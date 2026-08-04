@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<!--
+  L02 — MODULE DASHBOARD · DUAL-MODE file (lives in Layout/views/).
+  - Open directly in a browser -> the standalone harness (bottom) mounts + shows it.
+  - Fetched by Shell.html       -> injectDrawer('layout-module-dashboard','content').
+  Anatomy: notifications message-box · sibling-dashboard tab bar · a 6-column
+  bento grid reproducing the Figma widget set (node 22090:525264):
+    R1  [KPI ×3 + Last Contact] (3) | Computers by OS donut (3)
+    R2  Vulnerability column (2) | Network Patch donut (2) | Software Summary list (2)
+    R3  Remote Control list (2) | Image by OS donut (2) | System Health bars (2)
+    R4  Software Repository table (4) | Configurations list (2)
+    R5  Deployment donut (2) | Device Type pie (2) | Images By Status bars (2)
+    R6  Drivers By Class column (3) | Configuration Summary column (3)
+  Colors mirror the Figma via ds-chart series[0].colors (red/green/orange/…).
+  Built ONLY from Prism components (ds-inline-alert / ds-message-box /
+  ds-tab-bar-horizontal / ds-kpi-card / ds-widget / ds-chart / ds-badge /
+  ds-icon / ds-data-table). Device Type is a pie (ds-chart has no radar type).
+  Spec: handoff/layout-l02-module-dashboard.md.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Module Dashboard (L02) — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="layout-base.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    .sa-host { display: flex; flex-direction: column; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* == L02 Module Dashboard — Prism components + uems tokens =============== */
+/* Root + .lay + base .lay__scroll live in Layout/layout-base.css (shared via .lay-root); the flex/gap below is this view's addition. */
+#mdash-pop .lay__scroll { display: flex; flex-direction: column; gap: 16px; }
+
+/* Notifications message box — aligns with the content's 20px inset (not
+   edge-to-edge); it inherits the .lay__scroll horizontal padding. */
+.md-banner { padding-top: 12px; }
+
+/* Sibling-dashboard tabs: a single baseline. The underline tab-bar draws its
+   own border (dropped) so only the .md-tabs wrapper's 1px baseline remains.
+   Sticky: on scroll-down the tabs pin to the top of the scroll area (the
+   notifications message box scrolls away above them); scroll-up brings the
+   message box back. Solid background + z-index so the widget grid slides
+   cleanly underneath. */
+#mdash-pop .md-tabs {
+  border-bottom: 1px solid var(--uems-border-tertiary);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--uems-bg-base);
+  padding-top: 12px;
+}
+#mdash-pop .ds-tab-bar-horizontal--underline { border-bottom: none; }
+
+/* Figma bento: a 6-column base grid; widgets span 2 / 3 / 4 columns to
+   reproduce the reference rows (3+3, 2+2+2, 4+2, 3+3). */
+/* Definite row heights so charts have a real height to fill (no circular sizing).
+   Row 1 is taller (480) — it stacks the 3 KPI tiles above the Last Contact chart,
+   so the chart needs the extra height to read well; the rest stay a compact 400. */
+.md-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; align-items: stretch; grid-template-rows: 480px; grid-auto-rows: 400px; }
+/* ds-widget defaults to max-width:580px (a single Figma tile); a dashboard cell
+   can be wider (3–4 col spans), so lift the cap. Fill the cell in both axes so
+   every card in a row shares the row's height and aligns. */
+.md-grid > ds-widget, .md-grid > .md-col { min-width: 0; width: 100%; height: 100%; max-width: none; }
+.md-col ds-widget { max-width: none; }
+.md-grid ds-widget .ds-widget__surface { height: 100%; }
+/* Let the body shrink below its (chart) content so a tall chart fits the card
+   instead of overflowing — flex items default to min-height:auto (= content). */
+.md-grid ds-widget .ds-widget__body { min-height: 0; }
+/* Chart bodies are full-bleed by default (0 horizontal padding), so the plot +
+   legend touch the card border. Inset chart widgets so the legend/plot sit off
+   the edge and align with the title. */
+.md-grid .ds-widget--chart .ds-widget__body { padding-left: 16px; padding-right: 16px; }
+.md-sp2 { grid-column: span 2; }
+.md-sp3 { grid-column: span 3; }
+.md-sp4 { grid-column: span 4; }
+
+/* Row-1 left block = KPI tiles (×3) stacked over the Last Contact widget. */
+.md-col { display: flex; flex-direction: column; gap: 16px; }
+.md-col > ds-widget { flex: 1 1 auto; min-height: 0; }
+.md-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+
+/* Chart height inside widgets (donut/column/line/bar all read well ~200px).
+   max-height lets a chart shrink to fit a capped row instead of overflowing;
+   donuts stay circular (the SVG letterboxes via preserveAspectRatio). */
+.md-grid ds-chart { display: block; width: 100%; height: 100%; min-height: 200px; max-height: 100%; }
+.md-grid .ds-chart__plot { max-height: 100%; }
+
+/* Last Contact fills its widget (which grows to fill the row height); fit="fill"
+   lets the plot stretch wide/short instead of scaling by width. */
+#w-contact ds-chart { height: 100%; min-height: 0; }
+
+/* List-widget "collection" rows (icon tile + label + trailing value/badge) —
+   the canonical ds-widget type="list" pattern (Widget.html .wl-row). */
+#mdash-pop .wl-row { display: flex; align-items: center; gap: 12px; padding: 8px 16px; }
+#mdash-pop .wl-ico { width: 28px; height: 28px; border-radius: 8px; background: var(--uems-bg-secondary-alt, #eef1f6); display: inline-flex; align-items: center; justify-content: center; color: var(--uems-icon-secondary, #55607a); flex-shrink: 0; }
+#mdash-pop .wl-label { flex: 1 1 auto; min-width: 0; font-size: 14px; color: var(--uems-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#mdash-pop .wl-label--link { color: var(--uems-text-accent-link, #006aff); cursor: pointer; }
+#mdash-pop .wl-val { flex-shrink: 0; font-size: 14px; font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); }
+
+@media (max-width: 1200px) {
+  .md-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .md-sp3, .md-sp4 { grid-column: span 4; }
+  .md-sp2 { grid-column: span 2; }
+}
+@media (max-width: 760px) {
+  .md-grid { grid-template-columns: 1fr; }
+  .md-sp2, .md-sp3, .md-sp4 { grid-column: span 1; }
+  .md-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+</style>
+
+<div id="mdash-pop" class="lay-root" hidden>
+  <div class="lay">
+    <div class="lay__scroll">
+
+      <!-- Notifications (replaces the page header) — collapsible Alerts / Information box. -->
+      <!-- Temporarily hidden per request; remove `hidden` to restore the notifications box. -->
+      <div class="md-banner" hidden>
+        <ds-message-box id="md-msgs" tab="alerts" alerts-count="3" information-count="2">
+          <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar
+            title="Unsupported operating systems detected" show-title
+            description="Support for OSes older than Windows 7 / Server 2008 R2 and macOS 11 has ended. Agents on these systems will be removed automatically."
+            action="View affected devices" action-position="inline"></ds-inline-alert>
+          <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar
+            description="Query reports using &ldquo;Approve Status&rdquo; may be affected — Patch Approval Status changed recently."
+            action="Action" action-position="inline"></ds-inline-alert>
+          <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar
+            description="This is a description of the alert message that provides additional context for the user."
+            action="Action" action-position="inline"></ds-inline-alert>
+          <ds-inline-alert slot="information" type="info" style-variant="subtle" accent-bar
+            description="Scheduled maintenance window begins tonight at 11:00 PM."></ds-inline-alert>
+          <ds-inline-alert slot="information" type="info" style-variant="subtle" accent-bar
+            description="Agent version 11.3.2 is now available for rollout."></ds-inline-alert>
+        </ds-message-box>
+      </div>
+
+      <!-- Sibling dashboards -->
+      <div class="md-tabs">
+        <ds-tab-bar-horizontal id="md-tabs" type="underline" active-id="summary" aria-label="Dashboards"></ds-tab-bar-horizontal>
+      </div>
+
+      <!-- Bento widget grid — full Figma widget set (node 22090:525264). -->
+      <div class="md-grid">
+
+        <!-- Row 1: KPI tiles + Computers by OS (left half) | Last Contact (right half,
+             full-height so the trend line reads clearly). -->
+        <div class="md-col md-sp3">
+          <div class="md-kpis">
+            <ds-kpi-card label="Managed Computers" value="186" state="success" icon="computer"></ds-kpi-card>
+            <ds-kpi-card label="SDP Computers" value="39" state="default" icon="server-01"></ds-kpi-card>
+            <ds-kpi-card label="Waiting Computers" value="39" state="warning" icon="clock"></ds-kpi-card>
+          </div>
+          <ds-widget id="w-os" title="Computers by Operating System" show-drag="false" show-action="false" show-footer="false">
+            <ds-chart id="c-os" type="donut" monotone="blue" show-legend legend-position="right" fit="contain"></ds-chart>
+          </ds-widget>
+        </div>
+
+        <ds-widget class="md-sp3" id="w-contact" title="Last Contact summary" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-contact" type="line" area fit="fill"></ds-chart>
+        </ds-widget>
+
+        <!-- Row 2: Vulnerability | Network Patch | Software Summary -->
+        <ds-widget class="md-sp2" id="w-vuln" title="Vulnerability Severity Summary" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-vuln" type="column" fit="fill"></ds-chart>
+        </ds-widget>
+
+        <ds-widget class="md-sp2" id="w-patch" title="Network Patch Status" trend="Healthy" trend-status="success" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-patch" type="donut" show-legend fit="contain"></ds-chart>
+        </ds-widget>
+
+        <ds-widget class="md-sp2" id="w-soft" type="list" title="Software Summary" show-drag="false" show-action="false" show-footer="false">
+          <div id="soft-list"></div>
+        </ds-widget>
+
+        <!-- Row 3: Remote Control | Image by OS | System Health Graph -->
+        <ds-widget class="md-sp2" id="w-rc" type="list" title="Remote Control Connection Status" show-drag="false" show-action="false" show-footer="false">
+          <div id="rc-list"></div>
+        </ds-widget>
+
+        <ds-widget class="md-sp2" id="w-img" title="Image by OS" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-img" type="donut" show-legend fit="contain"></ds-chart>
+        </ds-widget>
+
+        <ds-widget class="md-sp2" id="w-health" title="System Health Graph" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-health" type="bar" fit="fill"></ds-chart>
+        </ds-widget>
+
+        <!-- Row 4: Software Repository (2/3) | Configurations (1/3) -->
+        <ds-widget class="md-sp4" id="w-repo" type="table" title="Software Repository" show-drag="false" show-action="false" show-footer="false">
+          <ds-data-table id="md-repo" selection-mode="none" row-height="comfortable" show-toolbar="false" show-footer="false" sticky-header rows-per-page="6" page="1"></ds-data-table>
+        </ds-widget>
+
+        <ds-widget class="md-sp2" id="w-cfg" type="list" title="Configurations" show-drag="false" show-action="false" footer-summary="+101 more Connections" footer-label="View all Configurations" footer-href="#">
+          <div id="cfg-list"></div>
+        </ds-widget>
+
+        <!-- Row 5: Deployment | Device Type | Images By Status -->
+        <ds-widget class="md-sp2" id="w-deploy" title="Deployment By Status" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-deploy" type="donut" show-legend fit="contain"></ds-chart>
+        </ds-widget>
+
+        <ds-widget class="md-sp2" id="w-devtype" title="Device Type" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-devtype" type="pie" show-legend fit="contain"></ds-chart>
+        </ds-widget>
+
+        <ds-widget class="md-sp2" id="w-imgstat" title="Images By Status" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-imgstat" type="bar" fit="fill"></ds-chart>
+        </ds-widget>
+
+        <!-- Row 6: Drivers By Class | Configuration Summary (each with a filter) -->
+        <ds-widget class="md-sp3" id="w-drivers" title="Drivers By Class" filter-label="All Drivers" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-drivers" type="column" fit="fill"></ds-chart>
+        </ds-widget>
+
+        <ds-widget class="md-sp3" id="w-cfgsum" title="Configuration Summary" filter-label="All Configuration" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-cfgsum" type="column" fit="fill"></ds-chart>
+        </ds-widget>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* == L02 view logic — feed charts, list, links, table =================== */
+(function () {
+  const root = document.getElementById('mdash-pop');
+  if (!root || root.__mdInit) return; root.__mdInit = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const tabs = $('md-tabs');
+  if (tabs) tabs.items = [
+    { id: 'summary', label: 'Summary', active: true },
+    { id: 'security', label: 'Security Dashboard' },
+    { id: 'zia', label: "Zia's Analysis" },
+  ];
+
+  /* Charts — ds-chart .data = { categories, series:[{ name, values, colors? }] }.
+     `colors` = per-slice/bar semantic palette: blue|green|orange|purple|red|yellow|grey. */
+  const setChart = (id, data) => { const c = $(id); if (c) c.data = data; };
+
+  setChart('c-contact', { categories: ['0-3 Days', '4-7 days', '8-15 days', '16-30 days', '31+ days'], series: [{ name: 'Devices', values: [20, 50, 210, 60, 200], color: 'red' }] });
+  setChart('c-os', { categories: ['Redhat', 'Windows', 'Ubuntu', 'Mac', 'Others'], series: [{ name: 'Devices Enrolled', values: [43270, 78990, 86543, 121, 209] }] });
+  setChart('c-vuln', { categories: ['Install', 'Important', 'Moderate', 'Low'], series: [{ name: 'Count', values: [1700, 1100, 650, 180], colors: ['red', 'orange', 'yellow', 'grey'] }] });
+  setChart('c-patch', { categories: ['Installed', 'Missing'], series: [{ name: 'Patches', values: [125, 30], colors: ['green', 'red'] }] });
+  setChart('c-img', { categories: ['Microsoft Windows 11 Professional'], series: [{ name: 'Total', values: [3], colors: ['blue'] }] });
+  setChart('c-health', { categories: ['Vulnerable', 'High Vulnerable', 'Healthy', 'Health Not Available'], series: [{ name: 'Count Range', values: [22, 45, 55, 68], colors: ['orange', 'red', 'green', 'blue'] }] });
+  setChart('c-deploy', { categories: ['Completed', 'Scheduled', 'In progress', 'Failed'], series: [{ name: 'Devices', values: [125, 90, 90, 90], colors: ['green', 'orange', 'yellow', 'red'] }] });
+  setChart('c-devtype', { categories: ['SmartPhone', 'Desktop', 'Laptop', 'Tablet', 'Others'], series: [{ name: 'Devices', values: [225, 200, 90, 90, 90] }] });
+  setChart('c-imgstat', { categories: ['In progress', 'Completed', 'Vulnerable', 'Failed'], series: [{ name: 'Count Range', values: [60, 40, 25, 30], colors: ['green', 'blue', 'grey', 'red'] }] });
+  setChart('c-drivers', { categories: ['Net', 'Mouse', 'Keyboard', 'System', 'I4IDClass', 'Process', 'fdc', 'USB', 'hdc', 'Ports', 'Display'], series: [{ name: 'Drivers', values: [5, 4, 3, 3, 2, 2, 2, 2, 2, 2, 1] }] });
+  setChart('c-cfgsum', { categories: ['Expired', 'Ready to Execute', 'Executed', 'In progress', 'Suspended', 'Retry in progress', 'Draft'], series: [{ name: 'Status', values: [1500, 1300, 864, 744, 643, 465, 245], colors: ['red', 'blue', 'green', 'orange', 'purple', 'charoite', 'grey'] }] });
+
+  /* List widgets (ds-widget type="list" → wl-row collections). A row is either
+     icon+label+value (metrics) or icon+link+status badge (entities). */
+  const rowsHtml = (rows) => rows.map((r) => {
+    const trailing = r.badge
+      ? `<ds-badge variant="subtle" state="${r.state || 'default'}" size="medium" shape="pill" label="${esc(r.badge)}"></ds-badge>`
+      : `<span class="wl-val">${esc(r.val)}</span>`;
+    /* Per-row icon tint + tile background (Figma). Falls back to the CSS default. */
+    const ico = (r.bg || r.color) ? ` style="${r.bg ? `background:${r.bg};` : ''}${r.color ? `color:${r.color};` : ''}"` : '';
+    return `<div class="wl-row"><span class="wl-ico"${ico}><ds-icon name="${r.icon}" size="16"></ds-icon></span>`
+      + `<span class="wl-label${r.link ? ' wl-label--link' : ''}">${esc(r.label)}</span>${trailing}</div>`;
+  }).join('');
+  const setList = (id, rows) => { const el = $(id); if (el) el.innerHTML = rowsHtml(rows); };
+
+  /* Software Summary — icon + tile colors taken from Figma (node 22090:525484). */
+  setList('soft-list', [
+    { icon: 'layers', label: 'Total Software', val: '1,289', bg: '#eaf0fc', color: '#2b7fff' },
+    { icon: 'circle-tick', label: 'In Compliance (Licensed)', val: '834', bg: '#e7f3ed', color: '#0c8844' },
+    { icon: 'exclamation-circle', label: 'Over Licensed', val: '89', bg: '#fdebeb', color: '#e42527' },
+    { icon: 'clock', label: 'Under Licensed', val: '42', bg: '#fef8eb', color: '#ff8b4d' },
+    { icon: 'info-circle', label: 'License Expired', val: '15', bg: '#fdebeb', color: '#e42527' },
+    { icon: 'shield', label: 'Prohibited Software', val: '13', bg: '#fdebeb', color: '#e42527' },
+  ]);
+
+  setList('rc-list', [
+    { icon: 'computer', label: 'Roy Device', link: true, badge: 'Disconnected', state: 'default' },
+    { icon: 'computer', label: 'Reser 2 device', link: true, badge: 'Disconnected', state: 'default' },
+    { icon: 'computer', label: 'Raju 209', link: true, badge: 'Operation failed!', state: 'critical' },
+    { icon: 'computer', label: '2892Dell dev', link: true, badge: 'Operation failed!', state: 'critical' },
+    { icon: 'computer', label: 'aravinth29302', link: true, badge: 'Disconnected', state: 'default' },
+    { icon: 'computer', label: 'James1239', link: true, badge: 'Operation failed!', state: 'critical' },
+  ]);
+
+  setList('cfg-list', [
+    { icon: 'settings', label: 'Configuration 2832', link: true, badge: 'Executed', state: 'success' },
+    { icon: 'settings', label: 'Configuration 1187', link: true, badge: 'Ready to Execute', state: 'default' },
+    { icon: 'settings', label: 'Configuration 0459', link: true, badge: 'Suspended', state: 'critical' },
+    { icon: 'settings', label: 'Configuration 7720', link: true, badge: 'Suspended', state: 'critical' },
+    { icon: 'settings', label: 'Configuration 5561', link: true, badge: 'Ready to Execute', state: 'default' },
+    { icon: 'settings', label: 'Configuration 3390', link: true, badge: 'Suspended', state: 'critical' },
+  ]);
+
+  /* Software Repository table. */
+  const repo = $('md-repo');
+  if (repo) {
+    repo.columns = [
+      { id: 'name', header: 'Name', accessor: 'name' },
+      { id: 'path', header: 'Path', accessor: 'path' },
+    ];
+    const NAMES = ['Notepad 5.8.6', 'Orca', 'Nvidia-353 367.57-0 for Ubuntu 14.04 LTS', 'PostgreSQL 9.5.173 for Ubuntu 16.04 LTS (x64)', 'Nvidia-353 367.57-0 for Ubuntu 14.04 LTS', 'Orca'];
+    repo.rows = NAMES.map((n, i) => ({ id: i + 1, name: n, path: 'C:\\DEMO\\DesktopCentral_Server\\lib\\703795-nvidia-352_3…' }));
+  }
+
+  function show() {
+    root.hidden = false;
+    /* Charts rendered while hidden couldn't measure text; refit once visible so
+       axis labels scale + truncate. rAF for the common case + a setTimeout
+       fallback (rAF can be throttled in a background/offscreen tab). */
+    const refit = () => root.querySelectorAll('ds-chart').forEach((c) => { if (c.refit) c.refit(); });
+    requestAnimationFrame(refit);
+    setTimeout(refit, 120);
+  }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['module-dashboard'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS — runs ONLY when opened directly. ================ */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers['module-dashboard'] && window.ShellDrawers['module-dashboard'].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

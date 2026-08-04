@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ds-stepper — examples</title>
+  <link rel="stylesheet" href="../../styles/index.css" />
+  <script>window.UEMS_ICON_SPRITE = '../../icons/icons.svg';</script>
+  <script type="module" src="./stepper.js"></script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 32px; background: var(--uems-background); color: var(--uems-text-primary); }
+    h2 { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); margin: 32px 0 12px; }
+    .frame { background: var(--uems-bg-base); border: 1px solid var(--uems-border-secondary); border-radius: var(--radius-lg, 12px); padding: 28px; margin-bottom: 8px; }
+    .row { display: flex; gap: 48px; flex-wrap: wrap; align-items: flex-start; }
+    .col { flex: 1 1 320px; min-width: 280px; }
+  </style>
+</head>
+<body>
+  <h2>1 · Horizontal — linear (default)</h2>
+  <div class="frame"><ds-stepper id="s1"></ds-stepper></div>
+
+  <h2>2 · Horizontal — inline labels</h2>
+  <div class="frame"><ds-stepper id="s2" label-placement="inline"></ds-stepper></div>
+
+  <h2>3 · Vertical</h2>
+  <div class="frame" style="max-width:360px"><ds-stepper id="s3" orientation="vertical"></ds-stepper></div>
+
+  <h2>4 · Error &amp; warning / optional</h2>
+  <div class="frame"><ds-stepper id="s4"></ds-stepper></div>
+
+  <h2>5 · Clickable (non-linear) — click a step</h2>
+  <div class="frame"><ds-stepper id="s5" clickable mode="nonlinear"></ds-stepper></div>
+
+  <h2>6 · Sizes (sm / md / lg)</h2>
+  <div class="frame row">
+    <div class="col"><ds-stepper id="s6a" size="sm"></ds-stepper></div>
+    <div class="col"><ds-stepper id="s6b" size="md"></ds-stepper></div>
+    <div class="col"><ds-stepper id="s6c" size="lg"></ds-stepper></div>
+  </div>
+
+  <h2>7 · Dashed connector</h2>
+  <div class="frame"><ds-stepper id="s7" connector="dashed"></ds-stepper></div>
+
+  <h2>8 · Icons (hide numbers) &amp; titles-only (hide descriptions)</h2>
+  <div class="frame row">
+    <div class="col"><ds-stepper id="s8a" hide-numbers></ds-stepper></div>
+    <div class="col"><ds-stepper id="s8b" hide-descriptions></ds-stepper></div>
+  </div>
+
+  <h2>9 · Vertical wizard rail (with a disabled step)</h2>
+  <div class="frame" style="max-width:360px"><ds-stepper id="s9" orientation="vertical" size="lg"></ds-stepper></div>
+
+  <h2>10 · RTL (horizontal + vertical)</h2>
+  <div class="frame row">
+    <div class="col"><ds-stepper id="s10a" rtl></ds-stepper></div>
+    <div class="col" style="max-width:340px"><ds-stepper id="s10b" rtl orientation="vertical"></ds-stepper></div>
+  </div>
+
+  <h2>11 · Responsive collapse — narrow the window (&lt; 600px) to see "Step N of M"</h2>
+  <div class="frame"><ds-stepper id="s11"></ds-stepper></div>
+
+  <script type="module">
+    customElements.whenDefined('ds-stepper').then(() => {
+      const base = [
+        { id: 'account', label: 'Account', description: 'Sign in', icon: 'user' },
+        { id: 'details', label: 'Details', description: 'Your info', icon: 'edit' },
+        { id: 'plan', label: 'Plan', description: 'Choose a plan', icon: 'layers' },
+        { id: 'review', label: 'Review', description: 'Confirm', icon: 'eye' },
+      ];
+      const clone = () => base.map((s) => ({ ...s }));
+
+      document.getElementById('s1').steps = clone();
+      document.getElementById('s1').active = 1;
+
+      document.getElementById('s2').steps = clone();
+      document.getElementById('s2').active = 1;
+
+      document.getElementById('s3').steps = clone();
+      document.getElementById('s3').active = 1;
+
+      document.getElementById('s4').steps = [
+        { id: 'a', label: 'Account', description: 'Done', status: 'completed' },
+        { id: 'b', label: 'Payment', description: 'Card declined', status: 'error' },
+        { id: 'c', label: 'Add-ons', description: 'Skippable', status: 'warning', optional: true },
+        { id: 'd', label: 'Review', description: 'Confirm' },
+      ];
+
+      const s5 = document.getElementById('s5');
+      s5.steps = clone(); s5.active = 2;
+      s5.addEventListener('ds-stepper-select', (e) => console.log('selected', e.detail.id, e.detail.index));
+
+      for (const id of ['s6a', 's6b', 's6c']) { const el = document.getElementById(id); el.steps = clone().slice(0, 3); el.active = 1; }
+
+      document.getElementById('s7').steps = clone();
+      document.getElementById('s7').active = 2;
+
+      document.getElementById('s8a').steps = clone(); document.getElementById('s8a').active = 1;
+      document.getElementById('s8b').steps = clone(); document.getElementById('s8b').active = 1;
+
+      document.getElementById('s9').steps = [
+        { id: 'w1', label: 'Welcome', description: 'Get started', status: 'completed' },
+        { id: 'w2', label: 'Configure', description: 'Set options', status: 'active' },
+        { id: 'w3', label: 'Deploy', description: 'Push to devices' },
+        { id: 'w4', label: 'Finish', description: 'Not available yet', disabled: true },
+      ];
+
+      document.getElementById('s10a').steps = clone(); document.getElementById('s10a').active = 1;
+      document.getElementById('s10b').steps = clone(); document.getElementById('s10b').active = 1;
+      document.getElementById('s11').steps = clone(); document.getElementById('s11').active = 1;
+    });
+  </script>
+</body>
+</html>

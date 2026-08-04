@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <title>Criteria Filter — examples</title>
+  <link rel="stylesheet" href="../../styles/index.css" />
+  <script>
+    window.UEMS_ICON_SPRITE = '../../icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../icons/illustrations.svg';
+  </script>
+  <script type="module" src="./criteria-filter.js"></script>
+  <style>
+    body { margin: 0; padding: 24px; font-family: var(--font-family-sans); background: var(--uems-bg-base); color: var(--uems-text-primary); }
+    .row { display: grid; grid-template-columns: minmax(0, 640px) 1fr; gap: 32px; align-items: start; max-width: 1100px; }
+    h2 { margin: 0 0 16px; font-size: 14px; }
+    pre { background: var(--uems-bg-secondary); border: 1px solid var(--uems-border-tertiary); border-radius: 8px; padding: 12px; font-size: 12px; margin: 0; white-space: pre-wrap; }
+    .out h3 { font-size: 12px; letter-spacing: .04em; color: var(--uems-text-tertiary); margin: 0 0 8px; }
+    .valid { color: var(--uems-text-success); font-weight: 600; }
+    .invalid { color: var(--uems-text-error); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h2>Grouped · live mode (nested AND/OR + NOT · preview · field compare)</h2>
+  <div class="row">
+    <ds-criteria-filter id="cf" title="Filter criteria" show-preview allow-field-source></ds-criteria-filter>
+    <div class="out">
+      <h3>Emitted query (live) — <span id="state" class="valid">valid</span></h3>
+      <pre id="out">{}</pre>
+    </div>
+  </div>
+
+  <h2 style="margin-top:40px">Apply mode (footer) · seeded query</h2>
+  <div class="row">
+    <ds-criteria-filter id="cf2" title="Filter criteria" apply-mode="apply"></ds-criteria-filter>
+    <div class="out">
+      <h3>Applied query (on Apply)</h3>
+      <pre id="out2">{}</pre>
+    </div>
+  </div>
+
+  <h2 style="margin-top:40px">Advanced conditions (lead word · per-row And/Or · criteria pattern)</h2>
+  <div class="row">
+    <ds-criteria-filter id="cf-adv" title="Advanced conditions" structure="advanced" lead-word="When"></ds-criteria-filter>
+    <div class="out">
+      <h3>Emitted query (rows carry <code>joiner</code>)</h3>
+      <pre id="out-adv">{}</pre>
+    </div>
+  </div>
+
+  <h2 style="margin-top:40px">Phase 3 · presentation modes</h2>
+  <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+    <ds-button id="open-popover" variant="secondary" prefix-icon="filter">Filter (popover)</ds-button>
+    <ds-button id="open-drawer" variant="secondary" prefix-icon="filter">Advanced filter (drawer)</ds-button>
+  </div>
+  <ds-criteria-filter id="cf-pop" mode="popover" apply-mode="apply" title="Filter"></ds-criteria-filter>
+  <ds-criteria-filter id="cf-drawer" mode="drawer" apply-mode="apply" title="Advanced filter"></ds-criteria-filter>
+
+  <h2 style="margin-top:40px">Loading (async fields)</h2>
+  <div class="row">
+    <ds-criteria-filter id="cf-load" title="Filter criteria" loading></ds-criteria-filter>
+    <div class="out"><h3>Toggles to the seeded builder after ~1.4s</h3></div>
+  </div>
+
+  <script type="module">
+    import './criteria-filter.js';
+    await customElements.whenDefined('ds-criteria-filter');
+
+    const FIELDS = [
+      { name: 'hostname',  label: 'Host name',   type: 'text' },
+      { name: 'os',        label: 'Operating system', type: 'select',
+        options: [
+          { label: 'Windows', value: 'win' },
+          { label: 'macOS',   value: 'mac' },
+          { label: 'Linux',   value: 'linux' },
+        ] },
+      { name: 'tags',      label: 'Tags', type: 'multiselect',
+        options: [
+          { label: 'Production', value: 'prod' },
+          { label: 'Finance',    value: 'fin' },
+          { label: 'Kiosk',      value: 'kiosk' },
+        ] },
+      { name: 'riskScore', label: 'Risk score', type: 'number' },
+      { name: 'threshold', label: 'Alert threshold', type: 'number' },
+      { name: 'lastSeen',  label: 'Last seen',  type: 'date' },
+      { name: 'managed',   label: 'Managed',    type: 'boolean' },
+    ];
+
+    const cf = document.getElementById('cf');
+    cf.fields = FIELDS;
+    cf.query = { combinator: 'and', rules: [
+      { field: 'os', operator: 'is', value: 'win' },
+      { field: 'riskScore', operator: 'gte', value: 70 },
+      { combinator: 'or', not: false, rules: [
+        { field: 'tags', operator: 'hasAnyOf', value: ['prod'] },
+        { field: 'hostname', operator: 'startsWith', value: 'FIN-' },
+      ] },
+    ] };
+    const out = document.getElementById('out');
+    const stateEl = document.getElementById('state');
+    const dump = () => { out.textContent = JSON.stringify(cf.getQuery(), null, 2); };
+    dump();
+    cf.addEventListener('ds-criteria-filter-change', (e) => {
+      dump();
+      stateEl.textContent = e.detail.valid ? 'valid' : 'invalid';
+      stateEl.className = e.detail.valid ? 'valid' : 'invalid';
+    });
+
+    /* Phase 5 — host-owned saved presets. Enable the UI by setting `presets`;
+       persist on save and feed the updated list back. */
+    let presetSeq = 0;
+    cf.presets = [{ id: 'p0', label: 'High-risk Windows', query: { combinator: 'and', rules: [
+      { field: 'os', operator: 'is', value: 'win' }, { field: 'riskScore', operator: 'gte', value: 80 } ] } }];
+    cf.addEventListener('ds-criteria-filter-preset-save', (e) => {
+      cf.presets = [...cf.presets, { id: 'p' + (++presetSeq), label: e.detail.label, query: e.detail.query }];
+    });
+    cf.addEventListener('ds-criteria-filter-preset-select', (e) => { dump(); });
+
+    const cf2 = document.getElementById('cf2');
+    cf2.fields = FIELDS;
+    cf2.query = { combinator: 'or', rules: [
+      { field: 'hostname', operator: 'contains', value: 'FIN-' },
+    ] };
+    const out2 = document.getElementById('out2');
+    out2.textContent = JSON.stringify(cf2.getQuery(), null, 2);
+    cf2.addEventListener('ds-criteria-filter-apply', (e) => {
+      out2.textContent = JSON.stringify(e.detail.query, null, 2);
+    });
+
+    /* Advanced conditions variant */
+    const cfAdv = document.getElementById('cf-adv');
+    cfAdv.fields = FIELDS;
+    cfAdv.query = { combinator: 'and', rules: [
+      { field: 'os', operator: 'is', value: 'win' },
+      { field: 'riskScore', operator: 'gte', value: 70, joiner: 'and' },
+      { field: 'hostname', operator: 'startsWith', value: 'FIN-', joiner: 'or' },
+    ] };
+    const outAdv = document.getElementById('out-adv');
+    const dumpAdv = () => { outAdv.textContent = JSON.stringify(cfAdv.getQuery(), null, 2) + '\n\npattern: ' + cfAdv.getPattern(); };
+    dumpAdv();
+    cfAdv.addEventListener('ds-criteria-filter-change', dumpAdv);
+
+    /* Phase 3 — overlay modes (open from a trigger; Apply/close dismiss) */
+    const cfPop = document.getElementById('cf-pop');
+    cfPop.fields = FIELDS;
+    cfPop.query = { combinator: 'and', rules: [ { field: 'os', operator: 'is', value: 'win' } ] };
+    document.getElementById('open-popover').addEventListener('click', (e) => cfPop.toggle(e.currentTarget));
+    cfPop.addEventListener('ds-criteria-filter-apply', () => cfPop.close());
+
+    const cfDrawer = document.getElementById('cf-drawer');
+    cfDrawer.fields = FIELDS;
+    cfDrawer.query = { combinator: 'and', rules: [ { field: 'department', operator: 'is', value: '' } ] };
+    document.getElementById('open-drawer').addEventListener('click', (e) => cfDrawer.open(e.currentTarget));
+    cfDrawer.addEventListener('ds-criteria-filter-apply', () => cfDrawer.close());
+
+    /* Loading → resolve to a real builder */
+    const cfLoad = document.getElementById('cf-load');
+    cfLoad.fields = FIELDS;
+    cfLoad.query = { combinator: 'and', rules: [ { field: 'riskScore', operator: 'gte', value: 70 } ] };
+    setTimeout(() => cfLoad.removeAttribute('loading'), 1400);
+  </script>
+</body>
+</html>

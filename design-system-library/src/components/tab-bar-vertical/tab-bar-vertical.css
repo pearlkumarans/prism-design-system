@@ -1,0 +1,196 @@
+/* =============================================================================
+   ds-tab-bar-vertical / .ds-tab-bar-vertical
+   200px-wide vertical tablist. Two visual treatments:
+     • Underline (default) — flush rows; active/hover show a 2px accent bar on
+       the inner edge (left LTR / right RTL).
+     • Fill — active/hover row is a filled accent card.
+   Medium tab items only (36px). Icons hidden by default. gap 4 both types.
+   ============================================================================= */
+
+:host { display: block; }
+
+.ds-tab-bar-vertical {
+  position: relative;                          /* anchors the sliding indicator */
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);                       /* 4px between tabs — both types */
+  font-family: var(--font-family-sans);
+  box-sizing: border-box;
+}
+/* Fill cards get 4px breathing room from the rail edges (live: +8px height). */
+.ds-tab-bar-vertical--fill { padding: var(--spacing-4); }
+/* Underline rail sits on a full-height 1px leading baseline (mirrors the
+   horizontal underline's bottom baseline). The active/hover accent bar overlaps
+   it. border-inline-start → stays on the leading edge in RTL too. */
+.ds-tab-bar-vertical--underline {
+  padding: 0;
+  border-inline-start: 1px solid var(--uems-border-tertiary);
+}
+
+/* Sliding active indicator — JS sets top + height to the active tab; it glides
+   vertically. Underline = 2px leading bar · Fill = filled card. */
+.ds-tab-bar-vertical__indicator {
+  position: absolute;
+  top: 0; height: 0;
+  inset-inline-start: 0;
+  box-sizing: border-box;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: top 220ms cubic-bezier(0.4, 0, 0.2, 1),
+              height 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ds-tab-bar-vertical--underline .ds-tab-bar-vertical__indicator {
+  inset-inline-start: -1px;                          /* overlap the 1px baseline */
+  width: 2px;
+  background: var(--uems-border-accent);             /* #006AFF leading bar */
+  border-start-end-radius: 2px;
+  border-end-end-radius: 2px;                        /* inner corners, RTL auto-flip */
+}
+.ds-tab-bar-vertical--fill .ds-tab-bar-vertical__indicator {
+  inset-inline: var(--spacing-4);                    /* match 4px container padding → tab width */
+  background: var(--uems-bg-accent-primary-action);  /* #EAF0FC card */
+  border-radius: var(--radius-sm);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-tab-bar-vertical__indicator { transition: none; }
+}
+
+/* ---- Item row ----------------------------------------------------- */
+.ds-tab-bar-vertical__item {
+  position: relative;
+  z-index: 1;                                  /* above the sliding indicator */
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  width: 100%;
+  height: 36px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: start;
+  font: inherit;
+  font-size: var(--font-size-14);
+  line-height: 20px;
+  font-weight: var(--font-weight-regular);     /* Default = Regular */
+  color: var(--uems-text-secondary);           /* Default label #2A303D */
+  box-sizing: border-box;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+/* Underline reserves 12px on the inner (indicator) edge; Fill is a flat box. */
+.ds-tab-bar-vertical--underline .ds-tab-bar-vertical__item {
+  padding: var(--spacing-8);
+  padding-inline-start: var(--spacing-12);
+  border-radius: 0;
+}
+.ds-tab-bar-vertical--fill .ds-tab-bar-vertical__item {
+  padding: var(--spacing-8);
+  border-radius: var(--radius-sm);
+}
+
+/* Leading-edge accent bar on HOVER (non-active) — a preview bar. The ACTIVE
+   bar is the sliding indicator above, so it can glide between tabs. */
+.ds-tab-bar-vertical--underline .ds-tab-bar-vertical__item:hover:not(.ds-tab-bar-vertical__item--disabled):not(.ds-tab-bar-vertical__item--active)::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: -1px;                    /* overlap the leading baseline */
+  width: 2px;
+  background: var(--uems-border-accent);       /* #006AFF */
+  border-start-end-radius: 2px;
+  border-end-end-radius: 2px;
+}
+
+/* ---- Hover (non-active, non-disabled) ----------------------------- */
+.ds-tab-bar-vertical--underline .ds-tab-bar-vertical__item:hover:not(.ds-tab-bar-vertical__item--disabled):not(.ds-tab-bar-vertical__item--active) {
+  background: var(--uems-bg-secondary-alt);    /* grey row #F0F2F5 */
+  color: var(--uems-text-primary);             /* #15181E */
+}
+.ds-tab-bar-vertical--fill .ds-tab-bar-vertical__item:hover:not(.ds-tab-bar-vertical__item--disabled):not(.ds-tab-bar-vertical__item--active) {
+  background: var(--uems-bg-accent-primary-hover);  /* #D5E0F8 */
+  color: var(--uems-text-secondary);                /* stays #2A303D */
+}
+
+/* ---- Active — label only; the accent bar / fill card is the sliding
+   indicator behind the rows (so it glides), not painted on the row. ---- */
+.ds-tab-bar-vertical__item--active {
+  color: var(--uems-text-accent-link);         /* #006AFF */
+  font-weight: var(--font-weight-medium);      /* Active = Medium */
+}
+
+/* ---- Focus — 2px accent ring (outside), radius 6, primary label --- */
+.ds-tab-bar-vertical__item:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);  /* #006AFF */
+  outline-offset: 0;
+  border-radius: 6px;
+  color: var(--uems-text-primary);             /* #15181E */
+  z-index: 1;
+}
+
+/* ---- Disabled — token recolor only, NO opacity -------------------- */
+/* Each item is a native <button disabled> (set in JS) AND the click/keydown
+   handlers bail when item.disabled, so clicks are already blocked — keep
+   pointer-events on so the not-allowed cursor shows (pointer-events:none would
+   suppress the cursor entirely). */
+.ds-tab-bar-vertical__item--disabled {
+  cursor: not-allowed;
+  color: var(--uems-text-disabled);            /* #8893AD */
+}
+/* Underline disabled — flat 2px inner-edge border (muted, no rounding). */
+.ds-tab-bar-vertical--underline .ds-tab-bar-vertical__item--disabled::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: -1px;                    /* overlap the leading baseline */
+  width: 2px;
+  background: var(--uems-border-disabled);     /* #E1E4EB */
+}
+
+/* ---- Inner slots --------------------------------------------------- */
+.ds-tab-bar-vertical__item-icon {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  color: currentColor;
+}
+/* Content is leading (icon·label·badge), NOT space-between — the badge sits
+   right after the label. Label shrinks + ellipsises; it does not grow. */
+.ds-tab-bar-vertical__item-label {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ds-tab-bar-vertical__item-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ---- Badge per-state recolour ------------------------------------- */
+/* Default subtle badge already = bg #F0F2F5 / text #2A303D. */
+/* Fill Active → white badge bg so it reads on the soft-blue card. */
+.ds-tab-bar-vertical--fill .ds-tab-bar-vertical__item--active .ds-badge {
+  --_badge-bg: var(--uems-bg-primary-alt);     /* #FFFFFF */
+}
+/* Focus → info-tint badge. */
+.ds-tab-bar-vertical__item:focus-visible .ds-badge {
+  --_badge-bg: var(--uems-bg-info-primary);    /* #EAF0FC */
+  --_badge-fg: var(--uems-text-info);          /* #1E52BB */
+}
+/* Disabled → muted badge text. */
+.ds-tab-bar-vertical__item--disabled .ds-badge {
+  --_badge-fg: var(--uems-text-disabled);      /* #8893AD */
+}
+
+/* ---- Reduced motion ----------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .ds-tab-bar-vertical__item { transition: none; }
+}

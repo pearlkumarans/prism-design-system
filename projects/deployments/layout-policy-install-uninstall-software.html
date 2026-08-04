@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<!--
+  Deployments · Policy · Install/Uninstall Software (Computer) — sectioned form.
+  Archetype: L06 Sectioned form. Reference: current EC "Install/Uninstall
+  Windows Software (Computer)" configuration page (dark-theme screenshot).
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Install/Uninstall software — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+#pol-sw-pop .lay__section { padding: 20px 0 4px; }
+#pol-sw-pop .lay__fields { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; }
+#pol-sw-pop .lay__field { max-width: 820px; padding-bottom: 20px; }
+#pol-sw-pop .lay__field:has(ds-field-helper) { padding-bottom: 0; }
+#pol-sw-pop .lay__control-only { padding-inline-start: 288px; }
+#pol-sw-pop #sw-optype .ds-radio-group__items,
+#pol-sw-pop #sw-install-as .ds-radio-group__items,
+#pol-sw-pop #sw-copy-opt .ds-radio-group__items { display: flex; flex-direction: row; gap: 32px; flex-wrap: wrap; }
+#pol-sw-pop .sw-packages-wrap { padding-top: 12px; }
+#pol-sw-pop .sw-packages-wrap ds-data-table { width: 100%; max-width: 1000px; }
+#pol-sw-pop .sw-add-more { padding: 20px 0 40px; text-align: center; }
+</style>
+
+<div id="pol-sw-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <ds-page-header id="sw-ph" icon="software" structure="default"
+      title="Install/Uninstall software (Computer)"
+      description="Deploy a package or remove one from managed computers."
+      show-description show-breadcrumbs>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+
+      <!-- Section 1: Name and Description -->
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large"
+          title="Name and description"
+          description="Name this policy and add an optional description."></ds-section-header>
+        <div class="lay__fields">
+          <div class="lay__field">
+            <ds-text-input id="sw-name" size="medium" required
+              label="Name" label-position="left"
+              placeholder="MyConfiguration51821"
+              value="MyConfiguration51821"
+              show-counter counter="19/100"></ds-text-input>
+          </div>
+          <div class="lay__field">
+            <div class="lay__control-only">
+              <ds-text-link href="#" size="medium" prefix-icon="plus">Add description</ds-text-link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Install/Uninstall Windows Software -->
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large"
+          title="Install/uninstall software"
+          description="Choose a package, the operation (Install / Uninstall) and how it should run on the endpoint."></ds-section-header>
+
+        <!-- Packages sub-section -->
+        <div class="sw-packages-wrap">
+          <ds-section-header size="medium" title="Package settings"></ds-section-header>
+          <ds-data-table id="sw-packages"
+            selection-mode="none"
+            row-height="comfortable"
+            show-footer="false"
+            sticky-header></ds-data-table>
+        </div>
+
+        <div class="lay__fields" style="padding-top: 20px;">
+          <div class="lay__field">
+            <ds-radio-group id="sw-optype" size="medium"
+              label="Operation type" label-position="left"
+              value="install"></ds-radio-group>
+          </div>
+          <div class="lay__field">
+            <div style="display: flex; align-items: center; gap: 12px; max-width: 820px;">
+              <ds-input-select id="sw-package" size="medium" required
+                label="Package name" label-position="left"
+                placeholder="Choose a package"
+                value="1password"></ds-input-select>
+              <ds-text-link href="#" size="medium">Modify package</ds-text-link>
+            </div>
+          </div>
+        </div>
+
+        <!-- Configure Install/Uninstall options accordion -->
+        <ds-accordion id="sw-options" expanded>
+          <span slot="title">Configure install/uninstall options</span>
+        </ds-accordion>
+
+        <div class="sw-add-more">
+          <ds-button id="sw-add-more" variant="secondary" prefix-icon="plus">Add more packages</ds-button>
+        </div>
+      </div>
+
+    </div>
+
+    <ds-form-footer id="sw-footer" show-left="false">
+      <ds-button data-act="cancel"     variant="outline">Cancel</ds-button>
+      <ds-button data-act="save-draft" variant="secondary">Save as Draft</ds-button>
+      <ds-button data-act="add"        variant="primary">Add Policy</ds-button>
+    </ds-form-footer>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('pol-sw-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+
+  /* ---- Breadcrumbs — route through the shell when injected ------------- */
+  const ph = $('sw-ph');
+  ph.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    const label = (a.textContent || '').trim();
+    if (label === 'Policies'   && window.openContentView) { e.preventDefault(); window.openContentView('deployments-policy-list'); }
+    else if (label === 'Add Policy' && window.openContentView) { e.preventDefault(); window.openContentView('deployments-policy'); }
+  });
+  ph.breadcrumbs = [
+    { label: 'Policies',   href: '#' },
+    { label: 'Add Policy', href: '#' },
+    { label: 'Install/Uninstall software (Computer)' },
+  ];
+
+  /* ---- Operation type radio ------------------------------------------- */
+  $('sw-optype').options = [
+    { value: 'install',   label: 'Install', selected: true },
+    { value: 'uninstall', label: 'Uninstall' },
+  ];
+
+  /* ---- Package select ------------------------------------------------- */
+  $('sw-package').options = [
+    { value: '1password',      label: '1 password' },
+    { value: 'postgresql-9.3', label: '.A_PostgreSQL 9.3 (X86)' },
+    { value: 'notepadpp',      label: 'Notepad++ (64-bit x64)' },
+    { value: 'chrome-126',     label: 'Google Chrome 126' },
+    { value: 'zoom',           label: 'Zoom Workplace 5.17' },
+  ];
+
+  /* ---- Packages table ------------------------------------------------- */
+  const tbl = $('sw-packages');
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  tbl.columns = [
+    { id: 'name',   header: 'Package name',   accessor: 'name' },
+    { id: 'by',     header: 'Created by',     accessor: 'by' },
+    { id: 'runAs',  header: 'Run as',         accessor: 'runAs' },
+    { id: 'op',     header: 'Operation type', render: (r) =>
+        `<ds-badge variant="subtle" state="${r.op === 'Install' ? 'success' : 'moderate'}" shape="rounded" size="medium">${esc(r.op)}</ds-badge>` },
+    { id: 'copy',   header: 'Copy option',    accessor: 'copy' },
+    { id: 'actions',header: '',               align: 'end', render: () =>
+        `<button type="button" class="pkg-menu-btn" aria-label="Row actions"
+          style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;background:transparent;border-radius:var(--radius-sm);cursor:pointer;color:var(--uems-icon-secondary)">
+          <ds-icon name="more-vertical" size="16"></ds-icon>
+        </button>` },
+  ];
+  tbl.rows = [
+    { id: 1, name: '1 password',            by: 'prabakar', runAs: '—',       op: 'Install',   copy: 'None' },
+    { id: 2, name: '.A_PostgreSQL 9.3 (X86)',by: 'admin',   runAs: 'Admin007', op: 'Uninstall', copy: 'None' },
+  ];
+
+  /* ---- Configure install/uninstall options (inside the accordion) ----- */
+  const accBody = document.createElement('div');
+  accBody.setAttribute('slot', 'body');
+  accBody.innerHTML = `
+    <div style="padding: 8px 16px 16px; display:flex; flex-direction:column; gap: 20px; max-width: 820px;">
+      <p style="margin:0; color: var(--uems-text-secondary); font-size: var(--font-size-13);">
+        Specify the <b>user account</b> under which the software should run.
+      </p>
+      <ds-radio-group id="sw-install-as"
+        label="Install as" label-position="left"
+        value="system"></ds-radio-group>
+      <ds-radio-group id="sw-copy-opt"
+        label="Copy option" label-position="left"
+        value="none"></ds-radio-group>
+      <div style="padding-inline-start: 288px;">
+        <ds-checkbox id="sw-allow-interact" size="medium" label="Allow user to interact with the installation/uninstallation window."></ds-checkbox>
+      </div>
+    </div>`;
+  $('sw-options').appendChild(accBody);
+  const installAs = accBody.querySelector('#sw-install-as');
+  installAs.options = [
+    { value: 'system',  label: 'System user', selected: true },
+    { value: 'user',    label: 'Run as user' },
+  ];
+  const copyOpt = accBody.querySelector('#sw-copy-opt');
+  copyOpt.options = [
+    { value: 'none',   label: 'None', selected: true },
+    { value: 'file',   label: 'Copy file to client machines' },
+    { value: 'folder', label: 'Copy folder to client machines' },
+  ];
+
+  /* ---- Form footer ---------------------------------------------------- */
+  $('sw-footer').addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('[data-act]');
+    if (!btn) return;
+    const id = btn.dataset.act;
+    if (id === 'cancel') { if (window.openContentView) window.openContentView('deployments-policy'); return; }
+    const name = ($('sw-name').value || '').trim() || 'Untitled policy';
+    if (window.savePolicyAndOpen) window.savePolicyAndOpen({
+      name,
+      type: 'Install/Uninstall Software',
+      platform: 'Windows',
+      scope: 'computer',
+      status: id === 'save-draft' ? 'Draft' : 'Ready to Execute',
+    });
+  });
+
+  function show() { root.hidden = false; }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-policy-install-uninstall-software'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-policy-install-uninstall-software'].show()));
+})();
+</script>
+</body>
+</html>

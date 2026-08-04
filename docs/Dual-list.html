@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dual list — UEMS Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css?v=dl1">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/dual-list/dual-list.css">
+<link rel="stylesheet" href="../design-system-library/src/components/checkbox/checkbox.css">
+<link rel="stylesheet" href="../design-system-library/src/components/search-field/search-field.css">
+<link rel="stylesheet" href="../design-system-library/src/components/badge/badge.css">
+<link rel="stylesheet" href="../design-system-library/src/components/text-link/text-link.css">
+<link rel="stylesheet" href="../design-system-library/src/components/field-helper/field-helper.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/dual-list/dual-list.js"></script>
+<style>
+  .page-dual-list .demo-canvas { align-items: stretch !important; justify-content: flex-start !important; padding: 28px !important; gap: 26px !important; }
+  .page-dual-list .demo-dl-section { display: flex; flex-direction: column; gap: 10px; }
+  .page-dual-list .demo-dl-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--prism-text-muted); text-transform: uppercase; }
+  .page-dual-list ds-dual-list { --ds-dl-height: 280px; max-width: 720px; }
+  .page-dual-list pre.dl-code { background: var(--prism-code-bg, rgba(127,127,127,.08)); border: 1px solid var(--prism-border, rgba(127,127,127,.2)); border-radius: 10px; padding: 16px 18px; overflow:auto; font-family: var(--font-mono, ui-monospace, monospace); font-size: 13px; line-height: 1.6; }
+</style>
+</head>
+<body class="page-dual-list">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">      <a href="Foundation.html" >Foundation</a>
+      <a href="Components.html" class="active">Components</a>      <a href="zia-experience.html" >Zia Experience</a><a href="llm-reference.html">LLM Reference</a><div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      
+      <div style="width: 16px;"></div> <!-- Spacer -->
+      
+
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search...">
+        <span class="search-shortcut">⌘K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link active">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Dual list</h1>
+        <p class="page-desc" style="font-size:17px;color:var(--prism-text-muted);line-height:1.7;margin-bottom:28px;max-width:720px">A two-panel transfer control (shuttle / pick-list). Users move items between an <strong>Available</strong> list and a <strong>Selected</strong> list using per-item checkboxes and transfer buttons. Use it for assignment tasks &mdash; pick report columns, assign agents to a group, choose dashboard widgets, toggle features per module.</p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram" style="padding:72px 40px;">
+            <div style="position:relative;display:flex;align-items:stretch;justify-content:center;gap:44px;">
+
+              <!-- Available panel -->
+              <div style="position:relative;width:210px;border:1px solid var(--prism-border,rgba(127,127,127,.25));border-radius:12px;overflow:hidden;background:var(--prism-surface,transparent);">
+                <!-- 1 Panel -->
+                <div style="position:absolute;top:-46px;left:16px;display:flex;flex-direction:column;align-items:center;gap:4px;"><span style="width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">1</span><div style="width:2px;height:20px;background:#2563eb;"></div></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--prism-bg-subtle,rgba(127,127,127,.08));border-bottom:1px solid var(--prism-border,rgba(127,127,127,.2));">
+                  <div style="position:relative;">
+                    <span style="font-size:13px;font-weight:500;color:var(--prism-text);">Available <span style="color:var(--prism-text-muted);font-weight:400;">(7)</span></span>
+                    <!-- 2 Count (inline in title) -->
+                    <span style="position:absolute;top:-42px;left:64px;display:flex;flex-direction:column;align-items:center;gap:4px;"><span style="width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">2</span><div style="width:2px;height:16px;background:#2563eb;"></div></span>
+                  </div>
+                  <ds-text-link variant="primary" size="small" underline="hover">Select all</ds-text-link>
+                </div>
+                <div style="position:relative;padding:8px;">
+                  <!-- 3 Search -->
+                  <div style="position:absolute;right:calc(100% + 6px);top:22px;display:flex;align-items:center;gap:6px;"><div style="width:26px;height:2px;background:#2563eb;"></div><span style="width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">3</span></div>
+                  <div style="display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;border:1px solid var(--prism-border,rgba(127,127,127,.25));border-radius:6px;color:var(--prism-text-muted);font-size:12px;"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Search…</div>
+                </div>
+                <div style="padding:2px 8px 8px;display:flex;flex-direction:column;gap:2px;">
+                  <div style="position:relative;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;">
+                    <div style="width:16px;height:16px;border:1.5px solid var(--prism-border,rgba(127,127,127,.4));border-radius:4px;"></div><span style="font-size:12px;color:var(--prism-text);">Ben Ortiz</span>
+                    <!-- 4 Row -->
+                    <span style="position:absolute;bottom:-44px;left:24px;display:flex;flex-direction:column-reverse;align-items:center;gap:4px;"><span style="width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">4</span><div style="width:2px;height:22px;background:#2563eb;"></div></span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;"><div style="width:16px;height:16px;border:1.5px solid var(--prism-border,rgba(127,127,127,.4));border-radius:4px;"></div><span style="font-size:12px;color:var(--prism-text);">Chloe Kim</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;"><div style="width:16px;height:16px;border:1.5px solid var(--prism-border,rgba(127,127,127,.4));border-radius:4px;"></div><span style="font-size:12px;color:var(--prism-text);">Emma Novak</span></div>
+                </div>
+              </div>
+
+              <!-- Transfer controls -->
+              <div style="position:relative;display:flex;flex-direction:column;justify-content:center;gap:8px;">
+                <div style="width:30px;height:30px;border:1px solid var(--prism-border,rgba(127,127,127,.3));border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--prism-text);"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+                <div style="width:30px;height:30px;border:1px solid var(--prism-border,rgba(127,127,127,.3));border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--prism-text);"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></div>
+                <!-- 5 Transfer controls -->
+                <div style="position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:2px;height:18px;background:#2563eb;"></div><span style="width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">5</span></div>
+              </div>
+
+              <!-- Selected panel -->
+              <div style="width:210px;border:1px solid var(--prism-border,rgba(127,127,127,.25));border-radius:12px;overflow:hidden;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--prism-bg-subtle,rgba(127,127,127,.08));border-bottom:1px solid var(--prism-border,rgba(127,127,127,.2));">
+                  <span style="font-size:13px;font-weight:500;color:var(--prism-text);">Selected <span style="color:var(--prism-text-muted);font-weight:400;">(2)</span></span>
+                  <ds-text-link variant="primary" size="small" underline="hover">Deselect all</ds-text-link>
+                </div>
+                <div style="padding:8px;display:flex;flex-direction:column;gap:2px;">
+                  <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;"><div style="width:16px;height:16px;border:1.5px solid var(--prism-border,rgba(127,127,127,.4));border-radius:4px;"></div><span style="font-size:12px;color:var(--prism-text);">Ava Chen</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;"><div style="width:16px;height:16px;border:1.5px solid var(--prism-border,rgba(127,127,127,.4));border-radius:4px;"></div><span style="font-size:12px;color:var(--prism-text);">Diego Ruiz</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="al">
+            <div class="ali"><span class="ami">1</span><div><strong>Panel</strong><span>A surface with a header, optional search, and a scrollable list. Two per instance &mdash; Available and Selected. <code style="font-size:12px;padding:1px 6px;border-radius:4px;background:rgba(37,99,235,.06);color:var(--prism-violet)">BG-Base</code> + <code style="font-size:12px;padding:1px 6px;border-radius:4px;background:rgba(37,99,235,.06);color:var(--prism-violet)">Border-Secondary</code>, radius-m.</span></div></div>
+            <div class="ali"><span class="ami">2</span><div><strong>Count</strong><span>Shown inline in the panel title, e.g. <code>Available (12)</code>; updates live on every move.</span></div></div>
+            <div class="ali"><span class="ami">3</span><div><strong>Search</strong><span>Optional <code>ds-search-field</code> that filters that panel's rows by label. Move-all respects the active filter.</span></div></div>
+            <div class="ali"><span class="ami">4</span><div><strong>Row</strong><span>A <code>ds-checkbox</code> labelled with the item; hover highlight, focus ring, and a lock icon for constrained items.</span></div></div>
+            <div class="ali"><span class="ami">5</span><div><strong>Transfer controls</strong><span>Centred column: single move (<code>&gt;</code> <code>&lt;</code>), optional move-all (<code>&raquo;</code> <code>&laquo;</code>), optional reorder (&#9650;&#9660;). Disabled when nothing is eligible.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="preview" class="doc-section-title">Preview</h2>
+          <p class="doc-section-subtitle">Every preview is interactive &mdash; check rows and use the transfer buttons, <strong>or drag a row onto the other panel to move it (or within a panel to reorder)</strong>. Locked rows can't be dragged.</p>
+          <div class="demo-container">
+            <div class="demo-toolbar"><div class="demo-toolbar-left"><div class="demo-toolbar-dot" style="background:#ef4444"></div><div class="demo-toolbar-dot" style="background:#eab308"></div><div class="demo-toolbar-dot" style="background:#22c55e"></div></div></div>
+            <div class="demo-canvas">
+              <div class="demo-dl-section"><div class="demo-dl-label">Drag &amp; drop &mdash; drag a row across to move it, or within a list to reorder</div><ds-dual-list id="dlp6" searchable move-all reorderable></ds-dual-list></div>
+              <div class="demo-dl-section"><div class="demo-dl-label">Searchable &middot; move-all</div><ds-dual-list id="dlp1" searchable move-all></ds-dual-list></div>
+              <div class="demo-dl-section"><div class="demo-dl-label">Grouped by module</div><ds-dual-list id="dlp2" searchable grouped move-all></ds-dual-list></div>
+              <div class="demo-dl-section"><div class="demo-dl-label">Error state</div><ds-dual-list id="dlp3" searchable move-all error error-message="Select at least one agent to continue."></ds-dual-list></div>
+              <div class="demo-dl-section"><div class="demo-dl-label">Loading</div><ds-dual-list id="dlp4" searchable move-all loading></ds-dual-list></div>
+              <div class="demo-dl-section"><div class="demo-dl-label">Read-only</div><ds-dual-list id="dlp5" readonly></ds-dual-list></div>
+            </div>
+          </div>
+          <script type="module">
+            const people = (ns) => ns.map((n) => ({ id: n.toLowerCase().replace(/\s+/g,'-'), label: n }));
+            const AVAIL = ['Ben Ortiz','Chloe Kim','Emma Novak','Farah Ali','Gus Park','Hana Sato','Ivan Petrov'];
+            const SEL = ['Ava Chen','Diego Ruiz'];
+            const base = () => ({ available: people(AVAIL), selected: people(SEL) });
+            customElements.whenDefined('ds-dual-list').then(() => {
+              for (const id of ['dlp1','dlp3','dlp4','dlp6']) document.getElementById(id).items = base();
+              document.getElementById('dlp2').items = { available:[{id:'patch',label:'Patch management',group:'Security'},{id:'threats',label:'Threats',group:'Security'},{id:'deploy',label:'Software deployment',group:'Operations'},{id:'inventory',label:'Inventory',group:'Operations'},{id:'remote',label:'Remote control',group:'Operations'}], selected:[{id:'dashboards',label:'Dashboards',group:'Reporting'}] };
+              document.getElementById('dlp5').items = base();
+            });
+          </script>
+        </div>
+
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px">
+          <h2 id="states" class="doc-section-title">States</h2>
+          <table class="sz-t"><thead><tr><th>State</th><th>Behavior</th></tr></thead><tbody>
+            <tr><td>Row hover</td><td>Background <code>BG-Accent-Primary-Hover</code>; suppressed on locked / disabled rows.</td></tr>
+            <tr><td>Row focus</td><td>2px accent focus ring (<code>Border-Accent-Focus</code>), no size change.</td></tr>
+            <tr><td>Transfer button disabled</td><td>When nothing is eligible to move on that side; muted, non-interactive.</td></tr>
+            <tr><td>Locked item</td><td>Checkbox disabled + lock icon; excluded from move-all and deselect-all.</td></tr>
+            <tr><td>Loading</td><td>Skeleton source rows; search and all controls disabled.</td></tr>
+            <tr><td>Read-only</td><td>No transfer controls, search, or select-all; rows non-interactive.</td></tr>
+            <tr><td>Empty</td><td>Inline message ("Nothing selected yet" / "No matches").</td></tr>
+            <tr><td>Error</td><td>Both panels use <code>Border-Error</code>; message below via <code>ds-field-helper</code>.</td></tr>
+          </tbody></table>
+          <hr class="doc-divider"/>
+          <h2 id="tokens" class="doc-section-title">Design tokens</h2>
+          <table class="sz-t"><thead><tr><th>Token</th><th>Usage</th></tr></thead><tbody>
+            <tr><td><code>BG-Base</code></td><td>Panel + transfer-button background</td></tr>
+            <tr><td><code>BG-Secondary</code></td><td>Panel header strip</td></tr>
+            <tr><td><code>Border-Secondary</code></td><td>Panel + transfer-button border</td></tr>
+            <tr><td><code>radius-m</code> / <code>radius-6</code></td><td>Panel / rows &amp; buttons</td></tr>
+            <tr><td><code>Icon-Primary</code></td><td>Chevron icons</td></tr>
+          </tbody></table>
+        </div>
+
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px">
+          <h2 id="when-to-use" class="doc-section-title">When to use</h2>
+          <ul class="doc-list">
+            <li>Assigning many items between two buckets where users need to see both sides at once.</li>
+            <li>Multi-select from a large pool where search + bulk move matter (10+ items).</li>
+            <li>When order in the target matters, enable <code>reorderable</code>.</li>
+          </ul>
+          <hr class="doc-divider"/>
+          <h2 id="dos-donts" class="doc-section-title">Do's and Don'ts</h2>
+          <div class="do-dont-grid">
+            <div class="do-card"><span class="card-label"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Do</span>
+              <ul class="doc-list" style="border:none;background:transparent;padding:0"><li style="border:none;background:transparent;padding-left:20px">Enable <code>searchable</code> once either list can exceed ~10 items.</li><li style="border:none;background:transparent;padding-left:20px">Use <code>locked</code> for mandatory selections instead of hiding them.</li><li style="border:none;background:transparent;padding-left:20px">Keep item labels short and scannable (1&ndash;4 words).</li></ul></div>
+            <div class="dont-card"><span class="card-label"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> Don't</span>
+              <ul class="doc-list" style="border:none;background:transparent;padding:0"><li style="border:none;background:transparent;padding-left:20px">Use a dual list for a single choice &mdash; use <code>ds-input-select</code> or radios.</li><li style="border:none;background:transparent;padding-left:20px">Show <code>move-all</code> when the lists are tiny; single moves are clearer.</li><li style="border:none;background:transparent;padding-left:20px">Hardcode colors or spacing &mdash; everything comes from tokens.</li></ul></div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px">
+          <h2 id="properties" class="doc-section-title">Component API &amp; Properties</h2>
+          <p class="doc-section-subtitle">Data is set via the <code>.items</code> JS property (or an <code>items</code> JSON attribute): <code>{ available:[{id,label,group?,locked?,disabled?}], selected:[…] }</code>.</p>
+          <table class="sz-t"><thead><tr><th>Attribute</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+            <tr><td><code>available-label</code> / <code>selected-label</code></td><td>string</td><td>'Available' / 'Selected'</td><td>Panel header titles.</td></tr>
+            <tr><td><code>search-placeholder</code></td><td>string</td><td>'Search…'</td><td>Placeholder for both search fields.</td></tr>
+            <tr><td><code>searchable</code></td><td>boolean</td><td>unset</td><td>Search field in both panels (client-side filter).</td></tr>
+            <tr><td><code>move-all</code></td><td>boolean</td><td>unset</td><td>Adds the <code>&raquo;</code> / <code>&laquo;</code> move-all buttons.</td></tr>
+            <tr><td><code>reorderable</code></td><td>boolean</td><td>unset</td><td>Adds &#9650;&#9660; reorder controls for Selected.</td></tr>
+            <tr><td><code>grouped</code></td><td>boolean</td><td>unset</td><td>Renders section headers from each item's <code>group</code>.</td></tr>
+            <tr><td><code>loading</code></td><td>boolean</td><td>unset</td><td>Skeleton rows; search + controls disabled.</td></tr>
+            <tr><td><code>readonly</code></td><td>boolean</td><td>unset</td><td>View-only &mdash; no controls, search, or select-all.</td></tr>
+            <tr><td><code>error</code> / <code>error-message</code></td><td>boolean / string</td><td>unset</td><td>Error border + message via <code>ds-field-helper</code>.</td></tr>
+          </tbody></table>
+          <p class="doc-section-subtitle" style="margin-top:16px">Item flags: <code>locked</code>, <code>disabled</code>. CSS var <code>--ds-dl-height</code> sets panel height. Emits <code>ds-dual-list-change</code> &rarr; <code>detail = { available:[ids], selected:[ids] }</code>.</p>
+          <hr class="doc-divider"/>
+          <h2 id="usage-code" class="doc-section-title">Usage</h2>
+          <pre class="dl-code"><code>&lt;ds-dual-list id="assign" searchable move-all&gt;&lt;/ds-dual-list&gt;
+&lt;script type="module"&gt;
+  const el = document.getElementById('assign');
+  el.items = {
+    available: [{ id: 'ben', label: 'Ben Ortiz' }],
+    selected:  [{ id: 'ava', label: 'Ava Chen', locked: true }],
+  };
+  el.addEventListener('ds-dual-list-change', (e) =&gt; {
+    console.log(e.detail.selected);
+  });
+&lt;/script&gt;</code></pre>
+        </div>
+
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <ul class="doc-list">
+            <li>Each panel is <code>role="group"</code> labelled by its header title (the count is part of the accessible name).</li>
+            <li>Lists are <code>role="listbox"</code> <code>aria-multiselectable</code>; rows are <code>role="option"</code> whose <code>aria-selected</code> mirrors the checkbox.</li>
+            <li>Transfer controls are real <code>&lt;button&gt;</code>s with <code>aria-label</code>s; disabled when there is nothing to move.</li>
+            <li>A polite live region announces each move &mdash; "Moved 3 items to Selected. Selected now has 5."</li>
+            <li>Error: panels get <code>aria-invalid</code>; the message is linked with <code>aria-describedby</code>.</li>
+            <li>Focus order: Available (select-all &rarr; search &rarr; list) &rarr; transfer controls &rarr; Selected.</li>
+          </ul>
+          <hr class="doc-divider"/>
+          <h2 id="related" class="doc-section-title">Related</h2>
+          <ul class="doc-list">
+            <li><a href="Checkbox.html">Checkbox</a> &mdash; the per-row selection control.</li>
+            <li><a href="Search-field.html">Search field</a> &mdash; the in-panel filter.</li>
+            <li><a href="Token-field.html">Token Field</a> &mdash; inline multi-select for smaller sets.</li>
+            <li><a href="Input-Select.html">Input select</a> &mdash; single or compact multi-select.</li>
+          </ul>
+        </div>
+
+        </div><!-- main-content-inner -->
+      </div>
+    
+    </main>
+  </div>
+
+  <script>
+    let pgRawCode = '';
+    const CB_COPY_LTR = { label: 'Notify me' };
+    const CB_COPY_RTL = { label: 'أعلمني' };
+    function rPg(){
+      const size=document.getElementById('pg-size').value;
+      const checked=document.getElementById('pg-checked').value==='true';
+      const indet=document.getElementById('pg-indet').value==='true';
+      const error=document.getElementById('pg-error').value==='true';
+      const disabled=document.getElementById('pg-disabled').value==='true';
+      const rtl=document.getElementById('pg-rtl').value==='true';
+      const labelEl=document.getElementById('pg-label');
+      const isDefault = labelEl.value === '' || labelEl.value === CB_COPY_LTR.label || labelEl.value === CB_COPY_RTL.label;
+      if (isDefault) labelEl.value = rtl ? CB_COPY_RTL.label : CB_COPY_LTR.label;
+      const label=labelEl.value||'';
+      const pv=document.getElementById('pg-pv'), co=document.getElementById('pg-co');
+
+      pv.innerHTML='';
+      const cb=document.createElement('ds-checkbox');
+      cb.setAttribute('label', label);
+      if(size!=='medium') cb.setAttribute('size', size);
+      if(checked) cb.setAttribute('checked','');
+      if(indet) cb.setAttribute('indeterminate','');
+      if(error) cb.setAttribute('error','');
+      if(disabled) cb.setAttribute('disabled','');
+      if(rtl) cb.setAttribute('rtl','');
+      pv.appendChild(cb);
+
+      let attrs=[];
+      attrs.push('label="'+label.replace(/"/g,'&quot;')+'"');
+      if(size!=='medium') attrs.push('size="'+size+'"');
+      if(checked) attrs.push('checked');
+      if(indet) attrs.push('indeterminate');
+      if(error) attrs.push('error');
+      if(disabled) attrs.push('disabled');
+      if(rtl) attrs.push('rtl');
+      pgRawCode = '<ds-checkbox '+attrs.join(' ')+'></ds-checkbox>';
+      const colored = '&lt;<span style="color:#60a5fa">ds-checkbox</span> '
+        + attrs.map(a=>{
+            const eq=a.indexOf('=');
+            if(eq===-1) return '<span style="color:#38bdf8">'+a+'</span>';
+            return '<span style="color:#38bdf8">'+a.slice(0,eq)+'</span>=<span style="color:#34d399">'+a.slice(eq+1)+'</span>';
+          }).join(' ')
+        + '&gt;&lt;/<span style="color:#60a5fa">ds-checkbox</span>&gt;';
+      co.innerHTML='<pre style="margin:0;white-space:pre-wrap;font-family:\'JetBrains Mono\',monospace;font-size:13.5px;line-height:1.6">'+colored+'</pre>';
+    }
+    function cpCode(){const t=pgRawCode;
+      const done=()=>{const b=document.getElementById('pg-copy'),o=b.innerHTML;b.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';setTimeout(()=>{b.innerHTML=o},2000)};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done()})}
+      else{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done()}
+    }
+    ['pg-size','pg-checked','pg-indet','pg-error','pg-disabled','pg-rtl'].forEach(id=>{document.getElementById(id).addEventListener('change',rPg)});
+    document.getElementById('pg-label').addEventListener('input', rPg);
+    if (window.customElements && customElements.whenDefined) {
+      customElements.whenDefined('ds-checkbox').then(rPg);
+    }
+    rPg();
+
+    let _tO=null;
+    function uTOC(tid){const tl=document.querySelector('.toc-nav');if(!tl)return;tl.innerHTML='';const ap=document.getElementById(tid);if(!ap)return;ap.querySelectorAll('h2[id],h3[id]').forEach(h=>{if(h.style.display==='none')return;const li=document.createElement('li'),a=document.createElement('a');a.href='#'+h.id;a.className='toc-link';let t=Array.from(h.childNodes).filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();if(!t)t=h.innerText;a.textContent=t;a.addEventListener('click',e=>{e.preventDefault();document.getElementById(h.id).scrollIntoView({behavior:'smooth',block:'start'})});li.appendChild(a);tl.appendChild(li)});iSS()}
+    function iSS(){if(_tO)_tO.disconnect();const tl=document.querySelectorAll('.toc-link'),ss=Array.from(tl).map(l=>document.getElementById(l.getAttribute('href').slice(1))).filter(Boolean);if(!ss.length)return;_tO=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){const id=e.target.getAttribute('id');tl.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+id))}})},{rootMargin:'-80px 0px -60% 0px',threshold:0});ss.forEach(s=>_tO.observe(s))}
+    document.querySelectorAll('.tab-item').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));tab.classList.add('active');const m={'Overview':'tab-overview','Usage':'tab-usage','Style':'tab-style','Code':'tab-code','Accessibility':'tab-accessibility'};document.querySelectorAll('.tab-content').forEach(p=>p.style.display='none');const tg=m[tab.textContent.trim()];if(tg){document.getElementById(tg).style.display='block';uTOC(tg)}window.scrollTo({top:0,behavior:'smooth'})})});
+    uTOC('tab-overview');
+
+    // Sidebar search filter
+    (function(){
+      var searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      var items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function(){
+        var q = this.value.toLowerCase().trim();
+        items.forEach(function(li){
+          var link = li.querySelector('a');
+          if (!link) return;
+          var text = link.textContent.toLowerCase();
+          li.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+      });
+      // Cmd+K / Ctrl+K shortcut to focus search
+      document.addEventListener('keydown', function(e){
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      });
+    })();
+
+    // Scroll sidebar to active link on page load
+    (function(){
+      var active = document.querySelector('.sidebar-link.active');
+      if (active) {
+        var sidebar = active.closest('.sidebar');
+        if (sidebar) {
+          var top = active.offsetTop - sidebar.offsetTop - (sidebar.clientHeight / 3);
+          sidebar.scrollTop = Math.max(0, top);
+        }
+      }
+    })();
+
+  </script>
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/main.js"></script>
+<script src="js/components/toc.js"></script>
+<script type="module">
+  /* Real-world pattern: keep the checkbox-group's counter in sync with the
+     selection via the single ds-checkbox-group-change event. */
+  customElements.whenDefined('ds-checkbox-group').then(() => {
+    const g = document.getElementById('cb-rw-prefs');
+    if (!g) return;
+    const total = g.querySelectorAll('ds-checkbox').length;
+    const update = (e) => {
+      const arr = (e && e.detail && e.detail.values)
+        || (Array.isArray(g.values) ? g.values
+            : (g.getAttribute('value') || '').split(',').filter(Boolean));
+      g.setAttribute('counter', `${arr.length}/${total}`);
+    };
+    g.addEventListener('ds-checkbox-group-change', update);
+    update();
+  });
+
+  /* "Select all" parent — true 3-state indeterminate:
+       all children selected  → TICK
+       some children selected  → MINUS (indeterminate)
+       none selected           → EMPTY
+     Clicking toggles ALL: if anything is selected it DESELECTS all (→ empty);
+     if nothing is selected it selects all (→ tick). */
+  customElements.whenDefined('ds-checkbox').then(() => {
+    const parent = document.getElementById('cb-selectall');
+    const wrap = document.getElementById('cb-selectall-items');
+    if (!parent || !wrap) return;
+    const kids = [...wrap.querySelectorAll('ds-checkbox')];
+    const total = kids.length;
+
+    const sync = () => {
+      const n = kids.filter((c) => c.checked).length;
+      if (n === total)      { parent.checked = true;  parent.removeAttribute('indeterminate'); }  /* TICK */
+      else if (n === 0)     { parent.checked = false; parent.removeAttribute('indeterminate'); }  /* EMPTY */
+      else                  { parent.checked = false; parent.setAttribute('indeterminate', ''); } /* MINUS */
+      parent.setAttribute('label', `Select all (${n} of ${total} selected)`);
+    };
+
+    parent.addEventListener('ds-checkbox-change', () => {
+      const anySelected = kids.some((c) => c.checked);
+      const target = !anySelected;     /* any → deselect all · none → select all */
+      kids.forEach((c) => { c.checked = target; });
+      sync();
+    });
+    kids.forEach((c) => c.addEventListener('ds-checkbox-change', sync));
+    sync();
+  });
+</script>
+
+</body>
+</html>

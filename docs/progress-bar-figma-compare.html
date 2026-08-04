@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<title>progress-bar ↔ figma compare</title>
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/progress-bar/progress-bar.css">
+<script type="module" src="../design-system-library/src/components/progress-bar/progress-bar.js"></script>
+<style>body{background:#fff;padding:20px;display:flex;flex-direction:column;gap:16px;width:320px;} pre{font-size:11px;width:900px;}</style>
+</head>
+<body>
+  <ds-progress-bar id="dflt" value="25" label="Progress"></ds-progress-bar>
+  <ds-progress-bar id="s" size="small"  value="25" label="Progress"></ds-progress-bar>
+  <ds-progress-bar id="m" size="medium" value="50" label="Progress"></ds-progress-bar>
+  <ds-progress-bar id="l" size="large"  value="75" label="Progress"></ds-progress-bar>
+  <ds-progress-bar id="succ" variant="success" size="medium" value="100" label="Done"></ds-progress-bar>
+  <ds-progress-bar id="warn" variant="warning" size="medium" value="50" label="Slow"></ds-progress-bar>
+  <ds-progress-bar id="err"  variant="error"   size="medium" value="50" label="Failed"></ds-progress-bar>
+  <ds-progress-bar id="ind"  variant="indeterminate" size="medium" label="Working"></ds-progress-bar>
+  <ds-progress-bar id="dis"  size="medium" value="50" label="Paused" disabled></ds-progress-bar>
+  <ds-progress-bar id="zero" size="medium" value="0" label="Empty"></ds-progress-bar>
+  <ds-progress-bar id="clamp" size="medium" value="250" label="Clamp"></ds-progress-bar>
+  <pre id="report">measuring…</pre>
+<script type="module">
+const hex = (rgb) => { const m = rgb.match(/\d+/g); return m ? '#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join('').toUpperCase() : rgb; };
+await customElements.whenDefined('ds-progress-bar');
+await new Promise(r => setTimeout(r, 500));
+const lines = []; let pass=0, fail=0;
+const check = (id, what, got, want) => { const ok = String(got)===String(want); ok?pass++:fail++; lines.push(`${ok?'PASS':'FAIL'} ${id} ${what}: got=${got} want=${want}`); };
+const track = id => document.getElementById(id).querySelector('.ds-progress-bar__track');
+const fill = id => document.getElementById(id).querySelector('.ds-progress-bar__fill');
+const row = id => document.getElementById(id).querySelector('.ds-progress-bar__row');
+// default = small (track 4px, text 10px)
+check('dflt','default-track-h',Math.round(track('dflt').getBoundingClientRect().height),4);
+check('dflt','default-text',getComputedStyle(row('dflt')).fontSize,'10px');
+// sizes: track h, text size/lh (row hugs, no clip), gap
+for (const [id,h,fs,lh,gap] of [['s',4,'10px','14px','4px'],['m',6,'12px','16px','6px'],['l',8,'14px','20px','8px']]) {
+  check(id,'track-h',Math.round(track(id).getBoundingClientRect().height),h);
+  const cs=getComputedStyle(row(id));
+  check(id,'text',cs.fontSize+'/'+cs.lineHeight+'/'+cs.fontWeight,`${fs}/${lh}/500`);
+  check(id,'row-hugs-lh',Math.round(row(id).getBoundingClientRect().height),parseInt(lh));
+  check(id,'gap',getComputedStyle(document.getElementById(id).querySelector('.ds-progress-bar')).gap,gap);
+  check(id,'radius',getComputedStyle(track(id)).borderRadius,'9999px');
+}
+// fill widths exact %
+const tw = track('s').getBoundingClientRect().width;
+check('s','fill-25%',Math.round(fill('s').getBoundingClientRect().width/tw*100),25);
+check('m','fill-50%',Math.round(fill('m').getBoundingClientRect().width/track('m').getBoundingClientRect().width*100),50);
+check('l','fill-75%',Math.round(fill('l').getBoundingClientRect().width/track('l').getBoundingClientRect().width*100),75);
+// tokens (light)
+check('dflt','track(info-secondary)',hex(getComputedStyle(track('dflt')).backgroundColor),'#D5E0F8');
+check('dflt','fill(button-primary)',hex(getComputedStyle(fill('dflt')).backgroundColor),'#006AFF');
+check('dflt','value-color(accent-primary)',hex(getComputedStyle(document.querySelector('#dflt .ds-progress-bar__value')).color),'#0E2553');
+check('succ','track',hex(getComputedStyle(track('succ')).backgroundColor),'#CEE7DA');
+check('succ','fill',hex(getComputedStyle(fill('succ')).backgroundColor),'#0C8844');
+check('warn','fill',hex(getComputedStyle(fill('warn')).backgroundColor),'#E65100');
+check('err','fill',hex(getComputedStyle(fill('err')).backgroundColor),'#E42527');
+check('dis','track(disabled-subtle)',hex(getComputedStyle(track('dis')).backgroundColor),'#F0F2F5');
+check('dis','fill(disabled)',hex(getComputedStyle(fill('dis')).backgroundColor),'#E1E4EB');
+check('dis','label(disabled)',hex(getComputedStyle(document.querySelector('#dis .ds-progress-bar__label')).color),'#8893AD');
+check('dis','no-opacity-dim',getComputedStyle(document.querySelector('#dis .ds-progress-bar')).opacity,'1');
+// indeterminate
+check('ind','value-dash',document.querySelector('#ind .ds-progress-bar__value').textContent.trim(),'—');
+check('ind','no-valuenow',track('ind').getAttribute('aria-valuenow')===null,true);
+check('ind','animating',getComputedStyle(fill('ind')).animationName,'ds-progress-sweep');
+// zero + clamp
+check('zero','no-fill-width',Math.round(fill('zero').getBoundingClientRect().width),0);
+check('clamp','clamped-100',track('clamp').getAttribute('aria-valuenow'),'100');
+// theme test: green-light-la track BLUE-a stay aaganum
+document.documentElement.setAttribute('data-theme','green-light');
+await new Promise(r=>setTimeout(r,100));
+check('theme:green','track-stays-blue',hex(getComputedStyle(track('dflt')).backgroundColor),'#D5E0F8');
+document.documentElement.setAttribute('data-theme','light');
+// a11y
+check('s','role',track('s').getAttribute('role'),'progressbar');
+check('s','valuenow',track('s').getAttribute('aria-valuenow'),'25');
+lines.unshift(`RESULT: ${pass} pass / ${fail} fail`);
+document.getElementById('report').textContent = lines.join('\n');
+</script>
+</body>
+</html>

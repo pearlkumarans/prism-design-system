@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reliability Alerts — Endpoint Central · Prism</title>
+
+  <link rel="stylesheet" href="../../design-system-library/src/styles/index.css" />
+  <!-- drawer.css is not bundled in styles/index.css — link it directly so ds-drawer renders as a slide-over -->
+  <link rel="stylesheet" href="../../design-system-library/src/components/drawer/drawer.css" />
+  <!-- token-field.css is also not bundled — needed for the Recipients ds-token-field -->
+  <link rel="stylesheet" href="../../design-system-library/src/components/token-field/token-field.css" />
+  <script type="module">import '../../design-system-library/src/components/index.js';</script>
+
+  <script>
+    /* Theme persistence — sync with ds-right-pane toggle */
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+      document.addEventListener('ds-right-pane-theme', function (e) {
+        document.documentElement.setAttribute('data-theme', e.detail.theme);
+        try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+      });
+      window.addEventListener('DOMContentLoaded', function () {
+        customElements.whenDefined('ds-right-pane').then(function () {
+          document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+            rp.setAttribute('theme', t);
+          });
+        });
+      });
+    })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body {
+      margin: 0;
+      font-family: var(--font-family-sans);
+      background: var(--cobalt-15);
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell-area, .content, ds-sidebar-l1, ds-sidebar-l2, ds-right-pane, ds-header-nav {
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard),
+                  border-color var(--duration-standard, 240ms) var(--ease-standard),
+                  color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+
+    ds-sidebar-l1, ds-sidebar-l2 {
+      max-width: 400px; opacity: 1; overflow: hidden;
+      will-change: max-width, opacity, transform;
+      transition: max-width 360ms cubic-bezier(0.16,1,0.3,1),
+                  opacity 240ms cubic-bezier(0.16,1,0.3,1) 40ms,
+                  transform 360ms cubic-bezier(0.16,1,0.3,1),
+                  margin 360ms cubic-bezier(0.16,1,0.3,1);
+    }
+    ds-sidebar-l1.is-hidden, ds-sidebar-l2.is-hidden {
+      max-width: 0 !important; opacity: 0 !important;
+      transform: translateX(-12px); margin-inline-end: 0 !important; pointer-events: none;
+    }
+    ds-right-pane { transition: opacity 220ms cubic-bezier(0.16,1,0.3,1), transform 300ms cubic-bezier(0.16,1,0.3,1); }
+    ds-right-pane.is-hidden { opacity: 0; transform: translateX(12px); pointer-events: none; }
+
+    .ds-sidebar-l1__item { transition: background-color 160ms cubic-bezier(0.4,0,0.2,1), transform 200ms cubic-bezier(0.16,1,0.3,1); }
+    .ds-sidebar-l1__item:hover:not([aria-disabled="true"]) { transform: translateY(-1px); }
+    .ds-sidebar-l2__item { transition: background-color 180ms cubic-bezier(0.4,0,0.2,1), color 180ms cubic-bezier(0.4,0,0.2,1); }
+
+    @media (prefers-reduced-motion: reduce) {
+      ds-sidebar-l1, ds-sidebar-l2, ds-right-pane, .ds-sidebar-l1__item, .ds-sidebar-l2__item {
+        transition: none !important; transform: none !important;
+      }
+    }
+    ds-sidebar-l1[collapsed] + ds-sidebar-l2 { margin-left: -8px; }
+
+    .body { display: flex; flex: 1; min-height: 0; padding: 0 0 var(--spacing-12) var(--spacing-12); gap: 0; }
+
+    .shell-area {
+      flex: 1; display: flex; min-width: 0; min-height: 0;
+      border: 1px solid var(--uems-border-accent-subtle); border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle); overflow: hidden;
+    }
+    .shell-area ds-sidebar-l1 { border: 0 !important; }
+    .shell-area ds-sidebar-l2 { border: 0 !important; }
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+    .shell-area .ds-sidebar-l1 { border: 0 !important; border-radius: 0 !important; padding-top: 4px !important; }
+
+    /* ── Page: header → banner → tab-filter → table ── */
+    .page { display: flex; flex-direction: column; min-width: 0; height: 100%; }
+    .page__scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .page__notice { padding: 0 var(--spacing-20) var(--spacing-12); }
+    .page__table-wrap {
+      flex: 1; min-height: 0; display: flex; flex-direction: column;
+      padding: 0 var(--spacing-20) var(--spacing-16);
+    }
+    .page__table-wrap ds-data-table { flex: 0 1 auto; min-height: 0; display: flex; }
+
+    /* Cell renderers */
+    .cell-desc { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--uems-text-secondary); }
+    .cell-score { display: inline-flex; align-items: center; gap: var(--spacing-8); }
+    .cell-source { color: var(--uems-text-secondary); display: inline-flex; align-items: center; gap: 6px; }
+    .cell-source ds-icon { color: var(--uems-icon-tertiary); }
+    .cell-reason { display: inline-block; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; color: var(--uems-text-secondary); }
+    .cell-actions { display: inline-flex; justify-content: flex-start; width: 100%; }
+
+    /* Drawer config sections */
+    .cfg { display: flex; flex-direction: column; gap: var(--spacing-20); }
+    /* A section header labels the content right below it, so pull that content
+       closer than the standard 20px inter-item gap. */
+    .cfg ds-section-header { margin-bottom: calc(-1 * var(--spacing-12)); }
+    .cfg__rule {
+      border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md, 10px);
+      padding: var(--spacing-16); background: var(--uems-bg-base);
+    }
+    .cfg__rule-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--spacing-16); }
+    .cfg__rule-title { margin: 0; font-size: var(--font-size-14, 14px); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+    .cfg__rule-desc { margin: 4px 0 0; font-size: var(--font-size-12, 12px); color: var(--uems-text-secondary); line-height: 1.5; }
+    .cfg__rule-body { margin-top: var(--spacing-16); display: none; }
+    .cfg__rule[data-on="true"] .cfg__rule-body { display: block; }
+    /* Threshold selects fill the card width (override the component's size cap). */
+    .cfg .ds-input-select__field-col { max-width: none; }
+    .cfg__field-label { display: block; margin-bottom: var(--spacing-8); font-size: var(--font-size-12, 12px); font-weight: var(--font-weight-medium); color: var(--uems-text-secondary); }
+    .cfg__recipients { margin-top: var(--spacing-12); }
+
+    /* Alert detail drawer */
+    .dt { display: flex; flex-direction: column; gap: var(--spacing-20); }
+    .dt__hd { display: flex; flex-direction: column; gap: 2px; }
+    .dt__id { font-size: var(--font-size-16, 16px); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+    .dt__name { font-size: var(--font-size-13, 13px); color: var(--uems-text-secondary); }
+    .dt__list { margin: 0; display: flex; flex-direction: column; }
+    .dt__row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-16); padding: var(--spacing-12) 0; border-top: 1px solid var(--uems-border-tertiary); }
+    .dt__row:first-child { border-top: 0; }
+    .dt__row dt { margin: 0; font-size: var(--font-size-13, 13px); color: var(--uems-text-secondary); }
+    .dt__row dd { margin: 0; font-size: var(--font-size-13, 13px); color: var(--uems-text-primary); text-align: right; }
+
+    /* Confirmation dialogs (ds-modal) — resolve / enable-automation / override —
+       share one left-aligned look: lighter scrim (rgba(10,11,15,.5), no blur) to
+       match the drawer, no header/footer divider lines, roomier outer padding
+       (sides 32, header-top 28, footer-bottom 28), a tight title→description gap,
+       and a close pinned to the top-right corner. */
+    #resolve-modal .ds-modal__overlay,
+    #confirm-modal .ds-modal__overlay,
+    #override-modal .ds-modal__overlay,
+    #bulk-modal    .ds-modal__overlay { background: rgba(10, 11, 15, 0.5); backdrop-filter: none; }
+    #resolve-modal .ds-modal__header,
+    #confirm-modal .ds-modal__header,
+    #override-modal .ds-modal__header,
+    #bulk-modal    .ds-modal__header { border-bottom: 0; padding: 28px 32px 8px; }
+    #resolve-modal .ds-modal__footer,
+    #confirm-modal .ds-modal__footer,
+    #override-modal .ds-modal__footer,
+    #bulk-modal    .ds-modal__footer { border-top: 0; padding: 16px 32px 28px; }
+    #resolve-modal .ds-modal__titles,
+    #confirm-modal .ds-modal__titles,
+    #override-modal .ds-modal__titles,
+    #bulk-modal    .ds-modal__titles { gap: var(--spacing-8); }
+    #resolve-modal .ds-modal__close,
+    #confirm-modal .ds-modal__close,
+    #override-modal .ds-modal__close,
+    #bulk-modal    .ds-modal__close { position: absolute; top: var(--spacing-12); right: var(--spacing-12); z-index: 1; }
+    /* Resolve / bulk-resolve carry a Reason field in the body, indented to align
+       with the header text (past the 48px leading icon + 12px gap). */
+    #resolve-modal .ds-modal__body,
+    #bulk-modal    .ds-modal__body { padding: 8px 32px 24px; padding-left: calc(32px + 48px + 12px); }
+    /* Enable-automation / override carry no body content — collapse the region so
+       the description sits directly above the footer. */
+    #confirm-modal .ds-modal__body,
+    #override-modal .ds-modal__body { display: none; padding: 0; }
+    /* Leading icon circle tinted by severity. */
+    #resolve-modal[data-severity="critical"] .ds-modal__leading,
+    #override-modal[data-severity="critical"] .ds-modal__leading,
+    #bulk-modal[data-severity="critical"]    .ds-modal__leading { background: var(--uems-bg-error-subtle, rgba(228,37,39,.12));  color: var(--uems-text-error, #c1181b); }
+    #resolve-modal[data-severity="moderate"] .ds-modal__leading,
+    #override-modal[data-severity="moderate"] .ds-modal__leading,
+    #bulk-modal[data-severity="moderate"]    .ds-modal__leading { background: var(--uems-bg-warning-subtle, rgba(234,179,8,.16)); color: var(--uems-text-warning, #a86400); }
+    #resolve-modal[data-severity="success"]  .ds-modal__leading,
+    #override-modal[data-severity="success"]  .ds-modal__leading,
+    #bulk-modal[data-severity="success"]     .ds-modal__leading { background: var(--uems-bg-success-subtle, rgba(12,136,68,.12)); color: var(--uems-text-success, #0a7138); }
+    /* Enable-automation & override read as cautionary — warning-tinted leading icon. */
+    #confirm-modal .ds-modal__leading,
+    #override-modal .ds-modal__leading { background: var(--uems-bg-warning-subtle, rgba(234,179,8,.16)); color: var(--uems-text-warning, #a86400); }
+    /* Decline is the destructive text action, pinned to the footer's left. Recolor
+       the tertiary button to error red, with an error-tinted hover/active. */
+    #resolve-decline .ds-button { color: var(--uems-text-error); }
+    #resolve-decline .ds-button:hover  { background: var(--uems-bg-error-primary); color: var(--uems-text-error); }
+    #resolve-decline .ds-button:active { background: var(--uems-bg-error-secondary); color: var(--uems-text-error); }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- TOP — Header navigation -->
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+  <div class="body">
+    <div class="shell-area">
+
+      <ds-sidebar-l1 id="shell-l1" class="is-hidden" style="height: 100%;"></ds-sidebar-l1>
+      <ds-sidebar-l2 id="shell-l2" class="is-hidden" style="height: 100%;"></ds-sidebar-l2>
+
+      <!-- CENTER — Page header + automation banner + tab filter + data table -->
+      <ds-content role="main">
+        <div class="page">
+
+          <ds-page-header id="ph"
+            structure="default"
+            title="Reliability alerts"
+            description="Patches flagged automatically for low reliability scores. Review and resolve before deployment."
+            show-description
+            show-breadcrumbs
+            show-overflow="false">
+            <ds-button slot="actions" id="open-cfg" variant="secondary" size="small" prefix-icon="settings">Automation &amp; alerts</ds-button>
+          </ds-page-header>
+
+          <div class="page__scroll">
+
+            <!-- Active-automation notice — shows only while a rule is enabled.
+                 NOTE: id/class must NOT contain "ad"/"banner" — ad blockers hide
+                 such elements with `display:none !important` (see decline-patch.html). -->
+            <div class="page__notice" id="autodecline-notice">
+              <ds-inline-alert id="autodecline-alert"
+                type="warning" style-variant="subtle" accent-bar
+                title="Auto-decline is active organization-wide"
+                description="Every patch scoring below 30 is declined automatically across the whole organization. 3 patches were auto-declined this week."
+                action="Manage rules" action-position="inline">
+              </ds-inline-alert>
+            </div>
+
+            <!-- Alert list — the status filter lives in the table toolbar's left region -->
+            <div class="page__table-wrap">
+              <ds-data-table id="alert-table"
+                selection-mode="multi"
+                row-height="comfortable"
+                show-footer
+                sticky-header
+                rows-per-page="10"
+                page="1">
+                <ds-tab-filter id="status-filter" size="small" slot="toolbar-left"></ds-tab-filter>
+              </ds-data-table>
+            </div>
+
+          </div>
+        </div>
+      </ds-content>
+
+    </div><!-- /.shell-area -->
+
+    <!-- RIGHT — Utility rail -->
+    <ds-right-pane id="shell-rp" show-accessibility style="height: 100%;"></ds-right-pane>
+
+  </div>
+</div>
+
+<!-- ───────────────────────── Automation & alerts config — right drawer ───────────────────────── -->
+<ds-drawer id="cfg-drawer" side="right" size="m"
+  title="Automation &amp; alerts"
+  subtitle="Rules apply across the organization">
+
+  <div class="cfg" slot="body">
+
+    <ds-section-header size="medium" title="Automated decisions"></ds-section-header>
+
+    <!-- Auto-approve lives on the Test & Approve page (configured per group by
+         reliability score), so it's intentionally not duplicated here. -->
+
+    <!-- Auto-decline -->
+    <div class="cfg__rule" id="rule-decline" data-on="false">
+      <div class="cfg__rule-head">
+        <div>
+          <h3 class="cfg__rule-title">Auto-decline low-reliability patches</h3>
+          <p class="cfg__rule-desc">Applies organization-wide. Every patch scoring below the threshold is declined automatically across all groups and excluded from deployment. Individual patches can still be overridden manually.</p>
+        </div>
+        <ds-toggle id="tg-decline" size="medium"></ds-toggle>
+      </div>
+      <div class="cfg__rule-body">
+        <ds-input-select id="decline-th" label="Decline when reliability score is below" required="false" show-helper-row="false" placeholder="Select threshold"></ds-input-select>
+      </div>
+    </div>
+
+    <ds-inline-alert
+      type="info" style-variant="subtle" show-icon
+      title="How automation interacts with review"
+      description="Auto-decline is a single organization-wide rule — turning it on affects every group. Automated decisions are logged in the alert list and tagged as “Automation”, and any admin can override an auto-decision manually.">
+    </ds-inline-alert>
+
+    <ds-divider></ds-divider>
+
+    <ds-section-header size="medium" title="Email notifications"></ds-section-header>
+
+    <!-- Notifications -->
+    <div class="cfg__rule" id="rule-notify" data-on="false">
+      <div class="cfg__rule-head">
+        <div>
+          <h3 class="cfg__rule-title">Notify on new reliability alerts</h3>
+          <p class="cfg__rule-desc">Send an email when a patch drops below the notification threshold. Up to 10 recipients.</p>
+        </div>
+        <ds-toggle id="tg-notify" size="medium"></ds-toggle>
+      </div>
+      <div class="cfg__rule-body">
+        <ds-input-select id="notify-th" label="Notify when score drops below" required="false" show-helper-row="false" placeholder="Select threshold"></ds-input-select>
+        <div class="cfg__recipients">
+          <ds-token-field id="recip-field" label="Recipients" required="false" show-helper-row="false"
+            placeholder="name@company.com — press Enter to add"></ds-token-field>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <ds-text-link slot="footer-start" id="cfg-reset" variant="subtle" underline="hover" href="#">Reset to defaults</ds-text-link>
+  <ds-button slot="footer" id="cfg-cancel" variant="outline" size="medium">Cancel</ds-button>
+  <ds-button slot="footer" id="cfg-save" variant="primary" size="medium">Save changes</ds-button>
+</ds-drawer>
+
+<!-- Enable-automation confirmation — left-aligned dialog (ds-modal) -->
+<ds-modal id="confirm-modal" size="sm" dismiss-on-overlay>
+  <ds-icon slot="icon" name="exclamation-circle" size="20"></ds-icon>
+  <ds-button slot="footer" id="confirm-cancel" variant="outline" size="medium">Cancel</ds-button>
+  <ds-button slot="footer" id="confirm-enable" variant="warning" size="medium">Enable</ds-button>
+</ds-modal>
+
+<!-- Per-row resolve decision — left-aligned dialog (ds-modal) -->
+<ds-modal id="resolve-modal" size="sm" title="Resolve" dismiss-on-overlay>
+  <ds-icon slot="icon" name="file-shield" size="20"></ds-icon>
+  <div slot="body">
+    <ds-text-area id="resolve-reason" label="Reason (optional)" label-position="top"
+      placeholder="Add an optional note explaining this decision — it's saved to the audit trail"
+      show-helper-row="false"></ds-text-area>
+  </div>
+  <ds-button slot="footer-start" id="resolve-decline" variant="tertiary" size="medium">Decline</ds-button>
+  <ds-button slot="footer" id="resolve-cancel"  variant="outline" size="medium">Cancel</ds-button>
+  <ds-button slot="footer" id="resolve-approve" variant="primary" size="medium">Approve</ds-button>
+</ds-modal>
+
+<!-- Resolved-alert detail — read-only audit + override (opened by "View") -->
+<ds-drawer id="detail-drawer" side="right" size="s"
+  title="Alert details">
+  <div id="detail-body" slot="body"></div>
+  <ds-button slot="footer" id="detail-close" variant="outline" size="medium">Close</ds-button>
+  <ds-button slot="footer" id="detail-override" variant="primary" size="medium">Override decision</ds-button>
+</ds-drawer>
+
+<!-- Override confirmation — left-aligned dialog (ds-modal) -->
+<ds-modal id="override-modal" size="sm" dismiss-on-overlay>
+  <ds-icon slot="icon" name="refresh-time" size="20"></ds-icon>
+  <ds-button slot="footer" id="override-cancel" variant="outline" size="medium">Cancel</ds-button>
+  <ds-button slot="footer" id="override-confirm" variant="primary" size="medium">Override &amp; re-open</ds-button>
+</ds-modal>
+
+<!-- Bulk resolve — approve/decline N pending patches at once -->
+<ds-modal id="bulk-modal" size="sm" title="Resolve patches" dismiss-on-overlay>
+  <ds-icon slot="icon" name="file-shield" size="20"></ds-icon>
+  <div slot="body">
+    <ds-text-area id="bulk-reason" label="Reason (optional)" label-position="top"
+      placeholder="Add an optional note explaining this decision — it's saved to the audit trail for every selected patch"
+      show-helper-row="false"></ds-text-area>
+  </div>
+  <ds-button slot="footer" id="bulk-cancel"  variant="outline" size="medium">Cancel</ds-button>
+  <ds-button slot="footer" id="bulk-confirm" variant="primary" size="medium">Approve</ds-button>
+</ds-modal>
+
+<!-- Toast host -->
+<div id="toast-host" style="position:fixed; top:24px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; z-index:1400; pointer-events:none;"></div>
+
+<script type="module">
+  import '../../design-system-library/src/components/index.js';
+  import { applyL2For, wireL1ToL2 } from '../../design-system-library/src/data/ec-menus.js';
+
+  /* ── Header tabs — Threats & Patches active ── */
+  document.getElementById('ec-header').tabs = [
+    { id: 'home',    label: 'Home' },
+    { id: 'configs', label: 'Configurations' },
+    { id: 'tp',      label: 'Threats & Patches', active: true },
+    { id: 'sd',      label: 'Software Deployment' },
+    { id: 'inv',     label: 'Inventory' },
+    { id: 'osd',     label: 'OS Deployment' },
+    { id: 'mdm',     label: 'MDM' },
+    { id: 'tools',   label: 'Tools' },
+    { id: 'agent',   label: 'Agent' },
+    { id: 'browsers', label: 'Browsers' },
+    { id: 'app-ctrl', label: 'Application Control' },
+    { id: 'malware',  label: 'Malware Protection' },
+    { id: 'dlp',      label: 'Endpoint DLP', newTag: true },
+    { id: 'bitlocker', label: 'BitLocker Management' },
+    { id: 'dev-ctrl',  label: 'Device Control' },
+    { id: 'reports',   label: 'Reports' },
+    { id: 'support',   label: 'Support' },
+    { id: 'dex',       label: 'DEX' },
+  ];
+
+  const l1El = document.getElementById('shell-l1');
+  const l2El = document.getElementById('shell-l2');
+
+  /* ── L1 module rail — Patches active ── */
+  l1El.items = [
+    { id: 'dash',    label: 'Dashboard',  icon: 'add-widget', href: 'patches-dashboard.html' },
+    { id: 'threats', label: 'Threats',    icon: 'bug' },
+    { id: 'patches', label: 'Patches',    icon: 'file-shield', active: true },
+    { id: 'sys',     label: 'Systems',    icon: 'computer' },
+    { id: 'deploy',  label: 'Deployment', icon: 'settings-deploy' },
+    { id: 'comp',    label: 'Compliance', icon: 'checklist-01' },
+    { id: 'rep',     label: 'Reports',    icon: 'file-report' },
+    { id: 'set',     label: 'Settings',   icon: 'settings', href: 'decline-patch.html' },
+  ];
+  l1El.bottomItems = [ { id: 'update', label: 'Update Now', icon: 'refresh-time' } ];
+
+  /* ── L2 sub-nav — Patches, "Reliability Alerts" active ── */
+  l2El.groups = [
+    { id: 'patches', label: 'Patches', expanded: true, items: [
+      { id: 'missing',    label: 'Missing Patches' },
+      { id: 'installed',  label: 'Installed Patches',  count: 81 },
+      { id: 'applicable', label: 'Applicable Patches', count: 397 },
+      { id: 'priority',   label: 'Top-Priority Patches' },
+      { id: 'supported',  label: 'Supported Patches',  count: '554 K' },
+      { id: 'latest',     label: 'Latest Patches',     count: '78 K' },
+      { id: 'detailed',   label: 'Detailed View' },
+      { id: 'downloaded', label: 'Downloaded Patches' },
+      { id: 'decline',    label: 'Decline Patch', href: 'decline-patch.html' },
+    ] },
+    { id: 'attention', label: 'Attention Required', expanded: true, items: [
+      { id: 'reliability', label: 'Reliability Alerts', count: 4, active: true },
+      { id: 'upload',      label: 'Upload Pending',     count: 1 },
+    ] },
+  ];
+  l2El.classList.remove('is-hidden');
+  l1El.classList.remove('is-hidden');
+
+  document.getElementById('ec-header').addEventListener('ds-header-nav-tab-select', (e) => {
+    applyL2For(l1El, l2El, e.detail?.id);
+  });
+  document.getElementById('ec-header').addEventListener('ds-header-nav-action', (e) => {
+    if (e.detail?.action === 'settings') {
+      applyL2For(l1El, l2El, 'admin');
+      document.querySelectorAll('.ds-header-nav__tab').forEach((el) => {
+        el.classList.remove('ds-header-nav__tab--active');
+        el.removeAttribute('aria-current');
+      });
+    }
+  });
+  wireL1ToL2(l1El, l2El);
+
+  /* L1 "Dashboard" → back to the Patch dashboard page. */
+  l1El.addEventListener('ds-sidebar-l1-select', (e) => {
+    if (e.detail?.id === 'dash') window.location.href = 'patches-dashboard.html';
+  });
+
+  /* ── Breadcrumbs ── */
+  document.getElementById('ph').breadcrumbs = [
+    { label: 'Threats & Patches', href: '#' },
+    { label: 'Patches', href: '#' },
+    { label: 'Reliability Alerts' },
+  ];
+
+  /* ─────────────────────────────────────────────────────────────
+     Data + helpers
+     ───────────────────────────────────────────────────────────── */
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  /* Reliability band from score → badge state + label */
+  function band(score) {
+    if (score < 30) return { state: 'critical', label: 'Critical' };
+    if (score < 60) return { state: 'moderate', label: 'Warning' };
+    return { state: 'success', label: 'Healthy' };
+  }
+
+  /* Approve-status → badge */
+  const STATUS = {
+    pending:        { state: 'default', label: 'Pending review' },
+    approved:       { state: 'success', label: 'Approved' },
+    declined:       { state: 'critical', label: 'Declined' },
+    'auto-approved':{ state: 'success', label: 'Auto-approved' },
+    'auto-declined':{ state: 'critical', label: 'Auto-declined' },
+  };
+
+  let ROWS = [
+    { id: 'KB5031356', name: 'Cumulative update for Windows 11 23H2', score: 22, status: 'auto-declined', source: 'Automation', reason: 'Auto-declined by organization-wide rule (score below 30)', decidedAt: 'Jun 24, 2026 · 02:14' },
+    { id: 'KB5028166', name: 'Security update for Windows Server 2022', score: 48, status: 'pending', source: '—', reason: 'Awaiting review' },
+    { id: 'KB5029331', name: '.NET Framework 4.8.1 rollup', score: 12, status: 'auto-declined', source: 'Automation', reason: 'Auto-declined by organization-wide rule (score below 30)', decidedAt: 'Jun 24, 2026 · 02:14' },
+    { id: 'KB5030219', name: 'Microsoft Edge 120 channel update', score: 41, status: 'pending', source: '—', reason: 'Awaiting review' },
+    { id: 'KB5032190', name: 'Cumulative update for Windows 10 22H2', score: 27, status: 'pending', source: '—', reason: 'Awaiting review' },
+    { id: 'KB5031455', name: 'Office Click-to-Run feature update', score: 55, status: 'pending', source: '—', reason: 'Awaiting review' },
+    { id: 'KB5029244', name: 'Servicing stack update 22H2', score: 52, status: 'approved', source: 'Manual', reason: 'Reviewed and approved by admin', decidedAt: 'Jun 23, 2026 · 16:40' },
+    { id: 'KB5028951', name: 'Adobe Reader DC security patch', score: 18, status: 'auto-declined', source: 'Automation', reason: 'Auto-declined by organization-wide rule (score below 30)', decidedAt: 'Jun 24, 2026 · 02:14' },
+    { id: 'KB5031987', name: 'Windows 11 dynamic update', score: 33, status: 'pending', source: '—', reason: 'Awaiting review' },
+    { id: 'KB5030841', name: 'SQL Server 2019 cumulative update', score: 9,  status: 'auto-declined', source: 'Automation', reason: 'Auto-declined by organization-wide rule (score below 30)', decidedAt: 'Jun 24, 2026 · 02:14' },
+    { id: 'KB5029775', name: 'Visual C++ redistributable update', score: 44, status: 'pending', source: '—', reason: 'Awaiting review' },
+    { id: 'KB5032007', name: 'Defender platform update', score: 25, status: 'declined', source: 'Manual', reason: 'Declined by admin — known regression', decidedAt: 'Jun 22, 2026 · 11:05' },
+  ];
+
+  const isResolved = (r) => r.status !== 'pending';
+
+  const patchCell = (r) => `<ds-text-link variant="primary" size="medium" underline="hover" href="#">${esc(r.id)}</ds-text-link>`;
+  const descriptionCell = (r) => `<span class="cell-desc" title="${esc(r.name)}">${esc(r.name)}</span>`;
+
+  const scoreCell = (r) => `${r.score}`;
+  const severityCell = (r) => {
+    const b = band(r.score);
+    return `<ds-badge variant="subtle" state="${b.state}" shape="rounded" size="medium">${b.label}</ds-badge>`;
+  };
+
+  const statusCell = (r) => {
+    const s = STATUS[r.status] || STATUS.pending;
+    return `<ds-badge variant="subtle" state="${s.state}" shape="rounded" size="medium">${s.label}</ds-badge>`;
+  };
+
+  const sourceCell = (r) => r.source === 'Automation'
+    ? `<span class="cell-source"><ds-icon name="settings" size="14"></ds-icon>Automation</span>`
+    : r.source === 'Manual'
+      ? `<span class="cell-source"><ds-icon name="user" size="14"></ds-icon>Manual</span>`
+      : `<span class="cell-source">—</span>`;
+
+  const actionCell = (r) => isResolved(r)
+    ? `<span class="cell-actions"><ds-text-link variant="primary" size="medium" underline="hover" href="#" data-view="${esc(r.id)}">View</ds-text-link></span>`
+    : `<span class="cell-actions"><ds-text-link variant="primary" size="medium" underline="hover" href="#" data-resolve="${esc(r.id)}">Resolve</ds-text-link></span>`;
+
+  const tbl = document.getElementById('alert-table');
+  tbl.columns = [
+    { id: 'patch',       header: 'Patch',            render: patchCell },
+    { id: 'description', header: 'Description',       render: descriptionCell },
+    { id: 'score',       header: 'Reliability score', render: scoreCell },
+    { id: 'severity', header: 'Severity',          align: 'start', render: severityCell },
+    { id: 'status',   header: 'Approve status',    align: 'start', render: statusCell },
+    { id: 'source', header: 'Decision source',   render: sourceCell },
+    { id: 'reason', header: 'Reason',            render: (r) => `<ds-tooltip text="${esc(r.reason)}" show-icon="false" position="up-center"><span class="cell-reason">${esc(r.reason)}</span></ds-tooltip>` },
+    { id: 'act',    header: '',                  align: 'start', render: actionCell },
+  ];
+
+  /* ── Bulk actions — Approve / Decline the selected pending rows ── */
+  tbl.bulkActions = [
+    { id: 'approve', label: 'Approve', icon: 'check' },
+    { id: 'decline', label: 'Decline', icon: 'close', destructive: true },
+  ];
+
+  /* ── Status filter (tab-filter) ── */
+  const filterEl = document.getElementById('status-filter');
+  /* Open on the tab named in the URL (e.g. from the dashboard's Reliability
+     alerts tile → ?tab=unresolved); fall back to "all". */
+  const _tabParam = new URLSearchParams(location.search).get('tab');
+  let activeFilter = ['all', 'unresolved', 'resolved'].includes(_tabParam) ? _tabParam : 'all';
+  function counts() {
+    const unresolved = ROWS.filter((r) => !isResolved(r)).length;
+    const resolved = ROWS.filter(isResolved).length;
+    return { all: ROWS.length, unresolved, resolved };
+  }
+  function paintFilter() {
+    const c = counts();
+    filterEl.options = [
+      { label: `All alerts (${c.all})`, value: 'all' },
+      { label: `Unresolved (${c.unresolved})`, value: 'unresolved' },
+      { label: `Resolved (${c.resolved})`, value: 'resolved' },
+    ];
+    filterEl.value = activeFilter;
+  }
+  function applyFilter() {
+    let rows = ROWS;
+    if (activeFilter === 'unresolved') rows = ROWS.filter((r) => !isResolved(r));
+    else if (activeFilter === 'resolved') rows = ROWS.filter(isResolved);
+    tbl.setAttribute('page', '1');
+    tbl.rows = rows;
+  }
+  filterEl.addEventListener('ds-tab-filter-change', (e) => {
+    activeFilter = e.detail?.value || 'all';
+    applyFilter();
+  });
+  paintFilter();
+  applyFilter();
+
+  /* ─────────────────────────────────────────────────────────────
+     Toast
+     ───────────────────────────────────────────────────────────── */
+  function showToast(status, title, description) {
+    const host = document.getElementById('toast-host');
+    const t = document.createElement('ds-toast');
+    t.setAttribute('status', status);
+    t.setAttribute('title', title);
+    if (description) t.setAttribute('description', description);
+    t.setAttribute('duration', '6000');
+    t.style.pointerEvents = 'auto';
+    t.addEventListener('ds-toast-close', () => t.remove());
+    host.appendChild(t);
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+     Per-row resolve — approve / decline via confirmation modal
+     ───────────────────────────────────────────────────────────── */
+  const resolveModal = document.getElementById('resolve-modal');
+  let pendingRow = null;
+
+  tbl.addEventListener('click', (e) => {
+    const viewLink = e.target.closest('[data-view]');
+    if (viewLink) {
+      e.preventDefault();
+      const row = ROWS.find((r) => r.id === viewLink.getAttribute('data-view'));
+      if (row) openDetail(row);
+      return;
+    }
+    const rBtn = e.target.closest('[data-resolve]');
+    if (rBtn) {
+      e.preventDefault();
+      pendingRow = ROWS.find((r) => r.id === rBtn.getAttribute('data-resolve'));
+      if (!pendingRow) return;
+      const b = band(pendingRow.score);
+      resolveModal.setAttribute('title', `Resolve ${pendingRow.id}`);
+      resolveModal.setAttribute('data-severity', b.state);   // tints the leading icon
+      /* Approve button reflects severity (how risky approving this patch is). */
+      const APPROVE_VARIANT = { critical: 'destructive', moderate: 'warning', success: 'success' };
+      document.getElementById('resolve-approve').setAttribute('variant', APPROVE_VARIANT[b.state] || 'primary');
+      /* Plain description for aria; the visible one (below) bolds the score. */
+      resolveModal.setAttribute('description',
+        `${pendingRow.name} — reliability score ${pendingRow.score} (${b.label}). Approve to deploy, or decline to exclude.`);
+      const reasonEl = document.getElementById('resolve-reason');
+      if (reasonEl) reasonEl.value = '';   // fresh note each time
+      resolveModal.open();
+      /* ds-modal sets description via textContent, so bold the score/severity by
+         overriding the rendered node after open. */
+      const descEl = resolveModal.querySelector('.ds-modal__desc');
+      if (descEl) descEl.innerHTML =
+        `${esc(pendingRow.name)} — <strong>reliability score ${pendingRow.score} (${esc(b.label)})</strong>. Approve to deploy, or decline to exclude.`;
+    }
+  });
+
+  const closeResolve = () => resolveModal.close();
+  function finishResolve(decision) {
+    if (pendingRow) {
+      pendingRow.status = decision;
+      pendingRow.source = 'Manual';
+      const note = (document.getElementById('resolve-reason')?.value || '').trim();
+      pendingRow.reason = note || (decision === 'approved'
+        ? 'Reviewed and approved by admin'
+        : 'Declined by admin after review');
+      const verb = decision === 'approved' ? 'approved' : 'declined';
+      showToast(decision === 'approved' ? 'success' : 'warning',
+        `Patch ${verb}`, `${pendingRow.id} was ${verb}.`);
+      pendingRow = null;
+      paintFilter(); applyFilter();
+    }
+    closeResolve();
+  }
+  document.getElementById('resolve-approve').addEventListener('click', () => finishResolve('approved'));
+  document.getElementById('resolve-decline').addEventListener('click', () => finishResolve('declined'));
+  document.getElementById('resolve-cancel').addEventListener('click', () => { pendingRow = null; closeResolve(); });
+  resolveModal.addEventListener('ds-modal-close', () => { pendingRow = null; }); // esc / overlay / X
+
+  /* ─────────────────────────────────────────────────────────────
+     Bulk resolve — approve / decline the selected pending rows.
+     The data-table fires ds-data-table-bulk-action with { id, ids };
+     we preventDefault and drive our own confirmation flow.
+     ───────────────────────────────────────────────────────────── */
+  const bulkModal = document.getElementById('bulk-modal');
+  const bulkConfirm = document.getElementById('bulk-confirm');
+  let bulkDecision = null;   /* 'approved' | 'declined' */
+  let bulkTargets = [];      /* row objects that will actually be updated */
+
+  function bulkSeverity(rows) {
+    /* Pick the most severe band across the selection — that's what the leading
+       icon tint and the primary button variant reflect. */
+    const bands = rows.map((r) => band(r.score).state);
+    if (bands.includes('critical')) return 'critical';
+    if (bands.includes('moderate')) return 'moderate';
+    return 'success';
+  }
+
+  tbl.addEventListener('ds-data-table-bulk-action', (e) => {
+    e.preventDefault();  /* take over — no built-in delete/export here */
+    const { id, ids } = e.detail || {};
+    if (id !== 'approve' && id !== 'decline') return;
+
+    bulkDecision = id === 'approve' ? 'approved' : 'declined';
+
+    /* Resolve selection to real row objects, then narrow to pending only —
+       already-resolved rows must be reached via "View" → "Override decision". */
+    const selected = ids.map((rid) => ROWS.find((r) => r.id === rid)).filter(Boolean);
+    bulkTargets = selected.filter((r) => !isResolved(r));
+    const skipped = selected.length - bulkTargets.length;
+
+    if (bulkTargets.length === 0) {
+      showToast('info', 'Nothing to resolve',
+        skipped
+          ? 'All selected patches are already resolved. Open a row and use "Override decision" to change any of them.'
+          : 'No rows selected.');
+      return;
+    }
+
+    /* Modal copy — count + severity breakdown + skip note */
+    const verbCap = bulkDecision === 'approved' ? 'Approve' : 'Decline';
+    const verb    = bulkDecision === 'approved' ? 'approve' : 'decline';
+    const noun    = bulkTargets.length === 1 ? 'patch' : 'patches';
+    const crit    = bulkTargets.filter((r) => band(r.score).state === 'critical').length;
+    const warn    = bulkTargets.filter((r) => band(r.score).state === 'moderate').length;
+    const parts   = [];
+    if (crit) parts.push(`${crit} Critical`);
+    if (warn) parts.push(`${warn} Warning`);
+    const sevNote  = parts.length ? ` (${parts.join(' · ')})` : '';
+    const skipNote = skipped ? ` ${skipped} already-resolved ${skipped === 1 ? 'row' : 'rows'} will be skipped.` : '';
+
+    bulkModal.setAttribute('title', `${verbCap} ${bulkTargets.length} ${noun}`);
+    bulkModal.setAttribute('description',
+      `You're about to ${verb} ${bulkTargets.length} pending ${noun}${sevNote}.${skipNote} The reason below is recorded for every affected row.`);
+
+    /* Leading-icon tint + primary button variant follow the worst severity. */
+    const sev = bulkSeverity(bulkTargets);
+    bulkModal.setAttribute('data-severity', sev);
+    /* Update the button's variant AND its label span (not the host's textContent —
+       that would destroy the internal <button> ds-button builds on mount). */
+    const APPROVE_VARIANT = { critical: 'destructive', moderate: 'warning', success: 'success' };
+    const bulkConfirmLabel = bulkConfirm.querySelector('.ds-button__label');
+    if (bulkDecision === 'approved') {
+      bulkConfirm.setAttribute('variant', APPROVE_VARIANT[sev] || 'primary');
+      if (bulkConfirmLabel) bulkConfirmLabel.textContent = `Approve ${bulkTargets.length} ${noun}`;
+    } else {
+      bulkConfirm.setAttribute('variant', 'destructive');
+      if (bulkConfirmLabel) bulkConfirmLabel.textContent = `Decline ${bulkTargets.length} ${noun}`;
+    }
+
+    document.getElementById('bulk-reason').value = '';   /* fresh note */
+    bulkModal.open();
+
+    /* Bold the count + severity in the visible description (matches per-row). */
+    const descEl = bulkModal.querySelector('.ds-modal__desc');
+    if (descEl) descEl.innerHTML =
+      `You're about to ${verb} <strong>${bulkTargets.length} pending ${noun}${esc(sevNote)}</strong>.${esc(skipNote)} The reason below is recorded for every affected row.`;
+  });
+
+  function finishBulk() {
+    if (!bulkDecision || bulkTargets.length === 0) { bulkModal.close(); return; }
+    const note = (document.getElementById('bulk-reason').value || '').trim();
+    const fallback = bulkDecision === 'approved'
+      ? 'Bulk approved by admin'
+      : 'Bulk declined by admin after review';
+    const stamp = new Date().toLocaleString('en-US',
+      { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:false });
+
+    bulkTargets.forEach((r) => {
+      r.status    = bulkDecision;
+      r.source    = 'Manual';
+      r.reason    = note || fallback;
+      r.decidedAt = stamp;
+    });
+
+    const count = bulkTargets.length;
+    const noun  = count === 1 ? 'patch' : 'patches';
+    const verb  = bulkDecision === 'approved' ? 'approved' : 'declined';
+    showToast(bulkDecision === 'approved' ? 'success' : 'warning',
+      `${count} ${noun} ${verb}`,
+      note ? `Reason saved to audit trail.` : `${count} ${noun} updated. Selection cleared.`);
+
+    bulkTargets = []; bulkDecision = null;
+    tbl.selectedIds = [];   /* clear checkboxes → bulk bar hides */
+    paintFilter(); applyFilter();
+    bulkModal.close();
+  }
+
+  bulkConfirm.addEventListener('click', finishBulk);
+  document.getElementById('bulk-cancel').addEventListener('click', () => {
+    bulkTargets = []; bulkDecision = null; bulkModal.close();
+  });
+  bulkModal.addEventListener('ds-modal-close', () => {
+    bulkTargets = []; bulkDecision = null;
+  });
+
+  /* ─────────────────────────────────────────────────────────────
+     Resolved-alert detail drawer — read-only audit + override
+     "View" on a resolved row opens this. There is no decision left to
+     make, so it shows the audit trail and offers an override that
+     re-opens the alert for manual review.
+     ───────────────────────────────────────────────────────────── */
+  const detailDrawer = document.getElementById('detail-drawer');
+  const detailBody = document.getElementById('detail-body');
+  const detailOverride = document.getElementById('detail-override');
+  let detailRow = null;
+
+  function openDetail(r) {
+    detailRow = r;
+    const b = band(r.score);
+    const s = STATUS[r.status] || STATUS.pending;
+    const srcLabel = r.source === 'Automation'
+      ? '<span class="cell-source"><ds-icon name="settings" size="14"></ds-icon>Automation</span>'
+      : r.source === 'Manual'
+        ? '<span class="cell-source"><ds-icon name="user" size="14"></ds-icon>Manual</span>'
+        : '—';
+    detailBody.innerHTML = `
+      <div class="dt">
+        <div class="dt__hd">
+          <span class="dt__id">${esc(r.id)}</span>
+          <span class="dt__name">${esc(r.name)}</span>
+        </div>
+        <dl class="dt__list">
+          <div class="dt__row"><dt>Reliability score</dt><dd><span class="cell-score"><strong>${r.score}</strong> <ds-badge variant="subtle" state="${b.state}" shape="rounded" size="medium">${b.label}</ds-badge></span></dd></div>
+          <div class="dt__row"><dt>Approve status</dt><dd><ds-badge variant="subtle" state="${s.state}" shape="rounded" size="medium">${s.label}</ds-badge></dd></div>
+          <div class="dt__row"><dt>Decision source</dt><dd>${srcLabel}</dd></div>
+          <div class="dt__row"><dt>Decided</dt><dd>${esc(r.decidedAt || '—')}</dd></div>
+          <div class="dt__row"><dt>Reason</dt><dd>${esc(r.reason)}</dd></div>
+        </dl>
+        <ds-inline-alert type="info" style-variant="subtle" show-icon
+          title="Override available"
+          description="Overriding clears this decision and re-opens the alert as “Pending review” for manual resolution.">
+        </ds-inline-alert>
+      </div>`;
+    detailDrawer.setAttribute('subtitle', `${r.id} · resolved`);
+    detailDrawer.open();
+  }
+
+  document.getElementById('detail-close').addEventListener('click', () => detailDrawer.close());
+
+  /* Override → confirm, then re-open the alert for review */
+  const overrideModal = document.getElementById('override-modal');
+  detailOverride.addEventListener('click', () => {
+    if (!detailRow) return;
+    overrideModal.setAttribute('title', `Override ${detailRow.id}?`);
+    overrideModal.setAttribute('description',
+      `This clears the “${(STATUS[detailRow.status] || {}).label || ''}” decision and re-opens ${detailRow.id} as Pending review for manual resolution.`);
+    /* Reflect the patch's reliability severity on the leading icon + primary button. */
+    const b = band(detailRow.score);
+    const SEVERITY_VARIANT = { critical: 'destructive', moderate: 'warning', success: 'success' };
+    overrideModal.setAttribute('data-severity', b.state);
+    document.getElementById('override-confirm').setAttribute('variant', SEVERITY_VARIANT[b.state] || 'primary');
+    overrideModal.open();
+  });
+  document.getElementById('override-confirm').addEventListener('click', () => {
+    if (detailRow) {
+      detailRow.status = 'pending';
+      detailRow.source = '—';
+      detailRow.reason = 'Awaiting review';
+      detailRow.decidedAt = null;
+      showToast('info', 'Decision overridden', `${detailRow.id} was re-opened for review.`);
+      detailRow = null;
+      paintFilter(); applyFilter();
+    }
+    overrideModal.close();
+    detailDrawer.close();
+  });
+  document.getElementById('override-cancel').addEventListener('click', () => overrideModal.close());
+
+  /* ─────────────────────────────────────────────────────────────
+     Automation & alerts config drawer
+     ───────────────────────────────────────────────────────────── */
+  const drawer = document.getElementById('cfg-drawer');
+  document.getElementById('open-cfg').addEventListener('click', () => drawer.open());
+
+  /* Threshold options */
+  const DECLINE_OPTS = [
+    { label: 'Below 20 (very strict)', value: '20' },
+    { label: 'Below 30 (recommended)', value: '30' },
+    { label: 'Below 40', value: '40' },
+    { label: 'Below 50', value: '50' },
+  ];
+  document.getElementById('decline-th').options = DECLINE_OPTS;
+  document.getElementById('decline-th').value = '30';
+  document.getElementById('notify-th').options = DECLINE_OPTS;
+  document.getElementById('notify-th').value = '50';
+
+  /* ── Shared auto-decline state — persisted so enabling it here also reflects on
+     the Decline Patch page (and vice versa), via localStorage. ── */
+  const AUTO_DECLINE_KEY = 'ec:auto-decline';
+  function readAutoDecline() {
+    try { return JSON.parse(localStorage.getItem(AUTO_DECLINE_KEY) || 'null'); } catch (_) { return null; }
+  }
+  function writeAutoDecline(state) {
+    try { localStorage.setItem(AUTO_DECLINE_KEY, JSON.stringify(state)); } catch (_) {}
+  }
+  function applyAutoDeclineFromStore() {
+    const s = readAutoDecline();
+    if (!s) return;
+    if (s.threshold) document.getElementById('decline-th').value = String(s.threshold);
+    document.getElementById('rule-decline').setAttribute('data-on', s.on ? 'true' : 'false');
+    document.getElementById('tg-decline').checked = !!s.on;  /* silent — no change event */
+    refreshBanner();
+  }
+
+  /* Toggle ↔ rule body visibility + enable-confirmation for org-wide automation */
+  const confirmModal = document.getElementById('confirm-modal');
+  let pendingToggle = null; /* { toggle, ruleEl } */
+
+  function wireAutomationToggle(toggleId, ruleId, copy) {
+    const tg = document.getElementById(toggleId);
+    const rule = document.getElementById(ruleId);
+    tg.addEventListener('ds-toggle-change', (e) => {
+      const on = e.detail?.checked;
+      if (on) {
+        /* Enabling an org-wide automated decision → confirm first, revert if cancelled */
+        pendingToggle = { tg, rule };
+        confirmModal.setAttribute('title', copy.title);
+        confirmModal.setAttribute('description', copy.desc);
+        confirmModal.open();
+      } else {
+        rule.setAttribute('data-on', 'false');
+      }
+    });
+  }
+  wireAutomationToggle('tg-decline', 'rule-decline',
+    { title: 'Enable auto-decline?',
+      desc: 'Patches below the reliability threshold will be declined automatically across the organization and excluded from deployment. You can override any decision later.' });
+
+  function revertPendingToggle() {
+    if (pendingToggle) { pendingToggle.tg.checked = false; pendingToggle.rule.setAttribute('data-on', 'false'); pendingToggle = null; }
+  }
+  document.getElementById('confirm-enable').addEventListener('click', () => {
+    if (pendingToggle) { pendingToggle.rule.setAttribute('data-on', 'true'); pendingToggle = null; }
+    confirmModal.close();
+  });
+  document.getElementById('confirm-cancel').addEventListener('click', () => { revertPendingToggle(); confirmModal.close(); });
+  /* Esc / overlay dismiss reverts the pending toggle, same as Cancel. */
+  confirmModal.addEventListener('ds-modal-close', revertPendingToggle);
+
+  /* Notify toggle — no org-wide confirmation needed, just show/hide body */
+  const tgNotify = document.getElementById('tg-notify');
+  const ruleNotify = document.getElementById('rule-notify');
+  tgNotify.addEventListener('ds-toggle-change', (e) => {
+    ruleNotify.setAttribute('data-on', e.detail?.checked ? 'true' : 'false');
+  });
+
+  /* Recipients — ds-token-field (each email is a removable token); cap at 10
+     and reject invalid addresses, reverting the bad/extra token. */
+  const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  const recipField = document.getElementById('recip-field');
+  customElements.whenDefined('ds-token-field').then(() => {
+    recipField.tokens = ['it-admin@company.com', 'security@company.com'];
+  });
+  recipField.addEventListener('ds-token-add', (e) => {
+    const val = (e.detail?.value || '').trim();
+    if (val && !EMAIL_RE.test(val)) {
+      showToast('error', 'Invalid email', `“${val}” is not a valid address.`);
+      recipField.tokens = recipField.values.filter((v) => v !== val);
+    } else if (recipField.values.length > 10) {
+      showToast('warning', 'Recipient limit reached', 'You can add up to 10 recipients.');
+      recipField.tokens = recipField.values.slice(0, 10);
+    }
+  });
+
+  /* Banner action — open the config drawer from "Manage rules".
+     Use both the component's action event AND a delegated click on the
+     [data-action] link: the banner re-renders when its description updates
+     (refreshBanner), which can detach the component's internal listener, so
+     the delegated click guarantees the action always works. */
+  const autoBanner = document.getElementById('autodecline-alert');
+  autoBanner.addEventListener('ds-inline-alert-action', () => drawer.open());
+  autoBanner.addEventListener('click', (e) => {
+    if (e.target.closest('[data-action]')) { e.preventDefault(); drawer.open(); }
+  });
+  document.getElementById('cfg-cancel').addEventListener('click', () => drawer.close());
+  document.getElementById('cfg-save').addEventListener('click', () => {
+    drawer.close();
+    const declineOn = document.getElementById('rule-decline').getAttribute('data-on') === 'true';
+    const th = document.getElementById('decline-th').value || 30;
+    /* Persist so the Decline Patch page reflects the same auto-decline state. */
+    writeAutoDecline({ on: declineOn, threshold: String(th) });
+    showToast('success', 'Automation & alerts updated',
+      declineOn
+        ? `Auto-decline is now on organization-wide for reliability scores below ${th}.`
+        : 'Auto-decline is off across the organization — low-reliability patches will surface here for manual review.');
+    refreshBanner();
+  });
+
+  /* Keep the active-automation banner in sync with the rules */
+  function refreshBanner() {
+    const declineOn = document.getElementById('rule-decline').getAttribute('data-on') === 'true';
+    const wrap = document.getElementById('autodecline-notice');
+    const banner = document.getElementById('autodecline-alert');
+    if (!declineOn) { wrap.style.setProperty('display', 'none', 'important'); return; }
+    wrap.style.setProperty('display', 'block', 'important');
+    banner.setAttribute('description', `Every patch scoring below ${document.getElementById('decline-th').value || 30} is declined automatically across the whole organization.`);
+  }
+  /* Hydrate from the shared state saved on either page, then paint the banner. */
+  applyAutoDeclineFromStore();
+  refreshBanner();
+  /* Live sync when the other page changes it in another tab. */
+  window.addEventListener('storage', (e) => {
+    if (e.key === AUTO_DECLINE_KEY) applyAutoDeclineFromStore();
+  });
+</script>
+
+</body>
+</html>

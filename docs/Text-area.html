@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Text Area — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/text-area/text-area.css">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/text-area/text-area.js"></script>
+<script type="module" src="../design-system-library/src/components/button/button.js"></script>
+<style>
+  .demo-ta-section { margin-bottom: 28px; }
+  .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+  .demo-ta-stack { display: flex; flex-direction: column; gap: 16px; max-width: 580px; }
+</style>
+</head>
+<body class="page-text-area">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link active">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Text Area</h1>
+        <p class="page-desc">A text area is for the kind of answer that needs more than a sentence &mdash; a description, a comment, a paragraph of feedback, a code snippet, a note. Pick it whenever the user might write across multiple lines. For one-line answers like a name or email, use a Text field instead.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram">
+            <div style="display:flex;justify-content:center;margin:20px 0;">
+              <div style="position:relative;display:inline-flex;align-items:flex-start;gap:8px;padding:40px 60px;">
+                <!-- Label area -->
+                <div style="position:relative;min-width:100px;padding-top:8px;">
+                  <div style="position:absolute;left:-30px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><span class="anat-marker-inline">1</span><div style="width:12px;height:2px;background:#2563eb;"></div></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);">Label</span>
+                  <span style="position:relative;top:-2px;"><div style="position:absolute;top:-30px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;"><span class="anat-marker-inline">2</span><div style="width:2px;height:10px;background:#2563eb;"></div></div><span style="color:#E42527;font-size:14px;font-weight:500;margin-left:2px;">*</span></span>
+                </div>
+                <!-- Field box -->
+                <div style="position:relative;width:320px;">
+                  <div style="position:absolute;top:-34px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;"><span class="anat-marker-inline">3</span><div style="width:2px;height:12px;background:#2563eb;"></div></div>
+                  <div style="border:1px solid var(--prism-border);border-radius:6px;padding:8px 12px;min-height:76px;background:var(--prism-surface);display:flex;align-items:flex-start;justify-content:space-between;">
+                    <span style="color:#94a3b8;font-size:14px;">Placeholder text</span>
+                    <div style="position:relative;"><div style="position:absolute;right:-40px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:12px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">6</span></div><span style="color:var(--prism-text-muted);font-size:14px;cursor:pointer;">&#10005;</span></div>
+                  </div>
+                  <!-- Footer -->
+                  <div style="position:relative;display:flex;align-items:center;gap:4px;margin-top:4px;">
+                    <div style="position:absolute;left:-38px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><span class="anat-marker-inline">7</span><div style="width:12px;height:2px;background:#2563eb;"></div></div>
+                    <ds-icon name="info-circle" size="14" style="color:#94a3b8;"></ds-icon>
+                    <span style="font-size:12px;color:var(--prism-text-muted);flex:1;">Help text</span>
+                    <div style="position:relative;"><div style="position:absolute;right:-40px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:12px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">8</span></div><span style="font-size:12px;color:var(--prism-text-muted);">0/500</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Label</strong><span>Field label text. Semibold, 13 px. Toggleable via Show Label.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Required Asterisk</strong><span>Red * appended to the label when Required = true. Uses Text/Text-Error.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Field Box</strong><span>Multi-line input surface. Padding 12 px H / 8 px V, corner radius 6 px.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Placeholder / Value</strong><span>Hint text when empty (Placeholder state) or entered text in all non-placeholder states.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Tags Container</strong><span>Optional inline tag chips inside the field (hidden by default).</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Clear Icon</strong><span>Optional trailing close button to clear the field value (hidden by default).</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">7</span><div><strong>Footer / Help Text</strong><span>Contextual hint or validation message below the field. Changes colour with validationState.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">8</span><div><strong>Counter</strong><span>Character/word count display, e.g. 0/500. Toggleable via Show Counter.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Every state, height, and label position side by side, plus real comment and feedback patterns. Click any field and start typing &mdash; this is exactly how it behaves in production.</p>
+
+            <style>
+              .page-text-area .demo-container .demo-canvas {
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+                min-height: 0 !important;
+                flex-direction: column !important;
+                padding: 32px !important;
+                gap: 32px !important;
+              }
+              .page-text-area .demo-ta-section { display: flex; flex-direction: column; gap: 14px; }
+              .page-text-area .demo-ta-section > .demo-group-label {
+                font-size: 11px !important; font-weight: 700 !important; letter-spacing: 0.08em !important;
+                color: var(--prism-text-muted) !important; text-transform: uppercase !important;
+                margin: 0 !important; text-align: left !important; width: auto !important;
+              }
+              .page-text-area .demo-ta-stack { display: flex; flex-direction: column; gap: 18px; max-width: 640px; }
+              .page-text-area .demo-realworld-card {
+                padding: 20px;
+                border: 1px solid var(--prism-border);
+                border-radius: 12px;
+                background: rgba(255,255,255,0.02);
+                max-width: 640px;
+              }
+              [data-theme="light"] .page-text-area .demo-realworld-card {
+                background: rgba(255,255,255,0.55);
+                border-color: rgba(37,99,235,0.1);
+              }
+              .page-text-area .demo-realworld-card-label {
+                font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+                color: var(--prism-text-muted); text-transform: uppercase;
+                margin-bottom: 14px;
+              }
+              .page-text-area .demo-form-footer {
+                display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px;
+              }
+            </style>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Text Area &middot; states &times; max-lines &times; label positions + form patterns</span>
+                </div>
+              </div>
+              <div class="demo-canvas">
+
+                <!-- States -->
+                <div class="demo-ta-section">
+                  <div class="demo-group-label">States &mdash; default / error / success / readonly / disabled</div>
+                  <div class="demo-ta-stack">
+                    <ds-text-area label="Description" placeholder="Enter a brief description&hellip;" required helper="Maximum 500 characters." show-counter counter="0/500"></ds-text-area>
+                    <ds-text-area label="Reason"     state="error"    helper="Please provide a reason before submitting." required></ds-text-area>
+                    <ds-text-area label="Bio"        state="success"  helper="Looks good!" value="Product designer with 8 years of experience in enterprise SaaS."></ds-text-area>
+                    <ds-text-area label="Audit log"  state="readonly" value="Reviewed and approved on 2026-03-15 by Aarti."></ds-text-area>
+                    <ds-text-area label="Locked"     state="disabled" value="This field is locked by your organisation policy."></ds-text-area>
+                  </div>
+                </div>
+
+                <!-- Max-lines -->
+                <div class="demo-ta-section">
+                  <div class="demo-group-label">Max-lines &mdash; 2 / 3 / 4 / 5 visible rows before scroll</div>
+                  <div class="demo-ta-stack">
+                    <ds-text-area label="2 lines &mdash; compact"       max-lines="2" placeholder="Compact &mdash; 2 lines visible"></ds-text-area>
+                    <ds-text-area label="3 lines (default)"             max-lines="3" placeholder="Standard form input"></ds-text-area>
+                    <ds-text-area label="4 lines"                       max-lines="4" placeholder="Slightly taller"></ds-text-area>
+                    <ds-text-area label="5 lines &mdash; roomy"         max-lines="5" placeholder="Roomy &mdash; great for notes"></ds-text-area>
+                  </div>
+                </div>
+
+                <!-- Label position -->
+                <div class="demo-ta-section">
+                  <div class="demo-group-label">Label position &mdash; <code>top</code> (mobile / long labels) vs <code>left</code> (desktop default)</div>
+                  <div class="demo-ta-stack">
+                    <ds-text-area label-position="top"  label="Top label"  placeholder="Stacked layout &mdash; better for long labels or narrow viewports" max-lines="4"></ds-text-area>
+                    <ds-text-area label-position="left" label="Left label" placeholder="Inline layout &mdash; default for short labels on desktop"></ds-text-area>
+                  </div>
+                </div>
+
+                <!-- Counter examples -->
+                <div class="demo-ta-section">
+                  <div class="demo-group-label">Width &mdash; <code>size</code>: medium (320px) &middot; large (400px, default) &mdash; same scale as the text field</div>
+                  <div class="demo-is-stack demo-is-stack--wide" style="max-width:none;">
+                    <ds-text-area size="medium" label="Medium" placeholder="Caps at 320px" helper="Matches ds-text-input medium."></ds-text-area>
+                    <ds-text-area size="large" label="Large" placeholder="Caps at 400px" helper="Matches ds-text-input large."></ds-text-area>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Character counter &mdash; live count via <code>show-counter</code> + <code>counter</code></div>
+                  <div class="demo-ta-stack">
+                    <ds-text-area label="Tweet"   required show-label-help-icon label-help="Counts every character, including spaces" helper="Maximum 280 characters." show-counter counter="0/280"  max-lines="3" placeholder="What's happening?"></ds-text-area>
+                    <ds-text-area label="Comment"          helper="Be concise (3-5 sentences)." show-counter counter="142/500" value="The new dashboard layout is much cleaner. The sidebar collapse animation feels smooth, and quick filters are easy to discover."></ds-text-area>
+                  </div>
+                </div>
+
+                <!-- Real-world patterns -->
+                <div class="demo-ta-section">
+                  <div class="demo-group-label">Real-world patterns</div>
+
+                  <div class="demo-realworld-card">
+                    <div class="demo-realworld-card-label">Feedback form &mdash; description + counter + submit</div>
+                    <ds-text-area label-position="top" label="What could be better?" required placeholder="Describe what's not working or what you'd like to see&hellip;" helper="Be specific so we can act on the feedback." show-counter counter="0/1000" max-lines="5"></ds-text-area>
+                    <div class="demo-form-footer">
+                      <ds-button variant="secondary" size="medium">Cancel</ds-button>
+                      <ds-button variant="primary"   size="medium">Send feedback</ds-button>
+                    </div>
+                  </div>
+
+                  <div class="demo-realworld-card">
+                    <div class="demo-realworld-card-label">Comment box &mdash; minimal Reply UI</div>
+                    <ds-text-area label-position="top" label="Reply" placeholder="Write a reply&hellip;" max-lines="3" show-helper-row="false"></ds-text-area>
+                    <div class="demo-form-footer">
+                      <ds-button variant="tertiary" size="small">Cancel</ds-button>
+                      <ds-button variant="primary"  size="small">Reply</ds-button>
+                    </div>
+                  </div>
+
+                  <div class="demo-realworld-card">
+                    <div class="demo-realworld-card-label">Incident report &mdash; multi-field with validation</div>
+                    <div style="display:flex;flex-direction:column;gap:16px;">
+                      <ds-text-area label-position="top" label="What happened?" required placeholder="Describe the incident" max-lines="3"></ds-text-area>
+                      <ds-text-area label-position="top" label="Steps to reproduce" state="error" helper="At least one step is required." max-lines="4"></ds-text-area>
+                      <ds-text-area label-position="top" label="Workaround (if any)" placeholder="Optional" max-lines="2" show-helper-row="false"></ds-text-area>
+                    </div>
+                    <div class="demo-form-footer">
+                      <ds-button variant="secondary" size="medium">Save draft</ds-button>
+                      <ds-button variant="primary"   size="medium">Submit incident</ds-button>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- RTL -->
+                <div class="demo-ta-section">
+                  <div class="demo-group-label">RTL &mdash; Arabic layout (mirrors label position and counter)</div>
+                  <div class="demo-ta-stack">
+                    <ds-text-area rtl label="&#1575;&#1604;&#1608;&#1589;&#1601;" placeholder="&#1571;&#1583;&#1582;&#1604; &#1608;&#1589;&#1601;&#1575;&#1611; &#1605;&#1608;&#1580;&#1586;&#1575;&#1611;&hellip;" helper="&#1575;&#1604;&#1581;&#1583; &#1575;&#1604;&#1571;&#1602;&#1589;&#1609; 500 &#1581;&#1585;&#1601;." show-counter counter="0/500"></ds-text-area>
+                    <ds-text-area rtl label="&#1575;&#1604;&#1587;&#1576;&#1576;" state="error" helper="&#1610;&#1585;&#1580;&#1609; &#1578;&#1602;&#1583;&#1610;&#1605; &#1587;&#1576;&#1576; &#1602;&#1576;&#1604; &#1575;&#1604;&#1573;&#1585;&#1587;&#1575;&#1604;." required></ds-text-area>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Use Left layout (default) for standard web forms.</li>
+                <li>Size maxLines to match the expected content length.</li>
+                <li>Always show a label (even visually hidden for a11y).</li>
+                <li>Use helpText to give format hints (e.g. "Describe in 2-3 sentences").</li>
+                <li>Show counter when there is a character limit.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Switch to Top layout unless on a mobile/narrow breakpoint or long label.</li>
+                <li>Always use maxLines=2 regardless of expected input length.</li>
+                <li>Rely on placeholder as the only label.</li>
+                <li>Show an error border without an accompanying message.</li>
+                <li>Show a counter without a limit set in code.</li>
+              </ul></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">The exact tokens, sizes, and colours behind every state of the text area. Use this tab when you&rsquo;re aligning a Figma node to code or matching a custom skin to the system.</p>
+
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">192 variants in total &mdash; the product of label position, state, validation, max lines, and reading direction. The table below shows how to pick the right one without scanning the full set.</p>
+
+            <h3 id="label-position" class="doc-h3">Label Position</h3>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Value</th><th>Default?</th><th>Description</th><th>Width</th></tr></thead>
+              <tbody>
+                <tr><td><code>Left</code></td><td>Yes (web)</td><td>Label sits to the left of the field in a horizontal row. Default for all standard responsive web layouts.</td><td>568 px (240 + 8 + 320)</td></tr>
+                <tr><td><code>Top</code></td><td>Special case</td><td>Label sits above the field in a vertical stack. Use for responsive/mobile breakpoints or when the label is too long.</td><td>320 px</td></tr>
+              </tbody>
+            </table>
+
+            <h3 id="states" class="doc-h3">States</h3>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>State</th><th>Description</th><th>Border Token</th></tr></thead>
+              <tbody>
+                <tr><td><code>Placeholder</code></td><td>Field is empty; placeholder hint text visible</td><td>Border/Border-Secondary</td></tr>
+                <tr><td><code>Inactive</code></td><td>Field has a value but is not focused</td><td>Border/Border-Secondary</td></tr>
+                <tr><td><code>Hover</code></td><td>Cursor over the field</td><td>Border/Border-Accent</td></tr>
+                <tr><td><code>Active</code></td><td>Field is focused / being typed into</td><td>Border/Border-Accent (2 px stroke)</td></tr>
+                <tr><td><code>Read Only</code></td><td>Value shown but not editable</td><td>Border/Border-Disabled, BG-Secondary-alt</td></tr>
+              </tbody>
+            </table>
+
+            <h3 id="validation-state" class="doc-h3">Validation State</h3>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Value</th><th>Visual Cue</th><th>Tokens</th></tr></thead>
+              <tbody>
+                <tr><td><code>None</code></td><td>No validation indicator</td><td>Border/Border-Secondary, Text/Text-Tertiary</td></tr>
+                <tr><td><code>Success</code></td><td>Tick icon in footer; green help text</td><td>Border/Border-Success, Text/Text-Success, Icon/Icon-Success</td></tr>
+                <tr><td><code>Error</code></td><td>Error icon in footer; red help text and border</td><td>Border/Border-Error, Text/Text-Error, Icon/Icon-Error</td></tr>
+              </tbody>
+            </table>
+
+            <h3 id="max-lines-height" class="doc-h3">Max Lines (Height)</h3>
+            <p class="doc-section-subtitle">Pick how tall the field is by how much the user is likely to write. Two lines for a quick note, three or four for a paragraph, six or more for long-form feedback or code. Each step adds one line of text height.</p>
+            <table class="size-table">
+              <thead><tr><th>maxLines</th><th>Field Height</th><th>Outer Height (Top)</th><th>Outer Height (Left)</th></tr></thead>
+              <tbody>
+                <tr><td><code>2</code></td><td>56 px</td><td>100 px</td><td>76 px</td></tr>
+                <tr><td><code>3</code></td><td>76 px</td><td>120 px</td><td>96 px</td></tr>
+                <tr><td><code>4</code></td><td>96 px</td><td>140 px</td><td>116 px</td></tr>
+                <tr><td><code>5</code></td><td>116 px</td><td>160 px</td><td>136 px</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:16px;padding:16px 20px;background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.15);border-radius:12px;">
+              <p style="font-size:14px;color:var(--prism-text);line-height:1.6;margin:0;"><strong>Note:</strong> <code>maxLines</code> sets the design-time starting height. At runtime the field also has a <strong>corner resize grip</strong> pinned to its bottom end edge: it drags in <strong>both axes</strong>, clamped to the container width (min 160px wide, never shorter than <code>maxLines</code>). Double-click the grip to reset; arrow keys resize in 8px steps when the grip is focused. The grip is hidden in Read&nbsp;Only and Disabled states.</p>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="color-tokens" class="doc-section-title">Color Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Role</th></tr></thead>
+              <tbody>
+                <tr><td><code>Background/BG-Primary-alt</code></td><td>Field background (Default, Hover, Active, Validation states)</td></tr>
+                <tr><td><code>Background/BG-Secondary-alt</code></td><td>Field background (Read Only state)</td></tr>
+                <tr><td><code>Background/BG-Disabled</code></td><td>Field background (Disabled state)</td></tr>
+                <tr><td><code>Border/Border-Secondary</code></td><td>Field stroke (Placeholder, Inactive, None validation)</td></tr>
+                <tr><td><code>Border/Border-Accent</code></td><td>Field stroke (Hover, Active)</td></tr>
+                <tr><td><code>Border/Border-Success</code></td><td>Field stroke (Success validation)</td></tr>
+                <tr><td><code>Border/Border-Error</code></td><td>Field stroke (Error validation)</td></tr>
+                <tr><td><code>Border/Border-Disabled</code></td><td>Field stroke (Disabled, Read Only)</td></tr>
+                <tr><td><code>Text/Text-Primary</code></td><td>Input value text colour</td></tr>
+                <tr><td><code>Text/Text-Placeholder</code></td><td>Placeholder text colour</td></tr>
+                <tr><td><code>Text/Text-Tertiary</code></td><td>Label, help text (default)</td></tr>
+                <tr><td><code>Text/Text-Disabled</code></td><td>Label, help text, value (Disabled state)</td></tr>
+                <tr><td><code>Text/Text-Error</code></td><td>Required asterisk; help text (Error state)</td></tr>
+                <tr><td><code>Text/Text-Success</code></td><td>Help text (Success state)</td></tr>
+                <tr><td><code>Text/Text-Secondary</code></td><td>Counter text colour</td></tr>
+                <tr><td><code>Border/Icon/Icon-Tertiary</code></td><td>Footer info icon (None state)</td></tr>
+                <tr><td><code>Border/Icon/Icon-Success</code></td><td>Footer tick icon (Success state)</td></tr>
+                <tr><td><code>Border/Icon/Icon-Error</code></td><td>Footer error icon (Error state)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="spacing-tokens" class="doc-section-title">Spacing Tokens</h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>spacing/2</code></td><td>2 px</td><td>Gap between label text and required asterisk</td></tr>
+                <tr><td><code>spacing/4</code></td><td>4 px</td><td>Gap: label row to body; field to footer</td></tr>
+                <tr><td><code>spacing/8</code></td><td>8 px</td><td>Field padding top/bottom; gap between leading and trailing areas; Left layout outer gap</td></tr>
+                <tr><td><code>spacing/12</code></td><td>12 px</td><td>Field padding left/right</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="corner-radius-border-radius" class="doc-section-title">Corner Radius (Border Radius)</h2>
+            <p class="doc-section-subtitle">A soft 8&nbsp;px corner gives the field a friendly edge without losing its form-input shape &mdash; consistent with the rest of the input family.</p>
+            <div style="display:flex;gap:24px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:200px;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;text-align:center;">
+                <div style="width:60px;height:36px;border:2px dashed #006AFF;border-radius:6px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:rgba(0,106,255,0.05);color:#006AFF;font-weight:600;font-size:11px;">6px</div>
+                <div style="font-size:14px;font-weight:600;color:var(--prism-text);">border-radius/radius-6</div>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:4px;">Field box all corners</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="typography-family" class="doc-section-title">Typography</h2>
+            <p class="doc-section-subtitle">Labels, body text, and helper text all use <strong>Zoho Puvi</strong> &mdash; the same family as the rest of the form system, so a text area never reads as foreign next to a text field or dropdown.</p>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Size</th><th>Weight</th><th>Line Height</th><th>Token</th></tr></thead>
+              <tbody>
+                <tr><td>Label</td><td>13 px</td><td>Semibold (600)</td><td>20 px</td><td><code>body/Small/Medium</code></td></tr>
+                <tr><td>Required *</td><td>14 px</td><td>Medium (500)</td><td>auto</td><td>&#8212;</td></tr>
+                <tr><td>Placeholder</td><td>14 px</td><td>Regular (400)</td><td>20 px</td><td><code>body/Default/Regular</code></td></tr>
+                <tr><td>Input value</td><td>14 px</td><td>Regular (400)</td><td>20 px</td><td><code>body/Default/Regular</code></td></tr>
+                <tr><td>Help text</td><td>12 px</td><td>Regular (400)</td><td>16 px</td><td><code>body/Small/Default</code></td></tr>
+                <tr><td>Counter</td><td>12 px</td><td>Regular (400)</td><td>16 px</td><td><code>body/Small/Default</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="spacing-sizing-reference" class="doc-section-title">Spacing &amp; Sizing Reference</h2>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Field padding (horizontal)</td><td>12 px (<code>spacing/12</code>)</td></tr>
+                <tr><td>Field padding (vertical)</td><td>8 px (<code>spacing/8</code>)</td></tr>
+                <tr><td>Leading / trailing gap inside field</td><td>8 px (<code>spacing/8</code>)</td></tr>
+                <tr><td>Label row to body gap (Top layout)</td><td>4 px (<code>spacing/4</code>)</td></tr>
+                <tr><td>Label column to body gap (Left layout)</td><td>8 px (<code>spacing/8</code>)</td></tr>
+                <tr><td>Field to footer gap</td><td>4 px (<code>spacing/4</code>)</td></tr>
+                <tr><td>Label column width (Left layout)</td><td>240 px</td></tr>
+                <tr><td>Field width</td><td>320 px</td></tr>
+                <tr><td>Total width (Left layout)</td><td>568 px</td></tr>
+                <tr><td>Total width (Top layout)</td><td>320 px</td></tr>
+                <tr><td>Corner radius</td><td>6 px (<code>border-radius/radius-6</code>)</td></tr>
+                <tr><td>Default border stroke</td><td>1 px</td></tr>
+                <tr><td>Active / focused stroke</td><td><strong>2 px</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">Reach for a text area when the answer could be a sentence or a paragraph, when the user might paste in code or a quote, or when comments and feedback are the point. For one-line answers, use a Text field instead.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><ds-icon name="check" size="20" style="color:#2563eb;"></ds-icon>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Users need to enter <strong>multiple lines</strong> of free text (descriptions, comments, notes, messages).</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Input length is variable and unpredictable &#8212; unlike a single-line text input.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Forms where the length or structure of the response cannot be predicted (feedback, addresses, bio).</li>
+                  <li style="border:none;background:transparent;">A character limit needs to be communicated via the counter.</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><ds-icon name="close" size="20" style="color:#e42527;"></ds-icon>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Short, single-line input (name, email, phone) &#8212; use Text Input Field.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Rich/formatted text (bold, lists, links) &#8212; use Rich Text Editor.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Code or script input &#8212; use Script Editor.</li>
+                  <li style="border:none;background:transparent;">Predefined answer choices &#8212; use Select Box or Radio Group.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="alignment-placement" class="doc-section-title">Alignment &amp; Placement</h2>
+            <p class="doc-section-subtitle">Where to put the label and how tall to make the field, so a long-form input still fits the rhythm of the surrounding form.</p>
+            <ul class="doc-list">
+              <li><strong>Left layout (default, web):</strong> Label sits to the left in a 240 px column with 8 px gap to the 320 px field. Total width: 568 px.</li>
+              <li><strong>Top layout (special case):</strong> Label sits above the field. Use for responsive/mobile breakpoints or when the label exceeds ~30 characters. Width: 320 px.</li>
+              <li><strong>maxLines sizing:</strong> Choose maxLines (2-5) to match expected content length. Each line adds 20 px.</li>
+              <li><strong>Footer placement:</strong> Help text and counter sit in a row 4 px below the field, aligned to the field width.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do's and Don'ts</h2>
+            <p class="doc-section-subtitle">Specifics &mdash; how tall to make the field, when to add a counter, what error text actually helps the user. Each rule has a reason; read both before you bend one.</p>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li><strong>Use Left layout (default):</strong> For standard web forms.</li>
+                <li><strong>Use Top layout on mobile:</strong> Or when the label exceeds ~30 characters.</li>
+                <li><strong>Size maxLines:</strong> Match to expected content length.</li>
+                <li><strong>Always show a label:</strong> Even visually hidden for a11y.</li>
+                <li><strong>Use helpText:</strong> Give format hints (e.g. "Describe in 2-3 sentences").</li>
+                <li><strong>Show validationState=Error + helpText together:</strong> Always pair error borders with messages.</li>
+                <li><strong>Show counter:</strong> When there is a character limit.</li>
+                <li><strong>Use showClearIcon=true:</strong> For long-form fields where clearing is valuable.</li>
+                <li><strong>Keep required fields marked:</strong> With required=true consistently across a form.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li><strong>Don't default to Top layout:</strong> On desktop just because it looks familiar.</li>
+                <li><strong>Don't always use maxLines=2:</strong> Regardless of expected input length.</li>
+                <li><strong>Don't rely on placeholder as label:</strong> Placeholder is not a substitute for a label.</li>
+                <li><strong>Don't show error border alone:</strong> Without an accompanying error message.</li>
+                <li><strong>Don't show counter without a limit:</strong> Set in code.</li>
+                <li><strong>Don't show clear icon:</strong> On short, single-line-height fields.</li>
+                <li><strong>Don't use asterisks inconsistently:</strong> Across a form.</li>
+              </ul></div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Other input controls to reach for when a free-form multi-line field isn&rsquo;t the right shape for the answer.</p>
+            <div class="related-grid">
+              <a href="Text-field.html" class="related-chip"><ds-icon name="align-justify" size="16"></ds-icon> Text Input Field</a>
+              <a href="Dropdown.html" class="related-chip"><ds-icon name="chevron-down" size="16"></ds-icon> Select Box</a>
+              <a href="Radio-button.html" class="related-chip"><ds-icon name="info-circle" size="16"></ds-icon> Radio Group</a>
+              <a href="Counter.html" class="related-chip"><ds-icon name="bookmark" size="16"></ds-icon> Multiselect</a>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <p class="doc-section-subtitle">Source files and design tokens for engineers and designers shipping or auditing the text area.</p>
+            <ul class="doc-list">
+              <li><strong>Figma Node:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">16048:2043</code> &#8212; Component Set: Text Area</li>
+              <li><strong>Total Variants:</strong> 2 Label Positions &times; 5 States &times; 2 Disabled &times; 3 Validation States &times; 4 Max Lines &times; 2 Directions = <strong>192 variants</strong></li>
+              <li><strong>Typography:</strong> Zoho Puvi &#8212; Semibold (600) for label, Regular (400) for input, 12 px Regular for help text &amp; counter</li>
+              <li><strong>Border Radius:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">6px</code> (border-radius/radius-6)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Toggle any prop on the left and watch the text area react in real time. The HTML below updates as you go &mdash; copy it straight into your project.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">State</label><select class="cp-select" id="pg-state"><option value="default" selected>default</option><option value="error">error</option><option value="success">success</option><option value="readonly">readonly</option><option value="disabled">disabled</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Label position</label><select class="cp-select" id="pg-layout"><option value="none">none</option><option value="left" selected>left</option><option value="top">top</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Full width</label><select class="cp-select" id="pg-fullwidth"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Max lines</label><select class="cp-select" id="pg-maxlines"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Required</label><select class="cp-select" id="pg-required"><option value="false">false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show counter</label><select class="cp-select" id="pg-counter"><option value="false">false</option><option value="true" selected>true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="pg-rtl"><option value="false">false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Label</label><input class="cp-select" id="pg-label" type="text" value="Description" style="font-family:inherit"></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Placeholder</label><input class="cp-select" id="pg-ph" type="text" value="Enter a brief description…" style="font-family:inherit"></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Helper</label><input class="cp-select" id="pg-helper" type="text" value="Maximum 500 characters." style="font-family:inherit"></div>
+              <div class="cp-control-group"><label class="cp-label">Counter text</label><input class="cp-select" id="pg-counter-text" type="text" value="0/500" style="font-family:inherit"></div>
+            </div>
+            <div class="cp-preview" id="pg-preview-area" style="padding:24px;display:flex;justify-content:center"><div id="pg-host" style="width:100%;max-width:720px"></div></div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-copy-btn"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+            </div>
+            <div class="cp-code-area" id="pg-code-output"></div>
+          </div>
+          <script>
+          (function(){
+            var els = {
+              state:    document.getElementById('pg-state'),
+              layout:   document.getElementById('pg-layout'),
+              fullWidth: document.getElementById('pg-fullwidth'),
+              maxlines: document.getElementById('pg-maxlines'),
+              required: document.getElementById('pg-required'),
+              counter:  document.getElementById('pg-counter'),
+              rtl:      document.getElementById('pg-rtl'),
+              label:    document.getElementById('pg-label'),
+              ph:       document.getElementById('pg-ph'),
+              helper:   document.getElementById('pg-helper'),
+              cTxt:     document.getElementById('pg-counter-text')
+            };
+            var host = document.getElementById('pg-host');
+            var codeOut = document.getElementById('pg-code-output');
+            var copyBtn = document.getElementById('pg-copy-btn');
+            var pgRawCode = '';
+            var TA_COPY_LTR = { label: 'Description', ph: 'Enter a brief description…', helper: 'Maximum 500 characters.' };
+            var TA_COPY_RTL = { label: 'الوصف', ph: 'أدخل وصفًا موجزًا…', helper: 'الحد الأقصى 500 حرفًا.' };
+            function build(){
+              var state = els.state.value;
+              var layout = els.layout.value;
+              var maxLines = els.maxlines.value;
+              var required = els.required.value === 'true';
+              var fullWidth = els.fullWidth.value === 'true';
+              var counter = els.counter.value === 'true';
+              var rtl = els.rtl.value === 'true';
+              ['label','ph','helper'].forEach(function(key){
+                var el = els[key];
+                if (el.value === '' || el.value === TA_COPY_LTR[key] || el.value === TA_COPY_RTL[key]) {
+                  el.value = rtl ? TA_COPY_RTL[key] : TA_COPY_LTR[key];
+                }
+              });
+              var label = els.label.value || '';
+              var ph = els.ph.value || '';
+              var helper = els.helper.value || '';
+              var cTxt = els.cTxt.value || '';
+
+              host.innerHTML = '';
+              var ta = document.createElement('ds-text-area');
+              if (state !== 'default') ta.setAttribute('state', state);
+              if (layout !== 'left') ta.setAttribute('label-position', layout);
+              if (fullWidth) ta.setAttribute('full-width', '');
+              if (maxLines !== '3') ta.setAttribute('max-lines', maxLines);
+              if (label) ta.setAttribute('label', label);
+              if (ph) ta.setAttribute('placeholder', ph);
+              if (helper) ta.setAttribute('helper', helper);
+              if (required) ta.setAttribute('required', '');
+              if (counter) {
+                ta.setAttribute('show-counter', '');
+                if (cTxt) ta.setAttribute('counter', cTxt);
+              }
+              if (rtl) ta.setAttribute('rtl', '');
+              host.appendChild(ta);
+
+              var attrs = [];
+              if (state !== 'default') attrs.push('state="' + state + '"');
+              if (layout !== 'left') attrs.push('label-position="' + layout + '"');
+              if (fullWidth) attrs.push('full-width');
+              if (maxLines !== '3') attrs.push('max-lines="' + maxLines + '"');
+              if (label) attrs.push('label="' + label.replace(/"/g, '&quot;') + '"');
+              if (ph) attrs.push('placeholder="' + ph.replace(/"/g, '&quot;') + '"');
+              if (helper) attrs.push('helper="' + helper.replace(/"/g, '&quot;') + '"');
+              if (required) attrs.push('required');
+              if (counter) {
+                attrs.push('show-counter');
+                if (cTxt) attrs.push('counter="' + cTxt.replace(/"/g, '&quot;') + '"');
+              }
+              if (rtl) attrs.push('rtl');
+              pgRawCode = '<ds-text-area' + (attrs.length ? '\n  ' + attrs.join('\n  ') : '') + '>\n</ds-text-area>';
+              var colored = '&lt;<span style="color:#60a5fa">ds-text-area</span>'
+                + (attrs.length ? '\n  ' : '')
+                + attrs.map(function(p){
+                    var eq = p.indexOf('=');
+                    if (eq === -1) return '<span style="color:#38bdf8">' + p + '</span>';
+                    return '<span style="color:#38bdf8">' + p.slice(0, eq) + '</span>=<span style="color:#34d399">' + p.slice(eq + 1) + '</span>';
+                  }).join('\n  ')
+                + '&gt;\n&lt;/<span style="color:#60a5fa">ds-text-area</span>&gt;';
+              codeOut.innerHTML = '<pre style="margin:0;white-space:pre-wrap;font-family:\'JetBrains Mono\',monospace;font-size:13.5px;line-height:1.6">' + colored + '</pre>';
+            }
+            Object.keys(els).forEach(function(k){ els[k].addEventListener(els[k].tagName === 'INPUT' ? 'input' : 'change', build); });
+            copyBtn.addEventListener('click', function(){
+              var t = pgRawCode;
+              var done = function(){ var o = copyBtn.innerHTML; copyBtn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!'; setTimeout(function(){ copyBtn.innerHTML = o; }, 2000); };
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(t).then(done).catch(function(){ var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); });
+              } else {
+                var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+              }
+            });
+            if (window.customElements && customElements.whenDefined) {
+              customElements.whenDefined('ds-text-area').then(build);
+            }
+            build();
+          })();
+          </script>
+
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="component-api-properties" class="doc-section-title">Component API &amp; Properties</h2>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>labelPosition</code></td><td>'none' | 'left' | 'top'</td><td>'left'</td><td>Controls label placement. 'left' is the default; use 'top' for mobile breakpoints or long labels, or 'none' to hide the label (text kept as <code>aria-label</code>).</td></tr>
+                <tr><td><code>full-width</code></td><td>boolean</td><td>false</td><td>Stretches the field to fill its container, overriding the per-size width cap (M 320 / L 400).</td></tr>
+                <tr><td><code>state</code></td><td>'Placeholder' | 'Inactive' | 'Hover' | 'Active' | 'Read Only'</td><td>'Placeholder'</td><td>Interaction state of the field. Typically driven by focus/blur/value in code.</td></tr>
+                <tr><td><code>isDisabled</code></td><td>boolean</td><td>false</td><td>Disables the field &#8212; non-interactive, all elements greyed out.</td></tr>
+                <tr><td><code>validationState</code></td><td>'None' | 'Success' | 'Error'</td><td>'None'</td><td>Drives border colour, footer icon, and help text colour.</td></tr>
+                <tr><td><code>maxLines</code></td><td>2 | 3 | 4 | 5</td><td>2</td><td>Sets the visible height of the textarea. Each line = 20 px.</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td>false</td><td>Switches to right-to-left layout mode.</td></tr>
+                <tr><td><code>label</code></td><td>string</td><td>"Label"</td><td>Field label text.</td></tr>
+                <tr><td><code>showLabel</code></td><td>boolean</td><td>true</td><td>Shows or hides the label row.</td></tr>
+                <tr><td><code>required</code></td><td>boolean</td><td>true</td><td>Appends a red * to the label.</td></tr>
+                <tr><td><code>placeholder</code></td><td>string</td><td>"Placeholder"</td><td>Hint text shown when the field is empty.</td></tr>
+                <tr><td><code>value</code></td><td>string</td><td>"Value"</td><td>The current value of the textarea (controlled).</td></tr>
+                <tr><td><code>showFooter</code></td><td>boolean</td><td>true</td><td>Shows or hides the entire footer (help text + counter).</td></tr>
+                <tr><td><code>helpText</code></td><td>string</td><td>"Help text"</td><td>Contextual or validation message below the field.</td></tr>
+                <tr><td><code>showCounter</code></td><td>boolean</td><td>true</td><td>Shows the character/word counter in the footer.</td></tr>
+                <tr><td><code>counter</code></td><td>string</td><td>"0/500"</td><td>Counter seed &mdash; the max is parsed from it ("0/500" &rarr; 500), input is capped there, and the count live-updates as the user types.</td></tr>
+                <tr><td><code>size</code></td><td><code>medium &middot; large</code></td><td>large</td><td>Width cap for the field body &mdash; medium 320px, large 400px (same scale as Text field). Responsive below the cap.</td></tr>
+                <tr><td><code>showLabelHelpIcon</code></td><td>boolean</td><td>false</td><td>Shows a help-circle icon after the label (same as Text field / Token field).</td></tr>
+                <tr><td><code>labelHelp</code></td><td>string</td><td>&#8212;</td><td>Tooltip text for the label help icon; clicking it fires <code>ds-text-area-help</code>.</td></tr>
+                <tr><td><code>showClearIcon</code></td><td>boolean</td><td>false</td><td>Shows a trailing close button to clear the field value.</td></tr>
+                <tr><td><code>showTags</code></td><td>boolean</td><td>false</td><td>Shows inline tag chips inside the field.</td></tr>
+                <tr><td><code>onChange</code></td><td>(value: string) =&gt; void</td><td>&#8212;</td><td>Fires on every keystroke.</td></tr>
+                <tr><td><code>onClear</code></td><td>() =&gt; void</td><td>&#8212;</td><td>Fires when the clear icon is activated.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="code-examples" class="doc-section-title">Code Examples</h2>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Basic usage &#8212; Left layout (default, web)</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#94a3b8;">{/* labelPosition defaults to "left" */}</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">TextArea</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Description"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">placeholder</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Enter a brief description..."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">helpText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Maximum 500 characters."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">showCounter</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">counter</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"0/500"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">maxLines</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">3</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">required</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Error state</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">TextArea</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Reason for request"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">validationState</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Error"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">helpText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Please provide a reason before submitting."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">required</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">maxLines</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">3</span><span style="color:#C678DD;">}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Success state</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">TextArea</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Bio"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">validationState</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Success"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">helpText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Looks good!"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Product designer with 8 years of experience."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">maxLines</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">3</span><span style="color:#C678DD;">}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Read Only</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">TextArea</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Previous notes"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">state</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Read Only"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Reviewed and approved by team lead on 2026-03-15."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">showClearIcon</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">false</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">maxLines</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">4</span><span style="color:#C678DD;">}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Top layout (responsive / mobile / long label)</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#94a3b8;">{/* Use labelPosition="top" for mobile or long labels */}</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">TextArea</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">labelPosition</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"top"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Describe the business impact of this change request"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">placeholder</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Include affected systems, teams, and timelines..."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">helpText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Be as specific as possible."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">maxLines</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">5</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">required</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">With tags and clear icon</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">TextArea</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Tags"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">showTags</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">tag1</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">tag2</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">tag3</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">showClearIcon</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">placeholder</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Add more context..."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">maxLines</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">3</span><span style="color:#C678DD;">}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">RTL</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">TextArea</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"\u0627\u0644\u0648\u0635\u0641"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">placeholder</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"\u0623\u062F\u062E\u0644 \u0648\u0635\u0641\u0627\u064B \u0645\u062E\u062A\u0635\u0631\u0627\u064B..."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">helpText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"\u0627\u0644\u062D\u062F \u0627\u0644\u0623\u0642\u0635\u0649 500 \u062D\u0631\u0641."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">rtl</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">maxLines</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">3</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">required</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+            <ul class="doc-list">
+              <li>Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> on the <code>textarea</code> or a parent. <code>text-align: right</code> applies automatically.</li>
+              <li>Label, field content, and footer order all mirror when RTL is active.</li>
+              <li>Controlled via the RTL Layout variable collection in Figma.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Most of this is wired in already &mdash; this section explains what your users get for free and the few things you have to provide: a real label, a clear error, ARIA on tag elements.</p>
+          <div class="doc-section">
+            <h3 id="keyboard-interaction" class="doc-h3">Keyboard Interaction</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><code>Tab</code></td><td>Moves focus into the textarea field.</td></tr>
+                <tr><td><code>Shift+Tab</code></td><td>Moves focus out of the textarea field.</td></tr>
+                <tr><td>Standard text-editing keys</td><td>Normal text editing applies inside the field (arrow keys, selection, copy/paste, etc.).</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="semantic-markup" class="doc-h3">Semantic Markup</h3>
+            <ul class="doc-list">
+              <li><strong>Element:</strong> Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;textarea&gt;</code> &#8212; never a <code>&lt;div contenteditable&gt;</code>.</li>
+              <li><strong>Label association:</strong> Connect <code>&lt;label for="id"&gt;</code> to <code>&lt;textarea id="id"&gt;</code>, or use <code>aria-labelledby</code>.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="aria-attributes-screen-reader-guidance" class="doc-h3">ARIA Attributes &amp; Screen Reader Guidance</h3>
+            <ul class="doc-list">
+              <li><strong>Required:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">required</code> / <code>aria-required="true"</code> on the <code>&lt;textarea&gt;</code>; the visual <code>*</code> alone is not sufficient.</li>
+              <li><strong>Validation:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-invalid="true"</code> on the <code>&lt;textarea&gt;</code> in Error state; link error message via <code>aria-describedby</code>.</li>
+              <li><strong>Read Only:</strong> Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">readonly</code> attribute; inform screen readers with <code>aria-readonly="true"</code>.</li>
+              <li><strong>Disabled:</strong> Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">disabled</code> attribute; disabled fields are not focusable (removed from tab order).</li>
+              <li><strong>Counter:</strong> Associate counter text with the field via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-describedby</code> so screen readers announce remaining characters.</li>
+              <li><strong>Resize:</strong> The corner grip is a real <code>&lt;button aria-label="Resize text area"&gt;</code> &mdash; focusable, and arrow keys resize in 8px steps (both axes, container-bound).</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="focus-state-design" class="doc-h3">Focus State Design</h3>
+            <ul class="doc-list">
+              <li>Active state uses a 2 px <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Border/Border-Accent</code> stroke that must be visible and not rely on colour alone.</li>
+              <li>The focus ring is applied to the field box (6 px border radius) and provides clear visual feedback.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="color-contrast-minimums" class="doc-h3">Color Contrast Minimums<span class="h3-badge" style="background:rgba(34,197,94,0.15);color:#16a34a;">WCAG AA</span></h3>
+            <p class="doc-section-subtitle">Label, body, placeholder, helper, and border colours all clear WCAG 2.1 AA &mdash; so a partially-sighted user can still tell empty from filled, focus from error, at every step.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:24px;">
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#fff;padding:28px 24px;text-align:center;border:2px solid #2563eb;border-radius:6px;margin:16px;"><div style="font-size:14px;color:#1a1a2e;">Input value text</div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">ACTIVE STATE</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#1a1a2e on #fff</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 16.1:1</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AAA Pass</div></div></div>
+              </div>
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#fff;padding:28px 24px;text-align:center;border:2px solid #E42527;border-radius:6px;margin:16px;"><div style="font-size:12px;color:#E42527;">Error help text</div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">ERROR STATE</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#E42527 on #fff</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 4.6:1</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AA Pass</div></div></div>
+              </div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="rtl-accessibility" class="doc-h3">RTL Accessibility</h3>
+            <ul class="doc-list">
+              <li>Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> on the <code>&lt;textarea&gt;</code> or a parent element; <code>text-align: right</code> applies automatically.</li>
+              <li>Label, field content, and footer order all mirror. The <code>RTL Layout</code> variable collection in Figma controls direction.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="touch-target-size" class="doc-h3">Touch Target Size</h3>
+            <p class="doc-section-subtitle">The field is taller than a single-line input by default, so the user&rsquo;s tap lands cleanly on touch. Inline tags inside the field are sized to clear WCAG 2.5.8 too, so removing one with a thumb tip is reliable.</p>
+            <div style="margin-top:16px;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;display:flex;align-items:center;gap:24px;">
+              <div style="width:44px;height:44px;background:rgba(37,99,235,0.1);border:1px dashed var(--prism-violet);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--prism-violet);font-size:13px;font-weight:600;flex-shrink:0;">44px</div>
+              <div><div style="font-weight:600;font-size:15px;color:var(--prism-text);">Minimum field height: 56px (maxLines=2)</div><div style="font-size:14px;color:var(--prism-text-muted);margin-top:4px;">Even the smallest maxLines=2 setting (56 px) exceeds the 44 px minimum touch target. The clear icon button, if shown, should also meet the 44x44px minimum.</div></div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/text-area.md" download="text-area.md" class="action-link"><ds-icon name="download" size="15"></ds-icon> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=16048-2043" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/components/toc.js"></script>
+<script src="js/main.js"></script>
+
+
+</body>
+</html>

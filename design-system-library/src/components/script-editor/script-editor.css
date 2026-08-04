@@ -1,0 +1,242 @@
+/* =============================================================================
+   ds-script-editor / .ds-script-editor
+   Visual chrome for code editing (frame + toolbar + tabs + gutter + terminal +
+   status bar + theme). Pair with CodeMirror 6 / Monaco for real editing.
+   Spec: docs/MD/script-editor.md · Figma 15914:18634.
+   ============================================================================= */
+
+:host { display: block; font-family: var(--font-family-sans); }
+
+.ds-script-editor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--uems-border-secondary);          /* #C3C9D6 */
+  border-radius: var(--uems-radius-s, 8px);                /* radius-8 */
+  background: var(--uems-bg-primary-alt);                  /* #FFFFFF surface */
+  overflow: hidden;
+  font-family: var(--uems-font-family-code);               /* Zoho Puvi Mono */
+  box-sizing: border-box;
+}
+
+/* Focus / Error → 2px ring drawn as an overlay so the layout never shifts
+   (the inner chrome stays put; only the ring thickens). */
+.ds-script-editor:focus-within::after,
+.ds-script-editor--error::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 3;
+}
+.ds-script-editor--error::after        { border: 2px solid var(--uems-border-error); }        /* #E42527 */
+.ds-script-editor:focus-within::after  { border: 2px solid var(--uems-border-accent-focus); } /* #006AFF */
+
+.ds-script-editor--readonly { border-color: var(--uems-border-secondary); }
+/* The code surface is contenteditable="false" when disabled, so it can't be
+   typed in — keep pointer-events on the editor + not-allowed cursor so the
+   cursor shows (pointer-events:none would suppress it). pointer-events:none is
+   moved onto the inner controls (toolbar / tab buttons) so they stay inert. */
+.ds-script-editor--disabled {
+  border-color: var(--uems-border-disabled);               /* #E1E4EB */
+  opacity: 0.5;                                            /* spec: white @ 0.5, not recolor */
+  cursor: not-allowed;
+}
+.ds-script-editor--disabled .ds-script-editor__tab,
+.ds-script-editor--disabled .ds-script-editor__btn,
+.ds-script-editor--disabled .ds-script-editor__terminal-tab,
+.ds-script-editor--disabled .ds-script-editor__code {
+  pointer-events: none;
+}
+
+/* ---- Tab bar ------------------------------------------------------- */
+.ds-script-editor__tabs {
+  display: flex;
+  background: var(--uems-bg-secondary-alt);                /* #F0F2F5 */
+  font-family: var(--font-family-sans);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+.ds-script-editor__tabs + .ds-script-editor__toolbar,
+.ds-script-editor__tabs:last-of-type { border-bottom: 1px solid var(--uems-border-secondary); }
+.ds-script-editor__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;                                       /* 6 y / 12 x */
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: var(--uems-text-secondary);                       /* inactive #2A303D Regular */
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-regular);
+  font-family: inherit;
+  white-space: nowrap;
+}
+.ds-script-editor__tab--active {
+  color: var(--uems-text-primary);                         /* active #15181E Medium */
+  font-weight: var(--font-weight-medium);
+}
+
+/* ---- Toolbar ------------------------------------------------------- */
+.ds-script-editor__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;                                                /* toolbar gap 2 */
+  padding: 4px 8px;                                        /* 4 y / 8 x */
+  background: var(--uems-bg-primary-alt);                  /* white */
+  border-bottom: 1px solid var(--uems-border-secondary);
+  font-family: var(--font-family-sans);
+  flex-shrink: 0;
+}
+.ds-script-editor__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;                                                /* button inner gap 4 */
+  padding: 4px 8px;
+  border-radius: var(--uems-radius-xs, 4px);               /* radius-4 */
+  background: transparent;
+  border: 0;
+  color: var(--uems-text-secondary);                       /* button label #2A303D */
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;                                         /* toolbar text 11px */
+  font-weight: var(--font-weight-medium);
+}
+.ds-script-editor__btn:hover { background: var(--uems-bg-secondary-hover); }
+.ds-script-editor__lang-badge {
+  margin-inline-start: auto;
+  padding: 3px 8px;                                        /* selector 3 y / 8 x */
+  background: var(--uems-bg-secondary-alt);                /* #F0F2F5 */
+  color: var(--uems-text-secondary);
+  font-size: 11px;
+  font-weight: var(--font-weight-regular);
+  border-radius: var(--uems-radius-xs, 4px);               /* radius-4 (not pill) */
+}
+
+/* ---- Body ---------------------------------------------------------- */
+.ds-script-editor__body {
+  position: relative;                                      /* anchors the READ ONLY badge */
+  display: flex;
+  flex: 1;
+  min-height: 0;                                           /* flex fills the fixed height */
+  background: var(--uems-bg-primary-alt);
+}
+.ds-script-editor__gutter {
+  margin: 0;
+  padding: 8px 8px 0 0;                                    /* 8 top / 8 right / 0 / 0 */
+  background: var(--uems-bg-secondary-alt);                /* #F0F2F5 */
+  border-inline-end: 1px solid var(--uems-border-secondary);  /* gutter border #C3C9D6 */
+  color: var(--uems-text-placeholder);                     /* #8893AD */
+  font-size: var(--font-size-13);                          /* line numbers 13px */
+  line-height: 20px;                                       /* align with code lines */
+  text-align: right;
+  user-select: none;
+  white-space: pre;
+  box-sizing: border-box;
+  width: var(--_se-gutter, 40px);                          /* 32 / 40 / 48 by size */
+  flex-shrink: 0;
+}
+.ds-script-editor__code {
+  flex: 1;
+  padding: 8px 12px 0;                                     /* 8 top / 12 x / 0 bottom */
+  font-size: var(--font-size-14);                          /* code 14px */
+  line-height: 20px;                                       /* 20 lh */
+  color: var(--uems-text-primary);                         /* #15181E */
+  outline: none;
+  white-space: pre;
+  overflow: auto;
+  min-width: 0;
+}
+/* "READ ONLY" badge in the code area (Figma node 15914:16375). */
+.ds-script-editor__readonly-badge {
+  position: absolute;
+  bottom: 8px;
+  inset-inline-start: 12px;
+  background: var(--uems-bg-secondary-alt);                /* #F0F2F5 */
+  border: 1px solid var(--uems-border-secondary);          /* #C3C9D6 */
+  color: var(--uems-text-placeholder);                     /* #8893AD */
+  padding: 2px 6px;                                        /* 2 y / 6 x */
+  border-radius: var(--uems-radius-xs, 4px);               /* radius-4 */
+  font-size: var(--font-size-14);
+  font-family: var(--uems-font-family-code);               /* Mono */
+  z-index: 2;
+}
+
+/* ---- Terminal panel (FullIDE only) --------------------------------- */
+.ds-script-editor__terminal {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--uems-border-secondary);
+  background: var(--uems-bg-primary-alt);
+  font-family: var(--uems-font-family-code);
+  height: 100px;
+  flex-shrink: 0;
+}
+.ds-script-editor__terminal-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 4px var(--spacing-12) 0;
+  font-family: var(--font-family-sans);
+}
+.ds-script-editor__terminal-tab {
+  background: transparent;
+  border: 0;
+  padding: 0 0 4px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-secondary);                       /* #2A303D */
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+.ds-script-editor__terminal-tab--active { color: var(--uems-text-primary); }
+.ds-script-editor__terminal-output {
+  margin: 0;
+  padding: 0 var(--spacing-12);
+  font-size: var(--font-size-12);
+  color: var(--uems-text-secondary);
+  white-space: pre-wrap;
+  overflow: auto;
+  line-height: 20px;
+}
+
+/* ---- Status bar ---------------------------------------------------- */
+.ds-script-editor__status {
+  display: flex;
+  align-items: center;
+  gap: 12px;                                               /* gap 12 */
+  padding: 2px 8px;                                        /* 2 y / 8 x → 18px tall */
+  background: var(--uems-bg-accent-secondary-solid);       /* #2C66DD blue */
+  color: var(--uems-text-white);
+  font-size: var(--font-size-10, 10px);                    /* 10px (11 at Large) */
+  line-height: 14px;
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-medium);
+  flex-shrink: 0;
+}
+/* Error: the status bar turns red and carries the error count. */
+.ds-script-editor--error .ds-script-editor__status { background: var(--uems-border-error); }
+
+/* ---- Sizes — fixed footprints (v1); gutter + status font scale ----- */
+.ds-script-editor--small  { width: 360px; height: 220px; --_se-gutter: 32px; }
+.ds-script-editor--medium { width: 520px; height: 320px; --_se-gutter: 40px; }
+.ds-script-editor--large  { width: 720px; height: 440px; --_se-gutter: 48px; }
+.ds-script-editor--large .ds-script-editor__status { font-size: 11px; }   /* 11px at Large */
+
+/* ---- RTL — chrome flips, code stays LTR ---------------------------- */
+.ds-script-editor[dir="rtl"] .ds-script-editor__body,
+.ds-script-editor[dir="rtl"] .ds-script-editor__code,
+.ds-script-editor[dir="rtl"] .ds-script-editor__gutter,
+.ds-script-editor[dir="rtl"] .ds-script-editor__terminal-output {
+  direction: ltr;
+  text-align: left;
+}
+.ds-script-editor[dir="rtl"] .ds-script-editor__gutter { text-align: right; }
+.ds-script-editor[dir="rtl"] .ds-script-editor__status,
+.ds-script-editor[dir="rtl"] .ds-script-editor__toolbar,
+.ds-script-editor[dir="rtl"] .ds-script-editor__tabs,
+.ds-script-editor[dir="rtl"] .ds-script-editor__terminal-tabs {
+  direction: rtl;
+}

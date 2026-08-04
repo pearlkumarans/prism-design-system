@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<!--
+  Search PAGE — DUAL-MODE file (Layout/views/, like support.html). Full global
+  search: scope selector + search field + (empty state: recent / popular /
+  categories / top articles) and (results: grouped Features / Devices / Articles
+  with match highlighting). Fills the shell-area; opened by the header search.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Search — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="../design-system-library/src/components/drawer/drawer.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-base); }
+    .sa-host { position: relative; display: flex; flex: 1; min-height: 0; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  #search-pop { display: none; flex: 1; min-width: 0; flex-direction: column; background: var(--uems-bg-primary); border-radius: 16px; overflow-y: auto; }
+  .shell-area.search-open #search-pop { display: flex; }
+  .shell-area.search-open > ds-content,
+  .shell-area.search-open > ds-sidebar-l1,
+  .shell-area.search-open > ds-sidebar-l2 { display: none !important; }
+
+  /* ── Search bar (sticky) ── */
+  .srch-head { position: sticky; top: 0; z-index: 5; height: 72px; box-sizing: border-box; display: flex; align-items: center; padding: 0 var(--spacing-20);
+    background: linear-gradient(135deg, var(--uems-bg-accent-primary) 0%, var(--uems-bg-primary) 55%, var(--uems-bg-warning-primary) 100%);
+    border-bottom: 1px solid var(--uems-border-tertiary); }
+  /* Same max-width + centering as .srch-wrap below, so the bar group and the
+     content line up edge-to-edge. */
+  .srch-head__inner { width: 100%; max-width: 1180px; margin: 0 auto; display: flex; align-items: center; gap: var(--spacing-12); }
+  /* Scope selector + search field are JOINED into one seamless bar (no gap): the
+     scope's right corners are square + its right border dropped, so the field's
+     left border is the single divider. Outer corners stay rounded (6px). */
+  .srch-bar { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; }
+  .srch-input-field { flex: 1 1 auto; min-width: 0; }
+  .srch-input-field .ds-search-field { border-radius: 0 8px 8px 0; }
+  /* Scope trigger is the ds-button COMPONENT (variant=outline), styled as the left
+     half of the joined bar: full-width, label-left/chevron-right, square right edge
+     + no right border (the field's left border is the divider). Opens ds-dropdown-menu. */
+  .srch-scope { position: relative; flex: 0 0 auto; width: 220px; }
+  .srch-scope__btn { width: 100%; }
+  /* Stay white on hover (no grey fill) — the bar only changes its border. */
+  .srch-scope__btn .ds-button { width: 100%; height: 48px; justify-content: space-between; padding: 0 var(--spacing-12); border-radius: 8px 0 0 8px; border-inline-end: 0; font-size: var(--font-size-14); --_btn-border: var(--uems-border-tertiary); --_btn-bg: var(--uems-bg-primary); --_btn-bg-hover: var(--uems-bg-primary); }
+  /* Joined bar acts as ONE unit: hover / focus on EITHER half lights up the WHOLE
+     bar (both halves), never just the hovered/focused one. */
+  .srch-bar:hover .srch-scope__btn .ds-button { --_btn-border: var(--uems-border-accent); }
+  .srch-bar:hover .srch-input-field .ds-search-field { border-color: var(--uems-border-accent) !important; }
+  .srch-bar:focus-within .srch-scope__btn .ds-button { --_btn-border: var(--uems-border-accent-focus); }
+  .srch-bar:focus-within .srch-input-field .ds-search-field { border-color: var(--uems-border-accent-focus) !important; border-width: 1px !important; }
+  .srch-scope__btn .ds-button__prefix { display: none; }
+  .srch-scope__btn .ds-button__label { overflow: hidden; text-overflow: ellipsis; font-weight: var(--font-weight-semibold); }
+  .srch-scope__btn .ds-button__suffix ds-icon { color: var(--uems-icon-secondary); }
+  .srch-scope__menu { position: absolute; top: calc(100% + 6px); inset-inline-start: 0; z-index: 20; min-width: 260px; }
+
+
+  /* ── Body ── */
+  .srch-body { flex: 1; min-height: 0; padding: var(--spacing-24) var(--spacing-20); }
+  .srch-wrap { max-width: 1180px; margin: 0 auto; }
+  .srch-sec { margin-bottom: var(--spacing-32); }
+  .srch-sec__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--spacing-12); }
+  .srch-sec__title { font-size: var(--font-size-12); font-weight: var(--font-weight-bold); letter-spacing: .06em; text-transform: uppercase; color: var(--uems-text-secondary); }
+  .srch-chips { display: flex; flex-wrap: wrap; gap: var(--spacing-12); }
+  .srch-chip { display: inline-flex; align-items: center; gap: var(--spacing-6); padding: var(--spacing-8) var(--spacing-12); border: 1px solid var(--uems-border-tertiary); border-radius: 999px; background: var(--uems-bg-primary); font-size: var(--font-size-14); color: var(--uems-text-primary); cursor: pointer; transition: background-color 120ms var(--ease-standard), border-color 120ms var(--ease-standard); }
+  .srch-chip:hover { background: var(--uems-bg-accent-primary-hover); border-color: var(--uems-border-accent-subtle); }
+  .srch-chip ds-icon { color: var(--uems-icon-tertiary); }
+  .srch-chip__x { display: inline-flex; color: var(--uems-icon-tertiary); margin-inline-start: var(--spacing-2); }
+  .srch-chip__x:hover { color: var(--uems-text-primary); }
+  .srch-chip--plain { cursor: pointer; }
+
+  /* category grid */
+  .srch-cats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: var(--spacing-16); }
+  @media (max-width: 1100px) { .srch-cats { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+  @media (max-width: 620px) { .srch-cats { grid-template-columns: 1fr; } }
+  .srch-cat { display: flex; align-items: center; gap: var(--spacing-12); padding: var(--spacing-12); border-radius: var(--radius-md, 8px); cursor: pointer; transition: background-color 120ms var(--ease-standard); }
+  .srch-cat:hover { background: var(--uems-bg-primary); }
+  .srch-cat__ic { flex: 0 0 40px; width: 40px; height: 40px; border-radius: var(--radius-md, 10px); background: var(--uems-bg-accent-primary); display: flex; align-items: center; justify-content: center; color: var(--uems-text-accent-link); }
+  .srch-cat__name { font-size: var(--font-size-15); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+  .srch-cat__count { font-size: var(--font-size-13); color: var(--uems-text-tertiary); }
+
+  /* rows (articles + results) */
+  .srch-row { display: flex; align-items: center; gap: var(--spacing-16, 16px); padding: var(--spacing-16, 16px) var(--spacing-8); border-radius: var(--radius-md, 8px); cursor: pointer; transition: background-color 120ms var(--ease-standard); }
+  .srch-row:hover { background: var(--uems-bg-primary); }
+  .srch-row + .srch-row { border-top: 1px solid var(--uems-border-tertiary); border-radius: 0; }
+  .srch-row__ic { flex: 0 0 36px; width: 36px; height: 36px; border-radius: var(--radius-md, 8px); background: var(--uems-bg-accent-secondary); display: flex; align-items: center; justify-content: center; color: var(--uems-text-accent-link); }
+  .srch-row__body { flex: 1; min-width: 0; }
+  .srch-row__title { font-size: var(--font-size-15); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+  .srch-row__sub { font-size: var(--font-size-13); color: var(--uems-text-secondary); margin-top: 2px; }
+  .srch-row__meta { flex: 0 0 auto; font-size: var(--font-size-13); color: var(--uems-text-tertiary); }
+  .srch-row mark { background: var(--uems-bg-warning-secondary, #fff4d6); color: inherit; border-radius: var(--radius-sm); padding: 0 2px; }
+  .srch-count { font-size: var(--font-size-15); color: var(--uems-text-secondary); margin-bottom: var(--spacing-16); }
+  .srch-empty-msg { padding: var(--spacing-40); text-align: center; color: var(--uems-text-tertiary); }
+</style>
+
+<section id="search-pop" aria-label="Search">
+  <div class="srch-head">
+    <div class="srch-head__inner">
+      <div class="srch-bar">
+        <div class="srch-scope">
+          <ds-button class="srch-scope__btn" id="srch-scope-btn" variant="outline" size="large" suffix-icon="chevron-down" aria-haspopup="true" aria-expanded="false">Features &amp; Articles</ds-button>
+          <ds-dropdown-menu class="srch-scope__menu" id="srch-scope-menu" type="select-tick"></ds-dropdown-menu>
+        </div>
+        <ds-search-field class="srch-input-field" id="srch-input" size="large" placeholder="Search…"></ds-search-field>
+      </div>
+      <ds-button variant="primary" size="large" id="srch-go">Search</ds-button>
+    </div>
+  </div>
+
+  <div class="srch-body">
+    <div class="srch-wrap">
+      <div id="srch-empty"></div>
+      <div id="srch-results" hidden></div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  const lang = () => (window.ShellCtx && window.ShellCtx.lang) || 'en';
+  const shellArea = () => window.ShellCtx && window.ShellCtx.shellArea;
+  const $ = (id) => document.getElementById(id);
+
+  const SCOPES = [
+    { id: 'all', label: 'Features & Articles', lead: true },
+    { grp: 'Computers' },
+    { id: 'computer-name', label: 'Computer Name', kind: 'devices' },
+    { id: 'inv', label: 'Inventory', arrow: true, kind: 'devices' },
+    { id: 'patch', label: 'Patch', arrow: true, kind: 'features' },
+    { id: 'custom', label: 'Custom Fields', arrow: true, kind: 'features' },
+    { id: 'ad', label: 'Active Directory', arrow: true, kind: 'features' },
+    { grp: 'Devices' },
+    { id: 'device-name', label: 'Device Name', kind: 'devices' },
+    { id: 'device-inv', label: 'Inventory', arrow: true, kind: 'devices' },
+  ];
+  const POPULAR = ['Vulnerability reports', 'Agent installation', 'Remote control', 'Firewall rules', 'BitLocker recovery key', 'Patch test & approve'];
+  const CATS = [
+    { name: 'Configurations', icon: 'settings-custom', count: 128 }, { name: 'Threats & Patches', icon: 'shield', count: 64 },
+    { name: 'Software Deployment', icon: 'software', count: 37 }, { name: 'Inventory', icon: 'layers', count: 52 },
+    { name: 'OS Deployment', icon: 'disk', count: 21 }, { name: 'MDM', icon: 'mobile-devices', count: 88 },
+    { name: 'Reports', icon: 'bar-vertical-chart', count: 40 }, { name: 'Admin', icon: 'user-setting', count: 73 },
+  ];
+  const ARTICLES = [
+    { title: 'How to fix "Network error code 2" on application installs', cat: 'Troubleshooting', read: '4 min read' },
+    { title: 'Configuring automatic patch deployment', cat: 'Patch Management', read: '6 min read' },
+    { title: 'Onboarding agents to managed endpoints', cat: 'Getting Started', read: '5 min read' },
+    { title: 'Enrolling iOS devices via Apple Business Manager', cat: 'MDM', read: '8 min read' },
+  ];
+  const FEATURES = [
+    { name: 'Patch Management', path: 'Threats & Patches › Patch Management' },
+    { name: 'Firewall Policy', path: 'Configurations › Security Configurations' },
+    { name: 'Vulnerability Management', path: 'Threats & Patches › Vulnerability' },
+    { name: 'Software Deployment', path: 'Software Deployment › Packages' },
+    { name: 'EDR / Malware Protection', path: 'Threats & Patches › Endpoint Security' },
+    { name: 'BitLocker Management', path: 'Configurations › Encryption' },
+    { name: 'Remote Control', path: 'Tools › Remote Tools' },
+    { name: 'Asset Inventory', path: 'Inventory › Hardware' },
+  ];
+  const DEVICES = [
+    { name: 'WIN-DESK-2207', sub: 'Windows 11 · Last scan 2h ago', status: 'Online', tone: 'success' },
+    { name: 'MAC-DEV-1148', sub: 'macOS 14 · 3 patches pending', status: 'Online', tone: 'warning' },
+    { name: 'LNX-SRV-0042', sub: 'Ubuntu 22.04 · Last seen 3d', status: 'Offline', tone: 'default' },
+  ];
+
+  let _scope = SCOPES[0];
+
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  function highlight(text, q) {
+    if (!q) return esc(text);
+    const i = text.toLowerCase().indexOf(q.toLowerCase());
+    if (i < 0) return esc(text);
+    return esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
+  }
+
+  /* Feed the ds-dropdown-menu grouped items: headings for groups, a trailing
+     chevron (›) for scopes that drill into sub-filters, tick on the active one. */
+  function renderScopeMenu() {
+    const menu = $('srch-scope-menu'); if (!menu) return;
+    menu.items = SCOPES.map((s) => (s.grp
+      ? { type: 'heading', label: s.grp }
+      : { label: s.label, value: s.id, chevron: !!s.arrow, selected: _scope.id === s.id }));
+  }
+
+  function renderEmpty() {
+    const el = $('srch-empty'); if (!el) return;
+    el.innerHTML =
+      `<div class="srch-sec"><div class="srch-sec__head"><span class="srch-sec__title">Popular right now</span></div>
+        <div class="srch-chips">${POPULAR.map((p) => `<span class="srch-chip srch-chip--plain" data-q="${esc(p)}">${esc(p)}</span>`).join('')}</div></div>`
+      + `<div class="srch-sec"><div class="srch-sec__head"><span class="srch-sec__title">Browse by category</span></div>
+        <div class="srch-cats">${CATS.map((c) => `<div class="srch-cat" data-q="${esc(c.name)}"><div class="srch-cat__ic"><ds-icon name="${c.icon}" size="20"></ds-icon></div><div><div class="srch-cat__name">${esc(c.name)}</div><div class="srch-cat__count">${c.count} features</div></div></div>`).join('')}</div></div>`
+      + `<div class="srch-sec"><div class="srch-sec__head"><span class="srch-sec__title">Top articles</span><ds-text-link href="#" variant="primary" size="small">View all</ds-text-link></div>
+        <div>${ARTICLES.map((a) => `<div class="srch-row"><div class="srch-row__ic"><ds-icon name="doc" size="18"></ds-icon></div><div class="srch-row__body"><div class="srch-row__title">${esc(a.title)}</div><div class="srch-row__sub">${esc(a.cat)}</div></div><div class="srch-row__meta">${esc(a.read)}</div></div>`).join('')}</div></div>`;
+  }
+
+  function renderResults(q) {
+    const box = $('srch-results'); if (!box) return;
+    const kind = _scope.kind || 'all';
+    const ql = q.toLowerCase();
+    const feats = (kind === 'all' || kind === 'features') ? FEATURES.filter((f) => f.name.toLowerCase().includes(ql) || f.path.toLowerCase().includes(ql)) : [];
+    const devs = (kind === 'all' || kind === 'devices') ? DEVICES.filter((d) => d.name.toLowerCase().includes(ql) || d.sub.toLowerCase().includes(ql)) : [];
+    const arts = (kind === 'all') ? ARTICLES.filter((a) => a.title.toLowerCase().includes(ql) || a.cat.toLowerCase().includes(ql)) : [];
+    const total = feats.length + devs.length + arts.length;
+    let html = `<div class="srch-count">${total} result${total === 1 ? '' : 's'} for “${esc(q)}”</div>`;
+    if (!total) { html += `<div class="srch-empty-msg">No matches — try a different term or scope.</div>`; box.innerHTML = html; return; }
+    if (devs.length) html += `<div class="srch-sec"><div class="srch-sec__head"><span class="srch-sec__title">Devices · ${devs.length}</span></div><div>`
+      + devs.map((d) => `<div class="srch-row"><div class="srch-row__ic"><ds-icon name="computer" size="18"></ds-icon></div><div class="srch-row__body"><div class="srch-row__title">${highlight(d.name, q)}</div><div class="srch-row__sub">${highlight(d.sub, q)}</div></div><ds-badge variant="subtle" state="${d.tone}" size="small" shape="rounded">${d.status}</ds-badge></div>`).join('') + `</div></div>`;
+    if (feats.length) html += `<div class="srch-sec"><div class="srch-sec__head"><span class="srch-sec__title">Features · ${feats.length}</span></div><div>`
+      + feats.map((f) => `<div class="srch-row"><div class="srch-row__ic"><ds-icon name="layout-grid" size="18"></ds-icon></div><div class="srch-row__body"><div class="srch-row__title">${highlight(f.name, q)}</div><div class="srch-row__sub">${highlight(f.path, q)}</div></div><ds-badge variant="subtle" state="success" size="small" shape="rounded">Feature</ds-badge></div>`).join('') + `</div></div>`;
+    if (arts.length) html += `<div class="srch-sec"><div class="srch-sec__head"><span class="srch-sec__title">Articles · ${arts.length}</span></div><div>`
+      + arts.map((a) => `<div class="srch-row"><div class="srch-row__ic"><ds-icon name="doc" size="18"></ds-icon></div><div class="srch-row__body"><div class="srch-row__title">${highlight(a.title, q)}</div><div class="srch-row__sub">${esc(a.cat)}</div></div><div class="srch-row__meta">${esc(a.read)}</div></div>`).join('') + `</div></div>`;
+    box.innerHTML = html;
+  }
+
+  function applyQuery(q) {
+    const input = $('srch-input'); if (input && input.value !== q) input.value = q;
+    const empty = $('srch-empty'), results = $('srch-results');
+    if (q && q.trim()) { renderResults(q.trim()); if (empty) empty.hidden = true; if (results) results.hidden = false; }
+    else { if (empty) empty.hidden = false; if (results) results.hidden = true; }
+  }
+
+  let _wired = false;
+  function build() {
+    renderScopeMenu(); renderEmpty();
+    /* deep-link / preview: ?q=term sets an initial query */
+    try { const q0 = new URLSearchParams(location.search).get('q'); if (q0 && $('srch-input') && !$('srch-input').value) $('srch-input').value = q0; } catch (_) {}
+    applyQuery($('srch-input') ? $('srch-input').value : '');
+    if (_wired) return; _wired = true;
+    const input = $('srch-input');
+    if (input) {
+      input.addEventListener('ds-search-field-input', (e) => applyQuery((e.detail && e.detail.value) || ''));
+      input.addEventListener('ds-search-field-submit', (e) => applyQuery((e.detail && e.detail.value) || ''));
+      input.addEventListener('ds-search-field-clear', () => applyQuery(''));
+    }
+    $('srch-go') && $('srch-go').addEventListener('click', () => applyQuery(input ? input.value : ''));
+    /* delegated clicks: chips, categories */
+    $('search-pop').addEventListener('click', (e) => {
+      const q = e.target.closest('[data-q]'); if (q) { applyQuery(q.getAttribute('data-q')); return; }
+    });
+    /* scope selector — trigger toggles the ds-dropdown-menu; select re-filters */
+    const sbtn = $('srch-scope-btn'), smenu = $('srch-scope-menu');
+    sbtn && sbtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const willOpen = !smenu.hasAttribute('open');
+      smenu.toggleAttribute('open', willOpen);
+      sbtn.setAttribute('aria-expanded', String(willOpen));
+    });
+    smenu && smenu.addEventListener('ds-dropdown-select', (e) => {
+      const sc = SCOPES.find((s) => s.id === (e.detail && e.detail.value)); if (!sc) return;
+      _scope = sc;
+      const lbl = sbtn && sbtn.querySelector('.ds-button__label'); if (lbl) lbl.textContent = sc.label;
+      smenu.removeAttribute('open'); sbtn && sbtn.setAttribute('aria-expanded', 'false');
+      renderScopeMenu(); applyQuery(input ? input.value : '');
+    });
+    smenu && smenu.addEventListener('ds-dropdown-close', () => { sbtn && sbtn.setAttribute('aria-expanded', 'false'); });
+    document.addEventListener('click', (e) => {
+      if (smenu && smenu.hasAttribute('open') && !e.target.closest('.srch-scope')) {
+        smenu.removeAttribute('open'); sbtn && sbtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  function show() {
+    const sa = shellArea(); if (!sa) return;
+    sa.classList.remove('set-open', 'zia-open', 'support-open');
+    sa.classList.add('search-open');
+    build();
+    requestAnimationFrame(() => { const i = $('srch-input'); if (i) i.focus(); });
+  }
+  function hide() { const sa = shellArea(); if (sa) sa.classList.remove('search-open'); }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers.search = { show, hide, build };
+})();
+</script>
+</template>
+
+<script>
+/* ── STANDALONE HARNESS — runs ONLY when opened directly. ── */
+(function () {
+  const KEY = 'search';
+  const host = document.createElement('div'); host.className = 'shell-area sa-host'; document.body.appendChild(host);
+  let lang = 'en';
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellCtx = window.ShellCtx || { get shellArea() { return host; }, get lang() { return lang; }, setActiveIcon() {} };
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers[KEY] && window.ShellDrawers[KEY].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

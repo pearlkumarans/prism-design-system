@@ -1,0 +1,297 @@
+
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+
+
+    /* ═══ DARK MODE (default) ═══ */
+    :root {
+        --bg: #0d0d10;
+        --text: #f4f4f6;
+        --text-soft: #c8c8d0;
+        --text-muted: rgba(255, 255, 255, 0.55);
+        --surface: rgba(255, 255, 255, 0.08);
+        --surface-strong: rgba(255, 255, 255, 0.1);
+        --surface-hover: rgba(255, 255, 255, 0.16);
+        --border: rgba(255, 255, 255, 0.12);
+        --cta-bg: #f4f4f6;
+        --cta-text: #0d0d10;
+        --cta-bg-hover: #fff;
+        --text-glow: rgba(13, 13, 16, 0.6);
+
+        --prism-violet: #2563eb;
+        --prism-violet-light: #a78bfa;
+        --prism-emerald: #10b981;
+        --prism-cyan: #06b6d4;
+        --prism-orange: #f59e0b;
+        --prism-fuchsia: #d946ef;
+        --prism-red: #ef4444;
+        --prism-text: #f4f4f6;
+        --prism-text-muted: rgba(255, 255, 255, 0.55);
+        --prism-surface: rgba(20, 20, 28, 0.85);
+        --prism-surface-hover: rgba(30, 30, 40, 0.95);
+        --prism-border: rgba(255, 255, 255, 0.08);
+
+        --nav-bg: rgba(10,10,12,0.75);
+        --logo-gradient: linear-gradient(135deg, #0058ff 40%, #3c50ff 30%, #0fd095 100%);
+        --logo-filter: drop-shadow(0 2px 10px rgba(124, 58, 237, 0.3));
+        --nav-link-color: rgba(255, 255, 255, 0.85);
+    }
+
+
+
+    /* ═══ LIGHT MODE ═══ */
+    [data-theme="light"] {
+        --bg: #ffffff;
+        --text: #111;
+        --text-soft: #3a3a3a;
+        --text-muted: rgba(0, 0, 0, 0.55);
+        --surface: rgba(255, 255, 255, 0.6);
+        --surface-strong: rgba(255, 255, 255, 0.7);
+        --surface-hover: rgba(255, 255, 255, 0.9);
+        --border: rgba(0, 0, 0, 0.08);
+        --cta-bg: #111;
+        --cta-text: #fff;
+        --cta-bg-hover: #000;
+        --text-glow: rgba(236, 242, 255, 0.5);
+
+        --prism-text: #1a1a22;
+        --prism-text-muted: rgba(0, 0, 0, 0.55);
+        --prism-surface: rgba(255, 255, 255, 0.85);
+        --prism-surface-hover: rgba(255, 255, 255, 0.95);
+        --prism-border: rgba(0, 0, 0, 0.08);
+
+        --nav-bg: transparent;
+        --logo-gradient: linear-gradient(135deg, #0058ff 40%, #3c50ff 30%, #0fd095 100%);
+        --logo-filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+        --nav-link-color: #000000;
+    }
+
+
+
+    html, body {
+        font-family: 'Zoho Puvi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg);
+        transition: background 0.5s ease;
+    }
+
+
+    body {
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+
+    #container {
+        position: absolute !important;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+
+    /* Light mode: fixed so the canvas ribbon scrolls with the page */
+    [data-theme="light"] #container {
+        position: fixed;
+        inset: 0;
+    }
+
+
+    #bgVideo, #bgVideoLight {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        pointer-events: none;
+        opacity: 0.9;
+        transition: opacity 1s ease;
+    }
+
+
+    /* Hide canvas in both themes */
+    #container canvas { display: none !important; }
+
+
+    /* Dark mode: show dark video, hide light video */
+    :root:not([data-theme="light"]) #bgVideo { display: block; }
+
+
+    :root:not([data-theme="light"]) #bgVideoLight { display: none; }
+
+
+    /* Light mode: show light video, hide dark video */
+    [data-theme="light"] #bgVideo { display: none; }
+
+
+    [data-theme="light"] #bgVideoLight { display: block; }
+
+
+    #container::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.00) 0%, #000 100%);
+        z-index: 2;
+        pointer-events: none;
+    }
+
+
+    [data-theme="light"] #container::after {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.00) 0%, #FFF 100%);
+    }
+
+
+    /* Dark mode: global dark veil over the video */
+    #container::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(0deg, rgb(0 0 0 / 70%) 0%, rgb(0 0 0 / 16%) 100%);
+        z-index: 2;
+        pointer-events: none;
+    }
+
+
+    [data-theme="light"] #container::before { display: none; }
+
+
+    h1 {
+        font-size: clamp(1.5rem, 4.2vw, 4rem);
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+        color: var(--text);
+        margin-bottom: 24px;
+        white-space: nowrap;
+    }
+
+
+    @keyframes marquee-left {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+    }
+
+
+    @keyframes marquee-right {
+        from { transform: translateX(-50%); }
+        to { transform: translateX(0); }
+    }
+
+
+    @keyframes rowEnter {
+        from { opacity: 0; filter: blur(6px); }
+        to   { opacity: 1; filter: blur(0); }
+    }
+
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+
+
+    /* ═══ Mobile Responsive Overrides ═══ */
+    @media (max-width: 1024px) {
+        .nav { padding: 0 20px !important; height: 64px !important; }
+        .nav-logo-mark { font-size: 22px !important; }
+        .nav-logo-sub { font-size: 11px !important; }
+        #features-section { padding: 80px 32px !important; }
+        #resource-section { padding: 80px 32px !important; }
+        .wn-section { padding: 24px 32px !important; }
+        .wn-bento { grid-template-columns: 1fr 1fr !important; }
+    }
+
+@media (max-width: 768px) {
+
+        #themeToggle { width: 36px !important; height: 36px !important; padding: 6px !important; margin-left: 4px !important; }
+
+        h1 { white-space: normal !important; font-size: clamp(1.75rem, 8vw, 2.5rem) !important; }
+
+
+        #features-section { padding: 64px 20px !important; }
+
+
+        #resource-section { padding: 64px 20px !important; }
+}
+
+@media (max-width: 480px) {
+
+        h1 { font-size: clamp(1.6rem, 9vw, 2.25rem) !important; }
+
+
+        #features-section { padding: 48px 16px !important; }
+
+
+        #resource-section { padding: 48px 16px !important; }
+}
+
+
+
+    /* Hamburger drawer — placed LAST so it wins the cascade at ≤ 768 px */
+    @media (max-width: 768px) {
+        .nav { padding: 0 16px !important; justify-content: flex-start !important; gap: 4px !important; }
+        .nav-links { display: flex !important; margin-left: auto !important; gap: 0 !important; }
+        .nav-links > a,
+        .nav-links > .nav-dropdown { display: none !important; }
+        .page-index .mobile-drawer { display: block; }
+    }
+    @media (max-width: 900px) and (min-width: 769px) {
+        .page-index .mobile-drawer { display: block; }
+    }
+
+
+
+    /* Ensure no horizontal overflow anywhere */
+    html, body { overflow-x: hidden; }
+
+
+    img, svg, video { max-width: 100%; height: auto; }
+
+
+
+      #features-section {
+        padding: 140px 64px;
+        background: #ffffff;
+      }
+
+
+      :root:not([data-theme="light"]) #features-section {
+        background: transparent;
+      }
+
+@media (max-width: 900px) {
+#features-section { padding: 64px 20px; }
+}
+
+
+
+      #resource-section {
+        padding: 100px 64px;
+        background: #ffffff;
+      }
+
+
+      :root:not([data-theme="light"]) #resource-section {
+        background: transparent;
+      }
+
+@media (max-width: 900px) {
+
+        #resource-section { padding: 80px 24px; }
+}

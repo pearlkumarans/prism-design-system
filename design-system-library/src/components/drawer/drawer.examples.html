@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ds-drawer — examples</title>
+  <script type="module">import '../../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 24px; background: var(--uems-background); color: var(--uems-text-primary); }
+    section { margin-bottom: 32px; }
+    h2 { font-size: var(--font-size-14); color: var(--uems-text-tertiary); margin: 0 0 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    p.note { color: var(--uems-text-tertiary); font-size: var(--font-size-14); max-width: 60ch; }
+  </style>
+</head>
+<body>
+  <p class="note">Drawers are fixed side-sheets that slide in over a scrim. Each trigger below opens one variant — close with the X, the scrim, or Esc.</p>
+
+  <section>
+    <h2>Side — right (default) / left</h2>
+    <div class="row">
+      <ds-button variant="secondary" data-open="d-right">Open right</ds-button>
+      <ds-button variant="secondary" data-open="d-left">Open left</ds-button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Sizes — s / m / l / full</h2>
+    <div class="row">
+      <ds-button variant="secondary" data-open="d-s">Size s (320)</ds-button>
+      <ds-button variant="secondary" data-open="d-m">Size m (480)</ds-button>
+      <ds-button variant="secondary" data-open="d-l">Size l (640)</ds-button>
+      <ds-button variant="secondary" data-open="d-full">Size full</ds-button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Header / footer / chrome variations</h2>
+    <div class="row">
+      <ds-button variant="secondary" data-open="d-sub">With subtitle</ds-button>
+      <ds-button variant="secondary" data-open="d-back">With back button</ds-button>
+      <ds-button variant="secondary" data-open="d-nofooter">No footer</ds-button>
+      <ds-button variant="secondary" data-open="d-noheader">No header</ds-button>
+      <ds-button variant="secondary" data-open="d-centered">Centered footer</ds-button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Modality</h2>
+    <div class="row">
+      <ds-button variant="secondary" data-open="d-nondismiss">Scrim won't close</ds-button>
+      <ds-button variant="secondary" data-open="d-nonmodal">Non-modal (no scrim)</ds-button>
+    </div>
+  </section>
+
+  <section>
+    <h2>RTL</h2>
+    <div class="row">
+      <ds-button variant="secondary" data-open="d-rtl">Open RTL</ds-button>
+    </div>
+  </section>
+
+  <!-- Drawer instances ----------------------------------------------------- -->
+  <ds-drawer id="d-right" title="Right drawer" side="right" size="m">
+    <p>Default drawer: anchored to the right edge at size m (480px).</p>
+    <ds-button slot="footer-start" variant="tertiary">Learn more</ds-button>
+    <ds-button slot="footer" variant="secondary" data-close>Cancel</ds-button>
+    <ds-button slot="footer" variant="primary" data-close>Save</ds-button>
+  </ds-drawer>
+
+  <ds-drawer id="d-left" title="Left drawer" side="left" size="m">
+    <p>Anchored to the left edge.</p>
+    <ds-button slot="footer" variant="primary" data-close>Done</ds-button>
+  </ds-drawer>
+
+  <ds-drawer id="d-s" title="Small" side="right" size="s">
+    <p>Size s — 320px.</p>
+    <ds-button slot="footer" variant="primary" data-close>OK</ds-button>
+  </ds-drawer>
+  <ds-drawer id="d-m" title="Medium" side="right" size="m">
+    <p>Size m — 480px (default).</p>
+    <ds-button slot="footer" variant="primary" data-close>OK</ds-button>
+  </ds-drawer>
+  <ds-drawer id="d-l" title="Large" side="right" size="l">
+    <p>Size l — 640px.</p>
+    <ds-button slot="footer" variant="primary" data-close>OK</ds-button>
+  </ds-drawer>
+  <ds-drawer id="d-full" title="Full" side="right" size="full">
+    <p>Size full — 100% width.</p>
+    <ds-button slot="footer" variant="primary" data-close>OK</ds-button>
+  </ds-drawer>
+
+  <ds-drawer id="d-sub" title="With subtitle" subtitle="Supporting text under the title" side="right" size="m">
+    <p>The subtitle renders below the title in the header.</p>
+    <ds-button slot="footer" variant="primary" data-close>OK</ds-button>
+  </ds-drawer>
+
+  <ds-drawer id="d-back" title="With back button" show-back side="right" size="m">
+    <p>The leading back button is shown (listen for <code>ds-drawer-back</code>).</p>
+    <ds-button slot="footer" variant="primary" data-close>OK</ds-button>
+  </ds-drawer>
+
+  <ds-drawer id="d-nofooter" title="No footer" show-footer="false" side="right" size="m">
+    <p>This drawer hides the footer region.</p>
+  </ds-drawer>
+
+  <ds-drawer id="d-noheader" title="No header" show-header="false" side="right" size="m">
+    <p>Header hidden — body content starts at the top.</p>
+    <ds-button slot="footer" variant="primary" data-close>Close</ds-button>
+  </ds-drawer>
+
+  <ds-drawer id="d-centered" title="Centered footer" footer-align="centered" side="right" size="m">
+    <p>Footer actions are centered.</p>
+    <ds-button slot="footer" variant="secondary" data-close>Cancel</ds-button>
+    <ds-button slot="footer" variant="primary" data-close>Confirm</ds-button>
+  </ds-drawer>
+
+  <ds-drawer id="d-nondismiss" title="Scrim won't close" dismiss-on-overlay="false" side="right" size="m">
+    <p>Clicking the scrim will not close this drawer — use the X, Esc, or a button.</p>
+    <ds-button slot="footer" variant="primary" data-close>Close</ds-button>
+  </ds-drawer>
+
+  <ds-drawer id="d-nonmodal" title="Non-modal" modal="false" side="right" size="m">
+    <p>No scrim, no focus trap, no scroll lock — the page behind stays interactive.</p>
+    <ds-button slot="footer" variant="primary" data-close>Close</ds-button>
+  </ds-drawer>
+
+  <ds-drawer id="d-rtl" title="عنوان" subtitle="نص داعم" rtl side="left" size="m">
+    <p>اتجاه من اليمين إلى اليسار.</p>
+    <ds-button slot="footer" variant="primary" data-close>إغلاق</ds-button>
+  </ds-drawer>
+
+  <script>
+    document.addEventListener('click', (e) => {
+      const opener = e.target.closest('[data-open]');
+      if (opener) { document.getElementById(opener.getAttribute('data-open'))?.open(); return; }
+      const closer = e.target.closest('[data-close]');
+      if (closer) closer.closest('ds-drawer')?.close();
+    });
+  </script>
+</body>
+</html>

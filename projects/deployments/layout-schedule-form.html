@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<!--
+  Deployments · Schedule Policy · Create/Edit — single-page form.
+  Policy Name → Deploy based on → Execute at → (added schedules table) →
+  Dotted card: Week(s)&Day(s) [multi] / Time Period / Months + Add more
+  schedules (secondary). Download & initiation with per-option notes.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Schedule Policy · Create — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+<template id="drawer-fragment">
+<style>
+#sp-form-pop .lay__section { padding: 20px 0 4px; }
+#sp-form-pop .lay__fields { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; }
+#sp-form-pop .lay__field { max-width: 900px; padding-bottom: 20px; }
+#sp-form-pop .lay__control-only { padding-inline-start: 288px; }
+
+/* Radio group inline rows — single row, never wrap. */
+#sp-form-pop #spf-deploy-based .ds-radio-group__items,
+#sp-form-pop #spf-download .ds-radio-group__items,
+#sp-form-pop #spf-initiate .ds-radio-group__items { display: flex; flex-direction: row; gap: 24px; flex-wrap: nowrap; align-items: center; }
+#sp-form-pop #spf-download .ds-radio-group__items ds-radio,
+#sp-form-pop #spf-initiate .ds-radio-group__items ds-radio { white-space: nowrap; }
+
+/* Two-input row for time-period From/To. */
+#sp-form-pop .spf-timeperiod { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; max-width: 540px; }
+#sp-form-pop .spf-timeperiod .to { font-size: 13px; color: var(--uems-text-secondary); }
+
+/* Months grid — 6 x 2, blue-fill when selected. */
+#sp-form-pop .spf-months { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; max-width: 720px; }
+#sp-form-pop .spf-month-btn {
+  padding: 10px 12px; border: 1px solid var(--uems-border-tertiary);
+  border-radius: 6px; background: var(--uems-bg-primary);
+  color: var(--uems-text-primary); font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  transition: background-color 140ms var(--ease-standard, ease), color 140ms var(--ease-standard, ease), border-color 140ms var(--ease-standard, ease);
+}
+#sp-form-pop .spf-month-btn:hover { background: var(--uems-bg-primary-hover); border-color: var(--uems-border-accent); }
+#sp-form-pop .spf-month-btn[aria-pressed="true"] {
+  background: var(--uems-bg-button-primary);
+  color: var(--uems-icon-white);
+  border-color: var(--uems-bg-button-primary);
+}
+
+/* Months action rows — Select/Deselect toggle sits inline to the right of
+   the months grid (hyperlink); Add more schedules sits below the grid as
+   a secondary button. */
+#sp-form-pop .spf-months-grid { display: flex; align-items: flex-start; gap: 16px; }
+#sp-form-pop .spf-months-toggle { padding-top: 4px; white-space: nowrap; }
+#sp-form-pop .spf-months-toggle ds-text-link[hidden] { display: none; }
+/* Add more schedules is a card-level action, not a Months sub-action,
+   so we give it +4px more breathing room from the months grid than the
+   row-to-row gap inside the card (20 → 24). */
+#sp-form-pop .spf-add-more-row { padding-top: 24px; }
+
+/* Two-column week/day selector. */
+#sp-form-pop .spf-wd { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 540px; }
+
+/* Compact multi-select trigger — keep the tag row on a single line and
+   append an inline "N selected" count badge to the right. When every
+   option is selected, replace the tags with a single "All selected"
+   label plus the count. */
+#sp-form-pop .spf-wd .ds-input-select__tags {
+  display: flex; align-items: center; gap: var(--spacing-4, 4px);
+  flex-wrap: nowrap; overflow: hidden;
+}
+#sp-form-pop .spf-wd .ds-input-select__tags ds-tag { flex: 0 0 auto; }
+#sp-form-pop .spf-wd .ds-input-select__tags .spf-count-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 20px; padding: 0 var(--spacing-6, 6px);
+  border-radius: 999px;
+  background: var(--uems-bg-info-subtle, var(--uems-bg-secondary));
+  color: var(--uems-text-primary);
+  font-size: 12px; font-weight: 600;
+  flex: 0 0 auto; margin-inline-start: auto;
+}
+#sp-form-pop .spf-wd .ds-input-select__tags .spf-all-label {
+  color: var(--uems-text-primary);
+  font-size: 13px; font-weight: 500;
+  flex: 0 0 auto; padding-inline-start: var(--spacing-2, 2px);
+}
+
+/* Dotted-outline card wrapping Weeks & Days → Months. */
+#sp-form-pop .spf-card {
+  border: 1px dashed var(--uems-border-tertiary);
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-md, 8px);
+  padding: 20px 20px 16px;
+  margin-top: 4px;
+  max-width: 80vw;
+}
+:root[data-theme="dark"] #sp-form-pop .spf-card { background: rgba(255, 255, 255, 0.04); }
+#sp-form-pop .spf-card .lay__field:last-child { padding-bottom: 0; }
+
+/* Added-schedules table (below Execute at). */
+#sp-form-pop .spf-sched-wrap { padding: 8px 0 4px; max-width: 80vw; }
+#sp-form-pop .spf-sched-wrap[hidden] { display: none; }
+#sp-form-pop .spf-sched-actions { display: inline-flex; gap: 2px; justify-content: flex-end; width: 100%; }
+#sp-form-pop .spf-sched-actions button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border: 0; background: transparent;
+  border-radius: var(--radius-sm); cursor: pointer; color: var(--uems-icon-secondary);
+}
+#sp-form-pop .spf-sched-actions button:hover { background: var(--uems-bg-secondary-hover); }
+#sp-form-pop .spf-sched-actions button[data-act="del"]:hover { color: var(--uems-icon-error); }
+
+/* Dynamic note under a radio group — aligned to the START of the radio
+   row (under the first radio) via a JS-computed left offset. Uses up to
+   80% of the viewport before wrapping to a second line. */
+#sp-form-pop .spf-radio-note {
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  font-size: 12px; line-height: 1.5; color: var(--uems-text-secondary);
+  max-width: 80vw;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: normal;
+}
+/* Let the Download & initiation fields exceed the form's 900px max-width
+   so the notes can breathe up to 80vw before wrapping. */
+#sp-form-pop .lay__field:has(> #spf-download),
+#sp-form-pop .lay__field:has(> #spf-initiate) { max-width: none; }
+/* Collapse the .ds-radio-group's own bottom breathing room too, so the
+   note sits flush under the radios. */
+#sp-form-pop #spf-download .ds-radio-group__body,
+#sp-form-pop #spf-initiate .ds-radio-group__body { padding-bottom: 0; margin-bottom: 0; }
+#sp-form-pop #spf-download,
+#sp-form-pop #spf-initiate { margin-bottom: 0; }
+#sp-form-pop .spf-radio-note:empty { display: none; }
+
+/* Silence the (?) info icon in every radio group inside this form. */
+#sp-form-pop .ds-radio-group__info,
+#sp-form-pop .ds-radio__help { display: none !important; }
+
+/* Section without a title still needs some breathing room but not the
+   full section-header padding. */
+#sp-form-pop .spf-section-flush { padding: 12px 0 0; }
+#sp-form-pop .spf-section-flush + .spf-section-flush { padding-top: 0; }
+
+/* Inline error hint under Add more schedules. */
+#sp-form-pop #spf-add-error {
+  font-size: 12px; color: var(--uems-text-error);
+  padding-top: 6px; display: none;
+}
+#sp-form-pop #spf-add-error.on { display: block; }
+</style>
+
+<div id="sp-form-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <ds-page-header id="spf-ph" icon="calendar" structure="default"
+      title="Create Deployment Policy"
+      description="Reusable maintenance window — pick the days, hours and months when this schedule runs."
+      show-description show-breadcrumbs>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+
+      <!-- Policy Name sits at the top of the form — no section title above it. -->
+      <div class="lay__section spf-section-flush">
+        <div class="lay__fields">
+          <div class="lay__field">
+            <ds-text-input id="spf-name" size="medium" required
+              label="Policy Name" label-position="left"
+              placeholder="e.g. Prod night window"></ds-text-input>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deployment schedule fields (section header removed per spec). -->
+      <div class="lay__section spf-section-flush">
+        <div class="lay__fields">
+          <div class="lay__field">
+            <ds-radio-group id="spf-deploy-based" label="Deploy based on" label-position="left" value="weeks"></ds-radio-group>
+          </div>
+
+          <div class="lay__field">
+            <ds-input-select id="spf-tz" size="medium" searchable
+              search-placeholder="Search country or timezone"
+              label="Execute at" label-position="left"
+              placeholder="Respective endpoint's time zone"
+              helper-text="Runs in each device's own timezone."></ds-input-select>
+          </div>
+
+          <!-- Added schedules table — sits below Execute at. Toolbar
+               (search + filter), footer (rows-per-page + prev/next), and
+               the leading checkbox column are all suppressed. Actions
+               column uses a single kebab that opens a menu. -->
+          <div id="spf-sched-wrap" class="spf-sched-wrap" hidden>
+            <ds-data-table id="spf-sched-table"
+              selection-mode="none" row-height="comfortable" sticky-header
+              show-toolbar="false" show-footer="false"></ds-data-table>
+            <ds-dropdown-menu id="spf-sched-menu" type="action"></ds-dropdown-menu>
+          </div>
+
+          <!-- Dotted card: Weeks & Days · Time Period · Months. -->
+          <div class="spf-card">
+            <div class="lay__field">
+              <div style="display: flex; align-items: flex-start; gap: 8px;">
+                <span style="width: 280px; font-size: 13px; font-weight: 600; padding-top: 8px; color: var(--uems-text-primary);">Week(s) &amp; Day(s) for deployment <span style="color: var(--uems-text-error);">*</span></span>
+                <div class="spf-wd">
+                  <ds-input-select id="spf-weeks" size="medium" multi placeholder="Select weeks"></ds-input-select>
+                  <ds-input-select id="spf-days"  size="medium" multi placeholder="Select days"></ds-input-select>
+                </div>
+              </div>
+            </div>
+
+            <div class="lay__field">
+              <div style="display: flex; align-items: flex-start; gap: 8px;">
+                <span style="width: 280px; font-size: 13px; font-weight: 600; padding-top: 8px; color: var(--uems-text-primary);">Deployment time period <span style="color: var(--uems-text-error);">*</span></span>
+                <div class="spf-timeperiod">
+                  <ds-text-input id="spf-from" size="medium" placeholder="09:00 AM"></ds-text-input>
+                  <span class="to">to</span>
+                  <ds-text-input id="spf-to"   size="medium" placeholder="05:00 PM"></ds-text-input>
+                </div>
+              </div>
+            </div>
+
+            <div class="lay__field">
+              <div style="display: flex; align-items: flex-start; gap: 8px;">
+                <span style="width: 280px; font-size: 13px; font-weight: 600; padding-top: 8px; color: var(--uems-text-primary);">Month(s) for deployment <span style="color: var(--uems-text-error);">*</span></span>
+                <div style="display: flex; flex-direction: column;">
+                  <div class="spf-months-grid">
+                    <div class="spf-months" id="spf-months"></div>
+                    <div class="spf-months-toggle">
+                      <ds-text-link id="spf-months-select-all"   href="#" variant="primary" size="medium">Select all</ds-text-link>
+                      <ds-text-link id="spf-months-deselect-all" href="#" variant="primary" size="medium" hidden>Deselect all</ds-text-link>
+                    </div>
+                  </div>
+                  <div class="spf-add-more-row">
+                    <ds-button id="spf-add-more" variant="secondary" size="small" prefix-icon="add">Add more schedules</ds-button>
+                    <div id="spf-add-error">Fill Week(s) &amp; Day(s), Time period, and at least one month before adding.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Download + Initiate — dynamic note under each radio group. -->
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large"
+          title="Download &amp; initiation"></ds-section-header>
+        <div class="lay__fields">
+          <div class="lay__field">
+            <ds-radio-group id="spf-download" label="Download patches from server to agent" label-position="left" value="any" show-info="false"></ds-radio-group>
+            <div class="spf-radio-note" id="spf-download-note"></div>
+          </div>
+          <div class="lay__field">
+            <ds-radio-group id="spf-initiate" label="Initiate deployment at" label-position="left" value="either" show-info="false"></ds-radio-group>
+            <div class="spf-radio-note" id="spf-initiate-note"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <ds-form-footer id="spf-footer" show-left="false">
+      <ds-button data-act="cancel"     variant="outline">Cancel</ds-button>
+      <ds-button data-act="save-draft" variant="secondary">Save as Draft</ds-button>
+      <ds-button data-act="save"       variant="primary">Save Window</ds-button>
+    </ds-form-footer>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('sp-form-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  /* Breadcrumb */
+  const ph = $('spf-ph');
+  ph.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    const label = (a.textContent || '').trim();
+    if (label === 'Policies'        && window.openContentView) { e.preventDefault(); window.openContentView('deployments-policy-list'); }
+    else if (label === 'Schedule Policy' && window.openContentView) { e.preventDefault(); window.openContentView('deployments-schedule'); }
+  });
+  ph.breadcrumbs = [
+    { label: 'Policies',        href: '#' },
+    { label: 'Schedule Policy', href: '#' },
+    { label: 'Create Deployment Policy' },
+  ];
+
+  /* ---- Options ---------------------------------------------------------- */
+  $('spf-deploy-based').options = [
+    { value: 'weeks',    label: 'Weeks & Days',                selected: true },
+    { value: 'ptuesday', label: 'Patch Tuesday (Tue to next Mon)' },
+    { value: 'calendar', label: 'Calendar Dates' },
+  ];
+  /* World timezones — GMT offset · common name · IANA (country / city). */
+  const TIMEZONES = [
+    { value: 'endpoint', label: "Respective endpoint's time zone" },
+    { value: 'server',   label: 'Server time zone' },
+    { value: 'pacific/pago_pago',      label: '(GMT-11:00) Samoa Standard Time (Pacific/Pago Pago, American Samoa)' },
+    { value: 'pacific/niue',           label: '(GMT-11:00) Niue Time (Pacific/Niue)' },
+    { value: 'pacific/midway',         label: '(GMT-11:00) Samoa Standard Time (Pacific/Midway, USA)' },
+    { value: 'pacific/honolulu',       label: '(GMT-10:00) Hawaii-Aleutian Standard Time (Pacific/Honolulu, USA)' },
+    { value: 'pacific/tahiti',         label: '(GMT-10:00) Tahiti Time (Pacific/Tahiti, French Polynesia)' },
+    { value: 'pacific/rarotonga',      label: '(GMT-10:00) Cook Islands Standard Time (Pacific/Rarotonga)' },
+    { value: 'pacific/marquesas',      label: '(GMT-09:30) Marquesas Time (Pacific/Marquesas, French Polynesia)' },
+    { value: 'america/anchorage',      label: '(GMT-09:00) Alaska Standard Time (America/Anchorage, USA)' },
+    { value: 'pacific/gambier',        label: '(GMT-09:00) Gambier Time (Pacific/Gambier, French Polynesia)' },
+    { value: 'america/los_angeles',    label: '(GMT-08:00) Pacific Standard Time (America/Los Angeles, USA)' },
+    { value: 'america/vancouver',      label: '(GMT-08:00) Pacific Standard Time (America/Vancouver, Canada)' },
+    { value: 'america/tijuana',        label: '(GMT-08:00) Pacific Standard Time (America/Tijuana, Mexico)' },
+    { value: 'america/denver',         label: '(GMT-07:00) Mountain Standard Time (America/Denver, USA)' },
+    { value: 'america/phoenix',        label: '(GMT-07:00) Mountain Standard Time (America/Phoenix, USA)' },
+    { value: 'america/edmonton',       label: '(GMT-07:00) Mountain Standard Time (America/Edmonton, Canada)' },
+    { value: 'america/chihuahua',      label: '(GMT-07:00) Mountain Standard Time (America/Chihuahua, Mexico)' },
+    { value: 'america/chicago',        label: '(GMT-06:00) Central Standard Time (America/Chicago, USA)' },
+    { value: 'america/mexico_city',    label: '(GMT-06:00) Central Standard Time (America/Mexico City, Mexico)' },
+    { value: 'america/guatemala',      label: '(GMT-06:00) Central Standard Time (America/Guatemala)' },
+    { value: 'america/regina',         label: '(GMT-06:00) Central Standard Time (America/Regina, Canada)' },
+    { value: 'america/costa_rica',     label: '(GMT-06:00) Central Standard Time (America/Costa Rica)' },
+    { value: 'america/new_york',       label: '(GMT-05:00) Eastern Standard Time (America/New York, USA)' },
+    { value: 'america/toronto',        label: '(GMT-05:00) Eastern Standard Time (America/Toronto, Canada)' },
+    { value: 'america/havana',         label: '(GMT-05:00) Cuba Standard Time (America/Havana, Cuba)' },
+    { value: 'america/bogota',         label: '(GMT-05:00) Colombia Time (America/Bogota, Colombia)' },
+    { value: 'america/lima',           label: '(GMT-05:00) Peru Time (America/Lima, Peru)' },
+    { value: 'america/panama',         label: '(GMT-05:00) Eastern Standard Time (America/Panama)' },
+    { value: 'america/halifax',        label: '(GMT-04:00) Atlantic Standard Time (America/Halifax, Canada)' },
+    { value: 'america/caracas',        label: '(GMT-04:00) Venezuela Time (America/Caracas, Venezuela)' },
+    { value: 'america/santiago',       label: '(GMT-04:00) Chile Standard Time (America/Santiago, Chile)' },
+    { value: 'america/la_paz',         label: '(GMT-04:00) Bolivia Time (America/La Paz, Bolivia)' },
+    { value: 'america/asuncion',       label: '(GMT-04:00) Paraguay Time (America/Asuncion, Paraguay)' },
+    { value: 'america/st_johns',       label: '(GMT-03:30) Newfoundland Standard Time (America/St. Johns, Canada)' },
+    { value: 'america/sao_paulo',      label: '(GMT-03:00) Brasilia Time (America/Sao Paulo, Brazil)' },
+    { value: 'america/argentina/buenos_aires', label: '(GMT-03:00) Argentina Time (America/Argentina/Buenos Aires, Argentina)' },
+    { value: 'america/montevideo',     label: '(GMT-03:00) Uruguay Time (America/Montevideo, Uruguay)' },
+    { value: 'america/godthab',        label: '(GMT-03:00) Greenland Time (America/Godthab, Greenland)' },
+    { value: 'atlantic/south_georgia', label: '(GMT-02:00) South Georgia Time (Atlantic/South Georgia)' },
+    { value: 'atlantic/azores',        label: '(GMT-01:00) Azores Time (Atlantic/Azores, Portugal)' },
+    { value: 'atlantic/cape_verde',    label: '(GMT-01:00) Cape Verde Time (Atlantic/Cape Verde)' },
+    { value: 'utc',                    label: '(GMT+00:00) Coordinated Universal Time (UTC)' },
+    { value: 'europe/london',          label: '(GMT+00:00) Greenwich Mean Time (Europe/London, United Kingdom)' },
+    { value: 'europe/dublin',          label: '(GMT+00:00) Greenwich Mean Time (Europe/Dublin, Ireland)' },
+    { value: 'europe/lisbon',          label: '(GMT+00:00) Western European Time (Europe/Lisbon, Portugal)' },
+    { value: 'atlantic/reykjavik',     label: '(GMT+00:00) Greenwich Mean Time (Atlantic/Reykjavik, Iceland)' },
+    { value: 'africa/casablanca',      label: '(GMT+00:00) Western European Time (Africa/Casablanca, Morocco)' },
+    { value: 'europe/paris',           label: '(GMT+01:00) Central European Time (Europe/Paris, France)' },
+    { value: 'europe/berlin',          label: '(GMT+01:00) Central European Time (Europe/Berlin, Germany)' },
+    { value: 'europe/madrid',          label: '(GMT+01:00) Central European Time (Europe/Madrid, Spain)' },
+    { value: 'europe/rome',            label: '(GMT+01:00) Central European Time (Europe/Rome, Italy)' },
+    { value: 'europe/amsterdam',       label: '(GMT+01:00) Central European Time (Europe/Amsterdam, Netherlands)' },
+    { value: 'europe/brussels',        label: '(GMT+01:00) Central European Time (Europe/Brussels, Belgium)' },
+    { value: 'europe/warsaw',          label: '(GMT+01:00) Central European Time (Europe/Warsaw, Poland)' },
+    { value: 'europe/stockholm',       label: '(GMT+01:00) Central European Time (Europe/Stockholm, Sweden)' },
+    { value: 'europe/vienna',          label: '(GMT+01:00) Central European Time (Europe/Vienna, Austria)' },
+    { value: 'europe/zurich',          label: '(GMT+01:00) Central European Time (Europe/Zurich, Switzerland)' },
+    { value: 'africa/lagos',           label: '(GMT+01:00) West Africa Time (Africa/Lagos, Nigeria)' },
+    { value: 'africa/cairo',           label: '(GMT+02:00) Eastern European Time (Africa/Cairo, Egypt)' },
+    { value: 'europe/athens',          label: '(GMT+02:00) Eastern European Time (Europe/Athens, Greece)' },
+    { value: 'europe/helsinki',        label: '(GMT+02:00) Eastern European Time (Europe/Helsinki, Finland)' },
+    { value: 'europe/bucharest',       label: '(GMT+02:00) Eastern European Time (Europe/Bucharest, Romania)' },
+    { value: 'europe/kiev',            label: '(GMT+02:00) Eastern European Time (Europe/Kiev, Ukraine)' },
+    { value: 'africa/johannesburg',    label: '(GMT+02:00) South Africa Standard Time (Africa/Johannesburg, South Africa)' },
+    { value: 'asia/jerusalem',         label: '(GMT+02:00) Israel Standard Time (Asia/Jerusalem, Israel)' },
+    { value: 'europe/moscow',          label: '(GMT+03:00) Moscow Standard Time (Europe/Moscow, Russia)' },
+    { value: 'europe/istanbul',        label: '(GMT+03:00) Turkey Time (Europe/Istanbul, Turkey)' },
+    { value: 'africa/nairobi',         label: '(GMT+03:00) East Africa Time (Africa/Nairobi, Kenya)' },
+    { value: 'asia/riyadh',            label: '(GMT+03:00) Arabia Standard Time (Asia/Riyadh, Saudi Arabia)' },
+    { value: 'asia/baghdad',           label: '(GMT+03:00) Arabia Standard Time (Asia/Baghdad, Iraq)' },
+    { value: 'asia/tehran',            label: '(GMT+03:30) Iran Standard Time (Asia/Tehran, Iran)' },
+    { value: 'asia/dubai',             label: '(GMT+04:00) Gulf Standard Time (Asia/Dubai, United Arab Emirates)' },
+    { value: 'asia/muscat',            label: '(GMT+04:00) Gulf Standard Time (Asia/Muscat, Oman)' },
+    { value: 'asia/baku',              label: '(GMT+04:00) Azerbaijan Time (Asia/Baku, Azerbaijan)' },
+    { value: 'asia/tbilisi',           label: '(GMT+04:00) Georgia Standard Time (Asia/Tbilisi, Georgia)' },
+    { value: 'asia/yerevan',           label: '(GMT+04:00) Armenia Time (Asia/Yerevan, Armenia)' },
+    { value: 'asia/kabul',             label: '(GMT+04:30) Afghanistan Time (Asia/Kabul, Afghanistan)' },
+    { value: 'asia/karachi',           label: '(GMT+05:00) Pakistan Standard Time (Asia/Karachi, Pakistan)' },
+    { value: 'asia/tashkent',          label: '(GMT+05:00) Uzbekistan Time (Asia/Tashkent, Uzbekistan)' },
+    { value: 'asia/kolkata',           label: '(GMT+05:30) India Standard Time (Asia/Kolkata, India)' },
+    { value: 'asia/colombo',           label: '(GMT+05:30) Sri Lanka Time (Asia/Colombo, Sri Lanka)' },
+    { value: 'asia/kathmandu',         label: '(GMT+05:45) Nepal Time (Asia/Kathmandu, Nepal)' },
+    { value: 'asia/dhaka',             label: '(GMT+06:00) Bangladesh Standard Time (Asia/Dhaka, Bangladesh)' },
+    { value: 'asia/almaty',            label: '(GMT+06:00) Kazakhstan Time (Asia/Almaty, Kazakhstan)' },
+    { value: 'asia/thimphu',           label: '(GMT+06:00) Bhutan Time (Asia/Thimphu, Bhutan)' },
+    { value: 'asia/yangon',            label: '(GMT+06:30) Myanmar Time (Asia/Yangon, Myanmar)' },
+    { value: 'asia/bangkok',           label: '(GMT+07:00) Indochina Time (Asia/Bangkok, Thailand)' },
+    { value: 'asia/jakarta',           label: '(GMT+07:00) Western Indonesian Time (Asia/Jakarta, Indonesia)' },
+    { value: 'asia/ho_chi_minh',       label: '(GMT+07:00) Indochina Time (Asia/Ho Chi Minh, Vietnam)' },
+    { value: 'asia/phnom_penh',        label: '(GMT+07:00) Indochina Time (Asia/Phnom Penh, Cambodia)' },
+    { value: 'asia/shanghai',          label: '(GMT+08:00) China Standard Time (Asia/Shanghai, China)' },
+    { value: 'asia/singapore',         label: '(GMT+08:00) Singapore Standard Time (Asia/Singapore)' },
+    { value: 'asia/hong_kong',         label: '(GMT+08:00) Hong Kong Time (Asia/Hong Kong, Hong Kong SAR)' },
+    { value: 'asia/taipei',            label: '(GMT+08:00) Taipei Standard Time (Asia/Taipei, Taiwan)' },
+    { value: 'asia/kuala_lumpur',      label: '(GMT+08:00) Malaysia Time (Asia/Kuala Lumpur, Malaysia)' },
+    { value: 'asia/manila',            label: '(GMT+08:00) Philippine Time (Asia/Manila, Philippines)' },
+    { value: 'australia/perth',        label: '(GMT+08:00) Australian Western Standard Time (Australia/Perth, Australia)' },
+    { value: 'asia/ulaanbaatar',       label: '(GMT+08:00) Ulaanbaatar Time (Asia/Ulaanbaatar, Mongolia)' },
+    { value: 'asia/tokyo',             label: '(GMT+09:00) Japan Standard Time (Asia/Tokyo, Japan)' },
+    { value: 'asia/seoul',             label: '(GMT+09:00) Korea Standard Time (Asia/Seoul, South Korea)' },
+    { value: 'asia/pyongyang',         label: '(GMT+09:00) Pyongyang Time (Asia/Pyongyang, North Korea)' },
+    { value: 'australia/adelaide',     label: '(GMT+09:30) Australian Central Standard Time (Australia/Adelaide, Australia)' },
+    { value: 'australia/darwin',       label: '(GMT+09:30) Australian Central Standard Time (Australia/Darwin, Australia)' },
+    { value: 'australia/sydney',       label: '(GMT+10:00) Australian Eastern Standard Time (Australia/Sydney, Australia)' },
+    { value: 'australia/brisbane',     label: '(GMT+10:00) Australian Eastern Standard Time (Australia/Brisbane, Australia)' },
+    { value: 'pacific/guam',           label: '(GMT+10:00) Chamorro Standard Time (Pacific/Guam)' },
+    { value: 'pacific/port_moresby',   label: '(GMT+10:00) Papua New Guinea Time (Pacific/Port Moresby, PNG)' },
+    { value: 'pacific/noumea',         label: '(GMT+11:00) New Caledonia Time (Pacific/Noumea, New Caledonia)' },
+    { value: 'pacific/guadalcanal',    label: '(GMT+11:00) Solomon Islands Time (Pacific/Guadalcanal, Solomon Islands)' },
+    { value: 'pacific/auckland',       label: '(GMT+12:00) New Zealand Standard Time (Pacific/Auckland, New Zealand)' },
+    { value: 'pacific/fiji',           label: '(GMT+12:00) Fiji Standard Time (Pacific/Fiji, Fiji)' },
+    { value: 'pacific/tongatapu',      label: '(GMT+13:00) Tonga Time (Pacific/Tongatapu, Tonga)' },
+    { value: 'pacific/apia',           label: '(GMT+13:00) Samoa Standard Time (Pacific/Apia, Samoa)' },
+    { value: 'pacific/kiritimati',     label: '(GMT+14:00) Line Islands Time (Pacific/Kiritimati, Kiribati)' },
+  ];
+  TIMEZONES[0].selected = true;
+  $('spf-tz').options = TIMEZONES;
+
+  const WEEK_OPTS = [
+    { value: 'first',  label: 'First' },
+    { value: 'second', label: 'Second' },
+    { value: 'third',  label: 'Third' },
+    { value: 'fourth', label: 'Fourth' },
+    { value: 'last',   label: 'Last' },
+  ];
+  const DAY_OPTS = [
+    { value: 'sun', label: 'Sunday' },
+    { value: 'mon', label: 'Monday' },
+    { value: 'tue', label: 'Tuesday' },
+    { value: 'wed', label: 'Wednesday' },
+    { value: 'thu', label: 'Thursday' },
+    { value: 'fri', label: 'Friday' },
+    { value: 'sat', label: 'Saturday' },
+  ];
+  $('spf-weeks').options = WEEK_OPTS.slice();
+  $('spf-days').options  = DAY_OPTS.slice();
+
+  /* Multi-select compact display — after every value change, if ALL options
+     are picked, replace the tag list with a single "All selected" label +
+     count badge. Otherwise keep the tags and append the count on the right. */
+  const _paintingKey = Symbol('painting');
+  function paintCompact(selectEl, totalCount) {
+    if (selectEl[_paintingKey]) return;              /* guard: our own writes below re-trigger the observer */
+    const tagsWrap = selectEl.querySelector('.ds-input-select__tags');
+    if (!tagsWrap) return;
+    const values = (selectEl.values || []).slice();
+    /* Skip if the current painted state already matches — avoids observer thrash. */
+    const existingBadge = tagsWrap.querySelector('.spf-count-badge');
+    const existingAll   = tagsWrap.querySelector('.spf-all-label');
+    const wantAll       = values.length === totalCount;
+    if (values.length === 0 && !existingBadge && !existingAll) return;
+    if (existingBadge && existingBadge.textContent === String(values.length)
+        && Boolean(existingAll) === wantAll) return;
+
+    selectEl[_paintingKey] = true;
+    try {
+      tagsWrap.querySelectorAll('.spf-count-badge, .spf-all-label').forEach((el) => el.remove());
+      const tagEls = [...tagsWrap.querySelectorAll('ds-tag')];
+      if (!values.length) return;
+      if (wantAll) {
+        tagEls.forEach((t) => { t.style.display = 'none'; });
+        const label = document.createElement('span');
+        label.className = 'spf-all-label';
+        label.textContent = 'All selected';
+        tagsWrap.appendChild(label);
+      } else {
+        tagEls.forEach((t) => { t.style.display = ''; });
+      }
+      const badge = document.createElement('span');
+      badge.className = 'spf-count-badge';
+      badge.textContent = String(values.length);
+      tagsWrap.appendChild(badge);
+    } finally {
+      /* Release on the microtask so the observer that fires from our own
+         writes finds the guard set and skips. */
+      Promise.resolve().then(() => { selectEl[_paintingKey] = false; });
+    }
+  }
+  const paintWeeks = () => paintCompact($('spf-weeks'), WEEK_OPTS.length);
+  const paintDays  = () => paintCompact($('spf-days'),  DAY_OPTS.length);
+  const paintOn = (el, fn) => {
+    const observer = new MutationObserver(() => { if (!el[_paintingKey]) fn(); });
+    observer.observe(el, { childList: true, subtree: true });
+    el.addEventListener('ds-input-select-change', () => requestAnimationFrame(fn));
+  };
+  paintOn($('spf-weeks'), paintWeeks);
+  paintOn($('spf-days'),  paintDays);
+  requestAnimationFrame(() => { paintWeeks(); paintDays(); });
+
+  $('spf-download').options = [
+    { value: 'any',    label: 'Any time agent contacts the server (Windows and Linux only)', selected: true },
+    { value: 'window', label: 'Only during Deployment Window' },
+  ];
+  $('spf-initiate').options = [
+    { value: 'startup', label: 'System Startup' },
+    { value: 'refresh', label: 'Refresh Cycle' },
+    { value: 'either',  label: 'Either of these whichever happens earlier', selected: true },
+  ];
+
+  /* Dynamic notes — one line under each radio group, driven by the current value. */
+  const DOWNLOAD_NOTES = {
+    any:    'The agent will not wait for the deployment window to download the patch binaries. The patch binaries will be downloaded in the next agent refresh cycle and the deployment alone is carried out in the deployment window.',
+    window: 'Download of the patch binaries in the agent and the deployment will happen during the deployment window.',
+  };
+  const INITIATE_NOTES = {
+    startup: 'Deployment will happen if the system starts up during the specified Deployment Window as specified above.',
+    refresh: 'Deployment will happen during the 90 minutes refresh cycle within the Deployment Window as specified above.',
+    either:  'Deployment happens either during the System startup or the Refresh cycle within the Deployment Window as chosen above.',
+  };
+  /* Position the note so its left edge aligns with the START of the radio
+     row (the FIRST radio), regardless of which option is selected. */
+  function alignNote(groupId, noteId) {
+    const group = $(groupId), note = $(noteId);
+    if (!group || !note) return;
+    const firstRadio = group.querySelector('.ds-radio-group__items ds-radio, .ds-radio-group__items .ds-radio');
+    const parent = note.parentElement;
+    if (!firstRadio || !parent) return;
+    const offset = firstRadio.getBoundingClientRect().left - parent.getBoundingClientRect().left;
+    note.style.paddingLeft = Math.max(0, offset) + 'px';
+  }
+  const setNote = (groupId, noteId, map, val) => {
+    $(noteId).textContent = map[val] || '';
+    requestAnimationFrame(() => alignNote(groupId, noteId));
+  };
+  /* Seed initial notes on next frames so the DOM has laid out. */
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    setNote('spf-download', 'spf-download-note', DOWNLOAD_NOTES, $('spf-download').value || 'any');
+    setNote('spf-initiate', 'spf-initiate-note', INITIATE_NOTES, $('spf-initiate').value || 'either');
+  }));
+  $('spf-download').addEventListener('ds-radio-group-change', (e) => setNote('spf-download', 'spf-download-note', DOWNLOAD_NOTES, e.detail.value));
+  $('spf-initiate').addEventListener('ds-radio-group-change', (e) => setNote('spf-initiate', 'spf-initiate-note', INITIATE_NOTES, e.detail.value));
+  window.addEventListener('resize', () => {
+    alignNote('spf-download', 'spf-download-note');
+    alignNote('spf-initiate', 'spf-initiate-note');
+  });
+
+  /* ---- Months grid (toggle buttons) ------------------------------------ */
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let selectedMonths = new Set(MONTHS);
+  function renderMonths() {
+    $('spf-months').innerHTML = MONTHS.map((m) =>
+      `<button type="button" class="spf-month-btn" data-month="${m}" aria-pressed="${selectedMonths.has(m)}">${m}</button>`).join('');
+    /* Dynamic Select/Deselect all — one link visible at a time. */
+    const allOn = selectedMonths.size === MONTHS.length;
+    $('spf-months-select-all').hidden   =  allOn;
+    $('spf-months-deselect-all').hidden = !allOn;
+  }
+  renderMonths();
+  $('spf-months').addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('.spf-month-btn');
+    if (!btn) return;
+    const m = btn.dataset.month;
+    if (selectedMonths.has(m)) selectedMonths.delete(m); else selectedMonths.add(m);
+    renderMonths();
+  });
+  $('spf-months-select-all').addEventListener('click', (e) => {
+    e.preventDefault();
+    MONTHS.forEach((m) => selectedMonths.add(m));
+    renderMonths();
+  });
+  $('spf-months-deselect-all').addEventListener('click', (e) => {
+    e.preventDefault();
+    selectedMonths.clear();
+    renderMonths();
+  });
+
+  /* ---- Schedules table (below Execute at) ------------------------------ */
+  const WEEK_LABEL = Object.fromEntries(WEEK_OPTS.map((o) => [o.value, o.label]));
+  const DAY_LABEL  = Object.fromEntries(DAY_OPTS.map((o) => [o.value, o.label.slice(0, 3)]));
+
+  const scheduleTable = $('spf-sched-table');
+  let addedSchedules = [];
+
+  scheduleTable.columns = [
+    { id: 'name',     header: 'Schedule Name',                accessor: 'name' },
+    { id: 'months',   header: 'Month(s) for deployment',      accessor: 'monthsLabel' },
+    { id: 'weeks',    header: 'Preferred Week(s) for Deployment', accessor: 'weeksLabel' },
+    { id: 'days',     header: 'Preferred day(s) for Deployment',  accessor: 'daysLabel' },
+    { id: 'time',     header: 'Deployment Time Period',       accessor: 'timeLabel' },
+    { id: 'actions',  header: 'Actions', align: 'end', render: (r) =>
+      `<span class="spf-sched-actions">
+         <button type="button" data-act="more" data-id="${esc(r.id)}" aria-label="More actions"><ds-icon name="more-vertical" size="16"></ds-icon></button>
+       </span>` },
+  ];
+
+  const rowMenu = $('spf-sched-menu');
+  rowMenu.items = [
+    { label: 'Edit',   value: 'edit',   icon: 'edit'   },
+    { label: 'Delete', value: 'delete', icon: 'delete' },
+  ];
+  let menuTargetId = null;
+  scheduleTable.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('button[data-act="more"]');
+    if (!b) return;
+    menuTargetId = b.dataset.id;
+    rowMenu.openFrom(b, { side: 'below', align: 'end', offset: 4 });
+  });
+  rowMenu.addEventListener('ds-dropdown-select', (e) => {
+    const id = menuTargetId; menuTargetId = null;
+    rowMenu.close();
+    const row = addedSchedules.find((r) => r.id === id);
+    if (!row) return;
+    if (e.detail.value === 'delete') {
+      if (confirm('Delete schedule "' + row.name + '"?')) {
+        addedSchedules = addedSchedules.filter((r) => r.id !== id);
+        refreshScheduleTable();
+      }
+    } else if (e.detail.value === 'edit') {
+      $('spf-weeks').values = row.weeks;
+      $('spf-days').values  = row.days;
+      $('spf-from').value = row.from;
+      $('spf-to').value   = row.to;
+      selectedMonths = new Set(row.months);
+      renderMonths();
+      addedSchedules = addedSchedules.filter((r) => r.id !== id);
+      refreshScheduleTable();
+    }
+  });
+
+  function refreshScheduleTable() {
+    scheduleTable.rows = addedSchedules.slice();
+    $('spf-sched-wrap').hidden = addedSchedules.length === 0;
+  }
+
+  /* ---- Add more schedules -------------------------------------------- */
+  $('spf-add-more').addEventListener('click', () => {
+    const weeksVals = ($('spf-weeks').values || []).slice();
+    const daysVals  = ($('spf-days').values  || []).slice();
+    const from = ($('spf-from').value || '').trim();
+    const to   = ($('spf-to').value   || '').trim();
+    const monthsList = [...selectedMonths];
+    const ok = weeksVals.length && daysVals.length && from && to && monthsList.length;
+    $('spf-add-error').classList.toggle('on', !ok);
+    if (!ok) return;
+
+    addedSchedules.push({
+      id: 'sch-' + (addedSchedules.length + 1),
+      name: 'Schedule' + (addedSchedules.length + 1),
+      weeks: weeksVals,  weeksLabel: weeksVals.map((v) => WEEK_LABEL[v]).join(', '),
+      days:  daysVals,   daysLabel:  daysVals.map((v)  => DAY_LABEL[v]).join(', '),
+      months: monthsList, monthsLabel: monthsList.join(', '),
+      from, to, timeLabel: from + ' to ' + to,
+    });
+    refreshScheduleTable();
+
+    /* Reset the just-added slot so user can add another. */
+    $('spf-weeks').values = [];
+    $('spf-days').values  = [];
+    $('spf-from').value = '';
+    $('spf-to').value   = '';
+    selectedMonths = new Set(MONTHS);
+    renderMonths();
+  });
+
+  /* ---- Footer handlers ------------------------------------------------- */
+  $('spf-footer').addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('[data-act]');
+    if (!btn) return;
+    const act = btn.dataset.act;
+    if (act === 'cancel') {
+      if (window.openContentView) window.openContentView('deployments-schedule');
+      return;
+    }
+    const based = $('spf-deploy-based').value || 'weeks';
+
+    /* If there are unsaved values in the "current slot", auto-fold them in as
+       the last entry so nothing is silently lost. */
+    const weeksVals = ($('spf-weeks').values || []).slice();
+    const daysVals  = ($('spf-days').values  || []).slice();
+    const from = ($('spf-from').value || '').trim();
+    const to   = ($('spf-to').value   || '').trim();
+    if (weeksVals.length && daysVals.length && from && to && selectedMonths.size) {
+      addedSchedules.push({
+        id: 'sch-' + (addedSchedules.length + 1),
+        name: 'Schedule' + (addedSchedules.length + 1),
+        weeks: weeksVals, weeksLabel: weeksVals.map((v) => WEEK_LABEL[v]).join(', '),
+        days:  daysVals,  daysLabel:  daysVals.map((v)  => DAY_LABEL[v]).join(', '),
+        months: [...selectedMonths], monthsLabel: [...selectedMonths].join(', '),
+        from, to, timeLabel: from + ' to ' + to,
+      });
+    }
+
+    const first = addedSchedules[0];
+    const scheduleType = based === 'ptuesday' ? 'Patch Tuesday' : based === 'calendar' ? 'Calendar Dates' : 'Weekly';
+    const schedule = based === 'ptuesday'
+      ? 'Monthly · 2nd Tuesday'
+      : based === 'calendar'
+        ? 'Calendar dates'
+        : (first ? first.weeksLabel + ' ' + first.daysLabel + ', ' + first.timeLabel : 'Weekly');
+
+    const payload = {
+      name: ($('spf-name').value || '').trim() || 'Untitled window',
+      status: act === 'save-draft' ? 'Draft' : 'Active',
+      scheduleType,
+      schedule,
+      duration: '2 hours',
+      months: first ? first.months : [...selectedMonths],
+      timeFrom: first ? first.from : '',
+      timeTo:   first ? first.to   : '',
+      based,
+      schedules: addedSchedules.slice(),
+      lastModified: 'just now',
+    };
+    if (window.saveScheduleAndOpen) window.saveScheduleAndOpen(payload);
+    else if (window.openContentView) window.openContentView('deployments-schedule');
+  });
+
+  function show() {
+    root.hidden = false;
+    /* Reset form each visit. */
+    $('spf-name').value = '';
+    $('spf-weeks').values = [];
+    $('spf-days').values  = [];
+    $('spf-from').value = ''; $('spf-to').value = '';
+    selectedMonths = new Set(MONTHS);
+    renderMonths();
+    addedSchedules = [];
+    refreshScheduleTable();
+    $('spf-add-error').classList.remove('on');
+  }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-schedule-form'] = { show, hide };
+})();
+</script>
+</template>
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-schedule-form'].show()));
+})();
+</script>
+</body>
+</html>

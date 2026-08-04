@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Computer Details — Endpoint Central · Prism</title>
+
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+
+  <script>
+    /* Theme persistence — sync with ds-right-pane toggle */
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+      document.addEventListener('ds-right-pane-theme', function (e) {
+        document.documentElement.setAttribute('data-theme', e.detail.theme);
+        try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+      });
+      window.addEventListener('DOMContentLoaded', function () {
+        customElements.whenDefined('ds-right-pane').then(function () {
+          document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+            rp.setAttribute('theme', t);
+          });
+        });
+      });
+    })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body {
+      margin: 0;
+      font-family: var(--font-family-sans);
+      background: var(--cobalt-15);
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    /* Smooth theme + chrome transitions across the page */
+    .shell-area,
+    .content,
+    ds-sidebar-l1,
+    ds-sidebar-l2,
+    ds-right-pane,
+    ds-header-nav {
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard),
+                  border-color var(--duration-standard, 240ms) var(--ease-standard),
+                  color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+
+    /* App shell */
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ─────────────────────────────────────────────────────────────
+       UI Transitions — super-smooth across every interaction
+       ───────────────────────────────────────────────────────────── */
+
+    /* L1 / L2 sidebar hide & show — slide out + fade instead of display:none. */
+    ds-sidebar-l1,
+    ds-sidebar-l2 {
+      max-width: 400px;
+      opacity: 1;
+      overflow: hidden;
+      will-change: max-width, opacity, transform;
+      transition:
+        max-width   360ms cubic-bezier(0.16, 1, 0.3, 1),
+        opacity     240ms cubic-bezier(0.16, 1, 0.3, 1) 40ms,
+        transform   360ms cubic-bezier(0.16, 1, 0.3, 1),
+        margin      360ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    ds-sidebar-l1.is-hidden,
+    ds-sidebar-l2.is-hidden {
+      max-width: 0 !important;
+      opacity: 0 !important;
+      transform: translateX(-12px);
+      margin-inline-end: 0 !important;
+      pointer-events: none;
+    }
+
+    /* Right pane — subtle fade-in */
+    ds-right-pane {
+      transition:
+        opacity 220ms cubic-bezier(0.16, 1, 0.3, 1),
+        transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    ds-right-pane.is-hidden {
+      opacity: 0;
+      transform: translateX(12px);
+      pointer-events: none;
+    }
+
+
+    /* Tab active highlight — silky bottom-border slide */
+    .ds-header-nav__tab {
+      position: relative;
+    }
+
+    /* L1 items — color-only hover (matches L2 and the base component). A prior
+       translateY(-1px) lift jerked on hover and detached the active item's icon
+       from its absolutely-positioned sliding chip, so it's removed. */
+    .ds-sidebar-l1__item {
+      transition: background-color 160ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* L2 items — color-only hover (no horizontal shift) */
+    .ds-sidebar-l2__item {
+      transition:
+        background-color 180ms cubic-bezier(0.4, 0, 0.2, 1),
+        color 180ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Right-pane buttons — gentle scale on press */
+    .ds-right-pane__btn {
+      transition:
+        background-color 100ms cubic-bezier(0.4, 0, 0.2, 1),
+        transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ds-right-pane__btn:active { transform: scale(0.92); }
+
+    /* Customer dropdown + search pill — soft focus halo */
+    .ds-header-nav__customer,
+    .ds-header-nav__search-pill {
+      transition:
+        background-color 130ms cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 130ms cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 130ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ds-header-nav__customer:hover,
+    .ds-header-nav__search-pill:hover {
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+
+    /* Reduce motion for users who prefer it */
+    @media (prefers-reduced-motion: reduce) {
+      ds-sidebar-l1, ds-sidebar-l2, ds-right-pane,
+      .ds-sidebar-l1__item, .ds-sidebar-l2__item,
+      .ds-right-pane__btn,
+      .ds-header-nav__tab, .ds-header-nav__customer, .ds-header-nav__search-pill {
+        transition: none !important;
+        transform: none !important;
+      }
+    }
+
+    /* When L1 collapses, pull L2 back so the right padding doesn't show as a gap */
+    ds-sidebar-l1[collapsed] + ds-sidebar-l2 { margin-left: -8px; }
+
+    .body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      padding: 0 0 var(--spacing-12) var(--spacing-12);
+      gap: 0;
+    }
+
+    /* One outer border wrapping L1 + L2 + content */
+    .shell-area {
+      flex: 1;
+      display: flex;
+      min-width: 0;
+      min-height: 0;
+      border: 1px solid var(--uems-border-accent-subtle);
+      border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle);
+      overflow: hidden;
+    }
+    /* Hide the individual borders on L1 and content — wrapper owns the perimeter */
+    .shell-area ds-sidebar-l1 { border: 0 !important; }
+    .shell-area ds-sidebar-l2 { border: 0 !important; }
+    /* Right-side border on the inner L2 card (visible element) */
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+    /* The L1 component's INNER div has its own border + radius — flatten + remove top padding */
+    .shell-area .ds-sidebar-l1 {
+      border: 0 !important;
+      border-radius: 0 !important;
+      padding-top: 4px !important;
+    }
+
+    /* Content area styling now lives in the ds-content component
+       (design-system-library/src/components/content/content.css). The component auto-toggles
+       its .ds-content--framed class when the adjacent ds-sidebar-l2 gains
+       `is-hidden`, so we don't need a sibling selector here. */
+
+    /* Empty-state wrapper — centers ds-empty-state inside the content area */
+    /* ── Computer Details (Inventory) ── */
+    .cd { display:flex; flex-direction:column; min-width:0; height:100%; }
+    .cd-head { display:flex; align-items:center; justify-content:space-between; gap:var(--spacing-16); padding: var(--spacing-16) var(--spacing-24) var(--spacing-4); background: var(--uems-bg-secondary-subtle); }
+    .cd-title { margin:0; font-size: var(--uems-font-size-18,18px); font-weight: var(--font-weight-semibold,600); color: var(--uems-text-primary); }
+    .cd-head-actions { display:inline-flex; align-items:center; gap:var(--spacing-16); }
+    .cd-head-actions ds-text-link { display:inline-flex; align-items:center; }
+    .cd-sep { width:1px; height:16px; background: var(--uems-border-tertiary); }
+    .cd-meta { display:flex; flex-wrap:wrap; align-items:center; gap: var(--spacing-12); padding: 0 var(--spacing-24) var(--spacing-12); background: var(--uems-bg-secondary-subtle); border-bottom: 1px solid var(--uems-border-tertiary); font-size: var(--uems-font-size-13,13px); color: var(--uems-text-secondary); }
+    .cd-meta b { color: var(--uems-text-primary); font-weight: var(--font-weight-semibold,600); }
+    .cd-meta .cd-sep { margin:0 4px; }
+    .cd-tabs-row { position: relative; padding: 0 var(--spacing-24); border-bottom: 1px solid var(--uems-border-tertiary); }
+    .cd-tabs-row #cd-tabs { display:block; }
+    /* remove the tab-bar's own track line so only the row's full-width line shows */
+    .cd-tabs-row .ds-tab-bar-horizontal--underline { border-bottom: 0; }
+    /* Actions — overlaid on the right, vertically centred on the tab row */
+    .cd-body { flex:1; min-height:0; display:flex; gap: var(--spacing-32); padding: var(--spacing-20) var(--spacing-24); }
+    .cd-subnav { width: 172px; flex:none; }
+    .cd-main { flex:1; min-width:0; display:flex; flex-direction:column; gap: var(--spacing-12); border-inline-start: 1px solid var(--uems-border-tertiary); padding-inline-start: var(--spacing-16); }
+    .cd-toolbar { display:flex; align-items:center; gap: var(--spacing-12); flex-wrap:wrap; }
+    .cd-toolbar .cd-filter-label { font-size: var(--uems-font-size-13,13px); color: var(--uems-text-secondary); margin-inline-start: var(--spacing-8); }
+    .cd-toolbar ds-input-select { width: 170px; }
+    .cd-total { margin-inline-start:auto; font-size: var(--uems-font-size-13,13px); color: var(--uems-text-secondary); }
+    .cd-icons { display:inline-flex; align-items:center; gap: var(--spacing-4); }
+    .cd-icon-btn { width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center; border:0; background:transparent; border-radius: var(--radius-sm); color: var(--uems-icon-secondary); cursor:pointer; }
+    .cd-icon-btn:hover { background: var(--uems-bg-secondary-hover); color: var(--uems-text-primary); }
+    .cd-vbar { width:1px; height:18px; background: var(--uems-border-tertiary); }
+
+    /* Truncated cell + tooltip on overflow (long software names / file paths
+       → ellipsis + full value via ds-tooltip on hover/focus). */
+    .cell-truncate { display:inline-block; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:bottom; }
+    ds-data-table ds-tooltip { display:inline-block; max-width:100%; vertical-align:bottom; }
+    ds-data-table ds-tooltip ds-text-link { max-width:100%; }
+
+    .content-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-32);
+    }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- TOP — Header navigation -->
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+  <div class="body">
+
+    <!-- ONE border wraps L1 + L2 + content -->
+    <div class="shell-area">
+
+      <!-- LEFT — Sidebar L1 (module rail). Starts hidden so the initial
+           Home state shows a clean view without a flash of patch menu. -->
+      <ds-sidebar-l1 id="shell-l1" class="is-hidden" style="height: 100%;"></ds-sidebar-l1>
+
+      <!-- LEFT — Sidebar L2 (sub-nav). Same: starts hidden until JS decides
+           which menu to apply for the active tab. -->
+      <ds-sidebar-l2 id="shell-l2" class="is-hidden" style="height: 100%;"></ds-sidebar-l2>
+
+      <!-- CENTER — Computer Details (Software tab) -->
+      <ds-content role="main">
+        <div class="cd">
+
+          <div class="cd-head">
+            <h1 class="cd-title">Computer Details - EC2AMAZ-LR1HLOU</h1>
+            <div class="cd-head-actions">
+              <ds-text-link href="#" prefix-icon="settings">Detect more computer information?</ds-text-link>
+              <span class="cd-sep"></span>
+              <ds-text-link href="#" prefix-icon="export">Export PDF</ds-text-link>
+              <ds-button id="actions-btn" variant="outline" size="small" suffix-icon="chevron-down">Actions</ds-button>
+            </div>
+          </div>
+
+          <div class="cd-meta">
+            <span>Last Scan : <b>Mar 12, 2026 06:09 PM</b></span><span class="cd-sep"></span>
+            <span>User Currently Logged on : <b>Administrator</b></span><span class="cd-sep"></span>
+            <span>Last Logon User : <b>EC2AMAZ\Administrator</b></span><span class="cd-sep"></span>
+            <span>Last Boot Time : <b>Jul 10, 2025 12:32 PM</b></span>
+          </div>
+
+          <div class="cd-tabs-row">
+            <ds-tab-bar-horizontal id="cd-tabs" type="underline" active-id="software"></ds-tab-bar-horizontal>
+          </div>
+
+          <div class="cd-body">
+            <ds-tab-bar-vertical id="cd-subnav" class="cd-subnav" type="underline" active-id="desktop"></ds-tab-bar-vertical>
+
+            <div class="cd-main">
+              <ds-data-table id="sw-table" selection-mode="none" row-height="default"
+                             sticky-header rows-per-page="500" rows-per-page-options="50,100,500" page="1">
+                <ds-button slot="toolbar-left" id="install-btn" variant="secondary" size="small" prefix-icon="settings-deploy" suffix-icon="chevron-down">Install/Uninstall Software</ds-button>
+              </ds-data-table>
+            </div>
+          </div>
+          <!-- Filter options live inside the table's Filter button (one button) -->
+          <ds-dropdown-menu id="sw-filter-menu" type="select-tick" style="position:fixed; z-index:1300;"></ds-dropdown-menu>
+          <ds-dropdown-menu id="install-menu" type="action" style="position:fixed; z-index:1300;"></ds-dropdown-menu>
+          <ds-dropdown-menu id="actions-menu" type="action" style="position:fixed; z-index:1300;"></ds-dropdown-menu>
+
+        </div>
+      </ds-content>
+
+    </div><!-- /.shell-area -->
+
+    <!-- RIGHT — Utility rail (outside the unified shell) -->
+    <ds-right-pane id="shell-rp" show-accessibility style="height: 100%;"></ds-right-pane>
+
+  </div>
+</div>
+
+<script type="module">
+  import '../design-system-library/src/components/index.js';
+  import { applyL2For, wireL1ToL2 } from '../design-system-library/src/data/ec-menus.js';
+
+  /* Header — Inventory active; this is a full-width drill-down (L1+L2 hidden) */
+  document.getElementById('ec-header').tabs = [
+    { id: 'home',    label: 'Home' },
+    { id: 'configs', label: 'Configurations' },
+    { id: 'tp',      label: 'Threats & Patches' },
+    { id: 'sd',      label: 'Software Deployment' },
+    { id: 'inv',     label: 'Inventory', active: true },
+    { id: 'osd',     label: 'OS Deployment' },
+    { id: 'mdm',     label: 'MDM' },
+    { id: 'tools',   label: 'Tools' },
+    { id: 'agent',   label: 'Agent' },
+    { id: 'browsers', label: 'Browsers' },
+    { id: 'app-ctrl', label: 'Application Control' },
+    { id: 'malware',  label: 'Malware Protection' },
+    { id: 'dlp',      label: 'Endpoint DLP', newTag: true },
+    { id: 'bitlocker', label: 'BitLocker Management' },
+    { id: 'dev-ctrl',  label: 'Device Control' },
+    { id: 'reports',   label: 'Reports' },
+    { id: 'support',   label: 'Support' },
+    { id: 'dex',       label: 'DEX' },
+  ];
+  /* App-shell navigation — same as the base page. Inventory module L2 is shown
+     (Computers active); header tabs swap the L2 panel. The page's own
+     Summary/System/Hardware tabs live inside the content area (cd-tabs). */
+  const l1El = document.getElementById('shell-l1');
+  const l2El = document.getElementById('shell-l2');
+  document.getElementById('ec-header').addEventListener('ds-header-nav-tab-select', (e) => {
+    applyL2For(l1El, l2El, e.detail?.id);
+  });
+  document.getElementById('ec-header').addEventListener('ds-header-nav-action', (e) => {
+    if (e.detail?.action === 'settings') {
+      applyL2For(l1El, l2El, 'admin');
+      document.querySelectorAll('.ds-header-nav__tab').forEach((el) => {
+        el.classList.remove('ds-header-nav__tab--active');
+        el.removeAttribute('aria-current');
+      });
+    }
+  });
+  wireL1ToL2(l1El, l2El);
+  applyL2For(l1El, l2El, 'inv');
+
+  /* Main tabs */
+  document.getElementById('cd-tabs').items = [
+    { id:'summary', label:'Summary' }, { id:'system', label:'System' }, { id:'hardware', label:'Hardware' },
+    { id:'software', label:'Software' }, { id:'certs', label:'Certificates' }, { id:'files', label:'File Details' },
+    { id:'security', label:'Security' }, { id:'usb', label:'USB Audit' }, { id:'history', label:'History' },
+  ];
+  /* Left sub-nav */
+  document.getElementById('cd-subnav').items = [
+    { id:'desktop', label:'Desktop Apps' },
+    { id:'store',   label:'Microsoft Store Apps' },
+    { id:'metered', label:'Metered Software' },
+  ];
+
+  /* Filter dropdowns */
+  /* Filter options live INSIDE the table's built-in Filter button (one button).
+     Clicking Filter opens a grouped dropdown; selecting an option filters rows. */
+  const filterMenu = document.getElementById('sw-filter-menu');
+  filterMenu.items = [
+    { type:'heading', label:'Software' },
+    { label:'All Software', value:'sw:all', selected:true },
+    { label:'Commercial', value:'sw:comm' },
+    { label:'Non Commercial', value:'sw:noncomm' },
+    { type:'divider' },
+    { type:'heading', label:'Installed User' },
+    { label:'All Users', value:'user:all' },
+    { label:'SYSTEM', value:'user:SYSTEM' },
+    { label:'Administrator', value:'user:Administrator' },
+    { type:'divider' },
+    { type:'heading', label:'OS Compatibility' },
+    { label:'All', value:'os:all' },
+    { label:'64-bit', value:'os:64-bit' },
+    { label:'32-bit', value:'os:32-bit' },
+  ];
+
+  /* ── Software table ── */
+  const LIC_STATE = { 'Unidentified':'default', 'Non Commercial':'active', 'Commercial':'success', 'Prohibited':'critical' };
+  const lic = (v) => `<ds-badge variant="subtle" state="${LIC_STATE[v] || 'default'}" shape="rounded" size="medium">${v}</ds-badge>`;
+  /* Truncate long cell text with ellipsis + show the full value in a ds-tooltip
+     on hover/focus (software names + file paths overflow easily). */
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const tip = (full, inner) =>
+    `<ds-tooltip text="${esc(full)}" show-icon="false" position="up-center"><span class="cell-truncate">${inner}</span></ds-tooltip>`;
+  const tbl = document.getElementById('sw-table');
+  tbl.columns = [
+    { id:'name', header:'Software Name', accessor:'name', render:(r)=>tip(r.name, `<ds-text-link href="#">${r.name}</ds-text-link>`) },
+    { id:'version', header:'Version', accessor:'version' },
+    { id:'os', header:'OS Compatibility', accessor:'os' },
+    { id:'manufacturer', header:'Manufacturer', accessor:'manufacturer' },
+    { id:'date', header:'Installed Date', accessor:'date', sortable:true },
+    { id:'account', header:'Installed User Account', accessor:'account' },
+    { id:'location', header:'Installed Location', accessor:'location', render:(r)=>r.location==='--'?'--':tip(r.location, `<span style="color:var(--uems-text-secondary)">${r.location}</span>`) },
+    { id:'license', header:'License Type', accessor:'license', render:(r)=>lic(r.license) },
+  ];
+  tbl.rows = [
+    { id:1, name:'Windows Internet Explorer 11(64 bit)', version:'11.1.20348.0', os:'64-bit', manufacturer:'Microsoft Corporation', date:'--', account:'SYSTEM', location:'--', license:'Unidentified' },
+    { id:2, name:'AWS PV Drivers', version:'8.5.0', os:'64-bit', manufacturer:'Amazon Web Services', date:'Dec 13, 2024', account:'SYSTEM', location:'--', license:'Unidentified' },
+    { id:3, name:'Amazon SSM Agent', version:'3.3.1611.0', os:'64-bit', manufacturer:'Amazon Web Services', date:'Feb 13, 2025', account:'SYSTEM', location:'C:\\ProgramData\\Package Cache\\{a550adcc-0e0a-4c7…', license:'Non Commercial' },
+    { id:4, name:'Amazon EC2Launch', version:'2.0.2081.0', os:'64-bit', manufacturer:'Amazon Web Services', date:'Mar 12, 2025', account:'SYSTEM', location:'--', license:'Non Commercial' },
+    { id:5, name:'Microsoft Visual C++ 2015-2022 Redistributable (x64…', version:'14.42.3443…', os:'64-bit', manufacturer:'Microsoft Corporation', date:'Mar 12, 2025', account:'SYSTEM', location:'C:\\ProgramData\\Package Cache\\{b49c10dd-4d54-45…', license:'Unidentified' },
+    { id:6, name:'aws-cfn-bootstrap', version:'2.0.33', os:'64-bit', manufacturer:'Amazon Web Services', date:'Mar 12, 2025', account:'SYSTEM', location:'C:\\ProgramData\\Package Cache\\{3d75435b-877e-49…', license:'Unidentified' },
+    { id:7, name:'Microsoft Edge', version:'145.0.3800.…', os:'64-bit', manufacturer:'Microsoft Corporation', date:'Mar 12, 2025', account:'SYSTEM', location:'--', license:'Unidentified' },
+    { id:8, name:'7-Zip 24.09 (x64)', version:'24.09', os:'64-bit', manufacturer:'Igor Pavlov', date:'Apr 1, 2025', account:'SYSTEM', location:'C:\\Program Files\\7-Zip\\', license:'Unidentified' },
+    { id:9, name:'Notepad++ (64-bit x64)', version:'8.7.8', os:'64-bit', manufacturer:'Notepad++ Team', date:'Apr 2, 2025', account:'SYSTEM', location:'C:\\Program Files\\Notepad++', license:'Unidentified' },
+    { id:10, name:'CrowdStrike Windows Sensor', version:'7.33.20505.0', os:'64-bit', manufacturer:'CrowdStrike, Inc.', date:'Mar 5, 2026', account:'SYSTEM', location:'C:\\ProgramData\\Package Cache\\{b59aaf9c-c478-431…', license:'Unidentified' },
+    { id:11, name:'DBeaver 26.0.0 (current user)', version:'26.0.0', os:'64-bit', manufacturer:'DBeaver Corp', date:'Mar 11, 2026', account:'Administrator', location:'C:\\Users\\Administrator\\AppData\\Local\\DBeaver', license:'Unidentified' },
+    { id:12, name:'ManageEngine UEMS - Agent', version:'11.5.2605.0…', os:'32-bit', manufacturer:'Zoho Corporation Pvt. Ltd.', date:'Mar 12, 2026', account:'SYSTEM', location:'C:\\Program Files (x86)\\ManageEngine\\UEMS_Agent\\', license:'Unidentified' },
+  ];
+
+  /* Wire the table's built-in Filter button → open the grouped dropdown,
+     and apply the chosen facet to the rows. */
+  const allRows = tbl.rows.slice();
+  const applyFacet = (val) => {
+    const [facet, v] = (val || '').split(':');
+    let rows = allRows;
+    if (v && v !== 'all') {
+      if (facet === 'os')   rows = allRows.filter(r => r.os === v);
+      if (facet === 'user') rows = allRows.filter(r => r.account === v);
+      if (facet === 'sw')   rows = allRows.filter(r => (v === 'noncomm') === (r.license === 'Non Commercial'));
+    }
+    tbl.rows = rows;
+    const _tot = document.querySelector('.cd-total'); if (_tot) _tot.textContent = 'Total : ' + rows.length;
+  };
+  tbl.addEventListener('ds-data-table-filter', () => {
+    const btn = tbl.querySelector('[data-act="filter"]');
+    if (btn) { const r = btn.getBoundingClientRect(); filterMenu.style.top = (r.bottom+6)+'px'; filterMenu.style.left = Math.max(8, r.right-220)+'px'; }
+    filterMenu.toggle();
+  });
+  filterMenu.addEventListener('ds-dropdown-select', (e) => { applyFacet(e.detail?.value); filterMenu.close(); });
+
+  /* Install/Uninstall dropdown — Computer / User scope (2 options) */
+  const installMenu = document.getElementById('install-menu');
+  installMenu.items = [
+    { label: 'Computer', value: 'computer', icon: 'computer' },
+    { label: 'User',     value: 'user',     icon: 'user' },
+  ];
+  const installBtn = document.getElementById('install-btn');
+  installBtn.addEventListener('click', () => {
+    const r = installBtn.getBoundingClientRect();
+    installMenu.style.top = (r.bottom + 6) + 'px';
+    installMenu.style.left = r.left + 'px';
+    installMenu.toggle();
+  });
+  installMenu.addEventListener('ds-dropdown-select', () => installMenu.close());
+
+  /* Global page Actions — computer-level operations for this device */
+  const actionsMenu = document.getElementById('actions-menu');
+  actionsMenu.items = [
+    { label: 'Scan Now',       value: 'scan',   icon: 'refresh-time' },
+    { label: 'Remote Control',  value: 'remote', icon: 'computer' },
+    { label: 'Move to Group',   value: 'move',   icon: 'folder' },
+    { type: 'divider' },
+    { label: 'Reboot',          value: 'reboot', icon: 'refresh' },
+    { label: 'Shut Down',       value: 'shutdown', icon: 'power' },
+    { type: 'divider' },
+    { label: 'Delete Computer', value: 'delete', icon: 'delete', danger: true },
+  ];
+  const _toast = (status, title, desc) => {
+    let host = document.querySelector('.ds-data-table__toast-host');
+    if (!host) { host = document.createElement('div'); host.className = 'ds-data-table__toast-host'; document.body.appendChild(host); }
+    const el = document.createElement('ds-toast');
+    el.setAttribute('status', status); el.setAttribute('style-variant', 'subtle'); el.setAttribute('title', title);
+    if (desc) { el.setAttribute('description', desc); el.setAttribute('show-description',''); }
+    el.setAttribute('duration', '4000'); el.addEventListener('ds-toast-close', () => el.remove());
+    host.appendChild(el);
+  };
+  const actionsBtn = document.getElementById('actions-btn');
+  actionsBtn.addEventListener('click', () => {
+    const r = actionsBtn.getBoundingClientRect();
+    actionsMenu.style.top = (r.bottom + 6) + 'px';
+    actionsMenu.style.left = Math.max(8, r.right - 200) + 'px';
+    actionsMenu.toggle();
+  });
+  actionsMenu.addEventListener('ds-dropdown-select', (e) => {
+    const map = { scan:['info','Scan started','Collecting the latest details for EC2AMAZ-LR1HLOU.'],
+                  remote:['info','Remote Control','Launching a remote session…'],
+                  move:['success','Moved to group','Computer reassigned successfully.'],
+                  reboot:['warning','Reboot scheduled','The device will restart shortly.'],
+                  shutdown:['warning','Shut down scheduled','The device will power off shortly.'],
+                  delete:['error','Computer removed','EC2AMAZ-LR1HLOU was deleted from inventory.'] };
+    const m = map[e.detail?.value] || ['info','Action', ''];
+    _toast(m[0], m[1], m[2]);
+    actionsMenu.close();
+  });
+  document.addEventListener('click', (e) => {
+    if (actionsMenu.hasAttribute('open') && !actionsMenu.contains(e.target) && e.target.closest('#actions-btn') !== actionsBtn) actionsMenu.close();
+  });
+  document.addEventListener('click', (e) => {
+    if (installMenu.hasAttribute('open') && !installMenu.contains(e.target) && e.target.closest('#install-btn') !== installBtn) installMenu.close();
+  });
+  document.addEventListener('click', (e) => {
+    if (filterMenu.hasAttribute('open') && !filterMenu.contains(e.target) && !(e.target.closest && e.target.closest('[data-act="filter"]'))) filterMenu.close();
+  });
+</script>
+
+</body>
+</html>

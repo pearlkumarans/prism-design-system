@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<!--
+  Help — DUAL-MODE drawer (ds-drawer, confined to .shell-area via .ec-drawer).
+  • Open directly → standalone harness mounts a .shell-area host + auto-opens.
+  • Fetched by Shell → injectDrawer('help') extracts only <template id="drawer-fragment">.
+  Shell's showHelp() coordinates mutual exclusion with the other right-pane drawers,
+  lazy-loads this, then calls ShellDrawers.help.show().
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Help — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="../design-system-library/src/components/drawer/drawer.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-base); }
+    .sa-host { position: relative; display: flex; flex: 1; min-height: 0; height: 100vh; overflow: clip; }
+    /* ec-drawer base (Shell already has this; needed here for standalone) */
+    .shell-area ds-drawer.ec-drawer { position: absolute !important; inset: 0 !important; z-index: 30; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  #help-pop .ds-drawer__body { padding-top: 0; }
+  .help-hdr { position: sticky; top: 0; z-index: 2; margin: 0 calc(-1 * var(--spacing-20)) 12px;
+    background: linear-gradient(135deg, var(--uems-bg-accent-primary) 0%, var(--uems-bg-primary) 55%, var(--uems-bg-warning-primary) 100%);
+    border-bottom: 1px solid var(--uems-border-tertiary); }
+  .help-head { position: relative; display: flex; align-items: center; gap: 8px; padding: var(--spacing-16) var(--spacing-20) 0; }
+  .help-head__title { flex: 1; min-width: 0; font-size: var(--font-size-16); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+  #help-pop ds-tab-bar-horizontal { display: block; padding: var(--spacing-12) var(--spacing-20) 0; background: transparent; }
+  #help-pop ds-tab-bar-horizontal .ds-tab-bar-horizontal { border-bottom: 0; }
+  .help-search { margin-bottom: 8px; }
+  .help-ai-ic { display: block; }
+  .help-list { list-style: none; margin: 0; padding: 0; }
+  /* Icon aligns to the FIRST line (centered within its 20px line-height), not the
+     two-line block centre. 14px icon in 20px line → (20-14)/2 = 3px top nudge. */
+  .help-list li { display: flex; gap: 12px; align-items: flex-start; padding: 8px 2px; }
+  .help-list__ic { flex: 0 0 auto; display: flex; align-items: center; height: 20px; }
+  .help-list a { font-size: var(--font-size-14); line-height: 20px; color: var(--uems-text-secondary); text-decoration: none; cursor: pointer; }
+  .help-list a:hover { color: var(--uems-text-accent-link); }
+  .help-empty { font-size: var(--font-size-14); color: var(--uems-text-secondary); padding: 28px 4px; text-align: center; }
+  .help-list--video li { gap: 12px; padding: 8px 2px; align-items: center; }
+  .help-list__play { flex: 0 0 auto; color: #6B94E7; display: flex; }
+  .help-tlist { display: flex; flex-direction: column; }
+  .help-t { padding: 4px 0 16px; }
+  .help-t + .help-t { border-top: 1px dashed var(--uems-border-secondary); padding-top: 16px; }
+  .help-t__quote { font-size: var(--font-size-15); line-height: 22px; color: var(--uems-text-primary); margin: 0 0 12px; }
+  .help-t__quote strong { font-weight: var(--font-weight-bold); }
+  .help-t__by { display: flex; align-items: center; gap: 12px; }
+  .help-t__name { font-size: var(--font-size-14); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+  .help-t__org { font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+  /* Footer — external resource links (open outside the product, new tab).
+     Lives in the ds-drawer footer slot (footer-start); the start region is
+     stretched to full width so the chips distribute evenly across the footer. */
+  #help-pop .ds-drawer__footer { background: transparent; padding: var(--spacing-12) var(--spacing-12); }
+  #help-pop .ds-drawer__footer-start { flex: 1 1 auto; width: 100%; }
+  #help-pop .ds-drawer__spacer, #help-pop .ds-drawer__footer-actions { display: none; }
+  /* Compact link-style footer — no chips/boxes; plain accent links, thin dividers between. */
+  .help-foot { display: flex; align-items: center; width: 100%; }
+  .help-flink { flex: 1 1 0; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 6px 8px; border: 0; background: none; text-decoration: none; cursor: pointer;
+    transition: color 140ms var(--ease-standard); }
+  .help-flink + .help-flink { border-inline-start: 1px solid var(--uems-border-tertiary); }
+  .help-flink__ic { flex: 0 0 auto; display: flex; align-items: center; margin-inline-end: 2px; color: var(--uems-text-accent-link); }
+  .help-flink__lbl { flex: 0 1 auto; min-width: 0; font-size: var(--font-size-12, 12px); font-weight: var(--font-weight-semibold);
+    color: var(--uems-text-accent-link); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .help-flink:hover .help-flink__lbl { text-decoration: underline; }
+</style>
+
+<ds-drawer id="help-pop" class="ec-drawer" side="right" size="m" modal="false" show-header="false" show-footer="true">
+  <div class="help-hdr">
+    <div class="help-head">
+      <span class="help-head__title" id="help-title">Hey there! Need help?</span>
+      <ds-icon-button class="help-close" data-help-close icon="close" label="Close" no-tooltip type="tertiary-grey" size="small"></ds-icon-button>
+    </div>
+    <ds-tab-bar-horizontal id="help-tabs" type="underline" active-id="howtos"></ds-tab-bar-horizontal>
+  </div>
+  <div id="help-body"></div>
+  <div class="help-foot" id="help-foot" slot="footer-start"></div>
+</ds-drawer>
+
+<script>
+(function () {
+  /* ── i18n: central catalog. Every displayed string lives here; non-string
+     data (tab ids, footer icons/hrefs, list sizes) stays on the arrays below. ── */
+  const MSGS = {
+    en: {
+      'help.title': 'Hey there! Need help?',
+      'help.search': 'Ask me anything...',
+      'help.noresults': 'No results found.',
+      'help.tab.howtos': "How to's",
+      'help.tab.kb': 'Knowledge Base',
+      'help.tab.faq': 'FAQ',
+      'help.tab.videos': 'Videos',
+      'help.tab.testimonials': 'Testimonials',
+      'help.howtos.0': 'How to change the local administrator password in a computer?',
+      'help.howtos.1': 'How to configure proxy settings in Internet Explorer for all users?',
+      'help.howtos.2': 'How do I deploy custom wallpapers to all the client computers in my network and prevent users from changing them?',
+      'help.howtos.3': 'How do I deploy custom screen savers at regular intervals to all the client computers in my network?',
+      'help.howtos.4': 'How to disable the Automatic Updates?',
+      'help.howtos.5': 'How to create custom messages to display on all the client systems in my network?',
+      'help.howtos.6': 'How to create shortcuts for Web applications on the desktops of all the client systems in my network?',
+      'help.howtos.7': 'How to enable the Remote Administration?',
+      'help.howtos.8': 'How do I move a user or group from one local group to another?',
+      'help.howtos.9': 'How to return Error codes on Scripts?',
+      'help.howtos.10': 'How to deploy Wireless Settings to Windows 7?',
+      'help.kb.0': 'Agent Installation KBs',
+      'help.kb.1': 'Patch Deployment KBs',
+      'help.kb.2': 'Software Deployment KBs',
+      'help.kb.3': 'Asset Management KBs',
+      'help.kb.4': 'How to disable the Automatic Updates?',
+      'help.kb.5': 'Remote Control KBs',
+      'help.kb.6': 'Configuration KBs',
+      'help.faq.0': 'What are the system requirements for Central servers and distribution servers?',
+      'help.faq.1': 'What are the ports used by the Central Server Application?',
+      'help.faq.2': 'What operating systems are supported by Central Server?',
+      'help.videos.0': 'Free desktop Central training',
+      'help.videos.1': 'Install Endpoint Central agents automatically',
+      'help.videos.2': 'Configurations Hidden Tricks',
+      'help.videos.3': 'Free training - PATCH Module',
+      'help.videos.4': 'Configuring Network Share and HTTP Repository in Endpoint Central',
+      'help.testi.0.quote': '<strong>Patch Manager Plus</strong> reduced our vulnerability exposure by 85% in the first month. The automated patching schedules ensure we never miss critical updates.',
+      'help.testi.0.name': 'David Kim',
+      'help.testi.0.org': 'SecureBank Financial',
+      'help.testi.1.quote': '<strong>Patch Manager Plus</strong> reduced our vulnerability exposure by 85% in the first month. The automated patching schedules ensure we never miss critical updates.',
+      'help.testi.1.name': 'Felix John',
+      'help.testi.1.org': 'SecureBank Financial',
+      'help.footer.0.label': 'View More',
+      'help.footer.1.label': 'Roadmap',
+      'help.footer.2.label': 'Online guide',
+    },
+    ar: {
+      'help.title': 'مرحبًا! تحتاج مساعدة؟',
+      'help.search': 'اسألني أي شيء...',
+      'help.noresults': 'لا توجد نتائج.',
+      'help.tab.howtos': 'كيفية',
+      'help.tab.kb': 'قاعدة المعرفة',
+      'help.tab.faq': 'الأسئلة الشائعة',
+      'help.tab.videos': 'فيديوهات',
+      'help.tab.testimonials': 'الشهادات',
+      'help.howtos.0': 'كيفية تغيير كلمة مرور المسؤول المحلي في جهاز كمبيوتر؟',
+      'help.howtos.1': 'كيفية تكوين إعدادات الوكيل في Internet Explorer لجميع المستخدمين؟',
+      'help.howtos.2': 'كيف أنشر خلفيات مخصصة على جميع أجهزة العملاء في شبكتي وأمنع المستخدمين من تغييرها؟',
+      'help.howtos.3': 'كيف أنشر شاشات توقف مخصصة على فترات منتظمة لجميع أجهزة العملاء في شبكتي؟',
+      'help.howtos.4': 'كيفية تعطيل التحديثات التلقائية؟',
+      'help.howtos.5': 'كيفية إنشاء رسائل مخصصة لعرضها على جميع أنظمة العملاء في شبكتي؟',
+      'help.howtos.6': 'كيفية إنشاء اختصارات لتطبيقات الويب على أسطح مكتب جميع أنظمة العملاء في شبكتي؟',
+      'help.howtos.7': 'كيفية تمكين الإدارة عن بُعد؟',
+      'help.howtos.8': 'كيف أنقل مستخدمًا أو مجموعة من مجموعة محلية إلى أخرى؟',
+      'help.howtos.9': 'كيفية إرجاع رموز الأخطاء في البرامج النصية؟',
+      'help.howtos.10': 'كيفية نشر إعدادات الشبكة اللاسلكية إلى Windows 7؟',
+      'help.kb.0': 'مقالات تثبيت الوكيل',
+      'help.kb.1': 'مقالات نشر التصحيحات',
+      'help.kb.2': 'مقالات نشر البرامج',
+      'help.kb.3': 'مقالات إدارة الأصول',
+      'help.kb.4': 'كيفية تعطيل التحديثات التلقائية؟',
+      'help.kb.5': 'مقالات التحكم عن بُعد',
+      'help.kb.6': 'مقالات التهيئة',
+      'help.faq.0': 'ما هي متطلبات النظام للخوادم المركزية وخوادم التوزيع؟',
+      'help.faq.1': 'ما هي المنافذ التي يستخدمها تطبيق الخادم المركزي؟',
+      'help.faq.2': 'ما هي أنظمة التشغيل المدعومة من الخادم المركزي؟',
+      'help.videos.0': 'تدريب مجاني على Desktop Central',
+      'help.videos.1': 'تثبيت وكلاء Endpoint Central تلقائيًا',
+      'help.videos.2': 'حيل خفية في التكوينات',
+      'help.videos.3': 'تدريب مجاني - وحدة التصحيح',
+      'help.videos.4': 'تكوين مشاركة الشبكة ومستودع HTTP في Endpoint Central',
+      'help.testi.0.quote': '<strong>Patch Manager Plus</strong> قلّل تعرّضنا للثغرات بنسبة 85٪ في الشهر الأول. تضمن جداول التصحيح التلقائية ألا نفوّت التحديثات الحرجة أبدًا.',
+      'help.testi.0.name': 'David Kim',
+      'help.testi.0.org': 'SecureBank Financial',
+      'help.testi.1.quote': '<strong>Patch Manager Plus</strong> قلّل تعرّضنا للثغرات بنسبة 85٪ في الشهر الأول. تضمن جداول التصحيح التلقائية ألا نفوّت التحديثات الحرجة أبدًا.',
+      'help.testi.1.name': 'Felix John',
+      'help.testi.1.org': 'SecureBank Financial',
+      'help.footer.0.label': 'عرض المزيد',
+      'help.footer.1.label': 'خارطة الطريق',
+      'help.footer.2.label': 'الدليل عبر الإنترنت',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+
+  /* Non-string data: tab ids/order, per-list item counts, footer icons/hrefs. */
+  const TABS = [{ id: 'howtos' }, { id: 'kb' }, { id: 'faq' }, { id: 'videos' }, { id: 'testimonials' }];
+  const LIST_LEN = { howtos: 11, kb: 7, faq: 3, videos: 5 };
+  const TESTI_LEN = 2;
+  /* Footer external links — leave the product (open in a new tab). Labels via t(). */
+  const FOOT_LINKS = [
+    { icon: 'globe', href: 'https://www.manageengine.com/products/desktop-central/' },
+    { icon: 'route', href: 'https://www.manageengine.com/products/desktop-central/product-roadmap.html?mod=Settings&trackingcode=dci&utm_source=In-Product&did=DIDNotAvailable&buildno=115261608' },
+    { icon: 'book-open', href: 'https://www.manageengine.com/products/desktop-central/help/' },
+  ];
+  const AI_ICON = `<svg class="help-ai-ic" width="14" height="14" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="6.00098" width="3.39443" height="3.39443" rx="1" transform="rotate(45 6.00098 0)" fill="#6B94E7"/><rect x="9.60156" y="3.60156" width="3.39443" height="3.39443" rx="1" transform="rotate(45 9.60156 3.60156)" fill="#6B94E7"/><rect x="2.40039" y="3.60156" width="3.39443" height="3.39443" rx="1" transform="rotate(45 2.40039 3.60156)" fill="#6B94E7"/><rect x="6" y="7.19922" width="3.39443" height="3.39443" rx="1" transform="rotate(45 6 7.19922)" fill="#6B94E7"/></svg>`;
+
+  const lang = () => (window.ShellCtx && window.ShellCtx.lang) || 'en';
+  const panel = () => document.getElementById('help-pop');
+  let _tab = 'howtos';
+  let _q = '';
+
+  function renderResults() {
+    const box = document.querySelector('#help-pop #help-results'); if (!box) return;
+    const q = _q.trim().toLowerCase();
+    if (_tab === 'testimonials') {
+      const items = Array.from({ length: TESTI_LEN }, (_, i) => ({ quote: t(`help.testi.${i}.quote`), name: t(`help.testi.${i}.name`), org: t(`help.testi.${i}.org`) }));
+      box.innerHTML = `<div class="help-tlist">${items.map((tt) => `
+        <div class="help-t"><p class="help-t__quote">“${tt.quote}”</p>
+          <div class="help-t__by"><ds-avatar name="${tt.name}" size="medium"></ds-avatar>
+            <div><div class="help-t__name">${tt.name}</div><div class="help-t__org">${tt.org}</div></div></div>
+        </div>`).join('')}</div>`;
+      return;
+    }
+    const isVideos = _tab === 'videos';
+    const all = Array.from({ length: LIST_LEN[_tab] || 0 }, (_, i) => t(`help.${_tab}.${i}`));
+    const list = all.filter((s) => !q || s.toLowerCase().includes(q));
+    if (!list.length) { box.innerHTML = `<div class="help-empty">${t('help.noresults')}</div>`; return; }
+    const bullet = isVideos ? `<span class="help-list__play"><ds-icon name="play" size="18"></ds-icon></span>` : `<span class="help-list__ic">${AI_ICON}</span>`;
+    box.innerHTML = `<ul class="help-list${isVideos ? ' help-list--video' : ''}">${list.map((s) => `<li>${bullet}<a href="#">${s}</a></li>`).join('')}</ul>`;
+  }
+  function renderBody() {
+    const rtl = lang() === 'ar'; _q = '';
+    const body = document.getElementById('help-body'); if (!body) return;
+    const searchHtml = _tab === 'testimonials' ? '' : `<div class="help-search"><ds-text-input id="help-search-input" prefix-icon="search" placeholder="${t('help.search')}" label-position="top" show-label="false" show-helper-row="false" ${rtl ? 'rtl' : ''}></ds-text-input></div>`;
+    body.innerHTML = searchHtml + `<div class="help-results" id="help-results"></div>`;
+    const si = body.querySelector('#help-search-input');
+    if (si) si.addEventListener('ds-input', (e) => { _q = (e.detail && e.detail.value) || ''; renderResults(); });
+    renderResults();
+  }
+  function renderFooter() {
+    const foot = document.getElementById('help-foot'); if (!foot) return;
+    foot.innerHTML = FOOT_LINKS.map((l, i) => {
+      const label = t(`help.footer.${i}.label`);
+      return `<a class="help-flink" href="${l.href}" target="_blank" rel="noopener noreferrer" title="${label}">
+         <span class="help-flink__ic"><ds-icon name="${l.icon}" size="16"></ds-icon></span>
+         <span class="help-flink__lbl">${label}</span>
+       </a>`;
+    }).join('');
+  }
+  function render() {
+    const p = panel(); const tabs = document.getElementById('help-tabs');
+    const ht = document.getElementById('help-title'); if (ht) ht.textContent = t('help.title');
+    if (p) { if (lang() === 'ar') p.setAttribute('rtl', ''); else p.removeAttribute('rtl'); }
+    if (tabs) { tabs.items = TABS.map((tb) => ({ id: tb.id, label: t(`help.tab.${tb.id}`) })); tabs.setAttribute('active-id', _tab); if (lang() === 'ar') tabs.setAttribute('rtl', ''); else tabs.removeAttribute('rtl'); }
+    renderBody();
+    renderFooter();
+  }
+  function show() {
+    const p = panel(); if (!p) return;
+    render(); p.open();
+    const tabs = document.getElementById('help-tabs');
+    /* tab bar renders while hidden (offset 0) → re-assign once visible to position the underline */
+    requestAnimationFrame(() => requestAnimationFrame(() => { if (tabs) { tabs.items = tabs.items; tabs.setAttribute('active-id', _tab); } }));
+  }
+  function hide() { const p = panel(); if (p) p.close(); }
+
+  /* Wire tab change + close (once, after the fragment is in the DOM) */
+  const tabsEl = document.getElementById('help-tabs');
+  if (tabsEl) tabsEl.addEventListener('ds-tab-change', (e) => { if (e.detail && e.detail.id) { _tab = e.detail.id; renderBody(); } });
+  panel() && panel().querySelector('[data-help-close]')?.addEventListener('click', hide);
+  document.addEventListener('shell:langchange', () => { const p = panel(); if (p && p.hasAttribute('open')) render(); });
+
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers.help = { show, hide, render };
+})();
+</script>
+</template>
+
+<script>
+/* ── STANDALONE HARNESS — runs ONLY when opened directly. ── */
+(function () {
+  const KEY = 'help';
+  const host = document.createElement('div'); host.className = 'shell-area sa-host'; document.body.appendChild(host);
+  let lang = 'en';
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellCtx = window.ShellCtx || { get shellArea() { return host; }, get lang() { return lang; }, setActiveIcon() {} };
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); s.textContent = o.textContent; document.body.appendChild(s); });
+  customElements.whenDefined('ds-drawer').then(() => requestAnimationFrame(() => window.ShellDrawers[KEY] && window.ShellDrawers[KEY].show()));
+})();
+</script>
+</body>
+</html>

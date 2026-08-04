@@ -1,0 +1,180 @@
+/* =============================================================================
+   ds-description-list — term/value metadata pairs. Spec: handoff/description-list.md
+   Container padding 16 · item gap 16 · column gap 32 (stacked) / 40 (horizontal).
+   Term = Text-Secondary 12/16 semibold · Value = Text-Primary 14/20 regular.
+   Multi-column uses CSS columns so items fill COLUMN-MAJOR (col 1 first),
+   matching the Figma "Column" frames. Collapses to a single column on mobile.
+   ============================================================================= */
+/* The custom element itself must be block — it renders a light-DOM <dl> child,
+   and an inline host (the browser default for an unknown element) collapses to
+   0 width and squashes flex/column layouts inside.
+   `container-type: inline-size` makes the host a query container so the list
+   reflows to its OWN available width (side-panel, drawer, full page) rather
+   than the viewport — see the @container rules at the foot of this file. */
+ds-description-list { display: block; container-type: inline-size; }
+.ds-description-list {
+  margin: 0;
+  /* 8px here + 8px on each item = the spec's 16px content inset. Splitting it
+     this way lets the item's hover pill sit fully INSIDE the container (never
+     bleeding past the edge, into a neighbour, or across a column gap). */
+  padding: var(--spacing-8, 8px);
+  font-family: var(--font-family-sans);
+}
+
+/* Multi-column: column-major fill. Gap differs by orientation (spec). */
+.ds-description-list[data-columns="2"] { column-count: 2; }
+.ds-description-list[data-columns="3"] { column-count: 3; }
+.ds-description-list[data-columns="2"],
+.ds-description-list[data-columns="3"] { column-gap: var(--spacing-32, 32px); }
+.ds-description-list--horizontal[data-columns="2"],
+.ds-description-list--horizontal[data-columns="3"],
+.ds-description-list--horizontal-auto[data-columns="2"],
+.ds-description-list--horizontal-auto[data-columns="3"] { column-gap: var(--spacing-40, 40px); }
+
+/* auto: let the browser pick the column count from available width — packs as
+   many ~300px columns as fit, collapsing to one when narrow. Use when the list
+   sits in a flexible-width region and a fixed 1/2/3 would waste space. */
+.ds-description-list[data-columns="auto"] { column-width: 300px; column-gap: var(--spacing-32, 32px); }
+.ds-description-list--horizontal[data-columns="auto"],
+.ds-description-list--horizontal-auto[data-columns="auto"] { column-gap: var(--spacing-40, 40px); }
+
+/* One item = one term/value pair. Never split across a column boundary. */
+.ds-description-list__item {
+  break-inside: avoid;
+  display: flex;
+  flex-direction: column;              /* Stacked: term above value */
+  gap: var(--spacing-6, 6px);
+  /* Hover affordance: a soft surface fades in behind the whole pair. The pill
+     lives fully INSIDE the container (container pads 8 + item pads 8 keeps the
+     spec's 16px text inset), so it never bleeds past the edge, over a
+     neighbour, or across a multi-column gap — no negative margins. Block
+     padding + margin keep the original 24px row rhythm (8 + 8 + 8). */
+  padding: var(--spacing-8, 8px);
+  margin-block-end: var(--spacing-8, 8px);
+  border-radius: var(--radius-md, 8px);
+  transition: background-color var(--duration-fast, 120ms) var(--ease-standard, ease);
+}
+.ds-description-list__item:last-child { margin-block-end: 0; }
+.ds-description-list__item:hover { background: var(--uems-bg-primary-hover); }
+
+/* Term (dt) — label. Text-Secondary, 12/16 semibold. */
+.ds-description-list__term {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4, 4px);
+  margin: 0;
+  min-width: 0;
+  font-size: var(--font-size-13, 13px);
+  line-height: 16px;
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--uems-text-tertiary);
+}
+
+/* Value (dd) — value. Text-Primary, 14/20 regular. Reset native dd margin. */
+.ds-description-list__value {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8, 8px);
+  margin: 0;
+  min-width: 0;
+  font-size: var(--font-size-14, 14px);
+  line-height: 20px;
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--uems-text-primary);
+}
+.ds-description-list__value-text { min-width: 0; word-break: break-word; }
+.ds-description-list__value--empty { color: var(--uems-text-tertiary, var(--uems-text-secondary)); }
+
+/* ── Value render types (each wraps an existing Prism component) ── */
+/* Tags: a wrapping row of chips. */
+.ds-description-list__tags { display: inline-flex; flex-wrap: wrap; gap: var(--spacing-4, 4px); min-width: 0; }
+/* User: avatar + name (with optional email subtext). */
+.ds-description-list__user { display: inline-flex; align-items: center; gap: var(--spacing-8, 8px); min-width: 0; }
+.ds-description-list__user-txt { display: inline-flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.ds-description-list__user-txt > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-description-list__user-email { font-size: var(--font-size-12, 12px); color: var(--uems-text-secondary); }
+/* Icon + text. */
+.ds-description-list__icon-val { display: inline-flex; align-items: center; gap: var(--spacing-6, 6px); min-width: 0; color: var(--uems-icon-tertiary, var(--uems-text-secondary)); }
+.ds-description-list__icon-val > span { color: var(--uems-text-primary); min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* Progress: bar + our own percentage (the term already labels the row). */
+.ds-description-list__progress { display: inline-flex; align-items: center; gap: var(--spacing-8, 8px); min-width: 160px; max-width: 260px; width: 100%; }
+.ds-description-list__progress ds-progress-bar { flex: 1 1 auto; min-width: 0; }
+.ds-description-list__progress-pct { flex: 0 0 auto; font-size: var(--font-size-13, 13px); color: var(--uems-text-secondary); min-width: 34px; text-align: end; }
+/* Copy: value text + trailing copy button. */
+.ds-description-list__copy { display: inline-flex; align-items: center; gap: var(--spacing-4, 4px); min-width: 0; }
+.ds-description-list__copy .ds-description-list__value-text { font-family: var(--font-family-mono, monospace); }
+
+/* Help affordance next to the term (shown only when item.help is set). */
+.ds-description-list__help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--uems-icon-tertiary, var(--uems-text-secondary));
+  cursor: pointer;
+  line-height: 0;
+  border-radius: var(--radius-xs, 4px);
+}
+.ds-description-list__help:hover { color: var(--uems-text-secondary); }
+.ds-description-list__help:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 1px; }
+.ds-description-list__help-tip { display: inline-flex; }
+
+/* ── Horizontal orientations: term beside the value ── */
+.ds-description-list--horizontal .ds-description-list__item,
+.ds-description-list--horizontal-auto .ds-description-list__item {
+  flex-direction: row;
+  gap: var(--spacing-24, 24px);
+  align-items: center;                 /* vertically center term against value */
+}
+.ds-description-list--horizontal .ds-description-list__value,
+.ds-description-list--horizontal-auto .ds-description-list__value {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/* Horizontal term reads at the same 14/20 as the value so the pair sits on a
+   shared baseline; the row's align-items:center keeps it vertically centered. */
+.ds-description-list--horizontal .ds-description-list__term,
+.ds-description-list--horizontal-auto .ds-description-list__term {
+  font-size: var(--font-size-14, 14px);
+  line-height: 20px;
+}
+/* Default horizontal: fixed 140px term column (spec). Long term wraps to 2 lines then ellipsis. */
+.ds-description-list--horizontal .ds-description-list__term {
+  flex: 0 0 140px;
+  width: 140px;
+}
+.ds-description-list--horizontal .ds-description-list__term-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* Auto variant: term hugs its content — neither term nor value has a fixed width.
+   (Values start at different x per row since terms vary in length.) */
+.ds-description-list--horizontal-auto .ds-description-list__term {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+/* ── Responsive: adapt to the CONTAINER's available width (the host is a
+   query container), so a list reflows the same whether it's narrowed by a
+   side-panel on a wide screen or by a small viewport. ── */
+
+/* Stacked (vertical): 3 columns at full width, stepping down to a FLOOR of 2
+   once a third ~240px column no longer fits — it never collapses to a single
+   column. (A list explicitly set to data-columns="1" or "2" is left as-is.) */
+@container (max-width: 720px) {
+  .ds-description-list--stacked[data-columns="3"] { column-count: 2; }
+}
+
+/* Horizontal: term+value rows span the full width, so its multi-column layouts
+   collapse to one column when narrow. The term still stays BESIDE the value at
+   every width (never flips to term-on-top). */
+@container (max-width: 460px) {
+  .ds-description-list--horizontal[data-columns="2"],
+  .ds-description-list--horizontal[data-columns="3"],
+  .ds-description-list--horizontal-auto[data-columns="2"],
+  .ds-description-list--horizontal-auto[data-columns="3"] { column-count: 1; column-gap: 0; }
+}

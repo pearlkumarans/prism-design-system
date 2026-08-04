@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<!--
+  MSP Central — Trial-expired gate — DUAL-MODE file (lives in Layout/views/).
+  • Open directly in a browser → the standalone harness (bottom) mounts + shows it.
+  • Fetched by Shell-msp.html   → injectDrawer('msp-trial-expired','content') extracts
+    ONLY <template id="drawer-fragment"> and injects it into <ds-content>.
+
+  It renders as a full content PAGE (the header + rails stay visible); each of the
+  three continue paths opens its own modal:
+    • Purchase license      → toast, then the purchase page
+    • Move to free version  → confirm scope, then dispatch `msp-trial:free-version`
+                              so the HOST SHELL restricts the workspace to Endpoints
+    • Extend trial period   → confirm, then route to sales
+
+  The only shell-coupled behaviour (restricting products to Endpoints) is emitted as
+  the `msp-trial:free-version` DOM event — the view never touches shell state directly.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>MSP Central — Trial expired (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    /* MSP Central defaults to the green (Fern) accent — mirror the shell. */
+    (function () { var t = 'green-light'; try { t = localStorage.getItem('uems-theme') || 'green-light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-base); }
+    .sa-host { position: relative; display: flex; flex-direction: column; flex: 1; min-height: 0; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  /* ── Trial-expired — a full content PAGE (centered), not a scrim overlay.
+     The action modals below are the only true dialogs. Composed from ds-* +
+     design tokens only. ── */
+  .tx-view {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100%; padding: var(--spacing-32) var(--spacing-24); box-sizing: border-box;
+  }
+  .tx-view[hidden] { display: none; }
+  .tx-card { width: 100%; max-width: 520px; text-align: center; background: var(--uems-bg-primary); }
+  .tx-inner { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-16); padding: var(--spacing-8) var(--spacing-8) var(--spacing-4); }
+  .tx-hero {
+    width: 72px; height: 72px; border-radius: var(--radius-full, 999px);
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--uems-bg-warning-primary, var(--uems-bg-alert-primary));
+    color: var(--uems-icon-warning, var(--uems-text-warning)); margin-bottom: var(--spacing-4);
+  }
+  .tx-title { margin: 0; font-size: var(--font-size-20); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); line-height: 28px; }
+  .tx-desc { margin: 0; font-size: var(--font-size-14); font-weight: var(--font-weight-medium); color: var(--uems-text-secondary); line-height: 20px; max-width: 40ch; }
+  .tx-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--spacing-12); margin-top: var(--spacing-8); width: 100%; }
+  .tx-actions ds-button { flex: 0 1 auto; }
+  @media (max-width: 460px) { .tx-actions { flex-direction: column-reverse; align-items: stretch; } .tx-actions ds-button { width: 100%; } }
+  .tx-extend { margin-top: var(--spacing-4); }
+  .tx-scope { display: flex; flex-direction: column; gap: var(--spacing-8); text-align: start; }
+  .tx-scope__row { display: flex; align-items: center; gap: var(--spacing-8); font-size: var(--font-size-14); }
+  .tx-scope__row--on { color: var(--uems-text-primary); }
+  .tx-scope__row--off { color: var(--uems-text-tertiary); }
+  .tx-scope__row--off .tx-scope__name { text-decoration: line-through; }
+  .tx-scope__ic--on { color: var(--uems-icon-success, var(--uems-text-success)); display: inline-flex; }
+  .tx-scope__ic--off { color: var(--uems-icon-tertiary, var(--uems-text-tertiary)); display: inline-flex; }
+  /* Action feedback uses the shared ds-toaster (globalThis.dsToast) — no bespoke bar. */
+</style>
+
+<!-- Trial expired — full content page. Starts hidden; the host shell (or the
+     standalone harness) calls ShellDrawers['msp-trial-expired'].show() to reveal it. -->
+<section id="msp-trial-view" class="tx-view" hidden>
+  <ds-container class="tx-card" variant="outline" radius="xl" padding="lg">
+    <div class="tx-inner">
+      <span class="tx-hero" aria-hidden="true"><ds-icon name="hourglass" size="30"></ds-icon></span>
+      <h1 class="tx-title" id="tx-title">Your trial period has expired</h1>
+      <p class="tx-desc">Pick how you'd like to keep using MSP Central — buy a license, switch to the free plan, or ask us for more trial time.</p>
+      <div class="tx-actions">
+        <ds-button id="tx-free" variant="outline" size="large">Move to free version</ds-button>
+        <ds-button id="tx-buy"  variant="primary" size="large" prefix-icon="cart">Purchase license</ds-button>
+      </div>
+      <ds-text-link id="tx-extend" class="tx-extend" href="#" size="medium" leading-icon="clock-alarm">Extend trial period</ds-text-link>
+    </div>
+  </ds-container>
+</section>
+
+<!-- Action modals (the initial message is the content page above). -->
+<ds-confirmation-modal id="tx-free-modal"
+  variant="information" icon="layers"
+  title="Switch to the free version?"
+  description="The free plan keeps one product active. You can purchase a license anytime to restore the rest."
+  primary-label="Move to free version" secondary-label="Cancel">
+  <div slot="body" class="tx-scope">
+    <div class="tx-scope__row tx-scope__row--on">
+      <span class="tx-scope__ic--on"><ds-icon name="circle-tick" size="16"></ds-icon></span>
+      <span><b>Endpoints</b> — stays active on the free plan</span>
+    </div>
+    <div class="tx-scope__row tx-scope__row--off">
+      <span class="tx-scope__ic--off"><ds-icon name="cancel-circle" size="16"></ds-icon></span>
+      <span><span class="tx-scope__name">Network &amp; Servers</span> — turned off</span>
+    </div>
+    <div class="tx-scope__row tx-scope__row--off">
+      <span class="tx-scope__ic--off"><ds-icon name="cancel-circle" size="16"></ds-icon></span>
+      <span><span class="tx-scope__name">HelpDesk</span> — turned off</span>
+    </div>
+    <div class="tx-scope__row tx-scope__row--off">
+      <span class="tx-scope__ic--off"><ds-icon name="cancel-circle" size="16"></ds-icon></span>
+      <span><span class="tx-scope__name">SIEM</span> — turned off</span>
+    </div>
+  </div>
+</ds-confirmation-modal>
+
+<ds-confirmation-modal id="tx-extend-modal"
+  variant="information" icon="headphone"
+  title="Extend your trial"
+  description="Trial extensions are handled by our sales team. Reach out and we'll help you keep exploring MSP Central."
+  primary-label="Contact sales" secondary-label="Not now"></ds-confirmation-modal>
+
+<script>
+(function () {
+  const KEY = 'msp-trial-expired';
+  const PURCHASE_URL = 'https://store.manageengine.com/';
+  const SALES_URL    = 'https://www.manageengine.com/company/contact.html';
+
+  const view        = document.getElementById('msp-trial-view');
+  const freeModal   = document.getElementById('tx-free-modal');
+  const extendModal = document.getElementById('tx-extend-modal');
+
+  /* Action feedback uses the shared ds-toaster (globalThis.dsToast) — never a
+     hand-rolled bar. Status drives the icon; 'subtle' matches the product style. */
+  const toast = (title, status = 'info') =>
+    globalThis.dsToast?.[status]?.({ title, style: 'subtle' });
+
+  /* Purchase license → redirect to the purchase page. */
+  document.getElementById('tx-buy')?.addEventListener('click', () => {
+    toast('Redirecting to the purchase page…');
+    setTimeout(() => window.open(PURCHASE_URL, '_blank', 'noopener'), 500);
+  });
+
+  /* Move to free version → confirm scope, then ask the host shell to restrict the
+     workspace to Endpoints (shell-coupled → emitted as a DOM event, not done here). */
+  document.getElementById('tx-free')?.addEventListener('click', () => freeModal?.open());
+  freeModal?.addEventListener('ds-confirmation-primary', () => {
+    freeModal.close();
+    toast('You’re on the free version — Endpoints only.', 'success');
+    document.dispatchEvent(new CustomEvent('msp-trial:free-version'));
+  });
+
+  /* Extend trial period → route to sales. */
+  document.getElementById('tx-extend')?.addEventListener('click', (e) => { e.preventDefault(); extendModal?.open(); });
+  extendModal?.addEventListener('ds-confirmation-primary', () => {
+    extendModal.close();
+    toast('Opening sales…');
+    setTimeout(() => window.open(SALES_URL, '_blank', 'noopener'), 500);
+  });
+
+  /* Shell contract — show/hide the page; build/onLang are no-ops (static copy). */
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers[KEY] = {
+    show() { if (view) view.hidden = false; },
+    hide() { if (view) view.hidden = true; },
+    build() {},
+    onLang() {},
+  };
+})();
+</script>
+</template>
+
+<script>
+/* ── STANDALONE HARNESS — runs ONLY when opened directly (Shell-msp.html strips
+   everything outside the template). ── */
+(function () {
+  const KEY = 'msp-trial-expired';
+  const host = document.createElement('div'); host.className = 'shell-area sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers[KEY] && window.ShellDrawers[KEY].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

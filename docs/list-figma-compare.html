@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>List ↔ Figma compare</title>
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<script>window.UEMS_ICON_SPRITE="/design-system-library/src/icons/icons.svg";</script>
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/list/list.css">
+<style>body{font-family:sans-serif;padding:24px;background:#fff}
+ .grid{display:flex;gap:48px;flex-wrap:wrap;margin-bottom:32px}
+ pre{background:#0b1020;color:#cfe;padding:16px;border-radius:8px;white-space:pre-wrap;font-size:12px}</style>
+</head>
+<body>
+<div class="grid">
+  <ds-list id="disc-s" size="small"  style-variant="disc"></ds-list>
+  <ds-list id="disc-l" size="large"  style-variant="disc"></ds-list>
+  <ds-list id="circle-s" size="small" style-variant="circle"></ds-list>
+  <ds-list id="circle-m" size="medium" style-variant="circle"></ds-list>
+  <ds-list id="square-m" size="medium" style-variant="square"></ds-list>
+  <ds-list id="icon-l" size="large" style-variant="icon"></ds-list>
+  <ds-list id="num-m" size="medium" style-variant="number"></ds-list>
+  <ds-list id="letter-s" size="small" style-variant="letter"></ds-list>
+  <ds-list id="badge-s" size="small" style-variant="badge"></ds-list>
+  <ds-list id="badge-l" size="large" style-variant="badge"></ds-list>
+</div>
+<pre id="out">running…</pre>
+<script type="module" src="../design-system-library/src/components/index.js"></script>
+<script type="module">
+const hex=c=>{const m=c.match(/[\d.]+/g);return m&&c.startsWith('rgb')?'#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join(''):c;};
+const ITEMS=[{text:'List item text'},{text:'List item text'},{text:'Nested',level:2},{text:'Deeper',level:3},{text:'List item text'}];
+await customElements.whenDefined('ds-list');
+document.querySelectorAll('ds-list').forEach(l=>l.items=ITEMS);
+await new Promise(r=>setTimeout(r,250));
+function bef(id){ // computed style of ::before
+  const li=document.getElementById(id).querySelector('.ds-list__item');
+  const b=getComputedStyle(li,'::before');
+  return {w:b.width,h:b.height,bg:hex(b.backgroundColor),bw:b.borderTopWidth,bc:hex(b.borderTopColor),col:hex(b.color),content:b.content,radius:b.borderTopLeftRadius};
+}
+function gap(id){ return getComputedStyle(document.getElementById(id).querySelector('.ds-list__item')).columnGap; }
+function indent(id){ const items=document.getElementById(id).querySelectorAll('.ds-list__item');
+  return [getComputedStyle(items[2]).paddingInlineStart, getComputedStyle(items[3]).paddingInlineStart]; }
+function iconSz(id){ const w=document.getElementById(id).querySelector('.ds-list__icon'); return w?getComputedStyle(w).width:'none'; }
+
+const EXP={
+  'disc-s':{w:'4px',h:'4px',bg:'#5f6c89',gap:'8px'},
+  'disc-l':{w:'8px',h:'8px',bg:'#5f6c89',gap:'12px'},
+  'circle-s':{w:'5px',bw:'1px',bc:'#55607a'},
+  'circle-m':{w:'6px',bw:'1.5px',bc:'#55607a'},
+  'square-m':{w:'6px',h:'6px',bg:'#5f6c89',radius:'0px'},
+  'icon-l':{iconSz:'16px'},
+  'num-m':{col:'#55607a',content:'"1."'},
+  'letter-s':{col:'#55607a',content:'"a."'},
+  'badge-s':{h:'16px',bg:'#f0f2f5',col:'#55607a'},
+  'badge-l':{h:'24px',bg:'#f0f2f5'},
+};
+let report='',fails=0;
+for(const id in EXP){
+  const exp=EXP[id], b=bef(id); report+=`\n[${id}] `;
+  for(const k in exp){
+    let got;
+    if(k==='gap') got=gap(id);
+    else if(k==='iconSz') got=iconSz(id);
+    else got=b[k];
+    const ok=String(got).toLowerCase()===String(exp[k]).toLowerCase();
+    if(!ok)fails++; report+=`${k}=${got}${ok?'✓':' ✗(want '+exp[k]+')'} `;
+  }
+}
+// indent check on disc-l
+const ind=indent('disc-l'); const indOk=ind[0]==='24px'&&ind[1]==='48px';
+if(!indOk)fails++; report+=`\n[indent disc-l] L2=${ind[0]} L3=${ind[1]} ${indOk?'✓':'✗(want 24/48)'}`;
+document.getElementById('out').textContent=(fails?`✗ ${fails} MISMATCH`:'✓ ALL PASS')+report;
+document.title=fails?`FAIL ${fails}`:'PASS';
+</script>
+</body>
+</html>

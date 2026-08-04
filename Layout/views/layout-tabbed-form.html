@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<!--
+  L07 — TABBED FORM / SETTINGS · DUAL-MODE file (lives in Layout/views/).
+  - Open directly in a browser -> the standalone harness (bottom) mounts + shows it.
+  - Fetched by Shell.html       -> injectDrawer('layout-tabbed-form','content')
+    extracts ONLY <template id="drawer-fragment"> and mounts it INSIDE <ds-content>.
+  Built ON the L06 sectioned-form (layout-sectioned-form.html): same section +
+  field conventions (ds-section-header with-border · component-native left labels ·
+  medium fields · sticky ds-form-footer). L07 adds a ds-tab-bar-horizontal that
+  swaps between per-category sectioned-form panels.
+  Spec: handoff/layout-l07-tabbed-form.md · Taxonomy: Layout/layouts.md → L07.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Tabbed Form / Settings (L07) — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="layout-base.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    /* Full viewport height (not min-height) so the flex column is height-bound:
+       .lay__scroll scrolls internally and ds-form-footer stays pinned at bottom. */
+    .sa-host { display: flex; flex-direction: column; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* == L07 Tabbed Form — reuses L06 section/field conventions ============== */
+/* Root + .lay + .lay__scroll scaffold live in Layout/layout-base.css (shared via .lay-root). */
+/* Horizontal category tabs (≤ 5) — flush to the 20px inline edge, divider under. */
+.lay__tabs { flex: none; padding: 0 20px; border-bottom: 1px solid var(--uems-border-tertiary); }
+/* Body = optional left vertical sub-nav + the scrolling panels. */
+.lay__body { flex: 1 1 auto; display: flex; min-height: 0; }
+.lay__nav { flex: none; width: 220px; padding: 4px 8px 12px; overflow: auto; border-inline-end: 1px solid var(--uems-border-tertiary); }
+.lay__panel[hidden] { display: none; }
+.lay__section { padding: 20px 0 4px; }
+/* ≤ 5 categories → horizontal tabs on top; > 5 → vertical sub-nav on the left. */
+.lay[data-tabs="horizontal"] .lay__nav  { display: none; }
+.lay[data-tabs="vertical"]   .lay__tabs { display: none; }
+/* ds-page-header keeps ~12px below its divider; in vertical mode pull the body up
+   into it so the sub-nav sits snug under the header divider (not floating below). */
+.lay[data-tabs="vertical"] .lay__body { margin-top: -12px; }
+
+/* Field stack — component-native left labels (240px col + 8px gap), medium controls. */
+.lay__fields { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; }
+.lay__field { max-width: 820px; }
+/* Reserve a consistent helper-row slot (field body's 4px gap + the 16px helper row)
+   under every field, so a field with a counter/helper (e.g. a "0/100" counter) and
+   one without sit on the same vertical rhythm. Fields already rendering a helper
+   don't double it. */
+.lay__field { padding-bottom: 20px; }
+.lay__field:has(ds-field-helper) { padding-bottom: 0; }
+
+/* Choice groups shown inline (options in a row); hide the default group help "?". */
+.frm-group--inline .ds-radio-group__items,
+.frm-group--inline .ds-checkbox-group__items { display: flex; flex-direction: row; gap: 32px; flex-wrap: wrap; }
+.frm-group--inline .ds-checkbox-group__info { display: none; }
+
+@media (max-width: 640px) {
+  .frm-group--inline .ds-radio-group__items,
+  .frm-group--inline .ds-checkbox-group__items { flex-direction: column; gap: 8px; }
+}
+</style>
+
+<div id="tform-pop" class="lay-root" hidden>
+  <div class="lay" id="tf-lay" data-tabs="horizontal">
+    <ds-page-header id="tf-ph" icon="edit" structure="default"
+      title="Configuration Settings"
+      description="Manage settings for this configuration across categories."
+      show-description show-breadcrumbs show-actions="false" show-overflow="false"
+      collapse-on-scroll scroll-target=".lay__scroll"></ds-page-header>
+
+    <!-- Horizontal tabs (used when ≤ 5 categories). -->
+    <div class="lay__tabs">
+      <ds-tab-bar-horizontal id="tf-tabs-h" type="underline" active-id="general" aria-label="Settings categories"></ds-tab-bar-horizontal>
+    </div>
+
+    <div class="lay__body">
+      <!-- Vertical sub-nav (used when > 5 categories) — fixed-width left. -->
+      <nav class="lay__nav">
+        <ds-tab-bar-vertical id="tf-tabs-v" type="fill" active-id="general" aria-label="Settings categories"></ds-tab-bar-vertical>
+      </nav>
+
+      <div class="lay__scroll">
+
+      <!-- ── General ─────────────────────────────────────────────────── -->
+      <div class="lay__panel" data-panel="general">
+        <section class="lay__section">
+          <ds-section-header style-variant="with-border" size="large" title="Identity" description="Name and describe this configuration."></ds-section-header>
+          <div class="lay__fields">
+            <ds-text-input class="lay__field" id="tf-name" size="medium" label="Configuration Name" label-position="left" required maxlength="60" show-counter counter="0/60"></ds-text-input>
+            <ds-text-area class="lay__field" id="tf-desc" size="medium" label="Description" label-position="left" placeholder="What is this configuration for?"></ds-text-area>
+          </div>
+        </section>
+        <section class="lay__section">
+          <ds-section-header style-variant="with-border" size="large" title="Status" description="Control whether this configuration is active."></ds-section-header>
+          <div class="lay__fields">
+            <ds-radio-group class="lay__field frm-group--inline" id="tf-status" label="Status" label-position="left"></ds-radio-group>
+          </div>
+        </section>
+      </div>
+
+      <!-- ── Deployment ──────────────────────────────────────────────── -->
+      <div class="lay__panel" data-panel="deployment" hidden>
+        <section class="lay__section">
+          <ds-section-header style-variant="with-border" size="large" title="Policy" description="How this configuration rolls out."></ds-section-header>
+          <div class="lay__fields">
+            <ds-input-select class="lay__field" id="tf-policy" size="medium" label="Deployment policy" label-position="left" placeholder="Select policy"></ds-input-select>
+            <ds-input-select class="lay__field" id="tf-retry" size="medium" label="Retry attempts" label-position="left" value="3"></ds-input-select>
+          </div>
+        </section>
+        <section class="lay__section">
+          <ds-section-header style-variant="with-border" size="large" title="Schedule" description="When deployment runs."></ds-section-header>
+          <div class="lay__fields">
+            <ds-input-select class="lay__field" id="tf-window" size="medium" label="Deploy window" label-position="left" placeholder="Select window"></ds-input-select>
+          </div>
+        </section>
+      </div>
+
+      <!-- ── Notifications ───────────────────────────────────────────── -->
+      <div class="lay__panel" data-panel="notifications" hidden>
+        <section class="lay__section">
+          <ds-section-header style-variant="with-border" size="large" title="Alerts" description="Who hears about deployment outcomes."></ds-section-header>
+          <div class="lay__fields">
+            <ds-checkbox-group class="lay__field frm-group--inline" id="tf-notify" label="Notify me about" label-position="left" value="failure">
+              <ds-checkbox value="success" label="On success"></ds-checkbox>
+              <ds-checkbox value="failure" label="On failure"></ds-checkbox>
+            </ds-checkbox-group>
+            <ds-input-select class="lay__field" id="tf-recipients" size="medium" label="Recipients" label-position="left" placeholder="Select recipients"></ds-input-select>
+          </div>
+        </section>
+      </div>
+
+      <!-- ── Security ────────────────────────────────────────────────── -->
+      <div class="lay__panel" data-panel="security" hidden>
+        <section class="lay__section">
+          <ds-section-header style-variant="with-border" size="large" title="Access" description="Who can run and modify this configuration."></ds-section-header>
+          <div class="lay__fields">
+            <ds-input-select class="lay__field" id="tf-role" size="medium" label="Required role" label-position="left" placeholder="Select role"></ds-input-select>
+            <ds-checkbox-group class="lay__field frm-group--inline" id="tf-guard" label="Require approval" label-position="left" value="deploy">
+              <ds-checkbox value="deploy" label="Before deploy"></ds-checkbox>
+              <ds-checkbox value="delete" label="Before delete"></ds-checkbox>
+            </ds-checkbox-group>
+          </div>
+        </section>
+      </div>
+
+      <!-- ── Integrations ────────────────────────────────────────────── -->
+      <div class="lay__panel" data-panel="integrations" hidden>
+        <section class="lay__section">
+          <ds-section-header style-variant="with-border" size="large" title="Connected apps" description="Send configuration events to external tools."></ds-section-header>
+          <div class="lay__fields">
+            <ds-input-select class="lay__field" id="tf-webhook" size="medium" label="Webhook target" label-position="left" placeholder="Select target"></ds-input-select>
+            <ds-text-input class="lay__field" id="tf-webhook-url" size="medium" label="Endpoint URL" label-position="left" placeholder="https://example.com/hook"></ds-text-input>
+          </div>
+        </section>
+      </div>
+
+      <!-- ── Advanced ────────────────────────────────────────────────── -->
+      <div class="lay__panel" data-panel="advanced" hidden>
+        <section class="lay__section">
+          <ds-section-header style-variant="with-border" size="large" title="Performance" description="Fine-tune how the agent applies this configuration."></ds-section-header>
+          <div class="lay__fields">
+            <ds-input-select class="lay__field" id="tf-throttle" size="medium" label="Bandwidth throttle" label-position="left" placeholder="Select limit"></ds-input-select>
+            <ds-text-area class="lay__field" id="tf-script" size="medium" label="Custom script" label-position="left" placeholder="Optional pre-deploy script"></ds-text-area>
+          </div>
+        </section>
+      </div>
+
+      </div>
+    </div>
+
+    <ds-form-footer id="tf-footer">
+      <span slot="left" id="tf-saved">All changes saved</span>
+      <ds-button slot="action" data-act="cancel" variant="outline">Cancel</ds-button>
+      <ds-button slot="action" data-act="save" variant="primary">Save</ds-button>
+    </ds-form-footer>
+  </div>
+</div>
+
+<script>
+/* == L07 view logic — tabs swap sectioned-form panels =================== */
+(function () {
+  const root = document.getElementById('tform-pop');
+  if (!root || root.__tfInit) return; root.__tfInit = true;
+  const $ = (id) => root.querySelector('#' + id);
+
+  const ph = $('tf-ph');
+  if (ph) ph.breadcrumbs = [
+    { label: 'Admin', href: '#' },
+    { label: 'Settings', href: '#' },
+    { label: 'Configuration Settings' },
+  ];
+
+  /* Category tabs (≤ 5 → horizontal, per L07 rule). */
+  const TABS = [
+    { id: 'general', label: 'General' },
+    { id: 'deployment', label: 'Deployment' },
+    { id: 'notifications', label: 'Notifications' },
+    { id: 'security', label: 'Security' },
+    { id: 'integrations', label: 'Integrations' },
+    { id: 'advanced', label: 'Advanced' },
+  ];
+  /* ≤ 5 categories → horizontal tabs on top; > 5 → vertical sub-nav on the left
+     (per the L07 taxonomy rule). Pick the matching tab bar and set the mode. */
+  const VERTICAL_MAX = 5;
+  const vertical = TABS.length > VERTICAL_MAX;
+  const lay = $('tf-lay');
+  if (lay) lay.dataset.tabs = vertical ? 'vertical' : 'horizontal';
+  const tabs = vertical ? $('tf-tabs-v') : $('tf-tabs-h');
+  if (tabs) tabs.items = TABS;
+
+  /* Option data. */
+  const status = $('tf-status');
+  if (status) status.options = [
+    { value: 'enabled', label: 'Enabled', selected: true },
+    { value: 'disabled', label: 'Disabled' },
+  ];
+  const num = [1, 2, 3, 5, 10].map((n) => ({ value: String(n), label: String(n) }));
+  const setOpts = (id, opts) => { const el = $(id); if (el) el.options = opts; };
+  setOpts('tf-policy', [
+    { value: 'weekly', label: 'Weekly maintenance window' },
+    { value: 'immediate', label: 'Immediate' },
+    { value: 'afterhours', label: 'After business hours' },
+  ]);
+  setOpts('tf-retry', num);
+  setOpts('tf-window', [{ value: 'business', label: 'Business hours' }, { value: 'offhours', label: 'Off hours' }, { value: 'any', label: 'Any time' }]);
+  setOpts('tf-recipients', [{ value: 'admins', label: 'Administrators' }, { value: 'owners', label: 'Config owners' }, { value: 'none', label: 'No one' }]);
+  setOpts('tf-throttle', [{ value: 'none', label: 'No limit' }, { value: '1mb', label: '1 MB/s' }, { value: '5mb', label: '5 MB/s' }]);
+  setOpts('tf-role', [{ value: 'admin', label: 'Administrator' }, { value: 'operator', label: 'Operator' }, { value: 'viewer', label: 'Viewer' }]);
+  setOpts('tf-webhook', [{ value: 'slack', label: 'Slack' }, { value: 'teams', label: 'Microsoft Teams' }, { value: 'none', label: 'None' }]);
+
+  /* Focus the first field of a panel (real browsers only — rAF is paused when
+     the tab is hidden; focus is non-critical). */
+  function focusFirst(panel) {
+    if (!panel) return;
+    requestAnimationFrame(() => {
+      const el = panel.querySelector('ds-text-input, ds-text-area, ds-input-select, ds-radio-group, ds-checkbox-group');
+      const inp = el && ((el.shadowRoot && el.shadowRoot.querySelector('input, textarea')) || el.querySelector('input, textarea'));
+      (inp || el)?.focus?.();
+    });
+  }
+
+  /* Tab → swap the visible panel. */
+  function showPanel(id) {
+    let active = null;
+    root.querySelectorAll('.lay__panel').forEach((p) => {
+      const on = p.dataset.panel === id;
+      p.hidden = !on;
+      if (on) active = p;
+    });
+    focusFirst(active);
+  }
+  if (tabs) tabs.addEventListener('ds-tab-change', (e) => { if (e.detail && e.detail.id) showPanel(e.detail.id); });
+
+  /* Footer actions → toast (settings apply across all categories on save). */
+  function toast(msg, variant) {
+    if (window.toast) { window.toast(msg, { variant: variant || 'success' }); return; }
+    const t = document.createElement('ds-toast');
+    t.setAttribute('variant', variant || 'success'); t.textContent = msg;
+    document.body.appendChild(t); setTimeout(() => t.remove(), 3200);
+  }
+  root.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => {
+    const a = b.getAttribute('data-act');
+    if (a === 'save') { toast('Settings saved.', 'success'); if (window.openContentView) window.openContentView('list-view'); }
+    else if (a === 'cancel') toast('Changes discarded.', 'info');
+  }));
+
+  /* Show the active category's panel immediately (don't wait for show()) so the
+     fields are visible on first paint, not only after the first tab click. */
+  const initialId = (tabs && tabs.activeId) || TABS[0].id;
+  showPanel(initialId);
+
+  function show() { root.hidden = false; showPanel((tabs && tabs.activeId) || initialId); }
+  function hide() { root.hidden = true; }
+
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['tabbed-form'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS — runs ONLY when opened directly. ================ */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers['tabbed-form'] && window.ShellDrawers['tabbed-form'].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

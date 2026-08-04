@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<!--
+  L04 — LIST–DETAIL (record drilldown) · DUAL-MODE file (Layout/views/).
+  - Open directly in a browser -> the standalone harness (bottom) mounts + shows it.
+  - Fetched by Shell.html       -> injectDrawer('layout-list-detail','content').
+  Anatomy (Layout/layouts.md → L04): RecordHeader (ds-page-header: device name ·
+  Online status · IP/owner summary · Actions) · FacetTabs (Summary … Audit) ·
+  FacetContent = the Summary facet as an L05 read-only bento of ds-widget cards
+  (charts · description-lists · status lists · empty-state). Built on the L03
+  (layout-list-view) chrome; user drills in from a device row.
+  Figma reference (visual only): node 22046:71053. Spec: handoff/layout-l04-list-detail.md.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>List–Detail (L04) — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="layout-base.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    .sa-host { display: flex; flex-direction: column; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* == L04 List–Detail — Prism components + uems tokens =================== */
+/* Root + .lay + .lay__scroll scaffold live in Layout/layout-base.css (shared via .lay-root). */
+
+/* Facet body (Summary): a 6-column bento of read-only cards; rows equalise
+   height so cards align, charts fill via the responsive ds-chart. */
+.ld-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; align-items: stretch; padding-top: 16px; }
+.ld-grid > ds-widget { min-width: 0; width: 100%; height: 100%; max-width: none; }
+.ld-grid ds-widget .ds-widget__surface { height: 100%; }
+.ld-grid ds-widget .ds-widget__body { min-height: 0; }
+.sp2 { grid-column: span 2; }
+.sp3 { grid-column: span 3; }
+.sp4 { grid-column: span 4; }
+
+/* Chart cards fill their card; the responsive viewBox keeps text readable. */
+.ld-grid ds-chart { display: block; width: 100%; height: 100%; min-height: 200px; max-height: 100%; }
+.ld-grid .ds-chart__plot { max-height: 100%; }
+
+/* Security & Compliance: a health tile + a 2-col checks list. */
+.ld-sec { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 16px; align-items: stretch; }
+/* w-sec is a default (chart-type) ds-widget, whose body rule
+   `.ds-widget--chart .ds-widget__body > * { display: block }` would flatten this
+   grid to a stacked block. Re-assert the grid with an id-scoped rule (beats the
+   widget rule's specificity) so the health tile + checks stay side by side. */
+#w-sec .ld-sec { display: grid; height: 100%; grid-template-rows: minmax(0, 1fr); }
+.ld-health { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; text-align: center; padding: 20px 16px; border-radius: var(--uems-radius-l, 16px); background: var(--uems-bg-error-primary); }
+.ld-health__ring { width: 56px; height: 56px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--uems-bg-error-solid); color: var(--uems-text-white); }
+.ld-health__text { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.ld-health__caption { font-size: var(--font-size-12); color: var(--uems-text-secondary); }
+.ld-health__label { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+.ld-checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px; }
+.ld-check { display: flex; align-items: center; gap: 10px; }
+/* Icon sits in a circular tint keyed to its status tone. */
+.ld-check__ico { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.ld-check__ico--neutral { background: var(--uems-bg-secondary);       color: var(--uems-icon-tertiary); }
+.ld-check__ico--error   { background: var(--uems-bg-error-primary);   color: var(--uems-icon-error); }
+.ld-check__ico--warning { background: var(--uems-bg-warning-primary); color: var(--uems-icon-warning); }
+.ld-check__ico--success { background: var(--uems-bg-success-primary); color: var(--uems-icon-success); }
+.ld-check__k { font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+.ld-check__v { font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+
+/* Recent Activity — list-widget rows: icon tile + title + meta (dot+tag[·user]·time). */
+#w-act .ld-list { display: flex; flex-direction: column; gap: 4px; padding: 4px 16px; }
+.ld-arow { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; }
+.ld-arow__ico { width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.ld-arow__body { min-width: 0; flex: 1 1 auto; }
+.ld-arow__title { font-size: var(--font-size-14); font-weight: var(--font-weight-medium); color: var(--uems-text-primary); }
+.ld-arow__meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--uems-spacing-8); font-size: var(--font-size-12); color: var(--uems-text-tertiary); margin-top: 3px; }
+/* The tag is a ds-status-indicator (dot + label). Strip its inline padding so it
+   sits flush with the rest of the meta row (user · time). */
+.ld-arow__tag .ds-status-indicator { padding-left: 0; padding-right: 0; }
+.ld-sep { color: var(--uems-border-secondary); }
+
+/* DEX Score: the gauge is a fixed semicircle (don't let it fill the card and
+   push the legend out); the legend sits directly beneath it. */
+#w-dex .ds-widget__body { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+/* Cap BOTH the host and the (aspect-driven) plot SVG so the gauge fits and
+   doesn't overflow onto the legend; preserveAspectRatio keeps it centered. */
+#w-dex ds-chart { height: 170px; min-height: 0; max-height: 170px; width: 100%; }
+#w-dex .ds-chart__plot { height: 170px; max-height: 170px; width: 100%; }
+
+/* DEX legend under the gauge. Scoped to #w-dex so it beats the widget's
+   `.ds-widget--chart .ds-widget__body > * { display:block }` rule (otherwise the
+   legend renders as a left-aligned block instead of a centered flex row). */
+#w-dex .ld-dex-foot { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: center; font-size: var(--font-size-12); color: var(--uems-text-secondary); }
+#w-dex .ld-dex-foot .lgd { display: inline-flex; align-items: center; gap: 6px; }
+#w-dex .ld-dex-foot .sw { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+
+@media (max-width: 1100px) { .sp2, .sp3 { grid-column: span 3; } .sp4 { grid-column: span 6; } }
+@media (max-width: 760px) {
+  .ld-grid { grid-template-columns: 1fr; }
+  .sp2, .sp3, .sp4 { grid-column: span 1; }
+  .ld-sec { grid-template-columns: 1fr; }
+  .ld-checks { grid-template-columns: 1fr; }
+}
+</style>
+
+<div id="ldet-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <!-- RecordHeader: device identity · Online status · IP/owner summary · facet tabs · Actions -->
+    <ds-page-header id="ld-ph" icon="computer" structure="full"
+      title="DESKTOP-G9STR9D" icon="computer"
+      show-breadcrumbs show-summary show-tabs
+      collapse-on-scroll scroll-target=".lay__scroll">
+      <ds-button slot="actions" variant="outline" suffix-icon="chevron-down">Actions</ds-button>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+
+      <!-- FacetContent — Summary facet (L05 read-only bento) -->
+      <div class="ld-grid" id="ld-summary">
+
+        <!-- R1: Security & Compliance | Disk Usage Summary -->
+        <ds-widget class="sp4" id="w-sec" title="Security &amp; Compliance" show-drag="false" show-action="false" show-footer="false">
+          <div class="ld-sec">
+            <div class="ld-health">
+              <span class="ld-health__ring"><ds-icon name="exclamation-triangle" size="24"></ds-icon></span>
+              <div class="ld-health__text">
+                <span class="ld-health__caption">Device Health</span>
+                <span class="ld-health__label">Highly Vulnerable</span>
+              </div>
+              <ds-button variant="outline" size="small" prefix-icon="computer-repair">Fix Now</ds-button>
+            </div>
+            <div class="ld-checks" id="ld-checks"></div>
+          </div>
+        </ds-widget>
+
+        <ds-widget class="sp2" id="w-disk" title="Disk Usage Summary" show-drag="false" show-action="false" show-footer="false">
+          <ds-toggle slot="filter" size="small" label="Partition Summary"></ds-toggle>
+          <ds-chart id="c-disk" type="donut" show-legend legend-position="right" fit="contain"></ds-chart>
+        </ds-widget>
+
+        <!-- R2: Software Summary | System Information -->
+        <ds-widget class="sp3" id="w-soft" title="Software Summary" trend="Total: 1250" trend-status="info" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-soft" type="column" fit="fill"></ds-chart>
+        </ds-widget>
+
+        <ds-widget class="sp3" id="w-sysinfo" title="System Information" trend="Warranty Expired" trend-status="critical" show-drag="false" show-action="false" show-footer="false">
+          <ds-description-list id="dl-sysinfo" columns="3"></ds-description-list>
+        </ds-widget>
+
+        <!-- R3: DEX Score | Recent Activity | Sensitive Data Distribution -->
+        <ds-widget class="sp2" id="w-dex" title="DEX Score" show-drag="false" show-action="false" show-footer="false">
+          <ds-text-link slot="header-action" href="#" size="small">View Details</ds-text-link>
+          <ds-chart id="c-dex" type="gauge"></ds-chart>
+          <div class="ld-dex-foot">
+            <span class="lgd"><span class="sw" style="background:var(--uems-bg-chart-red-primary)"></span>Security - 5</span>
+            <span class="lgd"><span class="sw" style="background:var(--uems-bg-chart-orange-tertiary)"></span>Application - 3</span>
+            <span class="lgd"><span class="sw" style="background:var(--uems-bg-chart-blue-primary)"></span>Hardware - 2</span>
+          </div>
+        </ds-widget>
+
+        <ds-widget class="sp2" id="w-act" type="list" title="Recent Activity" show-drag="false" show-action="false" show-footer="false">
+          <ds-button slot="filter" variant="outline" size="xsmall" suffix-icon="chevron-down">Last 7 days</ds-button>
+          <div class="ld-list" id="ld-activity"></div>
+        </ds-widget>
+
+        <ds-widget class="sp2" id="w-sens" title="Sensitive Data Distribution" show-drag="false" show-action="false" show-footer="false">
+          <ds-text-link slot="header-action" href="#" size="small">View Details</ds-text-link>
+          <ds-chart id="c-sens" type="donut" show-legend legend-position="right" fit="contain"></ds-chart>
+        </ds-widget>
+
+        <!-- R4: Operating System | Agent Summary -->
+        <ds-widget class="sp3" id="w-os" title="Operating System" show-drag="false" show-action="false" show-footer="false">
+          <ds-text-link slot="header-action" href="#" size="small" leading-icon="refresh">Check Updates</ds-text-link>
+          <ds-description-list id="dl-os" columns="3"></ds-description-list>
+        </ds-widget>
+
+        <ds-widget class="sp3" id="w-agent" title="Agent Summary" trend="Latest" trend-status="success" show-drag="false" show-action="false" show-footer="false">
+          <ds-description-list id="dl-agent" columns="3"></ds-description-list>
+        </ds-widget>
+
+        <!-- R5: Additional Device Information | Custom Computer Details -->
+        <ds-widget class="sp3" id="w-addl" title="Additional Device Information" show-drag="false" show-action="false" show-footer="false">
+          <ds-description-list id="dl-addl" columns="3"></ds-description-list>
+        </ds-widget>
+
+        <ds-widget class="sp3" id="w-custom" title="Custom Computer Details" show-drag="false" show-action="false" show-footer="false">
+          <ds-text-link slot="header-action" href="#" size="small" leading-icon="edit">Modify</ds-text-link>
+          <ds-description-list id="dl-custom" columns="3"></ds-description-list>
+        </ds-widget>
+
+        <!-- R6: Custom Fields (empty state) -->
+        <ds-widget class="sp2" id="w-cf" type="empty" title="Custom Fields"
+          state-illustration="formula-column"
+          state-title="Custom Fields"
+          state-description="Create and manage custom data fields tailored to your workflow."
+          retry-label="Add Field" show-drag="false" show-action="false"></ds-widget>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* == L04 view logic — record header, facet tabs, Summary bento ========== */
+(function () {
+  const root = document.getElementById('ldet-pop');
+  if (!root || root.__ldInit) return; root.__ldInit = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  /* ---- RecordHeader ----------------------------------------------------- */
+  const ph = $('ld-ph');
+  if (ph) {
+    ph.breadcrumbs = [
+      { label: 'Inventory', href: '#' },
+      { label: 'Computers', href: '#' },
+      { label: 'DESKTOP-G9STR9D' },
+    ];
+    ph.summary = [
+      { label: 'Status', value: 'Online', status: 'success' },
+      { label: 'IP Address', value: '192.168.1.1, 192.168.1.290 (+3)' },
+      { label: 'Primary Owner', value: 'Jane Smith' },
+    ];
+    ph.tabs = [
+      { id: 'summary', label: 'Summary', active: true },
+      { id: 'security', label: 'Security' },
+      { id: 'audit', label: 'Audit' },
+      { id: 'tasks', label: 'Tasks' },
+      { id: 'groups', label: 'Custom Groups' },
+      { id: 'software', label: 'Softwares' },
+      { id: 'hardware', label: 'Hardwares' },
+      { id: 'systems', label: 'Systems' },
+      { id: 'restrictions', label: 'Restrictions' },
+    ];
+    /* Summary shows the bento; other facets swap to a demo empty-state. */
+    ph.addEventListener('ds-page-header-tab', (e) => {
+      const t = e.detail && e.detail.tab;
+      const onSummary = !t || t.id === 'summary';
+      const grid = $('ld-summary'), empty = $('ld-facet-empty');
+      grid.hidden = !onSummary;
+      if (!empty && !onSummary) {
+        const box = document.createElement('div');
+        box.id = 'ld-facet-empty';
+        box.style.paddingTop = '24px';
+        box.innerHTML = '<ds-empty-state show-illustration="false" show-secondary="false" show-primary="false"></ds-empty-state>';
+        grid.parentNode.insertBefore(box, grid.nextSibling);
+      }
+      const eb = $('ld-facet-empty');
+      if (eb) {
+        eb.hidden = onSummary;
+        if (!onSummary) eb.querySelector('ds-empty-state').setAttribute('title', (t.label || 'Facet') + ' — demo facet');
+        if (!onSummary) eb.querySelector('ds-empty-state').setAttribute('description', 'Each facet renders an L05 summary or an L03 sub-list.');
+      }
+    });
+  }
+
+  /* ---- Security & Compliance checks ------------------------------------- */
+  /* Ordered so the 2-col row-major grid reads down each column as in Figma:
+     left col → Missing Patches · Device Warranty · Antivirus · Bit-locker,
+     right col → Firewall · Exploitable Vulnerabilities · OS License. */
+  const CHECKS = [
+    { icon: 'patch', tone: 'neutral', k: 'Missing Patches', v: '40' },
+    { icon: 'firewall', tone: 'error', k: 'Firewall', v: 'Disabled' },
+    { icon: 'clock', tone: 'warning', k: 'Device Warranty', v: 'Expired' },
+    { icon: 'circle-tick', tone: 'success', k: 'Exploitable Vulnerabilities', v: '0' },
+    { icon: 'circle-tick', tone: 'success', k: 'Antivirus', v: 'Up-to-date' },
+    { icon: 'certificate', tone: 'success', k: 'OS License', v: 'Licensed' },
+    { icon: 'lock', tone: 'success', k: 'Bit-locker', v: 'Enabled' },
+  ];
+  const checks = $('ld-checks');
+  if (checks) checks.innerHTML = CHECKS.map((c) =>
+    `<div class="ld-check"><span class="ld-check__ico ld-check__ico--${c.tone}"><ds-icon name="${c.icon}" size="16"></ds-icon></span>`
+    + `<div><div class="ld-check__k">${esc(c.k)}</div><div class="ld-check__v">${esc(c.v)}</div></div></div>`).join('');
+
+  /* ---- Charts ----------------------------------------------------------- */
+  const setChart = (id, data) => { const c = $(id); if (c) c.data = data; };
+  setChart('c-disk', { categories: ['Used', 'Free'], series: [{ name: 'Total Size', values: [190, 310], colors: ['blue', 'var(--uems-border-tertiary)'] }] });
+  setChart('c-soft', { categories: ['Recently Installed', 'Under Licensed', 'High-Risk', 'Commercial', 'Prohibited', 'Non-commercial'], series: [{ name: 'Count', values: [50, 200, 470, 320, 130, 80], colors: ['blue', 'green', 'orange', 'purple', 'red', 'yellow'] }] });
+  setChart('c-dex', { value: 60, label: 'out of 100' });
+  setChart('c-sens', { categories: ['PII', 'Health', 'HIPAA'], series: [{ name: 'Total Data', values: [94, 4, 2], colors: ['blue', 'yellow', 'red'] }] });
+
+  /* ---- Recent Activity (list-widget rows w/ icon tile + tag/user/time) --- */
+  /* Icon-tile colors use semantic status tokens; the tag is a ds-status-indicator
+     (dot + label) whose `status` carries the meaning: critical · info · warning ·
+     alert · success. Tokens (not raw hex) so it themes in dark mode too. */
+  const ACT = [
+    { icon: 'shield', tile: 'var(--uems-bg-error-primary)', color: 'var(--uems-icon-error)', title: 'Security patch installation failed', tag: 'Security', status: 'critical', when: '3 mins ago' },
+    { icon: 'info-circle', tile: 'var(--uems-bg-info-primary)', color: 'var(--uems-icon-info)', title: 'System scan completed', tag: 'Policy', status: 'info', user: 'john', when: '8 hours ago' },
+    { icon: 'exclamation-circle', tile: 'var(--uems-bg-warning-primary)', color: 'var(--uems-icon-warning)', title: 'High CPU Usage', tag: 'Error', status: 'warning', when: '18 mins ago' },
+    { icon: 'exclamation-circle', tile: 'var(--uems-bg-alert-primary)', color: 'var(--uems-icon-alert-secondary)', title: 'Network security scan initiated', tag: 'Expiry', status: 'alert', when: '1 day ago' },
+    { icon: 'circle-tick', tile: 'var(--uems-bg-success-primary)', color: 'var(--uems-icon-success)', title: 'MacBook-Pro-Dev-09 enrolled via ABM', tag: 'MDM', status: 'success', when: '2 days ago' },
+  ];
+  const act = $('ld-activity');
+  if (act) act.innerHTML = ACT.map((a) =>
+    `<div class="ld-arow"><span class="ld-arow__ico" style="background:${a.tile};color:${a.color}"><ds-icon name="${a.icon}" size="18"></ds-icon></span>`
+    + `<div class="ld-arow__body"><div class="ld-arow__title">${esc(a.title)}</div>`
+    + `<div class="ld-arow__meta"><ds-status-indicator class="ld-arow__tag" status="${a.status}" label="${esc(a.tag)}" size="medium"></ds-status-indicator>`
+    + (a.user ? `<span>${esc(a.user)}</span><span class="ld-sep">|</span>` : '')
+    + `<span>${esc(a.when)}</span></div></div></div>`).join('');
+
+  /* ---- Description-list facets ------------------------------------------ */
+  const setDL = (id, items) => { const el = $(id); if (el) el.items = items; };
+  setDL('dl-sysinfo', [
+    { term: 'Manufacturer', description: 'Dell Inc.' },
+    { term: 'Device Model', description: 'OptiPlex 7090' },
+    { term: 'Device Type', description: 'System' },
+    { term: 'Memory', description: '16 GB of RAM' },
+    { term: 'Memory Type', description: 'DDR4' },
+    { term: 'Processor', description: '12th Gen Intel® Core™ i7' },
+    { term: 'Storage Type', description: 'SSD' },
+    { term: 'Processor Architecture', description: 'x64-based PC' },
+    { term: 'Battery Health', type: 'link', description: 'MDM Profile Required', href: '#' },
+    { term: 'UDID', type: 'link', description: 'MDM Profile Required', href: '#' },
+    { term: 'EAS Device Identifier', type: 'link', description: 'MDM Profile Required', href: '#' },
+  ]);
+  setDL('dl-os', [
+    { term: 'OS Name', description: 'Windows 11 Professional' },
+    { term: 'OS Status', type: 'status', status: 'success', description: 'Licensed' },
+    { term: 'Version', description: '10.0.19045' },
+    { term: 'Build Number', description: '19045.4049' },
+    { term: 'Registered to', description: 'Sysadmin' },
+    { term: 'System Drive', description: 'C:' },
+    { term: 'License Type', description: 'OEM:DM' },
+    { term: 'Service Tag / Serial Number', description: '5QDWXJ2' },
+    { term: 'OS Key', description: '74x-xxxx-xxxx-xxxx-xxXC' },
+    { term: 'Product ID', description: '00330-53528-02747-AAOEM' },
+    { term: 'OS Service Pack', description: 'Windows 11 Version 22H2 (x64)' },
+  ]);
+  setDL('dl-agent', [
+    { term: 'Agent Version', description: '11.2.2340.1.W' },
+    { term: 'Remote Office', description: 'Chennai' },
+    { term: 'Current Logged User', description: 'Will Smith' },
+    { term: 'Last Logon User', description: 'John Doe' },
+    { term: 'Agent Installed Time', description: 'Jan 14, 2026 05:30 PM' },
+    { term: 'Last Successful Scan', description: 'May 17, 2025 03:24 AM' },
+    { term: 'Last Contact Time', description: 'Jun 22, 2026 09:12 AM' },
+    { term: 'Last Boot Time', description: 'May 28, 2025 08:11 PM' },
+  ]);
+  setDL('dl-addl', [
+    { term: 'Device Host Name', description: 'DESKTOP-G9STR9D' },
+    { term: 'Device Display Name', description: 'Jane Smith Windows' },
+    { term: 'Domain', description: 'jionetwork.com' },
+    { term: 'MDM Status', type: 'status', status: 'warning', description: 'Not Installed' },
+    { term: 'Enrolled Via', description: 'Network Scan' },
+    { term: 'Public Address', description: '172.0.0.0' },
+    { term: 'MAC Address', description: '00:1B:44:11:3A:B7' },
+    { term: 'Active Directory Status', description: 'Joined' },
+    { term: 'Service Tag', description: 'C03728A8DFJ903' },
+    { term: 'Timezone', description: 'GMT+5:30 — India, Tamil Nadu, Chennai' },
+  ]);
+  setDL('dl-custom', [
+    { term: 'Computer Location', description: 'Krisp IT Park, Chennai-603201, India' },
+    { term: 'Search Tag', description: 'DEV-TEAM-WS' },
+    { term: 'Product Number', description: '--' },
+    { term: 'Owner Name', description: 'Jane Smith' },
+    { term: 'Owner Email ID', type: 'link', description: 'john.smith@company.com', href: 'mailto:john.smith@company.com' },
+    { term: 'Notes', description: '--' },
+    { term: 'Shipping | Expiry Date', description: 'Dec 13, 2018 | Dec 12, 2026' },
+  ]);
+
+  /* show/hide. */
+  function refit() { root.querySelectorAll('ds-chart').forEach((c) => { if (c.refit) c.refit(); }); }
+  function show() { root.hidden = false; requestAnimationFrame(refit); setTimeout(refit, 120); }
+  function hide() { root.hidden = true; }
+
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['list-detail'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS — runs ONLY when opened directly. ================ */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers['list-detail'] && window.ShellDrawers['list-detail'].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

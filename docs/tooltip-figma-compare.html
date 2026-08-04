@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Tooltip ↔ Figma compare</title>
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/tooltip/tooltip.css">
+<style>
+  body { font-family: sans-serif; padding: 80px 40px; background:#fff; }
+  .grid { display:flex; gap:90px; flex-wrap:wrap; margin-bottom:60px; }
+  pre { background:#0b1020; color:#cfe; padding:16px; border-radius:8px; white-space:pre-wrap; font-size:12px; }
+  button { padding:6px 10px; }
+</style>
+</head>
+<body>
+<div class="grid">
+  <ds-tooltip id="t-dark"  theme="dark"  position="down-center" text="This is a helpful tooltip that provides additional context about this element."><button>dark</button></ds-tooltip>
+  <ds-tooltip id="t-light" theme="light" position="down-center" text="This is a helpful tooltip that provides additional context about this element."><button>light</button></ds-tooltip>
+  <ds-tooltip id="t-red"   theme="red"   position="down-center" text="This is a helpful tooltip that provides additional context about this element."><button>red</button></ds-tooltip>
+  <ds-tooltip id="t-short" theme="dark"  position="down-center" text="Hi"><button>short</button></ds-tooltip>
+  <ds-tooltip id="t-corner" theme="dark" position="down-left"   text="Corner arrow inset check goes here longer."><button>corner</button></ds-tooltip>
+  <ds-tooltip id="t-side"  theme="dark"  position="right"       text="Side arrow check."><button>side</button></ds-tooltip>
+</div>
+<pre id="out">running…</pre>
+<script type="module" src="../design-system-library/src/components/index.js"></script>
+<script type="module">
+const hex = (c) => { const m=c.match(/[\d.]+/g); if(!m) return c;
+  if(c.startsWith('rgb')) return '#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join(''); return c; };
+function show(host){ const t=host.querySelector('.ds-tooltip__tip'); t.dataset.visible='true'; return t; }
+function probe(id){
+  const host=document.getElementById(id), tip=show(host);
+  const cs=getComputedStyle(tip), b=tip.getBoundingClientRect();
+  const txt=host.querySelector('.ds-tooltip__text'), icon=host.querySelector('.ds-tooltip__icon ds-icon, .ds-tooltip__icon svg, .ds-tooltip__icon');
+  const af=getComputedStyle(tip,'::after');
+  // Border-triangle: visible width = left+right borders, height = top OR bottom border.
+  const bl=parseFloat(af.borderLeftWidth), br=parseFloat(af.borderRightWidth),
+        bt=parseFloat(af.borderTopWidth), bb=parseFloat(af.borderBottomWidth);
+  return {
+    bg: hex(cs.backgroundColor), color: hex(cs.color),
+    pad: cs.paddingTop+'/'+cs.paddingLeft, radius: cs.borderTopLeftRadius,
+    font: cs.fontSize+'/'+cs.lineHeight, gap: cs.gap || cs.columnGap,
+    w: Math.round(b.width), minW: cs.minWidth,
+    textMax: txt? getComputedStyle(txt).maxWidth.replace(/px.*/, 'px') : '—',
+    shadow: cs.boxShadow==='none'?'none':hex(cs.boxShadow),
+    // orientation-aware visible dims: a zeroed border = the pointing axis
+    arrowW: ((bl===0||br===0) ? Math.max(bl,br) : bl+br)+'px',
+    arrowH: ((bt===0||bb===0) ? Math.max(bt,bb) : bt+bb)+'px',
+    arrowInset: af.insetInlineStart!=='auto'? af.insetInlineStart : af.insetInlineEnd,
+  };
+}
+await customElements.whenDefined('ds-tooltip');
+await new Promise(r=>setTimeout(r,200));
+const EXP = {
+  't-dark':  {bg:'#313746', color:'#ffffff', pad:'8px/12px', radius:'6px', font:'13px/20px', gap:'4px'},
+  't-light': {bg:'#ffffff', color:'#15181e', pad:'8px/12px', radius:'6px', shadow:'has'},
+  't-red':   {bg:'#fdebeb', color:'#c1181b', pad:'8px/12px', radius:'6px'},
+  't-short': {minW:'72px'},
+  't-corner':{arrowW:'12px', arrowH:'6px', arrowInset:'12px'},
+  't-side':  {arrowW:'6px', arrowH:'12px'},
+};
+let report='', fails=0;
+for(const id in EXP){
+  const got=probe(id), exp=EXP[id]; report+=`\n[${id.replace('t-','')}] `;
+  for(const k in exp){
+    let ok; if(k==='shadow') ok = got.shadow!=='none'; else ok = String(got[k]).toLowerCase()===String(exp[k]).toLowerCase();
+    if(!ok) fails++;
+    report+=`${k}=${got[k]}${ok?'✓':' ✗(want '+exp[k]+')'} `;
+  }
+  if(id==='t-dark') report+=` [w=${got.w} textMax=${got.textMax} shadow=${got.shadow}]`;
+}
+document.getElementById('out').textContent=(fails?`✗ ${fails} MISMATCH`:'✓ ALL PASS')+report;
+document.title=fails?`FAIL ${fails}`:'PASS';
+</script>
+</body>
+</html>

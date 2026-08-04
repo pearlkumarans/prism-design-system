@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <script type="importmap">
+  {
+    "imports": {
+      "@uems/design-system": "../src/index.js"
+    }
+  }
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generating Pages with AI — Prism Guide</title>
+
+  <script type="module">import '@uems/design-system';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../src/icons/illustrations.svg';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font-family-sans);
+      background:
+        radial-gradient(1200px 600px at 0% -10%, var(--uems-bg-accent-primary-subtle, transparent), transparent 60%),
+        radial-gradient(1000px 500px at 100% 0%, var(--uems-bg-accent-primary, transparent), transparent 70%),
+        var(--uems-background);
+      color: var(--uems-text-primary);
+      min-height: 100vh;
+    }
+
+    /* ---- Header ----------------------------------------------------- */
+    header.site {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--spacing-16);
+      padding: var(--spacing-12) var(--spacing-32);
+      background: color-mix(in srgb, var(--uems-bg-base) 80%, transparent);
+      backdrop-filter: saturate(180%) blur(12px);
+      -webkit-backdrop-filter: saturate(180%) blur(12px);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .brand { display: inline-flex; align-items: center; gap: var(--spacing-8); }
+    .brand-mark {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--uems-bg-button-primary), var(--uems-bg-button-primary-hover));
+      color: var(--uems-text-white);
+    }
+    .brand h1 {
+      margin: 0; font-size: var(--font-size-16); font-weight: var(--font-weight-semibold);
+      letter-spacing: -0.005em;
+    }
+    .brand h1 .muted { color: var(--uems-text-tertiary); font-weight: var(--font-weight-medium); }
+    .header-links { display: inline-flex; gap: var(--spacing-8); }
+    .header-links a {
+      display: inline-flex; align-items: center; gap: var(--spacing-4);
+      padding: var(--spacing-6) var(--spacing-12);
+      border: 1px solid var(--uems-border-secondary); border-radius: var(--radius-md);
+      background: var(--uems-bg-base); color: var(--uems-text-primary);
+      text-decoration: none; font-size: var(--font-size-13); font-weight: var(--font-weight-medium);
+      transition: background var(--duration-fast) var(--ease-standard);
+    }
+    .header-links a:hover { background: var(--uems-bg-secondary-hover); }
+
+    /* ---- Layout ----------------------------------------------------- */
+    main { max-width: 1080px; margin: 0 auto; padding: var(--spacing-40) var(--spacing-32) var(--spacing-64); }
+
+    /* ---- Hero ------------------------------------------------------- */
+    .hero {
+      padding: var(--spacing-32) var(--spacing-40);
+      background: var(--uems-bg-base);
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-lg, 12px);
+      margin-bottom: var(--spacing-32);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      display: flex; align-items: center; gap: var(--spacing-32); flex-wrap: wrap;
+    }
+    .hero__copy { flex: 1; min-width: 280px; }
+    .hero .eyebrow {
+      font-size: var(--font-size-12); font-weight: var(--font-weight-semibold);
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--uems-text-accent-link);
+      margin: 0 0 var(--spacing-8);
+    }
+    .hero h2 {
+      margin: 0 0 var(--spacing-12); font-size: var(--font-size-32, 28px);
+      font-weight: var(--font-weight-semibold); letter-spacing: -0.02em;
+    }
+    .hero p { margin: 0; font-size: var(--font-size-15); color: var(--uems-text-secondary); max-width: 62ch; line-height: 1.6; }
+    .hero__stat {
+      display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: var(--spacing-16) var(--spacing-32);
+      background: var(--uems-bg-accent-primary-subtle); border-radius: var(--radius-md); min-width: 150px;
+    }
+    .hero__stat strong { font-size: 34px; font-weight: var(--font-weight-semibold); color: var(--uems-text-accent-link); letter-spacing: -0.02em; }
+    .hero__stat span { font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+
+    /* ---- Group title ------------------------------------------------ */
+    .group-title { display: flex; align-items: center; gap: var(--spacing-12); margin: var(--spacing-40) 0 var(--spacing-16); }
+    .group-title h3 { margin: 0; font-size: var(--font-size-18); font-weight: var(--font-weight-semibold); letter-spacing: -0.01em; }
+    .group-title::before {
+      content: ''; display: inline-block; width: 4px; height: 18px; border-radius: var(--radius-full);
+      background: linear-gradient(var(--uems-bg-button-primary), var(--uems-bg-button-primary-hover));
+    }
+    .group-title .step {
+      font-size: var(--font-size-12); color: var(--uems-text-tertiary); font-weight: var(--font-weight-medium);
+      padding: 2px 8px; background: var(--uems-bg-secondary); border-radius: var(--radius-full);
+    }
+    .lede { font-size: var(--font-size-14); color: var(--uems-text-secondary); line-height: 1.6; max-width: 70ch; margin: 0 0 var(--spacing-16); }
+
+    /* ---- Cards ------------------------------------------------------ */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--spacing-16); }
+    .card {
+      display: flex; flex-direction: column; gap: var(--spacing-8);
+      background: var(--uems-bg-base); border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-md); padding: var(--spacing-20);
+      transition: transform var(--duration-fast) var(--ease-standard),
+                  box-shadow var(--duration-fast) var(--ease-standard),
+                  border-color var(--duration-fast) var(--ease-standard);
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); border-color: var(--uems-border-accent); }
+    .card__ico {
+      width: 36px; height: 36px; border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center;
+      background: var(--uems-bg-accent-primary-subtle); color: var(--uems-text-accent-link); margin-bottom: var(--spacing-4);
+    }
+    .card__title { font-size: var(--font-size-15); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); margin: 0; }
+    .card__desc { font-size: var(--font-size-13); color: var(--uems-text-secondary); line-height: 1.55; margin: 0; }
+    .card code, .prose code {
+      font-family: var(--font-family-mono); font-size: 0.9em;
+      background: var(--uems-bg-secondary); padding: 1px 6px; border-radius: var(--radius-sm); color: var(--uems-text-primary);
+    }
+
+    /* ---- Numbered recipe -------------------------------------------- */
+    .recipe { display: flex; flex-direction: column; gap: var(--spacing-12); margin: 0; padding: 0; list-style: none; counter-reset: step; }
+    .recipe li {
+      display: flex; gap: var(--spacing-12); align-items: flex-start;
+      background: var(--uems-bg-base); border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-md); padding: var(--spacing-16) var(--spacing-16);
+    }
+    .recipe li::before {
+      counter-increment: step; content: counter(step);
+      flex: 0 0 24px; width: 24px; height: 24px; border-radius: var(--radius-full);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: var(--font-size-12); font-weight: var(--font-weight-bold);
+      background: var(--uems-bg-button-primary); color: var(--uems-text-white);
+    }
+    .recipe strong { font-size: var(--font-size-14); color: var(--uems-text-primary); }
+    .recipe span { display: block; font-size: var(--font-size-13); color: var(--uems-text-secondary); line-height: 1.5; margin-top: 2px; }
+
+    /* ---- Prompt blocks ---------------------------------------------- */
+    .prompts { display: grid; grid-template-columns: 1fr; gap: var(--spacing-12); }
+    .prompt {
+      position: relative; background: var(--uems-bg-base);
+      border: 1px solid var(--uems-border-tertiary); border-left: 3px solid var(--uems-border-accent);
+      border-radius: var(--radius-md); padding: var(--spacing-16) var(--spacing-20) var(--spacing-16) var(--spacing-20);
+    }
+    .prompt__label {
+      display: inline-flex; align-items: center; gap: 6px; font-size: var(--font-size-11);
+      font-weight: var(--font-weight-semibold); letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--uems-text-accent-link); margin-bottom: var(--spacing-8);
+    }
+    .prompt p { margin: 0; font-size: var(--font-size-14); line-height: 1.6; color: var(--uems-text-primary); }
+    .prompt strong { font-weight: var(--font-weight-semibold); color: var(--uems-text-accent-link); }
+
+    /* ---- Tables ----------------------------------------------------- */
+    .tbl-wrap { overflow-x: auto; border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md); }
+    table.doc { width: 100%; border-collapse: collapse; font-size: var(--font-size-13); min-width: 520px; }
+    table.doc th, table.doc td { text-align: left; padding: var(--spacing-12) var(--spacing-16); vertical-align: top; }
+    table.doc thead th { background: var(--uems-bg-secondary); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); font-size: var(--font-size-12); text-transform: uppercase; letter-spacing: 0.03em; }
+    table.doc tbody tr { border-top: 1px solid var(--uems-border-tertiary); }
+    table.doc td { color: var(--uems-text-secondary); line-height: 1.5; }
+    table.doc td:first-child { color: var(--uems-text-primary); font-weight: var(--font-weight-medium); white-space: nowrap; }
+    .vague td:first-child { color: var(--uems-text-critical, #b42318); }
+    .good  td:last-child  { color: var(--uems-text-primary); }
+
+    /* ---- Callout ---------------------------------------------------- */
+    .callout {
+      display: flex; gap: var(--spacing-12); align-items: flex-start;
+      background: var(--uems-bg-info-secondary, var(--uems-bg-accent-primary-subtle));
+      border: 1px solid var(--uems-border-accent-subtle, var(--uems-border-tertiary));
+      border-radius: var(--radius-md); padding: var(--spacing-16); margin-top: var(--spacing-16);
+    }
+    .callout ds-icon { color: var(--uems-icon-info, var(--uems-text-accent-link)); flex: none; margin-top: 2px; }
+    .callout p { margin: 0; font-size: var(--font-size-13); color: var(--uems-text-secondary); line-height: 1.6; }
+
+    /* ---- Tips list -------------------------------------------------- */
+    .tips { display: flex; flex-direction: column; gap: var(--spacing-12); margin: 0; padding: 0; list-style: none; }
+    .tips li { display: flex; gap: var(--spacing-12); align-items: flex-start; font-size: var(--font-size-14); color: var(--uems-text-secondary); line-height: 1.55; }
+    .tips ds-icon { color: var(--uems-icon-success, #0c8844); flex: none; margin-top: 2px; }
+    .tips strong { color: var(--uems-text-primary); font-weight: var(--font-weight-semibold); }
+
+    /* ---- Footer ----------------------------------------------------- */
+    footer.docs { max-width: 1080px; margin: 0 auto; padding: var(--spacing-24) var(--spacing-32) var(--spacing-64); border-top: 1px solid var(--uems-border-tertiary); }
+    footer.docs h4 { margin: 0 0 var(--spacing-12); font-size: var(--font-size-13); text-transform: uppercase; letter-spacing: 0.04em; color: var(--uems-text-tertiary); }
+    footer.docs .flinks { display: flex; flex-wrap: wrap; gap: var(--spacing-12); }
+    footer.docs a { display: inline-flex; align-items: center; gap: 6px; font-size: var(--font-size-13); color: var(--uems-text-accent-link); text-decoration: none; }
+    footer.docs a code { font-family: var(--font-family-mono); font-size: 0.9em; }
+
+    @media (max-width: 640px) { main { padding: var(--spacing-24) var(--spacing-16) var(--spacing-40); } .hero { padding: var(--spacing-24); } }
+  </style>
+</head>
+<body>
+  <header class="site">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"><ds-icon name="add-widget" size="18"></ds-icon></span>
+      <h1>Prism <span class="muted">· Generating Pages</span></h1>
+    </div>
+    <div class="header-links">
+      <a href="index.html"><ds-icon name="list-bullet" size="14"></ds-icon> Components</a>
+      <a href="../../Layout/Shell.html?view=demo-deployments"><ds-icon name="share-01" size="14"></ds-icon> Open the demo</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero__copy">
+        <p class="eyebrow">User Guide</p>
+        <h2>Generating pages with AI</h2>
+        <p>
+          Create new screens in the product by <strong>describing them in plain English</strong> —
+          no code. You describe a page; the AI builds it from proven templates, styles it with the
+          Prism design system, and plugs it into the app shell so you can open it right away.
+        </p>
+      </div>
+      <div class="hero__stat">
+        <strong>0</strong>
+        <span>lines of code you write</span>
+      </div>
+    </section>
+
+    <!-- WHAT IT IS -->
+    <div class="group-title"><h3>What it is</h3></div>
+    <p class="lede">
+      The product is two parts: <strong>the shell</strong> — the fixed frame of the app (top nav,
+      side menus, theming) — and <strong>pages</strong> that fill the middle. Picture the shell as a
+      framed wall with navigation, and each page as a picture you slot in. You ask for a picture; the
+      AI paints it in the house style and hangs it for you.
+    </p>
+
+    <!-- HOW IT WORKS -->
+    <div class="group-title"><h3>How it works</h3><span class="step">the mental model</span></div>
+    <div class="grid">
+      <div class="card">
+        <span class="card__ico"><ds-icon name="layout-grid" size="20"></ds-icon></span>
+        <p class="card__title">One shared shell</p>
+        <p class="card__desc">Every page runs inside the same app shell, so it automatically gets the header, menus, theme, and navigation.</p>
+      </div>
+      <div class="card">
+        <span class="card__ico"><ds-icon name="folder" size="20"></ds-icon></span>
+        <p class="card__title">Grouped by project</p>
+        <p class="card__desc">Pages live under <code>projects/&lt;name&gt;/</code> — one project or task per folder keeps related screens together.</p>
+      </div>
+      <div class="card">
+        <span class="card__ico"><ds-icon name="copy" size="20"></ds-icon></span>
+        <p class="card__title">Built from templates</p>
+        <p class="card__desc">The AI starts from a proven pattern — form, list, detail, dashboard — and fills it with your content, so pages look consistent.</p>
+      </div>
+      <div class="card">
+        <span class="card__ico"><ds-icon name="link" size="20"></ds-icon></span>
+        <p class="card__title">Opened by a short name</p>
+        <p class="card__desc">Each page gets a “slug” that names what it <em>is</em> (e.g. <code>deployments</code>) — that’s how you open it.</p>
+      </div>
+    </div>
+
+    <!-- HOW TO VIEW -->
+    <div class="group-title"><h3>How to view a page</h3></div>
+    <div class="grid">
+      <div class="card">
+        <span class="card__ico"><ds-icon name="link" size="20"></ds-icon></span>
+        <p class="card__title">By URL</p>
+        <p class="card__desc">Add <code>?view=&lt;slug&gt;</code> to the shell address, e.g. <code>Shell.html?view=demo-deployments</code>.</p>
+      </div>
+      <div class="card">
+        <span class="card__ico"><ds-icon name="chevron-right" size="20"></ds-icon></span>
+        <p class="card__title">By clicking a tab</p>
+        <p class="card__desc">If a module tab is wired to the page (e.g. <strong>Software Deployment</strong> → the demo list), just click it.</p>
+      </div>
+      <div class="card">
+        <span class="card__ico"><ds-icon name="arrow-narrow-right" size="20"></ds-icon></span>
+        <p class="card__title">In-flow</p>
+        <p class="card__desc">Pages link to each other — a form’s <em>Save</em> opens a list, a list row opens a detail, and so on.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <ds-icon name="info-circle" size="18"></ds-icon>
+      <p>To preview locally, run a small web server at the project root (<code>python3 -m http.server 8790</code>) and open <code>http://localhost:8790/Layout/Shell.html</code>. Opening files with <code>file://</code> won’t work.</p>
+    </div>
+
+    <!-- HOW TO PROMPT -->
+    <div class="group-title"><h3>How to prompt for good results</h3><span class="step">the recipe</span></div>
+    <p class="lede">Mention as many of these as apply. Anything you leave out, the AI picks a sensible default or asks.</p>
+    <ol class="recipe">
+      <li><div><strong>Project / task name</strong><span>Which folder it belongs to — “under project <code>acme</code>”.</span></div></li>
+      <li><div><strong>What the page is for</strong><span>Its purpose in plain words. This becomes the slug and title.</span></div></li>
+      <li><div><strong>Which kind of page</strong><span>Pick an archetype — form, list, detail, dashboard — or let the AI choose.</span></div></li>
+      <li><div><strong>Where it lives</strong><span>Which module/tab (Home, Configurations, Threats &amp; Patches, Software Deployment, Inventory…). Optionally: “open it when I click that tab”.</span></div></li>
+      <li><div><strong>The important content</strong><span>Fields for a form; columns/KPIs for a list; sections for a detail; widgets for a dashboard.</span></div></li>
+      <li><div><strong>Navigation</strong><span>What actions do — “Save goes to the device list”, “a row opens the device detail”.</span></div></li>
+    </ol>
+
+    <div class="group-title"><h3>Good prompt examples</h3></div>
+    <div class="prompts">
+      <div class="prompt">
+        <span class="prompt__label"><ds-icon name="spark" size="12"></ds-icon> Form</span>
+        <p>“Under project <strong>acme</strong>, create a <strong>form page</strong> to <em>configure a firewall rule</em>, on the <strong>Configurations</strong> tab. Fields: rule name, direction, protocol, port range, action. On <strong>Save</strong>, go to the firewall rules list.”</p>
+      </div>
+      <div class="prompt">
+        <span class="prompt__label"><ds-icon name="spark" size="12"></ds-icon> List</span>
+        <p>“Add a <strong>list page</strong> called <em>patch approvals</em> under project <strong>acme</strong>, on <strong>Threats &amp; Patches</strong>. Columns: patch name, severity badge, affected devices, status. KPI cards for Approved / Pending / Declined. Clicking a patch opens its detail.”</p>
+      </div>
+      <div class="prompt">
+        <span class="prompt__label"><ds-icon name="spark" size="12"></ds-icon> Dashboard</span>
+        <p>“Make a <strong>dashboard</strong> for project <strong>acme</strong> <em>inventory overview</em>, and open it when I click the <strong>Inventory</strong> tab. KPI tiles for total assets; charts for assets by OS and by warranty status.”</p>
+      </div>
+    </div>
+
+    <div class="group-title"><h3>Vague vs. specific</h3></div>
+    <div class="tbl-wrap">
+      <table class="doc">
+        <thead><tr><th>Vague (AI has to guess)</th><th>Specific (better output)</th></tr></thead>
+        <tbody class="good">
+          <tr><td class="vague">“Make a settings page.”</td><td>“Under <code>acme</code>, a <strong>tabbed form</strong> for <em>agent settings</em> on Configurations, tabs General / Network / Security.”</td></tr>
+          <tr><td class="vague">“Add a list.”</td><td>“A <strong>list</strong> <em>managed devices</em> on Inventory: columns device, platform, status badge, owner, last seen; row → device detail.”</td></tr>
+          <tr><td class="vague">“Build a dashboard.”</td><td>“A <strong>dashboard</strong> <em>security overview</em> on Threats &amp; Patches: KPI tiles (vulnerable, patched, at-risk) + a severity donut.”</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <ds-icon name="circle-tick" size="18"></ds-icon>
+      <p>Finish your prompt with <strong>“verify it in the browser”</strong> — the AI will load the page, click through it, and show you a screenshot before calling it done. Then iterate in plain language: “add a KPI row”, “make the header collapse on scroll”, “change Save to go to the deployments list”.</p>
+    </div>
+
+    <!-- BUILDING BLOCKS -->
+    <div class="group-title"><h3>Building blocks</h3><span class="step">archetypes</span></div>
+    <p class="lede">Ask for whichever fits; the AI adapts it to your content. A working <code>form → list → detail</code> example lives in <code>projects/demo/</code>.</p>
+    <div class="tbl-wrap">
+      <table class="doc">
+        <thead><tr><th>Ask for a…</th><th>You get</th><th>Good for</th></tr></thead>
+        <tbody>
+          <tr><td>Form (sectioned)</td><td>Scrolling form in titled sections + pinned footer</td><td>Create/edit records with grouped fields</td></tr>
+          <tr><td>Tabbed form</td><td>A form with category tabs</td><td>Longer settings split into categories</td></tr>
+          <tr><td>List</td><td>Data table with KPIs, search, filters, pagination</td><td>Browsing / managing many records</td></tr>
+          <tr><td>Detail</td><td>Record page: header, summary, tabs, info cards</td><td>Inspecting one item</td></tr>
+          <tr><td>Dashboard</td><td>KPI tiles + charts + widgets</td><td>A module’s landing / overview screen</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TIPS -->
+    <div class="group-title"><h3>Tips &amp; gotchas</h3></div>
+    <ul class="tips">
+      <li><ds-icon name="circle-tick" size="18"></ds-icon><span><strong>Name by purpose, not template.</strong> “create-deployment”, “patch-approvals” — not “sectioned-form” or “list-view”. It’s what you type in the URL.</span></li>
+      <li><ds-icon name="circle-tick" size="18"></ds-icon><span><strong>One project folder per feature/task</strong> keeps things tidy and easy to share.</span></li>
+      <li><ds-icon name="circle-tick" size="18"></ds-icon><span><strong>Give real-ish sample content</strong> (field and column names). It makes the page instantly useful and easy to review.</span></li>
+      <li><ds-icon name="circle-tick" size="18"></ds-icon><span><strong>Design consistency is automatic</strong> — pages use the shared components and tokens, so you don’t specify colors, fonts, or spacing.</span></li>
+      <li><ds-icon name="circle-tick" size="18"></ds-icon><span><strong>Blank page?</strong> Just tell the AI — it’s usually a one-line wiring fix.</span></li>
+    </ul>
+  </main>
+
+  <footer class="docs">
+    <h4>Related</h4>
+    <div class="flinks">
+      <a href="../../GENERATING-PAGES.md"><ds-icon name="file" size="14"></ds-icon> <code>GENERATING-PAGES.md</code></a>
+      <a href="../../projects/README.md"><ds-icon name="folder" size="14"></ds-icon> <code>projects/README.md</code></a>
+      <a href="../../AGENTS.md"><ds-icon name="sparkles" size="14"></ds-icon> <code>AGENTS.md</code> (for the AI)</a>
+      <a href="../../Layout/layouts.md"><ds-icon name="layout-grid" size="14"></ds-icon> Layout catalogue</a>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quick Links — Endpoint Central · Prism</title>
+
+  <link rel="stylesheet" href="../../design-system-library/src/styles/index.css" />
+  <script type="module">import '../../design-system-library/src/components/index.js';</script>
+
+  <script>
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+      document.addEventListener('ds-right-pane-theme', function (e) {
+        document.documentElement.setAttribute('data-theme', e.detail.theme);
+        try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+      });
+      window.addEventListener('DOMContentLoaded', function () {
+        customElements.whenDefined('ds-right-pane').then(function () {
+          document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+            rp.setAttribute('theme', t);
+          });
+        });
+      });
+    })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; margin: 0; }
+    body {
+      font-family: var(--font-family-sans);
+      background: var(--cobalt-15);
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+    .body  { display: flex; flex: 1; min-height: 0; padding: 0 0 var(--spacing-12) var(--spacing-12); gap: 0; }
+
+    .shell-area {
+      flex: 1; display: flex; min-width: 0; min-height: 0;
+      border: 1px solid var(--uems-border-accent-subtle);
+      border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle);
+      overflow: hidden;
+    }
+    .shell-area ds-sidebar-l1 { border: 0 !important; }
+    .shell-area ds-sidebar-l2 { border: 0 !important; }
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+    .shell-area .ds-sidebar-l1 { border: 0 !important; border-radius: 0 !important; padding-top: 4px !important; }
+
+    ds-sidebar-l1, ds-sidebar-l2 {
+      max-width: 400px; opacity: 1; overflow: hidden; will-change: max-width, opacity, transform;
+      transition: max-width 360ms cubic-bezier(0.16,1,0.3,1), opacity 240ms cubic-bezier(0.16,1,0.3,1) 40ms,
+                  transform 360ms cubic-bezier(0.16,1,0.3,1), margin 360ms cubic-bezier(0.16,1,0.3,1);
+    }
+    ds-sidebar-l1.is-hidden, ds-sidebar-l2.is-hidden {
+      max-width: 0 !important; opacity: 0 !important; transform: translateX(-12px); margin-inline-end: 0 !important; pointer-events: none;
+    }
+
+    /* ── Quick Links content layout ────────────────────────────────── */
+    .ql-body {
+      flex: 1;
+      padding: 0 var(--spacing-24) var(--spacing-24);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-24);
+    }
+
+    /* ── Create button in header-nav cluster ─────────────────────────── */
+    .hn-create-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      margin-right: 4px;
+    }
+    /* ── Quick Actions panel dropdown ────────────────────────────────── */
+    .qa-panel {
+      position: fixed;
+      z-index: 600;
+      width: 320px;
+      max-height: calc(100vh - 96px);
+      display: flex;
+      flex-direction: column;
+      background: var(--uems-bg-base);
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 8px 32px rgba(10,11,15,0.14);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(-6px) scale(0.98);
+      pointer-events: none;
+      visibility: hidden;
+      transition: opacity 180ms ease, transform 200ms cubic-bezier(0.16,1,0.3,1), visibility 180ms ease;
+    }
+    .qa-panel.open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: all;
+      visibility: visible;
+    }
+    .qa-panel__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-8);
+      padding: var(--spacing-12) var(--spacing-12) var(--spacing-8) var(--spacing-16);
+    }
+    .qa-panel__title {
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+    }
+    .qa-panel__search-wrap {
+      padding: 0 var(--spacing-12) var(--spacing-8);
+    }
+    .qa-panel__search-wrap ds-text-input {
+      display: block;
+      width: 100%;
+    }
+    /* Make the embedded ds-dropdown-menu stretch to the panel width and shed
+       its own surface chrome (qa-panel already provides border + shadow). */
+    .qa-panel ds-dropdown-menu {
+      display: block;
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .qa-panel ds-dropdown-menu .ds-dropdown-menu {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      box-shadow: none;
+      border-radius: 0;
+      padding: var(--spacing-4) 0 var(--spacing-8);
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+    }
+    .qa-panel ds-dropdown-menu .ds-dropdown-menu__list {
+      max-height: none;
+      flex: 1;
+      min-height: 0;
+    }
+    .qa-panel__empty {
+      padding: var(--spacing-12) var(--spacing-16);
+      color: var(--uems-text-tertiary);
+      font-size: var(--font-size-13);
+    }
+    /* Footer — "Browse Policy Catalog" + count badge */
+    .qa-panel__footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-8);
+      padding: var(--spacing-10) var(--spacing-16);
+      border-top: 1px solid var(--uems-border-tertiary);
+      flex-shrink: 0;
+    }
+    .qa-panel__footer-link {
+      font-size: var(--font-size-13);
+      font-weight: var(--font-weight-medium);
+      color: var(--uems-text-accent-primary);
+      text-decoration: none;
+    }
+    .qa-panel__footer-link:hover { text-decoration: underline; }
+    .qa-panel__footer-badge {
+      font-size: var(--font-size-11);
+      color: var(--uems-text-tertiary);
+      background: var(--uems-bg-secondary);
+      padding: 2px var(--spacing-8);
+      border-radius: 999px;
+    }
+
+    /* ── Quick Link cards grid ─────────────────────────────────────── */
+    .ql-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: var(--spacing-12);
+    }
+    .ql-card {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-12);
+      padding: var(--spacing-14) var(--spacing-16);
+      background: var(--uems-bg-base);
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--uems-text-primary);
+      transition: background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+    }
+    .ql-card:hover {
+      background: var(--uems-bg-accent-primary-subtle);
+      border-color: var(--uems-border-accent-subtle);
+      box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+    }
+    .ql-card__icon {
+      width: 36px; height: 36px; flex-shrink: 0;
+      border-radius: var(--radius-sm);
+      background: var(--uems-bg-accent-primary-subtle);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--uems-text-accent-primary);
+    }
+    .ql-card__label {
+      font-size: var(--font-size-13);
+      font-weight: var(--font-weight-medium);
+      color: var(--uems-text-primary);
+      line-height: 1.4;
+    }
+    .ql-card__sub {
+      font-size: var(--font-size-11);
+      color: var(--uems-text-tertiary);
+      margin-top: 1px;
+    }
+
+    /* ── Custom Actions modal — list of checkboxes ─────────────────── */
+    .custom-actions-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
+      max-height: min(560px, calc(100vh - 280px));
+      overflow-y: auto;
+      padding: var(--spacing-8) var(--spacing-12);
+    }
+    .custom-actions-list__heading {
+      padding: var(--spacing-10) var(--spacing-12) var(--spacing-4);
+      font-size: var(--font-size-11);
+      font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: var(--spacing-4);
+    }
+    .custom-actions-list__heading:first-child { margin-top: 0; }
+    .custom-actions-list .action-row {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-12);
+      padding: var(--spacing-8) var(--spacing-12);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 120ms ease;
+    }
+    .custom-actions-list .action-row:hover { background: var(--uems-bg-secondary-hover, var(--bg-hover)); }
+    .custom-actions-list .action-row > ds-icon {
+      color: var(--uems-text-secondary);
+      flex-shrink: 0;
+    }
+    .custom-actions-list .action-row .action-label {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .custom-actions-list .action-row .action-label__title {
+      font-size: var(--font-size-13);
+      font-weight: var(--font-weight-medium);
+      color: var(--uems-text-primary);
+      line-height: 18px;
+    }
+    .custom-actions-list .action-row .action-label__sub {
+      font-size: var(--font-size-11);
+      color: var(--uems-text-tertiary);
+      line-height: 14px;
+    }
+    .custom-actions-list .action-row ds-checkbox { flex-shrink: 0; }
+    .custom-actions-list__empty {
+      padding: var(--spacing-16);
+      text-align: center;
+      color: var(--uems-text-tertiary);
+      font-size: var(--font-size-13);
+    }
+
+    /* ── Modal overlay (custom, since body slot needs checkbox list) ── */
+    .custom-modal-overlay {
+      position: fixed; inset: 0; z-index: 900;
+      background: var(--uems-bg-overlay, rgba(10,11,15,0.65));
+      display: flex; align-items: center; justify-content: center;
+      padding: var(--spacing-24);
+      opacity: 0; pointer-events: none; visibility: hidden;
+      transition: opacity 200ms ease, visibility 200ms ease;
+    }
+    .custom-modal-overlay.open {
+      opacity: 1; pointer-events: all; visibility: visible;
+    }
+    .custom-modal-dialog {
+      background: var(--uems-bg-base);
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl, 0 20px 60px rgba(0,0,0,0.18));
+      width: 100%; max-width: 560px;
+      display: flex; flex-direction: column;
+      max-height: calc(100vh - 96px);
+      overflow: hidden;
+      transform: translateY(8px) scale(0.98);
+      transition: transform 220ms cubic-bezier(0.16,1,0.3,1);
+    }
+    .custom-modal-overlay.open .custom-modal-dialog {
+      transform: translateY(0) scale(1);
+    }
+    .custom-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--spacing-16) var(--spacing-20);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+    }
+    .custom-modal-header h2 {
+      font-size: var(--font-size-15); font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary); margin: 0;
+    }
+    .custom-modal-footer {
+      display: flex; align-items: center; justify-content: flex-end;
+      gap: var(--spacing-8);
+      padding: var(--spacing-14) var(--spacing-20);
+      border-top: 1px solid var(--uems-border-tertiary);
+    }
+    .modal-search {
+      padding: var(--spacing-12) var(--spacing-20);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+    }
+    .modal-search ds-text-input { display: block; width: 100%; }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- TOP — Header nav -->
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+  <div class="body">
+    <div class="shell-area">
+
+      <ds-sidebar-l1 id="shell-l1" class="is-hidden" style="height:100%;"></ds-sidebar-l1>
+      <ds-sidebar-l2 id="shell-l2" class="is-hidden" style="height:100%;"></ds-sidebar-l2>
+
+      <!-- MAIN content -->
+      <ds-content role="main">
+
+        <!-- Page header — no actions slot; + Create lives in top bar -->
+        <ds-page-header
+          id="ql-header"
+          title="Quick Links"
+          show-star
+          show-breadcrumbs="false"
+          show-overflow="false">
+        </ds-page-header>
+
+        <!-- Quick links body -->
+        <div class="ql-body">
+
+          <!-- Frequently Used -->
+          <div>
+            <ds-section-header title="Frequently Used" divider="bottom" style-variant="default"></ds-section-header>
+            <div class="ql-grid" style="margin-top: var(--spacing-12);">
+              <a class="ql-card" href="#">
+                <span class="ql-card__icon"><ds-icon name="computer" size="18"></ds-icon></span>
+                <div><div class="ql-card__label">Computer</div><div class="ql-card__sub">Manage endpoints</div></div>
+              </a>
+              <a class="ql-card" href="#">
+                <span class="ql-card__icon"><ds-icon name="settings" size="18"></ds-icon></span>
+                <div><div class="ql-card__label">Configuration</div><div class="ql-card__sub">Apply configurations</div></div>
+              </a>
+              <a class="ql-card" href="#">
+                <span class="ql-card__icon"><ds-icon name="settings-deploy" size="18"></ds-icon></span>
+                <div><div class="ql-card__label">Deploy Patch</div><div class="ql-card__sub">Push patch deployments</div></div>
+              </a>
+              <a class="ql-card" href="#">
+                <span class="ql-card__icon"><ds-icon name="checklist-01" size="18"></ds-icon></span>
+                <div><div class="ql-card__label">Enroll Device</div><div class="ql-card__sub">Onboard new devices</div></div>
+              </a>
+            </div>
+          </div>
+
+          <!-- All Actions -->
+          <div>
+            <ds-section-header title="All Actions" divider="bottom" style-variant="default"></ds-section-header>
+            <div class="ql-grid" style="margin-top: var(--spacing-12);">
+              <a class="ql-card" href="#">
+                <span class="ql-card__icon"><ds-icon name="file-shield" size="18"></ds-icon></span>
+                <div><div class="ql-card__label">Policy</div><div class="ql-card__sub">Create new policy</div></div>
+              </a>
+              <a class="ql-card" href="#">
+                <span class="ql-card__icon"><ds-icon name="users-group" size="18"></ds-icon></span>
+                <div><div class="ql-card__label">Custom Group</div><div class="ql-card__sub">Group devices or users</div></div>
+              </a>
+              <a class="ql-card" href="#">
+                <span class="ql-card__icon"><ds-icon name="package" size="18"></ds-icon></span>
+                <div><div class="ql-card__label">Software Package</div><div class="ql-card__sub">Bundle installers</div></div>
+              </a>
+              <a class="ql-card" href="#">
+                <span class="ql-card__icon"><ds-icon name="user" size="18"></ds-icon></span>
+                <div><div class="ql-card__label">Technician / User</div><div class="ql-card__sub">Add technicians</div></div>
+              </a>
+              <a class="ql-card" href="#">
+                <span class="ql-card__icon"><ds-icon name="calendar" size="18"></ds-icon></span>
+                <div><div class="ql-card__label">Scheduled Task</div><div class="ql-card__sub">Automate recurring tasks</div></div>
+              </a>
+              <a class="ql-card" href="#">
+                <span class="ql-card__icon"><ds-icon name="file-report" size="18"></ds-icon></span>
+                <div><div class="ql-card__label">Report</div><div class="ql-card__sub">Generate reports</div></div>
+              </a>
+              <a class="ql-card" href="#">
+                <span class="ql-card__icon"><ds-icon name="bug" size="18"></ds-icon></span>
+                <div><div class="ql-card__label">Vulnerability Scan</div><div class="ql-card__sub">Scan for threats</div></div>
+              </a>
+              <a class="ql-card" href="#">
+                <span class="ql-card__icon"><ds-icon name="add-widget" size="18"></ds-icon></span>
+                <div><div class="ql-card__label">Dashboard Widget</div><div class="ql-card__sub">Add custom widget</div></div>
+              </a>
+            </div>
+          </div>
+
+        </div><!-- /.ql-body -->
+      </ds-content>
+
+    </div><!-- /.shell-area -->
+
+    <ds-right-pane id="shell-rp" show-accessibility style="height:100%;"></ds-right-pane>
+  </div>
+</div>
+
+<!-- ── Add Custom Actions — modal overlay ──────────────────────────────── -->
+<div class="custom-modal-overlay" id="custom-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="custom-modal-dialog">
+    <div class="custom-modal-header">
+      <h2 id="modal-title">Add Custom Actions</h2>
+      <ds-icon-button id="modal-close-btn" icon="close" label="Close" type="tertiary-grey" size="small"></ds-icon-button>
+    </div>
+
+    <div class="modal-search">
+      <ds-text-input
+        id="modal-search"
+        placeholder="Search actions"
+        prefix-icon="search"
+        label-position="top"
+        show-helper-row="false"
+        autocomplete="off"></ds-text-input>
+    </div>
+
+    <div class="custom-actions-list" id="actions-list">
+      <!-- rows injected by JS -->
+    </div>
+
+    <div class="custom-modal-footer">
+      <ds-button id="modal-cancel" variant="outline" size="medium">Cancel</ds-button>
+      <ds-button id="modal-save" variant="primary" size="medium">Save</ds-button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Scripts ─────────────────────────────────────────────────────────── -->
+<script type="module">
+  import '../../design-system-library/src/components/index.js';
+  import { applyL2For, wireL1ToL2 } from '../../design-system-library/src/data/ec-menus.js';
+
+  /* ── Header nav tabs ──────────────────────────────────────────────── */
+  document.getElementById('ec-header').tabs = [
+    { id: 'home',    label: 'Home', active: true },
+    { id: 'configs', label: 'Configurations' },
+    { id: 'tp',      label: 'Threats & Patches' },
+    { id: 'sd',      label: 'Software Deployment' },
+    { id: 'inv',     label: 'Inventory' },
+    { id: 'osd',     label: 'OS Deployment' },
+    { id: 'mdm',     label: 'MDM' },
+    { id: 'policies', label: 'Policies' },
+  ];
+
+  /* ── Sidebar L1 ───────────────────────────────────────────────────── */
+  document.getElementById('shell-l1').items = [
+    { id: 'home',     label: 'Home',       icon: 'add-widget', active: true },
+    { id: 'configs',  label: 'Configs',    icon: 'settings' },
+    { id: 'patches',  label: 'Patches',    icon: 'file-shield' },
+    { id: 'systems',  label: 'Systems',    icon: 'computer' },
+    { id: 'reports',  label: 'Reports',    icon: 'file-report' },
+  ];
+
+  const l1El = document.getElementById('shell-l1');
+  const l2El = document.getElementById('shell-l2');
+
+  document.getElementById('ec-header').addEventListener('ds-header-nav-tab-select', (e) => {
+    applyL2For(l1El, l2El, e.detail?.id);
+  });
+  document.getElementById('ec-header').addEventListener('ds-header-nav-action', (e) => {
+    if (e.detail?.action === 'settings') applyL2For(l1El, l2El, 'admin');
+  });
+  wireL1ToL2(l1El, l2El);
+  applyL2For(l1El, l2El, 'home');
+
+  /* ── Quick Actions panel (lives on body, survives header re-renders) ─ */
+  const FREQUENTLY_USED = [
+    { label: 'Computer',       icon: 'computer',        chevron: true },
+    { label: 'Configuration',  icon: 'settings' },
+    { label: 'Deploy patch',   icon: 'install-patch' },
+    {
+      label: 'Enroll device',
+      icon: 'mobile',
+      subTitle: 'Choose Platform',
+      subItems: [
+        { label: 'iOS / iPadOS',        icon: 'mobile' },
+        { label: 'Android',             icon: 'mobile' },
+        { label: 'Windows',             icon: 'computer' },
+        { label: 'macOS',               icon: 'computer-mobile' },
+        { label: 'tvOS',                icon: 'computer-mobile' },
+        { label: 'ChromeOS',            icon: 'computer' },
+        { type: 'divider' },
+        { label: 'Bulk enrollment (QR)', icon: 'layout-grid' },
+      ],
+    },
+  ];
+
+  const ALL_ACTIONS = [
+    {
+      label: 'Policy',
+      icon: 'file-shield',
+      subTitle: 'Policy Templates',
+      subItems: [
+        { label: 'Patch Deployment Policy', icon: 'file-shield' },
+        { label: 'MDM Restriction Policy',  icon: 'mobile' },
+        { label: 'Malware Policy',          icon: 'bug' },
+        { label: 'Firewall Policy',         icon: 'file-shield' },
+        { label: 'BitLocker Policy',        icon: 'file-shield' },
+      ],
+    },
+    { label: 'Custom group',     icon: 'users' },
+    { label: 'Software package', icon: 'software' },
+    { label: 'Technician / User',icon: 'user' },
+    { label: 'Scheduled task',   icon: 'calendar' },
+    { label: 'Report',           icon: 'bar-vertical-chart' },
+  ];
+
+  const ALL_FLAT = [...FREQUENTLY_USED, ...ALL_ACTIONS];
+
+  const qaPanel = document.createElement('div');
+  qaPanel.id        = 'qa-panel';
+  qaPanel.className = 'qa-panel';
+  qaPanel.setAttribute('role', 'dialog');
+  qaPanel.setAttribute('aria-label', 'Quick Actions');
+  document.body.appendChild(qaPanel);
+
+  /* Build the items array consumed by <ds-dropdown-menu type="default">.
+     Headings + dividers come from `{ type: 'heading' | 'divider' }` entries.
+     The `href` carried on item objects is read in the ds-dropdown-select
+     handler to navigate to real pages. */
+  /* `chevron: true` adds the right chevron (handled natively by ds-dropdown-menu).
+     `subItems` / `subTitle` enable the component's built-in cascade flyout. */
+  function toMenuItem(a) {
+    return {
+      label: a.label,
+      icon: a.icon,
+      value: a.label,
+      chevron: !!a.chevron,
+      href: a.href,
+      subTitle: a.subTitle,
+      subItems: a.subItems,
+    };
+  }
+
+  function buildMenuItems(filter = '') {
+    const q = filter.trim().toLowerCase();
+    if (q) {
+      const filtered = ALL_FLAT.filter(a => a.label.toLowerCase().includes(q));
+      return filtered.map(toMenuItem);
+    }
+    return [
+      { type: 'heading', label: 'Frequently Used' },
+      ...FREQUENTLY_USED.map(toMenuItem),
+      { type: 'divider' },
+      { type: 'heading', label: 'All Actions' },
+      ...ALL_ACTIONS.map(toMenuItem),
+    ];
+  }
+
+  let _qaMenuEl = null;
+  let _qaSearchEl = null;
+
+  function buildQaPanelChrome() {
+    qaPanel.innerHTML = '';
+
+    /* Header */
+    const header = document.createElement('div');
+    header.className = 'qa-panel__header';
+
+    const title = document.createElement('span');
+    title.className = 'qa-panel__title';
+    title.textContent = 'Quick Actions';
+
+    const gearBtn = document.createElement('ds-icon-button');
+    gearBtn.id = 'qa-settings-btn';
+    gearBtn.setAttribute('icon', 'settings');
+    gearBtn.setAttribute('label', 'Customize actions');
+    gearBtn.setAttribute('type', 'tertiary-grey');
+    gearBtn.setAttribute('size', 'small');
+    gearBtn.setAttribute('shape', 'square');
+
+    header.appendChild(title);
+    header.appendChild(gearBtn);
+    qaPanel.appendChild(header);
+
+    /* Search */
+    const searchWrap = document.createElement('div');
+    searchWrap.className = 'qa-panel__search-wrap';
+
+    const searchInput = document.createElement('ds-text-input');
+    searchInput.id = 'qa-search';
+    searchInput.setAttribute('placeholder', 'Search actions');
+    searchInput.setAttribute('prefix-icon', 'search');
+    searchInput.setAttribute('label-position', 'top');
+    searchInput.setAttribute('show-helper-row', 'false');
+    searchInput.setAttribute('autocomplete', 'off');
+    searchWrap.appendChild(searchInput);
+    qaPanel.appendChild(searchWrap);
+
+    /* Items — delegated to <ds-dropdown-menu> from the Demo component set */
+    const menu = document.createElement('ds-dropdown-menu');
+    menu.id = 'qa-menu';
+    menu.setAttribute('type', 'default');
+    menu.setAttribute('open', '');
+    qaPanel.appendChild(menu);
+
+    /* Footer — "Browse Policy Catalog" link + count badge */
+    const footer = document.createElement('div');
+    footer.className = 'qa-panel__footer';
+    footer.innerHTML = `
+      <a href="#" class="qa-panel__footer-link" data-browse-catalog>Browse Policy Catalog</a>
+      <span class="qa-panel__footer-badge">42 policies</span>
+    `;
+    qaPanel.appendChild(footer);
+
+    /* Events */
+    gearBtn.addEventListener('click', () => {
+      closeQaPanel();
+      openCustomModal();
+    });
+
+    searchInput.addEventListener('ds-input', (e) => {
+      const q = e.detail?.value ?? '';
+      menu.items = buildMenuItems(q);
+    });
+
+    menu.addEventListener('ds-dropdown-select', (e) => {
+      /* Sub-item selects bubble up with `parent` set in detail; either way
+         the parent leaf is what we navigate to / close on. */
+      const item = e.detail?.item;
+      closeQaPanel();
+      if (item?.href) window.location.href = item.href;
+    });
+
+    footer.querySelector('[data-browse-catalog]').addEventListener('click', (e) => {
+      e.preventDefault();
+      menu.openSubmenuFor('Policy');
+    });
+
+    _qaMenuEl   = menu;
+    _qaSearchEl = searchInput;
+  }
+
+  function renderQaPanel(filter = '') {
+    if (!_qaMenuEl) buildQaPanelChrome();
+    if (_qaSearchEl) {
+      if (filter) _qaSearchEl.setAttribute('value', filter);
+      else        _qaSearchEl.removeAttribute('value');
+    }
+    _qaMenuEl.items = buildMenuItems(filter);
+    /* Escape inside the dropdown removes its open attr — reset on each show. */
+    _qaMenuEl.setAttribute('open', '');
+    /* Defer past the dropdown-menu's rAF first-item-focus so search wins. */
+    customElements.whenDefined('ds-text-input').then(() => {
+      requestAnimationFrame(() => _qaSearchEl?._input?.focus());
+    });
+  }
+
+  function positionAndOpenPanel(anchorBtn) {
+    const rect = anchorBtn.getBoundingClientRect();
+    qaPanel.style.top   = (rect.bottom + 8) + 'px';
+    qaPanel.style.right = (window.innerWidth - rect.right) + 'px';
+    renderQaPanel('');
+    qaPanel.classList.add('open');
+  }
+
+  function closeQaPanel() {
+    qaPanel.classList.remove('open');
+  }
+
+  /* ── Inject + button into header-nav cluster ──────────────────────── */
+  await customElements.whenDefined('ds-header-nav');
+
+  const headerEl = document.getElementById('ec-header');
+
+  function injectHeaderExtras() {
+    const cluster = headerEl.querySelector('.ds-header-nav__cluster');
+    if (!cluster) return;
+
+    /* ── + Create (Quick Actions trigger) ────────────────────────── */
+    if (!cluster.querySelector('#create-btn')) {
+      const createWrap = document.createElement('div');
+      createWrap.className = 'hn-create-wrap';
+
+      const btn = document.createElement('ds-icon-button');
+      btn.id = 'create-btn';
+      btn.setAttribute('icon', 'add');
+      btn.setAttribute('label', 'Quick Actions');
+      btn.setAttribute('type', 'primary');
+      btn.setAttribute('size', 'small');
+      btn.setAttribute('shape', 'square');
+      btn.setAttribute('aria-haspopup', 'true');
+
+      createWrap.appendChild(btn);
+      cluster.insertBefore(createWrap, cluster.firstChild);
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (qaPanel.classList.contains('open')) {
+          closeQaPanel();
+        } else {
+          positionAndOpenPanel(btn);
+        }
+      });
+    }
+
+    /* ── More (overflow) icon — sits just before the avatar ──────── */
+    if (!cluster.querySelector('#more-btn')) {
+      const moreBtn = document.createElement('ds-icon-button');
+      moreBtn.id = 'more-btn';
+      moreBtn.setAttribute('icon', 'more-horizontal');
+      moreBtn.setAttribute('label', 'More');
+      moreBtn.setAttribute('type', 'tertiary-grey');
+      moreBtn.setAttribute('size', 'small');
+      moreBtn.setAttribute('shape', 'square');
+      moreBtn.setAttribute('aria-haspopup', 'menu');
+
+      const avatar = cluster.querySelector('.ds-header-nav__avatar') || cluster.querySelector('[data-action="avatar"]');
+      if (avatar) cluster.insertBefore(moreBtn, avatar);
+      else cluster.appendChild(moreBtn);
+    }
+  }
+
+  injectHeaderExtras();
+  new MutationObserver(injectHeaderExtras).observe(headerEl, { childList: true, subtree: true });
+
+  /* Close on outside click. The component's cascade flyouts carry the
+     `.ds-dropdown-menu--cascade-sub` class — count those as "inside" too. */
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#create-btn')
+        && !e.target.closest('#qa-panel')
+        && !e.target.closest('.ds-dropdown-menu--cascade-sub')) {
+      closeQaPanel();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeQaPanel();
+  });
+
+  /* ── Custom Actions Modal ─────────────────────────────────────────── */
+  /* Actions grouped by Endpoint Central module. `module` is used as the
+     section header at render time; search collapses to a flat list. */
+  const MODAL_ACTIONS = [
+    /* ── Configurations ─────────────────────────────────────── */
+    { module: 'Configurations', icon: 'settings',         label: 'Configuration',          sub: 'Apply system configurations' },
+    { module: 'Configurations', icon: 'users',            label: 'Custom Group',           sub: 'Group devices or users' },
+    { module: 'Configurations', icon: 'calendar',         label: 'Scheduled Task',         sub: 'Automate recurring tasks' },
+    { module: 'Configurations', icon: 'checklist-01',     label: 'Collection',             sub: 'Bundle multiple configs' },
+
+    /* ── Patch Management ───────────────────────────────────── */
+    { module: 'Patch Management', icon: 'install-patch',  label: 'Deploy Patch',           sub: 'Push patches to endpoints' },
+    { module: 'Patch Management', icon: 'uninstall-patch', label: 'Decline Patch',         sub: 'Block specific patches' },
+    { module: 'Patch Management', icon: 'computer-scan',  label: 'Patch Scan',             sub: 'Discover missing patches' },
+    { module: 'Patch Management', icon: 'bug',            label: 'Vulnerability Scan',     sub: 'Scan endpoints for CVEs' },
+    { module: 'Patch Management', icon: 'refresh-time',   label: 'OS Update',              sub: 'Push feature/quality updates' },
+    { module: 'Patch Management', icon: 'file-shield',    label: 'Test & Approve Patch',   sub: 'Stage patches before rollout' },
+
+    /* ── Software Deployment ────────────────────────────────── */
+    { module: 'Software Deployment', icon: 'software',          label: 'Software Package', sub: 'Bundle installers' },
+    { module: 'Software Deployment', icon: 'computer-install',  label: 'Install Software', sub: 'Push install to endpoints' },
+    { module: 'Software Deployment', icon: 'computer-uninstall', label: 'Uninstall Software', sub: 'Remove from endpoints' },
+    { module: 'Software Deployment', icon: 'computer',          label: 'Self-Service Portal', sub: 'User-driven installs' },
+
+    /* ── Asset & Inventory ──────────────────────────────────── */
+    { module: 'Asset & Inventory', icon: 'computer-scan', label: 'Asset Scan',             sub: 'Inventory hardware & software' },
+    { module: 'Asset & Inventory', icon: 'file-report',   label: 'Hardware Report',        sub: 'Track device specifications' },
+    { module: 'Asset & Inventory', icon: 'software',      label: 'Software Inventory',     sub: 'List installed software' },
+    { module: 'Asset & Inventory', icon: 'calendar-tick', label: 'Warranty Tracking',      sub: 'Monitor device warranties' },
+    { module: 'Asset & Inventory', icon: 'file-shield',   label: 'License Compliance',     sub: 'Audit license usage' },
+
+    /* ── Mobile Device Management ───────────────────────────── */
+    { module: 'Mobile Device Management', icon: 'mobile',          label: 'Enroll Device',  sub: 'Onboard mobile endpoints' },
+    { module: 'Mobile Device Management', icon: 'mobile-devices',  label: 'Distribute App', sub: 'Push apps to devices' },
+    { module: 'Mobile Device Management', icon: 'mobile',          label: 'Geo-fence Rule', sub: 'Location-based policies' },
+    { module: 'Mobile Device Management', icon: 'file-shield',     label: 'Certificate',    sub: 'Provision device certs' },
+    { module: 'Mobile Device Management', icon: 'file',            label: 'Content Distribution', sub: 'Push documents to devices' },
+
+    /* ── Security & Privilege ───────────────────────────────── */
+    { module: 'Security & Privilege', icon: 'file-shield',  label: 'Policy',               sub: 'Create security policy' },
+    { module: 'Security & Privilege', icon: 'file-shield',  label: 'BitLocker Policy',     sub: 'Encrypt Windows drives' },
+    { module: 'Security & Privilege', icon: 'device-control', label: 'Device Control Rule', sub: 'Block USB / peripherals' },
+    { module: 'Security & Privilege', icon: 'software',     label: 'Application Control',  sub: 'Allow/block applications' },
+    { module: 'Security & Privilege', icon: 'file-shield',  label: 'DLP Rule',             sub: 'Prevent data exfiltration' },
+    { module: 'Security & Privilege', icon: 'file-shield',  label: 'Browser Security',     sub: 'Browser hardening policy' },
+    { module: 'Security & Privilege', icon: 'user-tick',    label: 'Privilege Elevation',  sub: 'Grant temporary admin rights' },
+
+    /* ── Endpoint Security (EDR) ────────────────────────────── */
+    { module: 'Endpoint Security (EDR)', icon: 'bug',         label: 'Threat Scan',        sub: 'Run malware scan' },
+    { module: 'Endpoint Security (EDR)', icon: 'file-shield', label: 'Quarantine',         sub: 'Isolate suspicious files' },
+    { module: 'Endpoint Security (EDR)', icon: 'file-shield', label: 'Anti-Ransomware Policy', sub: 'Block ransomware behaviour' },
+    { module: 'Endpoint Security (EDR)', icon: 'bug',         label: 'Malware Investigation', sub: 'Deep-dive on alerts' },
+
+    /* ── Remote Support ─────────────────────────────────────── */
+    { module: 'Remote Support', icon: 'computer',      label: 'Remote Session',           sub: 'Take control of endpoint' },
+    { module: 'Remote Support', icon: 'refresh-time',  label: 'Wake On LAN',              sub: 'Power on remote machines' },
+    { module: 'Remote Support', icon: 'computer',      label: 'Power Management',         sub: 'Schedule shutdown / restart' },
+    { module: 'Remote Support', icon: 'file',          label: 'File Transfer',            sub: 'Push files to endpoints' },
+
+    /* ── Reports ────────────────────────────────────────────── */
+    { module: 'Reports', icon: 'bar-vertical-chart',  label: 'Report',                    sub: 'Generate standard report' },
+    { module: 'Reports', icon: 'add-widget',          label: 'Dashboard Widget',          sub: 'Add custom widget' },
+    { module: 'Reports', icon: 'file-report',         label: 'Custom Report',             sub: 'Build ad-hoc report' },
+    { module: 'Reports', icon: 'calendar',            label: 'Schedule Report',           sub: 'Email reports on cadence' },
+
+    /* ── Users & Access ─────────────────────────────────────── */
+    { module: 'Users & Access', icon: 'user',         label: 'Technician / User',        sub: 'Add technicians' },
+    { module: 'Users & Access', icon: 'user-tick',    label: 'Role',                     sub: 'Define permissions' },
+    { module: 'Users & Access', icon: 'file-shield',  label: 'Conditional Access',       sub: 'Restrict by context' },
+
+    /* ── Notifications ──────────────────────────────────────── */
+    { module: 'Notifications', icon: 'bell',          label: 'Notification Rule',        sub: 'Set up alerts' },
+    { module: 'Notifications', icon: 'bell',          label: 'Alert Subscription',       sub: 'Subscribe to event types' },
+
+    /* ── System ─────────────────────────────────────────────── */
+    { module: 'System', icon: 'refresh-time',         label: 'System Update',            sub: 'Trigger update now' },
+    { module: 'System', icon: 'download',             label: 'Download Agent',           sub: 'Get agent installer' },
+    { module: 'System', icon: 'computer',             label: 'Database Maintenance',     sub: 'Run DB cleanup' },
+  ];
+
+  const customModal  = document.getElementById('custom-modal');
+  const actionsList  = document.getElementById('actions-list');
+  const modalSearch  = document.getElementById('modal-search');
+  const modalCancel  = document.getElementById('modal-cancel');
+  const modalSave    = document.getElementById('modal-save');
+  const modalClose   = document.getElementById('modal-close-btn');
+  let   _checked     = new Set();
+
+  function renderActionRow(action) {
+    const row = document.createElement('label');
+    row.className = 'action-row';
+    row.innerHTML = `
+      <ds-icon name="${action.icon}" size="18"></ds-icon>
+      <span class="action-label">
+        <span class="action-label__title">${action.label}</span>
+        <span class="action-label__sub">${action.sub}</span>
+      </span>
+      <ds-checkbox value="${action.label}" ${_checked.has(action.label) ? 'checked' : ''}></ds-checkbox>
+    `;
+    const cb = row.querySelector('ds-checkbox');
+    cb.addEventListener('ds-checkbox-change', (e) => {
+      if (e.detail.checked) _checked.add(action.label);
+      else _checked.delete(action.label);
+    });
+    return row;
+  }
+
+  function renderActionRows(filter = '') {
+    const q = filter.trim().toLowerCase();
+    actionsList.innerHTML = '';
+    const filtered = MODAL_ACTIONS.filter(
+      a => !q || a.label.toLowerCase().includes(q) || a.sub.toLowerCase().includes(q) || a.module.toLowerCase().includes(q)
+    );
+
+    if (!filtered.length) {
+      const empty = document.createElement('div');
+      empty.className = 'custom-actions-list__empty';
+      empty.textContent = 'No actions match your search';
+      actionsList.appendChild(empty);
+      return;
+    }
+
+    /* When searching, flatten — no section headers. Otherwise group by module
+       in the order they first appear in MODAL_ACTIONS. */
+    if (q) {
+      filtered.forEach(a => actionsList.appendChild(renderActionRow(a)));
+      return;
+    }
+
+    const groups = new Map();
+    filtered.forEach(a => {
+      if (!groups.has(a.module)) groups.set(a.module, []);
+      groups.get(a.module).push(a);
+    });
+
+    groups.forEach((actions, module) => {
+      const heading = document.createElement('div');
+      heading.className = 'custom-actions-list__heading';
+      heading.textContent = module;
+      actionsList.appendChild(heading);
+      actions.forEach(a => actionsList.appendChild(renderActionRow(a)));
+    });
+  }
+
+  function openCustomModal() {
+    _checked.clear();
+    modalSearch.removeAttribute('value');
+    renderActionRows();
+    customModal.classList.add('open');
+    customElements.whenDefined('ds-text-input').then(() => {
+      requestAnimationFrame(() => modalSearch._input?.focus());
+    });
+  }
+
+  function closeCustomModal() {
+    customModal.classList.remove('open');
+  }
+
+  /* Bridge — let the command-palette module open this modal */
+  window.openCustomActionsModal = openCustomModal;
+
+  modalSearch.addEventListener('ds-input', (e) => renderActionRows(e.detail?.value ?? ''));
+
+  modalClose.addEventListener('click', closeCustomModal);
+  modalCancel.addEventListener('click', closeCustomModal);
+
+  modalSave.addEventListener('click', () => {
+    closeCustomModal();
+    /* In a real app, persist _checked to user preferences */
+  });
+
+  /* Close on overlay click */
+  customModal.addEventListener('click', (e) => {
+    if (e.target === customModal) closeCustomModal();
+  });
+
+  /* Close on Escape */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && customModal.classList.contains('open')) closeCustomModal();
+  });
+</script>
+
+<!-- ════════════ Command Palette (⌘K) — composed from ds-* components ════════════ -->
+<style>
+  /* keep the scrim below the palette surface */
+  #cmdp-overlay { z-index: 1290; }
+  .cmdp {
+    position: fixed; top: 12vh; left: 50%;
+    transform: translateX(-50%) translateY(-6px) scale(.98);
+    width: 640px; max-width: calc(100vw - 32px); z-index: 1300;
+    background: var(--uems-bg-base);
+    border: 1px solid var(--uems-border-tertiary);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 16px 48px rgba(10,11,15,.18), 0 2px 6px rgba(10,11,15,.06);
+    overflow: hidden; display: flex; flex-direction: column;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity 160ms ease, transform 200ms cubic-bezier(.16,1,.3,1), visibility 160ms ease;
+  }
+  .cmdp.open { opacity: 1; visibility: visible; pointer-events: auto; transform: translateX(-50%) translateY(0) scale(1); }
+
+  .cmdp__search { display: flex; align-items: center; gap: var(--spacing-8); padding: var(--spacing-8) var(--spacing-12); border-bottom: 1px solid var(--uems-border-tertiary); }
+  .cmdp__search ds-search-field { flex: 1; min-width: 0; }
+  .cmdp__esc { flex-shrink: 0; font-size: var(--font-size-11); color: var(--uems-text-tertiary); background: var(--uems-bg-secondary); border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-sm); padding: 3px 8px; font-family: var(--font-family-mono, ui-monospace, monospace); }
+
+  .cmdp__tabs { display: flex; align-items: center; gap: var(--spacing-6); flex-wrap: wrap; padding: var(--spacing-10) var(--spacing-12); border-bottom: 1px solid var(--uems-border-tertiary); background: var(--uems-bg-secondary-subtle); }
+
+  .cmdp__list { max-height: 52vh; overflow-y: auto; padding: var(--spacing-4) 0 var(--spacing-8); }
+
+  .cmdp__group-head { display: flex; align-items: center; justify-content: space-between; padding: var(--spacing-10) var(--spacing-16) var(--spacing-4); }
+  .cmdp__group-label { font-size: var(--font-size-11); font-weight: var(--font-weight-semibold); letter-spacing: .06em; color: var(--uems-text-tertiary); text-transform: uppercase; }
+  .cmdp__group-action { font-size: var(--font-size-12); color: var(--uems-text-secondary); cursor: pointer; background: none; border: 0; font-family: inherit; }
+  .cmdp__group-action:hover { color: var(--uems-text-accent-link); }
+
+  .cmdp__item { display: flex; align-items: center; gap: var(--spacing-12); padding: var(--spacing-8) var(--spacing-12); margin: 0 var(--spacing-8); border-radius: var(--radius-md); cursor: pointer; border-left: 3px solid transparent; transition: background .1s ease; }
+  .cmdp__item:hover { background: var(--uems-bg-secondary); }
+  .cmdp__item.active { background: var(--uems-bg-accent-primary-subtle); border-left-color: var(--uems-border-accent); }
+  /* inline quick actions on a device row — reveal on hover / active */
+  .cmdp__quick { display: inline-flex; align-items: center; gap: 2px; margin-inline-start: var(--spacing-8); opacity: 0; transition: opacity .12s ease; }
+  .cmdp__item:hover .cmdp__quick, .cmdp__item.active .cmdp__quick { opacity: 1; }
+  @media (hover: none) { .cmdp__quick { opacity: 1; } }
+  .cmdp__ibox { width: 34px; height: 34px; border-radius: var(--radius-md); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .cmdp__ibox--accent  { background: var(--uems-bg-accent-primary-subtle); color: var(--uems-icon-accent); }
+  .cmdp__ibox--success { background: var(--uems-bg-success-primary); color: var(--uems-icon-success); }
+  .cmdp__ibox--error   { background: var(--uems-bg-error-primary); color: var(--uems-icon-error); }
+  .cmdp__ibox--warning { background: var(--uems-bg-warning-primary); color: var(--uems-icon-warning); }
+  .cmdp__ibox--neutral { background: var(--uems-bg-secondary); color: var(--uems-icon-tertiary); }
+  .cmdp__cbody { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .cmdp__title { font-size: var(--font-size-14); color: var(--uems-text-primary); line-height: 1.3; }
+  .cmdp__sub { font-size: var(--font-size-12); color: var(--uems-text-tertiary); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cmdp__divider { height: 1px; background: var(--uems-border-tertiary); margin: var(--spacing-4) var(--spacing-16); }
+  .cmdp__empty { padding: var(--spacing-16); text-align: center; color: var(--uems-text-tertiary); font-size: var(--font-size-13); }
+
+  .cmdp__footer { display: flex; align-items: center; gap: var(--spacing-16); padding: var(--spacing-8) var(--spacing-16); border-top: 1px solid var(--uems-border-tertiary); background: var(--uems-bg-secondary-subtle); }
+  .cmdp__hint { display: flex; align-items: center; gap: var(--spacing-4); font-size: var(--font-size-11); color: var(--uems-text-tertiary); }
+  .cmdp__key { background: var(--uems-bg-secondary); border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-sm); padding: 1px 6px; font-size: var(--font-size-11); color: var(--uems-text-secondary); font-family: var(--font-family-mono, ui-monospace, monospace); min-width: 18px; text-align: center; }
+  /* drill-in device view */
+  .cmdp__back { display: flex; align-items: center; gap: var(--spacing-6); padding: var(--spacing-8) var(--spacing-16); margin: var(--spacing-4) var(--spacing-8) var(--spacing-2); border: 0; background: none; font-family: inherit; font-size: var(--font-size-12); color: var(--uems-text-secondary); cursor: pointer; border-radius: var(--radius-md); }
+  .cmdp__back:hover { background: var(--uems-bg-secondary); color: var(--uems-text-primary); }
+  .cmdp__devhead { display: flex; align-items: center; gap: var(--spacing-12); padding: var(--spacing-8) var(--spacing-16) var(--spacing-10); margin: 0 var(--spacing-8); border-bottom: 1px solid var(--uems-border-tertiary); }
+  .cmdp__devhead .cmdp__title { font-weight: var(--font-weight-semibold); }
+  /* advanced-search bottom button */
+  .cmdp__advanced { display: flex; align-items: center; gap: var(--spacing-8); width: 100%; padding: var(--spacing-10) var(--spacing-16); border: 0; border-top: 1px solid var(--uems-border-tertiary); background: var(--uems-bg-base); color: var(--uems-text-accent-link); font-family: inherit; font-size: var(--font-size-13); font-weight: var(--font-weight-medium); cursor: pointer; text-align: left; }
+  .cmdp__advanced:hover { background: var(--uems-bg-secondary); }
+  .cmdp__advanced .cmdp__adv-arrow { margin-inline-start: auto; }
+  @media (prefers-reduced-motion: reduce) { .cmdp, .cmdp.open { transition: opacity 120ms ease; transform: translateX(-50%); } }
+</style>
+
+<ds-overlay id="cmdp-overlay" type="dim-blur"></ds-overlay>
+<div class="cmdp" id="cmdp" role="dialog" aria-modal="true" aria-label="Command palette">
+  <div class="cmdp__search">
+    <ds-search-field id="cmdp-search" size="medium" placeholder="Search or jump to…" aria-label="Search commands"></ds-search-field>
+  </div>
+  <div class="cmdp__tabs" id="cmdp-tabs">
+    <ds-button variant="secondary" size="small" prefix-icon="add" data-tab="create">Create</ds-button>
+    <ds-button variant="secondary" size="small" prefix-icon="users" data-tab="assign">Assign to group</ds-button>
+    <ds-button variant="secondary" size="small" prefix-icon="arrow-narrow-right" data-tab="goto">Go to</ds-button>
+    <ds-button variant="secondary" size="small" prefix-icon="terminal-square" data-tab="cmds">Commands</ds-button>
+  </div>
+  <div class="cmdp__list" id="cmdp-list" role="listbox"></div>
+  <button class="cmdp__advanced" id="cmdp-advanced" type="button">
+    <ds-icon name="search" size="16"></ds-icon>
+    <span id="cmdp-advanced-label">Open Advanced Search</span>
+    <ds-icon class="cmdp__adv-arrow" name="arrow-narrow-right" size="16"></ds-icon>
+  </button>
+  <div class="cmdp__footer">
+    <span class="cmdp__hint"><span class="cmdp__key">↑↓</span> Navigate</span>
+    <span class="cmdp__hint"><span class="cmdp__key">↵</span> Open</span>
+    <span class="cmdp__hint"><span class="cmdp__key">Esc</span> Dismiss</span>
+    <span class="cmdp__hint"><span class="cmdp__key">⌘K</span> Open palette</span>
+  </div>
+</div>
+
+<script type="module">
+  import '../../design-system-library/src/components/index.js';
+  await customElements.whenDefined('ds-search-field');
+  await customElements.whenDefined('ds-tab-filter');
+
+  const overlay = document.getElementById('cmdp-overlay');
+  const cmdp    = document.getElementById('cmdp');
+  const search  = document.getElementById('cmdp-search');
+  const tabsEl  = document.getElementById('cmdp-tabs');
+  const listEl  = document.getElementById('cmdp-list');
+
+  /* Scope buttons (secondary) — cosmetic scope switch for now */
+  tabsEl.addEventListener('click', (e)=>{ const b=e.target.closest('[data-tab]'); if(b) focusSearch(); });
+
+  /* Data — tone drives the icon-box colour + badge state, all via tokens. */
+  const GROUPS = [
+    { id:'quick', label:'Quick actions', items:[
+      { icon:'computer-download',       tone:'accent',  title:'Deploy software to device', sub:'Push package to selected endpoint', badge:'Deploy',   bstate:'active'    },
+      { icon:'file-shield', tone:'success', title:'Run patch scan now',        sub:'Force immediate vulnerability scan', badge:'Patch',    bstate:'success'   },
+      { icon:'lock',                    tone:'error',   title:'Lock device remotely',      sub:'Instantly lock selected endpoint',   badge:'Security', bstate:'critical'  },
+      { icon:'reboot',                  tone:'warning', title:'Restart endpoint',          sub:'Schedule or force immediate reboot',  badge:'Remote',  bstate:'moderate'  },
+      { icon:'file-report',             tone:'accent',  title:'Generate compliance report',sub:'Export current patch & config status',badge:'Report',  bstate:'important' },
+    ]},
+    { id:'goto', label:'Go to', items:[
+      { icon:'checklist-01', tone:'neutral', title:'Patch Management',    sub:'Missing patches · Deployment status' },
+      { icon:'layout-grid',  tone:'neutral', title:'Software Deployment', sub:'Packages · Definitions · History' },
+      { icon:'users',        tone:'neutral', title:'Device Groups',       sub:'Manage endpoint collections' },
+      { icon:'chart',        tone:'neutral', title:'Reports',             sub:'Compliance · Audit · Inventory' },
+    ]},
+    { id:'recent', label:'Recent (4)', action:'Clear', items:[
+      { icon:'file-shield', tone:'neutral', title:'Windows 11 Patch Deployment',  sub:'Last opened 2h ago',     badge:'Policy', bstate:'important' },
+      { icon:'settings',                tone:'neutral', title:'Antivirus Definition Update',  sub:'Last opened yesterday',  badge:'Config', bstate:'active'    },
+      { icon:'chart',                   tone:'neutral', title:'Q2 Compliance Audit Report',   sub:'Last opened 3 days ago', badge:'Report', bstate:'moderate'  },
+      { icon:'users',                   tone:'neutral', title:'Finance-BLR Device Group',     sub:'Last opened 4 days ago', badge:'Group',  bstate:'default'   },
+    ]},
+    /* Custom actions — always rendered LAST; "Manage" opens the Add Custom Actions modal */
+    { id:'custom', label:'Custom actions', action:'Manage', actionKind:'custom', items:[
+      { icon:'terminal-square',   tone:'neutral', title:'Run “Disk Cleanup” script',      sub:'Custom · Windows'   },
+      { icon:'calendar',          tone:'neutral', title:'Weekly reboot — Finance-BLR',     sub:'Custom · Scheduled' },
+      { icon:'add-widget',        tone:'neutral', title:'Pin “Patch SLA” widget',          sub:'Custom · Dashboard' },
+      { icon:'file-report',       tone:'neutral', title:'Export weekly compliance CSV',    sub:'Custom · Report'    },
+      { icon:'lock',              tone:'neutral', title:'Enforce BitLocker on laptops',    sub:'Custom · Security'  },
+      { icon:'computer-download', tone:'neutral', title:'Deploy “Zoho Suite” bundle',      sub:'Custom · Software'  },
+      { icon:'users',             tone:'neutral', title:'Sync AD security groups',         sub:'Custom · Directory' },
+      { icon:'reboot',            tone:'neutral', title:'Restart print spooler service',   sub:'Custom · Script'    },
+    ]},
+  ];
+
+  const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const advBtn   = document.getElementById('cmdp-advanced');
+  const advLabel = document.getElementById('cmdp-advanced-label');
+
+  /* Sample managed endpoints — searching a name / user / OS surfaces these. */
+  const DEVICES = [
+    { name:'ARAVINTH-WIN11', user:'Kumaran M R', os:'Windows 11 Pro',   status:'Managed' },
+    { name:'ARAVINTH-MAC',   user:'Kumaran M R', os:'macOS 14 Sonoma',  status:'Managed' },
+    { name:'PRIYA-WIN10',    user:'Priya N',      os:'Windows 10 Ent',   status:'Pending' },
+    { name:'KARTHIK-UBUNTU', user:'Karthik S',    os:'Ubuntu 22.04 LTS', status:'Managed' },
+    { name:'FIN-BLR-042',    user:'Divya R',      os:'Windows 11 Pro',   status:'Error'   },
+  ];
+  const STATUS_STATE = { Managed:'success', Pending:'moderate', Error:'critical', Retired:'default' };
+  const osIcon = (os)=> /mac/i.test(os) ? 'laptop' : /ubuntu|linux/i.test(os) ? 'terminal-square' : 'computer';
+
+  /* Endpoint Central per-device primary actions (drill-in). nav=true navigates. */
+  const DEVICE_ACTIONS = [
+    { icon:'search',             tone:'accent',  title:'Scan now',            sub:'Inventory & patch scan' },
+    { icon:'power',              tone:'success', title:'Wake up',             sub:'Wake on LAN' },
+    { icon:'computer',           tone:'accent',  title:'Remote control',      sub:'Start a remote session' },
+    { icon:'lock',               tone:'error',   title:'Lock device',         sub:'Lock immediately' },
+    { icon:'reboot',             tone:'warning', title:'Restart',             sub:'Reboot the endpoint' },
+    { icon:'file-shield',        tone:'accent',  title:'Deploy patches',      sub:'Push missing patches' },
+    { icon:'terminal-square',    tone:'neutral', title:'Run script',          sub:'Execute on this device' },
+    { icon:'users',              tone:'neutral', title:'Move to group',       sub:'Reassign device group' },
+    { icon:'message-chat-square',tone:'neutral', title:'Notify user',         sub:'Send a message / chat' },
+    { icon:'arrow-narrow-right', tone:'neutral', title:'View device details', sub:'Open the device page', nav:true },
+  ];
+
+  /* Most-needed quick ops shown inline on a device row (hover/active). */
+  const DEVICE_QUICK = [
+    { icon:'search',   title:'Scan now' },
+    { icon:'computer', title:'Remote control' },
+    { icon:'lock',     title:'Lock device' },
+    { icon:'reboot',   title:'Restart' },
+  ];
+
+  let flat = [], active = -1, mode = 'search', currentDevice = null, query = '';
+
+  const paint = ()=>flat.forEach((r,i)=>r.classList.toggle('active', i===active));
+  function setActive(i){ if(i>=0&&i<flat.length){ active=i; paint(); flat[i].scrollIntoView({block:'nearest'}); } }
+
+  const rowHTML = (icon,tone,title,sub,badge,bstate)=>
+    `<span class="cmdp__ibox cmdp__ibox--${tone}"><ds-icon name="${icon}" size="18"></ds-icon></span>` +
+    `<span class="cmdp__cbody"><span class="cmdp__title">${esc(title)}</span><span class="cmdp__sub">${esc(sub||'')}</span></span>` +
+    (badge ? `<ds-badge variant="subtle" state="${bstate||'default'}" size="small" shape="rounded">${esc(badge)}</ds-badge>` : '');
+  function addRow(html, onActivate){
+    const row=document.createElement('div'); row.className='cmdp__item'; row.setAttribute('role','option'); row.innerHTML=html;
+    const idx=flat.length;
+    row.addEventListener('mouseenter', ()=>setActive(idx));
+    row.addEventListener('click', ()=>onActivate());
+    listEl.appendChild(row); flat.push(row); return row;
+  }
+  function groupHead(label, action, gid, kind){
+    const h=document.createElement('div'); h.className='cmdp__group-head';
+    h.innerHTML=`<span class="cmdp__group-label">${esc(label)}</span>`+(action?`<button class="cmdp__group-action" type="button" data-gid="${gid||''}" data-kind="${kind||'clear'}">${esc(action)}</button>`:'');
+    listEl.appendChild(h);
+  }
+  const divider = ()=>{ const d=document.createElement('div'); d.className='cmdp__divider'; listEl.appendChild(d); };
+
+  function renderSearch(){
+    const q=query.toLowerCase().trim();
+    const devs = q ? DEVICES.filter(d=>(d.name+' '+d.user+' '+d.os).toLowerCase().includes(q)) : [];
+    let any=false;
+    if(devs.length){
+      any=true; groupHead('Devices');
+      devs.forEach(d=>{
+        const row = addRow(
+          `<span class="cmdp__ibox cmdp__ibox--accent"><ds-icon name="${osIcon(d.os)}" size="18"></ds-icon></span>`+
+          `<span class="cmdp__cbody"><span class="cmdp__title">${esc(d.name)}</span><span class="cmdp__sub">${esc(d.user+' · '+d.os)}</span></span>`+
+          `<span class="cmdp__quick">`+
+            DEVICE_QUICK.map(a=>`<ds-icon-button icon="${a.icon}" label="${esc(a.title)}" type="tertiary-grey" size="large"></ds-icon-button>`).join('')+
+          `</span>`+
+          `<ds-badge variant="subtle" state="${STATUS_STATE[d.status]||'default'}" size="small" shape="rounded">${esc(d.status)}</ds-badge>`,
+          ()=>enterDevice(d));
+        row.querySelectorAll('.cmdp__quick ds-icon-button').forEach((btn,bi)=>{
+          btn.addEventListener('click', (ev)=>{ ev.stopPropagation(); runDeviceAction(DEVICE_QUICK[bi], d); });
+        });
+      });
+      divider();
+    }
+    GROUPS.forEach((g)=>{
+      const matches=g.items.filter(it=>!q||(it.title+' '+(it.sub||'')).toLowerCase().includes(q));
+      if(!matches.length) return; any=true;
+      groupHead(g.label, g.action, g.id, g.actionKind);
+      matches.forEach(it=>addRow(rowHTML(it.icon,it.tone,it.title,it.sub,it.badge,it.bstate), ()=>close()));
+      divider();
+    });
+    if(listEl.lastElementChild?.classList.contains('cmdp__divider')) listEl.lastElementChild.remove();
+    if(!any){ const e=document.createElement('div'); e.className='cmdp__empty'; e.textContent='No results for “'+query+'”'; listEl.appendChild(e); }
+  }
+
+  function renderDevice(d){
+    const back=document.createElement('button'); back.type='button'; back.className='cmdp__back';
+    back.innerHTML=`<ds-icon name="arrow-narrow-left" size="16"></ds-icon> Back to search`;
+    back.addEventListener('click', goBack); listEl.appendChild(back);
+    const dh=document.createElement('div'); dh.className='cmdp__devhead';
+    dh.innerHTML=`<span class="cmdp__ibox cmdp__ibox--accent"><ds-icon name="${osIcon(d.os)}" size="18"></ds-icon></span>`+
+      `<span class="cmdp__cbody"><span class="cmdp__title">${esc(d.name)}</span><span class="cmdp__sub">${esc(d.user+' · '+d.os)}</span></span>`+
+      `<ds-badge variant="subtle" state="${STATUS_STATE[d.status]||'default'}" size="small" shape="rounded">${esc(d.status)}</ds-badge>`;
+    listEl.appendChild(dh);
+    groupHead('Primary actions');
+    DEVICE_ACTIONS.forEach(a=>addRow(rowHTML(a.icon,a.tone,a.title,a.sub), ()=>runDeviceAction(a,d)));
+  }
+
+  function rerender(){
+    listEl.innerHTML=''; flat=[];
+    if(mode==='device' && currentDevice) renderDevice(currentDevice); else renderSearch();
+    advLabel.textContent = query.trim() ? `Search “${query.trim()}” in Advanced Search` : 'Open Advanced Search';
+    active = flat.length ? 0 : -1; paint();
+  }
+
+  function enterDevice(d){ mode='device'; currentDevice=d; rerender(); listEl.scrollTop=0; }
+  function goBack(){ mode='search'; currentDevice=null; rerender(); requestAnimationFrame(focusSearch); }
+  function runDeviceAction(a,d){ if(a.nav){ window.location.href='../../Layout/computer-details.html'; return; } /* hook: trigger a.title on d.name */ close(); }
+
+  function focusSearch(){ const inp = search.querySelector('input'); (inp||search).focus?.(); }
+  function open(){ mode='search'; currentDevice=null; rerender(); overlay.setAttribute('open',''); cmdp.classList.add('open'); requestAnimationFrame(focusSearch); }
+  function close(){ overlay.removeAttribute('open'); cmdp.classList.remove('open'); }
+  const isOpen = ()=>cmdp.classList.contains('open');
+
+  rerender();
+
+  search.addEventListener('ds-search-field-input', (e)=>{ query=e.detail?.value||''; if(mode==='device'){mode='search';currentDevice=null;} rerender(); });
+  search.addEventListener('ds-search-field-clear', ()=>{ query=''; mode='search'; currentDevice=null; rerender(); });
+  search.addEventListener('ds-search-field-submit', ()=>{ if(active>=0) flat[active].click(); });
+
+  overlay.addEventListener('ds-dismiss', close);
+  listEl.addEventListener('click', (e)=>{
+    const b = e.target.closest('.cmdp__group-action'); if(!b) return;
+    if(b.dataset.kind==='custom'){ close(); window.openCustomActionsModal?.(); return; }
+    const g=GROUPS.find(x=>x.id===b.dataset.gid); if(g){ g.items=[]; g.label=g.label.replace(/\(\d+\)/,'(0)'); rerender(); }
+  });
+
+  /* Advanced search → deep-search results page (carries the query) */
+  advBtn.addEventListener('click', ()=>{ const q=query.trim(); window.location.href='../../Layout/advanced-search.html'+(q?('?q='+encodeURIComponent(q)):''); });
+
+  document.addEventListener('keydown', (e)=>{
+    if((e.metaKey||e.ctrlKey) && (e.key==='k'||e.key==='K')){ e.preventDefault(); isOpen()?close():open(); return; }
+    if(!isOpen()) return;
+    if(e.key==='Escape'){ e.preventDefault(); if(mode==='device') goBack(); else close(); }
+    else if(e.key==='ArrowDown'){ e.preventDefault(); setActive(Math.min(active+1, flat.length-1)); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); setActive(Math.max(active-1, 0)); }
+    else if(e.key==='Enter'){ if(active>=0){ e.preventDefault(); flat[active].click(); } }
+  });
+
+  /* Right rail trigger — add a Command-palette icon to the right pane */
+  const rp = document.getElementById('shell-rp');
+  if(rp){
+    customElements.whenDefined('ds-right-pane').then(()=>{
+      rp.topItems = [{ id:'cmdk', icon:'command', label:'Command palette (⌘K)', highlight:true }];
+      rp.bottomItems = [{ id:'accessibility', icon:'user', label:'Accessibility' }];
+      rp.addEventListener('ds-right-pane-select', (e)=>{ if(e.detail?.id==='cmdk') open(); });
+    });
+  }
+</script>
+</body>
+</html>

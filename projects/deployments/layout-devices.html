@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!--
+  Deployments · Devices (L1) — device table scoped to the module.
+  Table is present with the final column shape; only a few sample rows
+  ship so it reads as an "empty for now" placeholder until real data
+  is wired up.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Deployments · Devices — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+#dep-devices-pop .dev-wrap { padding-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+#dep-devices-pop .cell-os { display: inline-flex; align-items: center; gap: 8px; color: var(--uems-text-primary); }
+#dep-devices-pop .cell-os ds-icon { color: var(--uems-icon-tertiary); flex: none; }
+#dep-devices-pop .cell-actions { display: inline-flex; justify-content: flex-end; width: 100%; gap: 2px; }
+#dep-devices-pop .cell-actions button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border: 0; background: transparent;
+  border-radius: var(--radius-sm); cursor: pointer; color: var(--uems-icon-secondary);
+}
+#dep-devices-pop .cell-actions button:hover { background: var(--uems-bg-secondary-hover); }
+</style>
+
+<div id="dep-devices-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <ds-page-header icon="computer" structure="default"
+      title="Devices in deployment scope"
+      description="Every device reachable by at least one deployment in your Administrative Group.">
+      <ds-button slot="actions" variant="outline" size="small" prefix-icon="export">Export</ds-button>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+      <div class="dev-wrap">
+        <ds-data-table id="dep-dev-table"
+          selection-mode="multi"
+          row-height="comfortable"
+          show-footer
+          sticky-header
+          fit-viewport
+          rows-per-page="10"
+          rows-per-page-options="10,25,50"
+          page="1"></ds-data-table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('dep-devices-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const OS_ICON = { Windows: 'microsoft', macOS: 'apple', Linux: 'terminal-square' };
+  const osCell = (r) => `<span class="cell-os"><ds-icon name="${OS_ICON[r.platform] || 'computer'}" size="16"></ds-icon>${esc(r.os)}</span>`;
+  const STATE = { Online: 'success', Offline: 'moderate', 'Pending': 'warning' };
+  const stateBadge = (r) =>
+    `<ds-badge variant="subtle" state="${STATE[r.status] || 'default'}" shape="rounded" size="medium">${esc(r.status)}</ds-badge>`;
+  const actions = () =>
+    `<span class="cell-actions">
+       <button type="button" aria-label="Row actions"><ds-icon name="more-vertical" size="16"></ds-icon></button>
+     </span>`;
+
+  const tbl = $('dep-dev-table');
+  tbl.columns = [
+    { id: 'name',      header: 'Device',          accessor: 'name' },
+    { id: 'platform',  header: 'Operating system',render: osCell },
+    { id: 'status',    header: 'Status',          align: 'start', render: stateBadge },
+    { id: 'deployments', header: 'Active deployments', align: 'end', accessor: 'deployments' },
+    { id: 'lastRun',   header: 'Last run',        accessor: 'lastRun' },
+    { id: 'ag',        header: 'AG',              accessor: 'ag' },
+    { id: 'actions',   header: '',                align: 'end', render: actions },
+  ];
+  /* Empty for now — a few sample rows to show the shape. */
+  tbl.rows = [
+    { id: 'kavin', name: 'kavin',           platform: 'Windows', os: 'Windows 11 Pro (23H2)', status: 'Online',  deployments: 4, lastRun: '2 min ago',  ag: 'India' },
+    { id: 2,       name: 'IN-LT-2044',      platform: 'Windows', os: 'Windows 10 Enterprise', status: 'Pending', deployments: 1, lastRun: '1 hr ago',   ag: 'India' },
+    { id: 3,       name: 'IN-MB-Karthik',   platform: 'macOS',   os: 'macOS 14 Sonoma',       status: 'Online',  deployments: 2, lastRun: '9 min ago',  ag: 'India' },
+    { id: 4,       name: 'srv-build-01',    platform: 'Linux',   os: 'Ubuntu 22.04 LTS',      status: 'Online',  deployments: 3, lastRun: '3 min ago',  ag: 'Zoho' },
+  ];
+
+  function show() { root.hidden = false; }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-devices'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-devices'].show()));
+})();
+</script>
+</body>
+</html>

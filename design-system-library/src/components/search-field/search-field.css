@@ -1,0 +1,215 @@
+/* =============================================================================
+   ds-search-field / .ds-search-field
+   Spec: docs/MD/search-field.md  (Figma 16827:123098, 42-variant set)
+
+   Sizes : small | medium | large
+   States: default | hover | focus | filled | loading | disabled | error
+           (focus + filled are auto-derived from input state; the others are
+            opt-in via attributes)
+   ============================================================================= */
+
+ds-search-field {
+  display: inline-block;
+  width: 100%;
+  font-family: var(--font-family-sans);
+}
+
+.ds-search-field {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  background: var(--uems-bg-primary, #FFFFFF);
+  border: 1px solid var(--uems-border-tertiary, #E1E4EB);
+  border-radius: var(--radius-md);   /* 8px */
+  box-sizing: border-box;
+  cursor: text;
+  color: var(--uems-text-placeholder, #8893AD);
+  /* Smooth border + bg fade across all state transitions. The 2px focus
+     ring switch is animated as well so it eases in / out cleanly. */
+  transition:
+    border-color 160ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 160ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 160ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Sizes per MD §Sizes ─────────────────────────────────────────────── */
+.ds-search-field--small  { height: 32px; padding: 0 8px;  gap: 8px; font-size: 14px; }
+.ds-search-field--medium { height: 40px; padding: 0 12px; gap: 8px; font-size: 14px; }
+.ds-search-field--large  { height: 48px; padding: 0 12px; gap: 8px; font-size: 14px; }
+
+/* ── Leading search icon ─────────────────────────────────────────────── */
+.ds-search-field__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--uems-text-tertiary, #40485B);
+  pointer-events: none;
+  transition: color 160ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ds-search-field--small  .ds-search-field__icon { width: 16px; height: 16px; }
+.ds-search-field--medium .ds-search-field__icon,
+.ds-search-field--large  .ds-search-field__icon { width: 20px; height: 20px; }
+
+/* ── Native input — strip its default chrome ─────────────────────────── */
+.ds-search-field__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--uems-text-primary, #15181E);
+  outline: none;
+  padding: 0;
+}
+.ds-search-field__input::placeholder {
+  color: var(--uems-text-placeholder, #8893AD);
+  opacity: 1;
+}
+/* Suppress the WebKit default "X" so we can render our own. */
+.ds-search-field__input::-webkit-search-cancel-button,
+.ds-search-field__input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
+
+/* ── Trailing slot (shortcut / clear / loader) — one container, content
+       swapped per state ──────────────────────────────────────────────── */
+.ds-search-field__trailing {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 4px;
+  color: var(--uems-text-tertiary, #40485B);
+}
+
+/* Shortcut hint chip (⌘K) — Figma: borderless, no fill, 12px, 2px/4px pad. */
+.ds-search-field__shortcut {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--uems-text-placeholder, #8893AD);
+  background: transparent;
+  white-space: nowrap;
+  user-select: none;
+  transition:
+    opacity 160ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 160ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Clear button — appears in filled / error state */
+.ds-search-field__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--uems-text-tertiary, #40485B);
+  border-radius: 4px;
+  cursor: pointer;
+  transition:
+    background-color 140ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 140ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 140ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ds-search-field__clear:hover {
+  background: var(--uems-bg-secondary, #F0F2F5);
+  color: var(--uems-text-primary, #15181E);
+}
+.ds-search-field__clear:active { transform: scale(0.9); }
+.ds-search-field__clear:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+
+/* Loader — circular spinner (Figma: 20px Spinner-Round) */
+.ds-search-field__loader {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--uems-border-tertiary, #E1E4EB);
+  border-top-color: var(--uems-border-accent, #006AFF);
+  border-radius: 999px;
+  animation: ds-search-spin 0.7s linear infinite;
+}
+@keyframes ds-search-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-search-field__loader { animation: none; }
+  .ds-search-field { transition: none; }
+  .ds-search-field__icon,
+  .ds-search-field__clear,
+  .ds-search-field__shortcut { transition: none; }
+}
+
+/* ── States ────────────────────────────────────────────────────────── */
+
+/* Default — already styled above */
+
+/* Hover — Figma: 1px Border-Accent (#006AFF). */
+.ds-search-field:hover:not(.ds-search-field--disabled):not(.ds-search-field--error) {
+  border-color: var(--uems-border-accent, #006AFF);
+}
+
+/* Focus — Figma 16827:123111: a SOLID 2px Border-Accent-Focus (#006AFF) border
+   hugging the field (no offset ring). This is what distinguishes Focus (2px)
+   from Hover (1px) — both are accent blue, the weight is the differentiator.
+   box-sizing:border-box + the fixed height keep the outer box stable, so the
+   1px→2px swap only shrinks the inner content area — no layout jump. Use
+   :focus-within so clicking the icon / shortcut area still shows it. */
+.ds-search-field:focus-within:not(.ds-search-field--disabled):not(.ds-search-field--loading):not(.ds-search-field--error) {
+  border-color: var(--uems-border-accent-focus, #006AFF);
+  border-width: 2px;
+}
+
+/* Filled — value present (auto). Border darkens, text becomes primary. */
+.ds-search-field--filled:not(.ds-search-field--disabled):not(.ds-search-field--error) {
+  border-color: var(--uems-border-primary, #B4BBCC);
+}
+.ds-search-field--filled .ds-search-field__input { color: var(--uems-text-primary, #15181E); }
+
+/* Loading */
+.ds-search-field--loading {
+  border-color: var(--uems-border-accent, #006AFF);
+}
+.ds-search-field--loading .ds-search-field__input { color: var(--uems-text-primary, #15181E); }
+
+/* Disabled — Figma: bg-secondary + border-primary + 50% opacity on the whole field. */
+.ds-search-field--disabled {
+  background: var(--uems-bg-secondary, #F0F2F5);
+  border-color: var(--uems-border-primary, #B4BBCC);
+  opacity: 0.5;
+  /* The inner field is a native <input disabled> (set in JS), so clicks are
+     already blocked — keep pointer-events on so the not-allowed cursor shows
+     (a bare pointer-events:none would suppress the cursor entirely). */
+  cursor: not-allowed;
+}
+.ds-search-field--disabled .ds-search-field__input,
+.ds-search-field--disabled .ds-search-field__input::placeholder {
+  color: var(--uems-text-disabled, #8893AD);
+}
+/* A disabled native <input> reverts to the UA default cursor, so set
+   not-allowed on the input itself (the container rule doesn't reach it). */
+.ds-search-field--disabled .ds-search-field__input { cursor: not-allowed; }
+.ds-search-field--disabled .ds-search-field__icon { color: var(--uems-text-disabled, #8893AD); }
+
+/* Error */
+.ds-search-field--error {
+  border-color: var(--uems-border-error, #E42527);
+}
+.ds-search-field--error .ds-search-field__input { color: var(--uems-text-primary, #15181E); }
+
+/* ── RTL ─────────────────────────────────────────────────────────────
+   The container carries dir="rtl" (set by the component). dir="rtl" alone
+   mirrors a normal flex row: the leading search icon moves to the right
+   (trailing) edge and the clear / loader / shortcut to the left (leading)
+   edge — and the input's text-align follows dir for free.
+
+   Do NOT add flex-direction:row-reverse here — combined with dir="rtl" it
+   double-reverses and CANCELS the mirroring (the original bug). The search
+   glyph is flipped so its handle points to the mirrored side, per Figma. */
+.ds-search-field[dir="rtl"] .ds-search-field__icon { transform: scaleX(-1); }

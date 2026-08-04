@@ -1,0 +1,125 @@
+/* =============================================================================
+   ds-list / .ds-list
+   Presentational <ul>/<ol> with 7 marker styles, 3 sizes, 3 nesting levels,
+   full RTL. No states, no interaction — typography + markers only.
+   Spec: docs/MD/list.md · Figma node 18416:860839 (42) + _List Item 18416:860495.
+
+   Styles: disc · circle · square · custom-icon  (unordered)
+           number · letter · badge (Custom Number) (ordered)
+   Markers center to the FIRST text line via margin-top: calc((1lh - sz)/2),
+   so multi-line items hang naturally. Indent +24px per level, logical so RTL
+   mirrors with dir="rtl".
+   ============================================================================= */
+
+:host { display: block; font-family: var(--font-family-sans); }
+
+.ds-list {
+  color: var(--uems-text-primary);
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-regular, 400);
+}
+
+.ds-list__inner {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--uems-spacing-8, 8px);          /* row gap — 8px every size */
+  counter-reset: ds-li;
+}
+
+.ds-list__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--_li-gap, var(--uems-spacing-8, 8px));   /* Large overrides to 12 */
+  min-width: 0;
+}
+.ds-list__text { flex: 1 1 0; min-width: 0; }
+
+/* ---- Sizes — text token + marker scale vars -------------------------- */
+.ds-list--small  { font-size: var(--uems-font-size-12, 12px); line-height: 16px;
+  --_li-marker: 4px; --_li-icon: 8px;  --_li-badge: 16px; --_li-badge-font: 10px; --_li-gap: var(--uems-spacing-8, 8px); }
+.ds-list--medium { font-size: var(--uems-font-size-14, 14px); line-height: 20px;
+  --_li-marker: 6px; --_li-icon: 16px; --_li-badge: 20px; --_li-badge-font: 12px; --_li-gap: var(--uems-spacing-8, 8px); }
+.ds-list--large  { font-size: var(--uems-font-size-16, 16px); line-height: 24px;
+  --_li-marker: 8px; --_li-icon: 20px; --_li-badge: 24px; --_li-badge-font: 14px; --_li-gap: var(--uems-spacing-12, 12px); }
+
+/* ---- Indent per level — logical, mirrors in RTL --------------------- */
+.ds-list__item[data-level="1"] { padding-inline-start: 0; }
+.ds-list__item[data-level="2"] { padding-inline-start: var(--uems-spacing-24, 24px); }
+.ds-list__item[data-level="3"] { padding-inline-start: var(--uems-spacing-48, 48px); }
+
+/* ---- Shape markers (disc / square / circle) -------------------------
+   Drawn via ::before, sized per size var, vertically centered to line 1. */
+.ds-list--disc   .ds-list__item::before,
+.ds-list--square .ds-list__item::before,
+.ds-list--circle .ds-list__item::before {
+  content: "";
+  flex: none;
+  width: var(--_li-marker);
+  height: var(--_li-marker);
+  margin-top: calc((1lh - var(--_li-marker)) / 2);
+}
+.ds-list--disc   .ds-list__item::before { background: var(--uems-bg-quaternary-solid); border-radius: 50%; }
+.ds-list--square .ds-list__item::before { background: var(--uems-bg-quaternary-solid); }      /* no radius */
+.ds-list--circle .ds-list__item::before { border: 1.5px solid var(--uems-icon-tertiary); border-radius: 50%; box-sizing: border-box; }
+/* Small circle: Figma draws a 1px CENTER-aligned stroke on the 4px shape
+   (≈5px outer Ø for legibility). CSS borders are inside-only → render a 5px
+   box with a 1px border (geometrically identical). flag 2 — intentional. */
+.ds-list--small.ds-list--circle .ds-list__item::before {
+  width: 5px; height: 5px; border-width: 1px;
+  margin-top: calc((1lh - 5px) / 2);
+}
+
+/* ---- Custom Icon style — per-item SVG (ds-icon) --------------------- */
+.ds-list--icon .ds-list__icon {
+  flex: none;
+  width: var(--_li-icon);
+  height: var(--_li-icon);
+  color: var(--uems-icon-tertiary);
+  display: inline-flex;
+  margin-top: calc((1lh - var(--_li-icon)) / 2);
+}
+
+/* ---- Ordered text markers: number / letter ------------------------- */
+.ds-list--number .ds-list__inner,
+.ds-list--letter .ds-list__inner { counter-reset: ds-li; }
+.ds-list--number .ds-list__item,
+.ds-list--letter .ds-list__item { counter-increment: ds-li; }
+.ds-list--number .ds-list__item::before,
+.ds-list--letter .ds-list__item::before {
+  flex: none;
+  color: var(--uems-text-quaternary);
+  white-space: nowrap;
+}
+.ds-list--number .ds-list__item::before { content: counter(ds-li) "."; }
+.ds-list--letter .ds-list__item::before { content: counter(ds-li, lower-alpha) "."; }
+
+/* ---- Custom Number — pill badge ------------------------------------ */
+.ds-list--badge .ds-list__inner { counter-reset: ds-li; }
+.ds-list--badge .ds-list__item  { counter-increment: ds-li; }
+.ds-list--badge .ds-list__item::before {
+  content: counter(ds-li);
+  flex: none;
+  min-width: var(--_li-badge);
+  height: var(--_li-badge);
+  padding: 0 2px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--uems-bg-secondary);
+  border-radius: var(--uems-radius-pill, 9999px);
+  color: var(--uems-text-quaternary);
+  font-weight: var(--font-weight-medium, 500);
+  font-size: var(--_li-badge-font);
+  line-height: 1;
+  /* Badge height == the row's line-height at every size (16/20/24), so it
+     fills the first line box exactly — no offset needed. (Don't use `1lh`
+     here: line-height:1 makes 1lh resolve to the badge font, not the row.) */
+  margin-top: 0;
+}
+
+/* ---- RTL — logical props already flip indent & flex row; nothing else
+   needed. Arabic text right-aligns via dir; marker trails the text. ---- */

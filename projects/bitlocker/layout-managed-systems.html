@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<!-- BitLocker Management — Managed computers · DUAL-MODE file (projects/bitlocker/).
+     Archetype: LIST VIEW (Layout/views/layout-list-view.html, left filter sidebar).
+     Drill-down under BitLocker > Insights → HAS a breadcrumb. Encryption status of
+     every managed Windows computer, filterable by status / OS / auth method /
+     compliance. Row ⋯ menu → Retrieve recovery key (help-desk's top task). Bulk →
+     Deploy policy. Built ONLY from ds-* components + --uems-* tokens.
+     Open directly -> standalone harness. Fetched by Shell.html ->
+     injectDrawer('../projects/bitlocker/layout-managed-systems','content'). -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    .sa-host { display: flex; flex-direction: column; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* == BitLocker managed computers — scope EVERY selector to #bllist-pop ==== */
+/* Root + .lay + .lay__scroll scaffold live in Layout/layout-base.css (shared via .lay-root). */
+
+#bllist-pop .bl-kpis { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 16px; }
+#bllist-pop .bl-kpis ds-kpi-card { flex: 1 1 200px; min-width: 180px; }
+
+#bllist-pop .bl-grid {
+  display: grid;
+  grid-template-columns: 0px minmax(0, 1fr);
+  column-gap: 0; row-gap: 20px; padding-top: 20px; align-items: start;
+  transition: grid-template-columns 260ms var(--ease-standard, ease), column-gap 260ms var(--ease-standard, ease);
+}
+#bllist-pop .bl-grid.is-filtering { grid-template-columns: 240px minmax(0, 1fr); column-gap: 20px; }
+@media (prefers-reduced-motion: reduce) { #bllist-pop .bl-grid { transition: none; } }
+
+#bllist-pop .bl-filter-col { min-width: 0; overflow: hidden; position: relative; visibility: hidden; transition: visibility 0s linear 260ms; }
+#bllist-pop .bl-grid.is-filtering .bl-filter-col { visibility: visible; transition-delay: 0s; }
+#bllist-pop #bl-filter-panel { width: 240px; min-height: 0; }
+#bllist-pop #bl-filter-panel .ds-filter-panel { height: auto; }
+
+#bllist-pop .bl-content { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+#bllist-pop .bl-table-wrap { min-width: 0; }
+
+/* Cell helpers. */
+#bllist-pop .cell-os { display: inline-flex; align-items: center; gap: var(--spacing-8); color: var(--uems-text-primary); }
+#bllist-pop .cell-os ds-icon { color: var(--uems-icon-tertiary); flex: none; }
+#bllist-pop .cell-name { display: inline-flex; align-items: center; gap: var(--spacing-8); color: var(--uems-text-primary); font-weight: var(--font-weight-medium, 500); }
+#bllist-pop .cell-name ds-icon { color: var(--uems-icon-tertiary); flex: none; }
+#bllist-pop .cell-muted { color: var(--uems-text-secondary); }
+#bllist-pop .cell-actions { display: inline-flex; justify-content: flex-end; width: 100%; }
+#bllist-pop .cell-actions button { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 0; background: transparent; border-radius: var(--radius-sm); cursor: pointer; color: var(--uems-icon-secondary); }
+#bllist-pop .cell-actions button:hover { background: var(--uems-bg-secondary-hover); }
+
+@media (max-width: 900px) {
+  #bllist-pop .bl-grid, #bllist-pop .bl-grid.is-filtering { grid-template-columns: 1fr; column-gap: 0; }
+  #bllist-pop .bl-filter-col { overflow: visible; }
+  #bllist-pop .bl-grid:not(.is-filtering) .bl-filter-col { display: none; }
+  #bllist-pop #bl-filter-panel { position: static; inset: auto; width: 100%; }
+}
+</style>
+
+<div id="bllist-pop" class="lay-root" hidden>
+  <div class="lay">
+    <ds-page-header id="bl-ph" icon="computer" structure="default"
+      title="Managed computers"
+      description="Encryption status of every BitLocker-managed Windows computer."
+      show-description show-breadcrumbs
+      collapse-on-scroll scroll-target=".lay__scroll">
+      <ds-button slot="actions" id="bl-deploy" variant="primary" prefix-icon="settings-deploy">Deploy policy</ds-button>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+
+      <div class="bl-kpis">
+        <ds-kpi-card label="Managed computers" value="186" state="default" icon="computer"></ds-kpi-card>
+        <ds-kpi-card label="Encrypted" value="142" state="success" icon="lock"></ds-kpi-card>
+        <ds-kpi-card label="Pending" value="21" state="warning" icon="clock"></ds-kpi-card>
+        <ds-kpi-card label="Not compliant" value="15" state="alert" icon="exclamation-circle"></ds-kpi-card>
+      </div>
+
+      <div class="bl-grid" id="bl-grid">
+        <div class="bl-filter-col">
+          <ds-filter-panel id="bl-filter-panel" title="Filters" aria-label="Filters" fit-viewport></ds-filter-panel>
+        </div>
+
+        <section class="bl-content">
+          <div class="bl-table-wrap" id="bl-table-wrap">
+            <ds-data-table id="bl-table"
+              selection-mode="multi"
+              row-height="comfortable"
+              show-footer
+              sticky-header
+              fit-viewport
+              rows-per-page="12"
+              page="1"></ds-data-table>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Row ⋯ menu — one shared instance, anchored space-aware to each trigger. -->
+<ds-dropdown-menu id="bl-row-menu" type="single"></ds-dropdown-menu>
+
+<script>
+/* == BitLocker managed computers — table, filters, row actions =========== */
+(function () {
+  const root = document.getElementById('bllist-pop');
+  if (!root || root.__blmInit) return; root.__blmInit = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const toast = (kind, title, description) => { const api = globalThis.dsToast; if (api && api[kind]) api[kind]({ title, description, style: 'subtle' }); };
+
+  /* ── Localization. Data values stay canonical English (used as filter/match keys);
+     t() translates only what's DISPLAYED. Arabic is machine-translated — review. ── */
+  const MSGS = {
+    en: {
+      'ms.title': 'Managed computers', 'ms.desc': 'Encryption status of every BitLocker-managed Windows computer.',
+      'ms.deploy': 'Deploy policy',
+      'ms.bc.module': 'BitLocker management', 'ms.bc.insights': 'Insights', 'ms.bc.managed': 'Managed computers',
+      'ms.kpi.managed': 'Managed computers', 'ms.kpi.encrypted': 'Encrypted', 'ms.kpi.pending': 'Pending', 'ms.kpi.noncompliant': 'Not compliant',
+      'ms.filters': 'Filters',
+      'ms.col.computer': 'Computer', 'ms.col.os': 'Operating system', 'ms.col.status': 'Encryption status', 'ms.col.auth': 'Authentication', 'ms.col.scope': 'Scope', 'ms.col.compliance': 'Compliance', 'ms.col.seen': 'Last reported',
+      'ms.st.encrypted': 'Encrypted', 'ms.st.inprogress': 'In progress', 'ms.st.notstarted': 'Not started', 'ms.st.failed': 'Failed',
+      'ms.cmp.compliant': 'Compliant', 'ms.cmp.noncompliant': 'Not compliant',
+      'ms.auth.tpmonly': 'TPM only', 'ms.auth.tpmpin': 'TPM + PIN', 'ms.auth.tpmepin': 'TPM + Enhanced PIN', 'ms.auth.passphrase': 'Passphrase',
+      'ms.scope.full': 'Full drive', 'ms.scope.osonly': 'OS drive only', 'ms.scope.used': 'Used space only',
+      'ms.seen.2m': '2 min ago', 'ms.seen.18m': '18 min ago', 'ms.seen.1h': '1 hr ago', 'ms.seen.3h': '3 hrs ago', 'ms.seen.yesterday': 'Yesterday', 'ms.seen.jul8': 'Jul 8, 2026',
+      'ms.fg.status': 'Encryption status', 'ms.fg.os': 'Operating system', 'ms.fg.auth': 'Authentication', 'ms.fg.compliance': 'Compliance',
+      'ms.bulk.deploy': 'Deploy policy', 'ms.bulk.retrieve': 'Retrieve recovery key',
+      'ms.menu.retrieve': 'Retrieve recovery key', 'ms.menu.force': 'Force encryption', 'ms.menu.details': 'View details',
+      'ms.t.deployqueued': 'Deployment queued', 'ms.t.computersword': 'computers', 'ms.t.keysretrieved': 'Recovery keys retrieved', 'ms.t.rotatehint': 'Keys rotate at the next startup.',
+      'ms.t.keyretrieved': 'Recovery key retrieved', 'ms.t.encstarted': 'Encryption started', 'ms.t.thiscomputer': 'this computer',
+    },
+    ar: {
+      'ms.title': 'الأجهزة المُدارة', 'ms.desc': 'حالة التشفير لكل جهاز Windows تُدار عبر BitLocker.',
+      'ms.deploy': 'نشر السياسة',
+      'ms.bc.module': 'إدارة BitLocker', 'ms.bc.insights': 'رؤى', 'ms.bc.managed': 'الأجهزة المُدارة',
+      'ms.kpi.managed': 'الأجهزة المُدارة', 'ms.kpi.encrypted': 'مُشفّرة', 'ms.kpi.pending': 'قيد الانتظار', 'ms.kpi.noncompliant': 'غير متوافقة',
+      'ms.filters': 'عوامل التصفية',
+      'ms.col.computer': 'الكمبيوتر', 'ms.col.os': 'نظام التشغيل', 'ms.col.status': 'حالة التشفير', 'ms.col.auth': 'المصادقة', 'ms.col.scope': 'النطاق', 'ms.col.compliance': 'التوافق', 'ms.col.seen': 'آخر إبلاغ',
+      'ms.st.encrypted': 'مُشفّرة', 'ms.st.inprogress': 'قيد التقدم', 'ms.st.notstarted': 'لم يبدأ', 'ms.st.failed': 'فشل',
+      'ms.cmp.compliant': 'متوافق', 'ms.cmp.noncompliant': 'غير متوافق',
+      'ms.auth.tpmonly': 'TPM فقط', 'ms.auth.tpmpin': 'TPM + PIN', 'ms.auth.tpmepin': 'TPM + PIN محسّن', 'ms.auth.passphrase': 'عبارة مرور',
+      'ms.scope.full': 'القرص الكامل', 'ms.scope.osonly': 'قرص نظام التشغيل فقط', 'ms.scope.used': 'المساحة المستخدمة فقط',
+      'ms.seen.2m': 'قبل دقيقتين', 'ms.seen.18m': 'قبل 18 دقيقة', 'ms.seen.1h': 'قبل ساعة', 'ms.seen.3h': 'قبل 3 ساعات', 'ms.seen.yesterday': 'أمس', 'ms.seen.jul8': '8 يوليو 2026',
+      'ms.fg.status': 'حالة التشفير', 'ms.fg.os': 'نظام التشغيل', 'ms.fg.auth': 'المصادقة', 'ms.fg.compliance': 'التوافق',
+      'ms.bulk.deploy': 'نشر السياسة', 'ms.bulk.retrieve': 'استرجاع مفتاح الاسترداد',
+      'ms.menu.retrieve': 'استرجاع مفتاح الاسترداد', 'ms.menu.force': 'فرض التشفير', 'ms.menu.details': 'عرض التفاصيل',
+      'ms.t.deployqueued': 'تم جدولة النشر', 'ms.t.computersword': 'أجهزة', 'ms.t.keysretrieved': 'تم استرجاع مفاتيح الاسترداد', 'ms.t.rotatehint': 'تُدوَّر المفاتيح عند بدء التشغيل التالي.',
+      'ms.t.keyretrieved': 'تم استرجاع مفتاح الاسترداد', 'ms.t.encstarted': 'بدأ التشفير', 'ms.t.thiscomputer': 'هذا الكمبيوتر',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+  /* Translate a canonical English value via its key map (fallback: raw value). */
+  const tv = (map, v) => t(map[v] || v);
+  /* ds-button renders its label into an inner .ds-button__label; set THAT (not the
+     host's textContent, which would wipe the rendered button chrome). */
+  const setBtnLabel = (el, text) => { if (!el) return; const l = el.querySelector('.ds-button__label'); if (l) l.textContent = text; else el.textContent = text; };
+
+  const ph = $('bl-ph');
+  const crumbNav = (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    const m = (a.getAttribute('href') || '').match(/layout-([a-z-]+)\.html/);
+    if (m && window.openContentView) { e.preventDefault(); window.openContentView('bitlocker-' + (m[1] === 'summary-dashboard' ? 'dashboard' : m[1])); }
+  };
+  if (ph) ph.addEventListener('click', crumbNav);
+
+  /* ---- Data (canonical English values) ---------------------------------- */
+  const OS_ICON = { 'Windows 11 Pro': 'microsoft', 'Windows 11 Ent': 'microsoft', 'Windows 10 Ent': 'microsoft', 'Windows 10 Pro': 'microsoft', 'Windows 8.1 Ent': 'microsoft', 'Server 2019': 'server-01' };
+  const STATUS_STATE = { Encrypted: 'success', 'In progress': 'warning', 'Not started': 'default', Failed: 'critical' };
+  const COMPLIANCE_STATE = { Compliant: 'success', 'Not compliant': 'critical' };
+  /* value → i18n key maps (display only). */
+  const STATUS_KEY = { 'Encrypted': 'ms.st.encrypted', 'In progress': 'ms.st.inprogress', 'Not started': 'ms.st.notstarted', 'Failed': 'ms.st.failed' };
+  const CMP_KEY = { 'Compliant': 'ms.cmp.compliant', 'Not compliant': 'ms.cmp.noncompliant' };
+  const AUTH_KEY = { 'TPM only': 'ms.auth.tpmonly', 'TPM + PIN': 'ms.auth.tpmpin', 'TPM + Enhanced PIN': 'ms.auth.tpmepin', 'Passphrase': 'ms.auth.passphrase' };
+  const SCOPE_KEY = { 'Full drive': 'ms.scope.full', 'OS drive only': 'ms.scope.osonly', 'Used space only': 'ms.scope.used' };
+  const SEEN_KEY = { '2 min ago': 'ms.seen.2m', '18 min ago': 'ms.seen.18m', '1 hr ago': 'ms.seen.1h', '3 hrs ago': 'ms.seen.3h', 'Yesterday': 'ms.seen.yesterday', 'Jul 8, 2026': 'ms.seen.jul8' };
+
+  const _OS = ['Windows 11 Pro', 'Windows 11 Ent', 'Windows 10 Ent', 'Windows 10 Pro', 'Windows 8.1 Ent', 'Server 2019'];
+  const _STATUS = ['Encrypted', 'Encrypted', 'Encrypted', 'In progress', 'Not started', 'Failed'];
+  const _AUTH = ['TPM only', 'TPM + PIN', 'TPM + Enhanced PIN', 'Passphrase'];
+  const _SCOPE = ['Full drive', 'OS drive only', 'Used space only'];
+  const _SEEN = ['2 min ago', '18 min ago', '1 hr ago', '3 hrs ago', 'Yesterday', 'Jul 8, 2026'];
+  const pick = (arr, i) => arr[i % arr.length];
+  const ALL = [];
+  for (let i = 1; i <= 42; i++) {
+    const status = pick(_STATUS, i + (i % 3));
+    const compliance = (status === 'Encrypted') ? 'Compliant' : 'Not compliant';
+    ALL.push({
+      id: i,
+      name: pick(['FIN', 'SALES', 'ENG', 'HR', 'OPS', 'SRV'], i) + '-WKS-' + (100 + i * 7),
+      os: pick(_OS, i + 1), status, auth: pick(_AUTH, i), scope: pick(_SCOPE, i), compliance,
+      keyId: (10000000 + i * 131071).toString(16).toUpperCase().slice(0, 8),
+      seen: pick(_SEEN, i),
+    });
+  }
+
+  /* Render fns resolve t()/tv() at render time → re-setting columns re-localizes. */
+  const nameCell = (r) => `<span class="cell-name"><ds-icon name="${OS_ICON[r.os] || 'computer'}" size="16"></ds-icon>${esc(r.name)}</span>`;
+  const statusBadge = (r) => `<ds-badge variant="subtle" state="${STATUS_STATE[r.status] || 'default'}" shape="rounded" size="medium">${esc(tv(STATUS_KEY, r.status))}</ds-badge>`;
+  const complianceBadge = (r) => `<ds-badge variant="subtle" state="${COMPLIANCE_STATE[r.compliance] || 'default'}" shape="rounded" size="medium">${esc(tv(CMP_KEY, r.compliance))}</ds-badge>`;
+  const actionsCell = () => `<span class="cell-actions"><button type="button" aria-label="Row actions"><ds-icon name="more-vertical" size="16"></ds-icon></button></span>`;
+
+  const table = $('bl-table');
+  const panel = $('bl-filter-panel');
+  const grid = $('bl-grid');
+  const menu = document.getElementById('bl-row-menu');
+  const count = (key, val) => ALL.filter((r) => r[key] === val).length;
+  let activeRow = null;
+
+  function apply() {
+    const v = panel.value || {};
+    const rows = ALL.filter((r) =>
+      (!v.status || !v.status.length || v.status.includes(r.status)) &&
+      (!v.os || !v.os.length || v.os.includes(r.os)) &&
+      (!v.auth || !v.auth.length || v.auth.includes(r.auth)) &&
+      (!v.compliance || !v.compliance.length || v.compliance.includes(r.compliance)));
+    table.setAttribute('page', '1');
+    table.rows = rows;
+  }
+
+  function applyStrings() {
+    if (ph) {
+      ph.setAttribute('title', t('ms.title')); ph.setAttribute('description', t('ms.desc'));
+      ph.breadcrumbs = [
+        { label: t('ms.bc.module'), href: 'projects/bitlocker/layout-summary-dashboard.html' },
+        { label: t('ms.bc.insights') },
+        { label: t('ms.bc.managed') },
+      ];
+    }
+    setBtnLabel($('bl-deploy'), t('ms.deploy'));
+    ['ms.kpi.managed', 'ms.kpi.encrypted', 'ms.kpi.pending', 'ms.kpi.noncompliant']
+      .forEach((key, i) => { const c = root.querySelectorAll('.bl-kpis ds-kpi-card')[i]; if (c) c.setAttribute('label', t(key)); });
+    if (panel) panel.setAttribute('title', t('ms.filters'));
+
+    table.columns = [
+      { id: 'name', header: t('ms.col.computer'), render: nameCell },
+      { id: 'os', header: t('ms.col.os'), render: (r) => `<span class="cell-muted">${esc(r.os)}</span>` },
+      { id: 'status', header: t('ms.col.status'), align: 'start', render: statusBadge },
+      { id: 'auth', header: t('ms.col.auth'), render: (r) => esc(tv(AUTH_KEY, r.auth)) },
+      { id: 'scope', header: t('ms.col.scope'), render: (r) => `<span class="cell-muted">${esc(tv(SCOPE_KEY, r.scope))}</span>` },
+      { id: 'compliance', header: t('ms.col.compliance'), align: 'start', render: complianceBadge },
+      { id: 'seen', header: t('ms.col.seen'), render: (r) => esc(tv(SEEN_KEY, r.seen)) },
+      { id: 'actions', header: '', align: 'end', render: actionsCell },
+    ];
+
+    table.bulkActions = [
+      { id: 'deploy', label: t('ms.bulk.deploy'), icon: 'settings-deploy' },
+      { id: 'retrieve', label: t('ms.bulk.retrieve'), icon: 'key' },
+    ];
+
+    /* Facet labels localized; VALUES stay canonical English so filtering matches data. */
+    panel.groups = [
+      { id: 'status', label: t('ms.fg.status'), type: 'checkbox', options: ['Encrypted', 'In progress', 'Not started', 'Failed'].map((v) => ({ label: tv(STATUS_KEY, v), value: v, count: count('status', v) })) },
+      { id: 'os', label: t('ms.fg.os'), type: 'checkbox', options: _OS.map((v) => ({ label: v, value: v, count: count('os', v) })) },
+      { id: 'auth', label: t('ms.fg.auth'), type: 'checkbox', options: _AUTH.map((v) => ({ label: tv(AUTH_KEY, v), value: v, count: count('auth', v) })) },
+      { id: 'compliance', label: t('ms.fg.compliance'), type: 'checkbox', options: ['Compliant', 'Not compliant'].map((v) => ({ label: tv(CMP_KEY, v), value: v, count: count('compliance', v) })) },
+    ];
+
+    menu.items = [
+      { value: 'retrieve', label: t('ms.menu.retrieve'), icon: 'key' },
+      { value: 'force', label: t('ms.menu.force'), icon: 'lock' },
+      { value: 'details', label: t('ms.menu.details'), icon: 'chevron-right' },
+    ];
+
+    apply();
+  }
+
+  /* ---- Wire events ONCE (not in applyStrings) --------------------------- */
+  table.addEventListener('ds-data-table-bulk-action', (e) => {
+    const d = e.detail || {}; const n = (d.ids || []).length;
+    if (d.id === 'deploy') toast('success', t('ms.t.deployqueued'), n + ' ' + t('ms.t.computersword'));
+    else if (d.id === 'retrieve') toast('info', t('ms.t.keysretrieved'), t('ms.t.rotatehint'));
+  });
+  table.addEventListener('ds-data-table-filter', () => grid.classList.toggle('is-filtering'));
+  panel.addEventListener('ds-filter-panel-change', apply);
+  table.addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('.cell-actions button');
+    if (!btn) return;
+    e.stopPropagation();
+    const rowEl = btn.closest('[data-row-id], tr');
+    const rid = rowEl && (rowEl.getAttribute('data-row-id') || rowEl.dataset.rowId);
+    activeRow = ALL.find((r) => String(r.id) === String(rid)) || null;
+    menu.openFrom(btn, { align: 'before', vAlign: 'top' });
+  });
+  menu.addEventListener('ds-dropdown-select', (e) => {
+    const val = e.detail && e.detail.value;
+    const label = activeRow ? activeRow.name : t('ms.t.thiscomputer');
+    if (val === 'retrieve') toast('info', t('ms.t.keyretrieved'), (activeRow ? activeRow.keyId : '') + ' · ' + label + ' · ' + t('ms.t.rotatehint'));
+    else if (val === 'force') toast('success', t('ms.t.encstarted'), label);
+    else if (val === 'details' && window.openContentView) window.openContentView('bitlocker-device-detail');
+    menu.close && menu.close();
+  });
+  const deployBtn = $('bl-deploy');
+  if (deployBtn) deployBtn.addEventListener('click', () => { if (window.openContentView) window.openContentView('bitlocker-policy-creation'); });
+
+  /* Initial render + re-localize on language flip. */
+  applyStrings();
+  if (window.ShellCtx && window.ShellCtx.onLangChange) window.ShellCtx.onLangChange(applyStrings);
+
+  function show() { root.hidden = false; }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['bitlocker-managed-systems'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS — runs ONLY when opened directly. ================ */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers['bitlocker-managed-systems'] && window.ShellDrawers['bitlocker-managed-systems'].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

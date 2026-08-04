@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light")}else{document.documentElement.removeAttribute("data-theme")}}catch(e){document.documentElement.setAttribute("data-theme","light")}})();</script>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generating Pages — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/resources.css">
+<link rel="stylesheet" href="css/common/top-header.css">
+<style>
+/* ── Generating Pages guide — Prism resource-page styling ─────────────── */
+.page-genpages .page-content { padding: 120px 64px 64px; max-width: 1080px; margin: 0 auto; }
+.page-genpages .page-title { font-size: 48px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; color: var(--prism-text);
+  background: linear-gradient(120deg, var(--prism-text) 40%, var(--prism-violet)); -webkit-background-clip: text; background-clip: text; }
+.page-genpages .page-desc { color: var(--prism-text-muted); font-size: 20px; font-weight: 400; line-height: 1.5; margin-bottom: 40px; max-width: 760px; }
+.page-genpages .page-desc strong { color: var(--prism-text); font-weight: 600; }
+
+/* Section heads */
+.gp-h { display: flex; align-items: center; gap: 12px; margin: 48px 0 20px; }
+.gp-h h2 { font-size: 24px; font-weight: 700; color: var(--prism-text); margin: 0; letter-spacing: -0.01em; }
+.gp-h::before { content: ''; width: 4px; height: 20px; border-radius: 99px; background: linear-gradient(var(--prism-violet), var(--prism-violet-light)); }
+.gp-h .tag { font-size: 12px; font-weight: 600; color: var(--prism-text-muted); padding: 2px 10px; background: var(--prism-surface-hover); border-radius: 99px; }
+.gp-lede { font-size: 16px; color: var(--prism-text-muted); line-height: 1.65; max-width: 780px; margin: 0 0 20px; }
+.gp-lede strong { color: var(--prism-text); font-weight: 600; }
+.gp-code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.88em; background: var(--prism-surface-hover); border: 1px solid var(--prism-border); padding: 1px 7px; border-radius: 6px; color: var(--prism-text); }
+
+/* Cards */
+.gp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.gp-card { background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 14px; padding: 22px; transition: transform .25s cubic-bezier(.4,0,.2,1), box-shadow .25s ease, border-color .25s ease; }
+.gp-card:hover { transform: translateY(-3px); border-color: rgba(37,99,235,0.35); box-shadow: 0 12px 32px rgba(37,99,235,0.12); }
+[data-theme="light"] .gp-card { background: #fff; border-color: rgba(37,99,235,0.10); box-shadow: 0 1px 4px rgba(37,99,235,0.04); }
+[data-theme="light"] .gp-card:hover { border-color: rgba(37,99,235,0.25); box-shadow: 0 10px 28px rgba(37,99,235,0.10); }
+.gp-card__ico { width: 40px; height: 40px; border-radius: 11px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px;
+  background: rgba(37,99,235,0.12); color: var(--prism-violet); }
+.gp-card__ico svg { width: 20px; height: 20px; }
+.gp-card h3 { font-size: 16px; font-weight: 700; color: var(--prism-text); margin: 0 0 6px; }
+.gp-card p { font-size: 13.5px; color: var(--prism-text-muted); line-height: 1.55; margin: 0; }
+
+/* Numbered recipe */
+.gp-recipe { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; counter-reset: s; }
+.gp-recipe li { display: flex; gap: 14px; align-items: flex-start; background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 12px; padding: 15px 18px; }
+[data-theme="light"] .gp-recipe li { background: #fff; border-color: rgba(37,99,235,0.10); }
+.gp-recipe li::before { counter-increment: s; content: counter(s); flex: 0 0 26px; width: 26px; height: 26px; border-radius: 99px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+.gp-recipe b { font-size: 14.5px; color: var(--prism-text); display: block; }
+.gp-recipe span { font-size: 13.5px; color: var(--prism-text-muted); line-height: 1.5; }
+
+/* Prompt example blocks */
+.gp-prompts { display: grid; gap: 12px; }
+.gp-prompt { background: var(--prism-surface); border: 1px solid var(--prism-border); border-left: 3px solid var(--prism-violet); border-radius: 12px; padding: 16px 20px; }
+[data-theme="light"] .gp-prompt { background: #fff; }
+.gp-prompt__label { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--prism-violet); margin-bottom: 8px; }
+.gp-prompt p { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--prism-text); }
+.gp-prompt strong { color: var(--prism-violet); font-weight: 600; }
+
+/* Tables */
+.gp-tbl-wrap { overflow-x: auto; border: 1px solid var(--prism-border); border-radius: 12px; }
+[data-theme="light"] .gp-tbl-wrap { border-color: rgba(37,99,235,0.10); }
+table.gp-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 560px; }
+table.gp-tbl th, table.gp-tbl td { text-align: left; padding: 13px 18px; vertical-align: top; }
+table.gp-tbl thead th { background: var(--prism-surface-hover); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--prism-text-muted); }
+table.gp-tbl tbody tr { border-top: 1px solid var(--prism-border); }
+table.gp-tbl td { color: var(--prism-text-muted); line-height: 1.5; }
+table.gp-tbl td:first-child { color: var(--prism-text); font-weight: 600; white-space: nowrap; }
+table.gp-tbl.cmp td:first-child { color: #e5484d; font-weight: 500; white-space: normal; }
+table.gp-tbl.cmp td:last-child { color: var(--prism-text); }
+.gp-code-i { font-family: ui-monospace, monospace; font-size: 0.9em; color: var(--prism-violet); }
+
+/* Callout */
+.gp-note { display: flex; gap: 12px; align-items: flex-start; background: rgba(37,99,235,0.06); border: 1px solid rgba(37,99,235,0.18); border-radius: 12px; padding: 16px 18px; margin-top: 16px; }
+.gp-note svg { width: 20px; height: 20px; color: var(--prism-violet); flex: none; margin-top: 1px; }
+.gp-note p { margin: 0; font-size: 13.5px; color: var(--prism-text-muted); line-height: 1.6; }
+.gp-note strong { color: var(--prism-text); }
+
+/* Tips */
+.gp-tips { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.gp-tips li { display: flex; gap: 12px; align-items: flex-start; font-size: 14.5px; color: var(--prism-text-muted); line-height: 1.55; }
+.gp-tips svg { width: 20px; height: 20px; color: #16a34a; flex: none; margin-top: 1px; }
+.gp-tips strong { color: var(--prism-text); font-weight: 600; }
+
+@media (max-width: 768px) { .page-genpages .page-content { padding: 96px 20px 48px; } .page-genpages .page-title { font-size: 34px; } }
+</style>
+</head>
+<body class="page-icons page-genpages">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html" class="active">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html" class="active"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <main class="page-content">
+    <h1 class="page-title">Generating Pages with AI</h1>
+    <p class="page-desc">Create new screens in the product by <strong>describing them in plain English</strong> — no code. You describe a page; the AI builds it from proven templates, styles it with Prism, and plugs it into the app shell so you can open it right away.</p>
+
+    <!-- WHAT IT IS -->
+    <div class="gp-h"><h2>What it is</h2></div>
+    <p class="gp-lede">The product is two parts: <strong>the shell</strong> — the fixed frame of the app (top nav, side menus, theming) — and <strong>pages</strong> that fill the middle. Picture the shell as a framed wall with navigation, and each page as a picture you slot in. You ask for a picture; the AI paints it in the house style and hangs it for you.</p>
+
+    <!-- HOW IT WORKS -->
+    <div class="gp-h"><h2>How it works</h2><span class="tag">the mental model</span></div>
+    <div class="gp-grid">
+      <div class="gp-card">
+        <span class="gp-card__ico"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 9h16M9 9v11"/></svg></span>
+        <h3>One shared shell</h3>
+        <p>Every page runs inside the same app shell, so it automatically gets the header, menus, theme, and navigation.</p>
+      </div>
+      <div class="gp-card">
+        <span class="gp-card__ico"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg></span>
+        <h3>Grouped by project</h3>
+        <p>Pages live under <span class="gp-code">projects/&lt;name&gt;/</span> — one project or task per folder keeps related screens together.</p>
+      </div>
+      <div class="gp-card">
+        <span class="gp-card__ico"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 8V6a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2h-2M6 8h8a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2z"/></svg></span>
+        <h3>Built from templates</h3>
+        <p>The AI starts from a proven pattern — form, list, detail, dashboard — and fills it with your content, so pages look consistent.</p>
+      </div>
+      <div class="gp-card">
+        <span class="gp-card__ico"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 010 5.656l-3 3a4 4 0 01-5.656-5.656l1.5-1.5m6.656-1.828a4 4 0 000-5.656l-.5-.5a4 4 0 00-5.656 0l-3 3a4 4 0 000 5.656"/></svg></span>
+        <h3>Opened by a short name</h3>
+        <p>Each page gets a “slug” that names what it <em>is</em> (e.g. <span class="gp-code">deployments</span>) — that’s how you open it.</p>
+      </div>
+    </div>
+
+    <!-- HOW TO VIEW -->
+    <div class="gp-h"><h2>How to view a page</h2></div>
+    <div class="gp-grid">
+      <div class="gp-card">
+        <span class="gp-card__ico"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 010 5.656l-3 3a4 4 0 01-5.656-5.656l1.5-1.5m6.656-1.828a4 4 0 000-5.656l-.5-.5a4 4 0 00-5.656 0l-3 3a4 4 0 000 5.656"/></svg></span>
+        <h3>By URL</h3>
+        <p>Add <span class="gp-code">?view=&lt;slug&gt;</span> to the shell address, e.g. <span class="gp-code">Shell.html?view=demo-deployments</span>.</p>
+      </div>
+      <div class="gp-card">
+        <span class="gp-card__ico"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg></span>
+        <h3>By clicking a tab</h3>
+        <p>If a module tab is wired to the page (e.g. <strong>Software Deployment</strong> → the demo list), just click it.</p>
+      </div>
+      <div class="gp-card">
+        <span class="gp-card__ico"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></span>
+        <h3>In-flow</h3>
+        <p>Pages link to each other — a form’s <em>Save</em> opens a list, a list row opens a detail, and so on.</p>
+      </div>
+    </div>
+    <div class="gp-note">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p>To preview locally, run a small web server at the project root (<span class="gp-code">python3 -m http.server 8790</span>) and open <span class="gp-code">http://localhost:8790/Layout/Shell.html</span>. Opening files with <span class="gp-code">file://</span> won’t work.</p>
+    </div>
+
+    <!-- HOW TO PROMPT -->
+    <div class="gp-h"><h2>How to prompt for good results</h2><span class="tag">the recipe</span></div>
+    <p class="gp-lede">Mention as many of these as apply. Anything you leave out, the AI picks a sensible default or asks.</p>
+    <ol class="gp-recipe">
+      <li><div><b>Project / task name</b><span>Which folder it belongs to — “under project <span class="gp-code">acme</span>”.</span></div></li>
+      <li><div><b>What the page is for</b><span>Its purpose in plain words. This becomes the slug and title.</span></div></li>
+      <li><div><b>Which kind of page</b><span>Pick an archetype — form, list, detail, dashboard — or let the AI choose.</span></div></li>
+      <li><div><b>Where it lives</b><span>Which module/tab (Home, Configurations, Threats &amp; Patches, Software Deployment, Inventory…). Optionally: “open it when I click that tab”.</span></div></li>
+      <li><div><b>The important content</b><span>Fields for a form; columns/KPIs for a list; sections for a detail; widgets for a dashboard.</span></div></li>
+      <li><div><b>Navigation</b><span>What actions do — “Save goes to the device list”, “a row opens the device detail”.</span></div></li>
+    </ol>
+
+    <div class="gp-h"><h2>Good prompt examples</h2></div>
+    <div class="gp-prompts">
+      <div class="gp-prompt">
+        <span class="gp-prompt__label">Form</span>
+        <p>“Under project <strong>acme</strong>, create a <strong>form page</strong> to <em>configure a firewall rule</em>, on the <strong>Configurations</strong> tab. Fields: rule name, direction, protocol, port range, action. On <strong>Save</strong>, go to the firewall rules list.”</p>
+      </div>
+      <div class="gp-prompt">
+        <span class="gp-prompt__label">List</span>
+        <p>“Add a <strong>list page</strong> called <em>patch approvals</em> under project <strong>acme</strong>, on <strong>Threats &amp; Patches</strong>. Columns: patch name, severity badge, affected devices, status. KPI cards for Approved / Pending / Declined. Clicking a patch opens its detail.”</p>
+      </div>
+      <div class="gp-prompt">
+        <span class="gp-prompt__label">Dashboard</span>
+        <p>“Make a <strong>dashboard</strong> for project <strong>acme</strong> <em>inventory overview</em>, and open it when I click the <strong>Inventory</strong> tab. KPI tiles for total assets; charts for assets by OS and by warranty status.”</p>
+      </div>
+    </div>
+
+    <div class="gp-h"><h2>Vague vs. specific</h2></div>
+    <div class="gp-tbl-wrap">
+      <table class="gp-tbl cmp">
+        <thead><tr><th>Vague (AI has to guess)</th><th>Specific (better output)</th></tr></thead>
+        <tbody>
+          <tr><td>“Make a settings page.”</td><td>“Under <span class="gp-code-i">acme</span>, a <strong>tabbed form</strong> for <em>agent settings</em> on Configurations, tabs General / Network / Security.”</td></tr>
+          <tr><td>“Add a list.”</td><td>“A <strong>list</strong> <em>managed devices</em> on Inventory: columns device, platform, status badge, owner, last seen; row → device detail.”</td></tr>
+          <tr><td>“Build a dashboard.”</td><td>“A <strong>dashboard</strong> <em>security overview</em> on Threats &amp; Patches: KPI tiles (vulnerable, patched, at-risk) + a severity donut.”</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="gp-note">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p>Finish your prompt with <strong>“verify it in the browser”</strong> — the AI will load the page, click through it, and show you a screenshot before calling it done. Then iterate in plain language: “add a KPI row”, “make the header collapse on scroll”, “change Save to go to the deployments list”.</p>
+    </div>
+
+    <!-- BUILDING BLOCKS -->
+    <div class="gp-h"><h2>Building blocks</h2><span class="tag">archetypes</span></div>
+    <p class="gp-lede">Ask for whichever fits; the AI adapts it to your content. A working <span class="gp-code">form → list → detail</span> example lives in <span class="gp-code">projects/demo/</span>.</p>
+    <div class="gp-tbl-wrap">
+      <table class="gp-tbl">
+        <thead><tr><th>Ask for a…</th><th>You get</th><th>Good for</th></tr></thead>
+        <tbody>
+          <tr><td>Form (sectioned)</td><td>Scrolling form in titled sections + pinned footer</td><td>Create/edit records with grouped fields</td></tr>
+          <tr><td>Tabbed form</td><td>A form with category tabs</td><td>Longer settings split into categories</td></tr>
+          <tr><td>List</td><td>Data table with KPIs, search, filters, pagination</td><td>Browsing / managing many records</td></tr>
+          <tr><td>Detail</td><td>Record page: header, summary, tabs, info cards</td><td>Inspecting one item</td></tr>
+          <tr><td>Dashboard</td><td>KPI tiles + charts + widgets</td><td>A module’s landing / overview screen</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TIPS -->
+    <div class="gp-h"><h2>Tips &amp; gotchas</h2></div>
+    <ul class="gp-tips">
+      <li><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span><strong>Name by purpose, not template.</strong> “create-deployment”, “patch-approvals” — not “sectioned-form” or “list-view”. It’s what you type in the URL.</span></li>
+      <li><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span><strong>One project folder per feature/task</strong> keeps things tidy and easy to share.</span></li>
+      <li><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span><strong>Give real-ish sample content</strong> (field and column names). It makes the page instantly useful and easy to review.</span></li>
+      <li><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span><strong>Design consistency is automatic</strong> — pages use the shared components and tokens, so you don’t specify colors, fonts, or spacing.</span></li>
+      <li><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span><strong>Blank page?</strong> Just tell the AI — it’s usually a one-line wiring fix.</span></li>
+    </ul>
+  </main>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

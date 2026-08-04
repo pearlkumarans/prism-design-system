@@ -1,0 +1,88 @@
+/* =============================================================================
+   ds-status-indicator / .ds-status-indicator
+   Colored dot + optional icon + optional label. 6 statuses × 3 sizes × 3 states.
+   ============================================================================= */
+
+:host { display: inline-block; vertical-align: middle; font-family: var(--font-family-sans); }
+
+.ds-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--uems-spacing-4, 4px);
+  padding: 2px var(--uems-spacing-4, 4px);   /* top/bottom 2px · left/right 4px */
+  border-radius: var(--uems-radius-default, 6px);
+  background: transparent;
+  color: var(--uems-text-secondary);
+  font-size: var(--_si-font, var(--font-size-12));
+  line-height: var(--_si-line, 16px);
+  font-weight: var(--_si-weight, var(--font-weight-regular));
+  white-space: nowrap;
+}
+
+.ds-status-indicator__dot {
+  width: var(--_si-dot, 6px);
+  height: var(--_si-dot, 6px);
+  border-radius: var(--uems-radius-pill, 9999px);
+  background: var(--_si-color, var(--uems-bg-quaternary-solid));
+  flex-shrink: 0;
+}
+
+.ds-status-indicator__icon {
+  line-height: 0;
+  /* Spec: icon is colored Icon-Primary, NOT status-colored */
+  color: var(--uems-icon-primary);
+}
+
+/* ---- Sizes ---------------------------------------------------------- */
+/* Per spec table:
+   Small  → 6 dot · 10/14 Medium · body/Xsmall/Medium
+   Medium → 6 dot · 12/16 Regular · body/Small/Regular
+   Large  → 8 dot · 14/20 Regular · body/Default/Regular */
+.ds-status-indicator--small {
+  --_si-dot: 6px;
+  --_si-font: var(--uems-font-size-10, 10px);
+  --_si-line: 14px;
+  --_si-weight: var(--font-weight-medium, 500);
+}
+.ds-status-indicator--medium {
+  --_si-dot: 6px;
+  --_si-font: var(--uems-font-size-12, 12px);
+  --_si-line: 16px;
+  --_si-weight: var(--font-weight-regular, 400);
+}
+.ds-status-indicator--large {
+  --_si-dot: 8px;
+  --_si-font: var(--uems-font-size-14, 14px);
+  --_si-line: 20px;
+  --_si-weight: var(--font-weight-regular, 400);
+}
+
+/* ---- Status colors -------------------------------------------------- */
+.ds-status-indicator--neutral  { --_si-color: var(--uems-bg-quaternary-solid); }
+.ds-status-indicator--success  { --_si-color: var(--uems-bg-success-solid); }
+.ds-status-indicator--warning  { --_si-color: var(--uems-bg-warning-solid); }
+.ds-status-indicator--critical { --_si-color: var(--uems-text-error); }
+.ds-status-indicator--info     { --_si-color: var(--uems-bg-info-solid); }
+.ds-status-indicator--alert    { --_si-color: var(--uems-bg-alert-solid); }
+
+/* ---- Hover (interactive) ------------------------------------------- */
+.ds-status-indicator--interactive { cursor: pointer; }
+.ds-status-indicator--interactive.ds-status-indicator--neutral:hover  { background: var(--uems-bg-secondary); }
+.ds-status-indicator--interactive.ds-status-indicator--success:hover  { background: var(--uems-bg-success-primary); }
+.ds-status-indicator--interactive.ds-status-indicator--warning:hover  { background: var(--uems-bg-warning-primary); }
+.ds-status-indicator--interactive.ds-status-indicator--critical:hover { background: var(--uems-bg-error-primary); }
+.ds-status-indicator--interactive.ds-status-indicator--info:hover     { background: var(--uems-bg-accent-primary); }
+.ds-status-indicator--interactive.ds-status-indicator--alert:hover    { background: var(--uems-bg-alert-primary); }
+
+/* ---- Disabled ------------------------------------------------------- */
+.ds-status-indicator--disabled { color: var(--uems-text-disabled); cursor: not-allowed; }
+.ds-status-indicator--disabled .ds-status-indicator__dot { background: var(--uems-bg-disabled); }
+.ds-status-indicator--disabled.ds-status-indicator--success  .ds-status-indicator__dot { background: var(--uems-bg-success-secondary); }
+.ds-status-indicator--disabled.ds-status-indicator--warning  .ds-status-indicator__dot { background: var(--uems-bg-warning-secondary); }
+.ds-status-indicator--disabled.ds-status-indicator--critical .ds-status-indicator__dot { background: var(--uems-bg-error-secondary); }
+.ds-status-indicator--disabled.ds-status-indicator--info     .ds-status-indicator__dot { background: var(--uems-bg-info-secondary); }
+.ds-status-indicator--disabled.ds-status-indicator--alert    .ds-status-indicator__dot { background: var(--uems-bg-alert-secondary); }
+
+/* RTL — dir="rtl" alone reverses the flex inline axis. The dot, optional
+   icon and label naturally swap so the dot sits on the right and the label
+   on the left. text-align flips automatically via direction inheritance. */

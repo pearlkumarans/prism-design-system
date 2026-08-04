@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modal — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/modal/modal.css">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<link rel="stylesheet" href="../design-system-library/src/components/text-link/text-link.css">
+<link rel="stylesheet" href="../design-system-library/src/components/icon-button/icon-button.css">
+<link rel="stylesheet" href="../design-system-library/src/components/inline-alert/inline-alert.css">
+<link rel="stylesheet" href="../design-system-library/src/components/list/list.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/button/button.js"></script>
+<script type="module" src="../design-system-library/src/components/text-link/text-link.js"></script>
+<script type="module" src="../design-system-library/src/components/icon-button/icon-button.js"></script>
+<script type="module" src="../design-system-library/src/components/inline-alert/inline-alert.js"></script>
+<script type="module" src="../design-system-library/src/components/list/list.js"></script>
+<script type="module" src="../design-system-library/src/components/modal/modal.js"></script>
+<style>
+  /* Render the modal inline (no fixed overlay) inside Preview cards so variants
+     sit side-by-side as a static showcase. */
+  .page-snackbar .demo-mod-frame ds-modal {
+    position: static !important;
+    inset: auto !important;
+    z-index: auto !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center;
+    width: 100%;
+  }
+  .page-snackbar .demo-mod-frame .ds-modal__overlay { display: none !important; }
+  .page-snackbar .demo-mod-frame .ds-modal__dialog {
+    animation: none !important;
+    margin: 0 auto;
+    max-height: none !important;
+    max-width: 100%;
+  }
+
+  .page-snackbar .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-snackbar .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .page-snackbar .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    padding: 32px !important;
+    gap: 36px !important;
+  }
+  .page-snackbar .demo-mod-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-snackbar .demo-mod-section > .demo-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+    margin: 0; text-align: left; width: auto;
+  }
+  .page-snackbar .demo-mod-section > .demo-mod-desc { font-size: 12px; color: var(--prism-text-muted); line-height: 1.5; }
+  .page-snackbar .demo-mod-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 980px) { .page-snackbar .demo-mod-grid { grid-template-columns: 1fr; } }
+  .page-snackbar .demo-mod-card {
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 18px;
+    border: 1px solid var(--prism-border);
+    border-radius: 16px;
+    background: radial-gradient(circle at top, rgba(10,11,15,0.55), rgba(10,11,15,0.85)), #0a0b0f;
+  }
+  [data-theme="light"] .page-snackbar .demo-mod-card {
+    background: radial-gradient(circle at top, rgba(13,18,31,0.45), rgba(13,18,31,0.75));
+    border-color: rgba(37,99,235,0.1);
+  }
+  .page-snackbar .demo-mod-card .card-cap {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.65); text-transform: uppercase; text-align: center;
+  }
+  .page-snackbar .demo-mod-frame { display: flex; align-items: center; justify-content: center; padding: 8px 0; overflow-x: auto; }
+  .page-snackbar .anat-marker-inline {
+    background: #2563eb; color: #fff; font-size: 11px; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .page-snackbar .demo-trigger-row { display: flex; gap: 12px; flex-wrap: wrap; }
+</style>
+</head>
+<body class="page-snackbar">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link active">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Modal</h1>
+        <p class="page-desc">The general-purpose <strong>Modal</strong> is a left-aligned dialog &mdash; header, body, and footer &mdash; centered on a scrim, for forms, detail views, and multi-action tasks. It comes in three sizes (480 / 640 / 880) and supports a rich footer: a leading text link plus a right-aligned button group. For a short, intent-colored yes/no decision use <strong>Confirmation Modal</strong>; for a full-viewport flow use <strong>Fullscreen Modal</strong>.</p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══════════════ OVERVIEW ═══════════════ -->
+        <div class="tab-content" id="tab-overview">
+
+          <!-- ───── Anatomy ───── -->
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram" style="overflow:visible;">
+            <div style="display:flex;justify-content:center;margin:24px 0;padding:48px 64px;">
+              <div style="position:relative;width:480px;max-width:100%;border-radius:12px;background:var(--uems-bg-base,#fff);box-shadow:0 16px 32px rgba(13,18,31,0.18);text-align:left;color:var(--uems-text-primary,#1F242E);">
+                <!-- Header -->
+                <div style="position:relative;display:flex;align-items:flex-start;gap:12px;padding:20px 24px;border-bottom:1px solid #E1E4EB;">
+                  <div style="flex:0 0 auto;width:48px;height:48px;border-radius:50%;background:#eaf0fc;display:flex;align-items:center;justify-content:center;color:#006aff;">
+                    <ds-icon name="info-circle" size="24"></ds-icon>
+                    <div style="position:absolute;left:-16px;top:36px;transform:translate(-100%,-50%);display:flex;align-items:center;gap:6px;"><span class="anat-marker-inline">1</span><div style="width:24px;height:2px;background:#2563eb;"></div></div>
+                  </div>
+                  <div style="flex:1 1 auto;">
+                    <div style="font-size:16px;font-weight:600;line-height:22px;">Modal title
+                      <div style="position:absolute;left:calc(100% + 16px);top:32px;display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">2</span></div>
+                    </div>
+                    <div style="font-size:14px;line-height:20px;color:#5C6066;margin-top:4px;">A short description of what this modal does.
+                      <div style="position:absolute;left:calc(100% + 16px);top:56px;display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">3</span></div>
+                    </div>
+                  </div>
+                  <div style="flex:0 0 auto;width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#8893AD;">
+                    <ds-icon name="close" size="16"></ds-icon>
+                  </div>
+                </div>
+                <!-- Body -->
+                <div style="position:relative;font-size:14px;line-height:20px;color:#5C6066;padding:20px 24px 24px;">
+                  Body content goes here. The body scrolls when it overflows; the header and footer stay pinned.
+                  <div style="position:absolute;left:calc(100% + 16px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">4</span></div>
+                </div>
+                <!-- Footer -->
+                <div style="position:relative;display:flex;align-items:center;gap:12px;padding:16px 24px;border-top:1px solid #E1E4EB;">
+                  <span style="color:#006aff;font-size:14px;">Learn more</span>
+                  <span style="flex:1 1 auto;"></span>
+                  <button style="padding:8px 12px;border-radius:8px;border:0;background:#e1e4eb;color:#1F242E;font:inherit;font-size:14px;cursor:default;">Cancel</button>
+                  <button style="padding:8px 12px;border-radius:8px;border:0;background:#006aff;color:#fff;font:inherit;font-size:14px;font-weight:500;cursor:default;">Confirm</button>
+                  <div style="position:absolute;left:calc(100% + 16px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">5</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Leading icon</strong><span>Optional 48&times;48 circular pill (<code>slot="icon"</code>). Off by default &mdash; the standard modal is title + description only.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Title</strong><span>Left-aligned. Zoho Puvi Semibold 16. A close (&times;) sits at the trailing edge; an optional trailing action (<code>slot="header-action"</code>) can precede it.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Description</strong><span>Optional supporting line. Zoho Puvi Regular 14, <code>--uems-text-secondary</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Body</strong><span>Default slot. Any content; scrolls within the dialog when it overflows while header + footer stay pinned.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Footer</strong><span>Leading text link (<code>slot="footer-start"</code>) + spacer + right-aligned button group (<code>slot="footer"</code>). Top divider.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- ───── Preview ───── -->
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Rendered with the live <code>&lt;ds-modal&gt;</code> web component. Dialogs are shown inline (no overlay) so they sit side-by-side; the <strong>Code</strong> tab has interactive triggers with the real scrim, focus trap, and <kbd>Esc</kbd>-to-dismiss.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Modal &middot; sizes + composition + RTL</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Sizes -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Sizes &mdash; SM 480 / MD 640 / LG 880</div>
+                  <div class="demo-mod-desc">Set <code>size="sm|md|lg"</code>. Width is fixed per size; height hugs content (body scrolls past the viewport).</div>
+
+                  <div class="demo-mod-frame"><ds-modal size="sm" title="Small modal (480)" description="Short forms and focused tasks.">
+                    <div slot="body">A compact 480px dialog.</div>
+                    <ds-button slot="footer" variant="outline" size="small">Cancel</ds-button>
+                    <ds-button slot="footer" variant="primary" size="small">Save</ds-button>
+                  </ds-modal></div>
+
+                  <div class="demo-mod-frame"><ds-modal size="md" title="Medium modal (640)" description="The default — forms and detail views.">
+                    <div slot="body">A 640px dialog for most modal content.</div>
+                    <ds-text-link slot="footer-start" href="#">Learn more</ds-text-link>
+                    <ds-button slot="footer" variant="outline" size="small">Cancel</ds-button>
+                    <ds-button slot="footer" variant="primary" size="small">Confirm</ds-button>
+                  </ds-modal></div>
+
+                  <div class="demo-mod-frame"><ds-modal size="lg" title="Large modal (880)" description="Tables, rich content, side-by-side detail.">
+                    <div slot="body">An 880px dialog for dense content.</div>
+                    <ds-button slot="footer" variant="primary" size="small">Done</ds-button>
+                  </ds-modal></div>
+                </div>
+
+                <!-- Composition -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Composition &mdash; leading icon / header action / body-only / no footer</div>
+                  <div class="demo-mod-desc">Header and footer are opt-out (<code>show-header</code> / <code>show-footer</code>). Leading icon and trailing action auto-show when their slot has content.</div>
+                  <div class="demo-mod-grid">
+
+                    <div class="demo-mod-card">
+                      <span class="card-cap">Leading icon</span>
+                      <div class="demo-mod-frame"><ds-modal size="sm" title="With leading icon" description="A tinted 48px icon circle.">
+                        <ds-icon slot="icon" name="info-circle" size="24"></ds-icon>
+                        <div slot="body">Set via <code>slot="icon"</code>.</div>
+                        <ds-button slot="footer" variant="primary" size="small">Got it</ds-button>
+                      </ds-modal></div>
+                    </div>
+
+                    <div class="demo-mod-card">
+                      <span class="card-cap">Header trailing action</span>
+                      <div class="demo-mod-frame"><ds-modal size="sm" title="With header action">
+                        <ds-icon-button slot="header-action" icon="expand" size="small"></ds-icon-button>
+                        <div slot="body">An extra header action via <code>slot="header-action"</code>.</div>
+                        <ds-button slot="footer" variant="primary" size="small">Done</ds-button>
+                      </ds-modal></div>
+                    </div>
+
+                    <div class="demo-mod-card">
+                      <span class="card-cap">Body only (no header / footer)</span>
+                      <div class="demo-mod-frame"><ds-modal size="sm" show-header="false" show-footer="false">
+                        <div slot="body">A bare modal — content only. Provide your own controls.</div>
+                      </ds-modal></div>
+                    </div>
+
+                    <div class="demo-mod-card">
+                      <span class="card-cap">No footer</span>
+                      <div class="demo-mod-frame"><ds-modal size="sm" title="No footer" description="Header + body, no action row." show-footer="false">
+                        <div slot="body">Use when actions live inside the body.</div>
+                      </ds-modal></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- RTL -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">RTL &mdash; header, footer order, and text alignment mirror</div>
+                  <div class="demo-mod-grid">
+                    <div class="demo-mod-card">
+                      <span class="card-cap">Arabic</span>
+                      <div class="demo-mod-frame"><ds-modal size="sm" rtl title="&#1593;&#1606;&#1608;&#1575;&#1606; &#1575;&#1604;&#1606;&#1575;&#1601;&#1584;&#1577;" description="&#1608;&#1589;&#1601; &#1602;&#1589;&#1610;&#1585;.">
+                        <div slot="body">&#1605;&#1581;&#1578;&#1608;&#1609; &#1575;&#1604;&#1606;&#1575;&#1601;&#1584;&#1577; &#1607;&#1606;&#1575;.</div>
+                        <ds-button slot="footer" variant="outline" size="small">&#1573;&#1604;&#1594;&#1575;&#1569;</ds-button>
+                        <ds-button slot="footer" variant="primary" size="small">&#1578;&#1571;&#1603;&#1610;&#1583;</ds-button>
+                      </ds-modal></div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- ───── Content Guidelines ───── -->
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Pick the size by content density &mdash; SM for short forms, LG for tables / rich content.</li>
+                <li>Name the primary button for its action ("Save", "Publish") &mdash; not "OK".</li>
+                <li>Keep the header to a clear title + one optional description line.</li>
+                <li>Let long content scroll inside the body; keep the header and footer pinned.</li>
+                <li>Put the safe action (Cancel) left of the primary in the footer group.</li>
+                <li>Return focus to the trigger when the modal closes.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Use a Modal for a simple yes/no &mdash; use <strong>Confirmation Modal</strong>.</li>
+                <li>Enable overlay-click dismissal for forms with unsaved input (it's off by default).</li>
+                <li>Stack modals on top of modals &mdash; route to a new step or a fullscreen flow.</li>
+                <li>Let the dialog exceed the viewport &mdash; scroll the body instead.</li>
+                <li>Hide the close affordance without giving another clear way out.</li>
+                <li>Cram a multi-step wizard into one modal &mdash; use <strong>Fullscreen Modal</strong>.</li>
+              </ul></div>
+            </div>
+          </div>
+
+        </div> <!-- end tab-overview -->
+
+        <!-- ═══════════════ STYLE ═══════════════ -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Sizing, layout tokens, and motion that define the Modal's visual language.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Sizes</h3>
+            <table class="size-table">
+              <thead><tr><th>Size</th><th>Dialog width</th><th>Use for</th></tr></thead>
+              <tbody>
+                <tr><td><code>sm</code></td><td>480px</td><td>Short forms, focused single-task dialogs</td></tr>
+                <tr><td><code>md</code> <em>(default)</em></td><td>640px</td><td>Forms, detail views, most modal content</td></tr>
+                <tr><td><code>lg</code></td><td>880px</td><td>Tables, rich content, side-by-side detail</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Container &amp; layout</h3>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Surface</td><td><code>--uems-bg-primary-alt</code> &middot; #ffffff</td></tr>
+                <tr><td>Corner radius</td><td><code>--radius-lg</code> &middot; 12&thinsp;px</td></tr>
+                <tr><td>Drop shadow</td><td><code>0 16px 32px rgba(13, 18, 31, 0.18)</code></td></tr>
+                <tr><td>Overlay scrim</td><td><code>rgba(10, 11, 15, 0.7)</code> (<code>--uems-bg-overlay</code>)</td></tr>
+                <tr><td>Header padding</td><td><code>20px</code> y / <code>24px</code> x &middot; gap 12 &middot; bottom divider 1px <code>--uems-border-secondary</code></td></tr>
+                <tr><td>Body padding</td><td><code>20px</code> top / <code>24px</code> sides / <code>24px</code> bottom (SM: 20 bottom) &middot; scrolls</td></tr>
+                <tr><td>Footer padding</td><td><code>16px</code> y / <code>24px</code> x &middot; gap 12 &middot; top divider 1px &middot; button-group gap 8</td></tr>
+                <tr><td>Leading icon</td><td>48&times;48 full-radius, <code>--uems-bg-accent-primary</code> / <code>--uems-icon-accent-button</code></td></tr>
+                <tr><td>Close icon</td><td>24&times;24 hit target, 16&thinsp;px glyph, <code>--uems-icon-secondary</code></td></tr>
+                <tr><td>Title font</td><td>Zoho Puvi Semibold 16</td></tr>
+                <tr><td>Description / body</td><td>Zoho Puvi Regular 14, <code>--uems-text-secondary</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Motion</h3>
+            <table class="size-table">
+              <thead><tr><th>Transition</th><th>Duration</th><th>Easing</th></tr></thead>
+              <tbody>
+                <tr><td>Overlay fade-in</td><td>150&thinsp;ms</td><td><code>--ease-standard</code></td></tr>
+                <tr><td>Dialog pop (scale 0.96 &rarr; 1 + fade)</td><td>180&thinsp;ms</td><td><code>--ease-standard</code></td></tr>
+                <tr><td><code>prefers-reduced-motion</code></td><td>Animations replaced with instant show/hide</td><td>&mdash;</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ USAGE ═══════════════ -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <h2 id="usage" class="doc-section-title">Usage</h2>
+          <p class="doc-section-subtitle">When to reach for the general Modal versus its siblings.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">When to use</h3>
+            <ul class="doc-list">
+              <li>A focused task that interrupts the flow: a short form, a detail view, an edit dialog.</li>
+              <li>The content needs a title, body, and one or more actions in a footer.</li>
+              <li>The work fits in a 480 / 640 / 880&thinsp;px dialog (with the body scrolling if needed).</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">When not to use</h3>
+            <ul class="doc-list">
+              <li>A short, irreversible yes/no decision &mdash; use <strong>Confirmation Modal</strong>.</li>
+              <li>A full-viewport, multi-step flow or editor &mdash; use <strong>Fullscreen Modal</strong>.</li>
+              <li>Non-blocking acknowledgement &mdash; use <strong>Toast</strong> or <strong>Inline message</strong>.</li>
+              <li>Persistent secondary content alongside the page &mdash; use a <strong>Right pane</strong> / side panel.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Modal family</h3>
+            <table class="size-table">
+              <thead><tr><th>Pattern</th><th>Shape</th><th>Use for</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Modal</strong> (this)</td><td>Left-aligned, 3 sizes, rich footer</td><td>Forms, detail, multi-action tasks</td></tr>
+                <tr><td>Confirmation Modal</td><td>Centered, compact, intent-colored</td><td>Single reversible/irreversible decision</td></tr>
+                <tr><td>Fullscreen Modal</td><td>Full viewport, pinned header/footer</td><td>Wizards, editors, mobile flows</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ CODE ═══════════════ -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+
+          <h2 id="live-demo-code" class="doc-section-title">Live demo</h2>
+          <p class="doc-section-subtitle">Configure the Modal and copy the generated HTML. Click <strong>Open as full overlay</strong> to see the real fixed-viewport behavior with scrim, focus trap, and <kbd>Esc</kbd>-to-dismiss.</p>
+
+          <!-- Live overlay modal (real open) kept outside the playground -->
+          <ds-modal id="mod-live" size="md" title="Modal title" description="A short description of what this modal does.">
+            <div slot="body"><p>Body content goes here. The body scrolls when it overflows; header and footer stay pinned.</p></div>
+            <ds-text-link slot="footer-start" href="#">Learn more</ds-text-link>
+            <ds-button slot="footer" variant="outline" size="small">Cancel</ds-button>
+            <ds-button slot="footer" variant="primary" size="small">Confirm</ds-button>
+          </ds-modal>
+
+          <style>
+            .page-snackbar #pg-mod-element {
+              position: static !important; inset: auto !important; z-index: auto !important;
+              padding: 0 !important; display: flex !important; justify-content: center; width: 100%;
+            }
+            .page-snackbar #pg-mod-element .ds-modal__overlay { display: none !important; }
+            .page-snackbar #pg-mod-element .ds-modal__dialog { animation: none !important; margin: 0 auto; max-height: none !important; max-width: 100%; }
+          </style>
+
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group">
+                <label class="cp-label">Size</label>
+                <select class="cp-select" id="pg-mod-size">
+                  <option value="sm">SM (480)</option>
+                  <option value="md" selected>MD (640)</option>
+                  <option value="lg">LG (880)</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Leading icon</label>
+                <select class="cp-select" id="pg-mod-icon">
+                  <option value="false" selected>None</option>
+                  <option value="true">Show icon</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Footer</label>
+                <select class="cp-select" id="pg-mod-footer">
+                  <option value="true" selected>Show</option>
+                  <option value="false">Hide</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Dismiss on overlay</label>
+                <select class="cp-select" id="pg-mod-dismiss">
+                  <option value="false" selected>No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">RTL</label>
+                <select class="cp-select" id="pg-mod-rtl">
+                  <option value="false" selected>LTR</option>
+                  <option value="true">RTL (Arabic)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="cp-preview" id="pg-mod-preview-area" style="padding:32px 24px;flex-direction:column;gap:20px;">
+              <ds-modal id="pg-mod-element" size="md" title="Modal title" description="A short description of what this modal does.">
+                <div slot="body"><p>Body content goes here.</p></div>
+                <ds-text-link slot="footer-start" href="#">Learn more</ds-text-link>
+                <ds-button slot="footer" variant="outline" size="small">Cancel</ds-button>
+                <ds-button slot="footer" variant="primary" size="small">Confirm</ds-button>
+              </ds-modal>
+              <ds-button id="pg-mod-open-overlay" variant="primary" size="medium" prefix-icon="external-link">Open as full overlay</ds-button>
+            </div>
+
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-mod-copy-btn">
+                <ds-icon name="copy" size="15"></ds-icon>
+                Copy code
+              </button>
+            </div>
+            <div style="background:#0a0a0c;">
+              <div class="cp-code-area" id="pg-mod-code-output"></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="api" class="doc-section-title">Component API</h2>
+          <p class="doc-section-subtitle">HTML attributes, slots, and events for <code>&lt;ds-modal&gt;</code>. Source: <code>design-system-library/src/components/modal/modal.js</code>.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Attributes</h3>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Values</th><th>Default</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>size</code></td><td><code>sm</code> &middot; <code>md</code> &middot; <code>lg</code></td><td><code>md</code></td><td>480 / 640 / 880px dialog width.</td></tr>
+                <tr><td><code>title</code></td><td>string</td><td>&mdash;</td><td>Header title (16 SemiBold).</td></tr>
+                <tr><td><code>description</code></td><td>string</td><td>&mdash;</td><td>Optional supporting line below the title.</td></tr>
+                <tr><td><code>show-header</code></td><td><code>true</code> &middot; <code>false</code></td><td><code>true</code></td><td>Toggle the header region.</td></tr>
+                <tr><td><code>show-footer</code></td><td><code>true</code> &middot; <code>false</code></td><td><code>true</code></td><td>Toggle the footer region.</td></tr>
+                <tr><td><code>dismiss-on-overlay</code></td><td>boolean</td><td><strong>unset (false)</strong></td><td>Opt in for dismissible info modals; keep off for unsaved / destructive flows.</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td>unset</td><td>Mirror layout (or use host <code>dir="rtl"</code>).</td></tr>
+                <tr><td><code>open</code></td><td>boolean</td><td>unset</td><td>Open / close state.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Slots</h3>
+            <table class="size-table">
+              <thead><tr><th>Slot</th><th>Purpose</th></tr></thead>
+              <tbody>
+                <tr><td><code>icon</code></td><td>Leading 48&times;48 icon circle (auto-shows when present).</td></tr>
+                <tr><td><code>header-action</code></td><td>Trailing header action, before the close button (auto-shows when present).</td></tr>
+                <tr><td><strong>default / <code>body</code></strong></td><td>Body content region. Scrolls when it overflows.</td></tr>
+                <tr><td><code>footer-start</code></td><td>Leading footer content &mdash; typically a text link.</td></tr>
+                <tr><td><code>footer</code></td><td>Right-aligned footer button group.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Methods &amp; Events</h3>
+            <table class="size-table">
+              <thead><tr><th>API</th><th>Detail</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>.open()</code> / <code>.close()</code></td><td>&mdash;</td><td>Toggle the <code>open</code> attribute.</td></tr>
+                <tr><td><code>.returnFocusTo</code></td><td><code>HTMLElement</code></td><td>Focus restore target on close (defaults to the previously focused element).</td></tr>
+                <tr><td><code>ds-modal-open</code></td><td>&mdash;</td><td>Fires when the modal opens.</td></tr>
+                <tr><td><code>ds-modal-close</code></td><td><code>{ reason: 'esc' | 'overlay' | 'close' }</code></td><td>Fires when dismissed.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ ACCESSIBILITY ═══════════════ -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for an accessible Modal across assistive tech and input methods.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Roles &amp; ARIA</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Implementation</th></tr></thead>
+              <tbody>
+                <tr><td>Role</td><td><code>role="dialog"</code> with <code>aria-modal="true"</code> on the dialog.</td></tr>
+                <tr><td>Title</td><td><code>aria-labelledby</code> points to the title element.</td></tr>
+                <tr><td>Description / body</td><td><code>aria-describedby</code> points to the description (or body when no description).</td></tr>
+                <tr><td>Leading icon</td><td><code>aria-hidden="true"</code> &mdash; decorative.</td></tr>
+                <tr><td>Close button</td><td><code>aria-label="Close"</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Keyboard &amp; focus</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td><kbd>Esc</kbd></td><td>Dismiss the modal (emits <code>ds-modal-close</code> with reason <code>esc</code>).</td></tr>
+                <tr><td><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></td><td>Cycles focus inside the dialog only &mdash; focus is <strong>trapped</strong> while open.</td></tr>
+                <tr><td>Click on overlay</td><td>Dismiss only when <code>dismiss-on-overlay</code> is set; off by default.</td></tr>
+              </tbody>
+            </table>
+            <ul class="doc-list" style="margin-top:16px;">
+              <li>On open, focus moves to the first focusable element inside the dialog (or the dialog itself).</li>
+              <li>On close, focus returns to the triggering element (or <code>returnFocusTo</code> if set).</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Other concerns</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Requirement</th></tr></thead>
+              <tbody>
+                <tr><td>Color contrast</td><td>Title <code>#15181e</code> and description / body <code>#2a303d</code> on the white surface meet WCAG 2.1 AA.</td></tr>
+                <tr><td>Motion</td><td><code>prefers-reduced-motion: reduce</code> replaces scale + fade with instant show / hide.</td></tr>
+                <tr><td>RTL</td><td>Header, footer order, and text alignment mirror via <code>dir="rtl"</code>.</td></tr>
+                <tr><td>Tall content</td><td>The body scrolls; header and footer stay pinned so actions are always reachable.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=18461-1038457" target="_blank" rel="noopener" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+      <div id="feedback" class="feedback-banner" style="display:none;">
+        <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+        <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+      </div>
+
+    </main>
+  </div>
+
+  <a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+    <span class="float-cliq-label">Share feedback</span>
+    <span class="float-cliq-icon">
+      <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke-width="1.4">
+        <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+  </a>
+
+  <!-- Code playground + "Open as full overlay" trigger -->
+  <script type="module">
+    customElements.whenDefined('ds-modal').then(() => {
+      const sizeEl    = document.getElementById('pg-mod-size');
+      const iconEl     = document.getElementById('pg-mod-icon');
+      const footerEl   = document.getElementById('pg-mod-footer');
+      const dismissEl  = document.getElementById('pg-mod-dismiss');
+      const rtlEl      = document.getElementById('pg-mod-rtl');
+      const previewEl  = document.getElementById('pg-mod-element');
+      const codeOut    = document.getElementById('pg-mod-code-output');
+      const copyBtn    = document.getElementById('pg-mod-copy-btn');
+      const liveEl     = document.getElementById('mod-live');
+      if (!sizeEl) return;
+
+      const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      let rawCode = '';
+
+      function update() {
+        const size    = sizeEl.value;
+        const showIcon = iconEl.value === 'true';
+        const showFooter = footerEl.value === 'true';
+        const dismiss = dismissEl.value === 'true';
+        const rtl     = rtlEl.value === 'true';
+
+        /* Rebuild the preview modal from scratch on every change. ds-modal
+           captures & distributes its light-DOM children ONCE (in
+           connectedCallback, guarded by _mounted), so a slotted leading icon
+           must be present BEFORE it mounts — it can't be added to a live
+           instance (the child would sit undistributed outside the dialog).
+           Recreating the element keeps every control, especially the icon
+           toggle, reliable. */
+        const current = document.getElementById('pg-mod-element');
+        const fresh = document.createElement('ds-modal');
+        fresh.id = 'pg-mod-element';
+        fresh.setAttribute('size', size);
+        fresh.setAttribute('title', 'Modal title');
+        fresh.setAttribute('description', 'A short description of what this modal does.');
+        if (!showFooter) fresh.setAttribute('show-footer', 'false');
+        if (dismiss) fresh.setAttribute('dismiss-on-overlay', '');
+        if (rtl) fresh.setAttribute('rtl', '');
+        fresh.innerHTML =
+          (showIcon ? '<ds-icon slot="icon" name="info-circle" size="24"></ds-icon>' : '')
+          + '<div slot="body"><p>Body content goes here.</p></div>'
+          + (showFooter
+              ? '<ds-text-link slot="footer-start" href="#">Learn more</ds-text-link>'
+                + '<ds-button slot="footer" variant="outline" size="small">Cancel</ds-button>'
+                + '<ds-button slot="footer" variant="primary" size="small">Confirm</ds-button>'
+              : '');
+        current.replaceWith(fresh);
+
+        const attrs = [`size="${size}"`, `title="Modal title"`, `description="A short description of what this modal does."`];
+        if (!showFooter) attrs.push(`show-footer="false"`);
+        if (dismiss) attrs.push(`dismiss-on-overlay`);
+        if (rtl) attrs.push(`rtl`);
+        attrs.push('open');
+        const iconLine = showIcon ? `\n  <ds-icon slot="icon" name="info-circle" size="24"></ds-icon>` : '';
+        const footerLines = showFooter
+          ? `\n  <ds-text-link slot="footer-start" href="#">Learn more</ds-text-link>\n  <ds-button slot="footer" variant="outline" size="small">Cancel</ds-button>\n  <ds-button slot="footer" variant="primary" size="small">Confirm</ds-button>`
+          : '';
+        rawCode = `<ds-modal\n  ${attrs.join('\n  ')}>${iconLine}\n  <div slot="body">Body content goes here.</div>${footerLines}\n</ds-modal>`;
+
+        codeOut.innerHTML = esc(rawCode)
+          .replace(/&lt;(\/?)(ds-modal|ds-button|ds-text-link|ds-icon|div)/g, '&lt;$1<span style="color:#a78bfa;">$2</span>')
+          .replace(/([a-z-]+)=&quot;([^&]*)&quot;/g, '<span style="color:#38bdf8;">$1</span>=<span style="color:#34d399;">"$2"</span>')
+          .replace(/^(\s*)(open|dismiss-on-overlay|rtl)$/gm, '$1<span style="color:#38bdf8;">$2</span>')
+          .replace(/\n/g, '<br/>')
+          .replace(/  /g, '&nbsp;&nbsp;');
+      }
+
+      [sizeEl, iconEl, footerEl, dismissEl, rtlEl].forEach((el) => el.addEventListener('change', update));
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(rawCode);
+          const original = copyBtn.innerHTML;
+          copyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+          setTimeout(() => { copyBtn.innerHTML = original; }, 2000);
+        } catch {}
+      });
+
+      const overlayBtn = document.getElementById('pg-mod-open-overlay');
+      if (overlayBtn && liveEl) {
+        overlayBtn.addEventListener('click', () => {
+          liveEl.setAttribute('size', sizeEl.value);
+          (footerEl.value === 'true') ? liveEl.removeAttribute('show-footer') : liveEl.setAttribute('show-footer', 'false');
+          (dismissEl.value === 'true') ? liveEl.setAttribute('dismiss-on-overlay', '') : liveEl.removeAttribute('dismiss-on-overlay');
+          (rtlEl.value === 'true') ? liveEl.setAttribute('rtl', '') : liveEl.removeAttribute('rtl');
+          liveEl.open();
+        });
+      }
+
+      update();
+    });
+  </script>
+
+  <script src="js/components/toc.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

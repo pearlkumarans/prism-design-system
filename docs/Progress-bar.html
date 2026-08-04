@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progress Bar — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/progress-bar/progress-bar.css">
+<link rel="stylesheet" href="../design-system-library/src/components/badge/badge.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/progress-bar/progress-bar.js"></script>
+<script type="module" src="../design-system-library/src/components/badge/badge.js"></script>
+<style>
+  .demo-pb-section { margin-bottom: 28px; }
+  .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+  .demo-pb-stack { display: flex; flex-direction: column; gap: 18px; max-width: 480px; }
+  .demo-pb-card { padding: 18px 20px; background: var(--prism-surface, rgba(255,255,255,.02)); border: 1px solid var(--prism-border, rgba(255,255,255,.08)); border-radius: 12px; }
+  .demo-pb-card + .demo-pb-card { margin-top: 12px; }
+</style>
+</head>
+<body class="page-progress-bar">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link active">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Progress Bar</h1>
+        <p class="page-desc">A progress bar shows how far along a task is &mdash; uploading a file, running a scan, syncing a backup. Use the determinate mode when you know the percentage (5 of 12 files); use indeterminate when you only know that work is happening. Pair it with a short label so the user knows what&rsquo;s progressing, not just that something is.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:16px;margin:20px 0;">
+              <!-- Anatomy: labelled progress bar -->
+              <div style="position:relative;width:320px;">
+                <!-- Label row -->
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;position:relative;">
+                  <div style="position:relative;">
+                    <div style="position:absolute;top:-30px;left:0;display:flex;flex-direction:column;align-items:center;gap:2px;"><span class="anat-marker-inline">1</span><div style="width:2px;height:10px;background:#2563eb;"></div></div>
+                    <span style="font-size:12px;font-weight:500;color:var(--prism-text);">Progress</span>
+                  </div>
+                  <div style="position:relative;">
+                    <div style="position:absolute;top:-30px;right:0;display:flex;flex-direction:column;align-items:center;gap:2px;"><span class="anat-marker-inline">2</span><div style="width:2px;height:10px;background:#2563eb;"></div></div>
+                    <span style="font-size:12px;font-weight:500;color:#2C66DD;">25%</span>
+                  </div>
+                </div>
+                <!-- Track + Fill -->
+                <div style="position:relative;width:100%;height:6px;border-radius:9999px;background:#D5E0F8;overflow:hidden;">
+                  <div style="width:25%;height:100%;border-radius:9999px;background:#2C66DD;"></div>
+                  <!-- Marker 3: Track -->
+                  <div style="position:absolute;right:-32px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:4px;"><div style="width:12px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">3</span></div>
+                  <!-- Marker 4: Fill -->
+                  <div style="position:absolute;left:12.5%;top:18px;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="width:2px;height:10px;background:#2563eb;"></div><span class="anat-marker-inline">4</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Label</strong><span>Left-aligned descriptive text. Toggled via Show Label. Driven by the Label text property (default "Progress").</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Percentage</strong><span>Right-aligned current value (e.g. "25%"). Driven by the Progress text property. Shows "&#8212;" in Indeterminate mode.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Track</strong><span>Full-width pill-shaped background rail. Colour communicates semantic variant. border-radius: 9999px.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Fill</strong><span>Pill-shaped foreground bar inside the track. Width is proportional to the current percentage value.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Every <code>variant</code> &times; <code>size</code> &times; fill-level from <code>progress-bar.css</code>, plus real-world inline patterns &mdash; rendered with the live <code>&lt;ds-progress-bar&gt;</code> web component.</p>
+
+            <style>
+              .page-progress-bar .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+              .page-progress-bar .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; }
+              .page-progress-bar .demo-container .demo-canvas {
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+                min-height: 0 !important;
+                padding: 32px !important;
+                gap: 32px !important;
+              }
+              .page-progress-bar .demo-pb-section { display: flex; flex-direction: column; gap: 14px; }
+              .page-progress-bar .demo-pb-section > .demo-group-label {
+                font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+                color: var(--prism-text-muted); text-transform: uppercase;
+                margin: 0; text-align: left; width: auto;
+              }
+              .page-progress-bar .demo-pb-stack {
+                display: flex; flex-direction: column; gap: 18px;
+                max-width: 520px;
+              }
+              .page-progress-bar .demo-pb-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 18px 24px;
+              }
+              @media (max-width: 880px) {
+                .page-progress-bar .demo-pb-row { grid-template-columns: 1fr; }
+              }
+              .page-progress-bar .demo-realworld-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+              }
+              @media (max-width: 880px) {
+                .page-progress-bar .demo-realworld-grid { grid-template-columns: 1fr; }
+              }
+              .page-progress-bar .demo-realworld-card {
+                display: flex; flex-direction: column; gap: 12px;
+                padding: 18px;
+                border: 1px solid var(--prism-border);
+                border-radius: 12px;
+                background: rgba(255,255,255,0.02);
+              }
+              [data-theme="light"] .page-progress-bar .demo-realworld-card {
+                background: rgba(255,255,255,0.55);
+                border-color: rgba(37,99,235,0.1);
+              }
+              .page-progress-bar .demo-realworld-card-label {
+                font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+                color: var(--prism-text-muted); text-transform: uppercase;
+              }
+              .page-progress-bar .demo-upload-row {
+                display: flex; align-items: center; gap: 12px;
+                font-size: 13px; color: var(--prism-text);
+              }
+              .page-progress-bar .demo-upload-row .file-icon {
+                width: 32px; height: 32px; flex-shrink: 0;
+                display: inline-flex; align-items: center; justify-content: center;
+                background: rgba(37,99,235,0.08);
+                color: var(--prism-violet);
+                border-radius: 8px;
+              }
+              .page-progress-bar .demo-upload-row .file-icon svg { width: 16px; height: 16px; }
+              .page-progress-bar .demo-upload-row .file-name { flex: 1; min-width: 0; font-weight: 500; }
+              .page-progress-bar .demo-upload-row .file-size { color: var(--prism-text-muted); font-size: 12px; white-space: nowrap; }
+              .page-progress-bar .demo-storage-numbers {
+                display: flex; align-items: baseline; gap: 8px;
+              }
+              .page-progress-bar .demo-storage-numbers .big {
+                font-size: 24px; font-weight: 700; color: var(--prism-text);
+              }
+              .page-progress-bar .demo-storage-numbers .small {
+                font-size: 13px; color: var(--prism-text-muted);
+              }
+              .page-progress-bar .demo-wizard-steps {
+                display: flex; align-items: center; gap: 6px;
+                font-size: 12px; color: var(--prism-text-muted);
+              }
+              .page-progress-bar .demo-wizard-steps .step.is-active {
+                color: var(--prism-violet); font-weight: 600;
+              }
+              .page-progress-bar .demo-wizard-steps .sep { opacity: 0.4; }
+            </style>
+
+            <div class="demo-container">
+              <!-- Mac-window toolbar -->
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Progress Bar &middot; variants &times; sizes + real-world patterns</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Variants -->
+                <div class="demo-pb-section">
+                  <div class="demo-group-label">Variants &mdash; default &middot; success &middot; warning &middot; error &middot; indeterminate</div>
+                  <div class="demo-pb-stack">
+                    <ds-progress-bar label="Uploading"          value="25"></ds-progress-bar>
+                    <ds-progress-bar label="Analysis complete"  variant="success"       value="100" value-label="Done"></ds-progress-bar>
+                    <ds-progress-bar label="Storage used"       variant="warning"       value="82"></ds-progress-bar>
+                    <ds-progress-bar label="Sync failed"        variant="error"         value="43"  value-label="Failed at 43%"></ds-progress-bar>
+                    <ds-progress-bar label="Processing&hellip;" variant="indeterminate"></ds-progress-bar>
+                  </div>
+                </div>
+
+                <!-- Sizes — paired comparison -->
+                <div class="demo-pb-section">
+                  <div class="demo-group-label">Sizes &mdash; small (4&thinsp;px) / medium (6&thinsp;px) / large (8&thinsp;px) at the same fill</div>
+                  <div class="demo-pb-stack">
+                    <ds-progress-bar label="Small"  size="small"  value="60"></ds-progress-bar>
+                    <ds-progress-bar label="Medium" size="medium" value="60"></ds-progress-bar>
+                    <ds-progress-bar label="Large"  size="large"  value="60"></ds-progress-bar>
+                  </div>
+                </div>
+
+                <!-- Fill progression -->
+                <div class="demo-pb-section">
+                  <div class="demo-group-label">Fill progression &mdash; 0% &middot; 25% &middot; 50% &middot; 75% &middot; 100%</div>
+                  <div class="demo-pb-stack">
+                    <ds-progress-bar label="Just started" value="0"></ds-progress-bar>
+                    <ds-progress-bar label="Quarter way"  value="25"></ds-progress-bar>
+                    <ds-progress-bar label="Halfway"      value="50"></ds-progress-bar>
+                    <ds-progress-bar label="Almost done"  value="75"></ds-progress-bar>
+                    <ds-progress-bar label="Complete"     variant="success" value="100" value-label="Done"></ds-progress-bar>
+                  </div>
+                </div>
+
+                <!-- Custom max & value-label -->
+                <div class="demo-pb-section">
+                  <div class="demo-group-label">Custom max &amp; value-label &mdash; step counters / quotas</div>
+                  <div class="demo-pb-stack">
+                    <ds-progress-bar label="Onboarding" value="3"   max="8"   value-label="Step 3 of 8" size="large"></ds-progress-bar>
+                    <ds-progress-bar label="Tasks"      value="14"  max="20"  value-label="14 / 20"></ds-progress-bar>
+                    <ds-progress-bar label="Backup"     value="450" max="600" value-label="450 GB / 600 GB" variant="warning"></ds-progress-bar>
+                  </div>
+                </div>
+
+                <!-- Track-only + Disabled side-by-side -->
+                <div class="demo-pb-section">
+                  <div class="demo-group-label">Variants &mdash; track-only (no labels) &amp; disabled</div>
+                  <div class="demo-pb-row">
+                    <div style="display:flex;flex-direction:column;gap:12px;">
+                      <div style="font-size:10px;font-weight:600;letter-spacing:0.06em;color:var(--prism-text-muted);text-transform:uppercase;">Track-only &mdash; <code>show-label="false"</code></div>
+                      <ds-progress-bar value="35"  show-label="false"></ds-progress-bar>
+                      <ds-progress-bar value="70"  show-label="false" variant="success"></ds-progress-bar>
+                      <ds-progress-bar variant="indeterminate" show-label="false"></ds-progress-bar>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px;">
+                      <div style="font-size:10px;font-weight:600;letter-spacing:0.06em;color:var(--prism-text-muted);text-transform:uppercase;">Disabled &mdash; greyed track + label</div>
+                      <ds-progress-bar label="Quota"       value="50" disabled></ds-progress-bar>
+                      <ds-progress-bar label="Sync paused" value="80" variant="warning" disabled></ds-progress-bar>
+                      <ds-progress-bar label="Read-only"   value="100" variant="success" disabled value-label="Done"></ds-progress-bar>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Real-world patterns -->
+                <div class="demo-pb-section">
+                  <div class="demo-group-label">Real-world patterns</div>
+                  <div class="demo-realworld-grid">
+
+                    <!-- File upload card -->
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">File upload &mdash; concurrent transfers</div>
+                      <div class="demo-upload-row">
+                        <span class="file-icon"><ds-icon name="folder" size="16"></ds-icon></span>
+                        <span class="file-name">quarterly-report-Q1.pdf</span>
+                        <span class="file-size">12.4 MB</span>
+                      </div>
+                      <ds-progress-bar size="small" value="85" show-label="false"></ds-progress-bar>
+                      <div class="demo-upload-row">
+                        <span class="file-icon"><ds-icon name="archive" size="16"></ds-icon></span>
+                        <span class="file-name">design-mocks.zip</span>
+                        <span class="file-size">48.2 MB</span>
+                      </div>
+                      <ds-progress-bar size="small" value="42" show-label="false"></ds-progress-bar>
+                      <div class="demo-upload-row">
+                        <span class="file-icon"><ds-icon name="play" size="16"></ds-icon></span>
+                        <span class="file-name">walkthrough.mp4</span>
+                        <span class="file-size">112 MB</span>
+                      </div>
+                      <ds-progress-bar size="small" variant="indeterminate" show-label="false"></ds-progress-bar>
+                    </div>
+
+                    <!-- Storage usage tile -->
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">Storage usage &mdash; KPI tile</div>
+                      <div class="demo-storage-numbers">
+                        <span class="big">82%</span>
+                        <span class="small">used &middot; 9.84 GB of 12 GB</span>
+                      </div>
+                      <ds-progress-bar size="large" value="82" variant="warning" show-label="false"></ds-progress-bar>
+                      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--prism-text-muted);">
+                        <span>2.16 GB remaining</span>
+                        <a href="#" style="color:var(--prism-violet);font-weight:500;text-decoration:none;">Upgrade plan</a>
+                      </div>
+                    </div>
+
+                    <!-- Onboarding wizard -->
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">Onboarding wizard &mdash; step progress</div>
+                      <div class="demo-wizard-steps">
+                        <span class="step">Account</span><span class="sep">&rarr;</span>
+                        <span class="step">Profile</span><span class="sep">&rarr;</span>
+                        <span class="step is-active">Devices</span><span class="sep">&rarr;</span>
+                        <span class="step">Team</span><span class="sep">&rarr;</span>
+                        <span class="step">Review</span>
+                      </div>
+                      <ds-progress-bar size="large" value="3" max="5" value-label="Step 3 of 5" label="Set up Endpoint Central"></ds-progress-bar>
+                      <div style="font-size:12px;color:var(--prism-text-muted);line-height:1.5;">Connect the devices you want Endpoint Central to manage. You can add more later from Inventory.</div>
+                    </div>
+
+                    <!-- Patch deployment -->
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">Patch deployment &mdash; live job status</div>
+                      <ds-progress-bar label="CVE-2026-1041 rollout" value="248" max="500" value-label="248 / 500 endpoints"></ds-progress-bar>
+                      <ds-progress-bar label="CVE-2026-0987 rollout" value="500" max="500" variant="success" value-label="Done"></ds-progress-bar>
+                      <ds-progress-bar label="CVE-2026-0721 rollout" value="14"  max="120" variant="error"   value-label="Stalled at 14"></ds-progress-bar>
+                      <ds-progress-bar label="Health check"           variant="indeterminate"></ds-progress-bar>
+                    </div>
+
+                    <!-- Vulnerability remediation -->
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">Vulnerability remediation &mdash; by severity</div>
+                      <ds-progress-bar label="Critical" value="12"  max="45"  variant="error"   value-label="12 / 45 fixed"></ds-progress-bar>
+                      <ds-progress-bar label="High"     value="89"  max="120" variant="warning" value-label="89 / 120 fixed"></ds-progress-bar>
+                      <ds-progress-bar label="Medium"   value="230" max="260" value-label="230 / 260 fixed"></ds-progress-bar>
+                      <ds-progress-bar label="Low"      value="310" max="310" variant="success" value-label="All fixed"></ds-progress-bar>
+                    </div>
+
+                    <!-- OS deployment stages -->
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">OS deployment &mdash; staged task</div>
+                      <div style="display:flex;align-items:center;gap:8px;">
+                        <ds-badge variant="subtle" state="success" size="small" shape="pill" label="Done"></ds-badge>
+                        <span style="font-size:12px;color:var(--prism-text-muted);">Image captured &middot; win11-base.wim</span>
+                      </div>
+                      <ds-progress-bar label="Driver injection" value="64" max="100" size="medium"></ds-progress-bar>
+                      <ds-progress-bar label="Deploying to 38 machines" variant="indeterminate" size="medium"></ds-progress-bar>
+                      <ds-progress-bar label="Post-deploy validation" value="0" disabled value-label="Queued" size="medium"></ds-progress-bar>
+                    </div>
+
+                    <!-- License consumption -->
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">License consumption &mdash; per product</div>
+                      <ds-progress-bar label="Endpoint Central"    value="412" max="500" variant="warning" value-label="412 / 500"></ds-progress-bar>
+                      <ds-progress-bar label="Patch Manager Plus"  value="186" max="500" value-label="186 / 500"></ds-progress-bar>
+                      <ds-progress-bar label="Mobile Device Mgmt"  value="498" max="500" variant="error" value-label="2 left"></ds-progress-bar>
+                      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--prism-text-muted);">
+                        <span>Renewal: 30 Jun 2026</span>
+                        <a href="#" style="color:var(--prism-violet);font-weight:500;text-decoration:none;">Manage licenses</a>
+                      </div>
+                    </div>
+
+                    <!-- Backup & restore -->
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">Backup &amp; restore &mdash; job queue</div>
+                      <ds-progress-bar label="Nightly DB backup"   value="100" max="100" variant="success" value-label="02:14 AM"></ds-progress-bar>
+                      <ds-progress-bar label="Restoring snapshot"  value="58"  max="100" size="medium" value-label="58% &middot; 11 min left"></ds-progress-bar>
+                      <ds-progress-bar label="Integrity check"     variant="indeterminate" size="small"></ds-progress-bar>
+                      <ds-progress-bar label="Offsite sync"        value="35"  disabled value-label="Paused"></ds-progress-bar>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Use Large for prominent page-level progress; Small for dense lists or tables.</li>
+                <li>Keep the label concise (2&#8211;4 words: "Upload progress", "Storage used").</li>
+                <li>Show the % value alongside the bar so users can read the exact number.</li>
+                <li>Transition to Success variant at 100% completion.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Use Large inside a compact list item.</li>
+                <li>Write a full sentence as the label.</li>
+                <li>Rely on bar width alone for precision &#8212; perception is inaccurate.</li>
+                <li>Show 0% or a frozen bar while waiting &#8212; it implies the operation is stuck.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Icon usage -->
+          <div class="doc-section">
+            <h2 id="icon-usage" class="doc-section-title">Icon Usage</h2>
+            <p class="doc-section-subtitle">Progress Bar itself has no icon slot, but it commonly pairs with status icons in the label or appears alongside step indicators. Use these pairings consistently.</p>
+
+            <h3 class="doc-h4" style="margin-top:24px;">Status icons in the label</h3>
+            <p style="color:var(--prism-text-muted);font-size:14px;line-height:1.7;margin-top:8px;">
+              Prefix the label with a 16px icon that matches the variant. The icon reinforces the meaning at a glance, especially in error states.
+            </p>
+            <table class="size-table" style="margin-top:16px;">
+              <thead><tr><th>Variant</th><th>Icon</th><th>Example label</th></tr></thead>
+              <tbody>
+                <tr><td>Default / In progress</td><td><code>spinner</code> or no icon</td><td>"Uploading&hellip;"</td></tr>
+                <tr><td>Success (100%)</td><td><code>check-circle</code></td><td>"Upload complete"</td></tr>
+                <tr><td>Warning</td><td><code>exclamation-triangle</code></td><td>"Storage 85% full"</td></tr>
+                <tr><td>Error</td><td><code>exclamation-circle</code></td><td>"Upload failed &mdash; retry"</td></tr>
+                <tr><td>Info / Paused</td><td><code>pause-circle</code></td><td>"Paused at 42%"</td></tr>
+              </tbody>
+            </table>
+
+            <h3 class="doc-h4" style="margin-top:32px;">Step indicators (multi-step flows)</h3>
+            <p style="color:var(--prism-text-muted);font-size:14px;line-height:1.7;margin-top:8px;">
+              For multi-step wizards or onboarding, place small icon-filled circles before or above the bar segments. Use these icon states for each step:
+            </p>
+            <table class="size-table" style="margin-top:16px;">
+              <thead><tr><th>Step state</th><th>Icon</th><th>Background</th></tr></thead>
+              <tbody>
+                <tr><td>Completed</td><td><code>check</code> (white, filled circle)</td><td>Brand-default / Success-default</td></tr>
+                <tr><td>Current (active)</td><td>Step number (e.g., "3")</td><td>Brand-default with 2px ring</td></tr>
+                <tr><td>Upcoming</td><td>Step number (muted)</td><td>Neutral-subtle</td></tr>
+                <tr><td>Error</td><td><code>close</code> (white)</td><td>Critical-default</td></tr>
+                <tr><td>Skipped</td><td><code>minus</code> (muted)</td><td>Neutral-subtle, opacity 0.5</td></tr>
+              </tbody>
+            </table>
+
+            <h3 class="doc-h4" style="margin-top:32px;">Trailing action icons</h3>
+            <p style="color:var(--prism-text-muted);font-size:14px;line-height:1.7;margin-top:8px;">
+              For long-running operations, pair the Progress Bar with a trailing icon-button:
+            </p>
+            <ul class="doc-list" style="margin-top:8px;">
+              <li><strong><code>pause</code></strong> &mdash; allow user to pause an upload/download.</li>
+              <li><strong><code>play</code></strong> &mdash; resume a paused operation (replaces pause icon).</li>
+              <li><strong><code>close</code></strong> &mdash; cancel the operation. Always confirm before destructive cancel.</li>
+              <li><strong><code>refresh</code></strong> &mdash; retry after a failure (only shown in Error variant).</li>
+            </ul>
+            <p style="margin-top:16px;font-size:13.5px;color:var(--prism-text-muted);">
+              Use 32px tap target with 16px icon. Place the action icon outside the bar's container so it doesn't compete visually with the fill.
+            </p>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Design tokens, colour mappings, and spacing tokens that define the Progress Bar's visual language.</p>
+
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">126 variants across Variant (5) &times; State (2) &times; Fill Level (5) &times; Size (3) plus Indeterminate combos.</p>
+            <table class="size-table">
+              <thead><tr><th>Axis</th><th>Values</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Variant</strong></td><td><code>Default</code>, <code>Success</code>, <code>Warning</code>, <code>Error</code>, <code>Indeterminate</code></td><td>Semantic colour and mode. Use Indeterminate when duration is unknown.</td></tr>
+                <tr><td><strong>Size</strong></td><td><code>Small</code>, <code>Medium</code>, <code>Large</code></td><td>Controls track height, typography scale, and vertical gap.</td></tr>
+                <tr><td><strong>State</strong></td><td><code>Default</code>, <code>Disabled</code></td><td>Default is the interactive/live state. Disabled applies greyed-out tokens.</td></tr>
+                <tr><td><strong>Fill %</strong></td><td><code>0</code>, <code>25</code>, <code>50</code>, <code>75</code>, <code>100</code>, <code>N/A</code></td><td>Design-time fill percentage for static representations. N/A is Indeterminate only.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="variant-colours" class="doc-section-title">Variant Colours</h2>
+            <p class="doc-section-subtitle">Each variant maps to a specific track and fill colour, communicating semantic meaning.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:24px;">
+              <div style="padding:20px 12px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="width:100%;height:6px;border-radius:9999px;background:#D5E0F8;overflow:hidden;margin-bottom:12px;"><div style="width:50%;height:100%;border-radius:9999px;background:#2C66DD;"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Default</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">General progress</div>
+              </div>
+              <div style="padding:20px 12px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="width:100%;height:6px;border-radius:9999px;background:#E7F3ED;overflow:hidden;margin-bottom:12px;"><div style="width:100%;height:100%;border-radius:9999px;background:#0C8844;"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Success</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Completed / passed</div>
+              </div>
+              <div style="padding:20px 12px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="width:100%;height:6px;border-radius:9999px;background:#FEF8EB;overflow:hidden;margin-bottom:12px;"><div style="width:80%;height:100%;border-radius:9999px;background:#E6930A;"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Warning</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Near capacity</div>
+              </div>
+              <div style="padding:20px 12px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="width:100%;height:6px;border-radius:9999px;background:#FDEBEB;overflow:hidden;margin-bottom:12px;"><div style="width:43%;height:100%;border-radius:9999px;background:#E42527;"></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Error</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Failed operation</div>
+              </div>
+              <div style="padding:20px 12px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div class="pb pb-indeterminate" style="margin-bottom:12px;"><div class="pb-track" style="height:6px;"><div class="pb-fill"></div></div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Indeterminate</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Unknown duration</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="sizes" class="doc-section-title">Sizes</h2>
+            <p class="doc-section-subtitle">Three sizes to fit different layout contexts. All sizes share 9999px border radius.</p>
+            <table class="size-table">
+              <thead><tr><th>Size</th><th>Track Height</th><th>Label Font</th><th>Vertical Gap</th><th>Component Height</th><th>Preview</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Small</strong></td><td>4 px</td><td>10 px</td><td>4 px</td><td>24 px</td><td><div class="pb pb-default pb-sm" style="width:140px;"><div class="pb-track"><div class="pb-fill" style="width:50%;"></div></div></div></td></tr>
+                <tr><td><strong>Medium</strong></td><td>6 px</td><td>12 px</td><td>6 px</td><td>28 px</td><td><div class="pb pb-default pb-md" style="width:140px;"><div class="pb-track"><div class="pb-fill" style="width:50%;"></div></div></div></td></tr>
+                <tr><td><strong>Large</strong></td><td>8 px</td><td>14 px</td><td>8 px</td><td>32 px</td><td><div class="pb pb-default pb-lg" style="width:140px;"><div class="pb-track"><div class="pb-fill" style="width:50%;"></div></div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="color-tokens" class="doc-section-title">Color Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Track and Fill Colours</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Variant</th><th>Track Token</th><th>Fill Token</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Default</strong></td><td><code>Background/BG-Accent-Secondary</code></td><td><code>Background/BG-Button-Primary</code></td></tr>
+                <tr><td><strong>Success</strong></td><td><code>Background/BG-Success-Secondary</code></td><td><code>Background/BG-Success-Solid</code></td></tr>
+                <tr><td><strong>Warning</strong></td><td><code>Background/BG-Warning-Secondary</code></td><td><code>Background/BG-Warning-Solid</code></td></tr>
+                <tr><td><strong>Error</strong></td><td><code>Background/BG-Error-Secondary</code></td><td><code>Background/BG-Error-Solid</code></td></tr>
+                <tr><td><strong>Indeterminate</strong></td><td><code>Background/BG-Accent-Secondary</code></td><td><code>Background/BG-Button-Primary</code></td></tr>
+                <tr><td><strong>Disabled (all)</strong></td><td><code>Background/BG-Disabled_subtle</code></td><td><code>Background/BG-Disabled</code></td></tr>
+              </tbody>
+            </table>
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Text Colours</h4>
+            <table class="size-table">
+              <thead><tr><th>Variant</th><th>Label Token</th><th>Percentage Token</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Default / Indeterminate</strong></td><td><code>Text/Text-Primary</code></td><td><code>Text/Text-Accent-Primary</code></td></tr>
+                <tr><td><strong>Success</strong></td><td><code>Text/Text-Primary</code></td><td><code>Text/Text-Success</code></td></tr>
+                <tr><td><strong>Warning</strong></td><td><code>Text/Text-Primary</code></td><td><code>Text/Text-Warning</code></td></tr>
+                <tr><td><strong>Error</strong></td><td><code>Text/Text-Primary</code></td><td><code>Text/Text-Error</code></td></tr>
+                <tr><td><strong>Disabled (all)</strong></td><td><code>Text/Text-Disabled</code></td><td><code>Text/Text-Disabled</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="spacing-tokens" class="doc-section-title">Spacing Tokens</h2>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Component width</td><td>280 px (design canvas; use <code>width: 100%</code> in code)</td></tr>
+                <tr><td>Track corner radius</td><td><code>9999 px</code> (pill)</td></tr>
+                <tr><td>Fill corner radius</td><td><code>9999 px</code> (pill)</td></tr>
+                <tr><td>Label Row justification</td><td>Space between (label left-pinned, percentage right-pinned)</td></tr>
+                <tr><td>Label &#8596; Percentage gap</td><td>8 px</td></tr>
+                <tr><td>Label Row &#8596; Track gap</td><td>4 px (S) / 6 px (M) / 8 px (L)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="typography-family" class="doc-section-title">Typography Family</h2>
+            <p class="doc-section-subtitle">All text uses <strong>Zoho Puvi</strong> at Medium weight (500).</p>
+            <table class="size-table">
+              <thead><tr><th>Size</th><th>Font Size</th><th>Line Height</th><th>Token</th><th>Weight</th></tr></thead>
+              <tbody>
+                <tr><td>Small</td><td>10 px</td><td>14 px</td><td><code>body/Xsmall/Default</code>, <code>Font-weight/Medium</code></td><td>500</td></tr>
+                <tr><td>Medium</td><td>12 px</td><td>16 px</td><td><code>body/Small/Medium</code></td><td>500</td></tr>
+                <tr><td>Large</td><td>14 px</td><td>20 px</td><td><code>body/Default/Medium</code></td><td>500</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">Progress bars communicate measurable completion status across uploads, processing, and system operations.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><ds-icon name="check" size="20" style="color:#2563eb;"></ds-icon>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">To show <strong>measurable progress</strong> toward a known completion point (file upload, form completion, steps completed).</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">To communicate <strong>system status</strong> during a background operation (syncing, processing, building).</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When the user benefits from knowing <strong>how much remains</strong>, not just that something is happening.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Use <strong>Indeterminate</strong> when the duration or percentage cannot be calculated.</li>
+                  <li style="border:none;background:transparent;">Use <strong>Success / Warning / Error</strong> variants when the completion state carries a semantic outcome.</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><ds-icon name="close" size="20" style="color:#e42527;"></ds-icon>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;"><strong>Step-by-step workflows</strong> &#8212; use a Wizard instead. Progress bars don't communicate discrete steps clearly.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;"><strong>Circular loading</strong> &#8212; use Progress Loader for spinners inside buttons or inline loaders.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;"><strong>Binary complete / incomplete</strong> &#8212; use a Checkbox or a simple status indicator.</li>
+                  <li style="border:none;background:transparent;"><strong>Page-level loading</strong> &#8212; use a top-of-page slim bar (e.g. NProgress pattern), not a full-width labelled progress bar.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="indeterminate-mode" class="doc-section-title">Indeterminate Mode</h2>
+            <p class="doc-section-subtitle">When the total duration or steps of an operation are unknown, use variant="Indeterminate". The fill stub is a fixed-width segment (~33% of the track) that sweeps from left to right in a continuous animation.</p>
+            <ul class="doc-list">
+              <li><strong>Value label:</strong> Render "&#8212;" (em dash) or omit it entirely. Do not show "0%" &#8212; that implies 0% is known, which contradicts the indeterminate state.</li>
+              <li><strong>Animation:</strong> Apply <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">overflow: hidden</code> on the Track element so the fill clips at the track boundaries.</li>
+              <li><strong>Reduced motion:</strong> Respect <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">prefers-reduced-motion</code> &#8212; pause the animation and show a static 33% fill.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do's and Don'ts</h2>
+            <p class="doc-section-subtitle">Guidelines for effective progress bar usage.</p>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li><strong>Use Large for prominent page-level progress;</strong> Small for dense lists or tables.</li>
+                <li><strong>Keep the label concise</strong> (2&#8211;4 words: "Upload progress", "Storage used").</li>
+                <li><strong>Show the % value</strong> alongside the bar so users can read the exact number.</li>
+                <li><strong>Use Indeterminate</strong> when duration cannot be computed.</li>
+                <li><strong>Transition to Success</strong> variant at 100% completion.</li>
+                <li><strong>Set width: 100%</strong> in code so the bar fills its container.</li>
+                <li><strong>Animate fill width</strong> with transition: width 300ms ease.</li>
+                <li><strong>Respect prefers-reduced-motion</strong> &#8212; use instant updates instead of animations.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li><strong>Use Large inside a compact list item.</strong></li>
+                <li><strong>Write a full sentence</strong> as the label.</li>
+                <li><strong>Rely on bar width alone</strong> for precision &#8212; perception is inaccurate.</li>
+                <li><strong>Show 0% or a frozen bar</strong> while waiting &#8212; it implies the operation is stuck.</li>
+                <li><strong>Leave the bar in Default</strong> state after completion.</li>
+                <li><strong>Reset to 0% on error</strong> without feedback.</li>
+                <li><strong>Use Warning</strong> for purely in-progress states.</li>
+                <li><strong>Hard-code the 280 px</strong> canvas width.</li>
+                <li><strong>Force animations</strong> regardless of user preference.</li>
+              </ul></div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Components that complement or can be used alongside the Progress Bar.</p>
+            <div class="related-grid">
+              <a href="Progress-bar.html" class="related-chip"><ds-icon name="clock" size="16"></ds-icon> Progress Loader</a>
+              <a href="Slider.html" class="related-chip"><ds-icon name="align-justify" size="16"></ds-icon> Slider</a>
+              <a href="Tab-bar-horizontal.html" class="related-chip"><ds-icon name="align-justify" size="16"></ds-icon> Tabs</a>
+              <a href="Snackbar.html" class="related-chip"><ds-icon name="message-chat-square" size="16"></ds-icon> Toast / Snackbar</a>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <p class="doc-section-subtitle">Design tokens and resources for implementing the Progress Bar component.</p>
+            <ul class="doc-list">
+              <li><strong>Figma Node:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">17012:973360</code> &#8212; Component Set: Progress Bar</li>
+              <li><strong>Total Variants:</strong> 4 determinate variants &times; 2 states &times; 5 fill levels &times; 3 sizes + 1 indeterminate &times; 2 states &times; 3 sizes = <strong>126 variants</strong></li>
+              <li><strong>Typography:</strong> Zoho Puvi Medium (500) for all sizes</li>
+              <li><strong>Border Radius:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">9999px</code> (fully rounded pill)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Configure the Progress Bar component and view generated HTML.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Variant</label><select class="cp-select" id="pg-variant"><option value="default">default</option><option value="success">success</option><option value="warning">warning</option><option value="error">error</option><option value="indeterminate">indeterminate</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Size</label><select class="cp-select" id="pg-size"><option value="small">small</option><option value="medium" selected>medium</option><option value="large">large</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Value</label><input class="cp-select" id="pg-value" type="number" min="0" max="100" value="25" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Max</label><input class="cp-select" id="pg-max" type="number" min="1" value="100" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Label</label><input class="cp-select" id="pg-label" type="text" value="Uploading" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Value-label override</label><input class="cp-select" id="pg-vlabel" type="text" value="" placeholder="auto: pct%" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Show label</label><select class="cp-select" id="pg-showlabel"><option value="true" selected>true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Disabled</label><select class="cp-select" id="pg-disabled"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="pg-rtl"><option value="false" selected>No</option><option value="true">Yes</option></select></div>
+            </div>
+            <div class="cp-preview" id="pg-preview-area" style="padding:24px;display:flex;justify-content:center"><div id="pg-host" style="width:380px;max-width:100%"></div></div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-copy-btn"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+            </div>
+            <div class="cp-code-area" id="pg-code-output"></div>
+          </div>
+          <script>
+          (function(){
+            var els = {
+              variant:   document.getElementById('pg-variant'),
+              size:      document.getElementById('pg-size'),
+              value:     document.getElementById('pg-value'),
+              max:       document.getElementById('pg-max'),
+              label:     document.getElementById('pg-label'),
+              vlabel:    document.getElementById('pg-vlabel'),
+              showlabel: document.getElementById('pg-showlabel'),
+              disabled:  document.getElementById('pg-disabled'),
+              rtl:       document.getElementById('pg-rtl')
+            };
+            var LABEL_LTR = 'Uploading';
+            var LABEL_RTL = 'جارٍ الرفع';
+            var host = document.getElementById('pg-host');
+            var codeOut = document.getElementById('pg-code-output');
+            var copyBtn = document.getElementById('pg-copy-btn');
+            var pgRawCode = '';
+            function build(){
+              var variant = els.variant.value;
+              var size = els.size.value;
+              var value = parseInt(els.value.value, 10);
+              if (isNaN(value)) value = 0;
+              var max = parseInt(els.max.value, 10);
+              if (isNaN(max) || max < 1) max = 100;
+              var rawLabel = els.label.value;
+              var showLbl = els.showlabel.value === 'true';
+              var disabled = els.disabled.value === 'true';
+              var isRtl = els.rtl && els.rtl.value === 'true';
+              var isDefaultLabel = rawLabel === '' || rawLabel === LABEL_LTR || rawLabel === LABEL_RTL;
+              var label = isDefaultLabel ? (isRtl ? LABEL_RTL : LABEL_LTR) : rawLabel;
+              if (isDefaultLabel && els.label.value !== label) els.label.value = label;
+              var vlabel = els.vlabel.value || '';
+
+              host.innerHTML = '';
+              var pb = document.createElement('ds-progress-bar');
+              if (variant !== 'default') pb.setAttribute('variant', variant);
+              if (size !== 'medium') pb.setAttribute('size', size);
+              if (variant !== 'indeterminate') pb.setAttribute('value', String(value));
+              if (max !== 100) pb.setAttribute('max', String(max));
+              if (label) pb.setAttribute('label', label);
+              if (vlabel) pb.setAttribute('value-label', vlabel);
+              if (!showLbl) pb.setAttribute('show-label', 'false');
+              if (disabled) pb.setAttribute('disabled', '');
+              if (isRtl) pb.setAttribute('rtl', '');
+              host.appendChild(pb);
+
+              var attrs = [];
+              if (variant !== 'default') attrs.push('variant="' + variant + '"');
+              if (size !== 'medium') attrs.push('size="' + size + '"');
+              if (variant !== 'indeterminate') attrs.push('value="' + value + '"');
+              if (max !== 100) attrs.push('max="' + max + '"');
+              if (label) attrs.push('label="' + label.replace(/"/g, '&quot;') + '"');
+              if (vlabel) attrs.push('value-label="' + vlabel.replace(/"/g, '&quot;') + '"');
+              if (!showLbl) attrs.push('show-label="false"');
+              if (disabled) attrs.push('disabled');
+              if (isRtl) attrs.push('rtl');
+              pgRawCode = '<ds-progress-bar' + (attrs.length ? ' ' + attrs.join(' ') : '') + '></ds-progress-bar>';
+              var colored = '&lt;<span style="color:#60a5fa">ds-progress-bar</span>'
+                + (attrs.length ? ' ' : '')
+                + attrs.map(function(a){
+                    var eq = a.indexOf('=');
+                    if (eq === -1) return '<span style="color:#38bdf8">' + a + '</span>';
+                    return '<span style="color:#38bdf8">' + a.slice(0, eq) + '</span>=<span style="color:#34d399">' + a.slice(eq + 1) + '</span>';
+                  }).join(' ')
+                + '&gt;&lt;/<span style="color:#60a5fa">ds-progress-bar</span>&gt;';
+              codeOut.innerHTML = '<pre style="margin:0;white-space:pre-wrap;font-family:\'JetBrains Mono\',monospace;font-size:13.5px;line-height:1.6">' + colored + '</pre>';
+            }
+            Object.keys(els).forEach(function(k){ els[k].addEventListener(els[k].tagName === 'INPUT' ? 'input' : 'change', build); });
+            copyBtn.addEventListener('click', function(){
+              var t = pgRawCode;
+              var done = function(){ var o = copyBtn.innerHTML; copyBtn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!'; setTimeout(function(){ copyBtn.innerHTML = o; }, 2000); };
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(t).then(done).catch(function(){ var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); });
+              } else {
+                var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+              }
+            });
+            if (window.customElements && customElements.whenDefined) {
+              customElements.whenDefined('ds-progress-bar').then(build);
+            }
+            build();
+          })();
+          </script>
+
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="component-api-properties" class="doc-section-title">Component API &amp; Properties</h2>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>variant</code></td><td><code>'default' | 'success' | 'warning' | 'error' | 'indeterminate'</code></td><td><code>'default'</code></td><td>Drives track + fill colours. <code>indeterminate</code> hides the value and animates a sweep.</td></tr>
+                <tr><td><code>size</code></td><td><code>'small' | 'medium' | 'large'</code></td><td><code>'medium'</code></td><td>Track height 4 / 6 / 8 px and label font 10 / 12 / 14 px.</td></tr>
+                <tr><td><code>value</code></td><td>number 0&hellip;<code>max</code></td><td><code>0</code></td><td>Current progress. Ignored when <code>variant="indeterminate"</code>.</td></tr>
+                <tr><td><code>max</code></td><td>number &gt; 0</td><td><code>100</code></td><td>Used to compute the percentage.</td></tr>
+                <tr><td><code>label</code></td><td>string</td><td><code>"Progress"</code></td><td>Left-aligned label text.</td></tr>
+                <tr><td><code>value-label</code></td><td>string</td><td><code>{pct}%</code></td><td>Right-aligned value text. Defaults to &mdash; for indeterminate.</td></tr>
+                <tr><td><code>show-label</code></td><td><code>"false"</code> to hide</td><td>shown</td><td>Hides the entire label row (track-only).</td></tr>
+                <tr><td><code>disabled</code></td><td>boolean</td><td>unset</td><td>Greys the bar and the labels.</td></tr>
+              </tbody>
+            </table>
+            <p class="doc-section-subtitle" style="margin-top:16px">Accessibility: track uses <code>role="progressbar"</code> with <code>aria-valuemin</code>/<code>aria-valuemax</code>/<code>aria-valuenow</code>. For <code>variant="indeterminate"</code>, <code>aria-valuenow</code> is omitted. Animation pauses under <code>prefers-reduced-motion</code>.</p>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="code-examples" class="doc-section-title">Code Examples</h2>
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Default &#8212; 25% progress</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">ProgressBar</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Uploading"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{25}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">max</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{100}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Success at 100%</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">ProgressBar</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">variant</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Success"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Analysis complete"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{100}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">max</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{100}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">valueLabel</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Done"</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Warning &#8212; storage near capacity</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">ProgressBar</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">variant</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Warning"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Storage used"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{82}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">max</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{100}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">size</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Medium"</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Indeterminate &#8212; unknown duration</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">ProgressBar</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">variant</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Indeterminate"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Processing&#8230;"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">size</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Medium"</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Without label row (track only)</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">ProgressBar</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{60}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">showLabel</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{false}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">size</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Small"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">aria-label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Profile completion"</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Custom value label &#8212; steps</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">ProgressBar</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Onboarding"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{3}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">max</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{8}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">valueLabel</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Step 3 of 8"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">size</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Large"</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Responsive fill (CSS)</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#94a3b8;">/* Responsive fill */</span><br>
+                <span style="color:#E06C75;">.progress-bar</span> {<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">width</span>: <span style="color:#C678DD;">100%</span>;<br>
+                }<br>
+                <span style="color:#E06C75;">.progress-bar__fill</span> {<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">width</span>: <span style="color:#C678DD;">calc(var(--progress-value, 0) * 1%)</span>;<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">transition</span>: <span style="color:#C678DD;">width 300ms ease</span>;<br>
+                }<br><br>
+                <span style="color:#C678DD;">@media</span> (<span style="color:#D19A66;">prefers-reduced-motion: reduce</span>) {<br>
+                &nbsp;&nbsp;<span style="color:#E06C75;">.progress-bar__fill</span> { <span style="color:#D19A66;">transition</span>: <span style="color:#C678DD;">none</span>; }<br>
+                &nbsp;&nbsp;<span style="color:#E06C75;">.progress-bar--indeterminate .progress-bar__fill</span> {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">animation</span>: <span style="color:#C678DD;">none</span>;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">width</span>: <span style="color:#C678DD;">33%</span>;<br>
+                &nbsp;&nbsp;}<br>
+                }
+              </div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+            <ul class="doc-list">
+              <li>No RTL axis exists in the Figma component. Implement RTL by mirroring the fill direction in CSS: <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">direction: rtl</code> or <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">transform: scaleX(-1)</code> on the track.</li>
+              <li>The label row should also reverse: percentage left-aligned, label right-aligned in RTL contexts.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for ensuring progress bar elements are accessible across assistive technologies.</p>
+          <div class="doc-section">
+            <h3 id="aria-attributes-screen-reader-guidance" class="doc-h3">ARIA Attributes &amp; Screen Reader Guidance</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Requirement</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Role</strong></td><td>Use <code>role="progressbar"</code> on the track element.</td></tr>
+                <tr><td><strong>Value attributes</strong></td><td>Set <code>aria-valuenow</code>, <code>aria-valuemin="0"</code>, <code>aria-valuemax="100"</code> dynamically.</td></tr>
+                <tr><td><strong>Indeterminate</strong></td><td>Omit <code>aria-valuenow</code> when variant="Indeterminate" &#8212; its absence signals the value is unknown.</td></tr>
+                <tr><td><strong>Label</strong></td><td>Provide <code>aria-label</code> or <code>aria-labelledby</code> referencing the label text. e.g. <code>aria-label="File upload progress"</code>.</td></tr>
+                <tr><td><strong>Value text</strong></td><td>Use <code>aria-valuetext</code> when the visual label is non-numeric (e.g. "Step 3 of 8").</td></tr>
+                <tr><td><strong>Disabled state</strong></td><td>Set <code>aria-disabled="true"</code> on the container; visually greyed tokens already applied.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="live-region-announcements" class="doc-h3">Live Region Announcements</h3>
+            <ul class="doc-list">
+              <li><strong>aria-live="polite":</strong> Wrap in <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-live="polite"</code> to announce progress changes to screen readers.</li>
+              <li><strong>Throttle announcements:</strong> Avoid flooding the screen reader by throttling updates (e.g. announce every 10% or at key milestones).</li>
+              <li><strong>Completion:</strong> Announce completion explicitly (e.g. "Upload complete") when reaching 100%.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="keyboard-interaction" class="doc-h3">Keyboard Interaction</h3>
+            <div style="margin-top:16px;padding:16px 20px;background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.15);border-radius:12px;">
+              <p style="font-size:14px;color:var(--prism-text);line-height:1.6;margin:0;">Progress bars are read-only, non-interactive elements. They do not receive keyboard focus. The surrounding context (form, dialog, or page) conveys the progress information.</p>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="color-contrast-minimums" class="doc-h3">Color Contrast Minimums<span class="h3-badge" style="background:rgba(34,197,94,0.15);color:#16a34a;">WCAG AA Pass</span></h3>
+            <p class="doc-section-subtitle">Fill colour on track background must be distinguishable. All four Solid fill tokens meet sufficient contrast against their Secondary track tokens in UEMS Light theme.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:24px;">
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#D5E0F8;padding:28px 24px;text-align:center;"><div style="width:60%;height:8px;border-radius:9999px;background:#2C66DD;margin:0 auto;"></div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">DEFAULT</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#2C66DD on #D5E0F8</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Pass</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AA</div></div></div>
+              </div>
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#E7F3ED;padding:28px 24px;text-align:center;"><div style="width:100%;height:8px;border-radius:9999px;background:#0C8844;margin:0 auto;"></div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">SUCCESS</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#0C8844 on #E7F3ED</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Pass</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AA</div></div></div>
+              </div>
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#FEF8EB;padding:28px 24px;text-align:center;"><div style="width:80%;height:8px;border-radius:9999px;background:#E6930A;margin:0 auto;"></div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">WARNING</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#E6930A on #FEF8EB</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Pass</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AA</div></div></div>
+              </div>
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#FDEBEB;padding:28px 24px;text-align:center;"><div style="width:43%;height:8px;border-radius:9999px;background:#E42527;margin:0 auto;"></div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">ERROR</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#E42527 on #FDEBEB</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Pass</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AA</div></div></div>
+              </div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="motion-sensitivity" class="doc-h3">Motion Sensitivity</h3>
+            <p class="doc-section-subtitle">Indeterminate animation must pause when prefers-reduced-motion: reduce is set.</p>
+            <ul class="doc-list">
+              <li><strong>Reduced motion:</strong> When <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">prefers-reduced-motion: reduce</code> is active, disable the sweep animation and show a static 33% fill stub.</li>
+              <li><strong>Determinate transitions:</strong> Also disable <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">transition: width 300ms ease</code> so the fill updates instantly.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="rtl-accessibility" class="doc-h3">RTL Considerations</h3>
+            <ul class="doc-list">
+              <li>No RTL axis exists in the Figma component. Implement RTL by mirroring the fill direction in CSS: <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">direction: rtl</code> or <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">transform: scaleX(-1)</code> on the track.</li>
+              <li>Ensure <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-valuenow</code> and other ARIA attributes remain unchanged &#8212; screen readers handle directionality natively.</li>
+            </ul>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/progress-bar.md" download="progress-bar.md" class="action-link"><ds-icon name="download" size="15"></ds-icon> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=17012-973360" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/components/toc.js"></script>
+<script src="js/main.js"></script>
+
+
+</body>
+</html>

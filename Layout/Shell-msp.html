@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MSP Central · Prism</title>
+  <link rel="icon" type="image/svg+xml" href="../design-system-library/src/icons/logos/msp-central.svg" />
+
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="layout-base.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;700&family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600&display=swap" />
+
+  <!-- Early paint — apply persisted theme + direction before first render so
+       there's no flash of the wrong theme/LTR on reload. -->
+  <script>
+    (function () {
+      try {
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('uems-theme') || 'green-light');
+        document.documentElement.setAttribute('dir', localStorage.getItem('uems-rtl') === '1' ? 'rtl' : 'ltr');
+      } catch (_) {}
+    })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+  </script>
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+
+  <style>
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font-family-sans);
+      /* Per-theme canvas token (subtle tint) — distinct from the white/dark
+         framed shell-area so the shell reads as a card on a canvas. */
+      background: var(--uems-background);
+      color: var(--uems-text-primary);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+
+    /* Body row: module rail · framed shell-area (L1 · L2 · content). */
+    .msp-body {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      min-width: 0;
+    }
+    /* On Home the module rail is hidden, so the shell-area would sit flush to the
+       window edge. Restore the canvas inset (logical, so it mirrors in RTL) so
+       the content reads as a card floating on the canvas — matching Shell.html's
+       non-nav-left `.body`. In product mode the rail stays flush to the edge. */
+    .msp-body.is-home {
+      padding-block: 0 var(--spacing-12);
+      padding-inline: var(--spacing-12) 0;
+    }
+
+    /* Module rail — icon-only, flush to the start edge (transparent). */
+    #msp-rail { flex: none; }
+    #msp-rail.is-hidden { display: none; }
+
+    /* One border wraps L1 + L2 + content. */
+    .shell-area {
+      flex: 1;
+      display: flex;
+      min-width: 0;
+      min-height: 0;
+      position: relative;
+      border-radius: 16px;
+      background: var(--uems-bg-primary);
+      overflow: clip;
+    }
+    /* The wrapper owns the perimeter — flatten the rails' own borders. */
+    .shell-area ds-sidebar-l1 { border: 0 !important; }
+    .shell-area ds-sidebar-l2 { border: 0 !important; }
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+    .shell-area .ds-sidebar-l1 { border: 0 !important; border-radius: 0 !important; padding-top: 4px !important; }
+    .shell-area ds-content { z-index: 5; flex: 1; min-width: 0; }
+
+    /* Rails hide via the same is-hidden contract as ec-menus' setHidden. */
+    ds-sidebar-l1.is-hidden,
+    ds-sidebar-l2.is-hidden { display: none; }
+
+    /* ── Content: Home overview vs module page ── */
+    .msp-view { padding: var(--spacing-24) var(--spacing-32); }
+    .msp-view[hidden] { display: none; }
+
+    .msp-home__lede { margin: 0 0 var(--spacing-24); color: var(--uems-text-secondary); font-size: var(--font-size-14); max-width: 64ch; }
+    .msp-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--spacing-16); }
+    .msp-card { padding: var(--spacing-20); border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-lg, 12px); background: var(--uems-bg-primary); display: flex; flex-direction: column; gap: var(--spacing-12); }
+    .msp-card__head { display: flex; align-items: center; gap: var(--spacing-12); }
+    .msp-card__icon { width: 36px; height: 36px; border-radius: var(--radius-md, 8px); display: flex; align-items: center; justify-content: center; flex: none; }
+    /* Per-product tint so each card icon reads as its own product at a glance. */
+    .msp-card__icon--blue   { background: var(--uems-bg-info-primary);          color: var(--uems-icon-info); }
+    .msp-card__icon--green  { background: var(--uems-bg-success-primary);       color: var(--uems-icon-success); }
+    .msp-card__icon--amber  { background: var(--uems-bg-warning-primary);       color: var(--uems-icon-warning); }
+    .msp-card__icon--purple { background: var(--uems-bg-acknowledge-primary);   color: var(--uems-icon-acknowledge); }
+    .msp-card__title { margin: 0; font-size: var(--font-size-16); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+    .msp-card__sub { margin: 0; font-size: var(--font-size-12); color: var(--uems-text-tertiary); }
+    .msp-stats { display: flex; gap: var(--spacing-24); }
+    .msp-stat__n { font-size: var(--font-size-20); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); line-height: 1.1; }
+    .msp-stat__l { font-size: var(--font-size-12); color: var(--uems-text-tertiary); }
+
+    /* Module page placeholder */
+    .msp-page__crumbs { font-size: var(--font-size-12); color: var(--uems-text-tertiary); margin-bottom: var(--spacing-8); }
+    .msp-page__crumbs b { color: var(--uems-text-secondary); font-weight: var(--font-weight-medium); }
+
+    /* ── Appearance (theme) menu — opens on hover of the right-pane theme icon,
+       mirroring Shell.html: a "Theme" title + accent swatches (blue/green) and a
+       Light / Dark / System mode list. Floating, anchored to the icon. ── */
+    .msp-appr {
+      position: fixed; z-index: 2000; display: none; min-width: 210px; padding: 6px;
+      background: var(--uems-bg-primary); border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-lg, 12px); box-shadow: 0 8px 28px rgba(13, 17, 29, .16);
+      font-family: var(--font-family-sans);
+    }
+    .msp-appr.open { display: block; }
+    .appr-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 8px 2px; }
+    .appr-title { font-size: var(--font-size-13); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+    .appr-colors { display: flex; align-items: center; gap: 8px; }
+    .appr-color { width: 20px; height: 20px; border-radius: 6px; cursor: pointer; border: 0; padding: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
+    .appr-color.is-active { box-shadow: 0 0 0 1px var(--uems-bg-primary), 0 0 0 2px var(--uems-text-accent-link); }
+    .appr-color ds-icon { opacity: 0; }
+    .appr-color.is-active ds-icon { opacity: 1; }
+    .appr-menu { display: flex; flex-direction: column; gap: 2px; }
+    .appr-item {
+      display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px;
+      border: 0; background: none; border-radius: var(--radius-md, 8px); cursor: pointer;
+      font: inherit; color: var(--uems-text-primary); text-align: start;
+    }
+    .appr-item:hover { background: var(--uems-bg-secondary-hover); }
+    .appr-item.is-active { background: var(--uems-bg-accent-secondary); }
+    .appr-item__ico { flex: 0 0 20px; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; }
+    .appr-item__label { flex: 1; min-width: 0; white-space: nowrap; }
+    .appr-item__check { color: var(--uems-text-accent-link); flex: 0 0 auto; }
+
+    /* Trial-expired styles live with their markup in views/msp-trial-expired.html
+       (injected on ?trial=expired). */
+  </style>
+</head>
+<body>
+
+  <!-- Top bar — MSP Central brand + PRODUCT tabs + customer (client) selector.
+       variant="msp-central" supplies the MSP Central logo + name and gives the
+       top tab band AND the customer selector. -->
+  <ds-header-nav
+    id="msp-header"
+    variant="msp-central"
+    user-initials="AM"
+    show-customer-selector
+    show-zia="true"
+    show-bookmark="false"></ds-header-nav>
+
+  <div class="msp-body">
+
+    <!-- Tier 2 — modules of the active product (icon-only). Hidden on Home. -->
+    <ds-module-rail id="msp-rail" icons-only aria-label="Modules" class="is-hidden"></ds-module-rail>
+
+    <!-- One border wraps L1 + L2 + content. -->
+    <div class="shell-area">
+      <!-- Tier 3 -->
+      <ds-sidebar-l1 id="msp-l1" class="is-hidden" hide-toggle style="height:100%;"></ds-sidebar-l1>
+      <!-- Tier 4 -->
+      <ds-sidebar-l2 id="msp-l2" class="is-hidden" collapse-toggle style="height:100%;"></ds-sidebar-l2>
+
+      <ds-content role="main">
+        <!-- Home overview (default) -->
+        <section id="msp-home-view" class="msp-view">
+          <ds-section-header title="Managed services overview" size="lg"></ds-section-header>
+          <p class="msp-home__lede">A single console across every managed service. Pick a product above to drill into its modules — Endpoints (Endpoint Central), Network &amp; Servers (ITOM), HelpDesk (ServiceDesk Plus), or SIEM (Log360).</p>
+          <div class="msp-cards" id="msp-home-cards"></div>
+        </section>
+
+        <!-- Module page (per product/module) -->
+        <section id="msp-page-view" class="msp-view" hidden>
+          <div class="msp-page__crumbs" id="msp-page-crumbs"></div>
+          <ds-section-header id="msp-page-header" title="" size="lg"></ds-section-header>
+          <div style="margin-top: var(--spacing-32);">
+            <ds-empty-state
+              id="msp-page-empty"
+              illustration="common-search"
+              title="Module content goes here"
+              description="This is where the selected module's list, dashboard, or form renders. The 4-tier nav (product → module → L1 → L2) is fully wired."
+              primary-label="Get started"
+              show-secondary="false"
+              show-supported="false"
+              size="md"></ds-empty-state>
+          </div>
+        </section>
+
+        <!-- Trial expired (?trial=expired) is injected here from
+             views/msp-trial-expired.html — see the trial gate in the boot script. -->
+      </ds-content>
+    </div>
+
+    <!-- Utility rail (outside the framed shell-area) — theme + RTL/direction. -->
+    <ds-right-pane id="msp-rp" show-accessibility show-direction
+      direction-icon="arabic"
+      direction-label="Switch language and direction (English / العربية)"
+      show-update="false" show-help="false" show-mobile-app="false"
+      show-road-map="false" show-review="false" show-announcement="false"
+      show-get-quote="false" show-upload-logs="false" show-call="false"
+      style="height:100%;"></ds-right-pane>
+  </div>
+
+
+  <script type="module">
+    import {
+      MSP_PRODUCTS, MSP_PRODUCT_CONFIG, mspProducts,
+      applyMspModule, applyMspRail, wireL1ToL2,
+    } from '../design-system-library/src/data/msp-menus.js';
+    import { initShellResponsive } from '../design-system-library/src/shell/shell-responsive.js';
+
+    await Promise.all(
+      ['ds-header-nav', 'ds-module-rail', 'ds-sidebar-l1', 'ds-sidebar-l2', 'ds-content', 'ds-empty-state', 'ds-section-header']
+        .map((t) => customElements.whenDefined(t))
+    );
+
+    const header    = document.getElementById('msp-header');
+    const rail       = document.getElementById('msp-rail');
+    const l1          = document.getElementById('msp-l1');
+    const l2          = document.getElementById('msp-l2');
+    const homeView    = document.getElementById('msp-home-view');
+    const pageView    = document.getElementById('msp-page-view');
+    const pageHeader  = document.getElementById('msp-page-header');
+    const pageCrumbs  = document.getElementById('msp-page-crumbs');
+    const homeCards   = document.getElementById('msp-home-cards');
+    const contentEl   = document.querySelector('ds-content');
+
+    /* ── View injector — fetch a dual-mode file from Layout/views/ and inject its
+       <template id="drawer-fragment"> (styles + markup + scripts). Same contract
+       as Shell.html's injectDrawer; the MSP shell only uses it for the trial gate.
+       Idempotent per name. Requires http(s) — fetch won't run over file://. ── */
+    window.ShellDrawers = window.ShellDrawers || {};
+    const _injectedViews = {};
+    async function injectDrawer(name, mount) {
+      if (_injectedViews[name]) return _injectedViews[name];
+      _injectedViews[name] = (async () => {
+        try {
+          const url = name.includes('/') ? name + '.html' : 'views/' + name + '.html';
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const tpl = document.createElement('template');
+          tpl.innerHTML = await res.text();
+          const fragTpl = tpl.content.querySelector('#drawer-fragment');
+          const content = fragTpl ? fragTpl.content : tpl.content;
+          content.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+          const scripts = [...content.querySelectorAll('script')];
+          scripts.forEach((s) => s.remove());
+          (mount === 'body' ? document.body : contentEl).appendChild(content);
+          for (const o of scripts) {                     /* re-create scripts so they run */
+            const s = document.createElement('script');
+            if (o.type) s.type = o.type;
+            s.textContent = o.textContent;
+            document.body.appendChild(s);
+          }
+        } catch (e) { console.warn('[msp-shell] view load failed:', name, e); }
+      })();
+      return _injectedViews[name];
+    }
+
+    /* Language derives from direction (ar ⇄ rtl). Label lookups honour it,
+       falling back to English where no `labelAr` exists (same as ec-menus). */
+    let _lang = 'en';
+    const loc = (o) => (_lang === 'ar' && o && o.labelAr) ? o.labelAr : (o ? o.label : '');
+    const productLabel = (id) => loc(MSP_PRODUCTS.find((p) => p.id === id)) || id;
+    const moduleLabel = (productId, moduleId) => {
+      const m = (MSP_PRODUCT_CONFIG[productId]?.modules || []).find((x) => x.id === moduleId);
+      return m ? loc(m) : moduleId;
+    };
+
+    let _product = null;
+    let _module  = null;
+
+    const setHidden = (el, hide) => el.classList.toggle('is-hidden', !!hide);
+
+    /* ── Home overview cards (one per product) ── */
+    const HOME_CARDS = [
+      { id: 'endpoints',  icon: 'laptop',    tone: 'blue',   sub: 'Endpoint Central', stats: [['1,284', 'Managed'], ['37', 'Missing patches'], ['4', 'Threats']] },
+      { id: 'netservers', icon: 'server-01', tone: 'green',  sub: 'ITOM · OpManager',  stats: [['312', 'Devices'], ['4', 'Critical alarms'], ['99.9%', 'Uptime']] },
+      { id: 'helpdesk',   icon: 'headphone', tone: 'amber',  sub: 'ServiceDesk Plus',  stats: [['37', 'Open'], ['8', 'Overdue'], ['12', 'Unassigned']] },
+      { id: 'siem',       icon: 'shield',    tone: 'purple', sub: 'Log360',            stats: [['6', 'Critical'], ['1.2 M', 'Events/day'], ['98%', 'Compliance']] },
+    ];
+    function renderHomeCards() {
+      homeCards.innerHTML = HOME_CARDS.map((c) => `
+        <button class="msp-card" data-goto="${c.id}" type="button" style="text-align:start;cursor:pointer;font:inherit;">
+          <div class="msp-card__head">
+            <span class="msp-card__icon msp-card__icon--${c.tone || 'blue'}"><ds-icon name="${c.icon}" size="20"></ds-icon></span>
+            <div>
+              <h3 class="msp-card__title">${productLabel(c.id)}</h3>
+              <p class="msp-card__sub">${c.sub}</p>
+            </div>
+          </div>
+          <div class="msp-stats">
+            ${c.stats.map(([n, l]) => `<div><div class="msp-stat__n">${n}</div><div class="msp-stat__l">${l}</div></div>`).join('')}
+          </div>
+        </button>`).join('');
+      homeCards.querySelectorAll('[data-goto]').forEach((btn) => {
+        btn.addEventListener('click', () => selectProduct(btn.dataset.goto));
+      });
+    }
+
+    function renderPage(productId, moduleId) {
+      pageCrumbs.innerHTML = `<b>${productLabel(productId)}</b> &nbsp;›&nbsp; ${moduleLabel(productId, moduleId)}`;
+      pageHeader.setAttribute('title', moduleLabel(productId, moduleId));
+    }
+
+    function showHome(on) {
+      homeView.hidden = !on;
+      pageView.hidden = on;
+      /* Navigating away from the trial page dismisses it (injected lazily, so
+         look it up rather than holding a boot-time ref). */
+      window.ShellDrawers['msp-trial-expired']?.hide();
+    }
+    /* Trial-expired: inject views/msp-trial-expired.html (once) and render it as a
+       full content page with the rails hidden. */
+    async function showTrial() {
+      homeView.hidden = true;
+      pageView.hidden = true;
+      await injectDrawer('msp-trial-expired', 'content');
+      window.ShellDrawers['msp-trial-expired']?.show();
+      setHidden(rail, true); setHidden(l1, true); setHidden(l2, true);
+      mspBody.classList.add('is-home');
+    }
+
+    function selectModule(productId, moduleId) {
+      _module = moduleId;
+      const cfg = MSP_PRODUCT_CONFIG[productId];
+      applyMspModule(l1, l2, cfg.menus, moduleId, _lang);
+      rail.setActive?.(moduleId);
+      renderPage(productId, moduleId);
+    }
+
+    const mspBody = document.querySelector('.msp-body');
+
+    function selectProduct(id) {
+      _product = id;
+      header.setActiveTab?.(id);
+      const cfg = MSP_PRODUCT_CONFIG[id];
+      if (!cfg || cfg.home) {
+        setHidden(rail, true); setHidden(l1, true); setHidden(l2, true);
+        mspBody.classList.add('is-home');   /* rail gone → inset the content card */
+        showHome(true);
+        _module = null;
+        return;
+      }
+      mspBody.classList.remove('is-home');  /* product mode → rail flush to edge */
+      showHome(false);
+      setHidden(rail, false);
+      const activeModule = applyMspRail(rail, id, _lang);
+      selectModule(id, activeModule);
+    }
+
+    /* Re-localize the whole nav (header tabs + rail + L1/L2 + home) after a
+       language flip, preserving the current product/module. */
+    function reapplyNav() {
+      header.tabs = mspProducts(_lang);
+      header.setActiveTab?.(_product || 'home');
+      if (!_product || _product === 'home') { renderHomeCards(); return; }
+      const keep = _module;
+      applyMspRail(rail, _product, _lang);
+      selectModule(_product, keep);
+    }
+
+    /* ── Wire events ── */
+    header.tabs = mspProducts(_lang);
+    header.addEventListener('ds-header-nav-tab-select', (e) => selectProduct(e.detail.id));
+    rail.addEventListener('ds-module-rail-select', (e) => selectModule(_product, e.detail.id));
+    wireL1ToL2(l1, l2);
+
+    /* Client (customer) scope — MSP manages many tenants; log for now. */
+    header.addEventListener('ds-header-nav-customer', (e) => {
+      // Hook point: re-scope dashboards to the selected client.
+      // console.debug('client scope →', e.detail.label);
+    });
+
+    /* ── Theme + direction (RTL) via the right-pane utility rail ── */
+    const rp = document.getElementById('msp-rp');
+    const RTLABLE = [header, rail, l1, l2, rp, document.querySelector('ds-content')];
+
+    /* Theme: right-pane's built-in toggle emits ds-right-pane-theme. Persist +
+       reflect back onto the rail so its icon stays in sync. */
+    let _theme = 'green-light';
+    try { _theme = localStorage.getItem('uems-theme') || 'green-light'; } catch (_) {}
+    function applyTheme(t) {
+      _theme = t;
+      document.documentElement.setAttribute('data-theme', t);
+      rp?.setAttribute('theme', t);
+      try { localStorage.setItem('uems-theme', t); } catch (_) {}
+    }
+    document.addEventListener('ds-right-pane-theme', (e) => { applyTheme(e.detail.theme); _appr = e.detail.theme; });
+
+    /* ── Appearance menu — hover the right-pane theme icon to pick a mode
+       (Light / Dark / System) and accent (blue / green), like Shell.html. The
+       component skips a tooltip on the theme toggle precisely so hosts can add
+       this. `_appr` is the chosen value (may be green or system); it resolves
+       to a concrete data-theme via resolveTheme(). ── */
+    const apprEl = document.createElement('div');
+    apprEl.className = 'msp-appr'; document.body.appendChild(apprEl);
+    let _appr = _theme;
+    try { _appr = localStorage.getItem('uems-appr') || _theme; } catch (_) {}
+    const HALF = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.6a7.4 7.4 0 0 0 0 14.8z" fill="currentColor"/></svg>';
+    const resolveTheme = (v) => {
+      const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (v === 'system') return dark ? 'dark' : 'light';
+      if (v === 'green-system') return dark ? 'green-dark' : 'green-light';
+      return v;
+    };
+    const combineTheme = (mode, color) =>
+      color === 'green' ? (mode === 'system' ? 'green-system' : (mode === 'dark' ? 'green-dark' : 'green-light')) : mode;
+    function setAppr(v) {
+      _appr = v;
+      applyTheme(resolveTheme(v));
+      try { localStorage.setItem('uems-appr', v); } catch (_) {}
+      renderAppr();
+    }
+    function renderAppr() {
+      const curColor = _appr.indexOf('green') === 0 ? 'green' : 'blue';
+      const curMode  = (_appr === 'system' || _appr === 'green-system') ? 'system'
+                     : (_appr === 'dark'   || _appr === 'green-dark')   ? 'dark' : 'light';
+      const COLORS = [['blue', '#2C66DD'], ['green', '#1E8E3E']];
+      const colorBtns = COLORS.map(([c, hex]) =>
+        `<button type="button" class="appr-color${curColor === c ? ' is-active' : ''}" data-color="${c}" style="background:${hex}" aria-label="${c} accent"><ds-icon name="check" size="14"></ds-icon></button>`).join('');
+      const MODE = [
+        { m: 'light',  label: 'Light mode',          icon: 'sun'  },
+        { m: 'dark',   label: 'Dark mode',           icon: 'moon' },
+        { m: 'system', label: 'Use system settings', icon: 'half' },
+      ];
+      const rows = MODE.map((o) => {
+        const ico = o.icon === 'half' ? HALF : `<ds-icon name="${o.icon}" size="18"></ds-icon>`;
+        const active = curMode === o.m;
+        return `<button type="button" class="appr-item${active ? ' is-active' : ''}" role="menuitemradio" aria-checked="${active}" data-mode="${o.m}">
+          <span class="appr-item__ico">${ico}</span>
+          <span class="appr-item__label">${o.label}</span>
+          ${active ? '<ds-icon class="appr-item__check" name="check" size="16"></ds-icon>' : ''}
+        </button>`;
+      }).join('');
+      apprEl.setAttribute('dir', _rtl ? 'rtl' : 'ltr');
+      apprEl.innerHTML = `<div class="appr-head"><span class="appr-title">Theme</span><span class="appr-colors">${colorBtns}</span></div>
+        <div class="appr-menu" role="menu" aria-label="Theme mode">${rows}</div>`;
+      apprEl.querySelectorAll('[data-mode]').forEach((b) =>
+        b.addEventListener('click', (e) => { e.stopPropagation(); setAppr(combineTheme(b.dataset.mode, curColor)); }));
+      apprEl.querySelectorAll('[data-color]').forEach((b) =>
+        b.addEventListener('click', (e) => { e.stopPropagation(); setAppr(combineTheme(curMode, b.dataset.color)); }));
+    }
+    function positionAppr() {
+      const btn = rp.querySelector('[data-id="__theme__"]');
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      const w = apprEl.offsetWidth || 210, gap = 10;
+      /* LTR: rail is far-right → menu sits to its left. RTL: rail far-left → right. */
+      let left = _rtl ? (r.right + gap) : (r.left - w - gap);
+      left = Math.max(12, Math.min(left, window.innerWidth - w - 12));
+      const h = apprEl.offsetHeight || 170;
+      const top = Math.max(12, Math.min(r.top, window.innerHeight - h - 12));
+      apprEl.style.left = left + 'px';
+      apprEl.style.top = top + 'px';
+    }
+    /* Hover open/close with a bridge: moving from the icon into the menu keeps it
+       open; leaving either (without entering the other) closes after a beat. */
+    let _apprT;
+    const cancelApprClose = () => clearTimeout(_apprT);
+    const scheduleApprClose = () => { cancelApprClose(); _apprT = setTimeout(() => apprEl.classList.remove('open'), 180); };
+    const openAppr = () => { renderAppr(); apprEl.classList.add('open'); positionAppr(); };
+    rp.addEventListener('mouseover', (e) => {
+      if (e.target.closest('[data-id="__theme__"]')) { cancelApprClose(); openAppr(); }
+      else if (apprEl.classList.contains('open')) scheduleApprClose();
+    });
+    rp.addEventListener('mouseout', (e) => {
+      if (e.target.closest('[data-id="__theme__"]') && !apprEl.contains(e.relatedTarget)) scheduleApprClose();
+    });
+    apprEl.addEventListener('mouseenter', cancelApprClose);
+    apprEl.addEventListener('mouseleave', scheduleApprClose);
+
+    /* Direction: the "direction" control emits ds-right-pane-select {id:'direction'}.
+       Toggle LTR ⇄ RTL, mirror the `rtl` attribute onto every RTL-aware part,
+       and persist so the choice survives reloads (mirrors theme persistence). */
+    let _rtl = false;
+    try { _rtl = localStorage.getItem('uems-rtl') === '1'; } catch (_) {}
+    function applyDir(rtl) {
+      _rtl = rtl;
+      _lang = rtl ? 'ar' : 'en';   /* Arabic labels ride along with RTL */
+      document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr');
+      document.documentElement.setAttribute('lang', _lang);
+      RTLABLE.forEach((el) => { if (!el) return; rtl ? el.setAttribute('rtl', '') : el.removeAttribute('rtl'); });
+      try { localStorage.setItem('uems-rtl', rtl ? '1' : '0'); } catch (_) {}
+    }
+    rp?.addEventListener('ds-right-pane-select', (e) => {
+      if (e.detail?.id === 'direction') { applyDir(!_rtl); reapplyNav(); }
+    });
+
+    /* ── Boot ── */
+    applyTheme(resolveTheme(_appr));   /* restore persisted appearance (mode + accent) */
+    applyDir(_rtl);   /* restore persisted direction + language + rtl attrs */
+    header.tabs = mspProducts(_lang);   /* localized tabs for the restored language */
+    renderHomeCards();
+    selectProduct('home');
+
+    /* Responsive: tablet collapses L1/L2; mobile moves the rails into an
+       off-canvas drawer opened by the header's hamburger. Reusable — any shell
+       calls this with its own element refs. */
+    initShellResponsive({
+      root: document.body,
+      header,
+      rails: [rail, l1, l2],
+      collapse: [l1, l2],
+    });
+
+    /* ── Trial-expired gate — ?trial=expired injects views/msp-trial-expired.html
+       as a full content page. That view owns its own actions (purchase · free ·
+       extend) and toast; the only shell-coupled step — restricting the workspace
+       to Endpoints on "Move to free version" — is delivered as the
+       `msp-trial:free-version` DOM event, which we handle here. */
+    if (new URLSearchParams(location.search).get('trial') === 'expired') {
+      document.addEventListener('msp-trial:free-version', () => {
+        /* Free plan = Endpoints only: drop the other products from the top nav.
+           selectProduct → showHome hides the trial page automatically. */
+        header.tabs = mspProducts(_lang).filter((p) => p.id === 'home' || p.id === 'endpoints');
+        selectProduct('endpoints');
+      });
+      showTrial();   /* land on the trial-expired page */
+    }
+  </script>
+</body>
+</html>

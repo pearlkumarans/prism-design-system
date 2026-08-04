@@ -1,0 +1,51 @@
+{
+  "name": "@uems/design-system",
+  "version": "0.1.0",
+  "description": "UEMS Design System 3.0 — token-driven Web Components, framework-agnostic.",
+  "type": "module",
+  "main": "dist/ds.umd.cjs",
+  "module": "dist/ds.es.js",
+  "style": "dist/ds.css",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/ds.es.js",
+      "require": "./dist/ds.umd.cjs"
+    },
+    "./styles": "./dist/ds.css",
+    "./icons": "./src/icons/icons.svg",
+    "./tokens": "./src/tokens/index.css"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:illustrations": "node scripts/build-illustrations.mjs",
+    "test": "web-test-runner",
+    "test:watch": "web-test-runner --watch",
+    "hooks:install": "git config core.hooksPath \"$(pwd)/scripts/git-hooks\" && echo 'Pre-commit test gate enabled.'",
+    "hooks:uninstall": "git config --unset core.hooksPath && echo 'Pre-commit test gate disabled.'"
+  },
+  "devDependencies": {
+    "@open-wc/testing": "^4.0.0",
+    "@web/test-runner": "^0.19.0",
+    "vite": "^5.4.0"
+  },
+  "sideEffects": [
+    "**/*.css",
+    "src/index.js",
+    "src/components/index.js",
+    "src/components/**/*.js",
+    "src/icons/icon.js"
+  ],
+  "keywords": [
+    "design-system",
+    "web-components",
+    "custom-elements",
+    "css-tokens",
+    "uems"
+  ]
+}

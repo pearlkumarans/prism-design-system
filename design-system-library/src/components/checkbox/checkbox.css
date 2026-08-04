@@ -1,0 +1,178 @@
+/* =============================================================================
+   ds-checkbox / .ds-checkbox
+   Standalone or grouped checkbox. 2 sizes × checked/unchecked × default/disabled
+   × error × RTL. Wraps a real <input type="checkbox"> for native semantics.
+   ============================================================================= */
+
+.ds-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-14);
+  color: var(--uems-text-primary);
+  line-height: var(--line-height-snug);
+}
+.ds-checkbox--small {
+  font-size: var(--font-size-13);
+  gap: var(--spacing-6);
+}
+
+/* Visually-hidden native input — keeps form semantics + keyboard */
+.ds-checkbox__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+
+/* The visual box */
+.ds-checkbox__box {
+  position: relative;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  background: var(--uems-bg-primary-alt, var(--uems-bg-base));
+  border: 1px solid var(--uems-border-primary, var(--uems-border-secondary));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+.ds-checkbox--small .ds-checkbox__box {
+  width: 16px;
+  height: 16px;
+}
+
+/* Checkmark — inline SVG that DRAWS IN (dash-offset) when checked. The 0.1s
+   delay lets the box fill + bounce first, then the tick strokes on. */
+.ds-checkbox__box svg {
+  width: 70%;
+  height: 70%;
+  color: var(--uems-text-white);
+  opacity: 0;
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    stroke-dashoffset 0.3s var(--ease-standard) 0.1s;
+}
+
+/* Hover (only when interactive) */
+.ds-checkbox:hover .ds-checkbox__input:not(:disabled) ~ .ds-checkbox__box {
+  border-color: var(--uems-border-accent, var(--hyperlink));
+}
+
+/* Checked — fill the box + a quick "wave" scale bounce (pop) as it commits. */
+.ds-checkbox__input:checked ~ .ds-checkbox__box {
+  background: var(--uems-bg-button-primary, var(--hyperlink));
+  border-color: var(--uems-bg-button-primary, var(--hyperlink));
+  animation: ds-checkbox-wave 0.4s var(--ease-standard, ease);
+}
+.ds-checkbox__input:checked ~ .ds-checkbox__box svg {
+  opacity: 1;
+  stroke-dashoffset: 0;
+}
+/* The pop: dip to 0.9 mid-way, settle back to 1. */
+@keyframes ds-checkbox-wave {
+  50% { transform: scale(0.9); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-checkbox__input:checked ~ .ds-checkbox__box { animation: none; }
+  .ds-checkbox__box svg { transition: none; }
+}
+
+/* Indeterminate (aria-checked="mixed") — blue box + a bold rounded white
+   minus. Same "wave" pop as checked; the minus scales in. */
+.ds-checkbox__input[aria-checked="mixed"] ~ .ds-checkbox__box {
+  background: var(--uems-bg-button-primary, var(--hyperlink));
+  border-color: var(--uems-bg-button-primary, var(--hyperlink));
+  animation: ds-checkbox-wave 0.4s var(--ease-standard, ease);
+}
+.ds-checkbox__input[aria-checked="mixed"] ~ .ds-checkbox__box::after {
+  content: "";
+  position: absolute;
+  width: 52%;
+  height: 2.5px;
+  background: var(--uems-text-white);
+  border-radius: var(--radius-full, 9999px);    /* rounded caps */
+  animation: ds-checkbox-pop 0.2s var(--ease-standard, ease) 0.05s both;
+}
+/* The minus scales in from the centre after the box fills. */
+@keyframes ds-checkbox-pop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+.ds-checkbox--small .ds-checkbox__input[aria-checked="mixed"] ~ .ds-checkbox__box::after {
+  height: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-checkbox__input[aria-checked="mixed"] ~ .ds-checkbox__box,
+  .ds-checkbox__input[aria-checked="mixed"] ~ .ds-checkbox__box::after { animation: none; }
+}
+
+/* indicator="minus" — the checked/active state shows a bold rounded minus
+   (like the indeterminate look) instead of a tick; unchecked stays empty.
+   Clicking toggles minus ↔ empty, never a tick. */
+.ds-checkbox--minus .ds-checkbox__input:checked ~ .ds-checkbox__box svg {
+  display: none;
+}
+.ds-checkbox--minus .ds-checkbox__input:checked ~ .ds-checkbox__box::after {
+  content: "";
+  position: absolute;
+  width: 52%;
+  height: 2.5px;
+  background: var(--uems-text-white);
+  border-radius: var(--radius-full, 9999px);
+  animation: ds-checkbox-pop 0.2s var(--ease-standard, ease) 0.05s both;
+}
+.ds-checkbox--minus.ds-checkbox--small .ds-checkbox__input:checked ~ .ds-checkbox__box::after {
+  height: 2px;
+}
+
+/* Focus ring on the box when the (hidden) input is focused via keyboard */
+.ds-checkbox__input:focus-visible ~ .ds-checkbox__box {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+
+/* Error */
+.ds-checkbox--error .ds-checkbox__box,
+.ds-checkbox[data-error="true"] .ds-checkbox__box {
+  border-color: var(--uems-border-error);
+}
+.ds-checkbox--error .ds-checkbox__input:checked ~ .ds-checkbox__box,
+.ds-checkbox[data-error="true"] .ds-checkbox__input:checked ~ .ds-checkbox__box {
+  background: var(--uems-bg-error-solid);
+  border-color: var(--uems-bg-error-solid);
+}
+
+/* Disabled */
+.ds-checkbox--disabled,
+.ds-checkbox[aria-disabled="true"] {
+  cursor: not-allowed;
+  color: var(--uems-text-disabled);
+}
+.ds-checkbox__input:disabled ~ .ds-checkbox__box {
+  background: var(--uems-bg-disabled-subtle, var(--uems-bg-disabled));
+  border-color: var(--uems-border-disabled);
+}
+.ds-checkbox__input:disabled:checked ~ .ds-checkbox__box {
+  background: var(--uems-bg-disabled);
+  border-color: var(--uems-border-disabled);
+}
+.ds-checkbox__input:disabled:checked ~ .ds-checkbox__box svg {
+  color: var(--uems-text-disabled);
+}
+
+/* RTL — setting [dir="rtl"] on the wrapper already reverses the flex inline
+   axis (per Flexbox spec). DO NOT also add `flex-direction: row-reverse` —
+   that would cancel out the direction flip and render LTR-looking. */

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buy Cloud Storage — OS Deployment · Prism</title>
+
+  <link rel="stylesheet" href="../../design-system-library/src/styles/index.css" />
+  <script type="module">import '../../design-system-library/src/components/index.js';</script>
+
+  <script>
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+    window.UEMS_ICON_SPRITE = '../../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body { margin: 0; font-family: var(--font-family-sans); background: var(--cobalt-15); }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+    .body { display: flex; flex: 1; min-height: 0; padding: 0 0 var(--spacing-12) var(--spacing-12); gap: 0; }
+    .shell-area { flex: 1; display: flex; min-width: 0; min-height: 0;
+      border: 1px solid var(--uems-border-accent-subtle); border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle); overflow: hidden; }
+    ds-sidebar-l1, ds-sidebar-l2 { max-width: 400px; overflow: hidden; }
+    ds-sidebar-l1.is-hidden, ds-sidebar-l2.is-hidden { max-width: 0 !important; opacity: 0 !important; pointer-events: none; }
+    .shell-area .ds-sidebar-l1 { border: 0 !important; border-radius: 0 !important; padding-top: 4px !important; }
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+
+    .page { display: flex; flex-direction: column; min-width: 0; height: 100%; }
+    .buy { flex: 1; min-height: 0; overflow-y: auto; padding: 0 var(--spacing-20) var(--spacing-24);
+      display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: var(--spacing-20); align-items: start; }
+    @media (max-width: 1040px) { .buy { grid-template-columns: 1fr; } }
+
+    .col { display: flex; flex-direction: column; gap: var(--spacing-16); }
+
+    .panel { border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md, 10px);
+      background: var(--uems-bg-base); padding: var(--spacing-16); display: flex; flex-direction: column; gap: var(--spacing-12); }
+
+    /* Current plan strip */
+    .cur { display: flex; align-items: center; gap: var(--spacing-12); }
+    .cur__ico { width: 40px; height: 40px; border-radius: var(--radius-sm, 8px); flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--uems-bg-accent-primary-subtle); color: var(--uems-text-accent-link); }
+    .cur__meta { display: flex; flex-direction: column; }
+    .cur__t { font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+    .cur__v { font-size: var(--font-size-16); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+
+    /* Add-on plan cards */
+    .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-12); }
+    @media (max-width: 720px) { .plans { grid-template-columns: 1fr; } }
+    .plan { position: relative; border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md, 10px);
+      background: var(--uems-bg-base); padding: var(--spacing-16); cursor: pointer;
+      display: flex; flex-direction: column; gap: 6px; transition: border-color 160ms, background-color 160ms; }
+    .plan:hover { border-color: var(--uems-border-accent-subtle); }
+    .plan[aria-checked="true"] { border-color: var(--uems-border-accent); background: var(--uems-bg-accent-primary-subtle); box-shadow: inset 0 0 0 1px var(--uems-border-accent); }
+    .plan__head { display: flex; align-items: center; justify-content: space-between; }
+    .plan__gb { font-size: 22px; font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+    .plan__price { font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+    .plan__price b { color: var(--uems-text-primary); font-size: var(--font-size-14); }
+    .plan__note { font-size: var(--font-size-12); color: var(--uems-text-secondary); }
+    .plan__badge { position: absolute; top: -9px; right: 12px; }
+
+    .custom { display: flex; align-items: flex-end; gap: var(--spacing-12); flex-wrap: wrap; }
+    .custom label { display: flex; flex-direction: column; gap: 6px; font-size: var(--font-size-12); color: var(--uems-text-secondary); }
+    .custom input { width: 140px; height: 36px; padding: 0 12px; font: inherit; font-size: var(--font-size-14);
+      border: 1px solid var(--uems-border-secondary, #c7ccd6); border-radius: var(--radius-sm, 8px);
+      background: var(--uems-bg-base); color: var(--uems-text-primary); }
+    .custom input:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 1px; }
+
+    /* Order summary */
+    .sum { position: sticky; top: 0; }
+    .sum__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-12); font-size: var(--font-size-13); }
+    .sum__row .k { color: var(--uems-text-secondary); }
+    .sum__row .v { color: var(--uems-text-primary); font-weight: var(--font-weight-medium); }
+    .sum__total { border-top: 1px solid var(--uems-border-tertiary); margin-top: 4px; padding-top: var(--spacing-12); }
+    .sum__total .k { font-size: var(--font-size-14); color: var(--uems-text-primary); font-weight: var(--font-weight-semibold); }
+    .sum__total .v { font-size: var(--font-size-18); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+    .sum__cap { font-size: var(--font-size-12); color: var(--uems-text-secondary); }
+    .sum__cap strong { color: var(--uems-text-primary); }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+  <div class="body">
+    <div class="shell-area">
+      <ds-sidebar-l1 id="shell-l1" class="is-hidden" style="height:100%;"></ds-sidebar-l1>
+      <ds-sidebar-l2 id="shell-l2" class="is-hidden" style="height:100%;"></ds-sidebar-l2>
+
+      <ds-content role="main">
+        <div class="page">
+
+          <ds-page-header id="ph"
+            structure="default"
+            title="Buy cloud storage add-on"
+            description="Add more cloud storage for OSD image replication. Buy an add-on to raise your limit — and to keep your evaluation storage when your trial converts."
+            show-description show-breadcrumbs show-overflow="false"></ds-page-header>
+
+          <div class="buy">
+
+            <!-- LEFT: current plan + add-on selection -->
+            <div class="col">
+              <section class="panel">
+                <ds-section-header size="medium" title="Current plan"></ds-section-header>
+                <div class="cur">
+                  <span class="cur__ico"><ds-icon name="cloud" size="22"></ds-icon></span>
+                  <div class="cur__meta">
+                    <span class="cur__t">Trial — cloud storage included</span>
+                    <span class="cur__v">30 GB <span style="font-weight:var(--font-weight-regular);color:var(--uems-text-secondary);font-size:var(--font-size-13);">· 22.4 GB used</span></span>
+                  </div>
+                </div>
+                <ds-inline-alert type="info" style-variant="subtle" show-icon
+                  description="Buy an add-on now and the extra storage carries into your subscription when the trial converts to an active account. If the account becomes Free, the limit drops to 1 GB — existing data stays accessible but new uploads are blocked."></ds-inline-alert>
+              </section>
+
+              <section class="panel">
+                <ds-section-header size="medium" title="Choose an add-on"
+                  description="Add-on storage is billed monthly on top of your subscription."></ds-section-header>
+                <div class="plans" id="plans" role="radiogroup" aria-label="Storage add-on">
+                  <div class="plan" role="radio" tabindex="0" data-gb="20" data-price="10" aria-checked="true">
+                    <div class="plan__head"><span class="plan__gb">+20 GB</span><ds-icon name="disk" size="18"></ds-icon></div>
+                    <div class="plan__price"><b>$10</b> / month</div>
+                    <div class="plan__note">Covers most single-office image sets.</div>
+                  </div>
+                  <div class="plan" role="radio" tabindex="0" data-gb="40" data-price="18" aria-checked="false">
+                    <span class="plan__badge"><ds-badge variant="subtle" state="success" shape="rounded" size="medium">Popular</ds-badge></span>
+                    <div class="plan__head"><span class="plan__gb">+40 GB</span><ds-icon name="disk-library" size="18"></ds-icon></div>
+                    <div class="plan__price"><b>$18</b> / month</div>
+                    <div class="plan__note">Room for multiple golden images + remote offices.</div>
+                  </div>
+                  <div class="plan" role="radio" tabindex="0" data-gb="100" data-price="40" aria-checked="false">
+                    <div class="plan__head"><span class="plan__gb">+100 GB</span><ds-icon name="hard-disk" size="18"></ds-icon></div>
+                    <div class="plan__price"><b>$40</b> / month</div>
+                    <div class="plan__note">Large fleets and frequent re-imaging.</div>
+                  </div>
+                </div>
+
+                <div class="custom" id="custom-wrap">
+                  <label>Or a custom amount (GB)
+                    <input type="number" id="custom-gb" min="10" step="10" placeholder="e.g. 60" />
+                  </label>
+                  <ds-button id="apply-custom" variant="secondary" size="small">Use custom amount</ds-button>
+                  <span class="plan__note" style="align-self:center;">$0.50 / GB / month</span>
+                </div>
+              </section>
+            </div>
+
+            <!-- RIGHT: order summary -->
+            <div class="col">
+              <section class="panel sum">
+                <ds-section-header size="medium" title="Order summary"></ds-section-header>
+                <div class="sum__row"><span class="k">Current capacity</span><span class="v">30 GB</span></div>
+                <div class="sum__row"><span class="k">Storage add-on</span><span class="v" id="sum-addon">+20 GB</span></div>
+                <div class="sum__row"><span class="k">Add-on price</span><span class="v" id="sum-price">$10.00 / mo</span></div>
+                <div class="sum__row sum__total"><span class="k">New capacity</span><span class="v" id="sum-total">50 GB</span></div>
+                <p class="sum__cap">After purchase you'll have <strong id="sum-cap">50 GB</strong> of cloud storage. Image uploads and replication resume immediately once you're back under the limit.</p>
+                <ds-button id="purchase-btn" variant="primary" size="medium" prefix-icon="cart" style="width:100%;">Proceed to purchase</ds-button>
+                <ds-button id="cancel-btn" variant="outline" size="medium" style="width:100%;">Cancel</ds-button>
+              </section>
+            </div>
+
+          </div>
+        </div>
+      </ds-content>
+    </div>
+  </div>
+</div>
+
+<ds-toaster id="toaster" data-default position="top-right"></ds-toaster>
+
+<script type="module">
+  import '../../design-system-library/src/components/index.js';
+  import { toast } from '../../design-system-library/src/components/index.js';
+
+  /* ── Header tabs — OS Deployment active ── */
+  document.getElementById('ec-header').tabs = [
+    { id: 'home', label: 'Home' }, { id: 'configs', label: 'Configurations' },
+    { id: 'tp', label: 'Threats & Patches' }, { id: 'sd', label: 'Software Deployment' },
+    { id: 'inv', label: 'Inventory' }, { id: 'osd', label: 'OS Deployment', active: true },
+    { id: 'mdm', label: 'MDM' }, { id: 'tools', label: 'Tools' }, { id: 'reports', label: 'Reports' },
+  ];
+
+  /* ── L1 rail — Settings active ── */
+  const l1El = document.getElementById('shell-l1');
+  l1El.items = [
+    { id: 'dash',      label: 'Dashboard',            icon: 'add-widget' },
+    { id: 'images',    label: 'Image Repository',     icon: 'image' },
+    { id: 'drivers',   label: 'Driver Repository',    icon: 'hard-disk' },
+    { id: 'templates', label: 'Deployment Templates', icon: 'layers' },
+    { id: 'tasks',     label: 'Deployment Tasks',     icon: 'settings-deploy' },
+    { id: 'media',     label: 'Boot Media (WinPE)',   icon: 'usb-drive' },
+    { id: 'set',       label: 'Settings',             icon: 'settings', active: true },
+  ];
+  l1El.bottomItems = [{ id: 'update', label: 'Update Now', icon: 'refresh-time' }];
+  l1El.classList.remove('is-hidden');
+
+  /* ── L2 — Cloud Storage active ── */
+  const l2El = document.getElementById('shell-l2');
+  l2El.groups = [
+    { id: 'settings', label: 'Settings', expanded: true, items: [
+      { id: 'general',    label: 'General Settings' },
+      { id: 'cloud',      label: 'Cloud Storage', active: true },
+      { id: 'replication',label: 'Image Replication' },
+      { id: 'remote',     label: 'Remote Office Settings' },
+      { id: 'notif',      label: 'Notifications' },
+    ] },
+  ];
+  l2El.classList.remove('is-hidden');
+
+  /* ── Breadcrumbs ── */
+  const ph = document.getElementById('ph');
+  customElements.whenDefined('ds-page-header').then(() => {
+    ph.breadcrumbs = [
+      { id: 'osd',   label: 'OS Deployment' },
+      { id: 'set',   label: 'Settings' },
+      { id: 'cloud', label: 'Cloud Storage', href: 'osd-cloud-storage.html' },
+      { id: 'buy',   label: 'Buy add-on' },
+    ];
+  });
+
+  /* ── Plan selection + order summary ── */
+  const BASE = 30;
+  const plans = [...document.querySelectorAll('.plan')];
+  let selected = { gb: 20, price: 10 };
+
+  function recalc() {
+    const total = BASE + selected.gb;
+    document.getElementById('sum-addon').textContent = `+${selected.gb} GB`;
+    document.getElementById('sum-price').textContent = `$${selected.price.toFixed(2)} / mo`;
+    document.getElementById('sum-total').textContent = `${total} GB`;
+    document.getElementById('sum-cap').textContent = `${total} GB`;
+  }
+  function selectPlan(gb, price, el) {
+    selected = { gb, price };
+    plans.forEach((p) => p.setAttribute('aria-checked', String(p === el)));
+    recalc();
+  }
+  plans.forEach((p) => {
+    const pick = () => selectPlan(Number(p.dataset.gb), Number(p.dataset.price), p);
+    p.addEventListener('click', pick);
+    p.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+  });
+
+  /* Custom amount */
+  document.getElementById('apply-custom').addEventListener('click', () => {
+    const gb = Math.max(10, Number(document.getElementById('custom-gb').value) || 0);
+    if (!gb) return;
+    plans.forEach((p) => p.setAttribute('aria-checked', 'false'));
+    selected = { gb, price: gb * 0.5 };
+    recalc();
+    toast?.({ status: 'info', title: `Custom add-on: +${gb} GB`, description: `$${(gb * 0.5).toFixed(2)} / month` });
+  });
+
+  /* Purchase / cancel */
+  document.getElementById('purchase-btn').addEventListener('click', () => {
+    const total = BASE + selected.gb;
+    toast?.({ status: 'success', title: 'Storage add-on purchased', description: `Cloud storage is now ${total} GB. Uploads and replication have resumed.` });
+  });
+  document.getElementById('cancel-btn').addEventListener('click', () => { window.location.href = 'osd-cloud-storage.html'; });
+
+  recalc();
+</script>
+
+</body>
+</html>

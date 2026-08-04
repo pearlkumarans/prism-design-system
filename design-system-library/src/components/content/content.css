@@ -1,0 +1,36 @@
+/* =============================================================================
+   ds-content / .ds-content
+   Main content area in an app shell. Light-DOM render — the host element
+   carries the class. Scrolls vertically; takes remaining flex space.
+   ============================================================================= */
+
+ds-content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.ds-content {
+  flex: 1;
+  background: var(--uems-bg-base);
+  overflow-y: auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition:
+    border-top-left-radius 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow             200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Framed state — when L2 is absent, content takes over L2's chrome
+   (rounded top-left + bottom-left corners + soft left drop shadow). */
+.ds-content--framed {
+  border-top-left-radius: 16px;
+  border-bottom-left-radius: 16px;
+  box-shadow: -8px 0 24px rgba(15, 19, 31, 0.08);   /* matches ds-sidebar-l2 edge shadow */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-content { transition: none; }
+}

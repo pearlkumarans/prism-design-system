@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Base Layout — UEMS App Shell</title>
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+
+<!-- Design-system styles + components (full bundle, so every ds-* works) -->
+<link rel="stylesheet" href="../design-system-library/src/styles/index.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/components/index.js"></script>
+
+<style>
+  html, body { height: 100%; margin: 0; }
+  body { font-family: var(--font-family-sans); background: var(--uems-bg-secondary-subtle); color: var(--uems-text-primary); }
+
+  /* ---- App shell: header on top, body row below ---------------------- */
+  .shell { display: flex; flex-direction: column; height: 100vh; }
+
+  /* Body row: L1 rail + L2 panel + content. Left/bottom inset frames the
+     rounded panels against the shell surface. */
+  .shell__body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    padding: 0 0 var(--spacing-12) var(--spacing-12);
+  }
+
+  /* Content section — left-side framing (rounded top-left + bottom-left + soft
+     left drop shadow), so it reads as a panel tucked beside the sidebar. */
+  .shell__content {
+    flex: 1;
+    min-width: 0;
+    background: var(--uems-bg-base);
+    border-radius: 16px 0 0 16px;
+    box-shadow: -8px 0 24px rgba(15, 23, 42, 0.08);
+    margin-inline-start: -1px;
+    overflow-y: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-32);
+  }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <!-- Top bar -->
+    <ds-header-nav id="shell-header" variant="patch-manager-plus" user-initials="AM"
+                   show-customer-selector="false"></ds-header-nav>
+
+    <!-- Body: L1 (collapsible — tooltips on collapse) + L2 + content -->
+    <div class="shell__body">
+      <ds-sidebar-l1 id="shell-l1" style="height: 100%;"></ds-sidebar-l1>
+      <ds-sidebar-l2 id="shell-l2" title="Threats &amp; Patches" show-back
+                     style="height: 100%; margin-left: -10px;"></ds-sidebar-l2>
+      <main class="shell__content">
+        <ds-empty-state
+          size="lg"
+          illustration="file-search"
+          title="Pick something from the sidebar"
+          description="This is the base app-shell layout: header, a Level-1 icon rail, the Level-2 panel, and a framed content area. Collapse the L1 rail to see each item's name in a tooltip."
+          primary-label="Get started"
+          secondary-label="Learn more">
+        </ds-empty-state>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import './design-system-library/src/components/index.js';
+
+    customElements.whenDefined('ds-sidebar-l1').then(() => {
+      // Level-1 icon rail
+      document.getElementById('shell-l1').items = [
+        { id: 'dashboard',  label: 'Dashboard',  icon: 'home',          active: true },
+        { id: 'threats',    label: 'Threats',    icon: 'bug' },
+        { id: 'patches',    label: 'Patches',    icon: 'shield-check' },
+        { id: 'systems',    label: 'Systems',    icon: 'monitor' },
+        { id: 'deployment', label: 'Deployment', icon: 'rocket' },
+        { id: 'compliance', label: 'Compliance', icon: 'clipboard-check' },
+        { id: 'reports',    label: 'Reports',    icon: 'file-report' },
+        { id: 'settings',   label: 'Settings',   icon: 'settings' },
+      ];
+
+      // Level-2 contextual panel
+      document.getElementById('shell-l2').groups = [
+        {
+          id: 'patches', label: 'Patches', expanded: true, items: [
+            { id: 'missing',    label: 'Missing Patches', active: true },
+            { id: 'installed',  label: 'Installed Patches', count: 81 },
+            { id: 'applicable', label: 'Applicable Patches', count: 397 },
+            { id: 'top',        label: 'Top-Priority Patches' },
+            { id: 'detailed',   label: 'Detailed View', sub: true },
+          ],
+        },
+        {
+          id: 'attention', label: 'Attention Required', expanded: true, items: [
+            { id: 'upload', label: 'Upload Pending', count: 1 },
+          ],
+        },
+      ];
+    });
+  </script>
+</body>
+</html>

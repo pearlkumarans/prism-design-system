@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <title>Filter Panel — examples</title>
+  <link rel="stylesheet" href="../../styles/index.css" />
+  <script>
+    window.UEMS_ICON_SPRITE = '../../icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../icons/illustrations.svg';
+  </script>
+  <script type="module" src="./filter-panel.js"></script>
+  <style>
+    body { margin: 0; padding: 24px; font-family: var(--font-family-sans); background: var(--uems-background); color: var(--uems-text-primary); }
+    .row { display: grid; grid-template-columns: 280px 1fr; gap: 32px; align-items: start; max-width: 900px; }
+    h2 { margin: 0 0 16px; font-size: 14px; }
+    ds-filter-panel { max-height: 620px; }
+    pre { background: var(--uems-bg-secondary); border: 1px solid var(--uems-border-tertiary); border-radius: 8px; padding: 12px; font-size: 12px; margin: 0; white-space: pre-wrap; }
+    .out h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--uems-text-tertiary); margin: 0 0 8px; }
+  </style>
+</head>
+<body>
+  <h2>Docked · live mode (+ search-within · +N more · tags · custom)</h2>
+  <div class="row">
+    <ds-filter-panel id="fp" title="Filters" result-count="24 results" show-search></ds-filter-panel>
+    <div class="out">
+      <h3>Emitted value (live)</h3>
+      <pre id="out">{}</pre>
+    </div>
+  </div>
+
+  <h2 style="margin-top:40px">Docked · apply mode (footer)</h2>
+  <div class="row">
+    <ds-filter-panel id="fp2" title="Filters" apply-mode="apply"></ds-filter-panel>
+    <div class="out">
+      <h3>Applied value (on Apply)</h3>
+      <pre id="out2">{}</pre>
+    </div>
+  </div>
+
+  <h2 style="margin-top:40px">Loading (async facets) &amp; empty state</h2>
+  <div class="row">
+    <ds-filter-panel id="fp5" title="Filters" loading></ds-filter-panel>
+    <div class="out">
+      <button type="button" id="loadBtn" style="padding:8px 14px; border:1px solid var(--uems-border-secondary); border-radius:8px; background:var(--uems-bg-base); cursor:pointer; font:inherit;">Finish loading</button>
+      <ds-filter-panel id="fp6" title="Filters" empty-text="No filters for this view." style="display:block; margin-top:16px; max-height:160px;"></ds-filter-panel>
+    </div>
+  </div>
+
+  <h2 style="margin-top:40px">Overlay modes — drawer &amp; popover</h2>
+  <div style="display:flex; gap:12px; align-items:center;">
+    <button type="button" id="openDrawer" style="padding:8px 14px; border:1px solid var(--uems-border-secondary); border-radius:8px; background:var(--uems-bg-base); cursor:pointer; font:inherit;">Open drawer</button>
+    <button type="button" id="openPopover" style="padding:8px 14px; border:1px solid var(--uems-border-secondary); border-radius:8px; background:var(--uems-bg-base); cursor:pointer; font:inherit;">Filter ▾</button>
+    <span style="font-size:13px; color:var(--uems-text-secondary);">Drawer = off-canvas · Popover = anchored flyout (Esc / outside-click / backdrop closes)</span>
+  </div>
+  <ds-filter-panel id="fp3" mode="drawer" title="Filters" apply-mode="apply"></ds-filter-panel>
+  <ds-filter-panel id="fp4" mode="popover" title="Filters"></ds-filter-panel>
+
+  <script type="module">
+    const GROUPS = [
+      { id: 'name', label: 'Search', type: 'search', placeholder: 'Device name…' },
+      { id: 'platform', label: 'Platform', type: 'checkbox', options: [
+        { label: 'Windows', value: 'win', count: 28 },
+        { label: 'macOS', value: 'mac', count: 12 },
+        { label: 'Linux', value: 'linux', count: 8 },
+      ] },
+      { id: 'status', label: 'Status', type: 'radio', options: [
+        { label: 'All', value: 'all' },
+        { label: 'Managed', value: 'managed', count: 41 },
+        { label: 'Pending', value: 'pending', count: 5 },
+        { label: 'Error', value: 'error', count: 2 },
+      ] },
+      { id: 'owner', label: 'Owner', type: 'select', multi: true, placeholder: 'Any owner', options: [
+        { label: 'Kumaran M R', value: 'kumaran' },
+        { label: 'Priya N', value: 'priya' },
+        { label: 'Karthik S', value: 'karthik' },
+      ] },
+      { id: 'risk', label: 'Risk Score', type: 'range', min: 0, max: 100, step: 5 },
+      { id: 'lastSeen', label: 'Last Seen', type: 'date' },
+      { id: 'onlyErrors', label: 'Errors only', type: 'toggle', toggleLabel: 'Show only errored devices' },
+      { id: 'tags', label: 'Tags', type: 'tags', placeholder: 'Add a tag…' },
+      { id: 'department', label: 'Department', type: 'checkbox', maxVisible: 4, options:
+        ['Sales','Engineering','Support','Finance','HR','Legal','Marketing','IT Ops','Design'].map((d) => ({ label: d, value: d.toLowerCase().replace(/\s/g,'-') })) },
+      { id: 'compliance', label: 'Compliance', type: 'custom',
+        chipLabel: (v) => `Compliance ≥ ${v}%`,
+        render: ({ value, setValue }) => {
+          const el = document.createElement('input');
+          el.type = 'number'; el.min = 0; el.max = 100; el.placeholder = 'min %';
+          el.style.cssText = 'width:100px;padding:6px 8px;border:1px solid var(--uems-border-secondary);border-radius:8px;font:inherit;';
+          if (value != null) el.value = value;
+          el.addEventListener('change', () => setValue(el.value ? Number(el.value) : undefined));
+          return el;
+        },
+        sync: (v, host) => { const i = host.querySelector('input'); if (i) i.value = (v == null ? '' : v); },
+      },
+    ];
+    const wire = (panelId, outId, initial) => {
+      const fp = document.getElementById(panelId), out = document.getElementById(outId);
+      fp.groups = GROUPS;
+      if (initial) fp.value = initial;
+      const show = () => { out.textContent = JSON.stringify(fp.value, null, 2); };
+      show();
+      fp.addEventListener('ds-filter-panel-change', show);
+      fp.addEventListener('ds-filter-panel-clear', show);
+      fp.addEventListener('ds-filter-panel-remove', show);
+      fp.addEventListener('ds-filter-panel-apply', show);
+    };
+    wire('fp', 'out', { platform: ['win'], status: 'managed' });
+    wire('fp2', 'out2', {});
+
+    /* Loading → loaded; empty (fp6 has no groups) */
+    const fp5 = document.getElementById('fp5');
+    document.getElementById('loadBtn').addEventListener('click', () => { fp5.groups = GROUPS.slice(0, 3); fp5.removeAttribute('loading'); });
+    document.getElementById('fp6').groups = [];   /* empty state */
+
+    /* Overlay modes */
+    const drawer = document.getElementById('fp3'); drawer.groups = GROUPS;
+    document.getElementById('openDrawer').addEventListener('click', (e) => drawer.open(e.currentTarget));
+    const pop = document.getElementById('fp4'); pop.groups = GROUPS;
+    document.getElementById('openPopover').addEventListener('click', (e) => pop.toggle(e.currentTarget));
+  </script>
+</body>
+</html>

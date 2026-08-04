@@ -1,0 +1,409 @@
+/* =============================================================================
+   ds-sidebar-l2 / .ds-sidebar-l2
+   Contextual secondary navigation. ~280px wide, search + collapsible groups.
+   ============================================================================= */
+
+/* Light-DOM render — element selector mirrors `:host`. The host carries
+   the drop shadow + rounded left corners so it isn't clipped by inner overflow.
+   Radius MUST match the inner .ds-sidebar-l2 (16px 0 0 16px) — otherwise the
+   host's square bottom-left corner shows a mismatched shadow vs the rounded top. */
+:host,
+ds-sidebar-l2 {
+  display: inline-block;
+  vertical-align: top;
+  border-radius: 16px 0 0 16px;
+  /* Edge-anchored full-height panel → DIRECTIONAL edge shadow (0 vertical offset
+     so it never pools at the bottom). Standard token COLOR for system consistency;
+     ambient --shadow-* tokens are reserved for floating surfaces (cards/popovers). */
+  box-shadow: -8px 0 24px rgba(15, 19, 31, 0.08);
+  position: relative;            /* anchors the collapse toggle */
+}
+
+/* ── Hide/show toggle (opt in with `collapse-toggle`) — a floating control on
+   the L2 inner edge that collapses ONLY this sub-nav. Lives on the host (sibling
+   of the nav) so it survives a 0-width panel. ───────────────────────────────── */
+ds-sidebar-l2[collapse-toggle]:not(.is-hidden) { overflow: visible !important; }
+.ds-sidebar-l2__collapse {
+  position: absolute;
+  /* Above the content page so the handle shows FULLY (not tucked/clipped behind
+     it) — mirrors the right-pane toggle, which floats over the content edge. */
+  z-index: 6;
+  /* Bottom-anchored to line up with the right-pane toggle (32px from the viewport
+     bottom; the panel sits 12px above it, so 20px here). */
+  top: auto;
+  bottom: var(--spacing-20, 20px);
+  inset-inline-end: -4px;
+  width: 18px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+  background: var(--uems-bg-secondary-subtle, var(--uems-bg-secondary));
+  border: 0;                       /* borderless (matches the right-pane toggle) */
+  border-radius: var(--radius-sm, 6px);
+  box-shadow: var(--shadow-sm);   /* small floating control */
+  color: var(--uems-icon-secondary);
+  cursor: pointer;
+  transition: background-color 140ms var(--ease-standard), color 140ms var(--ease-standard);
+}
+.ds-sidebar-l2__collapse:hover { background: var(--uems-bg-accent-primary-hover); color: var(--uems-text-accent-link); }
+.ds-sidebar-l2__collapse:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; }
+/* Mirror the icon for the show state / RTL so the arrow always points correctly. */
+.ds-sidebar-l2__collapse--flip ds-icon { transform: scaleX(-1); }
+/* Collapsed — the panel shrinks to 0; the toggle stays. z-index lifts the host
+   above the adjacent content so the floating toggle isn't painted over, and the
+   toggle pushes into the content so it isn't clipped by the shell frame. */
+ds-sidebar-l2[collapsed] { overflow: visible !important; box-shadow: none; z-index: 40; }
+ds-sidebar-l2[collapsed] > .ds-sidebar-l2 {
+  width: 0 !important; min-width: 0 !important;
+  padding-inline: 0 !important; border: 0 !important;
+  overflow: hidden; opacity: 0;
+}
+/* Collapsed: render as a half-pill "handle" on the panel edge — the start side
+   is flat + borderless (sits flush against the edge), only the end side rounds. */
+ds-sidebar-l2[collapsed] .ds-sidebar-l2__collapse {
+  width: 20px;
+  inset-inline-end: -20px;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+  border-inline-start: 0;
+}
+
+.ds-sidebar-l2 {
+  width: 208px;                                /* Figma: panel 208px */
+  background: var(--uems-bg-primary-alt);      /* Figma: BG-Primary-alt #ffffff */
+  position: relative;
+  z-index: 2;
+  /* Figma: 1px right border (Border-Tertiary) separates the panel from content. */
+  border-inline-end: 1px solid var(--uems-border-tertiary);
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-12);                  /* Figma: search header + nav content padding 12 */
+  font-family: var(--font-family-sans);
+  height: 100%;
+  min-height: 480px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  border-radius: 16px 0 0 16px;
+  /* Smooth collapse / expand. `width`/`padding` reflow the whole content area
+     every frame, so they use the gentle standard ease (matching the right-pane
+     collapse) — a springy/hard-decelerating curve makes those per-frame layout
+     steps look uneven (jerky) on layout properties.
+     EXPAND direction: the nav labels are width-truncated (ellipsis), so while the
+     panel grows they re-ellipsize every frame — a visible flicker. Fading the
+     content IN only after the panel is nearly full-width (delayed opacity) hides
+     those re-truncating frames. Opacity is composited, so it's cheap. */
+  transition: width 240ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+              padding 240ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+              opacity 120ms linear 130ms;
+}
+/* COLLAPSE direction: fade the (re-truncating) content OUT immediately and fast,
+   so the shrinking labels are invisible well before the panel reaches 0-width.
+   The collapse handle lives on the host, not this element, so it stays visible. */
+ds-sidebar-l2[collapsed] > .ds-sidebar-l2 {
+  opacity: 0;
+  transition: width 240ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+              padding 240ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+              opacity 100ms linear 0ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-sidebar-l2 { transition: none; }
+}
+
+.ds-sidebar-l2[dir="rtl"] {
+  border-right: 0;
+  border-left: 1px solid var(--uems-border-tertiary);
+}
+
+/* Sliding active indicator — a filled rect behind the active item; JS sets its
+   box (top/left/width/height) so it glides between items on select. */
+.ds-sidebar-l2__indicator {
+  position: absolute;
+  left: 0; top: 0; width: 0; height: 0;
+  background: var(--uems-bg-accent-primary-action);   /* #EAF0FC */
+  border-radius: 6px;                                 /* Figma: pill radius-6 */
+  box-sizing: border-box;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: top 220ms cubic-bezier(0.4, 0, 0.2, 1),
+              left 220ms cubic-bezier(0.4, 0, 0.2, 1),
+              width 220ms cubic-bezier(0.4, 0, 0.2, 1),
+              height 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-sidebar-l2__indicator { transition: none; }
+}
+
+/* ---- Header (back + title) ----------------------------------------- */
+.ds-sidebar-l2__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4) var(--spacing-4) var(--spacing-8) var(--spacing-0);
+}
+/* Back/collapse control = <ds-icon-button> (owns its hover / focus ring /
+   sizing / colour). Only keep it from shrinking in the header flex row —
+   styling it here again would double up on the component's own skin. */
+.ds-sidebar-l2__back { flex-shrink: 0; }
+.ds-sidebar-l2__title {
+  margin: 0;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-primary);
+}
+
+/* ---- Search bar ---------------------------------------------------- */
+.ds-sidebar-l2__search {
+  position: relative;
+  margin-bottom: var(--spacing-12);
+}
+.ds-sidebar-l2__search-icon {
+  position: absolute;
+  inset-inline-start: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--uems-text-tertiary);
+  line-height: 0;
+  pointer-events: none;
+}
+.ds-sidebar-l2__search input {
+  width: 100%;
+  height: 32px;
+  padding: 0 12px 0 30px;
+  background: var(--uems-bg-base);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: 8px;
+  font-size: var(--font-size-12);
+  color: var(--uems-text-primary);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.ds-sidebar-l2[dir="rtl"] .ds-sidebar-l2__search input {
+  padding: 0 36px 0 12px;
+}
+.ds-sidebar-l2__search input:focus {
+  outline: none;
+  border-color: var(--uems-border-accent);
+}
+.ds-sidebar-l2__search input::placeholder { color: var(--uems-text-placeholder, var(--uems-text-tertiary)); }
+/* Hide the browser's native search clear (✕) — not a design-system icon */
+.ds-sidebar-l2__search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.ds-sidebar-l2__search input::-webkit-search-decoration { -webkit-appearance: none; }
+.ds-sidebar-l2__search input::-ms-clear { display: none; width: 0; height: 0; }
+
+/* ---- Tree ---------------------------------------------------------- */
+.ds-sidebar-l2__tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ds-sidebar-l2__group + .ds-sidebar-l2__group,
+.ds-sidebar-l2__group + li {
+  margin-top: var(--spacing-16);              /* Figma: group gap 8 */
+}
+
+.ds-sidebar-l2__group-header {
+  display: flex;
+  align-items: center;                       /* collapse chevron leads the title (left) */
+  gap: var(--spacing-4);                     /* chevron ↔ title gap = 4 */
+  width: 100%;
+  min-height: 20px;                          /* Figma: Group Title min-h 20 */
+  padding: var(--spacing-4);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--uems-text-tertiary);           /* expanded/active title = Text-Primary */
+  /* Figma: Group Title = 12px SemiBold. */
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-semibold);
+  text-align: start;
+  font-family: inherit;
+  border-radius: var(--radius-sm);
+}
+/* Figma: collapsed group title is muted (Text-Tertiary #40485b). */
+.ds-sidebar-l2__group--collapsed .ds-sidebar-l2__group-header { color: var(--uems-text-tertiary); }
+.ds-sidebar-l2__group-header:hover { background: var(--uems-bg-secondary-subtle); }
+.ds-sidebar-l2__group-header > ds-icon {
+  flex-shrink: 0;
+  color: var(--uems-text-secondary);
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1),
+              color var(--duration-fast) var(--ease-standard);
+}
+/* Expanded group, or hovering the title → accent chevron (Icon-Accent-Button). */
+.ds-sidebar-l2__group:not(.ds-sidebar-l2__group--collapsed) .ds-sidebar-l2__group-header > ds-icon,
+.ds-sidebar-l2__group-header:hover > ds-icon {
+  color: var(--uems-icon-accent-button);
+}
+/* chevron-down is a WIDE glyph; rotated to point right (collapsed) it becomes
+   NARROW, opening a larger gap before the title. Nudge it back toward the title
+   so the chevron↔title gap reads the same collapsed and expanded. */
+.ds-sidebar-l2__group--collapsed .ds-sidebar-l2__group-header > ds-icon {
+  transform: translateX(1.5px) rotate(-90deg);
+}
+.ds-sidebar-l2__group-header:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* L2 group expand/collapse — SaaS-style smooth animation:
+   - Expand uses ease-out-expo (0.16, 1, 0.3, 1) for confident, snappy reveal
+   - Collapse uses ease-in-quad (0.55, 0, 0.45, 0) for quick dismissal
+   - Subtle vertical translate + opacity adds depth without feeling slow */
+.ds-sidebar-l2__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 800px;
+  opacity: 1;
+  overflow: hidden;
+  transform: translateY(0);
+  transform-origin: top center;
+  /* Quick, snappy SaaS reveal — ease-out-expo for confident motion. */
+  transition:
+    max-height 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity   220ms cubic-bezier(0.16, 1, 0.3, 1) 40ms,
+    transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ds-sidebar-l2__group--collapsed .ds-sidebar-l2__items {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    max-height 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity   160ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Items inside a group — staggered fade-in when group expands. */
+.ds-sidebar-l2__items > li {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ds-sidebar-l2__group--collapsed .ds-sidebar-l2__items > li {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 140ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Stagger the expand reveal — each item appears slightly after the previous. */
+.ds-sidebar-l2__items > li:nth-child(1) { transition-delay: 60ms; }
+.ds-sidebar-l2__items > li:nth-child(2) { transition-delay: 90ms; }
+.ds-sidebar-l2__items > li:nth-child(3) { transition-delay: 120ms; }
+.ds-sidebar-l2__items > li:nth-child(4) { transition-delay: 150ms; }
+.ds-sidebar-l2__items > li:nth-child(5) { transition-delay: 180ms; }
+.ds-sidebar-l2__items > li:nth-child(6) { transition-delay: 210ms; }
+.ds-sidebar-l2__items > li:nth-child(7) { transition-delay: 240ms; }
+.ds-sidebar-l2__items > li:nth-child(8) { transition-delay: 270ms; }
+.ds-sidebar-l2__items > li:nth-child(n+9) { transition-delay: 300ms; }
+/* Collapse is uniform — no stagger so items disappear together */
+.ds-sidebar-l2__group--collapsed .ds-sidebar-l2__items > li {
+  transition-delay: 0ms;
+}
+
+/* Hover on the item itself */
+.ds-sidebar-l2__items .ds-sidebar-l2__item {
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+/* Truncation-tooltip wrapper — must fill the row so the item keeps full width. */
+.ds-sidebar-l2__tip { display: block; width: 100%; }
+
+.ds-sidebar-l2__item {
+  position: relative;
+  z-index: 1;                                /* above the sliding indicator */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  min-height: 32px;                          /* Figma: item h 32 (min 28) */
+  gap: var(--spacing-8);
+  /* Align the item label with the group title TEXT:
+     header padding-left 4 + chevron 8 + gap 4 = 16px. (pad 4 y · 8 right) */
+  padding: var(--spacing-4) var(--spacing-8) var(--spacing-4) var(--spacing-16);
+  border-radius: 6px;                        /* Figma: nav item row radius-6 */
+  color: var(--uems-text-secondary);         /* Figma: Default label = Text-Secondary */
+  text-decoration: none;
+  font-size: var(--font-size-13);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  width: 100%;
+  font-family: inherit;
+  text-align: start;
+  box-sizing: border-box;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+/* Figma: hover row pill = BG-Accent-Primary_action #eaf0fc (verified at the
+   bound-variable level — NOT accent-primary-subtle #F0F4FD). */
+.ds-sidebar-l2__item:hover:not(.ds-sidebar-l2__item--active):not([aria-disabled="true"]) {
+  background: var(--uems-bg-accent-primary-action);
+  color: var(--uems-text-primary);
+}
+/* Disabled — muted label, non-interactive (Figma: Text-Disabled, no pill). */
+.ds-sidebar-l2__item[aria-disabled="true"] {
+  color: var(--uems-text-disabled);
+  cursor: not-allowed;
+}
+/* Active — label colour + weight only; the filled bg is the sliding indicator
+   behind the item (so it can glide), not painted on the item. */
+.ds-sidebar-l2__item--active {
+  color: var(--uems-text-accent-link);
+  font-weight: var(--font-weight-medium);
+}
+.ds-sidebar-l2__item--active .ds-sidebar-l2__item-badge {
+  background: var(--uems-bg-base);
+  color: var(--uems-text-secondary);
+}
+.ds-sidebar-l2__item:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: -2px;
+}
+
+/* Optional leading icon (16×16, off by default — Figma: Leading Icon). */
+.ds-sidebar-l2__item-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  line-height: 0;
+  color: inherit;
+}
+.ds-sidebar-l2__item-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ds-sidebar-l2__item-badge {
+  font-size: 10px;
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-secondary);
+  background: var(--uems-bg-secondary);
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+  min-width: 20px;
+  text-align: center;
+  white-space: nowrap;
+}
+.ds-sidebar-l2__item-chevron { color: var(--uems-text-secondary); line-height: 0; }
+
+/* "New" indicator — accent sparkles for newly released items */
+.ds-sidebar-l2__item-new {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uems-icon-warning);
+  line-height: 0;
+  flex-shrink: 0;
+}
+.ds-sidebar-l2[dir="rtl"] .ds-sidebar-l2__item-chevron ds-icon { transform: rotate(180deg); }

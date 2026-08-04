@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<!--
+  Deployments · Workflows — table view + empty state fallback. Reads
+  from window.__workflowsStore populated by the workflow builder.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Deployments · Workflows — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+<template id="drawer-fragment">
+<style>
+#dep-workflow-pop .lay__scroll { display: flex; flex-direction: column; }
+#dep-workflow-pop .wf-empty { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: var(--spacing-32); }
+#dep-workflow-pop .wf-empty[hidden] { display: none; }
+#dep-workflow-pop .wf-empty-inner { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-16); text-align: center; max-width: 480px; }
+#dep-workflow-pop .wf-empty ds-illustration { width: 220px; height: auto; display: block; margin-top: var(--spacing-24); }
+#dep-workflow-pop .wf-empty h2 { margin: 4px 0 0; font-size: var(--uems-font-size-18, 18px); font-weight: var(--font-weight-semibold, 600); color: var(--uems-text-primary); }
+#dep-workflow-pop .wf-empty p  { margin: 0; font-size: var(--uems-font-size-13, 13px); line-height: 1.5; color: var(--uems-text-secondary); }
+#dep-workflow-pop #wf-ph[hidden]        { display: none; }
+#dep-workflow-pop #wf-table[hidden]     { display: none; }
+#dep-workflow-pop .wf-table-wrap { padding: 16px 0 24px; }
+#dep-workflow-pop .wf-actions { display: inline-flex; justify-content: flex-end; width: 100%; gap: 2px; }
+#dep-workflow-pop .wf-actions button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border: 0; background: transparent;
+  border-radius: var(--radius-sm); cursor: pointer; color: var(--uems-icon-secondary);
+}
+#dep-workflow-pop .wf-actions button:hover { background: var(--uems-bg-secondary-hover); }
+#dep-workflow-pop .wf-actions button[data-act="delete"]:hover { color: var(--uems-icon-error); }
+</style>
+
+<div id="dep-workflow-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <ds-page-header id="wf-ph" icon="route" structure="default"
+      title="Workflows"
+      description="Stack policies into stages — pre-deployment activities, notifications, retries — and run them in order.">
+      <ds-button slot="actions" id="wf-add-btn" variant="primary" size="small" prefix-icon="add">Add Workflow</ds-button>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+      <div class="wf-table-wrap">
+        <ds-data-table id="wf-table"
+          selection-mode="multi" row-height="comfortable" show-footer sticky-header fit-viewport
+          rows-per-page="10" rows-per-page-options="10,25,50" page="1"></ds-data-table>
+        <ds-dropdown-menu id="wf-row-menu" type="action"></ds-dropdown-menu>
+      </div>
+
+      <div id="wf-empty" class="wf-empty" hidden>
+        <div class="wf-empty-inner">
+          <ds-illustration name="workflow" size="lg"></ds-illustration>
+          <h2>No workflows yet</h2>
+          <p>Stack policies into stages — pre-deployment activities, notifications, retries — and run them in order.</p>
+          <ds-button id="wf-empty-cta" variant="primary" size="medium" prefix-icon="add">Add Workflow</ds-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('dep-workflow-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const goCreate = () => { if (window.openContentView) window.openContentView('deployments-workflow-builder'); };
+  $('wf-add-btn').addEventListener('click', goCreate);
+  $('wf-empty-cta').addEventListener('click', goCreate);
+
+  const STATUS_STATE = { 'active': 'success', 'draft': 'default', 'paused': 'moderate' };
+  const statusBadge = (s) =>
+    `<ds-badge variant="subtle" state="${STATUS_STATE[s] || 'default'}" shape="rounded" size="medium">${esc(s === 'active' ? 'Active' : s === 'draft' ? 'Draft' : s)}</ds-badge>`;
+
+  const table = $('wf-table');
+  table.columns = [
+    { id: 'name',     header: 'Workflow name',  accessor: 'name' },
+    { id: 'stages',   header: 'Stages',         align: 'end', accessor: 'stages' },
+    { id: 'status',   header: 'Status',         align: 'start', render: (r) => statusBadge(r.status) },
+    { id: 'actions',  header: 'Actions',        align: 'end', render: (r) =>
+      `<span class="wf-actions">
+         <button type="button" data-act="more" data-id="${esc(r.id)}" aria-label="Row actions"><ds-icon name="more-vertical" size="16"></ds-icon></button>
+       </span>` },
+  ];
+  const rowMenu = $('wf-row-menu');
+  rowMenu.items = [
+    { label: 'Edit',   value: 'edit',   icon: 'edit'   },
+    { label: 'Delete', value: 'delete', icon: 'delete' },
+  ];
+  let menuTargetId = null;
+  table.addEventListener('click', (e) => {
+    const moreBtn = e.target.closest && e.target.closest('button[data-act="more"]');
+    if (!moreBtn) return;
+    menuTargetId = moreBtn.dataset.id;
+    rowMenu.openFrom(moreBtn, { side: 'below', align: 'end', offset: 4 });
+  });
+  rowMenu.addEventListener('ds-dropdown-select', (e) => {
+    const id = menuTargetId; menuTargetId = null;
+    rowMenu.close();
+    if (e.detail.value === 'edit') {
+      window.__workflowEditId = id;
+      if (window.openContentView) window.openContentView('deployments-workflow-builder');
+    } else if (e.detail.value === 'delete') {
+      if (confirm('Delete this workflow?')) {
+        window.__workflowsStore = (window.__workflowsStore || []).filter((r) => r.id !== id);
+        refresh();
+      }
+    }
+  });
+
+  function refresh() {
+    const rows = (window.__workflowsStore || []).slice();
+    const has = rows.length > 0;
+    $('wf-ph').hidden       = !has;
+    $('wf-table').hidden    = !has;
+    $('wf-empty').hidden    = has;
+    if (!has) return;
+    table.rows = rows;
+  }
+
+  function show() { root.hidden = false; refresh(); }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-workflow'] = { show, hide };
+})();
+</script>
+</template>
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-workflow'].show()));
+})();
+</script>
+</body>
+</html>

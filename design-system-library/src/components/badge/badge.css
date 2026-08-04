@@ -1,0 +1,231 @@
+/* =============================================================================
+   ds-badge / .ds-badge
+   Compact status label. 7 states x 2 styles x 3 sizes x 2 shapes x RTL.
+   Token-driven; no hardcoded colors.
+   Public surface: BEM classes (light DOM) and <ds-badge> (custom element).
+   ============================================================================= */
+
+:host {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.ds-badge,
+:host(.ds-badge),
+[is="ds-badge"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  gap: 2px; /* --uems-spacing-2, all sizes per spec */
+  width: fit-content;
+  padding: var(--uems-spacing-2, 2px) var(--uems-spacing-8, 8px); /* 2px V × 8px H (Medium/Large) — H bumped from Figma's 4px per design review; Small stays 4px (see size overrides) */
+  white-space: nowrap;
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-medium, 500);
+  user-select: none;
+  /* Badges have no borders per spec */
+
+  /* Defaults — overridden by state modifiers below */
+  --_badge-bg: var(--uems-bg-secondary);
+  --_badge-fg: var(--uems-text-secondary);
+
+  background: var(--_badge-bg);
+  color: var(--_badge-fg);
+}
+
+/* ---- Sizes (heights 16/20/24; min-width = height on Small/Medium per Figma) */
+.ds-badge--small {
+  height: 16px;
+  min-width: 16px;
+  padding-left: var(--uems-spacing-4, 4px);  /* Small keeps the spec's 4px H */
+  padding-right: var(--uems-spacing-4, 4px);
+  font-size: var(--uems-font-size-10, 10px);
+  line-height: 14px;
+}
+.ds-badge--medium {
+  height: 20px;
+  min-width: 20px;
+  font-size: var(--uems-font-size-13, 13px);
+  line-height: 16px;
+}
+.ds-badge--large {
+  height: 24px;
+  font-size: var(--uems-font-size-14, 14px);
+  line-height: 20px;
+  font-weight: var(--font-weight-regular, 400); /* Large intentionally drops to Regular */
+}
+
+/* ---- Shapes ---------------------------------------------------------- */
+.ds-badge--pill    { border-radius: var(--uems-radius-pill, 9999px); }
+.ds-badge--rounded { border-radius: var(--uems-radius-xs, 4px); }
+
+/* ---- Icon slot (stroke-drawn icons share currentColor) --------------- */
+.ds-badge__icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: currentColor;
+}
+.ds-badge--small  .ds-badge__icon { font-size: 8px; }
+.ds-badge--medium .ds-badge__icon { font-size: 12px; }
+.ds-badge--large  .ds-badge__icon { font-size: 16px; }
+
+/* ---- Subtle states (tinted bg, colored fg) --------------------------- */
+.ds-badge--subtle.ds-badge--default {
+  --_badge-bg: var(--uems-bg-secondary);
+  --_badge-fg: var(--uems-text-secondary);
+}
+.ds-badge--subtle.ds-badge--active {
+  --_badge-bg: var(--uems-bg-info-primary);
+  --_badge-fg: var(--uems-text-info);
+}
+.ds-badge--subtle.ds-badge--critical {
+  --_badge-bg: var(--uems-bg-error-primary);
+  --_badge-fg: var(--uems-text-error);
+}
+.ds-badge--subtle.ds-badge--moderate {
+  --_badge-bg: var(--uems-bg-alert-primary);
+  --_badge-fg: var(--uems-text-alert);
+}
+.ds-badge--subtle.ds-badge--important {
+  --_badge-bg: var(--uems-bg-warning-primary);
+  --_badge-fg: var(--uems-text-warning);
+}
+.ds-badge--subtle.ds-badge--success {
+  --_badge-bg: var(--uems-bg-success-primary);
+  --_badge-fg: var(--uems-text-success);
+}
+.ds-badge--subtle.ds-badge--acknowledge {
+  --_badge-bg: var(--uems-bg-acknowledge-primary);
+  --_badge-fg: var(--uems-text-acknowledge);
+}
+
+/* ---- Intense states (solid bg, white fg) ----------------------------- */
+.ds-badge--intense.ds-badge--default {
+  --_badge-bg: var(--uems-bg-quaternary-solid);
+  --_badge-fg: var(--uems-text-white);
+}
+.ds-badge--intense.ds-badge--active {
+  --_badge-bg: var(--uems-bg-info-solid);
+  --_badge-fg: var(--uems-text-white);
+}
+.ds-badge--intense.ds-badge--critical {
+  --_badge-bg: var(--uems-bg-error-solid);
+  --_badge-fg: var(--uems-text-white);
+}
+.ds-badge--intense.ds-badge--moderate {
+  --_badge-bg: var(--uems-bg-alert-solid);
+  --_badge-fg: var(--uems-text-black, #000);
+}
+.ds-badge--intense.ds-badge--important {
+  --_badge-bg: var(--uems-bg-warning-solid);
+  --_badge-fg: var(--uems-text-white);
+}
+.ds-badge--intense.ds-badge--success {
+  --_badge-bg: var(--uems-bg-success-solid);
+  --_badge-fg: var(--uems-text-white);
+}
+.ds-badge--intense.ds-badge--acknowledge {
+  --_badge-bg: var(--uems-bg-acknowledge-solid);
+  --_badge-fg: var(--uems-text-white);
+}
+
+/* ---- RTL ------------------------------------------------------------- */
+/* dir="rtl" alone mirrors the flex order (icon stays visually leading, on
+   the right). Do NOT add flex-direction: row-reverse here — combined with
+   direction: rtl it double-reverses and puts the icon back on the left. */
+
+/* =============================================================================
+   Interaction states (opt-in)
+   -----------------------------------------------------------------------------
+   Badge is non-interactive by default per MD spec. Set `interactive` on the
+   element to enable hover + focus-visible cues — use this when the badge is
+   wrapped in a button/link or otherwise clickable. Disabled works on every
+   badge, interactive or not.
+   ============================================================================= */
+
+:host([interactive]:not([disabled])) .ds-badge,
+.ds-badge[interactive]:not([disabled]) {
+  cursor: pointer;
+  outline: none;
+  transition: background-color 120ms ease, color 120ms ease,
+              border-color 120ms ease, box-shadow 120ms ease;
+}
+
+/* Hover — Subtle: shift to the slightly bolder secondary tint -------------- */
+:host([interactive]:not([disabled])) .ds-badge--subtle.ds-badge--default:hover,
+.ds-badge--subtle.ds-badge--default[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-secondary-hover);
+}
+:host([interactive]:not([disabled])) .ds-badge--subtle.ds-badge--active:hover,
+.ds-badge--subtle.ds-badge--active[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-info-secondary);
+}
+:host([interactive]:not([disabled])) .ds-badge--subtle.ds-badge--critical:hover,
+.ds-badge--subtle.ds-badge--critical[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-error-secondary);
+}
+:host([interactive]:not([disabled])) .ds-badge--subtle.ds-badge--moderate:hover,
+.ds-badge--subtle.ds-badge--moderate[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-alert-secondary);
+}
+:host([interactive]:not([disabled])) .ds-badge--subtle.ds-badge--important:hover,
+.ds-badge--subtle.ds-badge--important[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-warning-secondary);
+}
+:host([interactive]:not([disabled])) .ds-badge--subtle.ds-badge--success:hover,
+.ds-badge--subtle.ds-badge--success[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-success-secondary);
+}
+:host([interactive]:not([disabled])) .ds-badge--subtle.ds-badge--acknowledge:hover,
+.ds-badge--subtle.ds-badge--acknowledge[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-acknowledge-secondary);
+}
+
+/* Hover — Intense: shift to the solid-hover token -------------------------- */
+:host([interactive]:not([disabled])) .ds-badge--intense.ds-badge--default:hover,
+.ds-badge--intense.ds-badge--default[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-tertiary-solid);
+}
+:host([interactive]:not([disabled])) .ds-badge--intense.ds-badge--active:hover,
+.ds-badge--intense.ds-badge--active[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-info-solid-hover);
+}
+:host([interactive]:not([disabled])) .ds-badge--intense.ds-badge--critical:hover,
+.ds-badge--intense.ds-badge--critical[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-error-solid-hover);
+}
+:host([interactive]:not([disabled])) .ds-badge--intense.ds-badge--moderate:hover,
+.ds-badge--intense.ds-badge--moderate[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-alert-solid-hover);
+}
+:host([interactive]:not([disabled])) .ds-badge--intense.ds-badge--important:hover,
+.ds-badge--intense.ds-badge--important[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-warning-solid-hover);
+}
+:host([interactive]:not([disabled])) .ds-badge--intense.ds-badge--success:hover,
+.ds-badge--intense.ds-badge--success[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-success-solid-hover);
+}
+:host([interactive]:not([disabled])) .ds-badge--intense.ds-badge--acknowledge:hover,
+.ds-badge--intense.ds-badge--acknowledge[interactive]:not([disabled]):hover {
+  --_badge-bg: var(--uems-bg-acknowledge-solid-hover);
+}
+
+/* Focus-visible — 2px accent ring outside the badge ------------------------- */
+:host([interactive]:not([disabled])) .ds-badge:focus-visible,
+.ds-badge[interactive]:not([disabled]):focus-visible {
+  box-shadow: 0 0 0 2px var(--uems-bg-base, #fff),
+              0 0 0 4px var(--uems-border-accent-focus);
+}
+
+/* Disabled — works on any badge, interactive or not. Clicks/activation are
+   blocked by a capture-phase guard in badge.js, so pointer-events stays ON and
+   the not-allowed cursor shows (pointer-events:none would suppress the cursor). */
+:host([disabled]) .ds-badge,
+.ds-badge[disabled] {
+  --_badge-bg: var(--uems-bg-disabled);
+  --_badge-fg: var(--uems-text-disabled);
+  cursor: not-allowed;
+}

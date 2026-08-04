@@ -1,0 +1,96 @@
+/* =============================================================================
+   ds-field-helper / .ds-field-helper
+   The shared "Form Field Helper Row" sub-component: a leading status icon +
+   helper/validation text (grows, truncates) and an optional trailing character
+   counter. States: default / error(negative) / success / disabled — icon + text
+   + counter share the state colour. Spec: handoff/FormFieldHelperRow.md.
+   Used by OTP Input, Text Input, Textarea, Select, Slider, Date picker, etc.
+   ============================================================================= */
+
+/* Light-DOM host — block so the row stretches to the field width and the
+   counter sits at the trailing edge (spec: stretch to 100% of the field). */
+ds-field-helper { display: block; }
+
+.ds-field-helper {
+  display: flex;
+  align-items: flex-start;             /* spec: root top-aligned (MIN) */
+  gap: var(--spacing-12);              /* spec: help-group ↔ counter gap = 12 */
+  width: 100%;
+  min-height: 16px;                    /* spec: fixed 16px row; constant across states */
+  font-family: var(--font-family-sans);
+  color: var(--uems-text-quaternary);  /* Default = Text-Quaternary #55607a */
+  /* Spec §Motion: color cross-fades on state change. */
+  transition: color 120ms ease;
+}
+
+/* Leading help-group: icon + text, gap 4, grows to fill. */
+.ds-field-helper__group {
+  flex: 1 1 auto;                      /* spec: help-group grows (FILL) */
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-4);               /* spec: icon ↔ text gap = 4 */
+}
+
+/* Icon: 12×12 glyph centred in a 12×16 box (glyph y=2). */
+.ds-field-helper__icon {
+  flex: 0 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 16px;
+  line-height: 0;
+}
+
+/* Help text: 12px, single line, truncates with ellipsis so it never pushes the
+   counter off the row (spec: always flex:1, regardless of state). */
+.ds-field-helper__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--font-size-12);      /* spec: Text/small/Regular = 12px */
+  line-height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Trailing character counter — hugs, vertically centred, follows state colour.
+   11px (a distinct, smaller size than the help text — spec: don't unify). */
+.ds-field-helper__counter {
+  flex: 0 0 auto;
+  align-self: center;                  /* spec: counter CENTER-aligned */
+  white-space: nowrap;
+  font-size: var(--font-size-11);      /* spec: Special-Sizes/small-11/Regular = 11px */
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ds-field-helper--error    { color: var(--uems-text-error); }     /* Negative #c1181b */
+.ds-field-helper--success  { color: var(--uems-text-success); }   /* #0a7138 */
+.ds-field-helper--disabled { color: var(--uems-text-disabled); }  /* #8893ad */
+
+/* Truncation tooltip — styled, body-level, hover-only; shown only when the help
+   text is clipped (see field-helper.js). Matches the Text Field affix tooltip. */
+.ds-field-helper__tooltip {
+  position: fixed;
+  z-index: 2000;
+  display: none;
+  max-width: 320px;
+  background: var(--uems-bg-base-black, #1a1a2e);
+  color: var(--uems-text-white, #fff);
+  font-size: var(--font-size-12);
+  line-height: 1.4;
+  padding: var(--spacing-6) var(--spacing-12);
+  border-radius: var(--radius-sm, 6px);
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* RTL: dir="rtl" on the row flips the inline axis (counter → leading-left,
+   help-group → trailing-right; inside the group text → icon) for free. */
+
+/* Spec §Motion: respect reduced-motion — swap colours instantly. */
+@media (prefers-reduced-motion: reduce) {
+  .ds-field-helper { transition: none; }
+}

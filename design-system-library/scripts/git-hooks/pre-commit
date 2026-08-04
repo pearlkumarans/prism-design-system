@@ -1,0 +1,28 @@
+#!/bin/sh
+# Prism design-system — pre-commit test gate.
+# Runs `npm test` (the component suite, headless browser) ONLY when files under
+# the design-system-library are staged, so commits elsewhere in the repo stay
+# fast. A failing test blocks the commit. Layout-independent: the hook locates
+# the library relative to its own path, so it works wherever the repo lives.
+#
+# Enable with:  npm run hooks:install   (from design-system-library/)
+# Bypass once:  git commit --no-verify
+set -e
+
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+LIB_DIR="$(cd "$HOOK_DIR/../.." && pwd)"                     # .../design-system-library
+LIB_REL="$(cd "$LIB_DIR" && git rev-parse --show-prefix)"   # path from repo root (trailing /)
+
+# Skip entirely when no staged file touches the library.
+if ! git diff --cached --name-only | grep -q "^${LIB_REL}"; then
+  exit 0
+fi
+
+if [ ! -d "$LIB_DIR/node_modules" ]; then
+  echo "⚠  design-system: node_modules missing — run 'npm install' in ${LIB_REL} to enable the pre-commit test gate. Skipping." >&2
+  exit 0   # don't block a commit just because the dev setup isn't installed yet
+fi
+
+echo "▶  design-system: running component tests before commit…"
+cd "$LIB_DIR"
+npm test --silent

@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<!--
+  L03 — LIST VIEW (variant B: left filter sidebar) · DUAL-MODE file (Layout/views/).
+  - Open directly in a browser -> the standalone harness (bottom) mounts + shows it.
+  - Fetched by Shell.html       -> injectDrawer('layout-list-view','content')
+    extracts ONLY <template id="drawer-fragment"> and mounts it INSIDE <ds-content>.
+  Anatomy (Layout/layouts.md → L03): page header · KPI row · 2-col (ds-filter-panel
+  facets/chips + content: bulk bar · data table w/ pagination).
+  Reuses the ds-data-table setup from Layout/list-view.html (Groups & Devices) and the
+  L06/L07 chrome conventions. Spec: handoff/layout-l03-list-view.md.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>List View (L03) — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="layout-base.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script src="data/prism-api.js"></script>   <!-- app data layer (front-end ⇄ backend API) -->
+
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    .sa-host { display: flex; flex-direction: column; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* == L03 List View (variant B) — Prism components + uems tokens ========== */
+/* Root + .lay + .lay__scroll scaffold live in Layout/layout-base.css (shared via .lay-root). */
+
+/* KPI summary row. */
+.lv-kpis { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 16px; }
+.lv-kpis ds-kpi-card { flex: 1 1 200px; min-width: 180px; }
+
+/* Content only by default; the filter sidebar slides in when toggled from the
+   table's filter icon. The left track animates 0 → 240px (with the gap) so the
+   panel reveals smoothly instead of snapping. */
+.lv-grid {
+  display: grid;
+  grid-template-columns: 0px minmax(0, 1fr);
+  column-gap: 0;
+  row-gap: 20px;
+  padding-top: 20px;
+  align-items: start;   /* columns keep their own height — the filter panel does NOT
+                           track the table, so applying a filter (which hugs the table
+                           via fit-viewport) never resizes the panel. */
+  transition: grid-template-columns 260ms var(--ease-standard, ease), column-gap 260ms var(--ease-standard, ease);
+}
+.lv-grid.is-filtering { grid-template-columns: 240px minmax(0, 1fr); column-gap: 20px; }
+@media (prefers-reduced-motion: reduce) { .lv-grid { transition: none; } }
+
+/* Left filter column — a clipping wrapper that holds the fixed-width panel so it
+   slides in/out smoothly. Collapsed: 0-wide track clips it to nothing;
+   visibility is deferred until the slide-out finishes so it also leaves the
+   a11y tree. */
+.lv-filter-col {
+  min-width: 0;
+  overflow: hidden;
+  position: relative;         /* anchor the absolutely-positioned panel */
+  visibility: hidden;
+  transition: visibility 0s linear 260ms;
+}
+.lv-grid.is-filtering .lv-filter-col { visibility: visible; transition-delay: 0s; }
+/* The panel keeps its OWN natural (content) height — a fixed 240px-wide box in
+   normal flow. With the grid at `align-items: start` it never stretches to the
+   table, so applying a filter (which hugs the table) leaves the panel unchanged.
+   Width is pinned so it doesn't reflow while the column track animates 0 → 240. */
+#lv-filter-panel { width: 240px; min-height: 0; }
+#lv-filter-panel .ds-filter-panel { height: auto; }
+
+/* Content column. */
+.lv-content { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.lv-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lv-controls ds-search-field { flex: 1 1 320px; max-width: 420px; }
+.lv-table-wrap { min-width: 0; }
+
+/* Data-table cell helpers (icon+text alignment, truncation, row actions). */
+.cell-os { display: inline-flex; align-items: center; gap: var(--spacing-8); color: var(--uems-text-primary); }
+.cell-os ds-icon { color: var(--uems-icon-tertiary); flex: none; }
+.cell-muted { color: var(--uems-text-secondary); }
+.cell-truncate { display: inline-block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+#lv-table ds-tooltip { display: inline-block; max-width: 100%; vertical-align: middle; }
+.cell-actions { display: inline-flex; justify-content: flex-end; width: 100%; }
+.cell-actions button { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 0; background: transparent; border-radius: var(--radius-sm); cursor: pointer; color: var(--uems-icon-secondary); }
+.cell-actions button:hover { background: var(--uems-bg-secondary-hover); }
+
+@media (max-width: 900px) {
+  /* Stack: the panel takes the full width above the content when filtering. */
+  .lv-grid, .lv-grid.is-filtering { grid-template-columns: 1fr; column-gap: 0; }
+  .lv-filter-col { overflow: visible; }
+  .lv-grid:not(.is-filtering) .lv-filter-col { display: none; }
+  /* On narrow, the panel stacks in normal flow (full width) rather than filling a column. */
+  #lv-filter-panel { position: static; inset: auto; width: 100%; }
+}
+</style>
+
+<div id="lview-pop" class="lay-root" hidden>
+  <div class="lay">
+    <!-- Header filter option is hidden: `show-filter` removed so the title filter
+         icon does not render (its ds-page-header-filter event then never fires, so
+         the handler below stays dormant). The advanced/saved filter lives on the
+         data-table's filter control. Re-add `show-filter` to bring it back. -->
+    <!-- No collapse-on-scroll: this is a fit-viewport list page — the table body
+         scrolls internally and the page itself does not scroll, so there's nothing
+         for the header to collapse against (leaving it in caused a scroll↔collapse
+         feedback jerk on any residual overflow). The header stays static. -->
+    <ds-page-header id="lv-ph" icon="list-bullet" structure="full"
+      title="Groups &amp; Devices"
+      description="Browse, filter, and act on enrolled devices."
+      show-description show-breadcrumbs show-summary show-tabs show-chevron>
+      <ds-button slot="actions" variant="primary" prefix-icon="add">Add Device</ds-button>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+
+      <!-- KPI summary row -->
+      <div class="lv-kpis">
+        <ds-kpi-card id="kpi-total" label="Total Devices" value="—" state="default" icon="computer"></ds-kpi-card>
+        <ds-kpi-card id="kpi-managed" label="Managed" value="—" state="success" icon="circle-tick"></ds-kpi-card>
+        <ds-kpi-card id="kpi-pending" label="Pending" value="—" state="warning" icon="clock"></ds-kpi-card>
+        <ds-kpi-card id="kpi-errors" label="Errors" value="—" state="alert" icon="exclamation-circle"></ds-kpi-card>
+      </div>
+
+      <div class="lv-grid" id="lv-grid">
+        <!-- Left filter column — ds-filter-panel (categorical facets + counts + active chips), toggled by the table filter icon.
+             Wrapped in a clipping column so it slides in/out smoothly as the grid track animates. -->
+        <div class="lv-filter-col">
+          <ds-filter-panel id="lv-filter-panel" title="Filters" aria-label="Filters" fit-viewport></ds-filter-panel>
+        </div>
+
+        <!-- Content: data table (bulk bar built-in). Active-filter chips live in the panel. -->
+        <section class="lv-content">
+          <!-- Status quick-filter — single-select segmented filter, kept in sync with the
+               sidebar's Status facet so the two never contradict (one status truth). -->
+          <ds-tab-filter id="lv-status-tabs" class="lv-status-tabs" aria-label="Filter by status"></ds-tab-filter>
+          <div class="lv-table-wrap" id="lv-table-wrap">
+            <ds-data-table id="lv-table"
+              selection-mode="multi"
+              row-height="comfortable"
+              show-footer
+              sticky-header
+              fit-viewport
+              advanced-filter
+              rows-per-page="10"
+              page="1"></ds-data-table>
+          </div>
+          <div id="lv-empty" hidden>
+            <ds-empty-state show-illustration="false" title="Nothing here yet" description="Demo sub-view — no sample data." show-primary="false" show-secondary="false"></ds-empty-state>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Advanced filter — a ds-criteria-filter expression builder in POPOVER mode,
+       opened from the table's advanced-filter caret ("Create advanced filter"),
+       anchored to the filter split button. Kept OUT of .lv-content's flex flow so
+       its (0-height) element + the column gap don't add a residual outer scroll. -->
+  <ds-criteria-filter id="lv-advanced" mode="popover" apply-mode="apply"
+    title="Advanced filter" anchor="#lv-table .ds-data-table__filter"></ds-criteria-filter>
+
+  <!-- Share dialog — opened from a saved filter's "Share" hover action in the
+       caret menu. Slotted children exist before ds-modal mounts (required so the
+       leading icon lands inside the dialog). Cancel = outline, Share = primary. -->
+  <ds-modal id="lv-share-modal" size="small" title="Share filter"
+            description="Choose who can access this saved filter." show-header show-footer>
+    <ds-icon slot="icon" name="share-01"></ds-icon>
+    <div slot="body">
+      <ds-token-field id="lv-share-people" label="People or roles"
+        placeholder="Add people or roles…" show-label show-helper-row="false"></ds-token-field>
+      <ds-input-select id="lv-share-access" label="Access" show-label
+        placeholder="Select access" style="margin-top: var(--spacing-16);"></ds-input-select>
+    </div>
+    <ds-button slot="footer" id="lv-share-cancel" variant="outline">Cancel</ds-button>
+    <ds-button slot="footer" id="lv-share-submit" variant="primary" prefix-icon="share-01">Share</ds-button>
+  </ds-modal>
+
+  <!-- Delete confirmation for a saved filter (destructive). Description is set to
+       the filter name on open; primary = Delete (red), secondary = Cancel. -->
+  <ds-confirmation-modal id="lv-delete-confirm" variant="destructive"
+    title="Delete filter?" primary-label="Delete" secondary-label="Cancel"></ds-confirmation-modal>
+</div>
+
+<script>
+/* == L03 view logic — filter sidebar + search drive the data table ======= */
+(function () {
+  const root = document.getElementById('lview-pop');
+  if (!root || root.__lvInit) return; root.__lvInit = true;
+  const $ = (id) => root.querySelector('#' + id);
+
+  /* ── Phase 0 trial: render icons from the Prism icon font on THIS view ──────
+     ds-icon defaults to the SVG sprite; flipping UEMS_ICON_MODE='font' makes any
+     piloted icon (delete/edit/filter/add/refresh/more/search/chevron/…) render as
+     a font glyph, with SVG fallback for everything else. Font-CSS path is derived
+     from the already-configured sprite path so it works standalone AND in the Shell.
+     Static template icons (KPI, header) mounted before this runs get a re-render
+     nudge; icons the view builds later (table toolbar) pick up font mode directly. */
+  if (typeof window !== 'undefined') {
+    window.UEMS_ICON_MODE = 'font';
+    if (!window.UEMS_ICON_FONT_CSS && window.UEMS_ICON_SPRITE) {
+      window.UEMS_ICON_FONT_CSS = window.UEMS_ICON_SPRITE.replace(/icons\.svg(\?.*)?$/, 'prism-font/css/icons.css');
+    }
+    requestAnimationFrame(() => root.querySelectorAll('ds-icon').forEach((el) => el.render && el.render()));
+  }
+
+  const ph = $('lv-ph');
+  if (ph) {
+    ph.breadcrumbs = [
+      { label: 'MDM', href: '#' },
+      { label: 'Device Management', href: '#' },
+      { label: 'Groups & Devices' },
+    ];
+    /* Title chevron = view/record switcher. Choosing an item updates the title
+       (component default); we also sync the last breadcrumb so the trail matches. */
+    ph.titleMenu = [
+      { label: 'Groups & Devices',    value: 'gd' },
+      { label: 'All Devices',         value: 'all' },
+      { label: 'Managed Devices',     value: 'managed' },
+      { label: 'Pending Enrollment',  value: 'pending' },
+    ];
+    /* Map each view to a Status filter. gd/all show everything; the others
+       narrow the table. Routed through `panel.value` (the single source of
+       truth) + apply(), so the sidebar facet and the status quick-tabs stay in
+       sync automatically. `panel`/`apply` are defined later in this script — this
+       callback only runs on user selection, by which time they exist. */
+    const VIEW_STATUS = { managed: ['Managed'], pending: ['Pending'] };
+    ph.addEventListener('ds-page-header-title-select', (e) => {
+      const item = e.detail && e.detail.item;
+      if (!item) return;
+      ph.breadcrumbs = [
+        { label: 'MDM', href: '#' },
+        { label: 'Device Management', href: '#' },
+        { label: item.label },
+      ];
+      panel.value = { ...(panel.value || {}), status: VIEW_STATUS[item.value] || [] };
+      apply();
+    });
+    /* Summary metadata row (key/value, delegates to ds-description-list). */
+    ph.summary = [
+      { label: 'Last synced', value: '2 min ago' },
+      { label: 'Auto-enroll', value: 'On', status: 'success' },
+      { label: 'Owner', value: 'IT Operations' },
+    ];
+    /* Sub-view tabs in the header (delegates to ds-tab-bar-horizontal). */
+    ph.tabs = [
+      { id: 'devices', label: 'Devices', active: true },
+      { id: 'groups', label: 'Groups' },
+      { id: 'blueprints', label: 'Blueprints' },
+    ];
+    /* Devices tab shows the table; other tabs swap to an empty-state (demo). */
+    ph.addEventListener('ds-page-header-tab', (e) => {
+      const t = e.detail && e.detail.tab;
+      const onDevices = !t || t.id === 'devices';
+      const wrap = $('lv-table-wrap'), emptyBox = $('lv-empty');
+      if (wrap) wrap.hidden = !onDevices;
+      if (emptyBox) {
+        emptyBox.hidden = onDevices;
+        if (!onDevices) emptyBox.querySelector('ds-empty-state')
+          .setAttribute('title', 'No ' + (t.label || 'items').toLowerCase() + ' yet');
+      }
+    });
+  }
+
+  /* ---- Data (reused from Layout/list-view.html) ------------------------- */
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const tip = (full, inner) => `<ds-tooltip text="${esc(full)}" show-icon="false" position="up-center"><span class="cell-truncate">${inner}</span></ds-tooltip>`;
+  const OS_ICON = { Windows: 'microsoft', macOS: 'apple', Linux: 'terminal-square' };
+  const osCell = (r) => `<span class="cell-os"><ds-icon name="${OS_ICON[r.platform] || 'computer'}" size="16"></ds-icon>${r.os}</span>`;
+  const STATUS_STATE = { Managed: 'success', Pending: 'moderate', Retired: 'default', Error: 'critical' };
+  const statusBadge = (r) => `<ds-badge variant="subtle" state="${STATUS_STATE[r.status] || 'default'}" shape="rounded" size="medium">${r.status}</ds-badge>`;
+
+  const table = $('lv-table');
+  table.columns = [
+    { id: 'device', header: 'Device Name', render: (r) => tip(r.device, `<ds-text-link class="lv-device" variant="primary" size="medium" underline="hover" href="../Layout/views/layout-list-detail.html">${r.device}</ds-text-link>`) },
+    { id: 'platform', header: 'Platform', render: osCell },
+    { id: 'status', header: 'Status', align: 'start', render: statusBadge },
+    { id: 'owner', header: 'Owner', align: 'start', render: (r) => `<ds-tooltip text="${esc(r.owner)} · ${esc(r.email)}" show-icon="false" position="up-center"><ds-avatar size="small" name="${esc(r.owner)}" src="https://i.pravatar.cc/64?u=${encodeURIComponent(r.email)}"></ds-avatar></ds-tooltip>` },
+    { id: 'lastSeen', header: 'Last Seen', accessor: 'lastSeen' },
+    { id: 'actions', header: '', align: 'end', render: () => `<span class="cell-actions"><button type="button" aria-label="Row actions"><ds-icon name="more-vertical" size="16"></ds-icon></button></span>` },
+  ];
+  /* Device rows come from the backend via PrismAPI (Layout/data/prism-api.js) —
+     loadData() below fetches them into ALL, then the existing client-side
+     filter / search / pagination / advanced-filter logic operates on ALL exactly
+     as before. Empty until the fetch resolves. */
+  let ALL = [];
+
+  /* ---- Filter panel (ds-filter-panel) — categorical facets + live counts -- */
+  const count = (key, val) => ALL.filter((r) => r[key] === val).length;
+  const panel = $('lv-filter-panel');
+  /* Facet option counts derive from the loaded data; rebuilt once after fetch. */
+  function rebuildFacets() {
+    panel.groups = [
+      { id: 'platform', label: 'Platform', type: 'checkbox',
+        options: ['Windows', 'macOS', 'Linux'].map((v) => ({ label: v, value: v, count: count('platform', v) })) },
+      { id: 'status', label: 'Status', type: 'checkbox',
+        options: ['Managed', 'Pending', 'Retired', 'Error'].map((v) => ({ label: v, value: v, count: count('status', v) })) },
+    ];
+  }
+  rebuildFacets();   /* initial (zero counts) so the panel renders before data lands */
+
+  /* ---- Status quick-filter (ds-tab-filter) — single-select segmented ------ */
+  /* Kept in sync with the sidebar's Status facet: one status "truth" surfaced in
+     two controls. The sidebar Status group is multi-select, so a single tab maps
+     to 0 or 1 selected status — 2+ selected in the sidebar falls back to "All". */
+  const statusTabs = $('lv-status-tabs');
+  const STATUSES = ['Managed', 'Pending', 'Retired', 'Error'];
+  statusTabs.options = [
+    { value: 'all', label: 'All' },
+    ...STATUSES.map((s) => ({ value: s, label: s })),
+  ];
+  let _syncingStatus = false;
+  /* Reflect the panel's committed Status back onto the tabs (derive from truth). */
+  function syncTabsFromPanel() {
+    const stat = (panel.value && panel.value.status) || [];
+    _syncingStatus = true;
+    /* Drive the tab via its ATTRIBUTE (not the .value property): the attribute
+       change re-runs ds-tab-filter's attributeChangedCallback → _syncActive, which
+       actually slides the active pill. Assigning .value alone doesn't move it. */
+    const v = stat.length === 1 ? stat[0] : 'all';
+    if (v === 'all') statusTabs.removeAttribute('value');
+    else statusTabs.setAttribute('value', v);
+    _syncingStatus = false;
+  }
+  /* Tab click → write the single status into the panel, then re-apply. Setting
+     statusTabs.value programmatically does NOT emit this event, so no loop. */
+  statusTabs.addEventListener('ds-tab-filter-change', (e) => {
+    if (_syncingStatus) return;
+    const v = e.detail.value;
+    panel.value = { ...(panel.value || {}), status: v === 'all' ? [] : [v] };
+    apply();
+  });
+
+  /* ---- Filter sidebar toggle -------------------------------------------- */
+  /* Hidden by default; the table's toolbar filter icon shows/hides it.
+     (Text search is the table's built-in toolbar search — client-side.) */
+  const grid = $('lv-grid');
+  /* Single source of truth for the filter sidebar's visibility. It also mirrors
+     that state onto the table (filter-open) so the filter button holds its
+     active/hover state while the panel shows. EVERY open/close path must go
+     through here — never toggle the class or the attribute directly — so the
+     flag can't drift out of sync with the actual panel. */
+  function setPanelOpen(open) {
+    grid.classList.toggle('is-filtering', open);
+    table.toggleAttribute('filter-open', open);
+  }
+  /* The table's toolbar filter button toggles the sidebar. Derive the next state
+     from the current DOM truth rather than a blind toggle. */
+  table.addEventListener('ds-data-table-filter', () => {
+    setPanelOpen(!grid.classList.contains('is-filtering'));
+  });
+
+  /* Device name → Details (L04). In the Shell, route via openContentView (no full
+     reload); standalone falls back to the link's href (the standalone detail). */
+  table.addEventListener('click', (e) => {
+    const link = e.target.closest && e.target.closest('.lv-device');
+    if (link && window.openContentView) { e.preventDefault(); window.openContentView('list-detail'); }
+  });
+
+  /* ---- Apply the panel's filter value → table --------------------------- */
+  /* The panel owns its facets, per-option counts, active-filter chips, and
+     Clear all; we just react to its committed value. In live mode a single
+     'change' event covers checkbox toggles, chip removals, and clear-all. */
+  function apply() {
+    const v = panel.value || {};
+    const plat = v.platform || [], stat = v.status || [];
+    const rows = ALL.filter((r) =>
+      (plat.length === 0 || plat.includes(r.platform)) &&
+      (stat.length === 0 || stat.includes(r.status)));
+    table.setAttribute('page', '1');
+    table.rows = rows;
+    /* One or more facets selected → red dot on the filter button. */
+    table.toggleAttribute('filter-applied', plat.length > 0 || stat.length > 0);
+    /* Keep the status tabs in step with whatever committed the change (sidebar
+       checkbox, chip removal, clear-all, or the tabs themselves). */
+    syncTabsFromPanel();
+  }
+  panel.addEventListener('ds-filter-panel-change', apply);
+
+  /* ---- Load data from the backend (PrismAPI) ---------------------------- */
+  /* Update the KPI cards from the stats endpoint (or derived counts). */
+  function applyStats(st) {
+    const set = (id, n) => { const c = root.querySelector('#' + id); if (c && n != null) c.setAttribute('value', String(n)); };
+    const bs = (st && st.byStatus) || {};
+    set('kpi-total', st && st.total);
+    set('kpi-managed', bs.Managed || 0);
+    set('kpi-pending', bs.Pending || 0);
+    set('kpi-errors', bs.Error || 0);
+  }
+  /* Fetch devices + stats, populate ALL, then render through the current filters.
+     Shows the table's loading skeleton while in flight and a message on failure. */
+  async function loadData() {
+    if (!window.PrismAPI) { console.warn('[list-view] PrismAPI not loaded — is Layout/data/prism-api.js included?'); return; }
+    table.setAttribute('loading', '');
+    try {
+      const [list, st] = await Promise.all([
+        PrismAPI.listDevices({ pageSize: 100000 }),   /* first pass: fetch the set, filter client-side */
+        PrismAPI.stats(),
+      ]);
+      ALL = list.rows || [];
+      applyStats(st);
+      rebuildFacets();
+      apply();
+    } catch (err) {
+      console.error('[list-view] failed to load devices:', err);
+      ALL = [];
+      table.rows = [];
+      table.setAttribute('empty-text', 'Couldn’t load devices. ' + (err && err.message ? err.message : 'Check the API connection.'));
+    } finally {
+      table.removeAttribute('loading');
+    }
+  }
+  loadData();
+
+  /* ---- Advanced-filter split button: main = simple, caret = advanced ------- */
+  /* With `advanced-filter`, the filter control is a split button. The MAIN action
+     toggles the faceted sidebar (the SIMPLE filter — ds-data-table-filter, wired
+     above). The CARET opens the advanced expression builder.
+     Saved advanced filters ARE surfaced in the caret via table.filterPresets (set
+     below): with saved filters present the caret opens a built-in menu (the saved
+     filters + an "Advanced filter…" entry that opens the builder); with none, the
+     caret opens the builder popover directly. Saving is an advanced-filter concept
+     only — the simple faceted panel has no "save". */
+  const advanced = $('lv-advanced');
+  advanced.fields = [
+    { name: 'device',   label: 'Device name', type: 'text' },
+    { name: 'platform', label: 'Platform',    type: 'select', options: ['Windows', 'macOS', 'Linux'].map((v) => ({ label: v, value: v })) },
+    { name: 'status',   label: 'Status',      type: 'select', options: ['Managed', 'Pending', 'Retired', 'Error'].map((v) => ({ label: v, value: v })) },
+    { name: 'owner',    label: 'Owner',       type: 'text' },
+  ];
+  /* Enable the advanced filter's built-in SAVE UI ("Save filter" + a saved-filters
+     picker in the header). Presets are HOST-owned: persisted to localStorage and
+     fed back on each save. (Saving is an advanced-filter concept only — the simple
+     faceted panel has no save.) */
+  const ADV_KEY = 'uems-listview-advfilters';
+  const loadSaved = () => { try { return JSON.parse(localStorage.getItem(ADV_KEY)) || []; } catch (_) { return []; } };
+  const saveSaved = (list) => { try { localStorage.setItem(ADV_KEY, JSON.stringify(list)); } catch (_) {} };
+  /* "Shared with me" — demo filters shared by an individual and by a role. `owner`
+     is the provenance shown under the name; `canEdit` gates the edit action (a
+     view-only share offers only Duplicate + Remove). In-memory so "Remove" just
+     drops it from this session's list. */
+  let sharedFilters = [
+    { id: 'sh-sec',  label: 'Security review',  shared: true, owner: 'Priya N',        canEdit: false,
+      query: { combinator: 'and', not: false, rules: [{ field: 'status', operator: 'equals', value: 'Error' }] } },
+    { id: 'sh-itops', label: 'Pending enrolments', shared: true, owner: 'IT Operations', canEdit: true,
+      query: { combinator: 'and', not: false, rules: [{ field: 'status', operator: 'equals', value: 'Pending' }] } },
+  ];
+  /* Feed the caret menu (my presets + shared) and the builder's own save picker
+     (my presets only — shared filters aren't mine to overwrite). */
+  const syncPresets = () => {
+    const mine = loadSaved();
+    advanced.presets = mine;                     /* setting this (even []) turns the Save UI on */
+    table.filterPresets = [...mine, ...sharedFilters];
+  };
+  syncPresets();
+  /* "Save & apply" fires preset-save THEN apply(). Stash the just-saved preset so
+     the apply that follows labels the chip with the filter's NAME (not a condition
+     count) and marks that saved filter active. Consumed + cleared in the apply
+     handler below. */
+  let _pendingSave = null;
+  advanced.addEventListener('ds-criteria-filter-preset-save', (e) => {
+    const list = loadSaved();
+    const entry = { id: 'af-' + Date.now(), label: e.detail.label, query: e.detail.query };
+    list.unshift(entry);
+    saveSaved(list);
+    syncPresets();                               /* refresh caret (mine + shared) + builder picker */
+    _pendingSave = entry;
+  });
+  /* Caret: no saved filters → the component emits ds-data-table-advanced-filter and
+     we open the builder popover. With saved filters, the component shows its own
+     menu and only the "Advanced filter…" entry emits this event. */
+  table.addEventListener('ds-data-table-advanced-filter', () => {
+    /* Anchor to the split button; open() sets the popover's trigger. */
+    const anchor = table.querySelector('.ds-data-table__filter');
+    advanced.open(anchor);
+  });
+  /* Page-header title filter icon. DORMANT while `show-filter` is removed from the
+     header above — the icon isn't rendered, so `ds-page-header-filter` never fires
+     and none of this runs. Kept wired so re-adding `show-filter` restores it.
+     Behaviour when enabled: no filter applied → opens the criteria builder directly;
+     a filter applied → a small menu ("Advanced filter…" edit + "Clear filter"),
+     mirroring the data-table caret so the header can clear too. No chip on header. */
+  const openBuilderFromHeader = () => {
+    advanced.open(ph.querySelector('[data-title-filter]') || table.querySelector('.ds-data-table__filter'));
+    /* Keep the title filter icon visible while the popover is open, even though
+       hover/focus moves off the title into the popover. */
+    ph.setAttribute('filter-active', '');
+  };
+  let phFilterMenu = null;
+  ph.addEventListener('ds-page-header-filter', () => {
+    const anchor = ph.querySelector('[data-title-filter]');
+    if (!table.hasAttribute('filter-applied')) { openBuilderFromHeader(); return; }
+    if (!phFilterMenu) {
+      phFilterMenu = document.createElement('ds-dropdown-menu');
+      phFilterMenu.setAttribute('type', 'action');
+      phFilterMenu.style.position = 'fixed';
+      phFilterMenu.style.zIndex = '1300';
+      phFilterMenu.addEventListener('ds-dropdown-select', (e) => {
+        const v = e.detail && e.detail.value;
+        phFilterMenu.close();
+        if (v === '__advanced__') openBuilderFromHeader();
+        else if (v === '__clear__') clearAllFilters();
+      });
+      document.addEventListener('click', (e) => {
+        if (phFilterMenu.hasAttribute('open') && !phFilterMenu.contains(e.target) &&
+            !(e.target.closest && e.target.closest('[data-title-filter]'))) phFilterMenu.close();
+      });
+      document.body.appendChild(phFilterMenu);
+    }
+    if (phFilterMenu.hasAttribute('open')) { phFilterMenu.close(); return; }
+    phFilterMenu.items = [
+      { label: 'Advanced filter…', value: '__advanced__', icon: 'settings-custom' },
+      { type: 'divider' },
+      { label: 'Clear filter', value: '__clear__', icon: 'close' },
+    ];
+    phFilterMenu.openFrom(anchor, { align: 'right', gap: 8 });
+  });
+  /* Popover closed (Cancel, Apply, Esc, outside-click) → drop the "active" hold.
+     The icon then hides again unless a filter is applied (filter-applied below). */
+  advanced.addEventListener('ds-criteria-filter-close', () => ph.removeAttribute('filter-active'));
+  /* Clear all → no filter applied anymore → let the icon return to hover-only. */
+  advanced.addEventListener('ds-criteria-filter-clear', () => ph.removeAttribute('filter-applied'));
+  /* Apply the built expression → filter the table (small recursive evaluator over
+     the query tree). Apply mode: commit on the popover's Apply button. */
+  const norm = (v) => String(v == null ? '' : v).toLowerCase();
+  const evalRule = (r, row) => {
+    const t = norm(row[r.field]); const q = norm(r.value);
+    switch (r.operator) {
+      case 'equals': case 'is':       return t === q;
+      case 'notEquals': case 'isNot': return t !== q;
+      case 'contains':                return t.includes(q);
+      case 'notContains':             return !t.includes(q);
+      case 'startsWith':              return t.startsWith(q);
+      case 'endsWith':                return t.endsWith(q);
+      case 'isEmpty':                 return t === '';
+      case 'isNotEmpty':              return t !== '';
+      default:                        return true;   /* unknown/unary → don't exclude */
+    }
+  };
+  const evalGroup = (g, row) => {
+    if (!g || !Array.isArray(g.rules) || !g.rules.length) return true;
+    const rs = g.rules.map((n) => (Array.isArray(n.rules) ? evalGroup(n, row) : evalRule(n, row)));
+    const combined = g.combinator === 'or' ? rs.some(Boolean) : rs.every(Boolean);
+    return g.not ? !combined : combined;
+  };
+  /* Count the leaf conditions in a query tree (for the chip's default summary). */
+  const countRules = (g) => (!g || !Array.isArray(g.rules)) ? 0
+    : g.rules.reduce((n, r) => n + (Array.isArray(r.rules) ? countRules(r) : 1), 0);
+  function applyAdvancedQuery(q, summary) {
+    const rows = ALL.filter((r) => evalGroup(q, r));
+    table.setAttribute('page', '1');
+    table.rows = rows;
+    const applied = !!(q && q.rules && q.rules.length);
+    table.toggleAttribute('filter-applied', applied);
+    /* Mirror onto the page header: keep the title filter icon visible + show its
+       applied dot while a filter is in effect. */
+    ph.toggleAttribute('filter-applied', applied);
+    /* Feed the removable chip: a saved filter's name, else a condition count. */
+    if (applied) {
+      const n = countRules(q);
+      table.filterSummary = summary || (n + (n === 1 ? ' condition' : ' conditions'));
+    } else {
+      table.filterSummary = '';
+    }
+  }
+  advanced.addEventListener('ds-criteria-filter-apply', (e) => {
+    if (!e.detail || !e.detail.valid) return;
+    if (_pendingSave) {
+      /* Came from "Save & apply" → chip shows the saved name; mark it active. */
+      applyAdvancedQuery(e.detail.query, _pendingSave.label);
+      table.filterPresetActive = _pendingSave.id;
+      _pendingSave = null;
+    } else {
+      applyAdvancedQuery(e.detail.query);
+      table.filterPresetActive = null;   /* ad-hoc filter — no saved filter is "active" */
+    }
+    advanced.close();
+  });
+  /* Caret menu → a saved filter was chosen: apply its stored query straight to the
+     table (no popover). The chip shows the preset's name and that row is marked
+     active in the menu. The "Create advanced filter" entry opens the builder instead. */
+  table.addEventListener('ds-data-table-preset-select', (e) => {
+    const preset = e.detail && e.detail.preset;
+    if (preset && preset.query) { applyAdvancedQuery(preset.query, preset.label); table.filterPresetActive = preset.id; }
+  });
+  /* Row hover actions from the caret menu. MY filters: share / edit / delete.
+     SHARED filters: duplicate (fork into my list) · remove (drop from my shared
+     list) · edit only when canEdit. */
+  const refreshPresets = (list) => { saveSaved(list); syncPresets(); };
+  table.addEventListener('ds-data-table-preset-action', (e) => {
+    const d = e.detail || {}; const preset = d.preset;
+    if (!preset) return;
+    if (d.action === 'edit') {
+      /* Load the query into the builder for editing, opened at the filter control. */
+      if (typeof advanced.setQuery === 'function') advanced.setQuery(preset.query);
+      advanced.open(table.querySelector('.ds-data-table__filter'));
+    } else if (d.action === 'delete') {
+      askDeleteFilter(preset);
+    } else if (d.action === 'share') {
+      openShareDialog(preset);
+    } else if (d.action === 'duplicate') {
+      /* Fork a shared filter into MY saved filters (a copy I own + can edit). */
+      const list = loadSaved();
+      list.unshift({ id: 'af-' + Date.now(), label: preset.label + ' (copy)', query: preset.query });
+      refreshPresets(list);
+      if (globalThis.dsToast) dsToast.success({ title: 'Filter duplicated', description: '“' + preset.label + '” copied to your saved filters.', style: 'subtle' });
+    } else if (d.action === 'remove') {
+      /* Remove a shared filter from my list (doesn't affect the owner's copy). */
+      sharedFilters = sharedFilters.filter((p) => String(p.id) !== String(preset.id));
+      syncPresets();
+      if (globalThis.dsToast) dsToast.success({ title: 'Removed from your filters', description: '“' + preset.label + '” won’t show here anymore.', style: 'subtle' });
+    }
+  });
+
+  /* Delete confirmation (ds-confirmation-modal) — the caret menu closes on the
+     action, then this destructive dialog gates the actual removal. */
+  const delConfirm = $('lv-delete-confirm');
+  let deletePreset = null;
+  function askDeleteFilter(preset) {
+    deletePreset = preset;
+    delConfirm.setAttribute('description', '“' + preset.label + '” will be permanently removed. This can’t be undone.');
+    delConfirm.open();
+  }
+  delConfirm?.addEventListener('ds-confirmation-primary', () => {
+    if (deletePreset) {
+      refreshPresets(loadSaved().filter((p) => String(p.id) !== String(deletePreset.id)));
+      if (globalThis.dsToast) dsToast.success({ title: 'Filter deleted', description: '“' + deletePreset.label + '” was removed.', style: 'subtle' });
+    }
+    deletePreset = null;
+    delConfirm.close();
+  });
+  delConfirm?.addEventListener('ds-confirmation-secondary', () => { deletePreset = null; delConfirm.close(); });
+  delConfirm?.addEventListener('ds-confirmation-close', () => { deletePreset = null; });
+
+  /* Share dialog wiring (ds-modal). Recipients via ds-token-field; access via
+     ds-input-select. Share → toast confirmation. */
+  const shareModal = $('lv-share-modal');
+  const sharePeople = $('lv-share-people');
+  const shareAccess = $('lv-share-access');
+  let sharePreset = null, shareTokens = [];
+  if (sharePeople) sharePeople.suggestions = ['IT Operations', 'Security team', 'Help Desk', 'Priya Nair', 'Marco Rossi', 'Aiko Tanaka'].map((v) => ({ label: v, value: v }));
+  if (shareAccess) shareAccess.options = [{ label: 'Can view', value: 'view' }, { label: 'Can edit', value: 'edit' }];
+  sharePeople?.addEventListener('ds-tokens-change', (e) => { shareTokens = (e.detail && e.detail.tokens) || []; });
+  function openShareDialog(preset) {
+    sharePreset = preset; shareTokens = [];
+    if (sharePeople) sharePeople.tokens = [];
+    shareModal.setAttribute('title', 'Share “' + preset.label + '”');
+    shareModal.open();
+  }
+  $('lv-share-cancel')?.addEventListener('click', () => shareModal.close());
+  $('lv-share-submit')?.addEventListener('click', () => {
+    const names = shareTokens.map((t) => t.label || t.value || t);
+    if (!names.length) {
+      if (globalThis.dsToast) dsToast.warning({ title: 'Add a recipient', description: 'Choose at least one person or role to share with.', style: 'subtle' });
+      return;
+    }
+    shareModal.close();
+    if (globalThis.dsToast) dsToast.success({ title: 'Filter shared', description: '“' + (sharePreset ? sharePreset.label : '') + '” shared with ' + names.join(', ') + '.', style: 'subtle' });
+  });
+  /* Clear filter — shared by the table caret's "Clear filter", the toolbar chip's ×,
+     AND the page-header filter menu's "Clear filter". Restore all rows, drop the
+     applied dot (table + header), remove the chip, and reset the builder so it
+     reopens empty with no active saved filter. */
+  function clearAllFilters() {
+    table.setAttribute('page', '1');
+    table.rows = ALL;
+    table.removeAttribute('filter-applied');
+    ph.removeAttribute('filter-applied');
+    ph.removeAttribute('filter-active');
+    table.filterSummary = '';
+    table.filterPresetActive = null;
+    _pendingSave = null;
+    if (typeof advanced.clear === 'function') advanced.clear();
+  }
+  table.addEventListener('ds-data-table-filter-clear', clearAllFilters);
+
+  /* show/hide. */
+  function show() { root.hidden = false; }
+  function hide() { root.hidden = true; }
+
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['list-view'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS — runs ONLY when opened directly. ================ */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers['list-view'] && window.ShellDrawers['list-view'].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

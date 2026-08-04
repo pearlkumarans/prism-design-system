@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Script Editor — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/script-editor/script-editor.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/script-editor/script-editor.js"></script>
+<style>
+  .demo-se-section { margin-bottom: 28px; }
+  .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+</style>
+</head>
+<body class="page-script-editor">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link active">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Script Editor</h1>
+        <p class="page-desc">The script editor is where users write or paste code &mdash; automations, configs, custom scripts. Pick the bare editor for inline snippets, the toolbar variant when users format and run code in place, and the full IDE layout when scripts get long enough to need a file tree, line numbers, and a console. For plain prose, use the Rich text editor.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div style="padding:24px 0;overflow:visible;">
+            <div id="anatomy-se-wrap" style="position:relative;display:block;padding:0 100px;">
+              <ds-script-editor id="anatomy-se" type="full-ide" tabs="index.ts, utils.ts, config.json" language="TypeScript">import { useState } from "react";
+
+interface Props { title: string; count: number; }</ds-script-editor>
+              <div class="anat-mk anat-mk-left" data-target="tabs"     style="top:0;"><span class="anat-marker-inline">1</span><div class="anat-mk-line"></div></div>
+              <div class="anat-mk anat-mk-left" data-target="toolbar"  style="top:0;"><span class="anat-marker-inline">2</span><div class="anat-mk-line"></div></div>
+              <div class="anat-mk anat-mk-left" data-target="code"     style="top:0;"><span class="anat-marker-inline">3</span><div class="anat-mk-line"></div></div>
+              <div class="anat-mk anat-mk-right" data-target="minimap" style="top:0;"><div class="anat-mk-line"></div><span class="anat-marker-inline">4</span></div>
+              <div class="anat-mk anat-mk-left" data-target="terminal" style="top:0;"><span class="anat-marker-inline">5</span><div class="anat-mk-line"></div></div>
+              <div class="anat-mk anat-mk-left" data-target="status"   style="top:0;"><span class="anat-marker-inline">6</span><div class="anat-mk-line"></div></div>
+            </div>
+          </div>
+          <style>
+            .anat-mk { position: absolute; display: flex; align-items: center; gap: 8px; white-space: nowrap; transform: translateY(-50%); }
+            .anat-mk-left  { right: calc(100% - 100px); }
+            .anat-mk-right { left:  calc(100% - 100px); }
+            .anat-mk-line  { width: 40px; height: 2px; background: #2563eb; }
+          </style>
+
+          <script type="module">
+            customElements.whenDefined('ds-script-editor').then(() => {
+              const host = document.getElementById('anatomy-se');
+              const wrap = document.getElementById('anatomy-se-wrap');
+              if (!host || !wrap) return;
+              const place = () => {
+                const wrapRect = wrap.getBoundingClientRect();
+                const targets = {
+                  tabs:     host.querySelector('.ds-script-editor__tabs'),
+                  toolbar:  host.querySelector('.ds-script-editor__toolbar'),
+                  code:     host.querySelector('.ds-script-editor__code'),
+                  minimap:  host.querySelector('.ds-script-editor__minimap'),
+                  terminal: host.querySelector('.ds-script-editor__terminal'),
+                  status:   host.querySelector('.ds-script-editor__status'),
+                };
+                wrap.querySelectorAll('.anat-mk').forEach((mk) => {
+                  const t = targets[mk.dataset.target];
+                  if (!t) { mk.style.display = 'none'; return; }
+                  const r = t.getBoundingClientRect();
+                  mk.style.top = (r.top + r.height / 2 - wrapRect.top) + 'px';
+                });
+              };
+              requestAnimationFrame(() => requestAnimationFrame(place));
+              window.addEventListener('load', place, { once: true });
+              if (document.fonts?.ready) document.fonts.ready.then(place);
+              new ResizeObserver(place).observe(host);
+            });
+          </script>
+          <div class="anat-legend" style="grid-template-columns:repeat(3,1fr);">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Tab Bar</strong><span>File tabs with document-style icons. Active tab has a bottom underline indicator and accent-colored icon.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Toolbar</strong><span>Action buttons (Run, Stop, Copy, Settings) and a language badge pill chip on the right.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Code Area</strong><span>Syntax-highlighted, scrollable code region with optional line numbers and active-line highlight.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Mini-map</strong><span>A miniature overview of the code for quick navigation. Available in FullIDE type only.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Terminal Panel</strong><span>Bottom panel with Terminal, Problems, and Output tabs. FullIDE only.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Status Bar</strong><span>Displays language, cursor position, encoding, and indentation settings. Blue by default, red in Error state.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Explore all five Script Editor types — rendered with the live <code>&lt;ds-script-editor&gt;</code> web component.</p>
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Script Editor Variants</span>
+                </div>
+              </div>
+              <div class="demo-canvas" style="flex-direction:column;align-items:stretch;gap:24px;padding:32px;">
+
+                <div class="demo-se-section">
+                  <div class="demo-group-label">Basic — code area + status bar</div>
+                  <ds-script-editor type="basic" language="TypeScript">import { useState } from "react";
+
+interface Props {
+  title: string;
+  count: number;
+}
+
+export function Editor(props: Props) {
+  const [value, setValue] = useState("");
+}</ds-script-editor>
+                </div>
+
+                <div class="demo-se-section">
+                  <div class="demo-group-label">With toolbar — Run / Stop / Copy / Settings</div>
+                  <ds-script-editor type="with-toolbar" language="TypeScript">export function greet(name) {
+  return `Hello, ${name}!`;
+}</ds-script-editor>
+                </div>
+
+                <div class="demo-se-section">
+                  <div class="demo-group-label">With tabs — multi-file</div>
+                  <ds-script-editor type="with-tabs" tabs="index.ts, utils.ts, config.json" language="TypeScript">import { useState } from "react";
+
+export function Editor(props) {
+  const [value, setValue] = useState("");
+}</ds-script-editor>
+                </div>
+
+                <div class="demo-se-section">
+                  <div class="demo-group-label">Full IDE — tabs + toolbar + minimap + terminal</div>
+                  <ds-script-editor type="full-ide" tabs="index.ts, utils.ts, config.json" language="TypeScript">import { useState } from "react";
+
+interface Props { title: string; count: number; }
+
+export function Editor(props: Props) {
+  const [value, setValue] = useState("");
+}</ds-script-editor>
+                </div>
+
+                <div class="demo-se-section">
+                  <div class="demo-group-label">Error state — syntax errors</div>
+                  <ds-script-editor type="basic" state="error" error-text="3 syntax errors" language="JavaScript">function broken( {
+  return undefined</ds-script-editor>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Language</code> to the actual syntax (TypeScript, Python, JSON, etc.) so the status bar is informative.</li>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">ReadOnly</code> for scripts users should inspect but not modify.</li>
+                <li>Show <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Error Text</code> with a specific count or message ("3 syntax errors").</li>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">WithLineNumbers</code> whenever the editor content may be referenced by line number in error messages or logs.</li>
+                <li>Toggle <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Show Status Bar=OFF</code> for ultra-compact embeds where metadata is not needed.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Leave <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Language</code> as "TypeScript" for non-TypeScript scripts.</li>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Disabled</code> for read-only display &#8212; Disabled implies unavailability, not protection.</li>
+                <li>Use generic text like "Error" without context.</li>
+                <li>Embed <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">FullIDE</code> inside a small card or sidebar panel.</li>
+                <li>Hide the status bar in <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Error</code> state &#8212; the error count lives there.</li>
+                <li>Add line numbers to Basic embeds where they add no informational value.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- RTL -->
+          <div class="doc-section">
+            <h2 id="rtl" class="doc-section-title">RTL (Right-to-Left)</h2>
+            <p class="doc-section-subtitle">Programming languages are inherently left-to-right (English keywords, ASCII operators, indentation), so the Script Editor's <strong>code area stays LTR</strong> even when the surrounding UI is RTL. Only the chrome (toolbar, status bar) mirrors.</p>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <div style="font-size:12px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px;">LTR (default)</div>
+                <ul style="margin:0;padding-left:20px;color:var(--prism-text-muted);font-size:14px;line-height:1.7;">
+                  <li>Toolbar title: <strong>left</strong></li>
+                  <li>Toolbar actions: <strong>right</strong></li>
+                  <li>Line numbers gutter: <strong>left</strong> of code</li>
+                  <li>Code: typed <strong>left to right</strong></li>
+                  <li>Status bar info: <strong>left</strong>, error count <strong>right</strong></li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <div style="font-size:12px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px;">RTL chrome, LTR code</div>
+                <ul style="margin:0;padding-left:20px;color:var(--prism-text-muted);font-size:14px;line-height:1.7;">
+                  <li>Toolbar title: <strong>right</strong></li>
+                  <li>Toolbar actions: <strong>left</strong></li>
+                  <li>Line numbers gutter: <strong>left</strong> of code (does NOT flip &mdash; line numbers prefix code which is LTR)</li>
+                  <li>Code: still typed <strong>left to right</strong></li>
+                  <li>Status bar info: <strong>right</strong>, error count <strong>left</strong></li>
+                </ul>
+              </div>
+            </div>
+            <p style="margin-top:16px;font-size:13.5px;color:var(--prism-text-muted);">
+              <strong>How it works:</strong> the editor chrome uses CSS logical properties (<code>padding-inline</code>, <code>margin-inline</code>) and flexbox so it mirrors automatically when <code>dir="rtl"</code> is set on an ancestor. The code area sets an explicit <code>direction: ltr</code> on the inner <code>&lt;textarea&gt;</code> so it stays canonical regardless of ambient direction. Arabic-language comments within the code render right-to-left naturally because Unicode bidi handles that at the character level.
+            </p>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Design tokens, variant specifications, and visual states that define the Script Editor's appearance.</p>
+
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">75 variants across Type (5) &times; State (5) &times; Size (3).</p>
+            <table class="size-table">
+              <thead><tr><th>Axis</th><th>Values</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Type</strong></td><td><code>Basic</code>, <code>WithToolbar</code>, <code>WithLineNumbers</code>, <code>WithTabs</code>, <code>FullIDE</code></td><td>Progressive feature set &#8212; each type adds chrome to the editor.</td></tr>
+                <tr><td><strong>State</strong></td><td><code>Default</code>, <code>Focus</code>, <code>Disabled</code>, <code>Error</code>, <code>ReadOnly</code></td><td>Interaction / validation state.</td></tr>
+                <tr><td><strong>Size</strong></td><td><code>Small</code>, <code>Medium</code>, <code>Large</code></td><td>Overall editor height and density.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="states" class="doc-section-title">States</h2>
+            <p class="doc-section-subtitle">Script Editor has four interaction states controlling borders, shadows, and text colors.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:24px;">
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-script-editor type="basic" size="small" language="TS">const x = 1;</ds-script-editor>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">Default</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Border-Secondary stroke</div>
+              </div>
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-script-editor type="basic" size="small" state="error" error-text="2 errors" language="TS">const x = 1;</ds-script-editor>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">Error</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Red border, error status bar</div>
+              </div>
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-script-editor type="basic" size="small" state="disabled" language="TS">const x = 1;</ds-script-editor>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">Disabled</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">50% opacity, non-interactive</div>
+              </div>
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-script-editor type="basic" size="small" state="readonly" language="TS">const x = 1;</ds-script-editor>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">ReadOnly</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Non-editable, badge shown</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="types" class="doc-section-title">Types</h2>
+            <p class="doc-section-subtitle">Five progressive configurations, each adding more chrome to the editor.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:24px;">
+              <div style="padding:20px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;text-align:center;">
+                <div style="font-size:24px;margin-bottom:8px;">&#128196;</div>
+                <div style="font-size:14px;font-weight:600;color:var(--prism-text);">Basic</div>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:4px;">Code area + Status bar</div>
+              </div>
+              <div style="padding:20px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;text-align:center;">
+                <div style="font-size:24px;margin-bottom:8px;">&#9655;</div>
+                <div style="font-size:14px;font-weight:600;color:var(--prism-text);">WithToolbar</div>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:4px;">+ Run/Stop/Copy/Settings</div>
+              </div>
+              <div style="padding:20px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;text-align:center;">
+                <div style="font-size:24px;margin-bottom:8px;">&#35;</div>
+                <div style="font-size:14px;font-weight:600;color:var(--prism-text);">WithLineNumbers</div>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:4px;">+ Numbered gutter</div>
+              </div>
+              <div style="padding:20px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;text-align:center;">
+                <div style="font-size:24px;margin-bottom:8px;">&#128451;</div>
+                <div style="font-size:14px;font-weight:600;color:var(--prism-text);">WithTabs</div>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:4px;">+ File tab bar</div>
+              </div>
+              <div style="padding:20px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;text-align:center;">
+                <div style="font-size:24px;margin-bottom:8px;">&#128187;</div>
+                <div style="font-size:14px;font-weight:600;color:var(--prism-text);">FullIDE</div>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:4px;">All features + terminal</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="syntax-highlighting-tokens" class="doc-section-title">Syntax Highlighting Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+            <table class="size-table">
+              <thead><tr><th>Syntax Role</th><th>UEMS Token</th><th>Resolves (Light)</th><th>Example</th></tr></thead>
+              <tbody>
+                <tr><td>Keywords</td><td><code>Text/Text-Accent-Link</code></td><td>#006AFF</td><td><code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">import</code>, <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">export</code>, <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">function</code></td></tr>
+                <tr><td>String literals / values</td><td><code>Text/Text-Primary</code></td><td>#15181E</td><td><code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">"react"</code>, <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">42</code></td></tr>
+                <tr><td>Comments</td><td><code>Text/Text-Placeholder</code></td><td>#8893AD</td><td><code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">// TODO</code></td></tr>
+                <tr><td>Identifiers / general</td><td><code>Text/Text-Primary</code></td><td>#15181E</td><td><code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Props</code>, <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">useState</code></td></tr>
+                <tr><td>Line numbers</td><td><code>Text/Text-Secondary</code></td><td>#2A303D</td><td>1, 2, 3 ...</td></tr>
+                <tr><td>Active line highlight</td><td><code>Background/BG-Secondary-alt</code></td><td>#F0F2F5</td><td>Row fill on current cursor line</td></tr>
+                <tr><td>Disabled text tint</td><td><code>Text/Text-Disabled</code> (purple/violet)</td><td>&#8212;</td><td>All text in Disabled state</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="design-tokens" class="doc-section-title">Design Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Editor Container</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Element</th><th>State</th><th>Token</th><th>Resolves (Light)</th></tr></thead>
+              <tbody>
+                <tr><td>Code area background</td><td>All</td><td><code>Background/BG-Base-White</code></td><td>#FFFFFF</td></tr>
+                <tr><td>Active line background</td><td>Default / Focus</td><td><code>Background/BG-Secondary-alt</code></td><td>#F0F2F5</td></tr>
+                <tr><td>Border</td><td>Default / ReadOnly</td><td><code>Border/Border-Secondary</code></td><td>#C3C9D6</td></tr>
+                <tr><td>Border</td><td>Focus</td><td><code>Border/Border-Accent</code> (2px)</td><td>#006AFF</td></tr>
+                <tr><td>Border</td><td>Error</td><td><code>Border/Border-Error</code></td><td>#E42527</td></tr>
+                <tr><td>Border</td><td>Disabled</td><td><code>Border/Border-Disabled</code></td><td>#E1E4EB</td></tr>
+                <tr><td>Scrollbar thumb</td><td>All</td><td><code>Background/BG-Tertiary</code></td><td>#E1E4EB</td></tr>
+                <tr><td>Text (all) &#8212; Disabled</td><td>Disabled</td><td><code>Text/Text-Disabled</code> (purple/violet)</td><td>&#8212;</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Status Bar</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Element</th><th>Token</th><th>Resolves (Light)</th></tr></thead>
+              <tbody>
+                <tr><td>Background (default)</td><td><code>Background/BG-Button-Primary</code></td><td>#006AFF</td></tr>
+                <tr><td>Background (error)</td><td><code>Background/BG-Error-Solid</code></td><td>#E42527</td></tr>
+                <tr><td>Text</td><td><code>Text/Text-White</code></td><td>#FFFFFF</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Toolbar</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Element</th><th>Token</th><th>Resolves (Light)</th></tr></thead>
+              <tbody>
+                <tr><td>Background</td><td><code>Background/BG-Secondary-alt</code></td><td>#F0F2F5</td></tr>
+                <tr><td>Button text / icons</td><td><code>Text/Text-Primary</code></td><td>#15181E</td></tr>
+                <tr><td>Language badge text</td><td><code>Text/Text-Secondary</code></td><td>#2A303D</td></tr>
+                <tr><td>Language badge background</td><td><code>Background/BG-Tertiary</code></td><td>#E1E4EB</td></tr>
+                <tr><td>Language badge border-radius</td><td>&#8212;</td><td><code>radius-full</code> (pill shape)</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Tab Bar</h4>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Token</th><th>Resolves (Light)</th></tr></thead>
+              <tbody>
+                <tr><td>Background</td><td><code>Background/BG-Secondary-alt</code></td><td>#F0F2F5</td></tr>
+                <tr><td>Active tab indicator</td><td><code>Border/Border-Accent</code></td><td>#006AFF</td></tr>
+                <tr><td>Active tab text</td><td><code>Text/Text-Primary</code></td><td>#15181E</td></tr>
+                <tr><td>Active tab file icon</td><td><code>Border/Icon/Icon-Accent</code></td><td>#006AFF</td></tr>
+                <tr><td>Inactive tab text</td><td><code>Text/Text-Secondary</code></td><td>#2A303D</td></tr>
+                <tr><td>File icon style</td><td>&#8212;</td><td>Document with folded top-right corner</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="type-feature-matrix" class="doc-section-title">Type Feature Matrix</h2>
+            <table class="size-table">
+              <thead><tr><th>Feature</th><th>Basic</th><th>WithToolbar</th><th>WithLineNumbers</th><th>WithTabs</th><th>FullIDE</th></tr></thead>
+              <tbody>
+                <tr><td>Code area</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+                <tr><td>Status bar</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+                <tr><td>Toolbar (Run/Stop/Copy/Settings)</td><td>&#8212;</td><td>&#10003;</td><td>&#8212;</td><td>&#8212;</td><td>&#10003;</td></tr>
+                <tr><td>Line number gutter</td><td>&#8212;</td><td>&#8212;</td><td>&#10003;</td><td>&#8212;</td><td>&#10003;</td></tr>
+                <tr><td>File tab bar</td><td>&#8212;</td><td>&#8212;</td><td>&#8212;</td><td>&#10003;</td><td>&#10003;</td></tr>
+                <tr><td>Mini-map panel</td><td>&#8212;</td><td>&#8212;</td><td>&#8212;</td><td>&#8212;</td><td>&#10003;</td></tr>
+                <tr><td>Terminal / Problems panel</td><td>&#8212;</td><td>&#8212;</td><td>&#8212;</td><td>&#8212;</td><td>&#10003;</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">Script Editor is designed for code editing, scripting, and configuration workflows.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">To let users write, edit, or review configuration scripts, automation scripts, or code snippets.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When the content requires syntax awareness that a plain textarea cannot convey.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When the editor needs to integrate execution controls (Run/Stop) in the same surface.</li>
+                  <li style="border:none;background:transparent;">To display read-only code references, computed scripts, or system-generated configurations.</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#e42527" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For single-line command inputs &#8212; use a Text Input with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">inputmode="text"</code>.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For plain prose or markdown editing &#8212; use a rich text editor or a Textarea.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For JSON/YAML form configuration &#8212; prefer structured form fields.</li>
+                  <li style="border:none;background:transparent;">As a lightweight "code display" block &#8212; use a Code Block instead.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="choosing-a-type" class="doc-section-title">Choosing a Type</h2>
+            <p class="doc-section-subtitle">Select the right Script Editor type for your use case.</p>
+            <table class="size-table">
+              <thead><tr><th>Scenario</th><th>Recommended Type</th></tr></thead>
+              <tbody>
+                <tr><td>Inline script input in a form or settings panel</td><td><code>Basic</code></td></tr>
+                <tr><td>Script execution with Run/Stop controls</td><td><code>WithToolbar</code></td></tr>
+                <tr><td>Long scripts where line references matter (e.g. debugging, logs)</td><td><code>WithLineNumbers</code></td></tr>
+                <tr><td>Multi-file project or config editing</td><td><code>WithTabs</code></td></tr>
+                <tr><td>Full scripting environment (developer-centric pages)</td><td><code>FullIDE</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do's and Don'ts</h2>
+            <p class="doc-section-subtitle">Guidelines for effective Script Editor usage.</p>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li><strong>Set language:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Language</code> to the actual syntax so the status bar is informative.</li>
+                <li><strong>Use ReadOnly:</strong> Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">ReadOnly</code> for scripts users should inspect but not modify.</li>
+                <li><strong>Specific errors:</strong> Show <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Error Text</code> with a specific count or message ("3 syntax errors").</li>
+                <li><strong>Use FullIDE only on dedicated pages:</strong> Ensure enough vertical space is available for the full IDE layout.</li>
+                <li><strong>Use line numbers for debugging:</strong> Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">WithLineNumbers</code> whenever error messages reference line numbers.</li>
+                <li><strong>Hide status bar sparingly:</strong> Toggle <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Show Status Bar=OFF</code> only for ultra-compact embeds.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li><strong>Wrong language:</strong> Leave <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Language</code> as "TypeScript" for non-TypeScript scripts.</li>
+                <li><strong>Disabled for read-only:</strong> Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Disabled</code> for read-only display &#8212; it implies unavailability.</li>
+                <li><strong>Generic errors:</strong> Use generic text like "Error" without context.</li>
+                <li><strong>FullIDE in small spaces:</strong> Embed FullIDE inside a small card or sidebar panel.</li>
+                <li><strong>Hidden error status:</strong> Hide the status bar in Error state &#8212; the error count lives there.</li>
+                <li><strong>Unnecessary line numbers:</strong> Add line numbers to Basic embeds where they add no informational value.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Components that complement or can be used alongside Script Editor.</p>
+            <div class="related-grid">
+              <a href="Text-area.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Textarea</a>
+              <a href="Text-field.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg> Text Input</a>
+              <a href="Dropdown.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg> Dropdown</a>
+              <a href="Script-editor.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Code Snippet</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <p class="doc-section-subtitle">Design tokens and resources for implementing the Script Editor component.</p>
+            <ul class="doc-list">
+              <li><strong>Figma Node:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">15914:18634</code> &#8212; Component Set: Script Editor</li>
+              <li><strong>Total Variants:</strong> 5 Types &times; 5 States &times; 3 Sizes = <strong>75 variants</strong></li>
+              <li><strong>Typography:</strong> Fira Code (monospace) for code content, status bar, and terminal; Zoho Puvi for labels</li>
+              <li><strong>Sub-components:</strong> Status Bar, Toolbar, Tab Bar, Terminal Panel, Mini-map</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Use the controls below to configure the Script Editor component and view the generated HTML code.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Type</label><select class="cp-select" id="pg-type"><option value="Basic" selected>Basic</option><option value="WithToolbar">WithToolbar</option><option value="WithLineNumbers">WithLineNumbers</option><option value="WithTabs">WithTabs</option><option value="FullIDE">FullIDE</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Size</label><select class="cp-select" id="pg-size"><option value="sm">Small</option><option value="md" selected>Medium</option><option value="lg">Large</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">State</label><select class="cp-select" id="pg-state"><option value="default" selected>Default</option><option value="focus">Focus</option><option value="error">Error</option><option value="disabled">Disabled</option><option value="readonly">ReadOnly</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="pg-rtl"><option value="false" selected>No</option><option value="true">Yes</option></select></div>
+            </div>
+            <div class="cp-preview" id="pg-preview-area" style="padding:24px;flex-direction:column;align-items:stretch;">
+              <ds-script-editor id="pg-se-element" type="basic" language="TypeScript">import { useState } from "react";
+
+interface Props { title: string; count: number; }
+
+export function Editor(props: Props) {
+  const [value, setValue] = useState("");
+}</ds-script-editor>
+            </div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-copy-btn"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg> Copy code</button>
+            </div>
+            <div style="background:#0a0a0c;">
+              <div class="cp-code-area" id="pg-code-output"></div>
+            </div>
+          </div>
+
+          <script type="module">
+            customElements.whenDefined('ds-script-editor').then(() => {
+              const typeEl  = document.getElementById('pg-type');
+              const sizeEl  = document.getElementById('pg-size');
+              const stateEl = document.getElementById('pg-state');
+              const rtlEl   = document.getElementById('pg-rtl');
+              const se      = document.getElementById('pg-se-element');
+              const codeOut = document.getElementById('pg-code-output');
+              const copyBtn = document.getElementById('pg-copy-btn');
+
+              const typeMap = { Basic:'basic', WithToolbar:'with-toolbar', WithLineNumbers:'with-line-numbers', WithTabs:'with-tabs', FullIDE:'full-ide' };
+              const sizeMap = { sm:'small', md:'medium', lg:'large' };
+
+              const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+              const SE_COPY_LTR = { errorText: '2 errors' };
+              const SE_COPY_RTL = { errorText: 'خطآن' };
+
+              function update() {
+                const t = typeMap[typeEl.value] || 'basic';
+                const sz = sizeMap[sizeEl.value] || 'medium';
+                const st = stateEl.value === 'focus' ? 'default' : stateEl.value;
+                const isRtl = rtlEl && rtlEl.value === 'true';
+                const copy = isRtl ? SE_COPY_RTL : SE_COPY_LTR;
+                se.setAttribute('type', t);
+                se.setAttribute('size', sz);
+                se.setAttribute('state', st);
+                if (t === 'with-tabs' || t === 'full-ide') se.setAttribute('tabs', 'index.ts, utils.ts, config.json');
+                else se.removeAttribute('tabs');
+                if (st === 'error') se.setAttribute('error-text', copy.errorText);
+                else se.removeAttribute('error-text');
+                if (isRtl) se.setAttribute('rtl', '');
+                else se.removeAttribute('rtl');
+
+                const attrs = [`type="${t}"`, `size="${sz}"`, 'language="TypeScript"'];
+                if (st !== 'default') attrs.push(`state="${st}"`);
+                if (t === 'with-tabs' || t === 'full-ide') attrs.push('tabs="index.ts, utils.ts, config.json"');
+                if (st === 'error') attrs.push(`error-text="${copy.errorText}"`);
+                if (isRtl) attrs.push('rtl');
+                const raw = `<ds-script-editor\n  ${attrs.join('\n  ')}\n>\n  // your code here\n</ds-script-editor>`;
+                codeOut.innerHTML = esc(raw)
+                  .replace(/&lt;(\/?)(ds-script-editor)/g, '&lt;$1<span style="color:#a78bfa;">$2</span>')
+                  .replace(/(type|size|state|tabs|language|error-text|rtl)(=|&gt;)/g, '<span style="color:#38bdf8;">$1</span>$2')
+                  .replace(/&quot;(.*?)&quot;/g, '<span style="color:#34d399;">"$1"</span>');
+                codeOut.dataset.raw = raw;
+              }
+
+              [typeEl, sizeEl, stateEl, rtlEl].forEach((el) => el && el.addEventListener('change', update));
+              copyBtn.addEventListener('click', () => {
+                const raw = codeOut.dataset.raw || '';
+                navigator.clipboard.writeText(raw).then(() => {
+                  const o = copyBtn.innerHTML;
+                  copyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+                  setTimeout(() => { copyBtn.innerHTML = o; }, 2000);
+                });
+              });
+
+              update();
+            });
+          </script>
+
+          <script type="text/disabled">
+          (function(){
+            var els = {type:document.getElementById('pg-type'),size:document.getElementById('pg-size'),state:document.getElementById('pg-state')};
+            var previewArea = document.getElementById('pg-preview-area');
+            var codeOut = document.getElementById('pg-code-output');
+            var copyBtn = document.getElementById('pg-copy-btn');
+
+            var sizeMap = {sm:{h:140,fs:11},md:{h:180,fs:13},lg:{h:220,fs:14}};
+
+            var codeLines = [
+              'import { useState } from "react";',
+              '',
+              'interface Props {',
+              '  title: string;',
+              '  count: number;',
+              '}',
+              '',
+              'export function Editor(props: Props) {',
+              '  const [value, setValue] = useState("");',
+              '}'
+            ];
+
+            function syntaxHL(line) {
+              return line
+                .replace(/\b(import|export|from|interface|function|const|return)\b/g, '<span class="kw">$1</span>')
+                .replace(/"([^"]*)"/g, '<span class="str">"$1"</span>');
+            }
+
+            function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+            function update(){
+              var tp = els.type.value;
+              var sz = els.size.value;
+              var st = els.state.value;
+              var s = sizeMap[sz];
+
+              var containerCls = 'se-container';
+              if(st==='focus') containerCls += ' focus';
+              if(st==='error') containerCls += ' error';
+              if(st==='disabled') containerCls += ' disabled';
+
+              var hasTabs = (tp==='WithTabs' || tp==='FullIDE');
+              var hasToolbar = (tp==='WithToolbar' || tp==='FullIDE');
+              var hasLineNums = (tp==='WithLineNumbers' || tp==='FullIDE');
+              var hasMinimap = (tp==='FullIDE');
+              var hasTerminal = (tp==='FullIDE');
+
+              // Build preview HTML
+              var html = '<div class="'+containerCls+'" style="width:100%;max-width:600px;font-size:'+s.fs+'px;">';
+
+              if(hasTabs) {
+                html += '<div class="se-tab-bar"><div class="se-tab active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> index.ts</div><div class="se-tab"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> utils.ts</div></div>';
+              }
+              if(hasToolbar) {
+                html += '<div class="se-toolbar"><span class="se-toolbar-btn">&#9655; Run</span><span class="se-toolbar-btn">&#9633; Stop</span><span class="se-toolbar-btn">&#9112; Copy</span><span class="se-toolbar-btn">&#9881; Settings</span><span class="se-lang-badge">TypeScript</span></div>';
+              }
+
+              if(hasMinimap) html += '<div style="display:flex;">';
+
+              html += '<div class="se-code-area" style="min-height:'+s.h+'px;'+(hasMinimap?'flex:1;':'')+'">';
+              for(var i=0;i<codeLines.length;i++){
+                var ln = codeLines[i];
+                var lineHtml = '';
+                if(hasLineNums) lineHtml += '<span class="line-nums">'+(i+1)+'</span> ';
+                if(i===8) lineHtml += '<span class="active-line">'+syntaxHL(ln)+'</span>';
+                else lineHtml += syntaxHL(ln || '&nbsp;');
+                html += lineHtml + '<br>';
+              }
+              if(st==='readonly') html += '<span class="se-readonly-badge">READ ONLY</span>';
+              html += '</div>';
+
+              if(hasMinimap) {
+                html += '<div class="se-minimap">';
+                for(var j=0;j<10;j++) html += '<div class="se-minimap-line'+(j%3===0?' accent':'')+'"></div>';
+                html += '</div></div>';
+              }
+
+              if(hasTerminal) {
+                html += '<div class="se-terminal"><div class="se-terminal-tabs"><div class="se-terminal-tab active">Terminal</div><div class="se-terminal-tab">Problems</div><div class="se-terminal-tab">Output</div></div><div class="se-terminal-output"><span class="prompt">$</span> npm run dev<br>&gt; vite --open<br>VITE v5.2.0 ready in 342ms</div></div>';
+              }
+
+              var statusCls = st==='error' ? 'se-status-bar error' : 'se-status-bar';
+              var statusLeft = st==='error' ? '2 Errors' : 'TypeScript';
+              html += '<div class="'+statusCls+'"><div class="status-left">'+statusLeft+'</div><div class="status-right"><span>Ln 9, Col 38</span><span>UTF-8</span><span>Spaces: 2</span></div></div>';
+              html += '</div>';
+              previewArea.innerHTML = html;
+
+              // Build code output
+              var stateAttr = '';
+              if(st==='default') stateAttr = 'default';
+              else if(st==='focus') stateAttr = 'focus';
+              else if(st==='error') stateAttr = 'error';
+              else if(st==='disabled') stateAttr = 'disabled';
+              else if(st==='readonly') stateAttr = 'readonly';
+
+              var codeStr = '<div\n  class="script-editor"\n  data-type="'+tp+'"\n  data-state="'+stateAttr+'"\n  data-size="'+sz+'"\n  role="group"\n  aria-label="Script editor"\n>';
+              if(hasTabs) codeStr += '\n  <!-- Tab Bar -->\n  <div class="editor-tab-bar">\n    <button class="tab active">index.ts</button>\n    <button class="tab">utils.ts</button>\n  </div>';
+              if(hasToolbar) codeStr += '\n  <!-- Toolbar -->\n  <div class="editor-toolbar" role="toolbar" aria-label="Editor actions">\n    <button aria-label="Run script">Run</button>\n    <button aria-label="Stop script">Stop</button>\n    <button aria-label="Copy code">Copy</button>\n    <button aria-label="Settings">Settings</button>\n    <span class="language-badge">TypeScript</span>\n  </div>';
+              codeStr += '\n  <!-- Code area -->\n  <div\n    class="editor-code-area"\n    role="textbox"\n    aria-multiline="true"\n    aria-label="Code editor"\n    aria-readonly="'+(st==='readonly'?'true':'false')+'"\n  ></div>';
+              if(hasTerminal) codeStr += '\n  <!-- Terminal -->\n  <div class="editor-terminal" role="log" aria-label="Terminal output"></div>';
+              codeStr += '\n  <!-- Status bar -->\n  <div class="editor-status-bar" aria-live="polite">\n    <span class="status-language">TypeScript</span>\n    <span class="status-position">Ln 9, Col 38</span>\n    <span class="status-encoding">UTF-8</span>\n    <span class="status-indent">Spaces: 2</span>\n  </div>';
+              codeStr += '\n</div>';
+
+              codeOut.innerHTML = esc(codeStr)
+                .replace(/class=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">class</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/data-type=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">data-type</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/data-state=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">data-state</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/data-size=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">data-size</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/role=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">role</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/aria-label=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">aria-label</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/aria-multiline=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">aria-multiline</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/aria-readonly=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">aria-readonly</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/aria-live=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">aria-live</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/ disabled/g,' <span style="color:#f97316;">disabled</span>')
+                .replace(/&lt;(\/?)(div|button|span|input)(.*?)&gt;/g,'&lt;$1<span style="color:#a78bfa;">$2</span>$3&gt;')
+                .replace(/&lt;!--(.*?)--&gt;/g,'<span style="color:#6b7280;">&lt;!--$1--&gt;</span>');
+            }
+            Object.values(els).forEach(function(e){e.addEventListener('change',update);});
+            copyBtn.addEventListener('click',function(){
+              var r=document.createElement('div');r.innerHTML=codeOut.innerHTML;
+              navigator.clipboard.writeText(r.innerText).then(function(){
+                var o=copyBtn.innerHTML;copyBtn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';setTimeout(function(){copyBtn.innerHTML=o;},2000);
+              });
+            });
+            update();
+          })();
+          </script>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="component-api-properties" class="doc-section-title">Component API &amp; Properties</h2>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Status Bar</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>Show Status Bar</code></td><td>Boolean</td><td>ON</td><td>Toggles the bottom status bar entirely.</td></tr>
+                <tr><td><code>Language</code></td><td>Text</td><td>"TypeScript"</td><td>Language indicator (left side of status bar).</td></tr>
+                <tr><td><code>Line Info</code></td><td>Text</td><td>"Ln 9, Col 38"</td><td>Cursor position display.</td></tr>
+                <tr><td><code>Encoding</code></td><td>Text</td><td>"UTF-8"</td><td>File encoding display.</td></tr>
+                <tr><td><code>Indent</code></td><td>Text</td><td>"Spaces: 2"</td><td>Indentation setting display.</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Toolbar (<code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">WithToolbar</code> and <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">FullIDE</code> only)</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>Show Toolbar</code></td><td>Boolean</td><td>ON</td><td>Toggles the entire toolbar.</td></tr>
+                <tr><td><code>Show Run</code></td><td>Boolean</td><td>ON</td><td>Toggles the Run button.</td></tr>
+                <tr><td><code>Show Stop</code></td><td>Boolean</td><td>ON</td><td>Toggles the Stop button.</td></tr>
+                <tr><td><code>Show Copy</code></td><td>Boolean</td><td>ON</td><td>Toggles the Copy button.</td></tr>
+                <tr><td><code>Show Settings</code></td><td>Boolean</td><td>ON</td><td>Toggles the Settings button.</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Tab Bar (<code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">WithTabs</code> and <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">FullIDE</code> only)</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>Show Tab Bar</code></td><td>Boolean</td><td>ON</td><td>Toggles the entire tab bar.</td></tr>
+                <tr><td><code>Tab 1</code></td><td>Text</td><td>"index.ts"</td><td>Label for the first (active) tab.</td></tr>
+                <tr><td><code>Tab 2</code></td><td>Text</td><td>"utils.ts"</td><td>Label for the second tab.</td></tr>
+                <tr><td><code>Tab 3</code></td><td>Text</td><td>"config.json"</td><td>Label for the third tab.</td></tr>
+                <tr><td><code>Show Tab 2</code></td><td>Boolean</td><td>ON</td><td>Toggles second tab visibility.</td></tr>
+                <tr><td><code>Show Tab 3</code></td><td>Boolean</td><td>ON</td><td>Toggles third tab visibility.</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Terminal &amp; Errors (<code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">FullIDE</code> only / Error state)</h4>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>Show Terminal</code></td><td>Boolean</td><td>ON</td><td>Toggles the Terminal / Problems / Output panel (FullIDE only).</td></tr>
+                <tr><td><code>Error Text</code></td><td>Text</td><td>"2 Errors"</td><td>Text shown in the status bar left zone during Error state.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="implementation-idea" class="doc-section-title">Implementation Idea: Ember</h2>
+            <div class="cp-code-area" style="border-radius:12px;margin-top:16px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#94a3b8;">&lt;!-- script-editor.hbs --&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">UemsScriptEditor</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@type</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"WithToolbar"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@size</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"md"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@state</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.editorState</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@language</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"TypeScript"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@value</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.scriptContent</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@onRun</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.executeScript</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@onChange</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.updateScript</span><span style="color:#C678DD;">}}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="state-mapping" class="doc-section-title">State Mapping</h2>
+            <table class="size-table">
+              <thead><tr><th>Figma State</th><th>CSS class / attribute</th><th>Editor behaviour</th></tr></thead>
+              <tbody>
+                <tr><td>Default</td><td>&#8212;</td><td>Editable; active-line highlight on current row.</td></tr>
+                <tr><td>Focus</td><td><code>:focus-within</code></td><td>Blue 2px border ring, cursor visible, active-line highlight.</td></tr>
+                <tr><td>Disabled</td><td><code>[disabled]</code> / <code>aria-disabled="true"</code></td><td>Not editable, not focusable; all text rendered in purple/violet.</td></tr>
+                <tr><td>Error</td><td><code>[data-state="error"]</code></td><td>Red border, error count in status bar with red fill.</td></tr>
+                <tr><td>ReadOnly</td><td><code>[readonly]</code> / <code>aria-readonly="true"</code></td><td>Not editable but focusable; "READ ONLY" badge above status bar.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for ensuring the Script Editor is accessible across assistive technologies and input methods.</p>
+
+          <div class="doc-section">
+            <h3 id="keyboard-interaction" class="doc-h3">Keyboard Interaction</h3>
+            <table class="size-table">
+              <thead><tr><th>Action</th><th>Result</th></tr></thead>
+              <tbody>
+                <tr><td><code>Tab</code></td><td>Inserts indentation (spaces per indent setting), does not move focus out of editor.</td></tr>
+                <tr><td><code>Shift+Tab</code></td><td>Decreases indentation.</td></tr>
+                <tr><td><code>Ctrl/&#8984;+A</code></td><td>Select all.</td></tr>
+                <tr><td><code>Ctrl/&#8984;+C</code></td><td>Copy selected text.</td></tr>
+                <tr><td><code>Ctrl/&#8984;+Z</code></td><td>Undo.</td></tr>
+                <tr><td><code>Ctrl/&#8984;+Shift+Z</code></td><td>Redo.</td></tr>
+                <tr><td><code>Ctrl/&#8984;+/</code></td><td>Toggle line comment.</td></tr>
+                <tr><td><code>Ctrl/&#8984;+Enter</code></td><td>Execute (when toolbar is present and Run is enabled).</td></tr>
+                <tr><td><code>Escape</code></td><td>Blur editor / return focus to parent context.</td></tr>
+                <tr><td><code>F1</code></td><td>Open command palette (FullIDE only).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="aria-attributes" class="doc-h3">ARIA Attributes &amp; Screen Reader Guidance</h3>
+            <ul class="doc-list">
+              <li><strong>Role:</strong> Wrap in <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="group"</code> with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-label="Script editor"</code> or <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-labelledby</code> referencing a heading.</li>
+              <li><strong>Code area:</strong> The editable region should be a <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">contenteditable</code> div or a library-managed textarea with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="textbox"</code> and <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-multiline="true"</code>.</li>
+              <li><strong>ReadOnly:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-readonly="true"</code> on the code area; the "READ ONLY" badge should also be announced.</li>
+              <li><strong>Disabled:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-disabled="true"</code> and remove from tab order (<code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">tabindex="-1"</code>). The purple/violet text tint is a visual cue only.</li>
+              <li><strong>Error:</strong> Status bar should have <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-live="polite"</code> so error count changes are announced.</li>
+              <li><strong>Toolbar buttons:</strong> Each button must have <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-label</code> for icon-only buttons.</li>
+              <li><strong>Focus ring:</strong> The 2px blue focus ring must not be overridden by global reset styles.</li>
+              <li><strong>Contrast:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Text-Accent-Link</code> (keywords, blue) on the light editor background must meet WCAG AA (4.5:1).</li>
+              <li><strong>Syntax colours:</strong> Do not rely solely on colour for syntax meaning &#8212; keywords should also be identifiable by context or font weight.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="focus-state-design" class="doc-h3">Focus State Design</h3>
+            <ul class="doc-list">
+              <li><strong>Visible focus indicator:</strong> The entire editor container receives a 2px blue border (<code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">#006AFF</code>) plus a blue shadow ring &#8212; this must not be overridden (WCAG 2.4.7).</li>
+              <li><strong>Cursor indicator:</strong> A blinking text cursor appears inside the code area to signal input readiness.</li>
+              <li><strong>Active-line highlight:</strong> The current cursor line receives a subtle background fill to provide visual context.</li>
+            </ul>
+            <div style="margin-top:24px;display:flex;gap:16px;align-items:center;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+              <div class="se-container focus" style="width:120px;font-size:11px;">
+                <div class="se-code-area" style="min-height:32px;padding:8px 10px;"><span class="kw">const</span> x = 1;</div>
+              </div>
+              <div>
+                <div style="font-weight:600;font-size:15px;color:var(--prism-text);">Focus ring: 2px border + 3px shadow</div>
+                <div style="font-size:14px;color:var(--prism-text-muted);margin-top:4px;">Border: #006AFF | Shadow: rgba(0,106,255,0.15)</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="tab-trap-note" class="doc-h3">Tab Trap Note</h3>
+            <div style="margin-top:16px;padding:16px 20px;background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.15);border-radius:12px;">
+              <p style="font-size:14px;color:var(--prism-text);line-height:1.6;margin:0;"><strong>Important:</strong> By default, <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Tab</code> inserts indentation rather than moving focus. Provide a documented keyboard escape (e.g. <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Escape</code> then <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Tab</code>) for keyboard-only users who need to exit the editor. Optionally expose a setting to use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Tab</code> for focus navigation instead of indentation.</p>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="color-contrast-minimums" class="doc-h3">Color Contrast Minimums<span class="h3-badge" style="background:rgba(34,197,94,0.15);color:#16a34a;">WCAG AA Pass</span></h3>
+            <p class="doc-section-subtitle">All color combinations meet WCAG 2.1 AA contrast requirements. Disabled state is exempt.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:24px;">
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#fff;padding:28px 24px;text-align:center;border-radius:12px 12px 0 0;"><div style="font-size:20px;font-weight:700;font-family:'Fira Code',monospace;color:#006AFF;">import export const</div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">KEYWORD BLUE ON WHITE</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#006AFF on #FFFFFF</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 4.68:1</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AA Pass</div></div></div>
+              </div>
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#fff;padding:28px 24px;text-align:center;border-radius:12px 12px 0 0;"><div style="font-size:20px;font-weight:700;font-family:'Fira Code',monospace;color:#15181E;">Props useState Editor</div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">TEXT-PRIMARY ON WHITE</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#15181E on #FFFFFF</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 17.4:1</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AAA Pass</div></div></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="touch-target-size" class="doc-h3">Touch Target Size</h3>
+            <p class="doc-section-subtitle">Toolbar buttons and tab bar items should meet the minimum 44px touch target. The code area is a continuous interactive surface.</p>
+            <div style="margin-top:16px;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;display:flex;align-items:center;gap:24px;">
+              <div style="width:48px;height:48px;background:rgba(37,99,235,0.1);border:1px dashed var(--prism-violet);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--prism-violet);font-size:13px;font-weight:600;flex-shrink:0;">44px</div>
+              <div><div style="font-weight:600;font-size:15px;color:var(--prism-text);">Minimum touch target: 44&times;44px</div><div style="font-size:14px;color:var(--prism-text-muted);margin-top:4px;">Toolbar buttons and tab bar items should be at least 44px in height on touch devices. Use the Large size variant for optimal mobile interaction.</div></div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/script-editor.md" download="script-editor.md" class="action-link"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=15914-18634" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/components/toc.js"></script>
+<script src="js/main.js"></script>
+
+
+</body>
+</html>

@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Description list — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/description-list/description-list.css">
+<link rel="stylesheet" href="../design-system-library/src/components/icon-button/icon-button.css">
+<link rel="stylesheet" href="../design-system-library/src/components/tooltip/tooltip.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/description-list/description-list.js"></script>
+<style>
+  .page-input-select .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    padding: 32px !important;
+    gap: 32px !important;
+  }
+  .page-input-select .demo-is-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-input-select .demo-is-section > .demo-group-label {
+    font-size: 11px !important; font-weight: 700 !important; letter-spacing: 0.08em !important;
+    color: var(--prism-text-muted) !important; text-transform: uppercase !important;
+    margin: 0 !important; text-align: left !important; width: auto !important;
+  }
+  .page-input-select .demo-is-stack { display: flex; flex-direction: column; gap: 16px; max-width: 480px; }
+  .page-input-select .demo-is-stack--wide { max-width: 720px; }
+  .page-input-select .demo-is-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  .page-input-select .anat-legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 28px; margin-top: 12px; }
+  .page-input-select .anat-legend-item { display: flex; gap: 10px; align-items: flex-start; }
+  .page-input-select .anat-legend-item > div { display: flex; flex-direction: column; gap: 2px; }
+  .page-input-select .anat-legend-item strong { font-size: 13px; color: var(--prism-text); }
+  .page-input-select .anat-legend-item span { font-size: 12px; color: var(--prism-text-muted); line-height: 1.45; }
+  .page-input-select .anat-marker-inline {
+    flex: 0 0 22px; width: 22px; height: 22px; border-radius: 999px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;
+    font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body class="page-input-select page-text-field">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div style="width: 16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search...">
+        <span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 id="components" class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link active">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Description list</h1>
+        <p class="page-desc">
+          A description list presents structured <strong>term&nbsp;&rarr;&nbsp;value</strong> pairs &mdash; metadata like status, owner, or dates on detail pages, side panels, and spec sheets. It maps to the native <code>&lt;dl&gt;</code> element. Pick how many <strong>columns</strong> the pairs flow into (1&ndash;3) and whether each item is <strong>Stacked</strong> (term above value) or <strong>Horizontal</strong> (term beside value). Based on PatternFly&rsquo;s Description List.
+        </p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══════════════════════════════ TAB: OVERVIEW ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-overview">
+
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div style="padding:32px 0;">
+            <div style="display:flex;justify-content:center;margin-bottom:28px;">
+              <div style="width:100%;max-width:460px;border:1px solid var(--prism-border);border-radius:12px;background:var(--prism-surface);">
+                <ds-description-list id="anat" orientation="horizontal"></ds-description-list>
+              </div>
+            </div>
+            <div class="anat-legend">
+              <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>List (&lt;dl&gt;)</strong><span>The container. Holds every term/value pair and owns the padding and column layout.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Item</strong><span>One term/value pair. Never splits across a column boundary.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Term (&lt;dt&gt;)</strong><span>The label/key. Text-Secondary, 12/16 semibold.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Value (&lt;dd&gt;)</strong><span>The value. Text-Primary, 14/20 regular. Empty values render an em-dash.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Help icon</strong><span>Optional. Shown when the item has <code>help</code> text; hover for a tooltip.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Edit button</strong><span>Optional. A full Icon Button shown when the item is <code>editable</code>.</span></div></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div style="margin-bottom: 64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom: 8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom: 28px;">Every column count and orientation, plus editable rows, help tooltips, empty values, and RTL &mdash; exactly how they behave in production.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Description list &middot; columns &times; orientation</span>
+                </div>
+              </div>
+              <div class="demo-canvas">
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Columns &mdash; 1 / 2 / 3 (Stacked). Items fill column-major.</div>
+                  <div class="demo-is-stack demo-is-stack--wide" style="max-width:none;gap:24px;">
+                    <ds-description-list class="dl-demo" data-demo="basic" columns="1"></ds-description-list>
+                    <ds-description-list class="dl-demo" data-demo="basic" columns="2"></ds-description-list>
+                    <ds-description-list class="dl-demo" data-demo="basic" columns="3"></ds-description-list>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Orientation &mdash; Stacked (term above) &middot; Horizontal (140px term column) &middot; Horizontal-auto (term hugs its content, no fixed width)</div>
+                  <div class="demo-is-stack demo-is-stack--wide" style="max-width:640px;gap:24px;">
+                    <ds-description-list class="dl-demo" data-demo="basic" orientation="stacked"></ds-description-list>
+                    <ds-description-list class="dl-demo" data-demo="basic" orientation="horizontal"></ds-description-list>
+                    <ds-description-list class="dl-demo" data-demo="basic" orientation="horizontal-auto"></ds-description-list>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Editable &amp; help &mdash; <code>editable</code> shows an edit button; <code>help</code> shows a hover tooltip. Empty value &rarr; em-dash.</div>
+                  <div class="demo-is-stack" style="max-width:520px;">
+                    <ds-description-list class="dl-demo" data-demo="rich" orientation="horizontal"></ds-description-list>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Value types &mdash; <code>type</code> renders the value as a Prism component: status &middot; badge &middot; link &middot; tags &middot; user &middot; icon &middot; progress &middot; toggle &middot; copy</div>
+                  <div class="demo-is-stack" style="max-width:560px;">
+                    <ds-description-list class="dl-demo" data-demo="types" orientation="horizontal"></ds-description-list>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">RTL &mdash; Arabic layout mirrors the columns and the term/value order</div>
+                  <div class="demo-is-stack" style="max-width:520px;">
+                    <ds-description-list class="dl-demo" data-demo="ar" columns="2" rtl></ds-description-list>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ TAB: STYLE ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-style" style="display: none; padding-top: 32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Exact measurements, typography, and tokens behind the description list. Use this to align a Figma node to code.</p>
+
+          <div class="doc-section">
+            <h2 id="variant-axes" class="doc-section-title">Variant Axes</h2>
+            <p class="doc-section-subtitle">Three dials describe every description list.</p>
+            <div style="padding: 24px; background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 12px; margin-top: 16px;">
+              <div style="font-size: 15px; color: var(--prism-text); line-height: 1.7;">
+                <strong>3</strong> Columns &times; <strong>2</strong> Orientation &times; <strong>2</strong> RTL = <strong style="color: var(--prism-violet); font-size: 18px;">12 variants</strong>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="measurements" class="doc-section-title">Measurements</h2>
+            <p class="doc-section-subtitle">Container height always hugs content. Multi-column widths are fluid in code (equal tracks); Figma pins them for layout.</p>
+            <table class="size-table">
+              <thead><tr><th>Region</th><th>Value</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>Container padding</td><td>16px</td><td>All sides</td></tr>
+                <tr><td>Item gap (vertical)</td><td>16px</td><td>Between items within a column</td></tr>
+                <tr><td>Column gap &mdash; Stacked</td><td>32px</td><td>Between columns (2/3 col)</td></tr>
+                <tr><td>Column gap &mdash; Horizontal</td><td>40px</td><td>Between columns (2/3 col)</td></tr>
+                <tr><td>Stacked: term &rarr; value</td><td>4px</td><td>Vertical gap</td></tr>
+                <tr><td>Horizontal: term column</td><td>140px</td><td>Fixed width; long term wraps to 2 lines then ellipsis</td></tr>
+                <tr><td>Horizontal: term &rarr; value</td><td>24px</td><td>Horizontal gap</td></tr>
+                <tr><td>Value &rarr; edit button</td><td>8px</td><td><code>spacing/8</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="design-tokens" class="doc-section-title">Design Tokens</h2>
+            <p class="doc-section-subtitle">Typography, colour, and spacing tokens the list touches.</p>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>Text/small/SemiBold</code></td><td>Zoho Puvi Semibold 12/16</td><td>Term (label) text</td></tr>
+                <tr><td><code>Text/Default/Regular</code></td><td>Zoho Puvi Regular 14/20</td><td>Description (value) text</td></tr>
+                <tr><td><code>Text-Secondary</code></td><td>#2A303D</td><td>Term colour</td></tr>
+                <tr><td><code>Text-Primary</code></td><td>#15181E</td><td>Value colour</td></tr>
+                <tr><td><code>spacing/4</code> / <code>16</code> / <code>24</code> / <code>32</code> / <code>40</code></td><td>4&ndash;40px</td><td>Gaps &amp; padding (see Measurements)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ TAB: USAGE ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-usage" style="display: none; padding-top: 32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When to Use</h2>
+            <ul class="doc-list">
+              <li><strong>Use</strong> for read-only metadata on detail pages, side panels, drawers, and spec sheets &mdash; status, owner, timestamps, IDs.</li>
+              <li><strong>Don&rsquo;t</strong> use for editable forms &mdash; use Text field / Input select. (Individual values may offer an inline <em>edit</em> affordance that opens an editor.)</li>
+              <li><strong>Don&rsquo;t</strong> use for rows of homogeneous records &mdash; use a Data table.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="columns-orientation" class="doc-section-title">Columns &amp; orientation</h2>
+            <table class="size-table">
+              <thead><tr><th>Choice</th><th>Best for</th></tr></thead>
+              <tbody>
+                <tr><td><strong>1 column</strong></td><td>Narrow panels, modals, drawers</td></tr>
+                <tr><td><strong>2 columns</strong></td><td>Medium-width detail pages</td></tr>
+                <tr><td><strong>3 columns</strong></td><td>Wide spec sheets</td></tr>
+                <tr><td><strong>Stacked</strong></td><td>Narrow items / unpredictable term lengths (term above value)</td></tr>
+                <tr><td><strong>Horizontal</strong></td><td>Wide items with short, consistent terms (fixed 140px term column, values align)</td></tr>
+                <tr><td><strong>Horizontal&#8209;auto</strong></td><td>Compact inline pairs where the term should hug its text and values need not align to a column</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="responsive" class="doc-section-title">Responsive</h2>
+            <ul class="doc-list">
+              <li>As width narrows, <strong>collapse to a single column</strong> and switch to <strong>Stacked</strong> orientation (below ~768px). The fixed 140px term column can&rsquo;t stay side-by-side on small screens.</li>
+              <li>The component keeps a single logical <code>&lt;dl&gt;</code> and drops to one column via CSS &mdash; no markup restructuring.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+            <p class="doc-section-subtitle">Set <code>rtl</code> to mirror the layout: column reading order reverses and the help icon / edit button swap sides. Provide already-localized <code>term</code> / <code>description</code> strings.</p>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="related-components" class="doc-section-title">Related Components</h2>
+            <div class="related-grid">
+              <a href="Data-table.html" class="related-chip"><ds-icon name="table" size="16"></ds-icon> Data table</a>
+              <a href="Section-Header.html" class="related-chip"><ds-icon name="heading" size="16"></ds-icon> Section header</a>
+              <a href="Text-field.html" class="related-chip"><ds-icon name="edit" size="16"></ds-icon> Text field</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="figma-reference" class="doc-section-title">Figma Reference</h2>
+            <p class="doc-section-subtitle">Built from the <strong>Description List</strong> component set (based on <a href="https://www.patternfly.org/components/description-list/" target="_blank">PatternFly</a>).</p>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ TAB: CODE ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-code" style="display: none; padding-top: 32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo</h2>
+          <p class="doc-section-subtitle">Toggle the layout controls on the left and watch the component &mdash; and the code below &mdash; update live.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Columns</label><select class="cp-select" id="dl-cols"><option>1</option><option selected>2</option><option>3</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Orientation</label><select class="cp-select" id="dl-ori"><option value="stacked">stacked</option><option value="horizontal" selected>horizontal</option><option value="horizontal-auto">horizontal-auto</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Value type</label><select class="cp-select" id="dl-type"><option value="mixed" selected>mixed</option><option value="text">text</option><option value="status">status</option><option value="badge">badge</option><option value="link">link</option><option value="tags">tags</option><option value="user">user</option><option value="icon">icon</option><option value="progress">progress</option><option value="toggle">toggle</option><option value="copy">copy</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Editable rows</label><select class="cp-select" id="dl-edit"><option value="true" selected>true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show help</label><select class="cp-select" id="dl-help"><option value="true" selected>true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="dl-rtl"><option value="false" selected>false</option><option value="true">true</option></select></div>
+            </div>
+            <div class="cp-preview" id="dl-pg-preview" style="padding:24px;"><div id="dl-pg-host" style="width:100%;max-width:640px;margin:0 auto;border:1px solid var(--prism-border);border-radius:12px;background:var(--prism-surface);"></div></div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML + JS</div>
+              <button class="cp-action-btn" id="dl-pg-copy"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+            </div>
+            <div class="cp-code-area" id="dl-pg-code"></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="usage-code" class="doc-section-title">Usage</h2>
+          <p class="doc-section-subtitle">Set attributes for layout; pass the pairs via the <code>items</code> JS property.</p>
+          <div class="cp-code-area" style="padding:20px;">
+<pre style="margin:0;white-space:pre-wrap;font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.7">&lt;<span style="color:#60a5fa">ds-description-list</span> <span style="color:#38bdf8">columns</span>=<span style="color:#34d399">"2"</span> <span style="color:#38bdf8">orientation</span>=<span style="color:#34d399">"horizontal"</span>&gt;&lt;/<span style="color:#60a5fa">ds-description-list</span>&gt;
+
+&lt;script&gt;
+  <span style="color:#c084fc">document</span>.querySelector(<span style="color:#34d399">'ds-description-list'</span>).items = [
+    { term: <span style="color:#34d399">'Status'</span>,  description: <span style="color:#34d399">'Active'</span> },
+    { term: <span style="color:#34d399">'Owner'</span>,   description: <span style="color:#34d399">'Jane Doe'</span>, help: <span style="color:#34d399">'Billing owner'</span>, editable: <span style="color:#f59e0b">true</span> },
+    { term: <span style="color:#34d399">'Region'</span>,  description: <span style="color:#34d399">''</span> },  <span style="color:#64748b">/* empty → em-dash */</span>
+  ];
+  <span style="color:#c084fc">document</span>.querySelector(<span style="color:#34d399">'ds-description-list'</span>)
+    .addEventListener(<span style="color:#34d399">'ds-description-list-edit'</span>, e =&gt; <span style="color:#c084fc">console</span>.log(e.detail));
+&lt;/script&gt;</pre>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="component-properties" class="doc-section-title">Component Properties</h2>
+          <p class="doc-section-subtitle">Layout is set via attributes; content via the <code>items</code> property.</p>
+
+          <div class="doc-section">
+            <h3 id="props-core" class="doc-h3">Container<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">4 props</span></h3>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>columns</code></td><td><code>1 · 2 · 3</code></td><td><code>1</code></td><td>Number of columns the items flow into (column-major). Collapses to 1 on mobile.</td></tr>
+                <tr><td><code>orientation</code></td><td><code>stacked · horizontal · horizontal-auto</code></td><td><code>stacked</code></td><td>Term above value (stacked); beside it in a fixed 140px column (horizontal); or beside it with the term hugging its content — no fixed width (horizontal-auto).</td></tr>
+                <tr><td><code>rtl</code></td><td>Boolean</td><td><code>false</code></td><td>Mirror layout + reading order for right-to-left languages.</td></tr>
+                <tr><td><code>items</code></td><td>Array (JS prop)</td><td><code>[]</code></td><td>The pairs: <code>[{ term, description, help?, editable? }]</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h3 id="props-item" class="doc-h3">Item fields<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">5 fields</span></h3>
+            <table class="size-table">
+              <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>term</code></td><td>String</td><td>The label/key (<code>&lt;dt&gt;</code>).</td></tr>
+                <tr><td><code>description</code></td><td>String</td><td>The value (<code>&lt;dd&gt;</code>). Empty/blank renders an em-dash. (Used as the label for status/badge/link/icon/copy.)</td></tr>
+                <tr><td><code>type</code></td><td>Enum</td><td>Optional. Renders the value as a Prism component &mdash; see the table below. Defaults to plain text.</td></tr>
+                <tr><td><code>help</code></td><td>String</td><td>Optional. Shows a help icon by the term with this text in a hover tooltip.</td></tr>
+                <tr><td><code>editable</code></td><td>Boolean</td><td>Optional. Shows an edit Icon Button after the value.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h3 id="props-value-types" class="doc-h3">Value types<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">10 types</span></h3>
+            <p class="doc-section-subtitle">Each maps to an existing Prism component. Set <code>type</code> plus its fields.</p>
+            <table class="size-table">
+              <thead><tr><th><code>type</code></th><th>Renders</th><th>Item fields</th></tr></thead>
+              <tbody>
+                <tr><td><code>text</code> <em>(default)</em></td><td>plain text</td><td><code>description</code> (empty &rarr; em-dash)</td></tr>
+                <tr><td><code>status</code></td><td><code>ds-status-indicator</code></td><td><code>status</code>, <code>description</code></td></tr>
+                <tr><td><code>badge</code></td><td><code>ds-badge</code></td><td><code>state</code>, <code>description</code>, <code>variant?</code>, <code>icon?</code></td></tr>
+                <tr><td><code>link</code></td><td><code>ds-text-link</code></td><td><code>description</code>, <code>href</code>, <code>icon?</code></td></tr>
+                <tr><td><code>tags</code></td><td><code>ds-tag</code> &times;N</td><td><code>tags: [string | {label, variant}]</code></td></tr>
+                <tr><td><code>user</code></td><td><code>ds-avatar</code> + name</td><td><code>name</code>, <code>avatar?</code>, <code>email?</code></td></tr>
+                <tr><td><code>icon</code></td><td><code>ds-icon</code> + text</td><td><code>icon</code>, <code>description</code></td></tr>
+                <tr><td><code>progress</code></td><td><code>ds-progress-bar</code> + %</td><td><code>value</code> (0&ndash;100), <code>valueLabel?</code>, <code>variant?</code></td></tr>
+                <tr><td><code>toggle</code></td><td><code>ds-toggle</code></td><td><code>checked</code>, <code>disabled?</code> &mdash; fires <code>ds-description-list-toggle</code></td></tr>
+                <tr><td><code>copy</code></td><td>mono text + copy button</td><td><code>description</code> &mdash; fires <code>ds-description-list-copy</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h3 id="props-events" class="doc-h3">Events</h3>
+            <table class="size-table">
+              <thead><tr><th>Event</th><th>Detail</th><th>Fires when</th></tr></thead>
+              <tbody>
+                <tr><td><code>ds-description-list-edit</code></td><td><code>{ index, term, item }</code></td><td>An item&rsquo;s edit button is pressed.</td></tr>
+                <tr><td><code>ds-description-list-help</code></td><td><code>{ index, term, item }</code></td><td>An item&rsquo;s help icon is pressed.</td></tr>
+                <tr><td><code>ds-description-list-toggle</code></td><td><code>{ index, checked, term, item }</code></td><td>A <code>type:'toggle'</code> value is flipped.</td></tr>
+                <tr><td><code>ds-description-list-copy</code></td><td><code>{ index, value, term, item }</code></td><td>A <code>type:'copy'</code> value&rsquo;s button is pressed.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ TAB: ACCESSIBILITY ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-accessibility" style="display: none; padding-top: 32px;">
+          <div class="doc-section">
+            <h2 id="a11y-overview" class="doc-section-title">Accessibility</h2>
+            <p class="doc-section-subtitle">The component renders semantic <code>&lt;dl&gt;</code> / <code>&lt;dt&gt;</code> / <code>&lt;dd&gt;</code>, so the term/value association is conveyed natively.</p>
+            <ul class="doc-list">
+              <li>Multi-column is a <strong>visual</strong> arrangement only &mdash; it stays a single logical <code>&lt;dl&gt;</code> (columns via CSS), so screen readers still pair each term with its value.</li>
+              <li><strong>DOM order = logical order</strong> (term, its help button, value, edit button), item by item. RTL reverses the <em>visual</em> order via <code>dir="rtl"</code>; the DOM order stays logical.</li>
+              <li>The <strong>help icon</strong> is a <code>&lt;button&gt;</code> with an <code>aria-label</code> (e.g. &ldquo;About {term}&rdquo;).</li>
+              <li>The <strong>edit button</strong> is a full Icon Button with a descriptive <code>aria-label</code> (e.g. &ldquo;Edit {term}&rdquo;) &mdash; the icon alone is not the accessible name.</li>
+              <li><strong>Contrast:</strong> Term <code>#2A303D</code> and Value <code>#15181E</code> on the base surface both exceed WCAG AA for normal text.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h3 id="keyboard-navigation" class="doc-h3">Keyboard</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><code>Tab</code></td><td>Move to the next control (help icon, then edit button, in reading order).</td></tr>
+                <tr><td><code>Enter</code> / <code>Space</code></td><td>Activate the focused help icon or edit button.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        </div><!-- close main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="../handoff/description-list.md" download="description-list.md" class="action-link">
+              <ds-icon name="download" size="15"></ds-icon>
+              Download MD
+            </a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=20097-607638" target="_blank" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+
+      </div> <!-- close main-content-area -->
+    </main>
+  </div>
+
+  <!-- ── Live demo data ── -->
+  <script type="module">
+    const BASIC = [
+      { term: 'Status',  description: 'Active' },
+      { term: 'Owner',   description: 'Jane Doe' },
+      { term: 'Region',  description: 'US-East' },
+      { term: 'Plan',    description: 'Enterprise' },
+      { term: 'Created', description: 'Jun 24, 2026' },
+      { term: 'Nodes',   description: '128' },
+    ];
+    const RICH = [
+      { term: 'Status',  description: 'Active' },
+      { term: 'Owner',   description: 'Jane Doe', help: 'The billing owner for this account', editable: true },
+      { term: 'Region',  description: '' },
+      { term: 'Plan',    description: 'Enterprise', editable: true },
+    ];
+    const AR = [
+      { term: 'الحالة',   description: 'نشط' },
+      { term: 'المالك',   description: 'جين دو' },
+      { term: 'المنطقة',  description: 'الشرق' },
+      { term: 'الخطة',    description: 'مؤسسة' },
+    ];
+    const TYPES = [
+      { term: 'Status',    status: 'success', description: 'Active' },
+      { term: 'Severity',  type: 'badge', state: 'warning', description: 'Warning' },
+      { term: 'Runbook',   type: 'link', description: 'View runbook', href: '#' },
+      { term: 'Labels',    type: 'tags', tags: ['Prod', { label: 'US-East', variant: 'success' }, 'Critical'] },
+      { term: 'Owner',     type: 'user', name: 'Jane Doe', email: 'jane@company.com' },
+      { term: 'Source',    type: 'icon', icon: 'shield', description: 'Verified' },
+      { term: 'Rollout',   type: 'progress', value: 72 },
+      { term: 'Auto-sync', type: 'toggle', checked: true },
+      { term: 'Token',     type: 'copy', description: 'a1b2c3d4e5f6' },
+    ];
+    const DATA = { basic: BASIC, rich: RICH, ar: AR, types: TYPES };
+    customElements.whenDefined('ds-description-list').then(() => {
+      document.querySelectorAll('.dl-demo').forEach((el) => { el.items = DATA[el.dataset.demo] || BASIC; });
+      const anat = document.getElementById('anat');
+      if (anat) anat.items = [
+        { term: 'Owner',  description: 'Jane Doe', help: 'The billing owner for this account', editable: true },
+        { term: 'Status', description: 'Active' },
+        { term: 'Region', description: '' },
+      ];
+    });
+  </script>
+
+  <!-- ── Code playground (live demo in the Code tab) ── -->
+  <script type="module">
+    customElements.whenDefined('ds-description-list').then(() => {
+      const host = document.getElementById('dl-pg-host');
+      const codeOut = document.getElementById('dl-pg-code');
+      const copyBtn = document.getElementById('dl-pg-copy');
+      if (!host) return;
+      const ctrl = {
+        cols: document.getElementById('dl-cols'), ori: document.getElementById('dl-ori'),
+        type: document.getElementById('dl-type'),
+        edit: document.getElementById('dl-edit'), help: document.getElementById('dl-help'),
+        rtl: document.getElementById('dl-rtl'),
+      };
+      /* One representative sample set per value type (plus a "mixed" showcase). */
+      const SAMPLES = {
+        mixed: [
+          { term: 'Status', status: 'success', description: 'Active' },
+          { term: 'Severity', type: 'badge', state: 'warning', description: 'Warning' },
+          { term: 'Runbook', type: 'link', description: 'View runbook', href: '#' },
+          { term: 'Labels', type: 'tags', tags: ['Prod', { label: 'US-East', variant: 'success' }] },
+          { term: 'Owner', type: 'user', name: 'Jane Doe', email: 'jane@company.com' },
+          { term: 'Rollout', type: 'progress', value: 72 },
+          { term: 'Auto-sync', type: 'toggle', checked: true },
+          { term: 'Token', type: 'copy', description: 'a1b2c3d4e5' },
+        ],
+        text: [
+          { term: 'Status', description: 'Active' },
+          { term: 'Owner', description: 'Jane Doe' },
+          { term: 'Region', description: '' },
+        ],
+        status: [
+          { term: 'Server', type: 'status', status: 'success', description: 'Online' },
+          { term: 'Backup', type: 'status', status: 'warning', description: 'Degraded' },
+          { term: 'Sync', type: 'status', status: 'error', description: 'Failed' },
+        ],
+        badge: [
+          { term: 'Severity', type: 'badge', state: 'critical', description: 'Critical' },
+          { term: 'Env', type: 'badge', state: 'success', description: 'Production' },
+          { term: 'Tier', type: 'badge', state: 'default', description: 'Standard' },
+        ],
+        link: [
+          { term: 'Patch', type: 'link', description: 'KB5028166', href: '#' },
+          { term: 'Contact', type: 'link', description: 'jane@company.com', href: '#' },
+        ],
+        tags: [
+          { term: 'Labels', type: 'tags', tags: ['Prod', { label: 'US-East', variant: 'success' }, 'Critical'] },
+          { term: 'Groups', type: 'tags', tags: ['Admins', 'Ops'] },
+        ],
+        user: [
+          { term: 'Owner', type: 'user', name: 'Jane Doe', email: 'jane@company.com' },
+          { term: 'Reviewer', type: 'user', name: 'Sam Lee' },
+        ],
+        icon: [
+          { term: 'Source', type: 'icon', icon: 'shield', description: 'Verified' },
+          { term: 'Platform', type: 'icon', icon: 'computer', description: 'Windows 11' },
+        ],
+        progress: [
+          { term: 'Rollout', type: 'progress', value: 72 },
+          { term: 'Coverage', type: 'progress', value: 38, variant: 'warning' },
+        ],
+        toggle: [
+          { term: 'Auto-sync', type: 'toggle', checked: true },
+          { term: 'Notifications', type: 'toggle', checked: false },
+        ],
+        copy: [
+          { term: 'Token', type: 'copy', description: 'a1b2c3d4e5f6' },
+          { term: 'Cluster ID', type: 'copy', description: 'cl-9f8e7d' },
+        ],
+      };
+      let rawCode = '';
+      const escH = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      /* Serialize any item field to a JS literal — plain (clipboard) or coloured (display). */
+      function jsVal(v, c) {
+        const S = '#34d399', C = '#38bdf8', A = '#f59e0b';
+        const wrap = (col, t) => c ? '<span style="color:' + col + '">' + t + '</span>' : t;
+        if (Array.isArray(v)) return '[' + v.map((x) => jsVal(x, c)).join(', ') + ']';
+        if (v && typeof v === 'object') return '{ ' + Object.entries(v).map(([k, val]) => wrap(C, k) + ': ' + jsVal(val, c)).join(', ') + ' }';
+        if (typeof v === 'string') return wrap(S, "'" + (c ? escH(v) : v).replace(/'/g, "\\'") + "'");
+        return wrap(A, String(v));
+      }
+      const itemLine = (it, c) => '    { ' + Object.entries(it).map(([k, v]) =>
+        (c ? '<span style="color:#38bdf8">' + k + '</span>' : k) + ': ' + jsVal(v, c)).join(', ') + ' },';
+
+      function build() {
+        const cols = ctrl.cols.value, ori = ctrl.ori.value, type = ctrl.type.value;
+        const editable = ctrl.edit.value === 'true', help = ctrl.help.value === 'true', rtl = ctrl.rtl.value === 'true';
+        const items = (SAMPLES[type] || SAMPLES.mixed).map((it, idx) => {
+          const o = Object.assign({}, it);
+          if (help && idx === 0) o.help = 'More about ' + it.term;
+          if (editable && idx < 2) o.editable = true;
+          return o;
+        });
+
+        host.innerHTML = '';
+        const el = document.createElement('ds-description-list');
+        if (cols !== '1') el.setAttribute('columns', cols);
+        if (ori !== 'stacked') el.setAttribute('orientation', ori);
+        if (rtl) el.setAttribute('rtl', '');
+        host.appendChild(el);
+        el.items = items;
+
+        const attrs = [];
+        if (cols !== '1') attrs.push('columns="' + cols + '"');
+        if (ori !== 'stacked') attrs.push('orientation="' + ori + '"');
+        if (rtl) attrs.push('rtl');
+        const openTag = '<ds-description-list' + (attrs.length ? ' ' + attrs.join(' ') : '') + '></ds-description-list>';
+        rawCode = openTag + '\n\n<script>\n  document.querySelector(\'ds-description-list\').items = [\n'
+          + items.map((it) => itemLine(it, false)).join('\n') + '\n  ];\n<\/script>';
+
+        const coloredAttrs = attrs.map((p) => {
+          const eq = p.indexOf('=');
+          if (eq === -1) return '<span style="color:#38bdf8">' + p + '</span>';
+          return '<span style="color:#38bdf8">' + p.slice(0, eq) + '</span>=<span style="color:#34d399">' + p.slice(eq + 1) + '</span>';
+        }).join(' ');
+        const colored = '&lt;<span style="color:#60a5fa">ds-description-list</span>'
+          + (attrs.length ? ' ' + coloredAttrs : '') + '&gt;&lt;/<span style="color:#60a5fa">ds-description-list</span>&gt;\n\n'
+          + '&lt;script&gt;\n  <span style="color:#c084fc">document</span>.querySelector(<span style="color:#34d399">\'ds-description-list\'</span>).items = [\n'
+          + items.map((it) => itemLine(it, true)).join('\n') + '\n  ];\n&lt;/script&gt;';
+        codeOut.innerHTML = '<pre style="margin:0;white-space:pre-wrap;font-family:\'JetBrains Mono\',monospace;font-size:13.5px;line-height:1.6">' + colored + '</pre>';
+      }
+      Object.values(ctrl).forEach((el) => el.addEventListener('change', build));
+      copyBtn?.addEventListener('click', () => {
+        const done = () => { const o = copyBtn.innerHTML; copyBtn.textContent = 'Copied!'; setTimeout(() => { copyBtn.innerHTML = o; }, 2000); };
+        if (navigator.clipboard?.writeText) navigator.clipboard.writeText(rawCode).then(done).catch(done); else done();
+      });
+      build();
+    });
+  </script>
+
+  <!-- ── Tabs + TOC + sidebar (shared template behaviour) ── -->
+  <script>
+    let _tocObserver = null;
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav');
+      if (!tocList) return;
+      tocList.innerHTML = '';
+      const activePanel = document.getElementById(targetId);
+      if (!activePanel) return;
+      activePanel.querySelectorAll('h2[id], h3[id]').forEach((h) => {
+        if (h.style.display === 'none') return;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + h.id; a.className = 'toc-link';
+        let text = Array.from(h.childNodes).filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim();
+        if (!text) text = h.innerText;
+        a.textContent = text;
+        a.addEventListener('click', (e) => { e.preventDefault(); document.getElementById(h.id).scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+        li.appendChild(a); tocList.appendChild(li);
+      });
+      initScrollSpy();
+    }
+    function initScrollSpy() {
+      if (_tocObserver) _tocObserver.disconnect();
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sections = Array.from(tocLinks).map((l) => document.getElementById(l.getAttribute('href').slice(1))).filter(Boolean);
+      if (!sections.length) return;
+      _tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            tocLinks.forEach((link) => link.classList.toggle('active', link.getAttribute('href') === '#' + id));
+          }
+        });
+      }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+      sections.forEach((s) => _tocObserver.observe(s));
+    }
+    document.querySelectorAll('.tab-item').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabMap = { 'Overview': 'tab-overview', 'Style': 'tab-style', 'Usage': 'tab-usage', 'Code': 'tab-code', 'Accessibility': 'tab-accessibility' };
+        document.querySelectorAll('.tab-content').forEach((panel) => panel.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) { document.getElementById(target).style.display = 'block'; updateTOC(target); }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+    updateTOC('tab-overview');
+    (function () {
+      const searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      const items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function () {
+        const q = this.value.toLowerCase().trim();
+        items.forEach((li) => { const link = li.querySelector('a'); if (!link) return; li.style.display = (!q || link.textContent.toLowerCase().indexOf(q) !== -1) ? '' : 'none'; });
+      });
+      document.addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchInput.focus(); searchInput.select(); } });
+    })();
+    (function () {
+      const active = document.querySelector('.sidebar-link.active');
+      if (active) { const sidebar = active.closest('.sidebar'); if (sidebar) sidebar.scrollTop = Math.max(0, active.offsetTop - sidebar.offsetTop - sidebar.clientHeight / 3); }
+    })();
+  </script>
+  <script src="js/main.js"></script>
+</body>
+</html>

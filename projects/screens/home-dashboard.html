@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<!--
+  Home DASHBOARD page - DUAL-MODE file (lives in Layout/views/, like the drawers).
+  - Open directly in a browser  -> the standalone harness (bottom) mounts + shows it.
+  - Fetched by Shell.html        -> injectDrawer('home-dashboard','content') extracts
+    ONLY <template id="drawer-fragment"> and mounts it INSIDE <ds-content>.
+  Rebuilt with Prism components (ds-page-header / ds-kpi-card / ds-container /
+  ds-badge / ds-inline-alert / ds-dropdown-menu / ds-toast / ds-text-link ...)
+  and --uems-* theme tokens throughout, so it follows light/dark/green themes.
+  Design source: Layout/ec-custom-dashboard.html (Enrollment "Summary Dashboard");
+  the radar + donut chart SVGs are carried over from it, everything else is
+  token-driven. Region chart is code-built (token bars).
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Home Dashboard - Prism (standalone)</title>
+  <link rel="stylesheet" href="../../design-system-library/src/styles/index.css" />
+  <script type="module">import '../../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    .sa-host { display: flex; flex-direction: column; min-height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* == Home dashboard — Prism components + uems tokens ====================== */
+#homedash-pop {
+  flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column;
+  background: var(--uems-bg-primary);
+  font-family: var(--font-family-sans);
+}
+#homedash-pop[hidden] { display: none; }
+
+/* Pin the header wrapper so the collapse-on-scroll header stays visible as the
+   dashboard scrolls (sticky is bounded by this wrapper, so it must be sticky). */
+.hd-head { padding: var(--spacing-16) var(--spacing-20) 0; position: sticky; top: 0; z-index: 20; background: var(--uems-bg-primary); }
+
+.hd-grid {
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--spacing-12); padding: var(--spacing-12) var(--spacing-20) var(--spacing-20);
+  align-items: stretch;
+}
+.hd-kpi-row {
+  grid-column: 1 / -1; display: grid; gap: var(--spacing-12);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+@media (max-width: 1240px) { .hd-kpi-row { grid-template-columns: repeat(2, 1fr); } }
+.hd-span-4 { grid-column: span 4; }
+.hd-span-6 { grid-column: span 6; }
+@media (max-width: 1240px) { .hd-span-4, .hd-span-6 { grid-column: span 6; } }
+@media (max-width: 860px) { .hd-span-4, .hd-span-6 { grid-column: 1 / -1; } }
+
+/* widget cards (ds-container) */
+.hd-card { position: relative; display: flex; flex-direction: column; min-width: 0; background: var(--uems-bg-primary); }
+.hd-card-head {
+  display: flex; align-items: center; gap: var(--spacing-8);
+  min-height: 52px; box-sizing: border-box;
+  padding: var(--spacing-8) var(--spacing-16);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+}
+.hd-card-title {
+  flex: 1; margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: var(--font-size-15); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary);
+}
+.hd-card-right { display: flex; align-items: center; gap: var(--spacing-8); }
+.hd-card-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--spacing-12); padding: var(--spacing-16); }
+.hd-card-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-12);
+  padding: var(--spacing-10) var(--spacing-16);
+  border-top: 1px solid var(--uems-border-tertiary);
+}
+.hd-foot-note { font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+.hd-alert { flex: 0 0 auto; }
+/* chart areas absorb the stretched space and centre their content — alerts/legends
+   stay pinned top/bottom, no dead whitespace in tall grid cells */
+.hd-card-body > .hd-chart { flex: 1 1 auto; }
+.hd-trb { flex: 1 1 auto; }
+.hd-card-body > .hd-bars { flex: 1 1 auto; justify-content: center; }
+
+/* charts + legends */
+.hd-chart { display: flex; align-items: center; justify-content: center; min-height: 0; }
+/* every chart svg keeps its aspect ratio; specific charts cap tighter below.
+   Order matters: the general rule FIRST so the per-chart caps win the cascade.
+   Radar carries inline height:100% -> constrain via max-height, not height. */
+.hd-chart svg { max-width: 100%; height: auto; }
+.hd-chart--radar svg { max-width: 340px; max-height: 300px; }
+.hd-chart--donut svg { max-width: 230px; max-height: 230px; }
+.hd-trend { max-width: 600px; }
+.hd-chart svg text { fill: var(--uems-text-tertiary); }
+.hd-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--spacing-6) var(--spacing-16); padding-bottom: var(--spacing-4); }
+.hd-lg { display: inline-flex; align-items: center; gap: var(--spacing-6); font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+.hd-lg b { color: var(--uems-text-primary); font-weight: var(--font-weight-semibold); }
+.hd-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 8px; }
+
+/* horizontal bar rows */
+.hd-bars { display: flex; flex-direction: column; gap: var(--spacing-12); }
+.hd-bar-row { display: grid; grid-template-columns: 130px 1fr 56px; align-items: center; gap: var(--spacing-10); }
+.hd-bars--wide .hd-bar-row { grid-template-columns: 90px 1fr 64px; }
+.hd-bar-label { font-size: var(--font-size-13); color: var(--uems-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hd-bar-track { height: 10px; border-radius: var(--radius-full, 999px); background: var(--uems-bg-secondary); overflow: hidden; }
+.hd-bar-fill { display: block; height: 100%; border-radius: inherit; transition: width .4s cubic-bezier(0.2,0.8,0.2,1); }
+.hd-bar-val { font-size: var(--font-size-13); color: var(--uems-text-primary); text-align: end; }
+
+/* activity list */
+.hd-act-list { display: flex; flex-direction: column; margin: calc(-1 * var(--spacing-6)) 0; }
+.hd-act-row { display: flex; gap: var(--spacing-10); padding: var(--spacing-10) 0; border-bottom: 1px dashed var(--uems-border-tertiary); }
+.hd-act-row:last-child { border-bottom: 0; }
+.hd-act-cta { margin-inline-start: auto; flex: 0 0 auto; align-self: center; }
+.hd-act-ico { flex: 0 0 28px; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.hd-act-ico--error { background: var(--uems-bg-error-primary); color: var(--uems-text-error); }
+.hd-act-ico--success { background: var(--uems-bg-success-primary); color: var(--uems-text-success); }
+.hd-act-ico--neutral { background: var(--uems-bg-secondary); color: var(--uems-text-tertiary); }
+.hd-act-main { flex: 1; min-width: 0; }
+.hd-act-text { font-size: var(--font-size-13); color: var(--uems-text-primary); margin-bottom: var(--spacing-6); }
+.hd-act-meta { display: flex; align-items: center; gap: var(--spacing-8); }
+.hd-act-who, .hd-act-time { font-size: var(--font-size-12); color: var(--uems-text-tertiary); }
+.hd-act-sep { color: var(--uems-border-secondary); font-size: var(--font-size-12); }
+
+/* troubleshooting */
+.hd-trb { display: flex; align-items: center; gap: var(--spacing-20); }
+.hd-trb-chart { flex: 0 0 auto; }
+.hd-trb-info { display: flex; flex-direction: column; gap: var(--spacing-8); min-width: 0; }
+.hd-trb-line { margin: 0; font-size: var(--font-size-14); color: var(--uems-text-secondary); }
+.hd-trb-line b { color: var(--uems-text-primary); }
+.hd-trb-rows { display: flex; flex-direction: column; gap: var(--spacing-6); margin-top: var(--spacing-6); }
+
+/* region bars */
+.hd-bars--region .hd-bar-row { grid-template-columns: 90px 1fr 56px; }
+
+/* ── edit mode ── */
+.hd-tools {
+  position: absolute; top: var(--spacing-8); inset-inline-end: var(--spacing-10); z-index: 5;
+  display: flex; gap: var(--spacing-4); padding: var(--spacing-4);
+  background: var(--uems-bg-primary); border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-md, 8px); box-shadow: 0 6px 18px rgba(13, 17, 29, 0.12);
+  opacity: 0; pointer-events: none; transition: opacity .14s ease;
+}
+.hd-grid.hd-editing .hd-card { cursor: grab; outline: 1.5px dashed var(--uems-border-accent-focus, var(--uems-text-accent-link)); outline-offset: 2px; }
+.hd-grid.hd-editing .hd-card:hover .hd-tools { opacity: 1; pointer-events: auto; }
+.hd-grid.hd-editing .hd-card:hover .hd-kebab { opacity: 0; pointer-events: none; }
+.hd-grid.hd-editing .hd-kpi { cursor: default; outline: none; }
+.hd-card.hd-dragging { opacity: 0.35; }
+
+/* ── floating menu host + toast stack ── */
+.hd-menu-host { position: fixed; z-index: 320; min-width: 210px; }
+.hd-menu-host ds-dropdown-menu { position: static; display: block; }
+/* Toasts drop in from the TOP, centred. JS pins the stack just below the
+   content area's top edge so it clears the Shell header in embedded mode. */
+.hd-toasts { position: fixed; left: 50%; transform: translateX(-50%); top: 16px; z-index: 400; display: flex; flex-direction: column; gap: var(--spacing-8); align-items: center; }
+
+/* ── side panels + modal (token-based) ── */
+.hd-panel {
+  position: absolute; top: 0; bottom: 0; inset-inline-end: 0; z-index: 60;
+  width: min(400px, 92%); background: var(--uems-bg-primary);
+  border-inline-start: 1px solid var(--uems-border-tertiary);
+  box-shadow: -16px 0 40px rgba(13, 17, 29, 0.14);
+  display: flex; flex-direction: column; min-height: 0;
+  transform: translateX(105%); transition: transform .28s cubic-bezier(0.2,0.8,0.2,1);
+}
+[dir="rtl"] .hd-panel { transform: translateX(-105%); }
+.hd-panel.hd-open { transform: translateX(0) !important; }
+.hd-panel-head { display: flex; align-items: center; gap: var(--spacing-8); padding: var(--spacing-14) var(--spacing-16); border-bottom: 1px solid var(--uems-border-tertiary); }
+.hd-panel-title { flex: 1; margin: 0; font-size: var(--font-size-16); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+.hd-panel-body { flex: 1; min-height: 0; overflow: auto; padding: var(--spacing-16); display: flex; flex-direction: column; gap: var(--spacing-12); }
+.hd-panel-foot { display: flex; justify-content: flex-end; gap: var(--spacing-8); padding: var(--spacing-12) var(--spacing-16); border-top: 1px solid var(--uems-border-tertiary); }
+
+.hd-lib-row { display: flex; align-items: center; gap: var(--spacing-10); padding: var(--spacing-10) var(--spacing-12); border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md, 8px); }
+.hd-lib-name { flex: 1; font-size: var(--font-size-13); color: var(--uems-text-primary); }
+
+.hd-scrim {
+  position: fixed; inset: 0; z-index: 340; background: rgba(15, 24, 40, 0.45);
+  display: flex; align-items: center; justify-content: center; padding: var(--spacing-24);
+  opacity: 0; pointer-events: none; transition: opacity .18s ease;
+}
+.hd-scrim.hd-open { opacity: 1; pointer-events: auto; }
+.hd-modal {
+  width: min(480px, 100%); background: var(--uems-bg-primary); border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 24px 60px rgba(13, 17, 29, 0.3); display: flex; flex-direction: column;
+  transform: scale(0.96); transition: transform .2s ease;
+}
+.hd-scrim.hd-open .hd-modal { transform: scale(1); }
+.hd-modal-body { padding: var(--spacing-16); display: flex; flex-direction: column; gap: var(--spacing-14); }
+</style>
+
+<div id="homedash-pop" class="hd" hidden>
+  <div class="hd-head">
+    <ds-page-header id="hd-ph" structure="default" title="Summary Dashboard"
+      description="Dashboard contains of Types, summary &amp; recent activity of Agent"
+      show-description show-chevron show-star show-overflow show-breadcrumbs="false"
+      collapse-on-scroll>
+      <ds-badge slot="badge" state="default" variant="subtle" size="small" show-icon="false">Default</ds-badge>
+      <ds-button slot="actions" data-hd="date-range" variant="outline" size="medium" prefix-icon="calendar" suffix-icon="chevron-down">Last 7 days</ds-button>
+      <ds-button slot="actions" data-hd="edit-layout" variant="secondary-color" size="medium" prefix-icon="edit">Edit Layout</ds-button>
+      <ds-icon-button slot="actions" data-hd="refresh" icon="refresh" label="Refresh" type="tertiary-grey" size="xl"></ds-icon-button>
+    </ds-page-header>
+  </div>
+
+  <div class="hd-grid" id="hd-grid">
+    <div class="hd-kpi-row">
+      <ds-kpi-card class="hd-kpi" clickable data-hd-kpi="requiresFix" label="Devices Requiring Fixes" value="496" state="alert" icon="patch"></ds-kpi-card>
+<ds-kpi-card class="hd-kpi" clickable data-hd-kpi="staged" label="Devices in Staged" value="250" state="warning" icon="software"></ds-kpi-card>
+<ds-kpi-card class="hd-kpi" clickable data-hd-kpi="discovered" label="Devices Discovered" value="30" state="default" icon="search"></ds-kpi-card>
+<ds-kpi-card class="hd-kpi" clickable data-hd-kpi="managed" label="Devices Managed" value="4,239" state="success" icon="computer"></ds-kpi-card>
+<ds-kpi-card class="hd-kpi" clickable data-hd-kpi="users" label="Users Enrolled" value="3,214" state="default" icon="user"></ds-kpi-card>
+    </div>
+    <ds-container class="hd-card hd-span-4" variant="outline" radius="lg" padding="none" data-hd-widget="devices-types" data-widget-title="Devices Types">
+  <div class="hd-tools" aria-hidden="true">
+    <ds-icon-button class="hd-tool" data-hd-act="duplicate" icon="copy" label="Duplicate" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="edit" icon="edit" label="Edit" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="delete" icon="delete" label="Delete" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+  </div>
+  <header class="hd-card-head">
+    <h3 class="hd-card-title">Devices Types</h3>
+    <div class="hd-card-right"><ds-badge state="critical" size="small">Critical</ds-badge>
+      <ds-icon-button class="hd-kebab" data-hd-act="menu" icon="more-vertical" label="Widget options" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    </div>
+  </header>
+  <div class="hd-card-body"><ds-inline-alert class="hd-alert" type="warning" description="Network drivers need immediate attention"></ds-inline-alert>
+    <div class="hd-chart hd-chart--radar"><svg viewBox="0 0 360 300" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: 100%; display: block;"><polygon class="chart-grid" points="180,131.33333333333334 197.75305497084287,144.23168277166764 190.97199137612617,165.10165056166568 169.02800862387383,165.10165056166568 162.24694502915713,144.23168277166764" fill="none" stroke="#E1E4EB" stroke-width="1"></polygon><polygon class="chart-grid" points="180,112.66666666666667 215.50610994168574,138.4633655433353 201.94398275225234,180.20330112333136 158.05601724774766,180.20330112333136 144.49389005831426,138.4633655433353" fill="none" stroke="#E1E4EB" stroke-width="1"></polygon><polygon class="chart-grid" points="180,94 233.2591649125286,132.69504831500294 212.91597412837848,195.30495168499706 147.08402587162152,195.30495168499706 126.7408350874714,132.69504831500294" fill="none" stroke="#E1E4EB" stroke-width="1"></polygon><polygon class="chart-grid" points="180,75.33333333333334 251.01221988337147,126.9267310866706 223.88796550450465,210.40660224666274 136.11203449549535,210.40660224666274 108.98778011662854,126.92673108667059" fill="none" stroke="#E1E4EB" stroke-width="1"></polygon><polygon class="chart-grid" points="180,56.66666666666666 268.76527485421434,121.15841385833824 234.85995688063082,225.50825280832845 125.14004311936918,225.50825280832845 91.23472514578566,121.15841385833824" fill="none" stroke="#E1E4EB" stroke-width="1"></polygon><polygon class="chart-grid" points="180,38 286.5183298250572,115.3900966300059 245.831948256757,240.60990336999413 114.16805174324303,240.60990336999413 73.4816701749428,115.39009663000587" fill="none" stroke="#E1E4EB" stroke-width="1"></polygon><line class="chart-grid" x1="180" y1="150" x2="180" y2="38" stroke="#E1E4EB" stroke-width="1"></line><line class="chart-grid" x1="180" y1="150" x2="286.5183298250572" y2="115.3900966300059" stroke="#E1E4EB" stroke-width="1"></line><line class="chart-grid" x1="180" y1="150" x2="245.831948256757" y2="240.60990336999413" stroke="#E1E4EB" stroke-width="1"></line><line class="chart-grid" x1="180" y1="150" x2="114.16805174324303" y2="240.60990336999413" stroke="#E1E4EB" stroke-width="1"></line><line class="chart-grid" x1="180" y1="150" x2="73.4816701749428" y2="115.39009663000587" stroke="#E1E4EB" stroke-width="1"></line><path class="ref-radial-sector" d="M180 150 L234.85995688063082 74.49174719167156 A93.33333333333334 93.33333333333334 0 0 0 125.14004311936918 74.49174719167156 Z" fill="#EE7476" fill-opacity="0.82" stroke="#EE7476" stroke-width="1" style="cursor: pointer; transition: fill-opacity 0.15s;"></path><path class="ref-radial-sector" d="M180 150 L279.8609342109911 182.44678440936949 A105 105 0 0 0 241.71745149070966 65.05321559063051 Z" fill="#2C66DD" fill-opacity="0.82" stroke="#2C66DD" stroke-width="1" style="cursor: pointer; transition: fill-opacity 0.15s;"></path><path class="ref-radial-sector" d="M180 150 L180 192 A42 42 0 0 0 219.94437368439645 162.9787137637478 Z" fill="#F9B21D" fill-opacity="0.82" stroke="#F9B21D" stroke-width="1" style="cursor: pointer; transition: fill-opacity 0.15s;"></path><path class="ref-radial-sector" d="M180 150 L140.05562631560355 162.9787137637478 A42 42 0 0 0 180 192 Z" fill="#0C8844" fill-opacity="0.82" stroke="#0C8844" stroke-width="1" style="cursor: pointer; transition: fill-opacity 0.15s;"></path><path class="ref-radial-sector" d="M180 150 L155.31301940371614 116.02128623625221 A42 42 0 0 0 140.05562631560355 162.9787137637478 Z" fill="#B4BBCC" fill-opacity="0.82" stroke="#B4BBCC" stroke-width="1" style="cursor: pointer; transition: fill-opacity 0.15s;"></path><text x="180" y="25" font-size="11" fill="#55607A" text-anchor="middle">Desktop</text><text x="301.73523408577967" y="113.44582472000673" font-size="11" fill="#55607A" text-anchor="start">Mobile</text><text x="255.23651229343656" y="256.5541752799933" font-size="11" fill="#55607A" text-anchor="start">Laptop</text><text x="104.76348770656345" y="256.5541752799933" font-size="11" fill="#55607A" text-anchor="end">Tablet</text><text x="58.26476591422035" y="113.44582472000673" font-size="11" fill="#55607A" text-anchor="end">others</text></svg></div>
+    <div class="hd-legend"><span class="hd-lg"><i class="hd-dot" style="background:var(--uems-text-accent-link,#006AFF)"></i>SmartPhone&nbsp;-&nbsp;<b>225</b></span><span class="hd-lg"><i class="hd-dot" style="background:#E8827C"></i>Desktop&nbsp;-&nbsp;<b>200</b></span><span class="hd-lg"><i class="hd-dot" style="background:#E0A01A"></i>Laptop&nbsp;-&nbsp;<b>90</b></span><span class="hd-lg"><i class="hd-dot" style="background:var(--uems-text-success,#0A7138)"></i>Tablet&nbsp;-&nbsp;<b>90</b></span><span class="hd-lg"><i class="hd-dot" style="background:var(--uems-border-secondary,#C3C9D6)"></i>Others&nbsp;-&nbsp;<b>90</b></span></div></div>
+  <footer class="hd-card-foot"><span class="hd-foot-note">+41 more device types</span><ds-text-link href="#" variant="primary" size="medium" trailing-icon="chevron-right">View all 46</ds-text-link></footer>
+</ds-container>
+<ds-container class="hd-card hd-span-4" variant="outline" radius="lg" padding="none" data-hd-widget="compliance-summary" data-widget-title="Compliance Summary">
+  <div class="hd-tools" aria-hidden="true">
+    <ds-icon-button class="hd-tool" data-hd-act="duplicate" icon="copy" label="Duplicate" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="edit" icon="edit" label="Edit" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="delete" icon="delete" label="Delete" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+  </div>
+  <header class="hd-card-head">
+    <h3 class="hd-card-title">Compliance Summary</h3>
+    <div class="hd-card-right"><ds-badge state="success" size="small">Healthy</ds-badge>
+      <ds-icon-button class="hd-kebab" data-hd-act="menu" icon="more-vertical" label="Widget options" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    </div>
+  </header>
+  <div class="hd-card-body"><div class="hd-chart hd-chart--donut"><svg class="donut-svg" viewBox="0 0 230 230" width="230" height="230"><path class="donut-ring" d="M 115.93998433341167 21.004699960833463 A 94 94 0 1 1 80.57715180039237 27.529619174106884" stroke="#0C8844" stroke-width="34" fill="none" stroke-linecap="butt" style="cursor: pointer; opacity: 1; transition: opacity 0.15s;"></path><path class="donut-ring" d="M 82.3333271322256 26.85870159936482 A 94 94 0 0 1 108.30770902252165 21.238530080460237" stroke="#FAC248" stroke-width="34" fill="none" stroke-linecap="butt" style="cursor: pointer; opacity: 1; transition: opacity 0.15s;"></path><path class="donut-ring" d="M 110.18415182170028 21.12344485270262 A 94 94 0 0 1 114.06001566658834 21.004699960833463" stroke="#EE7476" stroke-width="34" fill="none" stroke-linecap="butt" style="cursor: pointer; opacity: 1; transition: opacity 0.15s;"></path><foreignObject x="0" y="0" width="230" height="230" style="pointer-events: none;"><div xmlns="http://www.w3.org/1999/xhtml" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: inherit;"><div style="font-size: var(--font-size-32, 32px); font-weight: var(--font-weight-extrabold, 800); color: var(--uems-text-primary, #15181E); line-height: 1;">94%</div></div></foreignObject></svg></div>
+    <div class="hd-legend"><span class="hd-lg"><i class="hd-dot" style="background:var(--uems-text-success,#0A7138)"></i>Compliant&nbsp;-&nbsp;<b>4,541</b></span><span class="hd-lg"><i class="hd-dot" style="background:#E0A01A"></i>Warning&nbsp;-&nbsp;<b>233</b></span><span class="hd-lg"><i class="hd-dot" style="background:var(--uems-text-error,#C1181B)"></i>Violation&nbsp;-&nbsp;<b>47</b></span></div></div>
+  <footer class="hd-card-foot"><span class="hd-foot-note">Total devices: <b>4,821</b></span><ds-text-link href="#" variant="primary" size="medium" trailing-icon="chevron-right">View all</ds-text-link></footer>
+</ds-container>
+<ds-container class="hd-card hd-span-4" variant="outline" radius="lg" padding="none" data-hd-widget="recent-activity" data-widget-title="Recent Activity &amp; Actions">
+  <div class="hd-tools" aria-hidden="true">
+    <ds-icon-button class="hd-tool" data-hd-act="duplicate" icon="copy" label="Duplicate" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="edit" icon="edit" label="Edit" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="delete" icon="delete" label="Delete" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+  </div>
+  <header class="hd-card-head">
+    <h3 class="hd-card-title">Recent Activity &amp; Actions</h3>
+    <div class="hd-card-right"><ds-button class="hd-range" data-hd="act-range" variant="outline" size="xsmall" suffix-icon="chevron-down">Last 10 days</ds-button>
+      <ds-icon-button class="hd-kebab" data-hd-act="menu" icon="more-vertical" label="Widget options" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    </div>
+  </header>
+  <div class="hd-card-body"><div class="hd-act-list"><div class="hd-act-row">
+      <span class="hd-act-ico hd-act-ico--error"><ds-icon name="security-status-success" size="16"></ds-icon></span>
+      <div class="hd-act-main">
+        <div class="hd-act-text">23 devices pending enrollment approval</div>
+        <div class="hd-act-meta"><ds-badge state="critical" variant="subtle" size="small" show-icon="false">Security</ds-badge><span class="hd-act-time">3 mins ago</span></div>
+      </div>
+      <ds-text-link class="hd-act-cta" href="#" variant="primary" size="small" underline="hover">Approve</ds-text-link>
+    </div>
+<div class="hd-act-row">
+      <span class="hd-act-ico hd-act-ico--error"><ds-icon name="cancel-circle" size="16"></ds-icon></span>
+      <div class="hd-act-main">
+        <div class="hd-act-text">DESKTOP-ENG-117 lost agent connection</div>
+        <div class="hd-act-meta"><ds-badge state="critical" variant="subtle" size="small" show-icon="false">Error</ds-badge><span class="hd-act-time">18 mins ago</span></div>
+      </div>
+      <ds-text-link class="hd-act-cta" href="#" variant="primary" size="small" underline="hover">Reconnect</ds-text-link>
+    </div>
+<div class="hd-act-row">
+      <span class="hd-act-ico hd-act-ico--success"><ds-icon name="circle-tick" size="16"></ds-icon></span>
+      <div class="hd-act-main">
+        <div class="hd-act-text">MacBook-Pro-Dev-09 enrolled via ABM</div>
+        <div class="hd-act-meta"><ds-badge state="default" variant="subtle" size="small" show-icon="false">macOS</ds-badge><span class="hd-act-who">admin</span><span class="hd-act-sep">|</span><span class="hd-act-time">2 hours ago</span></div>
+      </div>
+    </div>
+<div class="hd-act-row">
+      <span class="hd-act-ico hd-act-ico--neutral"><ds-icon name="info-circle" size="16"></ds-icon></span>
+      <div class="hd-act-main">
+        <div class="hd-act-text">Device Policies updated - inactive threshold 30d</div>
+        <div class="hd-act-meta"><ds-badge state="default" variant="subtle" size="small" show-icon="false">Policy</ds-badge><span class="hd-act-who">john</span><span class="hd-act-sep">|</span><span class="hd-act-time">8 hours ago</span></div>
+      </div>
+    </div>
+<div class="hd-act-row">
+      <span class="hd-act-ico hd-act-ico--success"><ds-icon name="circle-tick" size="16"></ds-icon></span>
+      <div class="hd-act-main">
+        <div class="hd-act-text">Agent installed on DESKTOP-7FK2</div>
+        <div class="hd-act-meta"><ds-badge state="default" variant="subtle" size="small" show-icon="false">Windows</ds-badge><span class="hd-act-who">Kavin</span><span class="hd-act-sep">|</span><span class="hd-act-time">12 hours ago</span></div>
+      </div>
+    </div>
+<div class="hd-act-row">
+      <span class="hd-act-ico hd-act-ico--neutral"><ds-icon name="info-circle" size="16"></ds-icon></span>
+      <div class="hd-act-main">
+        <div class="hd-act-text">5 enrollment invites expiring in 2 hours</div>
+        <div class="hd-act-meta"><ds-badge state="moderate" variant="subtle" size="small" show-icon="false">Expiry</ds-badge><span class="hd-act-time">1 day ago</span></div>
+      </div>
+      <ds-text-link class="hd-act-cta" href="#" variant="primary" size="small" underline="hover">Resend</ds-text-link>
+    </div>
+<div class="hd-act-row">
+      <span class="hd-act-ico hd-act-ico--error"><ds-icon name="cancel-circle" size="16"></ds-icon></span>
+      <div class="hd-act-main">
+        <div class="hd-act-text">7 failed enrollments need review</div>
+        <div class="hd-act-meta"><ds-badge state="critical" variant="subtle" size="small" show-icon="false">Error</ds-badge><span class="hd-act-time">1 day ago</span></div>
+      </div>
+      <ds-text-link class="hd-act-cta" href="#" variant="primary" size="small" underline="hover">Review</ds-text-link>
+    </div>
+<div class="hd-act-row">
+      <span class="hd-act-ico hd-act-ico--neutral"><ds-icon name="info-circle" size="16"></ds-icon></span>
+      <div class="hd-act-main">
+        <div class="hd-act-text">182 agents running outdated versions</div>
+        <div class="hd-act-meta"><ds-badge state="moderate" variant="subtle" size="small" show-icon="false">Issue</ds-badge><span class="hd-act-time">2 days ago</span></div>
+      </div>
+      <ds-text-link class="hd-act-cta" href="#" variant="primary" size="small" underline="hover">Update</ds-text-link>
+    </div>
+<div class="hd-act-row">
+      <span class="hd-act-ico hd-act-ico--neutral"><ds-icon name="info-circle" size="16"></ds-icon></span>
+      <div class="hd-act-main">
+        <div class="hd-act-text">10 inactive devices detected</div>
+        <div class="hd-act-meta"><ds-badge state="default" variant="subtle" size="small" show-icon="false">Activity</ds-badge><span class="hd-act-time">2 days ago</span></div>
+      </div>
+      <ds-text-link class="hd-act-cta" href="#" variant="primary" size="small" underline="hover">Review</ds-text-link>
+    </div></div></div>
+  
+</ds-container>
+<ds-container class="hd-card hd-span-4" variant="outline" radius="lg" padding="none" data-hd-widget="troubleshooting" data-widget-title="Troubleshooting Summary">
+  <div class="hd-tools" aria-hidden="true">
+    <ds-icon-button class="hd-tool" data-hd-act="duplicate" icon="copy" label="Duplicate" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="edit" icon="edit" label="Edit" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="delete" icon="delete" label="Delete" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+  </div>
+  <header class="hd-card-head">
+    <h3 class="hd-card-title">Troubleshooting Summary</h3>
+    <div class="hd-card-right">
+      <ds-icon-button class="hd-kebab" data-hd-act="menu" icon="more-vertical" label="Widget options" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    </div>
+  </header>
+  <div class="hd-card-body"><div class="hd-trb">
+      <div class="hd-trb-chart"><svg viewBox="0 0 110 110" width="132" height="132" role="img" aria-label="496 devices with issues">
+  <circle cx="55" cy="55" r="40" fill="none" stroke="var(--uems-text-accent-link,#006AFF)" stroke-width="14"/>
+  <circle cx="55" cy="55" r="40" fill="none" stroke="var(--uems-text-error,#C1181B)" stroke-width="14"
+          stroke-dasharray="240.7 10.6" stroke-dashoffset="62.8" stroke-linecap="butt"/>
+  <text x="55" y="52" text-anchor="middle" font-size="20" font-weight="700" fill="var(--uems-text-primary,#15181E)">496</text>
+  <text x="55" y="68" text-anchor="middle" font-size="9" fill="var(--uems-text-tertiary,#40485B)">devices</text>
+</svg></div>
+      <div class="hd-trb-info">
+        <p class="hd-trb-line">Fix <b>8 issues</b> to resolve all <b>496 devices</b></p>
+        <ds-text-link href="#" variant="primary" size="medium" trailing-icon="chevron-right">Take action</ds-text-link>
+        <div class="hd-trb-rows">
+          <span class="hd-lg"><i class="hd-dot" style="background:var(--uems-text-accent-link,#006AFF)"></i>DS Issues&nbsp;-&nbsp;<b>21 Devices</b></span>
+          <span class="hd-lg"><i class="hd-dot" style="background:var(--uems-text-error,#C1181B)"></i>Agent Issues&nbsp;-&nbsp;<b>475 Devices</b></span>
+        </div>
+      </div>
+    </div></div>
+  
+</ds-container>
+<ds-container class="hd-card hd-span-4" variant="outline" radius="lg" padding="none" data-hd-widget="ds-upgrade" data-widget-title="DS Upgrade Status">
+  <div class="hd-tools" aria-hidden="true">
+    <ds-icon-button class="hd-tool" data-hd-act="duplicate" icon="copy" label="Duplicate" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="edit" icon="edit" label="Edit" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="delete" icon="delete" label="Delete" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+  </div>
+  <header class="hd-card-head">
+    <h3 class="hd-card-title">DS Upgrade Status</h3>
+    <div class="hd-card-right"><ds-badge state="critical" size="small">Critical</ds-badge>
+      <ds-icon-button class="hd-kebab" data-hd-act="menu" icon="more-vertical" label="Widget options" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    </div>
+  </header>
+  <div class="hd-card-body"><ds-inline-alert class="hd-alert" type="error" description="52 distribution servers are down" action="Take action"></ds-inline-alert>
+    <div class="hd-bars"><div class="hd-bar-row">
+      <span class="hd-bar-label">Up to date</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:93%;background:var(--uems-text-success,#0A7138)"></i></span>
+      <b class="hd-bar-val">65</b>
+    </div>
+<div class="hd-bar-row">
+      <span class="hd-bar-label">Upgrade available</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:54%;background:var(--uems-text-accent-link,#006AFF)"></i></span>
+      <b class="hd-bar-val">38</b>
+    </div>
+<div class="hd-bar-row">
+      <span class="hd-bar-label">Upgrade failed</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:14%;background:var(--uems-text-warning,#BC4200)"></i></span>
+      <b class="hd-bar-val">10</b>
+    </div>
+<div class="hd-bar-row">
+      <span class="hd-bar-label">DS Down</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:17%;background:var(--uems-text-error,#C1181B)"></i></span>
+      <b class="hd-bar-val">12</b>
+    </div></div></div>
+  <footer class="hd-card-foot"><span class="hd-foot-note">Total servers: <b>125</b></span><ds-text-link href="#" variant="primary" size="medium" trailing-icon="chevron-right">View all</ds-text-link></footer>
+</ds-container>
+<ds-container class="hd-card hd-span-4" variant="outline" radius="lg" padding="none" data-hd-widget="region" data-widget-title="Region based Device Count">
+  <div class="hd-tools" aria-hidden="true">
+    <ds-icon-button class="hd-tool" data-hd-act="duplicate" icon="copy" label="Duplicate" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="edit" icon="edit" label="Edit" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="delete" icon="delete" label="Delete" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+  </div>
+  <header class="hd-card-head">
+    <h3 class="hd-card-title">Region based Device Count</h3>
+    <div class="hd-card-right">
+      <ds-icon-button class="hd-kebab" data-hd-act="menu" icon="more-vertical" label="Widget options" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    </div>
+  </header>
+  <div class="hd-card-body"><div class="hd-bars hd-bars--region"><div class="hd-bar-row">
+      <span class="hd-bar-label">Sydney</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:100%;background:var(--uems-text-accent-link,#006AFF)"></i></span>
+      <b class="hd-bar-val">400</b>
+    </div>
+<div class="hd-bar-row">
+      <span class="hd-bar-label">Chennai</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:75%;background:var(--uems-text-accent-link,#006AFF)"></i></span>
+      <b class="hd-bar-val">300</b>
+    </div>
+<div class="hd-bar-row">
+      <span class="hd-bar-label">Tokyo</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:50%;background:var(--uems-text-accent-link,#006AFF)"></i></span>
+      <b class="hd-bar-val">200</b>
+    </div>
+<div class="hd-bar-row">
+      <span class="hd-bar-label">London</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:38%;background:var(--uems-text-accent-link,#006AFF)"></i></span>
+      <b class="hd-bar-val">150</b>
+    </div>
+<div class="hd-bar-row">
+      <span class="hd-bar-label">New York</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:25%;background:var(--uems-text-accent-link,#006AFF)"></i></span>
+      <b class="hd-bar-val">100</b>
+    </div>
+<div class="hd-bar-row">
+      <span class="hd-bar-label">Dubai</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:13%;background:var(--uems-text-accent-link,#006AFF)"></i></span>
+      <b class="hd-bar-val">50</b>
+    </div></div></div>
+  <footer class="hd-card-foot"><span class="hd-foot-note">Total devices across 6 locations: <b>1,200</b></span></footer>
+  
+</ds-container>
+<ds-container class="hd-card hd-span-6" variant="outline" radius="lg" padding="none" data-hd-widget="device-distribution" data-widget-title="Device Distribution">
+  <div class="hd-tools" aria-hidden="true">
+    <ds-icon-button class="hd-tool" data-hd-act="duplicate" icon="copy" label="Duplicate" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="edit" icon="edit" label="Edit" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="delete" icon="delete" label="Delete" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+  </div>
+  <header class="hd-card-head">
+    <h3 class="hd-card-title">Device Distribution</h3>
+    <div class="hd-card-right">
+      <ds-icon-button class="hd-kebab" data-hd-act="menu" icon="more-vertical" label="Widget options" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    </div>
+  </header>
+  <div class="hd-card-body"><div class="hd-bars hd-bars--wide"><div class="hd-bar-row">
+      <span class="hd-bar-label">Windows</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:100%;background:var(--uems-text-accent-link,#006AFF)"></i></span>
+      <b class="hd-bar-val">1,860</b>
+    </div>
+<div class="hd-bar-row">
+      <span class="hd-bar-label">macOS</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:29%;background:#663399"></i></span>
+      <b class="hd-bar-val">540</b>
+    </div>
+<div class="hd-bar-row">
+      <span class="hd-bar-label">Android</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:22%;background:var(--uems-text-success,#0A7138)"></i></span>
+      <b class="hd-bar-val">410</b>
+    </div>
+<div class="hd-bar-row">
+      <span class="hd-bar-label">iOS</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:17%;background:#E0A01A"></i></span>
+      <b class="hd-bar-val">320</b>
+    </div>
+<div class="hd-bar-row">
+      <span class="hd-bar-label">Linux</span>
+      <span class="hd-bar-track"><i class="hd-bar-fill" style="width:7%;background:var(--uems-text-tertiary,#40485B)"></i></span>
+      <b class="hd-bar-val">130</b>
+    </div></div></div>
+  
+</ds-container>
+<ds-container class="hd-card hd-span-6" variant="outline" radius="lg" padding="none" data-hd-widget="enrollment-trend" data-widget-title="Enrollment Trend">
+  <div class="hd-tools" aria-hidden="true">
+    <ds-icon-button class="hd-tool" data-hd-act="duplicate" icon="copy" label="Duplicate" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="edit" icon="edit" label="Edit" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    <ds-icon-button class="hd-tool" data-hd-act="delete" icon="delete" label="Delete" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+  </div>
+  <header class="hd-card-head">
+    <h3 class="hd-card-title">Enrollment Trend</h3>
+    <div class="hd-card-right">
+      <ds-icon-button class="hd-kebab" data-hd-act="menu" icon="more-vertical" label="Widget options" type="tertiary-grey" size="large" no-tooltip></ds-icon-button>
+    </div>
+  </header>
+  <div class="hd-card-body"><div class="hd-chart"><svg class="hd-trend" viewBox="0 0 560 200" width="100%" role="img" aria-label="Enrollment trend Oct to Mar"><line x1="44" y1="174" x2="544" y2="174" stroke="var(--uems-border-tertiary,#E1E4EB)" stroke-dasharray="3 4"/><line x1="44" y1="134" x2="544" y2="134" stroke="var(--uems-border-tertiary,#E1E4EB)" stroke-dasharray="3 4"/><line x1="44" y1="94" x2="544" y2="94" stroke="var(--uems-border-tertiary,#E1E4EB)" stroke-dasharray="3 4"/><line x1="44" y1="54" x2="544" y2="54" stroke="var(--uems-border-tertiary,#E1E4EB)" stroke-dasharray="3 4"/><line x1="44" y1="14" x2="544" y2="14" stroke="var(--uems-border-tertiary,#E1E4EB)" stroke-dasharray="3 4"/><text x="36" y="177" text-anchor="end" font-size="10" fill="var(--uems-text-tertiary,#40485B)">0</text><text x="36" y="137" text-anchor="end" font-size="10" fill="var(--uems-text-tertiary,#40485B)">85</text><text x="36" y="97" text-anchor="end" font-size="10" fill="var(--uems-text-tertiary,#40485B)">170</text><text x="36" y="57" text-anchor="end" font-size="10" fill="var(--uems-text-tertiary,#40485B)">255</text><text x="36" y="17" text-anchor="end" font-size="10" fill="var(--uems-text-tertiary,#40485B)">340</text><path d="M44,108 L144,89 L244,70 L344,75 L444,42 L544,23 L544,174 L44,174 Z" fill="var(--uems-bg-accent-primary,#EAF0FC)" opacity="0.7"/><polyline points="44,108 144,89 244,70 344,75 444,42 544,23" fill="none" stroke="var(--uems-text-accent-link,#006AFF)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><polyline points="44,155 144,160 244,148 344,153 444,146 544,150" fill="none" stroke="var(--uems-text-error,#C1181B)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="44" cy="108" r="3.2" fill="var(--uems-bg-primary,#fff)" stroke="var(--uems-text-accent-link,#006AFF)" stroke-width="2"/><circle cx="144" cy="89" r="3.2" fill="var(--uems-bg-primary,#fff)" stroke="var(--uems-text-accent-link,#006AFF)" stroke-width="2"/><circle cx="244" cy="70" r="3.2" fill="var(--uems-bg-primary,#fff)" stroke="var(--uems-text-accent-link,#006AFF)" stroke-width="2"/><circle cx="344" cy="75" r="3.2" fill="var(--uems-bg-primary,#fff)" stroke="var(--uems-text-accent-link,#006AFF)" stroke-width="2"/><circle cx="444" cy="42" r="3.2" fill="var(--uems-bg-primary,#fff)" stroke="var(--uems-text-accent-link,#006AFF)" stroke-width="2"/><circle cx="544" cy="23" r="3.2" fill="var(--uems-bg-primary,#fff)" stroke="var(--uems-text-accent-link,#006AFF)" stroke-width="2"/><text x="44" y="192" text-anchor="middle" font-size="11" fill="var(--uems-text-tertiary,#40485B)">Oct</text><text x="144" y="192" text-anchor="middle" font-size="11" fill="var(--uems-text-tertiary,#40485B)">Nov</text><text x="244" y="192" text-anchor="middle" font-size="11" fill="var(--uems-text-tertiary,#40485B)">Dec</text><text x="344" y="192" text-anchor="middle" font-size="11" fill="var(--uems-text-tertiary,#40485B)">Jan</text><text x="444" y="192" text-anchor="middle" font-size="11" fill="var(--uems-text-tertiary,#40485B)">Feb</text><text x="544" y="192" text-anchor="middle" font-size="11" fill="var(--uems-text-tertiary,#40485B)">Mar</text></svg></div>
+    <div class="hd-legend"><span class="hd-lg"><i class="hd-dot" style="background:var(--uems-text-accent-link,#006AFF)"></i>Enrolled</span><span class="hd-lg"><i class="hd-dot" style="background:var(--uems-text-error,#C1181B)"></i>Removed</span></div></div>
+  <footer class="hd-card-foot"><span class="hd-foot-note">Total enrolled: <b>1,210</b></span><ds-text-link href="#" variant="primary" size="medium" trailing-icon="chevron-right">View all</ds-text-link></footer>
+</ds-container>
+  </div>
+
+  <!-- Add Widget panel -->
+  <aside class="hd-panel" id="hd-panel-library" role="dialog" aria-label="Add Widget" aria-hidden="true">
+    <div class="hd-panel-head">
+      <h2 class="hd-panel-title">Library</h2>
+      <ds-button variant="secondary-color" size="small" prefix-icon="add" data-hd="lib-create">Create New</ds-button>
+      <ds-icon-button icon="close" label="Close" type="tertiary-grey" size="xl" data-hd-close></ds-icon-button>
+    </div>
+    <div class="hd-panel-body">
+      <ds-search-field placeholder="Search widgets" size="medium"></ds-search-field>
+      <div class="hd-lib-row"><span class="hd-lib-name">Devices by Operating System</span><ds-button variant="outline" size="xsmall" data-hd="lib-add">Add</ds-button></div>
+      <div class="hd-lib-row"><span class="hd-lib-name">Agent Version</span><ds-button variant="outline" size="xsmall" data-hd="lib-add">Add</ds-button></div>
+      <div class="hd-lib-row"><span class="hd-lib-name">Agent Install / Uninstall Summary</span><ds-button variant="outline" size="xsmall" data-hd="lib-add">Add</ds-button></div>
+      <div class="hd-lib-row"><span class="hd-lib-name">Agent Last Contact</span><ds-button variant="outline" size="xsmall" data-hd="lib-add">Add</ds-button></div>
+      <div class="hd-lib-row"><span class="hd-lib-name">Lifecycle - Declined &amp; Disposed</span><ds-button variant="outline" size="xsmall" data-hd="lib-add">Add</ds-button></div>
+      <div class="hd-lib-row"><span class="hd-lib-name">Inactive Device Policy Trend</span><ds-button variant="outline" size="xsmall" data-hd="lib-add">Add</ds-button></div>
+    </div>
+  </aside>
+
+  <!-- Edit Dashboard modal -->
+  <div class="hd-scrim" id="hd-modal-edit" aria-hidden="true">
+    <div class="hd-modal" role="dialog" aria-label="Edit Dashboard" aria-modal="true">
+      <div class="hd-panel-head">
+        <h2 class="hd-panel-title">Edit Dashboard</h2>
+        <ds-icon-button icon="close" label="Close" type="tertiary-grey" size="xl" data-hd-close></ds-icon-button>
+      </div>
+      <div class="hd-modal-body">
+        <ds-text-input id="hd-edit-name" label="Dashboard name" placeholder="Summary Dashboard" show-helper-row="false"></ds-text-input>
+        <ds-text-area id="hd-edit-desc" label="Description" placeholder="Dashboard contains of Types, summary &amp; recent activity of Agent" rows="3" show-helper-row="false"></ds-text-area>
+      </div>
+      <div class="hd-panel-foot">
+        <ds-button variant="secondary" size="medium" data-hd-close>Cancel</ds-button>
+        <ds-button id="hd-edit-save" variant="primary" size="medium" disabled>Save</ds-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- floating menu host (single ds-dropdown-menu reused for every menu) -->
+  <div class="hd-menu-host" id="hd-menu-host" hidden>
+    <ds-dropdown-menu id="hd-menu" type="action"></ds-dropdown-menu>
+  </div>
+  <div class="hd-toasts" id="hd-toasts"></div>
+</div>
+
+<script>
+/* Registration - the Shell (or the standalone harness) drives show/hide. */
+(function () {
+  const pop = () => document.getElementById('homedash-pop');
+  function show() { const el = pop(); if (el) el.hidden = false; }
+  function hide() { const el = pop(); if (el) el.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers.homedash = { show, hide };
+})();
+</script>
+<script>
+/* ── Behaviour layer ──────────────────────────────────────────────────────
+   Wires the Prism-component dashboard: page-header events (title menu / star /
+   overflow), date-range + in-card menus (one shared ds-dropdown-menu), KPI
+   count-up, Edit Layout (drag-reorder with FLIP + duplicate/delete + Undo),
+   refresh, the three side panels, the Edit Dashboard modal, and ds-toast
+   feedback. Everything stays inside #homedash-pop. */
+(function () {
+  const pop = document.getElementById('homedash-pop');
+  if (!pop || pop._wired) return; pop._wired = true;
+  const $  = (s, r) => (r || pop).querySelector(s);
+  const $$ = (s, r) => Array.from((r || pop).querySelectorAll(s));
+  const ph = $('#hd-ph');
+  const grid = $('#hd-grid');
+
+  const setBtnLabel = (dsBtn, text) => {
+    const l = dsBtn && dsBtn.querySelector('.ds-button__label');
+    if (l) l.textContent = text;
+  };
+  const btnLabel = (dsBtn) => {
+    const l = dsBtn && dsBtn.querySelector('.ds-button__label');
+    return l ? l.textContent.trim() : '';
+  };
+
+  /* ── toast (ds-toast in a fixed stack) ── */
+  const toastStack = $('#hd-toasts');
+  function toast(msg, opts) {
+    opts = opts || {};
+    /* pin the stack just below the dashboard's top edge (clears the Shell header) */
+    toastStack.style.top = Math.max(16, pop.getBoundingClientRect().top + 16) + 'px';
+    const t = document.createElement('ds-toast');
+    t.setAttribute('status', opts.status || 'info');
+    t.setAttribute('title', msg);
+    t.setAttribute('duration', '3200');
+    if (opts.cta) {
+      t.setAttribute('cta-text', opts.cta);
+      t.addEventListener('ds-toast-cta', () => { if (opts.onCta) opts.onCta(); t.remove(); });
+    }
+    t.addEventListener('ds-toast-close', () => t.remove());
+    toastStack.appendChild(t);
+    setTimeout(() => { if (t.isConnected) t.remove(); }, 4400);
+  }
+
+  /* ── shared dropdown menu (#hd-menu inside a fixed host) ── */
+  const menuHost = $('#hd-menu-host');
+  const menuEl = $('#hd-menu');
+  let menuAnchor = null, menuHandler = null;
+  function closeMenu() {
+    if (menuHost.hidden) return;
+    menuEl.close && menuEl.close();
+    menuHost.hidden = true; menuAnchor = null; menuHandler = null;
+    document.removeEventListener('click', onDocClick, true);
+    document.removeEventListener('scroll', onDocScroll, true);
+  }
+  function onDocClick(e) { if (!menuHost.contains(e.target)) closeMenu(); }
+  function onDocScroll(e) { if (!menuHost.contains(e.target)) closeMenu(); }
+  function openMenu(anchor, items, onSelect, type) {
+    if (menuAnchor === anchor && !menuHost.hidden) { closeMenu(); return; }
+    closeMenu();
+    menuEl.setAttribute('type', type || 'action');
+    menuEl.items = items;
+    menuAnchor = anchor; menuHandler = onSelect || null;
+    menuHost.hidden = false;
+    menuEl.open && menuEl.open();
+    const r = anchor.getBoundingClientRect();
+    const w = menuHost.offsetWidth || 210, h = menuHost.offsetHeight || 200;
+    menuHost.style.top = Math.min(r.bottom + 6, window.innerHeight - h - 12) + 'px';
+    menuHost.style.left = Math.max(12, Math.min(r.right - w, window.innerWidth - w - 12)) + 'px';
+    setTimeout(() => {
+      document.addEventListener('click', onDocClick, true);
+      document.addEventListener('scroll', onDocScroll, true);
+    }, 0);
+  }
+  menuEl.addEventListener('ds-dropdown-select', (e) => {
+    const fn = menuHandler; closeMenu();
+    if (fn) fn(e.detail && e.detail.value, e.detail && e.detail.item);
+  });
+  menuEl.addEventListener('ds-dropdown-close', closeMenu);
+
+  /* ── panels + modal ── */
+  const panels = { library: $('#hd-panel-library') };
+  const editModal = $('#hd-modal-edit');
+  function openPanel(name) {
+    closeAllOverlays();
+    const p = panels[name]; if (!p) return;
+    p.classList.add('hd-open'); p.setAttribute('aria-hidden', 'false');
+  }
+  function closeAllOverlays() {
+    Object.values(panels).forEach((p) => { p.classList.remove('hd-open'); p.setAttribute('aria-hidden', 'true'); });
+    editModal.classList.remove('hd-open'); editModal.setAttribute('aria-hidden', 'true');
+  }
+  function openEditModal() {
+    closeAllOverlays();
+    editModal.classList.add('hd-open'); editModal.setAttribute('aria-hidden', 'false');
+  }
+  pop.addEventListener('click', (e) => {
+    const c = e.target.closest && e.target.closest('[data-hd-close]');
+    if (c) closeAllOverlays();
+    if (e.target === editModal) closeAllOverlays();   /* scrim click */
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeMenu(); closeAllOverlays(); } });
+
+  /* ── page header: title menu / star / overflow kebab ── */
+  const DASHBOARDS = ['Summary Dashboard', 'Security Overview', 'Patch Compliance', 'Agent Health'];
+  ph.addEventListener('ds-page-header-title-menu', () => {
+    const cur = ph.getAttribute('title');
+    const anchor = ph.querySelector('[data-chevron]') || ph;
+    openMenu(anchor,
+      DASHBOARDS.map((d) => ({ label: d, value: d, selected: d === cur }))
+        .concat([{ type: 'divider' }, { label: '+ New dashboard', value: '__new' }]),
+      (v) => {
+        if (v === '__new') { toast('New dashboard — demo only'); return; }
+        ph.setAttribute('title', v);
+        toast('Switched to "' + v + '"');
+      }, 'select-tick');
+  });
+  ph.addEventListener('ds-page-header-star', (e) => {
+    toast(e.detail && e.detail.starred ? 'Added to favourites' : 'Removed from favourites', { status: 'success' });
+  });
+  ph.addEventListener('ds-page-header-overflow', () => {
+    const anchor = ph.querySelector('[data-overflow]') || ph;
+    openMenu(anchor, [
+      { label: 'Add widget', value: 'add' },
+      { label: 'Edit dashboard', value: 'edit' },
+      { type: 'divider' },
+      { label: 'Set as default', value: 'default' },
+      { label: 'Export as PDF', value: 'export' },
+    ], (v) => {
+      if (v === 'add') openPanel('library');
+      else if (v === 'edit') openEditModal();
+      else if (v === 'default') toast('Already the default dashboard');
+      else if (v === 'export') toast('Export queued — demo only');
+    });
+  });
+
+  /* ── KPI count-up + date range ── */
+  const kpiEls = $$('.hd-kpi');
+  function countTo(el, to) {
+    const from = parseInt((el.getAttribute('value') || '0').replace(/[^0-9]/g, ''), 10) || 0;
+    const dur = 550;
+    let t0 = null;
+    const token = (el._countToken = (el._countToken || 0) + 1);
+    function step(t) {
+      if (el._countToken !== token) return;
+      if (t0 === null) t0 = t;
+      const k = Math.max(0, Math.min(1, (t - t0) / dur));
+      el.setAttribute('value', Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))).toLocaleString('en-US'));
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+    setTimeout(() => { if (el._countToken === token) el.setAttribute('value', to.toLocaleString('en-US')); }, dur + 80);
+  }
+  kpiEls.forEach((k) => k.addEventListener('ds-kpi-card-select', () => {
+    toast('Opening filtered device list — demo only');
+  }));
+  const RANGES = {
+    'Last 24 hours': [72, 41, 6, 4198, 3187],
+    'Last 7 days':   [496, 250, 30, 4239, 3214],
+    'Last 30 days':  [1284, 693, 118, 4361, 3298],
+    'Last 90 days':  [2957, 1408, 344, 4520, 3411],
+  };
+  const dateBtn = $('[data-hd="date-range"]');
+  if (dateBtn) dateBtn.addEventListener('click', () => {
+    const cur = btnLabel(dateBtn);
+    openMenu(dateBtn,
+      Object.keys(RANGES).map((k) => ({ label: k, value: k, selected: k === cur })),
+      (v) => {
+        if (!RANGES[v]) return;
+        setBtnLabel(dateBtn, v);
+        RANGES[v].forEach((n, i) => kpiEls[i] && countTo(kpiEls[i], n));
+      }, 'select-tick');
+  });
+
+  /* ── refresh ── */
+  const refreshBtn = $('[data-hd="refresh"]');
+  if (refreshBtn) refreshBtn.addEventListener('click', () => {
+    const svg = refreshBtn.querySelector('svg');
+    if (svg) {
+      svg.style.transition = 'transform .7s cubic-bezier(0.4,0,0.2,1)';
+      svg.style.transform = 'rotate(360deg)';
+      setTimeout(() => { svg.style.transition = 'none'; svg.style.transform = 'none'; }, 720);
+    }
+    kpiEls.forEach((el) => {
+      const v = parseInt((el.getAttribute('value') || '0').replace(/[^0-9]/g, ''), 10) || 0;
+      countTo(el, Math.max(0, v + Math.round(v * (Math.random() * 0.04 - 0.02))));
+    });
+    toast('Dashboard refreshed just now', { status: 'success' });
+  });
+
+  /* ── Edit Layout: drag-reorder (FLIP) + per-card tools ── */
+  const editBtn = $('[data-hd="edit-layout"]');
+  let editing = false, dragSrc = null;
+  const widgetCards = () => $$('#hd-grid > .hd-card');
+  function flip(mutate) {
+    const before = new Map(widgetCards().map((c) => [c, c.getBoundingClientRect()]));
+    mutate();
+    widgetCards().forEach((c) => {
+      const a = before.get(c); if (!a) return;
+      const b = c.getBoundingClientRect();
+      const dx = a.left - b.left, dy = a.top - b.top;
+      if (!dx && !dy) return;
+      c.style.transition = 'none'; c.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+      requestAnimationFrame(() => {
+        c.style.transition = 'transform .22s cubic-bezier(0.2,0.8,0.2,1)'; c.style.transform = '';
+        setTimeout(() => { c.style.transition = ''; }, 240);
+      });
+    });
+  }
+  function setEditing(on) {
+    editing = on;
+    grid.classList.toggle('hd-editing', on);
+    setBtnLabel(editBtn, on ? 'Done' : 'Edit Layout');
+    widgetCards().forEach((c) => { c.draggable = on; });
+    if (on) toast('Drag cards to rearrange · hover a card for tools · click Done to finish');
+  }
+  if (editBtn) editBtn.addEventListener('click', () => setEditing(!editing));
+  grid.addEventListener('dragstart', (e) => {
+    const c = e.target.closest && e.target.closest('.hd-card');
+    if (!editing || !c) return;
+    dragSrc = c; c.classList.add('hd-dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', ''); } catch (err) {}
+  });
+  grid.addEventListener('dragover', (e) => {
+    if (!editing || !dragSrc) return;
+    e.preventDefault();
+    const over = e.target.closest && e.target.closest('#hd-grid > .hd-card');
+    if (!over || over === dragSrc) return;
+    const cards = widgetCards();
+    const iSrc = cards.indexOf(dragSrc), iOver = cards.indexOf(over);
+    flip(() => { grid.insertBefore(dragSrc, iSrc < iOver ? over.nextSibling : over); });
+  });
+  grid.addEventListener('dragend', () => { if (dragSrc) { dragSrc.classList.remove('hd-dragging'); dragSrc = null; } });
+
+  function removeCard(card) {
+    const next = card.nextSibling, parent = card.parentNode;
+    card.style.transition = 'opacity .18s, transform .18s';
+    card.style.opacity = '0'; card.style.transform = 'scale(0.96)';
+    setTimeout(() => {
+      card.remove();
+      toast('"' + (card.dataset.widgetTitle || 'Widget') + '" removed', {
+        cta: 'Undo',
+        onCta: () => {
+          card.style.opacity = ''; card.style.transform = ''; card.style.transition = '';
+          parent.insertBefore(card, next);
+        },
+      });
+    }, 190);
+  }
+  grid.addEventListener('click', (e) => {
+    const act = e.target.closest && e.target.closest('[data-hd-act]');
+    if (!act) return;
+    const card = act.closest('.hd-card');
+    if (!card) return;
+    const kind = act.getAttribute('data-hd-act');
+    if (kind === 'delete') removeCard(card);
+    else if (kind === 'duplicate') {
+      const copy = card.cloneNode(true);
+      copy.style.opacity = '0'; copy.draggable = editing;
+      copy.dataset.widgetTitle = (card.dataset.widgetTitle || 'Widget') + ' (copy)';
+      flip(() => card.after(copy));
+      requestAnimationFrame(() => { copy.style.transition = 'opacity .25s'; copy.style.opacity = '1'; });
+      toast('Widget duplicated', { status: 'success' });
+    } else if (kind === 'edit') openEditModal();
+    else if (kind === 'menu') {
+      openMenu(act, [
+        { label: 'Refresh widget', value: 'refresh' },
+        { label: 'View details', value: 'details' },
+        { type: 'divider' },
+        { label: 'Remove widget', value: 'remove', danger: true },
+      ], (v) => {
+        if (v === 'refresh') toast('"' + (card.dataset.widgetTitle || 'Widget') + '" refreshed', { status: 'success' });
+        else if (v === 'details') toast('Details view — demo only');
+        else if (v === 'remove') removeCard(card);
+      });
+    }
+  });
+
+  /* ── Recent Activity range dropdown ── */
+  const actRange = $('[data-hd="act-range"]');
+  if (actRange) actRange.addEventListener('click', () => {
+    const cur = btnLabel(actRange);
+    openMenu(actRange,
+      ['Last 24 hours', 'Last 5 days', 'Last 10 days', 'Last 30 days'].map((k) => ({ label: k, value: k, selected: k === cur })),
+      (v) => setBtnLabel(actRange, v), 'select-tick');
+  });
+
+  /* ── Edit Dashboard modal: inputs enable Save; Save renames ── */
+  const nameInput = $('#hd-edit-name');
+  const saveBtn = $('#hd-edit-save');
+  function syncSave() {
+    const inner = nameInput && nameInput.querySelector('input');
+    const ok = !!(inner && inner.value.trim());
+    if (saveBtn) { if (ok) saveBtn.removeAttribute('disabled'); else saveBtn.setAttribute('disabled', ''); }
+  }
+  if (editModal) editModal.addEventListener('input', syncSave);
+  if (saveBtn) saveBtn.addEventListener('click', () => {
+    const inner = nameInput && nameInput.querySelector('input');
+    const name = inner && inner.value.trim();
+    if (!name) return;
+    ph.setAttribute('title', name);
+    closeAllOverlays();
+    toast('Dashboard updated', { status: 'success' });
+  });
+
+  /* ── Library panel ── */
+  pop.addEventListener('click', (e) => {
+    const t = e.target.closest && e.target.closest('[data-hd]');
+    if (!t) return;
+    const k = t.getAttribute('data-hd');
+    if (k === 'lib-add') toast('Widget added — demo only', { status: 'success' });
+    else if (k === 'lib-create') toast('Widget builder — demo only');
+  });
+})();
+
+</script>
+<script>
+/* ── Enrollment Trend — constant font size at any card width ──────────────
+   The static SVG scaled through its viewBox, so on wide cards the 10/11px
+   axis fonts blew up to ~28px (bigger than the card title). Redraw the same
+   chart in REAL pixels on every card resize — geometry stretches, text and
+   strokes stay at design size. The static markup remains as the no-JS
+   fallback and is replaced on first draw. */
+(function () {
+  const svg = document.querySelector('svg.hd-trend');
+  if (!svg || svg._wired) return; svg._wired = true;
+  const MONTHS   = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+  const ENROLLED = [140, 181, 221, 210, 281, 321];
+  const REMOVED  = [40, 30, 55, 45, 60, 51];
+  const TICKS = [0, 85, 170, 255, 340], MAX = 340;
+  const H = 200, TOP = 14, BOT = 174, LEFT = 44, RIGHT = 16;
+  const box = svg.parentElement;
+  const AXIS = 'fill="var(--uems-text-tertiary,#40485B)"';
+  function draw() {
+    const w = box.clientWidth;
+    if (w < 160) return;
+    const x = (i) => LEFT + (w - LEFT - RIGHT) * i / (MONTHS.length - 1);
+    const y = (v) => BOT - (BOT - TOP) * v / MAX;
+    const pts = (a) => a.map((v, i) => x(i).toFixed(1) + ',' + y(v).toFixed(1)).join(' ');
+    let s = '';
+    TICKS.forEach((t) => {
+      s += `<line x1="${LEFT}" y1="${y(t)}" x2="${w - RIGHT}" y2="${y(t)}" stroke="var(--uems-border-tertiary,#E1E4EB)" stroke-dasharray="3 4"/>`;
+      s += `<text x="${LEFT - 8}" y="${y(t) + 3}" text-anchor="end" font-size="10" ${AXIS}>${t}</text>`;
+    });
+    s += `<path d="M${pts(ENROLLED).replace(/ /g, ' L')} L${x(5).toFixed(1)},${BOT} L${LEFT},${BOT} Z" fill="var(--uems-bg-accent-primary,#EAF0FC)" opacity="0.7"/>`;
+    s += `<polyline points="${pts(ENROLLED)}" fill="none" stroke="var(--uems-text-accent-link,#006AFF)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
+    s += `<polyline points="${pts(REMOVED)}" fill="none" stroke="var(--uems-text-error,#C1181B)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    ENROLLED.forEach((v, i) => {
+      s += `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3.2" fill="var(--uems-bg-primary,#fff)" stroke="var(--uems-text-accent-link,#006AFF)" stroke-width="2"/>`;
+    });
+    MONTHS.forEach((m, i) => { s += `<text x="${x(i).toFixed(1)}" y="192" text-anchor="middle" font-size="11" ${AXIS}>${m}</text>`; });
+    svg.removeAttribute('viewBox');
+    svg.setAttribute('width', w);
+    svg.setAttribute('height', H);
+    svg.innerHTML = s;
+  }
+  new ResizeObserver(() => requestAnimationFrame(draw)).observe(box);
+  draw();
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS - runs ONLY when opened directly. ================ */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers.homedash && window.ShellDrawers.homedash.show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

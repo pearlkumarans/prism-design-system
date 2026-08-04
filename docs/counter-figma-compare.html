@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/counter/counter.css">
+<script type="module" src="../design-system-library/src/components/counter/counter.js"></script>
+<style>body{background:#fff;padding:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;} pre{width:100%;font-size:11px;}</style>
+</head>
+<body>
+  <ds-counter id="dflt" value="5"></ds-counter>
+  <ds-counter id="s" size="small"  state="active" value="5"></ds-counter>
+  <ds-counter id="m" size="medium" state="active" value="5"></ds-counter>
+  <ds-counter id="l" size="large"  state="active" value="5"></ds-counter>
+  <ds-counter id="ovf" size="medium" state="critical" variant="intense" value="142" max="99"></ds-counter>
+  <ds-counter id="multi" size="small" state="active" value="120"></ds-counter>
+  <ds-counter id="ia" size="medium" state="active" variant="intense" value="7"></ds-counter>
+  <ds-counter id="im" size="medium" state="moderate" variant="intense" value="7"></ds-counter>
+  <pre id="report">measuring…</pre>
+<script type="module">
+const hex = (rgb) => { const m = rgb.match(/\d+/g); return m ? '#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join('').toUpperCase() : rgb; };
+await customElements.whenDefined('ds-counter');
+await new Promise(r => setTimeout(r, 500));
+const lines = []; let pass=0, fail=0;
+const check = (id, what, got, want) => { const ok = String(got)===String(want); ok?pass++:fail++; lines.push(`${ok?'PASS':'FAIL'} ${id} ${what}: got=${got} want=${want}`); };
+const g = id => document.getElementById(id);
+// defaults: subtle/small/active
+{ const el=g('dflt'), cs=getComputedStyle(el);
+  check('dflt','height',Math.round(el.getBoundingClientRect().height),16);
+  check('dflt','bg(subtle/active)',hex(cs.backgroundColor),'#D5E0F8');
+  check('dflt','fg(accent-tertiary)',hex(cs.color),'#1E52BB'); }
+// sizes
+for (const [id,h,minw,fs,lh,fw,padH] of [['s',16,'16px','10px','14px','500','4px'],['m',20,'20px','12px','16px','500','4px'],['l',24,'24px','14px','20px','400','8px']]) {
+  const el=g(id), cs=getComputedStyle(el), r=el.getBoundingClientRect();
+  check(id,'height',Math.round(r.height),h);
+  check(id,'min-width',cs.minWidth,minw);
+  check(id,'circle(single digit)',Math.round(r.width)===Math.round(r.height)||id==='l',true);
+  check(id,'font-size',cs.fontSize,fs);
+  check(id,'line-height',cs.lineHeight,lh);
+  check(id,'font-weight',cs.fontWeight,fw);
+  check(id,'pad-v',cs.paddingTop,'4px');
+  check(id,'pad-h',cs.paddingLeft,padH);
+  check(id,'radius',cs.borderRadius,'9999px');
+}
+// overflow + multi-digit stretch
+check('ovf','display-99+',g('ovf').textContent.trim(),'99+');
+check('ovf','aria-real-count',g('ovf').getAttribute('aria-label'),'142');
+{ const r=g('multi').getBoundingClientRect(); check('multi','pill-stretch(width>height)', r.width>r.height, true); check('multi','height-fixed',Math.round(r.height),16); }
+// intense active + moderate
+check('ia','bg(info-solid)',hex(getComputedStyle(g('ia')).backgroundColor),'#2C66DD');
+check('im','bg(alert-solid)',hex(getComputedStyle(g('im')).backgroundColor),'#F9B21D');
+check('im','fg(black)',hex(getComputedStyle(g('im')).color),'#000000');
+// theme switch — the real bug test: dark + green-light Subtle/Active bg
+for (const [theme, want, wantSolid] of [['dark','#112E68','#1B49A6'],['green-light','#D5E0F8','#2C66DD']]) {
+  document.documentElement.setAttribute('data-theme', theme);
+  await new Promise(r => setTimeout(r, 100));
+  check(`theme:${theme}`,'subtle/active bg',hex(getComputedStyle(g('m')).backgroundColor),want);
+  check(`theme:${theme}`,'intense/active bg',hex(getComputedStyle(g('ia')).backgroundColor),wantSolid);
+}
+document.documentElement.setAttribute('data-theme','light');
+lines.unshift(`RESULT: ${pass} pass / ${fail} fail`);
+g('report').textContent = lines.join('\n');
+</script>
+</body>
+</html>

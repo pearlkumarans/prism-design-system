@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fullscreen Modal — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/fullscreen-modal/fullscreen-modal.css">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<link rel="stylesheet" href="../design-system-library/src/components/icon-button/icon-button.css">
+<!-- Modal body lists use the DS List component -->
+<link rel="stylesheet" href="../design-system-library/src/components/list/list.css">
+<!-- SSO-wizard demo body uses the DS Text Input / Text Area components -->
+<link rel="stylesheet" href="../design-system-library/src/components/text-input/text-input.css">
+<link rel="stylesheet" href="../design-system-library/src/components/text-area/text-area.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/button/button.js"></script>
+<script type="module" src="../design-system-library/src/components/icon-button/icon-button.js"></script>
+<script type="module" src="../design-system-library/src/components/fullscreen-modal/fullscreen-modal.js"></script>
+<script type="module" src="../design-system-library/src/components/list/list.js"></script>
+<script type="module" src="../design-system-library/src/components/text-input/text-input.js"></script>
+<script type="module" src="../design-system-library/src/components/text-area/text-area.js"></script>
+<style>
+  /* Inline preview override — drop fixed overlay so the dialog shape can sit
+     inside a card next to other variants. The viewport-fixed live behaviour
+     still works for the trigger-button demos at the bottom. */
+  .page-snackbar .demo-fsm-frame ds-fullscreen-modal {
+    position: static !important;
+    inset: auto !important;
+    z-index: auto !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center;
+    width: 100%;
+  }
+  .page-snackbar .demo-fsm-frame .ds-fullscreen-modal__overlay { display: none !important; }
+  .page-snackbar .demo-fsm-frame .ds-fullscreen-modal__dialog {
+    animation: none !important;
+    height: 360px !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
+  }
+  .page-snackbar .demo-fsm-frame .ds-fullscreen-modal__body { overflow-y: auto; }
+
+  .page-snackbar .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-snackbar .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .page-snackbar .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    padding: 32px !important;
+    gap: 36px !important;
+  }
+  .page-snackbar .demo-fsm-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-snackbar .demo-fsm-section > .demo-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+    margin: 0; text-align: left; width: auto;
+  }
+  .page-snackbar .demo-fsm-section > .demo-fsm-desc {
+    font-size: 12px; color: var(--prism-text-muted); line-height: 1.5;
+  }
+  .page-snackbar .demo-fsm-card {
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 18px;
+    border: 1px solid var(--prism-border);
+    border-radius: 16px;
+    background: radial-gradient(circle at top, rgba(10,11,15,0.55), rgba(10,11,15,0.85)), #0a0b0f;
+  }
+  [data-theme="light"] .page-snackbar .demo-fsm-card {
+    background: radial-gradient(circle at top, rgba(13,18,31,0.45), rgba(13,18,31,0.75));
+    border-color: rgba(37,99,235,0.1);
+  }
+  .page-snackbar .demo-fsm-card .card-cap {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.65); text-transform: uppercase;
+  }
+  .page-snackbar .demo-trigger-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .page-snackbar .anat-marker-inline {
+    background: #2563eb; color: #fff; font-size: 11px; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body class="page-snackbar">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav" id="sidebar-nav-list">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link active">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Fullscreen Modal</h1>
+        <p class="page-desc">A fullscreen modal takes over the viewport for a focused, self-contained flow &mdash; a multi-step wizard, an enrolment journey, an embedded preview. Use it when the task needs the whole screen but the user shouldn&rsquo;t lose their place behind it. A 40&thinsp;px band of the page peeks at the top so the user remembers this is a layer they can close, not a navigation jump.</p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══════════════ OVERVIEW ═══════════════ -->
+        <div class="tab-content" id="tab-overview">
+
+          <!-- Anatomy -->
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram" style="overflow:visible;">
+            <div style="display:flex;justify-content:center;margin:24px 0;padding:32px;">
+              <div style="position:relative;width:100%;max-width:720px;border-radius:12px 12px 0 0;background:#fff;box-shadow:0 16px 32px rgba(13,18,31,0.18);color:#1F242E;">
+                <!-- Header -->
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:20px 24px;gap:12px;border-bottom:1px solid #E1E4EB;position:relative;">
+                  <div style="display:flex;align-items:flex-start;gap:16px;flex:1;">
+                    <div style="width:48px;height:48px;border-radius:50%;background:rgba(12,102,228,0.12);display:flex;align-items:center;justify-content:center;color:#0C66E4;flex-shrink:0;">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      <div style="position:absolute;left:-12px;top:50%;transform:translate(-100%,-50%);display:flex;align-items:center;gap:6px;"><span class="anat-marker-inline">1</span><div style="width:24px;height:2px;background:#2563eb;"></div></div>
+                    </div>
+                    <div style="text-align:left;flex:1;">
+                      <div style="font-size:20px;font-weight:600;line-height:28px;position:relative;">Configure SAML SSO
+                        <div style="position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">2</span></div>
+                      </div>
+                      <div style="font-size:14px;line-height:20px;color:#5C6066;margin-top:4px;position:relative;">A short description of what this modal is for.
+                        <div style="position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">3</span></div>
+                      </div>
+                    </div>
+                  </div>
+                  <button style="width:28px;height:28px;border:0;background:transparent;color:#8893AD;cursor:default;border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <div style="position:absolute;left:calc(100% + 6px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">4</span></div>
+                  </button>
+                </div>
+
+                <!-- Body -->
+                <div style="padding:20px 24px;min-height:160px;font-size:14px;line-height:20px;color:#5C6066;position:relative;">
+                  Full-screen modal body. Use for complex flows, wizards, or mobile-first experiences. The body scrolls independently &mdash; the header and footer stay pinned.
+                  <div style="position:absolute;left:calc(100% + 12px);top:32px;display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">5</span></div>
+                </div>
+
+                <!-- Footer -->
+                <div style="border-top:1px solid #E1E4EB;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;">
+                  <a href="#" style="font-size:14px;color:#0C66E4;text-decoration:none;font-weight:500;">View documentation</a>
+                  <div style="display:flex;gap:8px;">
+                    <button style="padding:10px 18px;border-radius:8px;border:1px solid #E1E4EB;background:#fff;color:#1F242E;font:inherit;font-size:14px;cursor:default;">Back</button>
+                    <button style="padding:10px 18px;border-radius:8px;border:1px solid #E1E4EB;background:#fff;color:#1F242E;font:inherit;font-size:14px;cursor:default;">Cancel</button>
+                    <button style="padding:10px 18px;border-radius:8px;border:0;background:#0C66E4;color:#fff;font:inherit;font-size:14px;font-weight:500;cursor:default;">Save and apply</button>
+                  </div>
+                  <div style="position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">6</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Leading icon</strong><span>48&times;48 circular pill. Tint follows the <code>leading-tone</code> attribute (info / warning / success / brand).</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Title</strong><span>One short sentence naming the flow. Zoho Puvi Semibold 20/28. Sentence case, &le; 60 chars.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Description</strong><span>Optional supporting line. Zoho Puvi Regular 14/20, <code>--uems-text-tertiary</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Close icon</strong><span>Top-right dismiss. 28&times;28 hit target with 16&times;16 &times; glyph.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Body slot</strong><span>The whole scrollable region. Owns its own typography &mdash; forms, lists, wizards.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Footer</strong><span>Split layout: left utility slot (TextLink / status / "Don't show again"), right action group (Tertiary &middot; Secondary &middot; Primary).</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Preview -->
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Every <code>leading-tone</code>, slot variant, and footer combination from <code>fullscreen-modal.css</code>. The dialog body is shown inline (no overlay) so every variant sits side-by-side; an interactive trigger row at the bottom shows the real full-viewport behavior.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Fullscreen Modal &middot; tones &times; slots + live triggers</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Leading tones -->
+                <div class="demo-fsm-section">
+                  <div class="demo-group-label">Leading tones &mdash; info (default) / warning / success / brand</div>
+                  <div class="demo-fsm-desc">Drives the circular icon background and foreground colour. The primary button colour does <strong>not</strong> follow the tone (Fullscreen modals shouldn't be destructive surfaces &mdash; use Confirmation Modal for that).</div>
+
+                  <div class="demo-fsm-card">
+                    <span class="card-cap">Info &middot; SAML SSO wizard</span>
+                    <div class="demo-fsm-frame">
+                      <ds-fullscreen-modal preview-mode                        leading-tone="info"
+                        title="Configure SAML single sign-on"
+                        description="Set up identity-provider-initiated SSO for your workspace."
+                        primary-label="Save and apply"
+                        secondary-label="Cancel"
+                        tertiary-label="Back">
+                        <p>This wizard walks you through 3 steps: <strong>identity provider</strong>, <strong>attribute mapping</strong>, and <strong>test sign-in</strong>. You can save progress and come back at any time.</p>
+                      </ds-fullscreen-modal>
+                    </div>
+                  </div>
+
+                  <div class="demo-fsm-card">
+                    <span class="card-cap">Warning &middot; risky setup</span>
+                    <div class="demo-fsm-frame">
+                      <ds-fullscreen-modal preview-mode                        leading-tone="warning"
+                        title="Enable enforce-policy mode"
+                        description="Endpoints that don't comply will be blocked from accessing internal services."
+                        primary-label="Enable enforcement"
+                        secondary-label="Cancel"
+                        tertiary-label="Test first">
+                        <p>Before enabling, please confirm:</p>
+                        <ds-list list-style="disc" size="medium">
+                          <ds-list-item>All 248 endpoints have the agent installed.</ds-list-item>
+                          <ds-list-item>Compliance baselines are configured per platform.</ds-list-item>
+                          <ds-list-item>A communication has been sent to affected users.</ds-list-item>
+                        </ds-list>
+                      </ds-fullscreen-modal>
+                    </div>
+                  </div>
+
+                  <div class="demo-fsm-card">
+                    <span class="card-cap">Success &middot; post-setup confirmation</span>
+                    <div class="demo-fsm-frame">
+                      <ds-fullscreen-modal preview-mode                        leading-tone="success"
+                        title="Deployment complete"
+                        description="248 of 248 endpoints received the v2.4.0 patch."
+                        primary-label="View report"
+                        secondary-label="Close">
+                        <p>Average rollout time: <strong>1m 42s</strong> per endpoint.</p>
+                        <p>No failures or stalls reported. Health check passed on all platforms.</p>
+                      </ds-fullscreen-modal>
+                    </div>
+                  </div>
+
+                  <div class="demo-fsm-card">
+                    <span class="card-cap">Brand &middot; product onboarding</span>
+                    <div class="demo-fsm-frame">
+                      <ds-fullscreen-modal preview-mode                        leading-tone="brand"
+                        title="Welcome to Endpoint Central"
+                        description="Let's set up your first device group in under 3 minutes."
+                        primary-label="Start setup"
+                        secondary-label="Skip for now"
+                        tertiary-label="Watch demo (2:14)">
+                        <p>Endpoint Central will help you discover, manage, and patch all the devices in your environment. Pick the platforms you want to enrol first.</p>
+                      </ds-fullscreen-modal>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Slot toggles -->
+                <div class="demo-fsm-section">
+                  <div class="demo-group-label">Slot toggles &mdash; minimal / no tertiary / no close</div>
+                  <div class="demo-fsm-card">
+                    <span class="card-cap">Minimal &mdash; title + body + primary only</span>
+                    <div class="demo-fsm-frame">
+                      <ds-fullscreen-modal preview-mode                        leading-tone="info"
+                        title="Review changes"
+                        primary-label="Apply changes">
+                        <p>Compact configuration &mdash; no description, no secondary, no tertiary, no close button. Use when the modal is invoked from a single explicit action and "Apply" is the only meaningful next step.</p>
+                      </ds-fullscreen-modal>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Loading -->
+                <div class="demo-fsm-section">
+                  <div class="demo-group-label">Loading &mdash; async save in flight</div>
+                  <div class="demo-fsm-desc">Set <code>loading</code> while the primary action runs (saving a wizard, applying a config). The primary shows a spinner; Cancel, Back, close, Esc, and overlay all lock so a long save can&rsquo;t be abandoned halfway. Keep the modal open in your <code>ds-fullscreen-primary</code> handler with <code>e.preventDefault()</code>, then clear <code>loading</code> when the request settles.</div>
+                  <div class="demo-fsm-card">
+                    <span class="card-cap">Saving SSO configuration</span>
+                    <div class="demo-fsm-frame">
+                      <ds-fullscreen-modal preview-mode leading-tone="info"
+                        loading
+                        title="Configure SAML single sign-on"
+                        description="Saving your identity-provider settings&hellip;"
+                        primary-label="Saving&hellip;"
+                        secondary-label="Cancel"
+                        tertiary-label="Back">
+                        <p>While the save runs, the footer actions and close affordance are locked so the user can&rsquo;t leave the wizard in a half-applied state.</p>
+                      </ds-fullscreen-modal>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Live triggers -->
+                <div class="demo-fsm-section">
+                  <div class="demo-group-label">Live triggers &mdash; click to open the real full-viewport overlay</div>
+                  <div class="demo-fsm-desc">Press <kbd>Esc</kbd> or click the close icon / Cancel to dismiss. The dialog covers the full width and almost-full height with a 40&thinsp;px overlay band at the top.</div>
+                  <div class="demo-trigger-row">
+                    <ds-button id="fsm-trigger-info" variant="primary" size="medium" prefix-icon="info">Open info modal</ds-button>
+                    <ds-button id="fsm-trigger-warn" variant="warning" size="medium" prefix-icon="exclamation-circle">Open warning modal</ds-button>
+                    <ds-button id="fsm-trigger-succ" variant="success" size="medium" prefix-icon="check">Open success modal</ds-button>
+                  </div>
+
+                  <ds-fullscreen-modal id="fsm-live-info"
+                    leading-tone="info"
+                    title="Configure SAML single sign-on"
+                    description="Set up identity-provider-initiated SSO for your workspace."
+                    primary-label="Save and apply"
+                    secondary-label="Cancel"
+                    tertiary-label="Back">
+                    <p>Walk through 3 steps to configure SSO: identity provider, attribute mapping, test sign-in.</p>
+                    <ds-text-input label="Entity ID" value="https://idp.zohocorp.com/saml/metadata" show-helper-row="false"></ds-text-input>
+                    <ds-text-input label="ACS URL" value="https://prism.zoho.com/sso/saml/acs" show-helper-row="false"></ds-text-input>
+                    <ds-text-area label="IdP metadata XML" placeholder="Paste your IdP metadata XML&hellip;" max-lines="6" show-helper-row="false"></ds-text-area>
+                  </ds-fullscreen-modal>
+
+                  <ds-fullscreen-modal id="fsm-live-warn"
+                    leading-tone="warning"
+                    title="Enable enforce-policy mode"
+                    description="Endpoints that don't comply will be blocked."
+                    primary-label="Enable enforcement"
+                    secondary-label="Cancel"
+                    tertiary-label="Test first">
+                    <p>Before enabling, please confirm:</p>
+                    <ds-list list-style="disc" size="medium">
+                      <ds-list-item>All 248 endpoints have the agent installed.</ds-list-item>
+                      <ds-list-item>Compliance baselines are configured per platform.</ds-list-item>
+                      <ds-list-item>A communication has been sent to affected users.</ds-list-item>
+                    </ds-list>
+                  </ds-fullscreen-modal>
+
+                  <ds-fullscreen-modal id="fsm-live-succ"
+                    leading-tone="success"
+                    title="Deployment complete"
+                    description="248 of 248 endpoints received the v2.4.0 patch."
+                    primary-label="View report"
+                    secondary-label="Close">
+                    <p>Average rollout time: <strong>1m 42s</strong> per endpoint.</p>
+                    <p>No failures or stalls reported. Health check passed on all platforms.</p>
+                  </ds-fullscreen-modal>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Guidelines -->
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Lead the title with what the modal is for: "Configure SAML SSO", "Import contacts".</li>
+                <li>Keep the description to one short line summarising what the user can do here.</li>
+                <li>Place dismissive actions (Cancel, Back) on the <strong>left</strong> of the action group; primary on the right.</li>
+                <li>Use the left footer slot for utility &mdash; TextLink to docs, "Don't show again" checkbox, save status.</li>
+                <li>Make the body the sole scroll container; header and footer stay pinned.</li>
+                <li>Disable backdrop dismiss when there are unsaved changes; warn before closing.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Use generic titles like "Settings".</li>
+                <li>Repeat the title in the description or use it for marketing language.</li>
+                <li>Scatter actions across the left and right footer slots.</li>
+                <li>Let the entire dialog scroll &mdash; the footer must always be visible.</li>
+                <li>Allow accidental dismissal of in-flight wizard state.</li>
+                <li>Use a danger-toned leading icon &mdash; reach for Confirmation Modal for destructive surfaces.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- RTL Demonstration -->
+          <div class="doc-section">
+            <h2 id="rtl" class="doc-section-title">RTL (Right-to-Left)</h2>
+            <p class="doc-section-subtitle">For Arabic, Hebrew, and other RTL locales, the header close button moves to the leading edge, the leading icon flips to the right of the title, and footer action ordering reverses so the primary stays on the visual leading edge.</p>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <div style="font-size:12px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px;">LTR (default)</div>
+                <ul style="margin:0;padding-left:20px;color:var(--prism-text-muted);font-size:14px;line-height:1.7;">
+                  <li>Close button: <strong>right</strong></li>
+                  <li>Leading icon: <strong>left</strong> of title</li>
+                  <li>Primary action: <strong>right</strong> footer</li>
+                  <li>Cancel / Back: <strong>left</strong> of primary</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <div style="font-size:12px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px;">RTL</div>
+                <ul style="margin:0;padding-left:20px;color:var(--prism-text-muted);font-size:14px;line-height:1.7;">
+                  <li>Close button: <strong>left</strong></li>
+                  <li>Leading icon: <strong>right</strong> of title</li>
+                  <li>Primary action: <strong>left</strong> footer</li>
+                  <li>Cancel / Back: <strong>right</strong> of primary</li>
+                </ul>
+              </div>
+            </div>
+            <p style="margin-top:16px;font-size:13.5px;color:var(--prism-text-muted);">
+              <strong>How it works:</strong> set <code>dir="rtl"</code> on the modal or any ancestor. The component reads ambient direction via <code>:dir(rtl)</code> selectors in <code>fullscreen-modal.css</code> and flips header layout, icon padding, and footer flex direction automatically. Try it in the playground &mdash; the "Open as full overlay" button respects the page's <code>dir</code> attribute.
+            </p>
+          </div>
+        </div>
+
+        <!-- ═══════════════ STYLE ═══════════════ -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Layout tokens, per-tone accent colours, and motion specs.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Container</h3>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Width</td><td><code>100vw</code></td></tr>
+                <tr><td>Height</td><td><code>calc(100vh - 40px)</code></td></tr>
+                <tr><td>Top inset (overlay band)</td><td><code>40px</code></td></tr>
+                <tr><td>Top corner radius</td><td><code>12px</code></td></tr>
+                <tr><td>Bottom corner radius</td><td><code>0</code> (flush with viewport edge)</td></tr>
+                <tr><td>Drop shadow</td><td><code>0 16px 32px rgba(13, 18, 31, 0.18)</code></td></tr>
+                <tr><td>Overlay</td><td><code>rgba(10, 11, 15, 0.7)</code></td></tr>
+                <tr><td>Header padding</td><td><code>20px 24px</code></td></tr>
+                <tr><td>Body padding</td><td><code>20px 24px</code></td></tr>
+                <tr><td>Footer padding</td><td><code>16px 24px</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Leading-tone accent tokens</h3>
+            <table class="size-table">
+              <thead><tr><th>Tone</th><th>Background</th><th>Foreground</th><th>Default icon</th></tr></thead>
+              <tbody>
+                <tr><td><code>info</code> <em>(default)</em></td><td><code>--bg-info-subtlest</code></td><td><code>--text-info</code></td><td><code>info-circle</code></td></tr>
+                <tr><td><code>warning</code></td><td><code>--bg-warning-subtlest</code></td><td><code>--uems-text-warning</code></td><td><code>exclamation-circle</code></td></tr>
+                <tr><td><code>success</code></td><td><code>--bg-success-subtlest</code></td><td><code>--uems-text-success</code></td><td><code>check-circle</code></td></tr>
+                <tr><td><code>brand</code></td><td><code>--bg-accent-subtlest</code></td><td><code>--uems-text-accent-link</code></td><td><code>star</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Typography</h3>
+            <table class="size-table">
+              <thead><tr><th>Slot</th><th>Spec</th></tr></thead>
+              <tbody>
+                <tr><td>Title</td><td>Zoho Puvi Semibold 20 / 28</td></tr>
+                <tr><td>Description</td><td>Zoho Puvi Regular 14 / 20, <code>--uems-text-tertiary</code></td></tr>
+                <tr><td>Footer button label</td><td>Zoho Puvi Medium 14 / 20</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ USAGE ═══════════════ -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <h2 id="usage" class="doc-section-title">Usage</h2>
+          <p class="doc-section-subtitle">When to reach for a Fullscreen Modal versus alternative dialog patterns.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">When to use</h3>
+            <ul class="doc-list">
+              <li>Multi-step flows that need their own focused canvas: onboarding, wizards, structured imports.</li>
+              <li>Rich editing experiences that won't fit in a centered modal &mdash; entity detail panels, JSON editors, image cropping.</li>
+              <li>Mobile-first or responsive layouts &mdash; the same component fills a phone screen naturally.</li>
+              <li>Patterns that would otherwise need a new page but should preserve the user's place in the host app.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">When not to use</h3>
+            <table class="size-table">
+              <thead><tr><th>Situation</th><th>Use instead</th></tr></thead>
+              <tbody>
+                <tr><td>Binary confirmation (Delete / Cancel)</td><td><a href="Confirmation-modal.html">Modal / Confirmation</a></td></tr>
+                <tr><td>Short form (3&ndash;5 fields)</td><td>Standard centered Modal</td></tr>
+                <tr><td>Persistent contextual panel beside the canvas</td><td>Drawer / Side Sheet</td></tr>
+                <tr><td>Content that should live at its own URL</td><td>A real page</td></tr>
+                <tr><td>Onboarding overlays pointing at UI</td><td>Coachmark / Tour</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ CODE ═══════════════ -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+
+          <!-- ───── Live demo (Code playground) ───── -->
+          <h2 id="live-demo-code" class="doc-section-title">Live demo</h2>
+          <p class="doc-section-subtitle">Configure the Fullscreen Modal below and copy the generated HTML. Click <strong>Open as full overlay</strong> to see the real fixed-viewport behavior with focus trap and body-scroll lock.</p>
+
+          <!-- Live overlay modal — kept outside the playground so position:fixed paints cleanly -->
+          <ds-fullscreen-modal id="pg-fsm-live"
+            leading-tone="info"
+            title="Configure SAML single sign-on"
+            description="Set up identity-provider-initiated SSO for your workspace."
+            primary-label="Save and apply"
+            secondary-label="Cancel">
+            <p>Use this playground's current settings to preview the modal in its real viewport-filling overlay form.</p>
+            <p>Press <kbd>Esc</kbd> or click Cancel to dismiss.</p>
+          </ds-fullscreen-modal>
+
+          <style>
+            /* Inline preview: drop fixed positioning + hide overlay so the
+               dialog renders as a card inside cp-preview. */
+            .page-snackbar #pg-fsm-element {
+              position: static !important;
+              inset: auto !important;
+              z-index: auto !important;
+              padding: 0 !important;
+              display: flex !important;
+              justify-content: center;
+              width: 100%;
+            }
+            .page-snackbar #pg-fsm-element .ds-fullscreen-modal__overlay { display: none !important; }
+            .page-snackbar #pg-fsm-element .ds-fullscreen-modal__dialog {
+              animation: none !important;
+              height: 360px !important;
+              margin: 0 !important;
+              border-radius: 12px !important;
+              width: 100%;
+              max-width: 720px;
+            }
+            .page-snackbar #pg-fsm-element .ds-fullscreen-modal__body { overflow-y: auto; }
+          </style>
+
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group">
+                <label class="cp-label">Leading tone</label>
+                <select class="cp-select" id="pg-fsm-tone">
+                  <option value="info" selected>Info</option>
+                  <option value="warning">Warning</option>
+                  <option value="success">Success</option>
+                  <option value="brand">Brand</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Show description</label>
+                <select class="cp-select" id="pg-fsm-desc">
+                  <option value="true" selected>Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Tertiary action</label>
+                <select class="cp-select" id="pg-fsm-tertiary">
+                  <option value="false" selected>None</option>
+                  <option value="true">Show "Back"</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Show close icon</label>
+                <select class="cp-select" id="pg-fsm-close">
+                  <option value="true" selected>Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Show header divider</label>
+                <select class="cp-select" id="pg-fsm-divh">
+                  <option value="true" selected>Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">RTL</label>
+                <select class="cp-select" id="pg-fsm-rtl">
+                  <option value="false" selected>No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="cp-preview" id="pg-fsm-preview-area" style="padding:32px 24px;flex-direction:column;gap:20px;align-items:center;">
+              <ds-fullscreen-modal id="pg-fsm-element"
+                preview-mode
+                leading-tone="info"
+                title="Configure SAML single sign-on"
+                description="Set up identity-provider-initiated SSO for your workspace."
+                primary-label="Save and apply"
+                secondary-label="Cancel">
+                <div style="font-size:14px;line-height:1.6;">Full-screen modal body. Use for complex flows, wizards, or mobile-first experiences.</div>
+              </ds-fullscreen-modal>
+              <ds-button id="pg-fsm-open-overlay" variant="primary" size="medium" prefix-icon="external-link">Open as full overlay</ds-button>
+            </div>
+
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-fsm-copy-btn">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                Copy code
+              </button>
+            </div>
+            <div style="background:#0a0a0c;">
+              <div class="cp-code-area" id="pg-fsm-code-output"></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="api" class="doc-section-title">Component API</h2>
+          <p class="doc-section-subtitle">Attributes, slots, and events for <code>&lt;ds-fullscreen-modal&gt;</code>. Source: <code>design-system-library/src/components/fullscreen-modal/fullscreen-modal.js</code>.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Attributes</h3>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Values</th><th>Default</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>title</code></td><td>string</td><td>&mdash;</td><td>Required. Sentence case, &le; 60 chars.</td></tr>
+                <tr><td><code>description</code></td><td>string</td><td>&mdash;</td><td>Optional supporting line.</td></tr>
+                <tr><td><code>leading-tone</code></td><td><code>info</code> &middot; <code>warning</code> &middot; <code>success</code> &middot; <code>brand</code></td><td><code>info</code></td><td>Tints the circular icon block.</td></tr>
+                <tr><td><code>leading-icon</code></td><td>sprite name</td><td>per tone</td><td>Override the default glyph.</td></tr>
+                <tr><td><code>primary-label</code></td><td>string</td><td>&mdash;</td><td>Required.</td></tr>
+                <tr><td><code>secondary-label</code></td><td>string</td><td><code>Cancel</code></td><td>Dismiss action.</td></tr>
+                <tr><td><code>tertiary-label</code></td><td>string</td><td>&mdash;</td><td>Optional. "Back" in wizards.</td></tr>
+                <tr><td><code>hide-close</code></td><td>boolean</td><td>unset</td><td>Hides the top-right close icon.</td></tr>
+                <tr><td><code>dismiss-on-overlay-click</code></td><td><code>true</code> &middot; <code>false</code></td><td><code>true</code></td><td>Click on overlay band closes the modal.</td></tr>
+                <tr><td><code>dismiss-on-esc</code></td><td><code>true</code> &middot; <code>false</code></td><td><code>true</code></td><td>Esc closes the modal.</td></tr>
+                <tr><td><code>show-divider-header</code></td><td><code>true</code> &middot; <code>false</code></td><td><code>true</code></td><td>Divider between header and body.</td></tr>
+                <tr><td><code>show-divider-footer</code></td><td><code>true</code> &middot; <code>false</code></td><td><code>true</code></td><td>Divider between body and footer.</td></tr>
+                <tr><td><code>loading</code></td><td>boolean</td><td>unset</td><td>Spinner on the primary action while an async save runs. Locks Cancel, Back, close, Esc, and overlay so the flow can&rsquo;t be abandoned mid-save.</td></tr>
+                <tr><td><code>open</code></td><td>boolean</td><td>unset</td><td>Controls visibility.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Events</h3>
+            <table class="size-table">
+              <thead><tr><th>Event</th><th>Fires when</th></tr></thead>
+              <tbody>
+                <tr><td><code>ds-fullscreen-open</code></td><td>Modal opened.</td></tr>
+                <tr><td><code>ds-fullscreen-close</code></td><td>Dismissed via Esc / overlay / close icon / Cancel.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ ACCESSIBILITY ═══════════════ -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <div class="doc-section">
+            <h3 class="doc-h3">Roles &amp; ARIA</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Implementation</th></tr></thead>
+              <tbody>
+                <tr><td>Role</td><td><code>role="dialog"</code> + <code>aria-modal="true"</code>.</td></tr>
+                <tr><td>Title</td><td><code>aria-labelledby</code> pointing to the title element.</td></tr>
+                <tr><td>Body</td><td><code>aria-describedby</code> pointing to the body region.</td></tr>
+                <tr><td>Decorative icons</td><td><code>aria-hidden="true"</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Keyboard &amp; focus</h3>
+            <ul class="doc-list">
+              <li><kbd>Esc</kbd> dismisses (suppress only when there are unsaved changes).</li>
+              <li><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> cycle inside the dialog only &mdash; focus is trapped while open.</li>
+              <li>On open, focus moves to the first focusable control inside the body.</li>
+              <li>On close, focus returns to the originating trigger element.</li>
+              <li>Body region scrolls independently; document scroll is locked while open.</li>
+            </ul>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0" target="_blank" rel="noopener" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+
+      </div><!-- main-content-area -->
+    </main>
+  </div>
+
+  <script type="module">
+    customElements.whenDefined('ds-fullscreen-modal').then(() => {
+      const wire = (btnId, modalId) => {
+        const btn = document.getElementById(btnId);
+        const modal = document.getElementById(modalId);
+        if (!btn || !modal) return;
+        btn.addEventListener('click', () => modal.setAttribute('open', ''));
+      };
+      wire('fsm-trigger-info', 'fsm-live-info');
+      wire('fsm-trigger-warn', 'fsm-live-warn');
+      wire('fsm-trigger-succ', 'fsm-live-succ');
+
+      // ── Code playground (controls → live preview + generated HTML) ──
+      const pgEl       = document.getElementById('pg-fsm-element');
+      const pgLive     = document.getElementById('pg-fsm-live');
+      const pgTone     = document.getElementById('pg-fsm-tone');
+      const pgDesc     = document.getElementById('pg-fsm-desc');
+      const pgTert     = document.getElementById('pg-fsm-tertiary');
+      const pgClose    = document.getElementById('pg-fsm-close');
+      const pgDivH     = document.getElementById('pg-fsm-divh');
+      const pgRtl      = document.getElementById('pg-fsm-rtl');
+      const pgCode     = document.getElementById('pg-fsm-code-output');
+      const pgCopyBtn  = document.getElementById('pg-fsm-copy-btn');
+      const pgOpenBtn  = document.getElementById('pg-fsm-open-overlay');
+      if (!pgEl) return;
+
+      const COPY_LTR = {
+        info:    { title: 'Configure SAML single sign-on',   desc: 'Set up identity-provider-initiated SSO for your workspace.', primary: 'Save and apply',        secondary: 'Cancel', tertiary: 'Back' },
+        warning: { title: 'Enable enforce-policy mode',      desc: "Endpoints that don't comply will be blocked.",               primary: 'Enable enforcement',    secondary: 'Cancel', tertiary: 'Back' },
+        success: { title: 'Deployment complete',             desc: '248 of 248 endpoints received the v2.4.0 patch.',            primary: 'View report',           secondary: 'Cancel', tertiary: 'Back' },
+        brand:   { title: 'Welcome to Endpoint Central',     desc: "Let's set up your first device group in under 3 minutes.",   primary: 'Start setup',           secondary: 'Cancel', tertiary: 'Back' },
+      };
+      const COPY_RTL = {
+        info:    { title: 'تكوين تسجيل الدخول الموحد SAML', desc: 'إعداد تسجيل الدخول الموحد لمساحة العمل الخاصة بك.',          primary: 'حفظ وتطبيق',          secondary: 'إلغاء',   tertiary: 'رجوع' },
+        warning: { title: 'تفعيل وضع فرض السياسة',          desc: 'سيتم حظر الأجهزة التي لا تلتزم بالسياسة.',                   primary: 'تفعيل الفرض',          secondary: 'إلغاء',   tertiary: 'رجوع' },
+        success: { title: 'اكتمل النشر',                    desc: 'تلقت 248 من 248 جهازًا حزمة الإصدار 2.4.0.',                  primary: 'عرض التقرير',          secondary: 'إلغاء',   tertiary: 'رجوع' },
+        brand:   { title: 'مرحبًا بك في Endpoint Central',  desc: 'لنقم بإعداد مجموعة الأجهزة الأولى في أقل من 3 دقائق.',        primary: 'بدء الإعداد',          secondary: 'إلغاء',   tertiary: 'رجوع' },
+      };
+      const COPY = COPY_LTR; /* legacy alias for any leftover refs */
+      let pgRaw = '';
+
+      function applyAttrs(el, copy, opts) {
+        el.setAttribute('leading-tone', opts.tone);
+        el.setAttribute('title', copy.title);
+        if (opts.showDesc) el.setAttribute('description', copy.desc);
+        else el.removeAttribute('description');
+        el.setAttribute('primary-label', copy.primary);
+        el.setAttribute('secondary-label', copy.secondary);
+        if (opts.showTert) el.setAttribute('tertiary-label', copy.tertiary);
+        else el.removeAttribute('tertiary-label');
+        if (opts.showClose) el.removeAttribute('hide-close');
+        else el.setAttribute('hide-close', '');
+        if (opts.showDivH) el.removeAttribute('show-divider-header');
+        else el.setAttribute('show-divider-header', 'false');
+        if (opts.isRtl) el.setAttribute('dir', 'rtl');
+        else el.removeAttribute('dir');
+      }
+
+      function updatePg() {
+        const opts = {
+          tone:      pgTone.value,
+          showDesc:  pgDesc.value === 'true',
+          showTert:  pgTert.value === 'true',
+          showClose: pgClose.value === 'true',
+          showDivH:  pgDivH.value === 'true',
+          isRtl:     pgRtl && pgRtl.value === 'true',
+        };
+        const copy = (opts.isRtl ? COPY_RTL : COPY_LTR)[opts.tone];
+        applyAttrs(pgEl, copy, opts);
+        applyAttrs(pgLive, copy, opts);
+
+        const attrs = [`leading-tone="${opts.tone}"`, `title="${copy.title}"`];
+        if (opts.showDesc) attrs.push(`description="${copy.desc}"`);
+        attrs.push(`primary-label="${copy.primary}"`);
+        attrs.push(`secondary-label="${copy.secondary}"`);
+        if (opts.showTert) attrs.push(`tertiary-label="${copy.tertiary}"`);
+        if (!opts.showClose) attrs.push(`hide-close`);
+        if (!opts.showDivH) attrs.push(`show-divider-header="false"`);
+        if (opts.isRtl) attrs.push(`dir="rtl"`);
+        attrs.push(`open`);
+        pgRaw = `<ds-fullscreen-modal\n  ${attrs.join('\n  ')}>\n  Modal body content goes here.\n</ds-fullscreen-modal>`;
+
+        const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        pgCode.innerHTML = esc(pgRaw)
+          .replace(/&lt;(\/?)(ds-fullscreen-modal)/g, '&lt;$1<span style="color:#a78bfa;">$2</span>')
+          .replace(/([a-z-]+)=&quot;([^&]*)&quot;/g, '<span style="color:#38bdf8;">$1</span>=<span style="color:#34d399;">"$2"</span>')
+          .replace(/^(\s*)(open|hide-close)$/gm, '$1<span style="color:#38bdf8;">$2</span>')
+          .replace(/\n/g, '<br/>')
+          .replace(/  /g, '&nbsp;&nbsp;');
+      }
+
+      [pgTone, pgDesc, pgTert, pgClose, pgDivH, pgRtl].forEach((el) => el && el.addEventListener('change', updatePg));
+      pgCopyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(pgRaw);
+          const o = pgCopyBtn.innerHTML;
+          pgCopyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+          setTimeout(() => { pgCopyBtn.innerHTML = o; }, 2000);
+        } catch {}
+      });
+      if (pgOpenBtn) {
+        pgOpenBtn.addEventListener('click', () => pgLive.setAttribute('open', ''));
+      }
+      updatePg();
+    });
+  </script>
+
+  <script src="js/components/toc.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

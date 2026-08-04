@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<!-- BitLocker Management — Create encryption policy · DUAL-MODE file (projects/bitlocker/).
+     Archetype: SECTIONED FORM (Layout/views/layout-sectioned-form.html).
+     Drill-down (BitLocker > Policies > Create policy) → HAS a breadcrumb.
+     Fields map to the BitLocker policy-creation contract: drive encryption on/off,
+     authentication (TPM modes / passphrase), scope, algorithm, startup enforcement,
+     recovery-key escrow + rotation. Built ONLY from ds-* components + --uems-* tokens.
+     Open directly -> standalone harness. Fetched by Shell.html ->
+     injectDrawer('../projects/bitlocker/layout-policy-creation','content'). -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    .sa-host { display: flex; flex-direction: column; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* == BitLocker policy form — scope EVERY selector to #blform-pop ========== */
+/* Root + .lay + .lay__scroll scaffold live in Layout/layout-base.css (shared via .lay-root). */
+#blform-pop .lay__section { padding: 20px 0 4px; }
+
+#blform-pop .lay__fields { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; }
+#blform-pop .lay__field { max-width: 820px; }
+/* Reserve a consistent helper-row slot under every field for one vertical rhythm. */
+#blform-pop .lay__field { padding-bottom: 20px; }
+#blform-pop .lay__field:has(ds-field-helper) { padding-bottom: 0; }
+
+/* Labeled toggle / composite rows mirror the component left-label column (280 + 8). */
+#blform-pop .blf-row { display: flex; gap: 8px; max-width: 820px; align-items: flex-start; padding-bottom: 20px; }
+#blform-pop .blf-label { width: 280px; flex-shrink: 0; padding-top: 2px; font-size: var(--font-size-13); font-weight: 600; color: var(--uems-text-primary); }
+#blform-pop .blf-control { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+#blform-pop .blf-hint { font-size: var(--font-size-12); color: var(--uems-text-secondary); }
+
+/* Short option lists render inline (Figma shows them in a row). */
+#blform-pop #bf-scope .ds-radio-group__items,
+#blform-pop #bf-startup .ds-radio-group__items { display: flex; flex-direction: row; gap: 32px; flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+  #blform-pop .blf-row { flex-direction: column; }
+  #blform-pop .blf-label { width: auto; padding-top: 0; }
+}
+</style>
+
+<div id="blform-pop" class="lay-root" hidden>
+  <div class="lay">
+    <ds-page-header id="bf-ph" icon="edit" structure="default"
+      title="Create encryption policy"
+      description="Define how BitLocker encrypts, authenticates, and escrows recovery keys before you deploy to devices."
+      show-description show-breadcrumbs
+      collapse-on-scroll scroll-target=".lay__scroll"></ds-page-header>
+
+    <div class="lay__scroll">
+
+      <!-- §1 Policy details -->
+      <section class="lay__section">
+        <ds-section-header id="sh-details" style-variant="with-border" size="large" title="Policy details" description="Name this policy so technicians can recognise it during deployment."></ds-section-header>
+        <div class="lay__fields">
+          <ds-text-input class="lay__field" id="bf-name" size="medium" label="Policy name" label-position="left" required maxlength="100" show-counter counter="0/100" placeholder="e.g. Corp laptops — TPM + PIN"></ds-text-input>
+          <ds-text-area class="lay__field" id="bf-desc" size="medium" label="Description" label-position="left" placeholder="Optional notes about scope and intent"></ds-text-area>
+        </div>
+      </section>
+
+      <!-- §2 Drive encryption -->
+      <section class="lay__section">
+        <ds-section-header id="sh-drive" style-variant="with-border" size="large" title="Drive encryption" description="Choose what to encrypt and which algorithm to use."></ds-section-header>
+        <div class="lay__fields">
+          <div class="blf-row">
+            <div class="blf-label" id="bf-encrypt-lbl">Drive encryption</div>
+            <div class="blf-control">
+              <ds-toggle id="bf-encrypt" checked label="Drive encryption"></ds-toggle>
+              <span class="blf-hint" id="bf-encrypt-hint">On encrypts the drive on deployment; turn off to decrypt targeted devices.</span>
+            </div>
+          </div>
+          <ds-radio-group class="lay__field" id="bf-scope" label="Encryption scope" label-position="left"></ds-radio-group>
+          <ds-input-select class="lay__field" id="bf-algo" size="medium" label="Encryption algorithm" label-position="left"></ds-input-select>
+        </div>
+      </section>
+
+      <!-- §3 Authentication -->
+      <section class="lay__section">
+        <ds-section-header id="sh-auth" style-variant="with-border" size="large" title="Authentication" description="How users unlock the OS drive at startup."></ds-section-header>
+        <div class="lay__fields">
+          <ds-radio-group class="lay__field" id="bf-auth" label="Authentication mode" label-position="left"></ds-radio-group>
+          <ds-input-select class="lay__field" id="bf-pinlen" size="medium" label="Minimum PIN length" label-position="left" hidden></ds-input-select>
+        </div>
+      </section>
+
+      <!-- §4 Startup enforcement -->
+      <section class="lay__section">
+        <ds-section-header id="sh-startup" style-variant="with-border" size="large" title="Startup enforcement" description="Control how strictly the startup prompt is applied."></ds-section-header>
+        <div class="lay__fields">
+          <ds-radio-group class="lay__field" id="bf-startup" label="Password prompt" label-position="left"></ds-radio-group>
+        </div>
+      </section>
+
+      <!-- §5 Recovery key -->
+      <section class="lay__section">
+        <ds-section-header id="sh-recovery" style-variant="with-border" size="large" title="Recovery key" description="Where recovery keys are stored and whether they rotate."></ds-section-header>
+        <div class="lay__fields">
+          <div class="blf-row">
+            <div class="blf-label" id="bf-escrow-lbl">Escrow to domain controller</div>
+            <div class="blf-control">
+              <ds-toggle id="bf-escrow" checked label="Escrow to domain controller"></ds-toggle>
+              <span class="blf-hint" id="bf-escrow-hint">On backs recovery keys up to Active Directory; off keeps them only on the Endpoint Central server.</span>
+            </div>
+          </div>
+          <div class="blf-row">
+            <div class="blf-label" id="bf-rotate-lbl">Periodic key rotation</div>
+            <div class="blf-control">
+              <ds-toggle id="bf-rotate" label="Periodic key rotation"></ds-toggle>
+              <span class="blf-hint" id="bf-rotate-hint">Re-keys used recovery keys on a fixed interval to limit exposure.</span>
+            </div>
+          </div>
+          <ds-input-select class="lay__field" id="bf-rotate-days" size="medium" label="Rotation interval" label-position="left" hidden></ds-input-select>
+        </div>
+      </section>
+
+    </div>
+
+    <ds-form-footer id="bf-footer">
+      <span slot="left" id="bf-saved">Not saved yet</span>
+      <ds-button slot="action" data-act="cancel" variant="outline">Cancel</ds-button>
+      <ds-button slot="action" data-act="draft" variant="secondary">Save as draft</ds-button>
+      <ds-button slot="action" data-act="create" variant="primary">Create policy</ds-button>
+    </ds-form-footer>
+  </div>
+</div>
+
+<script>
+/* == BitLocker policy form — data, conditional fields, footer actions ===== */
+(function () {
+  const root = document.getElementById('blform-pop');
+  if (!root || root.__bfInit) return; root.__bfInit = true;
+  const $ = (id) => root.querySelector('#' + id);
+
+  /* ── Localization (register + resolve via ShellCtx.t; EN fallback standalone).
+     Arabic is machine-translated — have a native speaker review. ─────────────── */
+  const MSGS = {
+    en: {
+      'pf.title': 'Create encryption policy',
+      'pf.desc': 'Define how BitLocker encrypts, authenticates, and escrows recovery keys before you deploy to devices.',
+      'pf.bc.module': 'BitLocker management', 'pf.bc.policies': 'Policies', 'pf.bc.create': 'Create policy',
+      'pf.sh.details': 'Policy details', 'pf.sh.details.d': 'Name this policy so technicians can recognise it during deployment.',
+      'pf.sh.drive': 'Drive encryption', 'pf.sh.drive.d': 'Choose what to encrypt and which algorithm to use.',
+      'pf.sh.auth': 'Authentication', 'pf.sh.auth.d': 'How users unlock the OS drive at startup.',
+      'pf.sh.startup': 'Startup enforcement', 'pf.sh.startup.d': 'Control how strictly the startup prompt is applied.',
+      'pf.sh.recovery': 'Recovery key', 'pf.sh.recovery.d': 'Where recovery keys are stored and whether they rotate.',
+      'pf.name': 'Policy name', 'pf.name.ph': 'e.g. Corp laptops — TPM + PIN',
+      'pf.desc.lbl': 'Description', 'pf.desc.ph': 'Optional notes about scope and intent',
+      'pf.scope': 'Encryption scope', 'pf.algo': 'Encryption algorithm', 'pf.auth': 'Authentication mode',
+      'pf.pinlen': 'Minimum PIN length', 'pf.startup': 'Password prompt', 'pf.rotdays': 'Rotation interval',
+      'pf.encrypt.lbl': 'Drive encryption', 'pf.encrypt.text': 'Encrypt on deploy', 'pf.encrypt.hint': 'On encrypts the drive on deployment; turn off to decrypt targeted devices.',
+      'pf.escrow.lbl': 'Escrow to domain controller', 'pf.escrow.text': 'Back up to Active Directory', 'pf.escrow.hint': 'On backs recovery keys up to Active Directory; off keeps them only on the Endpoint Central server.',
+      'pf.rotate.lbl': 'Periodic key rotation', 'pf.rotate.text': 'Rotate recovery keys', 'pf.rotate.hint': 'Re-keys used recovery keys on a fixed interval to limit exposure.',
+      'pf.o.full': 'Full drive', 'pf.o.os': 'OS drive only', 'pf.o.used': 'Used space only',
+      'pf.o.xts256': 'XTS-AES 256 (recommended)', 'pf.o.xts128': 'XTS-AES 128', 'pf.o.aes256': 'AES-CBC 256', 'pf.o.aes128': 'AES-CBC 128',
+      'pf.o.tpm': 'TPM only', 'pf.o.tpmpin': 'TPM + PIN', 'pf.o.tpmepin': 'TPM + Enhanced PIN', 'pf.o.passphrase': 'Passphrase (non-TPM)',
+      'pf.o.enforce': 'Enforce immediately', 'pf.o.skip': 'Allow users to skip (grace window)',
+      'pf.o.chars': 'characters', 'pf.o.d7': 'Every 7 days', 'pf.o.d30': 'Every 30 days', 'pf.o.d90': 'Every 90 days',
+      'pf.saved': 'Not saved yet', 'pf.cancel': 'Cancel', 'pf.draft': 'Save as draft', 'pf.create': 'Create policy',
+      'pf.untitled': 'Untitled policy',
+      'pf.t.created': 'Policy created', 'pf.t.draft': 'Draft saved', 'pf.t.cancel': 'Changes discarded', 'pf.t.cancel.d': 'No policy was created.',
+    },
+    ar: {
+      'pf.title': 'إنشاء سياسة تشفير',
+      'pf.desc': 'حدّد كيفية تشفير BitLocker والمصادقة وحفظ مفاتيح الاسترداد قبل النشر على الأجهزة.',
+      'pf.bc.module': 'إدارة BitLocker', 'pf.bc.policies': 'السياسات', 'pf.bc.create': 'إنشاء سياسة',
+      'pf.sh.details': 'تفاصيل السياسة', 'pf.sh.details.d': 'سمِّ هذه السياسة ليتعرّف عليها الفنيون أثناء النشر.',
+      'pf.sh.drive': 'تشفير القرص', 'pf.sh.drive.d': 'اختر ما تريد تشفيره والخوارزمية المستخدمة.',
+      'pf.sh.auth': 'المصادقة', 'pf.sh.auth.d': 'كيف يفتح المستخدمون قرص نظام التشغيل عند بدء التشغيل.',
+      'pf.sh.startup': 'فرض بدء التشغيل', 'pf.sh.startup.d': 'تحكّم في مدى صرامة تطبيق مطالبة بدء التشغيل.',
+      'pf.sh.recovery': 'مفتاح الاسترداد', 'pf.sh.recovery.d': 'أين تُخزّن مفاتيح الاسترداد وهل يتم تدويرها.',
+      'pf.name': 'اسم السياسة', 'pf.name.ph': 'مثال: أجهزة الشركة المحمولة — TPM + PIN',
+      'pf.desc.lbl': 'الوصف', 'pf.desc.ph': 'ملاحظات اختيارية حول النطاق والغرض',
+      'pf.scope': 'نطاق التشفير', 'pf.algo': 'خوارزمية التشفير', 'pf.auth': 'وضع المصادقة',
+      'pf.pinlen': 'الحد الأدنى لطول PIN', 'pf.startup': 'مطالبة كلمة المرور', 'pf.rotdays': 'فترة التدوير',
+      'pf.encrypt.lbl': 'تشفير القرص', 'pf.encrypt.text': 'التشفير عند النشر', 'pf.encrypt.hint': 'عند التفعيل يُشفّر القرص عند النشر؛ أوقفه لفك تشفير الأجهزة المستهدفة.',
+      'pf.escrow.lbl': 'الحفظ في وحدة تحكم المجال', 'pf.escrow.text': 'النسخ الاحتياطي إلى Active Directory', 'pf.escrow.hint': 'عند التفعيل تُحفظ مفاتيح الاسترداد في Active Directory؛ عند الإيقاف تبقى على خادم Endpoint Central فقط.',
+      'pf.rotate.lbl': 'التدوير الدوري للمفتاح', 'pf.rotate.text': 'تدوير مفاتيح الاسترداد', 'pf.rotate.hint': 'يعيد إنشاء مفاتيح الاسترداد المستخدمة على فترات ثابتة للحد من التعرّض.',
+      'pf.o.full': 'القرص الكامل', 'pf.o.os': 'قرص نظام التشغيل فقط', 'pf.o.used': 'المساحة المستخدمة فقط',
+      'pf.o.xts256': 'XTS-AES 256 (مُوصى به)', 'pf.o.xts128': 'XTS-AES 128', 'pf.o.aes256': 'AES-CBC 256', 'pf.o.aes128': 'AES-CBC 128',
+      'pf.o.tpm': 'TPM فقط', 'pf.o.tpmpin': 'TPM + PIN', 'pf.o.tpmepin': 'TPM + PIN محسّن', 'pf.o.passphrase': 'عبارة مرور (بدون TPM)',
+      'pf.o.enforce': 'الفرض فورًا', 'pf.o.skip': 'السماح للمستخدمين بالتخطي (فترة سماح)',
+      'pf.o.chars': 'حرفًا', 'pf.o.d7': 'كل 7 أيام', 'pf.o.d30': 'كل 30 يومًا', 'pf.o.d90': 'كل 90 يومًا',
+      'pf.saved': 'لم يُحفظ بعد', 'pf.cancel': 'إلغاء', 'pf.draft': 'حفظ كمسودة', 'pf.create': 'إنشاء سياسة',
+      'pf.untitled': 'سياسة بلا عنوان',
+      'pf.t.created': 'تم إنشاء السياسة', 'pf.t.draft': 'تم حفظ المسودة', 'pf.t.cancel': 'تم تجاهل التغييرات', 'pf.t.cancel.d': 'لم يتم إنشاء أي سياسة.',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+  /* ds-button renders its label into an inner .ds-button__label; set THAT (not the
+     host's textContent, which would wipe the rendered button chrome). */
+  const setBtnLabel = (el, text) => { if (!el) return; const l = el.querySelector('.ds-button__label'); if (l) l.textContent = text; else el.textContent = text; };
+
+  /* Breadcrumb — route crumbs through the shell when injected; hrefs keep direct-open working. */
+  const ph = $('bf-ph');
+  const crumbNav = (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    const m = (a.getAttribute('href') || '').match(/layout-([a-z-]+)\.html/);
+    if (m && window.openContentView) { e.preventDefault(); window.openContentView('bitlocker-' + (m[1] === 'summary-dashboard' ? 'dashboard' : m[1])); }
+  };
+  if (ph) ph.addEventListener('click', crumbNav);
+
+  /* Element refs. */
+  const scope = $('bf-scope'), algo = $('bf-algo'), auth = $('bf-auth'), startup = $('bf-startup'), pinLen = $('bf-pinlen'), rotateDays = $('bf-rotate-days'), rotate = $('bf-rotate');
+
+  /* Localized options — preserve the current selection across a language flip. */
+  const opt = (v, key, cur) => ({ value: v, label: t(key), selected: v === cur });
+  function setOptions() {
+    /* Radio groups reflect options[].selected directly. Selects also need `value`
+       set so the chosen option shows in the field (not the placeholder). */
+    if (scope) { const c = scope.value || 'full'; scope.options = [opt('full', 'pf.o.full', c), opt('os', 'pf.o.os', c), opt('used', 'pf.o.used', c)]; }
+    if (auth) { const c = auth.value || 'tpm'; auth.options = [opt('tpm', 'pf.o.tpm', c), opt('tpm-pin', 'pf.o.tpmpin', c), opt('tpm-epin', 'pf.o.tpmepin', c), opt('passphrase', 'pf.o.passphrase', c)]; }
+    if (startup) { const c = startup.value || 'enforce'; startup.options = [opt('enforce', 'pf.o.enforce', c), opt('skip', 'pf.o.skip', c)]; }
+    if (algo) { const c = algo.value || 'xts256'; algo.options = [opt('xts256', 'pf.o.xts256', c), opt('xts128', 'pf.o.xts128', c), opt('aes256', 'pf.o.aes256', c), opt('aes128', 'pf.o.aes128', c)]; algo.setAttribute('value', c); }
+    if (pinLen) { const c = pinLen.value || '6'; pinLen.options = Array.from({ length: 15 }, (_, i) => ({ value: String(i + 6), label: String(i + 6) + ' ' + t('pf.o.chars'), selected: String(i + 6) === c })); pinLen.setAttribute('value', c); }
+    if (rotateDays) { const c = rotateDays.value || '7'; rotateDays.options = [{ value: '7', label: t('pf.o.d7'), selected: c === '7' }, { value: '30', label: t('pf.o.d30'), selected: c === '30' }, { value: '90', label: t('pf.o.d90'), selected: c === '90' }]; rotateDays.setAttribute('value', c); }
+  }
+
+  function applyStrings() {
+    if (ph) {
+      ph.setAttribute('title', t('pf.title')); ph.setAttribute('description', t('pf.desc'));
+      ph.breadcrumbs = [
+        { label: t('pf.bc.module'), href: 'projects/bitlocker/layout-summary-dashboard.html' },
+        { label: t('pf.bc.policies') },
+        { label: t('pf.bc.create') },
+      ];
+    }
+    [['sh-details', 'pf.sh.details'], ['sh-drive', 'pf.sh.drive'], ['sh-auth', 'pf.sh.auth'], ['sh-startup', 'pf.sh.startup'], ['sh-recovery', 'pf.sh.recovery']]
+      .forEach(([id, key]) => { const s = $(id); if (s) { s.setAttribute('title', t(key)); s.setAttribute('description', t(key + '.d')); } });
+    const setLabel = (id, key) => { const el = $(id); if (el) el.setAttribute('label', t(key)); };
+    setLabel('bf-name', 'pf.name'); const nm = $('bf-name'); if (nm) nm.setAttribute('placeholder', t('pf.name.ph'));
+    setLabel('bf-desc', 'pf.desc.lbl'); const de = $('bf-desc'); if (de) de.setAttribute('placeholder', t('pf.desc.ph'));
+    setLabel('bf-scope', 'pf.scope'); setLabel('bf-algo', 'pf.algo'); setLabel('bf-auth', 'pf.auth');
+    setLabel('bf-pinlen', 'pf.pinlen'); setLabel('bf-startup', 'pf.startup'); setLabel('bf-rotate-days', 'pf.rotdays');
+    const setText = (id, key) => { const el = $(id); if (el) el.textContent = t(key); };
+    setText('bf-encrypt-lbl', 'pf.encrypt.lbl'); setText('bf-encrypt-hint', 'pf.encrypt.hint');
+    setText('bf-escrow-lbl', 'pf.escrow.lbl'); setText('bf-escrow-hint', 'pf.escrow.hint');
+    setText('bf-rotate-lbl', 'pf.rotate.lbl'); setText('bf-rotate-hint', 'pf.rotate.hint');
+    /* Toggles carry no visible inline text (a switch shows state by position, not a
+       word); localize their aria-label to the setting name instead. */
+    const setToggleAria = (id, key) => { const el = $(id); if (el) el.setAttribute('label', t(key)); };
+    setToggleAria('bf-encrypt', 'pf.encrypt.lbl'); setToggleAria('bf-escrow', 'pf.escrow.lbl'); setToggleAria('bf-rotate', 'pf.rotate.lbl');
+    setOptions();
+    const saved = $('bf-saved'); if (saved) saved.textContent = t('pf.saved');
+    root.querySelectorAll('[data-act]').forEach((b) => { const a = b.getAttribute('data-act'); setBtnLabel(b, a === 'cancel' ? t('pf.cancel') : a === 'draft' ? t('pf.draft') : t('pf.create')); });
+    syncPin(); syncRotate();
+  }
+
+  /* Conditional reveal: PIN length only for TPM + PIN / Enhanced PIN. */
+  const syncPin = () => {
+    const v = auth && auth.value;
+    const need = v === 'tpm-pin' || v === 'tpm-epin';
+    if (pinLen) pinLen.hidden = !need;
+  };
+  if (auth) auth.addEventListener('ds-radio-group-change', syncPin);
+
+  /* Conditional reveal: rotation interval only when rotation is on. */
+  const syncRotate = () => { if (rotateDays) rotateDays.hidden = !(rotate && rotate.checked); };
+  if (rotate) rotate.addEventListener('ds-toggle-change', syncRotate);
+
+  /* Footer actions → toast + navigation. */
+  function toast(kind, title, description) {
+    const api = globalThis.dsToast;
+    if (api && api[kind]) api[kind]({ title, description, style: 'subtle' });
+  }
+  root.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => {
+    const a = b.getAttribute('data-act');
+    const name = ($('bf-name') && $('bf-name').value) || t('pf.untitled');
+    if (a === 'create') {
+      toast('success', t('pf.t.created'), name);
+      if (window.openContentView) window.openContentView('bitlocker-managed-systems');
+    } else if (a === 'draft') {
+      toast('info', t('pf.t.draft'), name);
+    } else if (a === 'cancel') {
+      toast('info', t('pf.t.cancel'), t('pf.t.cancel.d'));
+      if (window.openContentView) window.openContentView('bitlocker-dashboard');
+    }
+  }));
+
+  /* Initial render + re-localize on language flip. */
+  applyStrings();
+  if (window.ShellCtx && window.ShellCtx.onLangChange) window.ShellCtx.onLangChange(applyStrings);
+
+  function show() {
+    root.hidden = false;
+    requestAnimationFrame(() => {
+      const el = $('bf-name');
+      const input = el && ((el.shadowRoot && el.shadowRoot.querySelector('input, textarea')) || (el.querySelector && el.querySelector('input, textarea'))) || el;
+      input && input.focus && input.focus();
+    });
+  }
+  function hide() { root.hidden = true; }
+
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['bitlocker-policy-creation'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS — runs ONLY when opened directly. ================ */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers['bitlocker-policy-creation'] && window.ShellDrawers['bitlocker-policy-creation'].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

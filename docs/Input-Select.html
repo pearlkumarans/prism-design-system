@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Input select — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/input-select/input-select.css">
+<link rel="stylesheet" href="../design-system-library/src/components/dropdown-menu/dropdown-menu.css">
+<link rel="stylesheet" href="../design-system-library/src/components/field-helper/field-helper.css">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/dropdown-menu/dropdown-menu.js"></script>
+<script type="module" src="../design-system-library/src/components/input-select/input-select.js"></script>
+<style>
+  .page-input-select .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    padding: 32px !important;
+    gap: 32px !important;
+  }
+  .page-input-select .demo-is-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-input-select .demo-is-section > .demo-group-label {
+    font-size: 11px !important; font-weight: 700 !important; letter-spacing: 0.08em !important;
+    color: var(--prism-text-muted) !important; text-transform: uppercase !important;
+    margin: 0 !important; text-align: left !important; width: auto !important;
+  }
+  .page-input-select .demo-is-stack { display: flex; flex-direction: column; gap: 16px; max-width: 480px; }
+  .page-input-select .demo-is-stack--wide { max-width: 720px; }
+  .page-input-select .demo-is-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  .page-input-select .anat-legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 28px; margin-top: 12px; }
+  .page-input-select .anat-legend-item { display: flex; gap: 10px; align-items: flex-start; }
+  .page-input-select .anat-legend-item > div { display: flex; flex-direction: column; gap: 2px; }
+  .page-input-select .anat-legend-item strong { font-size: 13px; color: var(--prism-text); }
+  .page-input-select .anat-legend-item span { font-size: 12px; color: var(--prism-text-muted); line-height: 1.45; }
+  .page-input-select .anat-marker-inline {
+    flex: 0 0 22px; width: 22px; height: 22px; border-radius: 999px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;
+    font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body class="page-input-select page-text-field">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div style="width: 16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search...">
+        <span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 id="components" class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link active">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Input select</h1>
+        <p class="page-desc">
+          An input select lets the user pick a single value from a list of options. It looks like a text field with a chevron; clicking it opens a dropdown of options anchored to (and the same width as) the field. Use it when the answer is one item from a known set. For picking several values at once, use the Token Field instead.
+        </p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══════════════════════════════ TAB: OVERVIEW ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-overview">
+
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div style="padding:32px 0;">
+            <div style="display:flex;justify-content:center;margin-bottom:28px;">
+              <div style="width:100%;max-width:420px;">
+                <ds-input-select id="anat" label="Country" required
+                  placeholder="Select" value="us"
+                  prefix-icon="globe" show-clear
+                  helper="Choose your billing country"></ds-input-select>
+              </div>
+            </div>
+            <div class="anat-legend">
+              <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Label</strong><span>Identifies the field, with an optional required indicator (*).</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Field / trigger</strong><span>The combobox container — border, background, and all inner elements.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Prefix</strong><span>Optional leading text and/or icon for context. Off by default.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Value / placeholder</strong><span>The selected option label, or the placeholder when empty.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Clear</strong><span>An &times; to reset the selection. Shown only when a value exists.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Chevron</strong><span>Static dropdown indicator (does not rotate or swap when open).</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">7</span><div><strong>Suffix</strong><span>Optional trailing text and/or icon, after the chevron. Off by default.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">8</span><div><strong>Helper row</strong><span>Supporting text / validation message below the field.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">9</span><div><strong>Dropdown</strong><span>The option list (ds-dropdown-menu), matched to the field width.</span></div></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div style="margin-bottom: 64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom: 8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom: 28px;">Click any field to open its option list. Every size, state, and prefix/suffix combination is shown side by side &mdash; this is exactly how it behaves in production.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Input select &middot; states &times; sizes &times; affixes</span>
+                </div>
+              </div>
+              <div class="demo-canvas">
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">States &mdash; default / filled / error / success / disabled / read only</div>
+                  <div class="demo-is-stack">
+                    <ds-input-select data-opts label="Default" placeholder="Select"></ds-input-select>
+                    <ds-input-select data-opts label="Filled" value="uk"></ds-input-select>
+                    <ds-input-select data-opts label="Error" state="error" value="us" helper="Please choose a supported region"></ds-input-select>
+                    <ds-input-select data-opts label="Success" state="success" value="ca" helper="Looks good"></ds-input-select>
+                    <ds-input-select data-opts label="Disabled" state="disabled" placeholder="Select"></ds-input-select>
+                    <ds-input-select data-opts label="Read only" state="read-only" value="de"></ds-input-select>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Sizes &mdash; small (36) / medium (40, default) / large (44)</div>
+                  <div class="demo-is-stack">
+                    <ds-input-select data-opts size="small" label="Small" placeholder="Select"></ds-input-select>
+                    <ds-input-select data-opts size="medium" label="Medium" placeholder="Select"></ds-input-select>
+                    <ds-input-select data-opts size="large" label="Large" placeholder="Select"></ds-input-select>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Label position &mdash; <code>top</code> (mobile / long labels) vs <code>left</code> (dense desktop)</div>
+                  <div class="demo-is-stack demo-is-stack--wide">
+                    <ds-input-select data-opts label="Top label" label-position="top" placeholder="Select"></ds-input-select>
+                    <ds-input-select data-opts label="Left label" label-position="left" placeholder="Select"></ds-input-select>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Prefix &amp; suffix &mdash; text and icons (off by default)</div>
+                  <div class="demo-is-stack">
+                    <ds-input-select data-opts label="Prefix icon" prefix-icon="globe" placeholder="Select"></ds-input-select>
+                    <ds-input-select data-opts label="Prefix text" prefix-text="Region" placeholder="Select"></ds-input-select>
+                    <ds-input-select data-opts label="Suffix icon" suffix-icon="info-circle" placeholder="Select"></ds-input-select>
+                    <ds-input-select data-opts label="Suffix text" suffix-text="UTC" placeholder="Select"></ds-input-select>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Unit selection &mdash; <code>prefix-dropdown</code> / <code>suffix-dropdown</code> with a chevron; <strong>click the chip</strong> to open a menu and pick a unit (mirrors the text field)</div>
+                  <div class="demo-is-stack">
+                    <ds-input-select id="unit-demo" data-opts-spacing label="Spacing" placeholder="Select"
+                      suffix-dropdown suffix-text="px" suffix-icon="chevron-down"
+                      helper="Pick a value, then click px on the right to change the unit"></ds-input-select>
+                    <ds-input-select id="currency-demo" label="Amount" placeholder="Select"
+                      prefix-dropdown prefix-text="USD" prefix-icon="chevron-down"
+                      helper="Click USD on the left to change the currency"></ds-input-select>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Clearable &mdash; <code>show-clear</code> reveals an &times; when there is a value</div>
+                  <div class="demo-is-stack">
+                    <ds-input-select data-opts label="Clearable" show-clear value="in"></ds-input-select>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Helper text &mdash; long messages truncate; hover to see the full text</div>
+                  <div class="demo-is-stack">
+                    <ds-input-select data-opts label="With helper" placeholder="Select" helper="This supporting message is intentionally long enough to truncate inside the field width — hover it to read the full text in a tooltip"></ds-input-select>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Label help icon &mdash; <code>show-label-help-icon</code> (off by default)</div>
+                  <div class="demo-is-stack">
+                    <ds-input-select data-opts label="Country" show-label-help-icon label-help="Pick the country where your account is billed. This determines your currency and tax rules." placeholder="Select" helper="Hover the ? beside the label"></ds-input-select>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Overflow &mdash; long lists cap their height and scroll vertically</div>
+                  <div class="demo-is-stack">
+                    <ds-input-select data-opts-long label="Time zone" placeholder="Select a time zone" helper="Open it &mdash; the menu caps to the available space and scrolls"></ds-input-select>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Searchable &mdash; <code>searchable</code> adds a filter box to the open menu</div>
+                  <div class="demo-is-stack">
+                    <ds-input-select data-opts-long searchable label="Time zone" placeholder="Select a time zone" helper="Open it and type to filter the options"></ds-input-select>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">RTL &mdash; Arabic layout (mirrors prefix/suffix &amp; chevron)</div>
+                  <div class="demo-is-stack">
+                    <ds-input-select data-opts-ar rtl label="الدولة" placeholder="اختر" prefix-icon="globe" helper="اختر بلد الفوترة"></ds-input-select>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ TAB: STYLE ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-style" style="display: none; padding-top: 32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">The exact tokens, sizes, and colours behind every state of the input select. Use this when aligning a Figma node to code or matching a custom skin to the system.</p>
+
+          <div class="doc-section">
+            <h2 id="variant-axes" class="doc-section-title">Variant Axes</h2>
+            <p class="doc-section-subtitle">Four dials describe every input select in the system.</p>
+            <div style="padding: 24px; background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 12px; margin-top: 16px;">
+              <div style="font-size: 15px; color: var(--prism-text); line-height: 1.7;">
+                <strong>3</strong> Sizes &times; <strong>9</strong> States &times; <strong>2</strong> RTL &times; <strong>2</strong> Label Positions = <strong style="color: var(--prism-violet); font-size: 18px;">108 variants</strong>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="sizes" class="doc-section-title">Sizes</h2>
+            <p class="doc-section-subtitle">Three sizes for three contexts. Small in toolbar filters and dense tables, Medium in standard forms, Large on mobile and touch-first screens.</p>
+            <table class="size-table">
+              <thead><tr><th>Size</th><th>Height</th><th>Radius</th><th>Padding</th><th>Font</th><th>Ref width</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Small</strong></td><td>36px</td><td>6px</td><td>8px 12px</td><td>14px</td><td>160px</td></tr>
+                <tr><td><strong>Medium</strong></td><td>40px</td><td>8px</td><td>10px 12px</td><td>14px</td><td>320px</td></tr>
+                <tr><td><strong>Large</strong></td><td>44px</td><td>8px</td><td>12px 12px</td><td>16px</td><td>400px</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="states" class="doc-section-title">States</h2>
+            <p class="doc-section-subtitle">Nine states cover the full life of the field — from empty and waiting, to filled, focused, open, in error, or locked.</p>
+            <table class="size-table">
+              <thead><tr><th>State</th><th>Border</th><th>Border px</th><th>Fill</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Default</strong></td><td><code>Border-Primary</code> #b4bbcc</td><td>1</td><td><code>BG-Primary-alt</code> #fff</td></tr>
+                <tr><td><strong>Hover</strong></td><td><code>Border-Accent</code> #006aff</td><td>1</td><td>#fff</td></tr>
+                <tr><td><strong>Focus</strong></td><td><code>Border-Button</code> #2c66dd</td><td>2</td><td>#fff</td></tr>
+                <tr><td><strong>Filled</strong></td><td><code>Border-Primary</code></td><td>1</td><td>#fff</td></tr>
+                <tr><td><strong>Error</strong></td><td><code>Border-Error</code> #e42527</td><td>1</td><td>#fff</td></tr>
+                <tr><td><strong>Success</strong></td><td><code>Border-Success</code> #0c8844</td><td>1</td><td>#fff</td></tr>
+                <tr><td><strong>Disabled</strong></td><td><code>Border-Primary</code></td><td>1</td><td><code>BG-Secondary</code> #f0f2f5</td></tr>
+                <tr><td><strong>Read Only</strong></td><td><code>Border-Disabled</code> #e1e4eb</td><td>1</td><td><code>BG-Secondary-alt</code> #f0f2f5</td></tr>
+                <tr><td><strong>Active (open)</strong></td><td><code>Border-Button</code> #2c66dd</td><td>2</td><td>#fff</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="design-tokens" class="doc-section-title">Design Tokens</h2>
+            <p class="doc-section-subtitle">Every colour and typography token the field touches.</p>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Property</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td><code>Border-Primary</code></td><td>Default border</td><td>#b4bbcc</td></tr>
+                <tr><td><code>Border-Accent</code></td><td>Hover border</td><td>#006aff</td></tr>
+                <tr><td><code>Border-Button</code></td><td>Focus / active border</td><td>#2c66dd</td></tr>
+                <tr><td><code>BG-Primary-alt</code></td><td>Field fill</td><td>#ffffff</td></tr>
+                <tr><td><code>Text-Tertiary</code></td><td>Label text (13 / Semibold)</td><td>#40485b</td></tr>
+                <tr><td><code>Text-Placeholder</code></td><td>Placeholder</td><td>#5f6c89</td></tr>
+                <tr><td><code>Text-Primary</code></td><td>Value &amp; prefix/suffix text</td><td>#15181e</td></tr>
+                <tr><td><code>Text-Quaternary</code></td><td>Helper text (12px)</td><td>#55607a</td></tr>
+                <tr><td><code>Text-Error</code></td><td>Required asterisk / error helper</td><td>#c1181b</td></tr>
+                <tr><td><code>radius-6 / radius-md</code></td><td>Corner radius (S / M·L)</td><td>6px / 8px</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ TAB: USAGE ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-usage" style="display: none; padding-top: 32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When to Use</h2>
+            <p class="doc-section-subtitle">Reach for an input select when the user picks one value from a known list and you want a compact, form-aligned control.</p>
+            <ul class="doc-list">
+              <li><strong>Single choice from a set:</strong> country, status, category, owner — one value at a time.</li>
+              <li><strong>Form fields:</strong> as a drop-in alongside Text field in standard forms (same sizes, label, helper, states).</li>
+              <li><strong>Filters:</strong> dense table toolbars and dashboards where a native select looks out of place.</li>
+              <li><strong>Autocomplete:</strong> long option lists the user filters by typing.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="single-vs-multi" class="doc-section-title">Single vs. multiple</h2>
+            <p class="doc-section-subtitle">Input select is for a single value. When the user needs to pick several, use the Token Field, which shows each choice as a removable chip.</p>
+            <div class="best-practices-grid">
+              <div class="bp-card bp-do">
+                <div class="bp-head"><span class="bp-icon-do">&#10003;</span> Do</div>
+                <ul><li>Use Input select for one value (status, country, owner).</li><li>Match the dropdown width to the field.</li><li>Keep option labels short and scannable.</li></ul>
+              </div>
+              <div class="bp-card bp-dont">
+                <div class="bp-head"><span class="bp-icon-dont">&times;</span> Don't</div>
+                <ul><li>Force multi-select into this control — use Token Field.</li><li>Use it for free-text entry — use Text field.</li><li>Hide the selected value behind a generic "Selected".</li></ul>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="prefix-suffix" class="doc-section-title">Prefix &amp; Suffix</h2>
+            <p class="doc-section-subtitle">Both are off by default. Turn them on for fixed context the user shouldn't have to read from the option labels.</p>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Position</th><th>Example</th><th>Use Case</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Prefix icon</strong></td><td>Leading</td><td>globe, search</td><td>Visual context for the field's purpose.</td></tr>
+                <tr><td><strong>Prefix text</strong></td><td>Leading</td><td>"Region"</td><td>A fixed qualifier before the value.</td></tr>
+                <tr><td><strong>Suffix text</strong></td><td>Trailing (after chevron)</td><td>"UTC"</td><td>Units or a fixed trailing qualifier.</td></tr>
+                <tr><td><strong>Suffix icon</strong></td><td>Trailing (after chevron)</td><td>info-circle</td><td>Secondary context or a help affordance.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+            <p class="doc-section-subtitle">Set <code>rtl</code> (or an ancestor <code>dir="rtl"</code>) and the whole field mirrors — label, prefix/suffix, chevron, clear, and helper row all swap sides.</p>
+            <ul class="doc-list">
+              <li><strong>Layout mirrored:</strong> prefix moves to the right, suffix and chevron to the left.</li>
+              <li><strong>Dropdown:</strong> the option list mirrors and stays matched to the field width.</li>
+              <li><strong>Text alignment:</strong> value, placeholder, and helper start from the right.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="related-components" class="doc-section-title">Related Components</h2>
+            <div class="related-grid">
+              <a href="Token-field.html" class="related-chip"><ds-icon name="tag" size="16"></ds-icon> Token field</a>
+              <a href="Dropdown.html" class="related-chip"><ds-icon name="chevron-down" size="16"></ds-icon> Dropdown menu</a>
+              <a href="Text-field.html" class="related-chip"><ds-icon name="edit" size="16"></ds-icon> Text field</a>
+              <a href="Search-field.html" class="related-chip"><ds-icon name="search" size="16"></ds-icon> Search</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="figma-reference" class="doc-section-title">Figma Reference</h2>
+            <ul class="doc-list">
+              <li><strong>Figma Node:</strong> <code style="font-family: monospace; font-size: 13px; padding: 2px 8px; border-radius: 6px; background: rgba(37,99,235,0.06); color: var(--prism-violet);">16926:796521</code> — Component Set: Input Select (108 variants)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ TAB: CODE ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-code" style="display: none; padding-top: 32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Toggle any prop on the left and watch the field react. The HTML below updates as you go. Options are supplied via the <code>options</code> JS property (shown beneath the markup).</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Size</label><select class="cp-select" id="is-size"><option value="small">small</option><option value="medium" selected>medium</option><option value="large">large</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">State</label><select class="cp-select" id="is-state"><option value="default" selected>default</option><option value="error">error</option><option value="success">success</option><option value="read-only">read-only</option><option value="disabled">disabled</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Label position</label><select class="cp-select" id="is-label"><option value="none">none</option><option value="top">top</option><option value="left" selected>left</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Full width</label><select class="cp-select" id="is-fullwidth"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Required</label><select class="cp-select" id="is-required"><option value="true" selected>true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show clear</label><select class="cp-select" id="is-clear"><option value="false">false</option><option value="true" selected>true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Prefix icon</label><select class="cp-select" id="is-pfx-icon"><option value="">none</option><option value="globe" selected>globe</option><option value="search">search</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Suffix icon</label><select class="cp-select" id="is-sfx-icon"><option value="">none</option><option value="info-circle">info-circle</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="is-rtl"><option value="false">false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Label</label><input class="cp-select" id="is-label-text" type="text" value="Country" style="font-family:inherit"></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Placeholder</label><input class="cp-select" id="is-ph" type="text" value="Select" style="font-family:inherit"></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Helper</label><input class="cp-select" id="is-helper" type="text" value="Choose your billing country" style="font-family:inherit"></div>
+              <div class="cp-control-group"><label class="cp-label">Prefix text</label><input class="cp-select" id="is-pfx" type="text" value="" style="font-family:inherit"></div>
+              <div class="cp-control-group"><label class="cp-label">Suffix text</label><input class="cp-select" id="is-sfx" type="text" value="" style="font-family:inherit"></div>
+            </div>
+            <div class="cp-preview" id="is-pg-preview" style="padding:24px;display:flex;justify-content:center"><div id="is-pg-host" style="width:100%;max-width:720px"></div></div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="is-pg-copy"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+            </div>
+            <div class="cp-code-area" id="is-pg-code"></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="component-properties" class="doc-section-title">Component Properties</h2>
+          <p class="doc-section-subtitle">Attributes and JS properties the component accepts. Most are optional; pass only what you need.</p>
+
+          <div class="doc-section">
+            <h3 id="props-core" class="doc-h3">Core<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">8 props</span></h3>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>size</code></td><td><code>small · medium · large</code></td><td><code>medium</code></td><td>Field height &amp; radius.</td></tr>
+                <tr><td><code>state</code></td><td><code>default · error · success · disabled · read-only · active</code></td><td><code>default</code></td><td>Visual / validation state. <code>filled</code> &amp; <code>active</code> are derived automatically.</td></tr>
+                <tr><td><code>label-position</code></td><td><code>none · top · left</code></td><td><code>left</code></td><td>Label inline-start (left), stacked above (top), or hidden with the text kept as <code>aria-label</code> (none). A left label auto-stacks below 640px.</td></tr>
+                <tr><td><code>full-width</code></td><td>Boolean</td><td><code>false</code></td><td>Stretch the field to fill its container, overriding the per-size width cap (S 160 / M 320 / L 400).</td></tr>
+                <tr><td><code>label</code></td><td>String</td><td>—</td><td>The field label.</td></tr>
+                <tr><td><code>required</code></td><td>Boolean</td><td><code>true</code></td><td>Shows the asterisk. Set <code>required="false"</code> to hide.</td></tr>
+                <tr><td><code>placeholder</code></td><td>String</td><td>"Select"</td><td>Text shown when no value is chosen.</td></tr>
+                <tr><td><code>value</code> / <code>options</code></td><td>String / Array</td><td>—</td><td>Selected value; option list set via the <code>options</code> JS property: <code>[{label, value, icon?, disabled?}]</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h3 id="props-affix" class="doc-h3">Prefix / Suffix / Clear<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">8 props</span></h3>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>prefix-icon</code></td><td>String (icon)</td><td>—</td><td>Leading icon. Renders the prefix group when set.</td></tr>
+                <tr><td><code>prefix-text</code></td><td>String</td><td>—</td><td>Leading text (Text-Primary).</td></tr>
+                <tr><td><code>prefix-dropdown</code></td><td>Boolean</td><td><code>false</code></td><td>Make the prefix a unit-selection chip (a button with a chevron). Set the <code>prefixOptions</code> property to have it open a Dropdown Menu on click and update the prefix on select; also fires <code>ds-input-select-prefix-click</code>.</td></tr>
+                <tr><td><code>suffix-text</code></td><td>String</td><td>—</td><td>Trailing text, after the chevron.</td></tr>
+                <tr><td><code>suffix-icon</code></td><td>String (icon)</td><td>—</td><td>Trailing icon, after the chevron.</td></tr>
+                <tr><td><code>suffix-dropdown</code></td><td>Boolean</td><td><code>false</code></td><td>Make the suffix a unit-selection chip (a button with a chevron). Set the <code>suffixOptions</code> property to have it open a Dropdown Menu on click and update the suffix on select; also fires <code>ds-input-select-suffix-click</code>. Never opens the value list. Mirrors the text field.</td></tr>
+                <tr><td><code>prefixOptions</code> / <code>suffixOptions</code></td><td>Array (JS prop)</td><td><code>[]</code></td><td>Unit menu items <code>[{label, value, icon?}]</code>. When set, the matching chip opens a Dropdown Menu and fires <code>ds-input-select-{prefix|suffix}-change</code> on pick.</td></tr>
+                <tr><td><code>show-clear</code></td><td>Boolean</td><td><code>false</code></td><td>Show an &times; to clear the selection when a value exists.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h3 id="props-helper" class="doc-h3">Helper &amp; misc<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">4 props</span></h3>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>helper</code></td><td>String</td><td>—</td><td>Supporting text below the field.</td></tr>
+                <tr><td><code>show-helper-row</code></td><td>Boolean</td><td><code>true</code></td><td>Reserve / show the helper row.</td></tr>
+                <tr><td><code>show-label</code></td><td>Boolean</td><td><code>true</code></td><td>Show the label row.</td></tr>
+                <tr><td><code>show-label-help-icon</code></td><td>Boolean</td><td><code>false</code></td><td>Show a help-circle (16) beside the label; emits <code>ds-input-select-help</code> on click.</td></tr>
+                <tr><td><code>label-help</code></td><td>String</td><td>—</td><td>Hint text shown in a tooltip when hovering/focusing the label help icon (reuses <code>ds-tooltip</code>).</td></tr>
+                <tr><td><code>searchable</code></td><td>Boolean</td><td><code>false</code></td><td>Adds a search box atop the open menu that filters options by label as you type (single-select only).</td></tr>
+                <tr><td><code>search-placeholder</code></td><td>String</td><td>"Search"</td><td>Placeholder for the search box when <code>searchable</code>.</td></tr>
+                <tr><td><code>rtl</code></td><td>Boolean</td><td><code>false</code></td><td>Mirror the layout for right-to-left languages.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h3 id="props-events" class="doc-h3">Events</h3>
+            <table class="size-table">
+              <thead><tr><th>Event</th><th>Detail</th><th>Fires when</th></tr></thead>
+              <tbody>
+                <tr><td><code>ds-input-select-change</code></td><td><code>{ value }</code></td><td>A selection is made or cleared.</td></tr>
+                <tr><td><code>ds-input-select-open</code></td><td>—</td><td>The dropdown opens.</td></tr>
+                <tr><td><code>ds-input-select-close</code></td><td>—</td><td>The dropdown closes.</td></tr>
+                <tr><td><code>ds-input-select-clear</code></td><td>—</td><td>The clear button is pressed.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ TAB: ACCESSIBILITY ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-accessibility" style="display: none; padding-top: 32px;">
+          <div class="doc-section">
+            <h2 id="a11y-overview" class="doc-section-title">Accessibility</h2>
+            <p class="doc-section-subtitle">The field follows the WAI-ARIA "select-only combobox" pattern.</p>
+            <ul class="doc-list">
+              <li>The trigger is <code>role="combobox"</code> with <code>aria-haspopup="listbox"</code>, <code>aria-expanded</code>, and <code>aria-controls</code> pointing at the option list.</li>
+              <li>The option list is <code>role="listbox"</code>; each option is <code>role="option"</code> with <code>aria-selected</code>.</li>
+              <li>Required fields set <code>aria-required="true"</code>; the asterisk is decorative (<code>aria-hidden</code>).</li>
+              <li>Error state sets <code>aria-invalid="true"</code> and links the helper via <code>aria-describedby</code>.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h3 id="keyboard-navigation" class="doc-h3">Keyboard Navigation</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><code>Enter</code> / <code>Space</code> / <code>&darr;</code></td><td>Open the dropdown and move into the option list.</td></tr>
+                <tr><td><code>&uarr;</code> / <code>&darr;</code></td><td>Move the active option; <code>Home</code>/<code>End</code> jump to ends.</td></tr>
+                <tr><td><code>Enter</code></td><td>Select the active option and close.</td></tr>
+                <tr><td><code>Escape</code></td><td>Close without changing the selection; focus returns to the field.</td></tr>
+                <tr><td><code>Tab</code></td><td>Close and move to the next focusable element.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h3 id="screen-reader" class="doc-h3">Screen Reader</h3>
+            <ul class="doc-list">
+              <li>Associate a <code>&lt;label&gt;</code> with the trigger so the field name is announced.</li>
+              <li>Announce expanded/collapsed state and the active option as it changes.</li>
+              <li>After autocomplete filtering, announce the result count via a live region.</li>
+              <li>The clear button has an explicit <code>aria-label="Clear selection"</code>.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h3 id="disabled-readonly" class="doc-h3">Disabled &amp; Read Only</h3>
+            <ul class="doc-list">
+              <li><strong>Disabled:</strong> trigger is <code>aria-disabled</code> and removed from tab order; the menu cannot open.</li>
+              <li><strong>Read Only:</strong> trigger stays focusable but the menu does not open and the value cannot change.</li>
+              <li>Never rely on colour alone for error — always pair the red border with helper text.</li>
+            </ul>
+          </div>
+        </div>
+
+        </div><!-- close main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="../handoff/input-select.md" download="input-select.md" class="action-link">
+              <ds-icon name="download" size="15"></ds-icon>
+              Download MD
+            </a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=16926-796521" target="_blank" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+
+      </div> <!-- close main-content-area -->
+    </main>
+  </div>
+
+  <!-- ── Live option data for the demos ── -->
+  <script type="module">
+    const OPTS = [
+      { label: 'United States', value: 'us' },
+      { label: 'United Kingdom', value: 'uk' },
+      { label: 'Australia', value: 'au' },
+      { label: 'Canada', value: 'ca' },
+      { label: 'Germany', value: 'de' },
+      { label: 'India', value: 'in' },
+    ];
+    const OPTS_AR = [
+      { label: 'الولايات المتحدة', value: 'us' },
+      { label: 'المملكة المتحدة', value: 'uk' },
+      { label: 'أستراليا', value: 'au' },
+      { label: 'كندا', value: 'ca' },
+    ];
+    /* A deliberately long list to demonstrate the overflow → vertical-scroll case. */
+    const OPTS_LONG = [
+      'UTC−12:00 Baker Island', 'UTC−11:00 Pago Pago', 'UTC−10:00 Honolulu', 'UTC−09:00 Anchorage',
+      'UTC−08:00 Los Angeles', 'UTC−07:00 Denver', 'UTC−06:00 Mexico City', 'UTC−05:00 New York',
+      'UTC−04:00 Santiago', 'UTC−03:00 São Paulo', 'UTC−02:00 South Georgia', 'UTC−01:00 Azores',
+      'UTC±00:00 London', 'UTC+01:00 Berlin', 'UTC+02:00 Cairo', 'UTC+03:00 Moscow',
+      'UTC+04:00 Dubai', 'UTC+05:00 Karachi', 'UTC+05:30 Chennai', 'UTC+06:00 Dhaka',
+      'UTC+07:00 Bangkok', 'UTC+08:00 Singapore', 'UTC+09:00 Tokyo', 'UTC+10:00 Sydney',
+      'UTC+11:00 Nouméa', 'UTC+12:00 Auckland',
+    ].map((label, i) => ({ label, value: 'tz' + i }));
+    customElements.whenDefined('ds-input-select').then(() => {
+      document.querySelectorAll('[data-opts]').forEach((el) => { el.options = OPTS; });
+      document.querySelectorAll('[data-opts-ar]').forEach((el) => { el.options = OPTS_AR; });
+      document.querySelectorAll('[data-opts-long]').forEach((el) => { el.options = OPTS_LONG; });
+      const anat = document.getElementById('anat'); if (anat) anat.options = OPTS;
+
+      /* Unit-selection demo — the value select carries numeric options; the
+         prefix/suffix chips carry their OWN unit menus via the component-managed
+         prefixOptions / suffixOptions properties (exactly like the text field).
+         Clicking a chip opens its Dropdown Menu; picking a unit updates the affix
+         text and fires ds-input-select-{prefix|suffix}-change. */
+      document.querySelectorAll('[data-opts-spacing]').forEach((el) => {
+        el.options = [4, 8, 12, 16, 24].map((n) => ({ label: String(n), value: String(n) }));
+      });
+      const unitSel = document.getElementById('unit-demo');
+      if (unitSel) unitSel.suffixOptions = ['px', '%', 'em', 'rem'].map((u) => ({ label: u, value: u }));
+      const currencySel = document.getElementById('currency-demo');
+      if (currencySel) {
+        currencySel.options = [10, 25, 50, 100].map((n) => ({ label: String(n), value: String(n) }));
+        currencySel.prefixOptions = [
+          { label: 'USD — US Dollar', value: 'USD' },
+          { label: 'EUR — Euro', value: 'EUR' },
+          { label: 'GBP — Pound', value: 'GBP' },
+          { label: 'INR — Rupee', value: 'INR' },
+        ];
+      }
+    });
+  </script>
+
+  <!-- ── Code playground ── -->
+  <script type="module">
+    customElements.whenDefined('ds-input-select').then(() => {
+      const OPTS = [
+        { label: 'United States', value: 'us' },
+        { label: 'United Kingdom', value: 'uk' },
+        { label: 'Canada', value: 'ca' },
+        { label: 'Germany', value: 'de' },
+      ];
+      const els = {
+        size: 'is-size', state: 'is-state', label: 'is-label', fullWidth: 'is-fullwidth', required: 'is-required',
+        clear: 'is-clear', pfxIcon: 'is-pfx-icon', sfxIcon: 'is-sfx-icon', rtl: 'is-rtl',
+        labelText: 'is-label-text', ph: 'is-ph', helper: 'is-helper', pfx: 'is-pfx', sfx: 'is-sfx',
+      };
+      Object.keys(els).forEach((k) => { els[k] = document.getElementById(els[k]); });
+      const host = document.getElementById('is-pg-host');
+      const codeOut = document.getElementById('is-pg-code');
+      const copyBtn = document.getElementById('is-pg-copy');
+      let rawCode = '';
+
+      function build() {
+        const size = els.size.value, state = els.state.value, labelPos = els.label.value;
+        const required = els.required.value === 'true', clear = els.clear.value === 'true';
+        const fullWidth = els.fullWidth.value === 'true';
+        const pfxIcon = els.pfxIcon.value, sfxIcon = els.sfxIcon.value, rtl = els.rtl.value === 'true';
+        const labelText = els.labelText.value || '', ph = els.ph.value || '', helper = els.helper.value || '';
+        const pfx = els.pfx.value || '', sfx = els.sfx.value || '';
+
+        host.innerHTML = '';
+        const elx = document.createElement('ds-input-select');
+        if (size !== 'medium') elx.setAttribute('size', size);
+        if (state !== 'default') elx.setAttribute('state', state);
+        if (labelPos !== 'left') elx.setAttribute('label-position', labelPos);
+        if (fullWidth) elx.setAttribute('full-width', '');
+        if (labelText) elx.setAttribute('label', labelText);
+        if (ph) elx.setAttribute('placeholder', ph);
+        if (helper) elx.setAttribute('helper', helper);
+        if (!required) elx.setAttribute('required', 'false');
+        if (clear) elx.setAttribute('show-clear', '');
+        if (pfx) elx.setAttribute('prefix-text', pfx);
+        if (sfx) elx.setAttribute('suffix-text', sfx);
+        if (pfxIcon) elx.setAttribute('prefix-icon', pfxIcon);
+        if (sfxIcon) elx.setAttribute('suffix-icon', sfxIcon);
+        if (rtl) elx.setAttribute('rtl', '');
+        host.appendChild(elx);
+        elx.options = OPTS;
+
+        const attrs = [];
+        if (size !== 'medium') attrs.push('size="' + size + '"');
+        if (state !== 'default') attrs.push('state="' + state + '"');
+        if (labelPos !== 'left') attrs.push('label-position="' + labelPos + '"');
+        if (fullWidth) attrs.push('full-width');
+        if (labelText) attrs.push('label="' + labelText.replace(/"/g, '&quot;') + '"');
+        if (ph) attrs.push('placeholder="' + ph.replace(/"/g, '&quot;') + '"');
+        if (helper) attrs.push('helper="' + helper.replace(/"/g, '&quot;') + '"');
+        if (!required) attrs.push('required="false"');
+        if (clear) attrs.push('show-clear');
+        if (pfx) attrs.push('prefix-text="' + pfx.replace(/"/g, '&quot;') + '"');
+        if (sfx) attrs.push('suffix-text="' + sfx.replace(/"/g, '&quot;') + '"');
+        if (pfxIcon) attrs.push('prefix-icon="' + pfxIcon + '"');
+        if (sfxIcon) attrs.push('suffix-icon="' + sfxIcon + '"');
+        if (rtl) attrs.push('rtl');
+        rawCode = '<ds-input-select' + (attrs.length ? '\n  ' + attrs.join('\n  ') : '') + '>\n</ds-input-select>\n\n'
+          + '<script>\n  document.querySelector(\'ds-input-select\').options = [\n'
+          + '    { label: \'United States\', value: \'us\' },\n    { label: \'United Kingdom\', value: \'uk\' },\n    /* … */\n  ];\n<\/script>';
+        const coloredAttrs = attrs.map((p) => {
+          const eq = p.indexOf('=');
+          if (eq === -1) return '<span style="color:#38bdf8">' + p + '</span>';
+          return '<span style="color:#38bdf8">' + p.slice(0, eq) + '</span>=<span style="color:#34d399">' + p.slice(eq + 1) + '</span>';
+        }).join('\n  ');
+        const colored = '&lt;<span style="color:#60a5fa">ds-input-select</span>'
+          + (attrs.length ? '\n  ' + coloredAttrs : '') + '&gt;\n&lt;/<span style="color:#60a5fa">ds-input-select</span>&gt;';
+        codeOut.innerHTML = '<pre style="margin:0;white-space:pre-wrap;font-family:\'JetBrains Mono\',monospace;font-size:13.5px;line-height:1.6">' + colored + '</pre>';
+      }
+      Object.keys(els).forEach((k) => { els[k].addEventListener(els[k].tagName === 'INPUT' ? 'input' : 'change', build); });
+      copyBtn.addEventListener('click', () => {
+        const done = () => { const o = copyBtn.innerHTML; copyBtn.textContent = 'Copied!'; setTimeout(() => { copyBtn.innerHTML = o; }, 2000); };
+        if (navigator.clipboard?.writeText) navigator.clipboard.writeText(rawCode).then(done).catch(done);
+        else done();
+      });
+      build();
+    });
+  </script>
+
+  <!-- ── Tabs + TOC + sidebar (shared template behaviour) ── -->
+  <script>
+    let _tocObserver = null;
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav');
+      if (!tocList) return;
+      tocList.innerHTML = '';
+      const activePanel = document.getElementById(targetId);
+      if (!activePanel) return;
+      activePanel.querySelectorAll('h2[id], h3[id]').forEach((h) => {
+        if (h.style.display === 'none') return;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + h.id; a.className = 'toc-link';
+        let text = Array.from(h.childNodes).filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim();
+        if (!text) text = h.innerText;
+        a.textContent = text;
+        a.addEventListener('click', (e) => { e.preventDefault(); document.getElementById(h.id).scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+        li.appendChild(a); tocList.appendChild(li);
+      });
+      initScrollSpy();
+    }
+    function initScrollSpy() {
+      if (_tocObserver) _tocObserver.disconnect();
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sections = Array.from(tocLinks).map((l) => document.getElementById(l.getAttribute('href').slice(1))).filter(Boolean);
+      if (!sections.length) return;
+      _tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            tocLinks.forEach((link) => link.classList.toggle('active', link.getAttribute('href') === '#' + id));
+          }
+        });
+      }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+      sections.forEach((s) => _tocObserver.observe(s));
+    }
+    document.querySelectorAll('.tab-item').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabMap = { 'Overview': 'tab-overview', 'Style': 'tab-style', 'Usage': 'tab-usage', 'Code': 'tab-code', 'Accessibility': 'tab-accessibility' };
+        document.querySelectorAll('.tab-content').forEach((panel) => panel.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) { document.getElementById(target).style.display = 'block'; updateTOC(target); }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+    updateTOC('tab-overview');
+    (function () {
+      const searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      const items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function () {
+        const q = this.value.toLowerCase().trim();
+        items.forEach((li) => { const link = li.querySelector('a'); if (!link) return; li.style.display = (!q || link.textContent.toLowerCase().indexOf(q) !== -1) ? '' : 'none'; });
+      });
+      document.addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchInput.focus(); searchInput.select(); } });
+    })();
+    (function () {
+      const active = document.querySelector('.sidebar-link.active');
+      if (active) { const sidebar = active.closest('.sidebar'); if (sidebar) sidebar.scrollTop = Math.max(0, active.offsetTop - sidebar.offsetTop - sidebar.clientHeight / 3); }
+    })();
+  </script>
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<!-- BitLocker Management — Summary Dashboard · DUAL-MODE file (projects/bitlocker/).
+     Archetype: MODULE DASHBOARD (Layout/views/layout-module-dashboard.html).
+     Landing view for the BitLocker tab (TAB_DEFAULT_VIEW.bitlocker → bitlocker-dashboard),
+     so it is top-level: NO breadcrumb. Primary action → Create policy.
+     Open directly -> standalone harness (bottom) mounts it.
+     Fetched by Shell.html -> injectDrawer('../projects/bitlocker/layout-summary-dashboard','content').
+     Built ONLY from Prism ds-* components + --uems-* tokens.
+     Color: encryption STATUS is semantic (green/yellow/grey/red); equal-priority
+     categories (OS, auth method) are monotone one-hue (design-cases.md). -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    .sa-host { display: flex; flex-direction: column; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* == BitLocker Summary Dashboard — scope EVERY selector to #bldash-pop ===== */
+/* Root + .lay + base .lay__scroll live in Layout/layout-base.css (shared via .lay-root); flex/gap below is this view's addition. */
+#bldash-pop .lay__scroll { display: flex; flex-direction: column; gap: 16px; }
+
+/* KPI summary row. */
+#bldash-pop .bl-kpis { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 16px; }
+#bldash-pop .bl-kpis ds-kpi-card { flex: 1 1 200px; min-width: 180px; }
+
+/* Bento widget grid — 6 columns; widgets span 2. Definite row heights so charts
+   have a real height to fill (no circular sizing). */
+#bldash-pop .bl-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; align-items: stretch; grid-auto-rows: 360px; }
+#bldash-pop .bl-grid > ds-widget { min-width: 0; width: 100%; height: 100%; max-width: none; }
+#bldash-pop .bl-grid ds-widget .ds-widget__surface { height: 100%; }
+#bldash-pop .bl-grid ds-widget .ds-widget__body { min-height: 0; }
+/* Chart bodies are full-bleed by default (0 h-padding); inset chart widgets so
+   the plot + legend sit off the edge and align with the title. */
+#bldash-pop .bl-grid .ds-widget--chart .ds-widget__body { padding-left: 16px; padding-right: 16px; }
+#bldash-pop .bl-sp2 { grid-column: span 2; }
+#bldash-pop .bl-sp3 { grid-column: span 3; }
+
+#bldash-pop .bl-grid ds-chart { display: block; width: 100%; height: 100%; min-height: 200px; max-height: 100%; }
+#bldash-pop .bl-grid .ds-chart__plot { max-height: 100%; }
+
+/* List-widget collection rows (icon tile + label + trailing value/badge). */
+#bldash-pop .wl-row { display: flex; align-items: center; gap: 12px; padding: 8px 16px; }
+#bldash-pop .wl-ico { width: 28px; height: 28px; border-radius: 8px; background: var(--uems-bg-secondary-alt, #eef1f6); display: inline-flex; align-items: center; justify-content: center; color: var(--uems-icon-secondary, #55607a); flex-shrink: 0; }
+#bldash-pop .wl-label { flex: 1 1 auto; min-width: 0; font-size: 14px; color: var(--uems-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#bldash-pop .wl-label--link { color: var(--uems-text-accent-link, #006aff); cursor: pointer; }
+#bldash-pop .wl-val { flex-shrink: 0; font-size: 14px; font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); }
+
+/* Full-width "needs attention" table block (table owns its own inset). */
+#bldash-pop .bl-attention .ds-widget__surface { height: auto; }
+#bldash-pop .bl-name { display: inline-flex; align-items: center; gap: var(--spacing-8); color: var(--uems-text-primary); }
+#bldash-pop .bl-name ds-icon { color: var(--uems-icon-tertiary); flex: none; }
+#bldash-pop .cell-muted { color: var(--uems-text-secondary); }
+
+@media (max-width: 1200px) {
+  #bldash-pop .bl-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  #bldash-pop .bl-sp3 { grid-column: span 4; }
+  #bldash-pop .bl-sp2 { grid-column: span 2; }
+}
+@media (max-width: 760px) {
+  #bldash-pop .bl-grid { grid-template-columns: 1fr; }
+  #bldash-pop .bl-sp2, #bldash-pop .bl-sp3 { grid-column: span 1; }
+}
+</style>
+
+<div id="bldash-pop" class="lay-root" hidden>
+  <div class="lay">
+    <ds-page-header id="bl-ph" icon="shield" structure="default"
+      title="BitLocker management"
+      description="Encryption posture, compliance, and recovery-key coverage across your Windows fleet."
+      show-description
+      collapse-on-scroll scroll-target=".lay__scroll">
+      <ds-button slot="actions" id="bl-create" variant="primary" prefix-icon="add">Create policy</ds-button>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+
+      <!-- KPI summary row -->
+      <div class="bl-kpis">
+        <ds-kpi-card label="Managed computers" value="186" state="default" icon="computer"></ds-kpi-card>
+        <ds-kpi-card label="Encrypted" value="142" state="success" icon="lock"></ds-kpi-card>
+        <ds-kpi-card label="Encryption in progress" value="21" state="warning" icon="clock"></ds-kpi-card>
+        <ds-kpi-card label="Not compliant" value="15" state="alert" icon="exclamation-circle"></ds-kpi-card>
+        <ds-kpi-card label="Recovery keys escrowed" value="138" state="default" icon="key"></ds-kpi-card>
+      </div>
+
+      <!-- Bento grid -->
+      <div class="bl-grid">
+        <!-- Row 1 -->
+        <ds-widget class="bl-sp2" id="w-status" title="Encryption status" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-status" type="donut" show-legend legend-position="right" fit="contain"></ds-chart>
+        </ds-widget>
+
+        <ds-widget class="bl-sp2" id="w-os" title="Compliance by operating system" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-os" type="column" fit="fill"></ds-chart>
+        </ds-widget>
+
+        <ds-widget class="bl-sp2" id="w-auth" title="Authentication method" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-auth" type="donut" monotone="blue" show-legend legend-position="right" fit="contain"></ds-chart>
+        </ds-widget>
+
+        <!-- Row 2 -->
+        <ds-widget class="bl-sp2" id="w-prereq" title="Prerequisite check failures" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-prereq" type="column" fit="fill"></ds-chart>
+        </ds-widget>
+
+        <ds-widget class="bl-sp2" id="w-escrow" title="Recovery-key escrow" show-drag="false" show-action="false" show-footer="false">
+          <ds-chart id="c-escrow" type="donut" show-legend legend-position="right" fit="contain"></ds-chart>
+        </ds-widget>
+
+        <ds-widget class="bl-sp2" id="w-deploy" type="list" title="Recent policy deployments" show-drag="false" show-action="false" footer-label="View all deployments" footer-href="#">
+          <div id="deploy-list"></div>
+        </ds-widget>
+      </div>
+
+      <!-- Systems needing attention (full width) -->
+      <ds-widget class="bl-attention" id="w-attn" type="table" title="Systems needing attention" show-drag="false" show-action="false" footer-label="View all managed computers" footer-href="#">
+        <ds-data-table id="attn-table" selection-mode="none" row-height="comfortable" show-toolbar="false" show-footer="false" sticky-header rows-per-page="6" page="1"></ds-data-table>
+      </ds-widget>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* == BitLocker Summary Dashboard — feed charts, lists, table ============== */
+(function () {
+  const root = document.getElementById('bldash-pop');
+  if (!root || root.__blInit) return; root.__blInit = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  /* ── Localization. Register this page's strings into the shell's central catalog,
+     then resolve every user-facing string via ShellCtx.t(). Falls back to English
+     when opened standalone (no shell). NOTE: Arabic here is machine-translated —
+     have a native speaker review before shipping. ─────────────────────────────── */
+  const MSGS = {
+    en: {
+      'bl.title': 'BitLocker management',
+      'bl.desc': 'Encryption posture, compliance, and recovery-key coverage across your Windows fleet.',
+      'bl.createPolicy': 'Create policy',
+      'bl.kpi.managed': 'Managed computers', 'bl.kpi.encrypted': 'Encrypted', 'bl.kpi.inprogress': 'Encryption in progress', 'bl.kpi.noncompliant': 'Not compliant', 'bl.kpi.keys': 'Recovery keys escrowed',
+      'bl.w.status': 'Encryption status', 'bl.w.os': 'Compliance by operating system', 'bl.w.auth': 'Authentication method', 'bl.w.prereq': 'Prerequisite check failures', 'bl.w.escrow': 'Recovery-key escrow', 'bl.w.deploy': 'Recent policy deployments', 'bl.w.attn': 'Systems needing attention',
+      'bl.f.deploy': 'View all deployments', 'bl.f.attn': 'View all managed computers',
+      'bl.s.computers': 'Computers', 'bl.s.encrypted': 'Encrypted', 'bl.s.devices': 'Devices', 'bl.s.keys': 'Keys',
+      'bl.cat.encrypted': 'Encrypted', 'bl.cat.inprogress': 'In progress', 'bl.cat.notstarted': 'Not started', 'bl.cat.failed': 'Failed',
+      'bl.cat.tpmonly': 'TPM only', 'bl.cat.tpmpin': 'TPM + PIN', 'bl.cat.tpmepin': 'TPM + Enhanced PIN', 'bl.cat.passphrase': 'Passphrase',
+      'bl.cat.tpmno': 'TPM not owned', 'bl.cat.legacy': 'Legacy BIOS', 'bl.cat.gpo': 'GPO conflict', 'bl.cat.wmi': 'WMI error', 'bl.cat.osunsup': 'OS unsupported',
+      'bl.cat.ecserver': 'EC server only',
+      'bl.dep.corp': 'Corp laptops — TPM + PIN', 'bl.dep.finance': 'Finance — full drive AES-256', 'bl.dep.sales': 'Sales — used-space only', 'bl.dep.servers': 'Servers — passphrase', 'bl.dep.kiosks': 'Kiosks — TPM only',
+      'bl.st.completed': 'Completed', 'bl.st.inprogress': 'In progress', 'bl.st.failed': 'Failed', 'bl.st.scheduled': 'Scheduled',
+      'bl.col.computer': 'Computer', 'bl.col.os': 'Operating system', 'bl.col.issue': 'Issue', 'bl.col.reason': 'Reason', 'bl.col.seen': 'Last reported',
+      'bl.iss.failed': 'Deployment failed', 'bl.iss.prereq': 'Prereq failed', 'bl.iss.noncompliant': 'Not compliant', 'bl.iss.reboot': 'Pending reboot',
+      'bl.rsn.tpm': 'TPM not owned', 'bl.rsn.feat': 'BitLocker feature not enabled', 'bl.rsn.gpo': 'Conflicting BitLocker GPO', 'bl.rsn.reboot': 'Awaiting restart to encrypt', 'bl.rsn.legacy': 'Firmware in Legacy mode', 'bl.rsn.noesc': 'Recovery key not escrowed',
+      'bl.time.12m': '12 min ago', 'bl.time.1h': '1 hr ago', 'bl.time.2h': '2 hrs ago', 'bl.time.3h': '3 hrs ago', 'bl.time.yesterday': 'Yesterday',
+    },
+    ar: {
+      'bl.title': 'إدارة BitLocker',
+      'bl.desc': 'وضع التشفير والامتثال وتغطية مفاتيح الاسترداد عبر أجهزة Windows لديك.',
+      'bl.createPolicy': 'إنشاء سياسة',
+      'bl.kpi.managed': 'الأجهزة المُدارة', 'bl.kpi.encrypted': 'مُشفّرة', 'bl.kpi.inprogress': 'التشفير قيد التقدم', 'bl.kpi.noncompliant': 'غير متوافقة', 'bl.kpi.keys': 'مفاتيح الاسترداد المحفوظة',
+      'bl.w.status': 'حالة التشفير', 'bl.w.os': 'التوافق حسب نظام التشغيل', 'bl.w.auth': 'طريقة المصادقة', 'bl.w.prereq': 'إخفاقات فحص المتطلبات', 'bl.w.escrow': 'حفظ مفتاح الاسترداد', 'bl.w.deploy': 'عمليات نشر السياسات الأخيرة', 'bl.w.attn': 'الأنظمة التي تحتاج إلى انتباه',
+      'bl.f.deploy': 'عرض كل عمليات النشر', 'bl.f.attn': 'عرض كل الأجهزة المُدارة',
+      'bl.s.computers': 'أجهزة', 'bl.s.encrypted': 'مُشفّرة', 'bl.s.devices': 'أجهزة', 'bl.s.keys': 'مفاتيح',
+      'bl.cat.encrypted': 'مُشفّرة', 'bl.cat.inprogress': 'قيد التقدم', 'bl.cat.notstarted': 'لم يبدأ', 'bl.cat.failed': 'فشل',
+      'bl.cat.tpmonly': 'TPM فقط', 'bl.cat.tpmpin': 'TPM + PIN', 'bl.cat.tpmepin': 'TPM + PIN محسّن', 'bl.cat.passphrase': 'عبارة مرور',
+      'bl.cat.tpmno': 'TPM غير مملوك', 'bl.cat.legacy': 'BIOS قديم', 'bl.cat.gpo': 'تعارض GPO', 'bl.cat.wmi': 'خطأ WMI', 'bl.cat.osunsup': 'نظام غير مدعوم',
+      'bl.cat.ecserver': 'خادم EC فقط',
+      'bl.dep.corp': 'أجهزة الشركة المحمولة — TPM + PIN', 'bl.dep.finance': 'المالية — القرص الكامل AES-256', 'bl.dep.sales': 'المبيعات — المساحة المستخدمة فقط', 'bl.dep.servers': 'الخوادم — عبارة مرور', 'bl.dep.kiosks': 'الأكشاك — TPM فقط',
+      'bl.st.completed': 'مكتمل', 'bl.st.inprogress': 'قيد التقدم', 'bl.st.failed': 'فشل', 'bl.st.scheduled': 'مجدول',
+      'bl.col.computer': 'الكمبيوتر', 'bl.col.os': 'نظام التشغيل', 'bl.col.issue': 'المشكلة', 'bl.col.reason': 'السبب', 'bl.col.seen': 'آخر إبلاغ',
+      'bl.iss.failed': 'فشل النشر', 'bl.iss.prereq': 'فشل المتطلبات', 'bl.iss.noncompliant': 'غير متوافق', 'bl.iss.reboot': 'في انتظار إعادة التشغيل',
+      'bl.rsn.tpm': 'TPM غير مملوك', 'bl.rsn.feat': 'ميزة BitLocker غير مُفعّلة', 'bl.rsn.gpo': 'سياسة GPO متعارضة لـ BitLocker', 'bl.rsn.reboot': 'في انتظار إعادة التشغيل للتشفير', 'bl.rsn.legacy': 'البرنامج الثابت في وضع Legacy', 'bl.rsn.noesc': 'مفتاح الاسترداد غير محفوظ',
+      'bl.time.12m': 'قبل 12 دقيقة', 'bl.time.1h': 'قبل ساعة', 'bl.time.2h': 'قبل ساعتين', 'bl.time.3h': 'قبل 3 ساعات', 'bl.time.yesterday': 'أمس',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+  /* ds-button renders its label into an inner .ds-button__label; set THAT (not the
+     host's textContent, which would wipe the rendered button chrome). */
+  const setBtnLabel = (el, text) => { if (!el) return; const l = el.querySelector('.ds-button__label'); if (l) l.textContent = text; else el.textContent = text; };
+
+  /* Data is language-neutral (values + colors + string KEYS); applyStrings() resolves
+     the keys through t() so a single function re-localizes everything on lang change. */
+  const setChart = (id, data) => { const c = $(id); if (c) c.data = data; };
+  const DEPLOYS = [
+    { icon: 'shield', k: 'bl.dep.corp', badge: 'completed', state: 'success' },
+    { icon: 'shield', k: 'bl.dep.finance', badge: 'inprogress', state: 'warning' },
+    { icon: 'shield', k: 'bl.dep.sales', badge: 'completed', state: 'success' },
+    { icon: 'shield', k: 'bl.dep.servers', badge: 'failed', state: 'critical' },
+    { icon: 'shield', k: 'bl.dep.kiosks', badge: 'scheduled', state: 'default' },
+  ];
+  const ISSUE_STATE = { failed: 'critical', prereq: 'warning', noncompliant: 'critical', reboot: 'warning' };
+  const ATTN = [
+    { id: 1, name: 'FIN-WKS-2043', os: 'Windows 11 Pro', issue: 'failed', rsn: 'bl.rsn.tpm', code: '0x80310018', seen: 'bl.time.12m' },
+    { id: 2, name: 'SRV-DC-01', os: 'Server 2019', issue: 'prereq', rsn: 'bl.rsn.feat', code: '', seen: 'bl.time.1h' },
+    { id: 3, name: 'SALES-LT-118', os: 'Windows 10 Ent', issue: 'noncompliant', rsn: 'bl.rsn.gpo', code: '', seen: 'bl.time.2h' },
+    { id: 4, name: 'ENG-WKS-770', os: 'Windows 11 Pro', issue: 'reboot', rsn: 'bl.rsn.reboot', code: '', seen: 'bl.time.3h' },
+    { id: 5, name: 'HR-LT-052', os: 'Windows 10 Pro', issue: 'failed', rsn: 'bl.rsn.legacy', code: '0x80310048', seen: 'bl.time.yesterday' },
+    { id: 6, name: 'OPS-WKS-311', os: 'Windows 8.1 Ent', issue: 'noncompliant', rsn: 'bl.rsn.noesc', code: '', seen: 'bl.time.yesterday' },
+  ];
+
+  function applyStrings() {
+    /* Header + primary action. */
+    const ph = $('bl-ph');
+    if (ph) { ph.setAttribute('title', t('bl.title')); ph.setAttribute('description', t('bl.desc')); }
+    setBtnLabel($('bl-create'), t('bl.createPolicy'));
+    /* KPI labels (in DOM order). */
+    const kpiKeys = ['bl.kpi.managed', 'bl.kpi.encrypted', 'bl.kpi.inprogress', 'bl.kpi.noncompliant', 'bl.kpi.keys'];
+    root.querySelectorAll('.bl-kpis ds-kpi-card').forEach((c, i) => { if (kpiKeys[i]) c.setAttribute('label', t(kpiKeys[i])); });
+    /* Widget titles + footer labels. */
+    [['w-status', 'bl.w.status'], ['w-os', 'bl.w.os'], ['w-auth', 'bl.w.auth'], ['w-prereq', 'bl.w.prereq'], ['w-escrow', 'bl.w.escrow'], ['w-deploy', 'bl.w.deploy'], ['w-attn', 'bl.w.attn']]
+      .forEach(([id, key]) => { const w = $(id); if (w) w.setAttribute('title', t(key)); });
+    const wd = $('w-deploy'); if (wd) wd.setAttribute('footer-label', t('bl.f.deploy'));
+    const wa = $('w-attn'); if (wa) wa.setAttribute('footer-label', t('bl.f.attn'));
+
+    /* Charts — categories/series localized; values + colors fixed. */
+    setChart('c-status', { categories: [t('bl.cat.encrypted'), t('bl.cat.inprogress'), t('bl.cat.notstarted'), t('bl.cat.failed')], series: [{ name: t('bl.s.computers'), values: [142, 14, 15, 15], colors: ['green', 'yellow', 'grey', 'red'] }] });
+    setChart('c-os', { categories: ['Windows 11', 'Windows 10', 'Windows 8.1', 'Server 2019'], series: [{ name: t('bl.s.encrypted'), values: [88, 74, 12, 12], color: 'blue' }] });
+    setChart('c-auth', { categories: [t('bl.cat.tpmonly'), t('bl.cat.tpmpin'), t('bl.cat.tpmepin'), t('bl.cat.passphrase')], series: [{ name: t('bl.s.computers'), values: [61, 58, 15, 8] }] });
+    setChart('c-prereq', { categories: [t('bl.cat.tpmno'), t('bl.cat.legacy'), t('bl.cat.gpo'), t('bl.cat.wmi'), t('bl.cat.osunsup')], series: [{ name: t('bl.s.devices'), values: [6, 4, 3, 1, 1], color: 'orange' }] });
+    setChart('c-escrow', { categories: ['Active Directory', t('bl.cat.ecserver')], series: [{ name: t('bl.s.keys'), values: [96, 42], colors: ['blue', 'green'] }] });
+
+    /* Recent deployments list. */
+    const deploy = $('deploy-list');
+    if (deploy) deploy.innerHTML = DEPLOYS.map((r) =>
+      `<div class="wl-row"><span class="wl-ico"><ds-icon name="${r.icon}" size="16"></ds-icon></span>`
+      + `<span class="wl-label wl-label--link">${esc(t(r.k))}</span>`
+      + `<ds-badge variant="subtle" state="${r.state}" size="medium" shape="pill" label="${esc(t('bl.st.' + r.badge))}"></ds-badge></div>`).join('');
+
+    /* Systems needing attention table. */
+    const attn = $('attn-table');
+    if (attn) {
+      attn.columns = [
+        { id: 'name', header: t('bl.col.computer'), render: (r) => `<span class="bl-name"><ds-icon name="microsoft" size="16"></ds-icon>${esc(r.name)}</span>` },
+        { id: 'os', header: t('bl.col.os'), accessor: 'os' },
+        { id: 'issue', header: t('bl.col.issue'), render: (r) => `<ds-badge variant="subtle" state="${ISSUE_STATE[r.issue] || 'default'}" size="medium" shape="rounded">${esc(t('bl.iss.' + r.issue))}</ds-badge>` },
+        { id: 'reason', header: t('bl.col.reason'), render: (r) => `<span class="cell-muted">${esc(t(r.rsn) + (r.code ? ' (' + r.code + ')' : ''))}</span>` },
+        { id: 'seen', header: t('bl.col.seen'), render: (r) => esc(t(r.seen)) },
+      ];
+      attn.rows = ATTN.map((r) => ({ id: r.id, name: r.name, os: r.os, issue: r.issue, rsn: r.rsn, code: r.code, seen: r.seen }));
+    }
+  }
+
+  /* Create policy → policy form. */
+  const createBtn = $('bl-create');
+  if (createBtn) createBtn.addEventListener('click', () => { if (window.openContentView) window.openContentView('bitlocker-policy-creation'); });
+
+  /* Re-localize on language flip. */
+  const refit = () => root.querySelectorAll('ds-chart').forEach((c) => { if (c.refit) c.refit(); });
+  if (window.ShellCtx && window.ShellCtx.onLangChange) window.ShellCtx.onLangChange(() => { applyStrings(); requestAnimationFrame(refit); });
+
+  applyStrings();
+
+  function show() {
+    root.hidden = false;
+    requestAnimationFrame(refit);
+    setTimeout(refit, 120);
+  }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['bitlocker-dashboard'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS — runs ONLY when opened directly. ================ */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers['bitlocker-dashboard'] && window.ShellDrawers['bitlocker-dashboard'].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

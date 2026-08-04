@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<title>status-indicator ↔ figma compare</title>
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/status-indicator/status-indicator.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/status-indicator/status-indicator.js"></script>
+<style>body{background:#fff;padding:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;} pre{width:100%;font-size:11px;}</style>
+</head>
+<body>
+  <ds-status-indicator id="dflt" label="Status"></ds-status-indicator>
+  <ds-status-indicator id="s" size="small"  status="neutral" label="Status"></ds-status-indicator>
+  <ds-status-indicator id="m" size="medium" status="neutral" label="Status"></ds-status-indicator>
+  <ds-status-indicator id="l" size="large"  status="neutral" label="Status"></ds-status-indicator>
+  <ds-status-indicator id="su" size="medium" status="success" label="Healthy"></ds-status-indicator>
+  <ds-status-indicator id="wa" size="medium" status="warning" label="At risk"></ds-status-indicator>
+  <ds-status-indicator id="cr" size="medium" status="critical" label="Failed"></ds-status-indicator>
+  <ds-status-indicator id="inf" size="medium" status="info" label="Syncing"></ds-status-indicator>
+  <ds-status-indicator id="dis" size="medium" status="info" disabled label="Off"></ds-status-indicator>
+  <ds-status-indicator id="ico" size="medium" status="success" icon="check" label="Done"></ds-status-indicator>
+  <ds-status-indicator id="dot-only" size="medium" status="success" show-label="false" label="Healthy"></ds-status-indicator>
+  <pre id="report">measuring…</pre>
+<script type="module">
+const hex = (rgb) => { const m = rgb.match(/\d+/g); return m ? '#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join('').toUpperCase() : rgb; };
+await customElements.whenDefined('ds-status-indicator');
+await new Promise(r => setTimeout(r, 600));
+const lines = []; let pass=0, fail=0;
+const check = (id, what, got, want) => { const ok = String(got)===String(want); ok?pass++:fail++; lines.push(`${ok?'PASS':'FAIL'} ${id} ${what}: got=${got} want=${want}`); };
+const root = id => document.getElementById(id).querySelector('.ds-status-indicator');
+const dot = id => document.getElementById(id).querySelector('.ds-status-indicator__dot');
+// default size = small → container 22
+check('dflt','default-height(small=22)',Math.round(root('dflt').getBoundingClientRect().height),22);
+// geometry per size: container hug heights 22/24/28, dot 6/6/8, pad/gap 4, radius 6
+for (const [id,h,d] of [['s',22,6],['m',24,6],['l',28,8]]) {
+  const el = root(id), cs = getComputedStyle(el);
+  check(id,'container-height',Math.round(el.getBoundingClientRect().height),h);
+  check(id,'dot',Math.round(dot(id).getBoundingClientRect().width),d);
+  check(id,'pad',cs.paddingTop+'/'+cs.paddingLeft,'4px/4px');
+  check(id,'gap',cs.gap,'4px');
+  check(id,'radius',cs.borderRadius,'6px');
+}
+// fonts
+check('s','font',getComputedStyle(root('s')).fontSize+'/'+getComputedStyle(root('s')).fontWeight,'10px/500');
+check('m','font',getComputedStyle(root('m')).fontSize+'/'+getComputedStyle(root('m')).fontWeight,'12px/400');
+check('l','font',getComputedStyle(root('l')).fontSize+'/'+getComputedStyle(root('l')).fontWeight,'14px/400');
+// dot colors (light)
+check('s','neutral-dot',hex(getComputedStyle(dot('s')).backgroundColor),'#5F6C89');
+check('su','success-dot',hex(getComputedStyle(dot('su')).backgroundColor),'#0C8844');
+check('wa','warning-dot',hex(getComputedStyle(dot('wa')).backgroundColor),'#E65100');
+check('cr','critical-dot(Text-Error)',hex(getComputedStyle(dot('cr')).backgroundColor),'#C1181B');
+check('inf','info-dot(info-solid)',hex(getComputedStyle(dot('inf')).backgroundColor),'#2C66DD');
+// label color + disabled
+check('su','label-color',hex(getComputedStyle(root('su')).color),'#2A303D');
+check('dis','disabled-label',hex(getComputedStyle(root('dis')).color),'#8893AD');
+check('dis','disabled-info-dot(info-secondary)',hex(getComputedStyle(dot('dis')).backgroundColor),'#D5E0F8');
+// icon replaces dot
+check('ico','icon-present',!!document.getElementById('ico').querySelector('.ds-status-indicator__icon'),true);
+check('ico','dot-NOT-rendered',dot('ico')===null,true);
+// dot-only aria
+check('dot-only','aria-label',root('dot-only').getAttribute('aria-label'),'Healthy');
+check('dot-only','no-label-el',document.getElementById('dot-only').querySelector('.ds-status-indicator__label')===null,true);
+// no role=status anymore
+check('su','no-role',root('su').getAttribute('role')===null,true);
+// theme test — info dot must stay BLUE in green theme, correct shade in dark
+for (const [theme, wantDot, wantDis] of [['dark','#1B49A6','#112E68'],['green-light','#2C66DD','#D5E0F8']]) {
+  document.documentElement.setAttribute('data-theme', theme);
+  await new Promise(r => setTimeout(r, 100));
+  check(`theme:${theme}`,'info-dot',hex(getComputedStyle(dot('inf')).backgroundColor),wantDot);
+  check(`theme:${theme}`,'disabled-info-dot',hex(getComputedStyle(dot('dis')).backgroundColor),wantDis);
+}
+document.documentElement.setAttribute('data-theme','light');
+lines.unshift(`RESULT: ${pass} pass / ${fail} fail`);
+document.getElementById('report').textContent = lines.join('\n');
+</script>
+</body>
+</html>

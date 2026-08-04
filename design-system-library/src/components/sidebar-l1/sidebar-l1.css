@@ -1,0 +1,237 @@
+/* =============================================================================
+   ds-sidebar-l1 / .ds-sidebar-l1
+   Vertical icon-based primary navigation. 72px expanded, 44px collapsed.
+   ============================================================================= */
+
+/* Light-DOM render — `:host` doesn't apply, so the host element selector
+   is what actually styles the custom element. */
+:host,
+ds-sidebar-l1 { display: inline-block; vertical-align: top; }
+
+.ds-sidebar-l1 {
+  position: relative;                        /* anchors the sliding chip */
+  display: flex;
+  flex-direction: column;
+  width: 72px;
+  /* No rail background or border. (A border would also offset the absolutely
+     positioned active chip — its `left` is relative to the rail's padding box
+     while the JS measures from the border box.) */
+  /* Figma: rail padding = 12 top/bottom, 0 sides. (Expanded needs the full 72px
+     for labels — no side padding here, else labels truncate.) */
+  padding: var(--spacing-12) 0;
+  font-family: var(--font-family-sans);
+  height: 100%;
+  min-height: 480px;
+  box-sizing: border-box;
+  border-radius: 16px 0 0 16px;
+  transition: width 320ms cubic-bezier(0.4, 0, 0.2, 1),
+              padding 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Icon Only mode = 44px (Figma), labels hidden. Symmetric (0) side padding so
+   the 28px icon-wraps sit centered within the 44px rail. */
+.ds-sidebar-l1--collapsed { width: 44px; }
+
+.ds-sidebar-l1__list {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);                     /* Figma: inter-item gap 8 */
+}
+
+.ds-sidebar-l1__bottom {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ds-sidebar-l1__toggle-row {
+  list-style: none;
+  margin: 0 var(--spacing-12);
+  padding: var(--spacing-8) 0;
+  border-top: 1px solid var(--uems-border-tertiary);
+  display: flex;
+  flex-direction: column;
+}
+.ds-sidebar-l1__toggle-row li { list-style: none; }
+/* Toggle is icon-only — hide the label that gets rendered as a sibling. */
+.ds-sidebar-l1__toggle-row .ds-sidebar-l1__label { display: none; }
+.ds-sidebar-l1__toggle-row .ds-sidebar-l1__icon-wrap {
+  width: 28px;
+  height: 28px;
+  color: var(--uems-text-secondary);
+}
+.ds-sidebar-l1__toggle-row .ds-sidebar-l1__item { padding: var(--spacing-4) 0; }
+
+/* Collapsed-item tooltip wrapper — must fill the row so the item stays full-width. */
+.ds-sidebar-l1__tip { display: block; width: 100%; }
+
+/* ---- Item ---------------------------------------------------------- */
+.ds-sidebar-l1__item {
+  position: relative;
+  z-index: 1;                                /* above the sliding chip */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-4);                     /* icon→label gap (4 — a touch more air than Figma's 2) */
+  padding: var(--spacing-4) var(--spacing-2);/* Figma: item internal pad 4y / 2x */
+  border-radius: 8px;                        /* Figma: item container radius 8 */
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--uems-text-secondary);
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+/* Hover (Figma): icon-wrap highlight BG-Accent-Secondary_action #d5e0f8 + accent
+   icon; label darkens to Text-Primary. Item root keeps NO fill. */
+.ds-sidebar-l1__item:hover:not([aria-disabled="true"]):not(.ds-sidebar-l1__item--active) {
+  background: transparent;
+}
+.ds-sidebar-l1__item:hover:not([aria-disabled="true"]):not(.ds-sidebar-l1__item--active) .ds-sidebar-l1__icon-wrap {
+  background: var(--uems-bg-accent-secondary-action);
+  border-color: transparent;
+  color: var(--uems-icon-accent-button, var(--uems-text-accent-link));
+}
+.ds-sidebar-l1__item:hover:not([aria-disabled="true"]):not(.ds-sidebar-l1__item--active) .ds-sidebar-l1__label {
+  color: var(--uems-text-primary);
+}
+
+.ds-sidebar-l1__item:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+.ds-sidebar-l1__icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;                               /* Figma: icon-wrap 28×28 */
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: 6px;                        /* Figma: icon-wrap radius-6 */
+  color: inherit;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard);
+}
+
+.ds-sidebar-l1__label {
+  display: grid;
+  justify-items: center;
+  max-width: 100%;
+  font-size: var(--font-size-11);
+  line-height: 1.2;
+  text-align: center;
+  color: inherit;
+  /* Smooth label fade-out on collapse */
+  transition: opacity 180ms ease 100ms, max-height 240ms ease;
+  max-height: 32px;
+  overflow: hidden;
+}
+/* The visible text and a hidden MEDIUM-weight twin are stacked in the same grid
+   cell, so the label box always reserves the medium footprint. Toggling active
+   (regular ↔ medium) then only restyles glyphs — the box never reflows → no jerk.
+   Multi-word labels wrap to 2 lines; single long words truncate with ellipsis. */
+.ds-sidebar-l1__label-text,
+.ds-sidebar-l1__label::after {
+  grid-area: 1 / 1;
+  max-width: 100%;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ds-sidebar-l1__label-text { font-weight: var(--font-weight-regular); }
+.ds-sidebar-l1__item--active .ds-sidebar-l1__label-text { font-weight: var(--font-weight-medium); }
+.ds-sidebar-l1__label::after {
+  content: attr(data-label);
+  font-weight: var(--font-weight-medium);   /* reserves the widest footprint */
+  visibility: hidden;
+  pointer-events: none;
+}
+/* Single-word labels stay on ONE line — if too long they truncate with an
+   ellipsis (…) instead of clipping mid-word; the full name shows in the hover
+   title (set by JS when actually cut). */
+.ds-sidebar-l1__label--single .ds-sidebar-l1__label-text,
+.ds-sidebar-l1__label--single::after {
+  display: block;
+  -webkit-line-clamp: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 100%;
+}
+.ds-sidebar-l1--collapsed .ds-sidebar-l1__label {
+  opacity: 0;
+  max-height: 0;
+  transition: opacity 120ms ease, max-height 240ms ease 60ms;
+  overflow: hidden;
+}
+/* Collapsed = icon only. Drop the icon→label gap (label is 0-height now) and
+   tighten the vertical padding so the icons sit closer together. */
+.ds-sidebar-l1--collapsed .ds-sidebar-l1__item {
+  gap: 0;
+  padding: 2px 0;
+}
+
+/* ---- States -------------------------------------------------------- */
+/* Sliding active chip — matches the active icon-wrap (accent square, radius-md);
+   JS sets its box so it glides vertically between items. */
+.ds-sidebar-l1__indicator {
+  position: absolute;
+  left: 0; top: 0; width: 0; height: 0;
+  background: var(--uems-bg-accent-secondary-action);
+  border-radius: 6px;                        /* match the icon-wrap highlight (radius-6) */
+  box-sizing: border-box;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: top 220ms cubic-bezier(0.4, 0, 0.2, 1),
+              left 220ms cubic-bezier(0.4, 0, 0.2, 1),
+              width 220ms cubic-bezier(0.4, 0, 0.2, 1),
+              height 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-sidebar-l1__indicator { transition: none; }
+}
+
+.ds-sidebar-l1__item--active {
+  color: var(--uems-text-accent-link);
+}
+/* Active icon chip is the sliding indicator behind the icon (so it glides) —
+   the icon-wrap itself stays transparent. */
+.ds-sidebar-l1__item--active .ds-sidebar-l1__icon-wrap {
+  background: transparent;
+  border-color: transparent;
+}
+.ds-sidebar-l1__item--active .ds-sidebar-l1__label {
+  color: var(--uems-text-accent-link);   /* weight (medium) is on .ds-sidebar-l1__label-text */
+}
+
+.ds-sidebar-l1__item[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+.ds-sidebar-l1__item[aria-disabled="true"] .ds-sidebar-l1__icon-wrap,
+.ds-sidebar-l1__item[aria-disabled="true"] .ds-sidebar-l1__label {
+  color: var(--uems-text-disabled);
+}
+
+/* "Add" state (Figma): filled BG-Button-Primary SQUARE (radius-4) with a white
+   icon — not a circle. */
+.ds-sidebar-l1__item--add .ds-sidebar-l1__icon-wrap {
+  background: var(--uems-bg-button-primary);
+  color: var(--uems-text-white);
+  border-radius: 4px;                        /* Figma Add button = radius-4 */
+}

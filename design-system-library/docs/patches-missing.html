@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  {
+    "imports": {
+      "@uems/design-system": "../src/index.js"
+    }
+  }
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Threats &amp; Patches — Missing Patches</title>
+
+  <script type="module">import '@uems/design-system';</script>
+  <script>
+  (function () {
+    var t = localStorage.getItem('uems-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', t);
+    document.addEventListener('ds-right-pane-theme', function (e) {
+      document.documentElement.setAttribute('data-theme', e.detail.theme);
+      try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+    });
+    window.addEventListener('DOMContentLoaded', function () {
+      customElements.whenDefined('ds-right-pane').then(function () {
+        document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+          rp.setAttribute('theme', t);
+        });
+      });
+    });
+  })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../src/icons/illustrations.svg';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body { background: var(--cobalt-15); }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+
+    .body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      padding: 0 0 var(--spacing-12) var(--spacing-12);
+      gap: 0;
+    }
+
+    .content {
+      flex: 1;
+      background: var(--uems-bg-base);
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: 16px 0 0 16px; box-shadow: -8px 0 24px rgba(15, 23, 42, 0.08);
+      margin-inline-start: -1px;
+      overflow-y: auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Top description band ------------------------------------------- */
+    .desc-band {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-16);
+      padding: var(--spacing-16) var(--spacing-32);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+    }
+    .desc-band__text {
+      font-size: var(--font-size-14);
+      color: var(--uems-text-secondary);
+    }
+    .desc-band__right {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-12);
+      font-size: var(--font-size-14);
+    }
+    .desc-band__sep {
+      width: 1px;
+      height: 14px;
+      background: var(--uems-border-tertiary);
+    }
+    .desc-band__link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--uems-text-accent-link);
+      text-decoration: none;
+      font-weight: var(--font-weight-medium);
+    }
+    .desc-band__link:hover { text-decoration: underline; }
+    .desc-band__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--uems-text-secondary);
+    }
+    .desc-band__cta a {
+      color: var(--uems-text-accent-link);
+      text-decoration: none;
+      font-weight: var(--font-weight-medium);
+    }
+    .desc-band__cta a:hover { text-decoration: underline; }
+
+    .table-region {
+      padding: var(--spacing-16) var(--spacing-24) var(--spacing-24);
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Single-line truncation in every data-table body cell. */
+    ds-data-table .ds-data-table__table tbody td,
+    ds-data-table .ds-data-table__table tbody th[scope="row"] {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 320px;
+    }
+    ds-data-table .ds-data-table__table tbody td > a,
+    ds-data-table .ds-data-table__table tbody th[scope="row"] > a {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: bottom;
+    }
+    /* Cells that host a truncation tooltip must NOT clip — otherwise the
+       absolutely-positioned tip popup gets cut off by the cell's overflow:hidden.
+       Truncation moves to the inner .cell-truncate span instead. */
+    ds-data-table .ds-data-table__table tbody td:has(ds-tooltip) { overflow: visible; }
+    ds-data-table ds-tooltip { display: inline-block; max-width: 100%; vertical-align: bottom; }
+    ds-data-table ds-tooltip .cell-truncate {
+      display: inline-block; max-width: 300px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom;
+    }
+
+    /* ---- Severity badge in cells ---------------------------------------- */
+    .sev {
+      width: 18px; height: 18px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: var(--font-weight-semibold);
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .sev--critical { background: #E53935; }     /* red    ! */
+    .sev--high     { background: #F59E0B; }     /* orange ! */
+    .sev--unknown  { background: #94A3B8; }     /* gray   ? */
+    .sev--low      { background: #3B82F6; color: #fff; }   /* blue  − */
+    .patch-id {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: var(--font-weight-medium);
+    }
+    .platform-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--uems-text-secondary);
+    }
+    .approve-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--uems-text-secondary);
+    }
+    .approve-cell--flag { color: #E53935; }
+
+    /* ---- Patch Details modal ------------------------------------------- */
+    .patch-modal {
+      width: min(680px, calc(100vw - 32px));
+      padding: 0;
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-md);
+      background: var(--uems-bg-base);
+      color: var(--uems-text-primary);
+      box-shadow: var(--shadow-lg, 0 24px 48px rgba(15, 23, 42, 0.18));
+    }
+    .patch-modal::backdrop { background: rgba(15, 23, 42, 0.45); }
+    .patch-modal__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--spacing-16) var(--spacing-24);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+    }
+    .patch-modal__title {
+      margin: 0;
+      font-size: var(--font-size-15);
+      font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-accent-primary);
+    }
+    .patch-modal__body {
+      padding: var(--spacing-12) var(--spacing-24);
+      max-height: calc(100vh - 220px);
+      overflow-y: auto;
+    }
+    .patch-modal__row {
+      display: grid;
+      grid-template-columns: 200px 16px 1fr;
+      column-gap: var(--spacing-12);
+      align-items: start;
+      padding: var(--spacing-12) 0;
+      border-bottom: 1px solid var(--uems-border-tertiary);
+      font-size: var(--font-size-14);
+    }
+    .patch-modal__row:last-child { border-bottom: 0; }
+    .patch-modal__label { color: var(--uems-text-secondary); }
+    .patch-modal__value { color: var(--uems-text-primary); word-break: break-word; }
+    .patch-modal__value a {
+      color: var(--uems-text-accent-link);
+      text-decoration: none;
+      font-weight: var(--font-weight-medium);
+    }
+    .patch-modal__foot {
+      display: flex;
+      justify-content: center;
+      padding: var(--spacing-16) var(--spacing-24);
+      border-top: 1px solid var(--uems-border-tertiary);
+    }
+
+    /* ---- Bulletin modal extras ---------------------------------------- */
+    .patch-modal--lg { width: min(880px, calc(100vw - 32px)); }
+    .bulletin-section {
+      margin: var(--spacing-12) calc(-1 * var(--spacing-24)) 0;
+      padding: var(--spacing-12) var(--spacing-24);
+      background: var(--uems-bg-secondary-alt);
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+    }
+    .bulletin-summary {
+      padding: var(--spacing-12) 0 var(--spacing-16);
+      font-size: var(--font-size-14);
+      color: var(--uems-text-primary);
+    }
+    .bulletin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--font-size-14);
+    }
+    .bulletin-table th {
+      text-align: start;
+      padding: var(--spacing-12) var(--spacing-16);
+      background: var(--uems-bg-secondary-alt);
+      color: var(--uems-text-tertiary);
+      font-weight: var(--font-weight-semibold);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+    }
+    .bulletin-table td {
+      padding: var(--spacing-16);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+      vertical-align: top;
+    }
+    .bulletin-table td:last-child { color: var(--uems-text-primary); }
+    .bulletin-table .products { display: flex; flex-wrap: wrap; gap: var(--spacing-12); }
+    .bulletin-table .show-more {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: var(--spacing-8);
+      color: var(--uems-text-accent-link);
+      text-decoration: none;
+      font-weight: var(--font-weight-medium);
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+
+    <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+    <div class="body">
+      <ds-sidebar-l1 id="shell-l1" style="height: 100%;"></ds-sidebar-l1>
+      <ds-sidebar-l2 id="shell-l2" title="Threats &amp; Patches" show-back style="height: 100%; margin-left: -10px;"></ds-sidebar-l2>
+
+      <ds-content class="content" role="main">
+
+        <!-- Description + watch demo strip -->
+        <div class="desc-band">
+          <div class="desc-band__text">
+            This view displays the list of patches that are found missing in your network.
+          </div>
+          <div class="desc-band__right">
+            <a href="#" class="desc-band__link">
+              <ds-icon name="play-circle" size="16"></ds-icon>
+              Watch Demo
+            </a>
+            <span class="desc-band__sep"></span>
+            <span class="desc-band__cta">
+              <ds-icon name="refresh-time" size="16" style="color: var(--uems-text-tertiary);"></ds-icon>
+              Do you want more pre-defined patch reports?
+              <a href="#">Tell us your requirements.</a>
+            </span>
+          </div>
+        </div>
+
+        <!-- Data table -->
+        <div class="table-region">
+          <ds-data-table id="patches-table"
+            selection-mode="multi"
+            total-rows="316"
+            rows-per-page="500"
+            empty-text="No missing patches found">
+            <div slot="toolbarLeft" style="display: flex; gap: var(--spacing-8); align-items: center;">
+              <ds-button variant="secondary" size="small" prefix-icon="settings-deploy">Install/Publish Patches</ds-button>
+              <ds-button variant="secondary" size="small" prefix-icon="download">Download Patches</ds-button>
+              <ds-split-button id="mark-as" size="small" label="Mark as" icon="check"></ds-split-button>
+              <ds-button variant="secondary" size="small" suffix-icon="chevron-down">Filters</ds-button>
+            </div>
+          </ds-data-table>
+        </div>
+
+      </ds-content>
+
+      <ds-right-pane id="shell-rp" style="height: 100%;"></ds-right-pane>
+    </div>
+  </div>
+
+  <!-- Patch Details modal — opened from a Patch ID click in the table. -->
+  <dialog id="patch-modal" class="patch-modal" aria-labelledby="patch-modal-title">
+    <div class="patch-modal__head">
+      <h2 id="patch-modal-title" class="patch-modal__title">Patch Details</h2>
+      <ds-icon-button id="patch-modal-close" shape="square" type="tertiary-grey"
+        size="small" icon="close" label="Close"></ds-icon-button>
+    </div>
+    <div id="patch-modal-body" class="patch-modal__body"></div>
+    <div class="patch-modal__foot">
+      <ds-button id="patch-modal-done" variant="primary" size="small">Close</ds-button>
+    </div>
+  </dialog>
+
+  <!-- Bulletin Details modal — opened from a Bulletin ID click in the table. -->
+  <dialog id="bulletin-modal" class="patch-modal patch-modal--lg" aria-labelledby="bulletin-modal-title">
+    <div class="patch-modal__head">
+      <h2 id="bulletin-modal-title" class="patch-modal__title">Bulletin Details</h2>
+      <ds-icon-button id="bulletin-modal-close" shape="square" type="tertiary-grey"
+        size="small" icon="close" label="Close"></ds-icon-button>
+    </div>
+    <div id="bulletin-modal-body" class="patch-modal__body"></div>
+    <div class="patch-modal__foot">
+      <ds-button id="bulletin-modal-done" variant="primary" size="small">Close</ds-button>
+    </div>
+  </dialog>
+
+  <script type="module">
+    import '@uems/design-system';
+
+    /* ---- Header tabs --------------------------------------------------- */
+    document.getElementById('ec-header').tabs = [
+      { id: 'home',     label: 'Home' },
+      { id: 'configs',  label: 'Configurations', href: 'configurations-all.html' },
+      { id: 'tp',       label: 'Threats & Patches', active: true, href: 'patches-missing.html' },
+      { id: 'sd',       label: 'Software Deployment' },
+      { id: 'inv',      label: 'Inventory' },
+      { id: 'osd',      label: 'OS Deployment' },
+      { id: 'mdm',      label: 'MDM', href: 'mdm-groups.html' },
+      { id: 'bl',       label: 'BitLocker', href: 'bitlocker-dashboard.html' },
+      { id: 'tools',    label: 'Tools' },
+      { id: 'agent',    label: 'Agent' },
+    ];
+
+    /* ---- L1 sidebar ---------------------------------------------------- */
+    document.getElementById('shell-l1').items = [
+      { id: 'dash',    label: 'Dashboard',  icon: 'add-widget' },
+      { id: 'threats', label: 'Threats',    icon: 'shield' },
+      { id: 'patches', label: 'Patches',    icon: 'file-shield', href: 'patches-missing.html', active: true },
+      { id: 'sys',     label: 'Systems',    icon: 'computer' },
+      { id: 'deploy',  label: 'Deployment', icon: 'settings-deploy' },
+      { id: 'comp',    label: 'Compliance', icon: 'checklist-01' },
+      { id: 'rep',     label: 'Reports',    icon: 'file-report' },
+      { id: 'set',     label: 'Settings',   icon: 'settings' },
+    ];
+    document.getElementById('shell-l1').bottomItems = [
+      { id: 'update', label: 'Update Now', icon: 'refresh' },
+    ];
+
+    /* ---- L2 sidebar ---------------------------------------------------- */
+    document.getElementById('shell-l2').groups = [
+      { id: 'patches', label: 'Patches', expanded: true, items: [
+        { id: 'missing',    label: 'Missing Patches',     count: 316, active: true },
+        { id: 'installed',  label: 'Installed Patches',   count: 81 },
+        { id: 'applicable', label: 'Applicable Patches',  count: 397 },
+        { id: 'priority',   label: 'Top-Priority Patches' },
+        { id: 'supported',  label: 'Supported Patches',   count: 554388 },
+        { id: 'latest',     label: 'Latest Patches',      count: 78203 },
+        { id: 'detailed',   label: 'Detailed View' },
+        { id: 'downloaded', label: 'Downloaded Patches' },
+        { id: 'decline',    label: 'Decline Patch' },
+      ] },
+      { id: 'attention', label: 'Attention Required', expanded: true, items: [
+        { id: 'upload', label: 'Upload Pending', count: 1 },
+      ] },
+    ];
+
+    /* ---- Patches table ------------------------------------------------- */
+    customElements.whenDefined('ds-data-table').then(() => {
+      const dt = document.getElementById('patches-table');
+
+      const sevBadge = (sev) => {
+        const map = {
+          critical: { cls: 'sev--critical', glyph: '!' },
+          high:     { cls: 'sev--high',     glyph: '!' },
+          unknown:  { cls: 'sev--unknown',  glyph: '?' },
+          low:      { cls: 'sev--low',      glyph: '−' },
+        };
+        const s = map[sev] || map.unknown;
+        return `<span class="sev ${s.cls}" aria-label="${sev}">${s.glyph}</span>`;
+      };
+
+      const linkCell = (text) =>
+        `<a href="#" style="color:var(--uems-text-accent-link);text-decoration:none;font-weight:var(--font-weight-medium);">${text}</a>`;
+
+      const patchLink = (text, rowId) =>
+        `<a href="#" data-patch-open="${rowId}" style="color:var(--uems-text-accent-link);text-decoration:none;font-weight:var(--font-weight-medium);">${text}</a>`;
+
+      const bulletinLink = (text, rowId) =>
+        `<a href="#" data-bulletin-open="${rowId}" style="color:var(--uems-text-accent-link);text-decoration:none;font-weight:var(--font-weight-medium);">${text}</a>`;
+
+      /* Long patch descriptions truncate with an ellipsis and reveal the full
+         text in a ds-tooltip on hover/focus. */
+      const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const tip = (full, inner) =>
+        `<ds-tooltip text="${esc(full)}" show-icon="false" position="up-center"><span class="cell-truncate">${inner}</span></ds-tooltip>`;
+
+      dt.columns = [
+        { id: 'patch', header: 'Patch ID', accessor: 'patch', sortable: true, rowHeader: true,
+          render: (r) => `<span class="patch-id">${sevBadge(r.severity)}${patchLink(r.patch, r.id)}</span>` },
+        { id: 'bulletin', header: 'Bulletin ID', accessor: 'bulletin', sortable: true,
+          render: (r) => bulletinLink(r.bulletin, r.id) },
+        { id: 'desc', header: 'Patch Description', accessor: 'desc', render: (r) => tip(r.desc, r.desc) },
+        { id: 'missing', header: 'Missing Systems', accessor: 'missing', align: 'end', sortable: true,
+          render: (r) => linkCell(r.missing) },
+        { id: 'approve', header: 'Approve Status', accessor: 'approve', sortable: true,
+          render: (r) => `<span class="approve-cell">
+            <ds-icon name="flag" size="14" style="color:#E53935"></ds-icon>
+            ${r.approve}
+          </span>` },
+        { id: 'platform', header: 'Platform', accessor: 'platform',
+          render: (r) => `<span class="platform-cell">
+            <ds-icon name="windows" size="14"></ds-icon>
+            ${r.platform}
+          </span>` },
+        { id: 'reboot', header: 'Reboot', accessor: 'reboot' },
+      ];
+
+      dt.rows = [
+        { id: 'p1',  severity: 'unknown',  patch: '110044', bulletin: 'MSWU-3528',  desc: 'Feature Pack Update for Windows 10 (22H2) - October 2022 Update for enterprise (x64)', missing: 10, approve: 'Not Approved', platform: 'Windows', reboot: 'Required',
+          name: '22H2_Enterprise_x64.exe', released: 'Oct 20, 2022', supportedDate: 'Oct 20, 2022', superseding: 'NA',
+          languages: 'English, Spanish, Arabic, Chinese (Simplified), Chinese (Traditional), Czech, Danish, Dutch, Finnish, French, German, Greek, Hebrew, Hungarian, Italian, Japanese, Korean, Norwegian (Bokmål), Polish, Portuguese (Brazil), Portuguese (Portugal), Russian, Swedish, Turkish, Thai, Chinese (Hong Kong), Slovenian, Croatian, English (United Kingdom), Spanish (Mexico), Bulgarian, French (Canada), Estonian, Latvian, Lithuanian, Romanian, Serbian, Slovak, Ukrainian, "Maori (New Zealand)"',
+          postedOn: 'Oct 19, 2022', updatedOn: 'Oct 19, 2022', qNumber: '22H2',
+          bulletinSummary: 'Feature Pack Update for Windows 10 - October 2022 Update (22H2)',
+          bulletinPatches: [
+            { name: '22H2_Enterprise_x64.exe', products: ['Windows 10 Version 1511 (x64)', 'Windows 10 Version 1607 (x64)'], showMore: true },
+            { name: 'Win10_22H2_enx32.iso',    products: ['Windows 10 Version 1511', 'Windows 10 Version 1607', 'Windows 10 Version 1703'] },
+          ] },
+        { id: 'p2',  severity: 'high',     patch: '355988', bulletin: 'TU-024',     desc: '7 Zip (exe) (x64) (26.00)',                                                            missing: 1,  approve: 'Not Approved', platform: 'Windows', reboot: 'Not Required' },
+        { id: 'p3',  severity: 'high',     patch: '42605',  bulletin: 'MS25-OCT12', desc: 'KB5066743, 2025-10 Cumulative Update for .NET Framework 3.5 and 4.8 for Microsoft server operating sy…', missing: 1, approve: 'Not Approved', platform: 'Windows', reboot: 'May Require' },
+        { id: 'p4',  severity: 'critical', patch: '43211',  bulletin: 'MS26-JAN3',  desc: '2026-01 Cumulative Update for Microsoft server operating system version 21H2 for x64-based Systems (K…', missing: 1, approve: 'Not Approved', platform: 'Windows', reboot: 'Required' },
+        { id: 'p5',  severity: 'critical', patch: '16159',  bulletin: 'MS14-053',   desc: 'Security Update for Microsoft .NET Framework 3.5 on Windows 8.1 and Windows Server 2012 R2 (KB2973…', missing: 9, approve: 'Not Approved', platform: 'Windows', reboot: 'May Require' },
+        { id: 'p6',  severity: 'low',      patch: '353096', bulletin: 'TU-1232',    desc: 'Amazon EC2Launch (x64) (2.3.56.0)',                                                       missing: 1,  approve: 'Not Approved', platform: 'Windows', reboot: 'Not Required' },
+        { id: 'p7',  severity: 'critical', patch: '100253', bulletin: 'MSWU-1025',  desc: 'Security Update for Microsoft .NET Framework 3.5 on Windows 8.1 and Windows Server 2012 R2 (KB2894…', missing: 9, approve: 'Not Approved', platform: 'Windows', reboot: 'May Require' },
+        { id: 'p8',  severity: 'critical', patch: '42885',  bulletin: 'MS25-NOV3',  desc: '2025-11 Cumulative Update for Microsoft server operating system version 21H2 for x64-based Systems (K…', missing: 1, approve: 'Not Approved', platform: 'Windows', reboot: 'Required' },
+        { id: 'p9',  severity: 'high',     patch: '356100', bulletin: 'TU-034',     desc: 'Notepad++ (x64) (8.9.2)',                                                                missing: 1,  approve: 'Not Approved', platform: 'Windows', reboot: 'Not Required' },
+        { id: 'p10', severity: 'high',     patch: '15974',  bulletin: 'MS14-046',   desc: 'Security Update for Microsoft .NET Framework 3.5 on Windows 8.1 and Windows Server 2012 R2 (KB2966…', missing: 9, approve: 'Not Approved', platform: 'Windows', reboot: 'May Require' },
+        { id: 'p11', severity: 'low',      patch: '355074', bulletin: 'TU-1233',    desc: 'Amazon SSM Agent (3.3.3598.0)',                                                          missing: 1,  approve: 'Not Approved', platform: 'Windows', reboot: 'Not Required' },
+        { id: 'p12', severity: 'critical', patch: '43387',  bulletin: 'MS26-FEB3',  desc: '2026-02 Cumulative Update for Microsoft server operating system version 21H2 for x64-based Systems (K…', missing: 1, approve: 'Not Approved', platform: 'Windows', reboot: 'Required' },
+        { id: 'p13', severity: 'unknown',  patch: '112862', bulletin: 'MSWU-3550',  desc: 'Microsoft Visual C++ 2015-2022 Redistributable (x64) (14.50.35719.0)',                    missing: 1,  approve: 'Not Approved', platform: 'Windows', reboot: 'Required' },
+        { id: 'p14', severity: 'unknown',  patch: '112943', bulletin: 'MSWU-3695',  desc: '2026-01 Cumulative Update Preview for Microsoft server operating system version 21H2 for x64-based Sys…', missing: 1, approve: 'Not Approved', platform: 'Windows', reboot: 'Required' },
+        { id: 'p15', severity: 'low',      patch: '43411',  bulletin: 'MSRT-001',   desc: 'Windows Malicious Software Removal Tool x64 - Feb 2026 (KB890830)',                       missing: 1,  approve: 'Not Approved', platform: 'Windows', reboot: 'May Require' },
+        { id: 'p16', severity: 'low',      patch: '354055', bulletin: 'TU-1233',    desc: 'Amazon SSM Agent (3.3.3270.0)',                                                          missing: 1,  approve: 'Not Approved', platform: 'Windows', reboot: 'Not Required' },
+        { id: 'p17', severity: 'high',     patch: '15034',  bulletin: 'MS14-009',   desc: 'Security Update for Microsoft .NET Framework 3.5.1 on Windows 7 Service Pack 1 and Windows Server 200…', missing: 9, approve: 'Not Approved', platform: 'Windows', reboot: 'May Require' },
+      ];
+
+      dt.bulkActions = [
+        { id: 'install',  label: 'Install/Publish Patches', icon: 'settings-deploy' },
+        { id: 'download', label: 'Download Patches',        icon: 'download' },
+        { id: 'mark',     label: 'Mark as',                 icon: 'check' },
+      ];
+
+      /* ---- Patch Details modal --------------------------------------- */
+      const modal = document.getElementById('patch-modal');
+      const body  = document.getElementById('patch-modal-body');
+
+      const SEV_LABEL = { critical: 'Critical', high: 'High', low: 'Low', unknown: 'Unrated' };
+
+      const escapeHtml = (s) => String(s ?? '').replace(/[&<>"]/g, (c) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+      const row = (label, valueHtml) => `
+        <div class="patch-modal__row">
+          <div class="patch-modal__label">${label}</div>
+          <div>:</div>
+          <div class="patch-modal__value">${valueHtml}</div>
+        </div>`;
+
+      const openPatch = (rowId) => {
+        const r = dt.rows.find((x) => x.id === rowId);
+        if (!r) return;
+        body.innerHTML = [
+          row('Patch ID',                escapeHtml(r.patch)),
+          row('Patch Name',              `<a href="#">${escapeHtml(r.name || `${r.patch}.exe`)}</a>`),
+          row('Patch Description',       escapeHtml(r.desc)),
+          row('Release Date',            escapeHtml(r.released || '—')),
+          row('Supported Date',          escapeHtml(r.supportedDate || r.released || '—')),
+          row('Bulletin ID',             `<a href="#">${escapeHtml(r.bulletin)}</a>`),
+          row('Severity',                escapeHtml(SEV_LABEL[r.severity] || '—')),
+          row('Reboot',                  escapeHtml(r.reboot)),
+          row('Superseding Bulletin ID', escapeHtml(r.superseding || 'NA')),
+          row('Languages supported',     escapeHtml(r.languages || '—')),
+        ].join('');
+        if (typeof modal.showModal === 'function') modal.showModal();
+        else modal.setAttribute('open', '');
+      };
+
+      const closeModal = () => {
+        if (typeof modal.close === 'function') modal.close();
+        else modal.removeAttribute('open');
+      };
+
+      // Delegated click on Patch ID links inside the table.
+      dt.addEventListener('click', (e) => {
+        const a = e.target.closest('a[data-patch-open]');
+        if (!a) return;
+        e.preventDefault();
+        openPatch(a.getAttribute('data-patch-open'));
+      });
+
+      document.getElementById('patch-modal-close').addEventListener('click', closeModal);
+      document.getElementById('patch-modal-done').addEventListener('click', closeModal);
+      // Click on backdrop closes the dialog.
+      modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+      /* ---- Bulletin Details modal ---------------------------------- */
+      const bModal = document.getElementById('bulletin-modal');
+      const bBody  = document.getElementById('bulletin-modal-body');
+
+      const openBulletin = (rowId) => {
+        const r = dt.rows.find((x) => x.id === rowId);
+        if (!r) return;
+
+        const patchRows = (r.bulletinPatches || [{ name: r.name || `${r.patch}.exe`, products: [r.platform] }])
+          .map((p) => `
+            <tr>
+              <td>${escapeHtml(p.name)}</td>
+              <td>
+                <div class="products">${p.products.map(escapeHtml).join('&nbsp;&nbsp;&nbsp;&nbsp;')}</div>
+                ${p.showMore ? `<a href="#" class="show-more">Show More <ds-icon name="chevron-down" size="14"></ds-icon></a>` : ''}
+              </td>
+            </tr>`).join('');
+
+        bBody.innerHTML = `
+          ${row('Bulletin ID', `<a href="#">${escapeHtml(r.bulletin)}</a>`)}
+          ${row('Posted On',   escapeHtml(r.postedOn || '—'))}
+          ${row('Updated On',  escapeHtml(r.updatedOn || r.postedOn || '—'))}
+          ${row('Q Number',    `<a href="#">${escapeHtml(r.qNumber || '—')}</a>`)}
+          <div class="bulletin-section">Bulletin Summary</div>
+          <div class="bulletin-summary">${escapeHtml(r.bulletinSummary || r.desc)}</div>
+          <div class="bulletin-section">Patch Details</div>
+          <table class="bulletin-table">
+            <thead><tr><th style="width: 40%;">Patch Name</th><th>Affected Products</th></tr></thead>
+            <tbody>${patchRows}</tbody>
+          </table>`;
+
+        if (typeof bModal.showModal === 'function') bModal.showModal();
+        else bModal.setAttribute('open', '');
+      };
+
+      const closeBulletin = () => {
+        if (typeof bModal.close === 'function') bModal.close();
+        else bModal.removeAttribute('open');
+      };
+
+      dt.addEventListener('click', (e) => {
+        const a = e.target.closest('a[data-bulletin-open]');
+        if (!a) return;
+        e.preventDefault();
+        openBulletin(a.getAttribute('data-bulletin-open'));
+      });
+
+      document.getElementById('bulletin-modal-close').addEventListener('click', closeBulletin);
+      document.getElementById('bulletin-modal-done').addEventListener('click', closeBulletin);
+      bModal.addEventListener('click', (e) => { if (e.target === bModal) closeBulletin(); });
+    });
+  </script>
+</body>
+</html>

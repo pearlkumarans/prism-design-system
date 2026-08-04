@@ -1,0 +1,83 @@
+/* =============================================================================
+   ds-overlay
+   Scrim/backdrop behind modals, dialogs, drawers, and popovers.
+   5 types: dim (default), light, transparent, blur, dim-blur. Token-driven.
+   Single layer, no children — the host element IS the overlay rectangle.
+   Spec: docs/MD/overlay.md · Figma node 18413:617583
+   ============================================================================= */
+
+ds-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay, 1300); /* below the dialog surface, above page content */
+}
+
+ds-overlay[open] {
+  display: block;
+}
+
+/* --- Dim (default) — token: Background/BG-Overlay --------------------------- */
+ds-overlay,
+ds-overlay[type="dim"] {
+  background: var(--uems-bg-overlay, #0A0B0F);
+  opacity: 0.7;
+}
+
+/* --- Light — token: Background/BG-Quaternary-Solid -------------------------- */
+ds-overlay[type="light"] {
+  background: var(--uems-bg-quaternary-solid, #5F6C89);
+  opacity: 0.7;
+}
+
+/* --- Transparent — invisible click-trap -------------------------------------- */
+ds-overlay[type="transparent"] {
+  background: transparent;
+  opacity: 1;
+}
+
+/* --- Blur — frosted light scrim (fixed fill, not theme-bound) ----------------
+   70% alpha lives on the background colour (rgba), NOT on `opacity` —
+   element-level opacity would also fade the backdrop-filter effect. */
+ds-overlay[type="blur"] {
+  background: rgba(95, 108, 137, 0.7); /* #5F6C89 @ 70% */
+  opacity: 1;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* --- Dim Blur — frosted dark scrim (fixed fill, not theme-bound) ------------- */
+ds-overlay[type="dim-blur"] {
+  background: rgba(21, 24, 30, 0.7); /* #15181E @ 70% */
+  opacity: 1;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* --- Non-blurred fallback: blur variants degrade to Light / Dim -------------- */
+@supports not (backdrop-filter: blur(8px)) {
+  ds-overlay[type="blur"] {
+    background: var(--uems-bg-quaternary-solid, #5F6C89);
+    opacity: 0.7;
+  }
+  ds-overlay[type="dim-blur"] {
+    background: var(--uems-bg-overlay, #0A0B0F);
+    opacity: 0.7;
+  }
+}
+
+/* --- Honour prefers-reduced-transparency: swap blur for solid Dim/Light ------ */
+@media (prefers-reduced-transparency: reduce) {
+  ds-overlay[type="blur"] {
+    background: var(--uems-bg-quaternary-solid, #5F6C89);
+    opacity: 0.7;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  ds-overlay[type="dim-blur"] {
+    background: var(--uems-bg-overlay, #0A0B0F);
+    opacity: 0.7;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

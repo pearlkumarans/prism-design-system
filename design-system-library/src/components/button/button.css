@@ -1,0 +1,272 @@
+/* =============================================================================
+   ds-button / .ds-button
+   8 variants × 4 sizes × 5 states. Token-driven.
+   The custom element renders a real <button> child so form semantics work.
+   ============================================================================= */
+
+:host {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.ds-button {
+  position: relative;            /* anchors the hover-shine ::after */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-8);
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-md); /* 8px per spec, all sizes */
+  border: 1px solid transparent;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    opacity var(--duration-fast) var(--ease-standard);
+
+  /* Themed CSS vars resolved per variant */
+  --_btn-bg: var(--uems-bg-secondary);
+  --_btn-bg-hover: var(--uems-bg-secondary-hover);
+  --_btn-fg: var(--uems-text-primary);
+  --_btn-border: transparent;
+
+  background: var(--_btn-bg);
+  color: var(--_btn-fg);
+  border-color: var(--_btn-border);
+}
+
+/* Hover shine — a soft currentColor band sweeps across on hover (reference
+   idea). Clipped to the button shape via inset:0 + inherited radius, so it
+   never needs overflow:hidden (which would clip focus rings / shadows). The
+   colour follows currentColor, so it adapts per variant (white on Primary,
+   dark on Secondary, etc.). pointer-events:none + excluded on disabled. */
+.ds-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(120deg,
+    transparent 35%,
+    color-mix(in srgb, currentColor 20%, transparent) 50%,
+    transparent 65%);
+  background-size: 220% 100%;
+  background-position: 150% 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.ds-button:hover:not(:disabled)::after {
+  opacity: 1;
+  animation: ds-button-shine 600ms var(--ease-standard, ease);
+}
+@keyframes ds-button-shine {
+  from { background-position: 150% 0; }
+  to   { background-position: -60% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-button:hover:not(:disabled)::after { animation: none; opacity: 0; }
+}
+/* Secondary + Outline keep only their plain token hover — no shine sweep. */
+.ds-button--secondary::after,
+.ds-button--outline::after { content: none; }
+
+/* ---- Sizes (per spec table) ----------------------------------------- */
+.ds-button--large {
+  height: 48px;
+  padding: 0 var(--spacing-16);
+  font-size: var(--font-size-16);
+  line-height: 24px;
+  gap: var(--spacing-8);
+}
+
+.ds-button--medium {
+  height: 40px;
+  padding: 0 var(--spacing-16);
+  font-size: var(--font-size-14);
+  line-height: 20px;
+  gap: var(--spacing-8);
+}
+
+.ds-button--small {
+  height: 36px;
+  padding: 0 var(--spacing-12);
+  font-size: var(--font-size-14);
+  line-height: 20px;
+  gap: var(--spacing-4);
+}
+
+.ds-button--xsmall {
+  height: 28px;
+  padding: 0 var(--spacing-8);
+  font-size: var(--font-size-12);
+  line-height: 16px;
+  gap: var(--spacing-4);
+}
+
+/* Icon-bearing spans share a vertical-centering rule so the SVG aligns to the
+   text middle, not the baseline. The actual icon px size is set via the
+   <ds-icon size="…"> attribute in button.js based on the button size. */
+.ds-button__prefix,
+.ds-button__suffix {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.ds-button__label {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Collapse the label out of the flex layout when the button has no text
+   content (icon-only buttons). Otherwise the empty label still consumes
+   the parent's `gap` on both sides, leaving extra space around the icon. */
+.ds-button__label:empty {
+  display: none;
+}
+
+/* ---- Variants -------------------------------------------------------- */
+.ds-button--primary {
+  /* Gradient: top-left brighter -> bottom-right darker. On hover the
+     direction reverses (darker -> brighter), per the spec. */
+  --_btn-bg: linear-gradient(135deg,
+      var(--uems-bg-button-primary, var(--hyperlink)) 0%,
+      var(--uems-bg-button-primary-hover, var(--cobalt-600)) 100%);
+  --_btn-bg-hover: linear-gradient(315deg,
+      var(--uems-bg-button-primary, var(--hyperlink)) 0%,
+      var(--uems-bg-button-primary-hover, var(--cobalt-600)) 100%);
+  --_btn-fg: var(--uems-text-white);
+}
+
+.ds-button--secondary {
+  /* Spec: BG-Tertiary (#E1E4EB) → BG-Tertiary-hover (#D2D7E0). */
+  --_btn-bg: var(--uems-bg-tertiary);
+  --_btn-bg-hover: var(--uems-bg-tertiary-hover);
+  --_btn-fg: var(--uems-text-primary);
+}
+
+.ds-button--tertiary {
+  --_btn-bg: transparent;
+  --_btn-bg-hover: var(--uems-bg-accent-primary);
+  --_btn-fg: var(--uems-text-accent-link, var(--hyperlink));
+}
+
+.ds-button--outline {
+  /* Spec: 1px Border-Primary (#B4BBCC); hover BG-Secondary-alt (#F0F2F5). */
+  --_btn-bg: transparent;
+  --_btn-bg-hover: var(--uems-bg-secondary-alt);
+  --_btn-fg: var(--uems-text-primary);
+  --_btn-border: var(--uems-border-primary);
+}
+
+.ds-button--destructive {
+  --_btn-bg: var(--uems-bg-error-solid);
+  --_btn-bg-hover: var(--uems-bg-error-solid-hover);
+  --_btn-fg: var(--uems-text-white);
+}
+
+.ds-button--success {
+  --_btn-bg: var(--uems-bg-success-solid);
+  --_btn-bg-hover: var(--uems-bg-success-solid-hover);
+  --_btn-fg: var(--uems-text-white);
+}
+
+.ds-button--warning {
+  --_btn-bg: var(--uems-bg-warning-solid);
+  --_btn-bg-hover: var(--uems-bg-warning-solid-hover);
+  --_btn-fg: var(--uems-text-white);
+}
+
+.ds-button--secondary-color {
+  --_btn-bg: var(--uems-bg-accent-primary);
+  --_btn-bg-hover: var(--uems-bg-accent-primary-hover, var(--uems-bg-accent-primary));
+  /* Spec: label = Text-Accent-Secondary (#184091), not Accent-Primary (#0E2553). */
+  --_btn-fg: var(--uems-text-accent-secondary);
+}
+
+/* ---- States --------------------------------------------------------- */
+.ds-button:hover:not(:disabled):not([aria-busy="true"]) {
+  background: var(--_btn-bg-hover);
+}
+
+.ds-button:active:not(:disabled):not([aria-busy="true"]) {
+  filter: brightness(0.95);
+}
+
+/* Focus ring per spec — 2 px outer border, 4 px gap from button edge.
+   With border-radius 8 px on the button, the outline naturally renders at
+   ~12 px radius (8 + 4) following the offset, matching the spec. */
+.ds-button:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
+/* Disabled — mixed model per spec: solids keep their fill at 40% opacity;
+   ghost/tint variants swap tokens at full opacity (consistent within each
+   emphasis group). */
+.ds-button:disabled,
+.ds-button[aria-disabled="true"] { cursor: not-allowed; }
+
+/* Solids — fill kept, dimmed to 40%, white label unchanged. */
+.ds-button--primary:disabled,
+.ds-button--destructive:disabled,
+.ds-button--success:disabled,
+.ds-button--warning:disabled { opacity: 0.4; }
+
+/* Secondary — disabled fill + disabled text. */
+.ds-button--secondary:disabled {
+  --_btn-bg: var(--uems-bg-disabled);
+  --_btn-fg: var(--uems-text-disabled);
+}
+
+/* Tertiary / Outline — transparent + disabled text (Outline keeps a disabled border). */
+.ds-button--tertiary:disabled,
+.ds-button--outline:disabled { --_btn-fg: var(--uems-text-disabled); }
+.ds-button--outline:disabled { --_btn-border: var(--uems-border-disabled); }
+
+/* Secondary Color — info tint + disabled text. */
+.ds-button--secondary-color:disabled {
+  --_btn-bg: var(--uems-bg-info-primary);
+  --_btn-fg: var(--uems-text-disabled);
+}
+
+/* Loading — spec: spinner REPLACES the prefix icon; the LABEL stays visible
+   (so width is stable and the action stays identifiable); suffix is hidden.
+   The spinner element + suffix hiding are driven from button.js. */
+.ds-button[aria-busy="true"] {
+  cursor: wait;
+  pointer-events: none;
+}
+
+.ds-button__spinner {
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: var(--radius-full);
+  animation: ds-button-spin 0.8s linear infinite;
+}
+
+@keyframes ds-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-button__spinner {
+    animation: none;
+  }
+}
+
+/* ---- RTL ------------------------------------------------------------- */
+.ds-button[dir="rtl"] {
+  flex-direction: row-reverse;
+}

@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<!--
+  Deployments · Workflow builder — canvas + right-side palette.
+  · Start node is fixed at the top of the canvas and always present.
+  · Every palette tile (Engage · Deploy Policy · Conditional · Delay ·
+    Send Notification · Restart · End) appends a new stage node below the
+    last one, connected by the vertical rail.
+  · Clicking any placed node opens the right-side "Configure Step" panel
+    with fields tailored to that node type.
+  · Header holds an inline-editable workflow name + Save As Draft + Save
+    Workflow. Save routes back to Workflows list.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Workflow builder — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* == Workflow Builder — scoped to #wf-builder-pop ==================== */
+
+#wf-builder-pop .wfb-topbar {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 20px;
+  background: var(--uems-bg-primary);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+}
+#wf-builder-pop .wfb-name-block { display: flex; flex-direction: column; gap: 6px; flex: 1 1 auto; min-width: 0; max-width: 520px; }
+#wf-builder-pop .wfb-crumbs {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--uems-text-secondary);
+}
+#wf-builder-pop .wfb-crumbs a {
+  color: var(--uems-text-secondary);
+  text-decoration: none;
+}
+#wf-builder-pop .wfb-crumbs a:hover { color: var(--uems-text-accent, var(--uems-text-primary)); text-decoration: underline; }
+#wf-builder-pop .wfb-crumbs .wfb-crumb-current { color: var(--uems-text-primary); font-weight: 500; }
+#wf-builder-pop .wfb-crumbs .wfb-crumb-sep { color: var(--uems-icon-tertiary); }
+#wf-builder-pop .wfb-name-row { display: inline-flex; align-items: center; gap: 8px; }
+#wf-builder-pop .wfb-title {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--uems-bg-primary);
+  border: 1px solid var(--uems-border-tertiary);
+  color: var(--uems-text-primary);
+  font-size: 14px; font-weight: 600;
+  transition: border-color 140ms var(--ease-standard, ease);
+}
+#wf-builder-pop .wfb-title:hover,
+#wf-builder-pop .wfb-title:focus-within { border-color: var(--uems-border-accent); }
+#wf-builder-pop .wfb-title ds-icon { color: var(--uems-icon-tertiary); }
+#wf-builder-pop .wfb-title-name { outline: none; border: 0; background: transparent; color: inherit; font: inherit; padding: 0; min-width: 160px; }
+#wf-builder-pop .wfb-topbar-spacer { flex: 1 1 auto; }
+
+/* "Add description" inline action + revealed description input. */
+#wf-builder-pop .wfb-add-desc {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 8px; border: 0; background: transparent;
+  border-radius: 6px; cursor: pointer;
+  color: var(--uems-text-accent, var(--uems-text-primary));
+  font-size: 13px; font-weight: 500;
+}
+#wf-builder-pop .wfb-add-desc:hover { background: var(--uems-bg-primary-hover); }
+#wf-builder-pop .wfb-desc-row { display: none; }
+#wf-builder-pop .wfb-desc-row[data-open="true"] { display: flex; align-items: center; gap: 6px; max-width: 520px; }
+#wf-builder-pop .wfb-desc-input {
+  flex: 1 1 auto;
+  padding: 6px 10px;
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: 6px;
+  background: var(--uems-bg-primary);
+  color: var(--uems-text-primary);
+  font-size: 13px;
+  outline: none;
+}
+#wf-builder-pop .wfb-desc-input:focus { border-color: var(--uems-border-accent); }
+/* Delete icon — box-style trailing action; revealed on row hover only. */
+#wf-builder-pop .wfb-desc-delete {
+  flex: none;
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: 6px;
+  background: var(--uems-bg-primary);
+  color: var(--uems-icon-error);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 140ms var(--ease-standard, ease), visibility 0s linear 140ms;
+}
+#wf-builder-pop .wfb-desc-row:hover .wfb-desc-delete,
+#wf-builder-pop .wfb-desc-row:focus-within .wfb-desc-delete {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 140ms var(--ease-standard, ease), visibility 0s linear 0s;
+}
+#wf-builder-pop .wfb-desc-delete:hover { background: var(--uems-bg-error-primary); border-color: var(--uems-border-error); }
+
+/* Body — canvas + right rail. */
+#wf-builder-pop .wfb-body {
+  flex: 1 1 auto; min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 0;
+}
+#wf-builder-pop .wfb-canvas {
+  position: relative;
+  overflow: auto;
+  background-color: var(--uems-bg-secondary-subtle);
+  background-image: radial-gradient(circle at 1px 1px, var(--uems-border-secondary) 1px, transparent 1px);
+  background-size: 20px 20px;
+  padding: 40px 24px 80px;
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+}
+#wf-builder-pop .wfb-rail {
+  border-inline-start: 1px solid var(--uems-border-tertiary);
+  background: var(--uems-bg-primary);
+  padding: 20px 16px;
+  overflow: auto;
+}
+#wf-builder-pop .wfb-rail-title {
+  margin: 0 0 12px;
+  font-size: 13px; font-weight: 600;
+  color: var(--uems-text-primary);
+}
+
+/* Canvas nodes — 2-row card (title row + content row) matching Sensor spec. */
+#wf-builder-pop .wfb-node {
+  position: relative;
+  display: flex; flex-direction: column;
+  width: 320px;
+  border: 1px solid var(--uems-border-accent);
+  border-radius: 10px;
+  background: var(--uems-bg-accent-primary-action);
+  cursor: pointer;
+  transition: box-shadow 140ms var(--ease-standard, ease), border-color 140ms var(--ease-standard, ease);
+}
+#wf-builder-pop .wfb-node:hover { box-shadow: 0 1px 6px rgba(15, 23, 42, 0.08); }
+#wf-builder-pop .wfb-node.is-selected {
+  border-color: var(--uems-bg-button-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--uems-bg-button-primary) 15%, transparent);
+}
+#wf-builder-pop .wfb-node .wfb-node-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--uems-border-accent) 40%, transparent);
+}
+#wf-builder-pop .wfb-node .wfb-node-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; flex: none;
+  color: var(--uems-icon-accent, var(--uems-text-accent));
+}
+#wf-builder-pop .wfb-node .wfb-node-title {
+  flex: 1 1 auto; min-width: 0;
+  font-size: 14px; font-weight: 700; color: var(--uems-text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#wf-builder-pop .wfb-node .wfb-node-menu {
+  border: 0; background: transparent; padding: 0;
+  width: 22px; height: 22px; border-radius: var(--radius-sm);
+  color: var(--uems-icon-secondary); cursor: pointer; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+#wf-builder-pop .wfb-node .wfb-node-menu:hover { background: var(--uems-bg-secondary-hover); }
+#wf-builder-pop .wfb-node .wfb-node-content { padding: 12px 14px; }
+#wf-builder-pop .wfb-node .wfb-node-summary { font-size: 14px; font-weight: 600; color: var(--uems-text-primary); margin-bottom: 2px; }
+#wf-builder-pop .wfb-node .wfb-node-desc  { font-size: 12px; color: var(--uems-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Start node — outline-only, non-clickable; keeps the tight single-row shape. */
+#wf-builder-pop .wfb-node--start {
+  width: auto; min-width: 120px; max-width: 160px;
+  flex-direction: row; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 16px;
+  cursor: default;
+  background: var(--uems-bg-primary);
+}
+#wf-builder-pop .wfb-node--start .wfb-node-head { border: 0; padding: 0; gap: 8px; }
+#wf-builder-pop .wfb-node--start .wfb-node-title { font-weight: 600; }
+
+/* Node dropdown menu — positioned relative to the node card, anchored to the ⋯ button. */
+#wf-builder-pop .wfb-node-dropdown {
+  position: absolute;
+  z-index: 20;
+  top: 40px;
+  right: -140px;
+  min-width: 128px;
+  background: var(--uems-bg-primary);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+  padding: 4px;
+  display: none;
+}
+#wf-builder-pop .wfb-node-dropdown[data-open="true"] { display: block; }
+#wf-builder-pop .wfb-node-dropdown button {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 8px 12px;
+  border: 0; background: transparent;
+  border-radius: 6px;
+  font-size: 13px; color: var(--uems-text-primary);
+  text-align: start; cursor: pointer;
+}
+#wf-builder-pop .wfb-node-dropdown button:hover { background: var(--uems-bg-secondary-hover); }
+#wf-builder-pop .wfb-node-dropdown button[data-act="delete"] { color: var(--uems-text-error); }
+
+/* Vertical rail between nodes. */
+#wf-builder-pop .wfb-line { width: 1px; height: 24px; background: var(--uems-border-secondary); flex: none; }
+
+/* Drop-here placeholder — only shown when the flow has just Start. */
+#wf-builder-pop .wfb-drop {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-width: 260px; max-width: 360px;
+  padding: 16px 14px;
+  border: 1px dashed var(--uems-border-accent);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--uems-text-accent, var(--uems-text-primary));
+  font-size: 13px; font-weight: 500;
+}
+
+/* Palette tiles. */
+#wf-builder-pop .wfb-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#wf-builder-pop .wfb-tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: 8px;
+  background: var(--uems-bg-primary);
+  cursor: pointer;
+  color: var(--uems-text-primary);
+  font-size: 12px; font-weight: 500;
+  transition: border-color 140ms var(--ease-standard, ease), background-color 140ms var(--ease-standard, ease);
+}
+#wf-builder-pop .wfb-tile:hover { border-color: var(--uems-border-accent); background: var(--uems-bg-primary-hover); }
+#wf-builder-pop .wfb-tile ds-icon { color: var(--uems-icon-secondary); }
+
+/* Configure Step panel — slides in when a node is selected, replaces the palette. */
+#wf-builder-pop .wfb-config { display: none; flex-direction: column; gap: 16px; }
+#wf-builder-pop .wfb-config[data-open="true"] { display: flex; }
+#wf-builder-pop .wfb-config-head { display: flex; align-items: center; justify-content: space-between; }
+#wf-builder-pop .wfb-config-head h3 { margin: 0; font-size: 15px; font-weight: 700; color: var(--uems-text-primary); }
+#wf-builder-pop .wfb-config-close {
+  border: 0; background: transparent; padding: 0;
+  width: 24px; height: 24px; border-radius: var(--radius-sm);
+  color: var(--uems-icon-error); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+#wf-builder-pop .wfb-config-card {
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+#wf-builder-pop .wfb-config-card h4 { margin: 0; font-size: 14px; font-weight: 600; color: var(--uems-text-primary); }
+#wf-builder-pop .wfb-config-done { align-self: stretch; }
+
+/* Policy pick card — shows the selected policy's name + module below the picker. */
+#wf-builder-pop .wfb-policy-card {
+  border: 1px solid var(--uems-border-accent);
+  background: var(--uems-bg-accent-primary-action);
+  border-radius: 8px;
+  padding: 12px;
+}
+#wf-builder-pop .wfb-policy-card .n { font-size: 14px; font-weight: 600; color: var(--uems-text-primary); }
+#wf-builder-pop .wfb-policy-card .m { margin-top: 4px; font-size: 12px; color: var(--uems-text-secondary); }
+</style>
+
+<div id="wf-builder-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <!-- Top bar — breadcrumb + name + description toggle + save actions. -->
+    <div class="wfb-topbar">
+      <div class="wfb-name-block">
+        <nav class="wfb-crumbs" aria-label="Breadcrumb">
+          <a href="#" data-crumb="policies">Policies</a>
+          <span class="wfb-crumb-sep">›</span>
+          <a href="#" data-crumb="workflow">Workflow</a>
+          <span class="wfb-crumb-sep">›</span>
+          <span class="wfb-crumb-current">Add Workflows</span>
+        </nav>
+        <div class="wfb-name-row">
+          <span class="wfb-title">
+            <input class="wfb-title-name" id="wfb-name" value="Unnamed Workflow" aria-label="Workflow name">
+            <ds-icon name="edit" size="14"></ds-icon>
+          </span>
+          <button type="button" id="wfb-add-desc" class="wfb-add-desc">
+            <ds-icon name="add" size="14"></ds-icon>
+            <span>Add description</span>
+          </button>
+        </div>
+        <div id="wfb-desc-row" class="wfb-desc-row">
+          <input class="wfb-desc-input" id="wfb-desc" placeholder="Enter a short description for this workflow" aria-label="Workflow description">
+          <button type="button" id="wfb-desc-delete" class="wfb-desc-delete" aria-label="Remove description">
+            <ds-icon name="delete" size="16"></ds-icon>
+          </button>
+        </div>
+      </div>
+      <span class="wfb-topbar-spacer"></span>
+      <ds-button id="wfb-save-draft" variant="secondary" size="small">Save As Draft</ds-button>
+      <ds-button id="wfb-save"       variant="primary"   size="small">Save Workflow</ds-button>
+    </div>
+
+    <!-- Canvas + right rail. -->
+    <div class="wfb-body">
+      <div class="wfb-canvas" id="wfb-canvas">
+        <!-- Nodes injected here by renderCanvas(). -->
+      </div>
+
+      <aside class="wfb-rail">
+        <!-- Palette. -->
+        <div id="wfb-palette">
+          <h3 class="wfb-rail-title">Workflow Actions</h3>
+          <div class="wfb-tiles" id="wfb-tiles"></div>
+        </div>
+
+        <!-- Configure Step (hidden until a node is picked). -->
+        <div id="wfb-config" class="wfb-config">
+          <div class="wfb-config-head">
+            <h3>Configure Step</h3>
+            <button type="button" class="wfb-config-close" aria-label="Close configuration" id="wfb-config-close">
+              <ds-icon name="cancel" size="18"></ds-icon>
+            </button>
+          </div>
+          <div class="wfb-config-card" id="wfb-config-card">
+            <!-- Per-node fields rendered here. -->
+          </div>
+          <ds-button id="wfb-config-done" variant="primary" size="medium" class="wfb-config-done">Done</ds-button>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('wf-builder-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  /* ---- Palette tiles ---------------------------------------------------- */
+  const TILES = [
+    { type: 'engage',       label: 'Engage',            icon: 'message-chat-square' },
+    { type: 'deploy',       label: 'Deploy Policy',     icon: 'circle-tick' },
+    { type: 'conditional',  label: 'Conditional',       icon: 'code' },
+    { type: 'delay',        label: 'Delay',             icon: 'clock' },
+    { type: 'notify',       label: 'Send Notification', icon: 'mail' },
+    { type: 'restart',      label: 'Restart',           icon: 'refresh' },
+    { type: 'end',          label: 'End',               icon: 'shield' },
+  ];
+  $('wfb-tiles').innerHTML = TILES.map((t) =>
+    `<button type="button" class="wfb-tile" data-type="${t.type}">
+       <ds-icon name="${t.icon}" size="18"></ds-icon>
+       <span>${esc(t.label)}</span>
+     </button>`).join('');
+
+  /* ---- Canvas state ---------------------------------------------------- */
+  /* The canvas is an ordered list of nodes; Start is always first, End is
+     always last if it's ever placed. Each node has {id, type, cfg}. */
+  const stateInit = () => [
+    { id: 'n-start', type: 'start', cfg: {} },
+  ];
+  let nodes = stateInit();
+  let selectedId = null;
+  let openMenuId = null;
+
+  function nodeTitle(n) {
+    if (n.type === 'start') return 'Start';
+    const meta = TILES.find((t) => t.type === n.type);
+    return (n.cfg && n.cfg.title) || (meta ? meta.label : n.type);
+  }
+  function nodeIcon(n) {
+    if (n.type === 'start') return 'shield';
+    const meta = TILES.find((t) => t.type === n.type);
+    return meta ? meta.icon : 'circle';
+  }
+  /* Content-row summary — the primary bold value in the node card
+     (e.g. "Get confirmation" for Engage, policy name for Deploy Policy). */
+  function nodeSummary(n) {
+    const c = n.cfg || {};
+    switch (n.type) {
+      case 'engage':      return c.action === 'confirm'  ? 'Get confirmation'
+                                : c.action === 'approval' ? 'Require approval'
+                                : c.action === 'notify'   ? 'Send notification'
+                                : 'Configure action';
+      case 'deploy':      return c.policyName || 'Select a policy';
+      case 'conditional': return c.field ? (c.field + ' ' + (c.op || '') + ' ' + (c.value || '')) : 'Configure condition';
+      case 'delay':       return (c.duration || '15') + ' ' + ({m:'minutes',h:'hours',d:'days'}[c.unit || 'm']);
+      case 'notify':      return c.email || 'Configure recipient';
+      case 'restart':     return c.when === 'scheduled' ? 'At scheduled time'
+                                : c.when === 'prompt'    ? 'Prompt the user'
+                                : 'Immediately';
+      case 'end':         return 'End of workflow';
+      default:            return '';
+    }
+  }
+  function nodeDesc(n) {
+    return (n.cfg && n.cfg.description) || 'No description';
+  }
+
+  function renderCanvas() {
+    const canvas = $('wfb-canvas');
+    const parts = [];
+    nodes.forEach((n, i) => {
+      if (i > 0) parts.push('<span class="wfb-line" aria-hidden="true"></span>');
+      const startCls = n.type === 'start' ? ' wfb-node--start' : '';
+      const sel = n.id === selectedId ? ' is-selected' : '';
+      const isOpen = n.id === openMenuId;
+      const body = n.type === 'start'
+        ? `<div class="wfb-node-head">
+             <span class="wfb-node-icon"><ds-icon name="shield" size="16"></ds-icon></span>
+             <div class="wfb-node-title">Start</div>
+           </div>`
+        : `<div class="wfb-node-head">
+             <span class="wfb-node-icon"><ds-icon name="${nodeIcon(n)}" size="18"></ds-icon></span>
+             <div class="wfb-node-title">${esc(nodeTitle(n))}</div>
+             <button type="button" class="wfb-node-menu" data-node-menu="${n.id}" aria-label="Row actions" aria-expanded="${isOpen}"><ds-icon name="more-vertical" size="14"></ds-icon></button>
+           </div>
+           <div class="wfb-node-content">
+             <div class="wfb-node-summary">${esc(nodeSummary(n))}</div>
+             <div class="wfb-node-desc">${esc(nodeDesc(n))}</div>
+           </div>
+           <div class="wfb-node-dropdown" data-open="${isOpen}" data-menu-for="${n.id}">
+             <button type="button" data-act="edit"   data-for="${n.id}"><ds-icon name="edit" size="14"></ds-icon>Edit</button>
+             <button type="button" data-act="delete" data-for="${n.id}"><ds-icon name="delete" size="14"></ds-icon>Delete</button>
+           </div>`;
+      parts.push(`<div class="wfb-node${startCls}${sel}" data-node-id="${n.id}">${body}</div>`);
+    });
+    /* Drop-here hint — shown only while the flow still has just the Start node. */
+    if (nodes.length === 1) {
+      parts.push('<span class="wfb-line" aria-hidden="true"></span>');
+      parts.push(`<div class="wfb-drop"><ds-icon name="download" size="18"></ds-icon><span>Drop Here — pick an action on the right</span></div>`);
+    }
+    canvas.innerHTML = parts.join('');
+  }
+
+  /* ---- Add / select / remove ------------------------------------------- */
+  function addNode(type) {
+    const id = 'n-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+    /* End should always sit at the very bottom; other nodes append before it. */
+    const endIdx = nodes.findIndex((n) => n.type === 'end');
+    const newNode = { id, type, cfg: {} };
+    if (type === 'end') {
+      /* Only one End allowed. */
+      if (endIdx !== -1) return;
+      nodes.push(newNode);
+    } else if (endIdx !== -1) {
+      nodes.splice(endIdx, 0, newNode);
+    } else {
+      nodes.push(newNode);
+    }
+    selectedId = id;
+    renderCanvas();
+    if (type !== 'end') openConfig(id);
+  }
+  function removeNode(id) {
+    nodes = nodes.filter((n) => n.id !== id);
+    if (nodes.length === 0) nodes = stateInit();
+    if (selectedId === id) selectedId = null;
+    renderCanvas();
+    closeConfig();
+  }
+
+  $('wfb-tiles').addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('.wfb-tile');
+    if (!btn) return;
+    addNode(btn.dataset.type);
+  });
+  $('wfb-canvas').addEventListener('click', (e) => {
+    /* ⋯ button — open (or close) the Edit / Delete dropdown for this node. */
+    const menuBtn = e.target.closest && e.target.closest('[data-node-menu]');
+    if (menuBtn) {
+      e.stopPropagation();
+      const id = menuBtn.dataset.nodeMenu;
+      openMenuId = openMenuId === id ? null : id;
+      renderCanvas();
+      return;
+    }
+    /* Dropdown item click. */
+    const actBtn = e.target.closest && e.target.closest('.wfb-node-dropdown [data-act]');
+    if (actBtn) {
+      e.stopPropagation();
+      const id = actBtn.dataset.for;
+      const act = actBtn.dataset.act;
+      openMenuId = null;
+      if (act === 'edit') { selectedId = id; renderCanvas(); openConfig(id); }
+      else if (act === 'delete') removeNode(id);
+      return;
+    }
+    /* Card click — select + open config (only for non-start non-end nodes). */
+    const nodeEl = e.target.closest && e.target.closest('.wfb-node');
+    if (!nodeEl) return;
+    const id = nodeEl.dataset.nodeId;
+    const n = nodes.find((x) => x.id === id);
+    if (!n || n.type === 'start') return;
+    selectedId = id; renderCanvas(); openConfig(id);
+  });
+  /* Close the dropdown when clicking anywhere else. */
+  document.addEventListener('click', (e) => {
+    if (openMenuId && !(e.target.closest && e.target.closest('#wfb-canvas'))) {
+      openMenuId = null; renderCanvas();
+    }
+  });
+
+  /* ---- Configure Step panel -------------------------------------------- */
+  function openConfig(id) {
+    const n = nodes.find((x) => x.id === id);
+    if (!n) return;
+    $('wfb-palette').style.display = 'none';
+    const panel = $('wfb-config');
+    panel.setAttribute('data-open', 'true');
+    const card = $('wfb-config-card');
+    card.innerHTML = renderConfigCard(n);
+    wireConfigCard(n, card);
+  }
+  function closeConfig() {
+    selectedId = null;
+    renderCanvas();
+    $('wfb-config').removeAttribute('data-open');
+    $('wfb-palette').style.display = '';
+  }
+  $('wfb-config-close').addEventListener('click', closeConfig);
+  $('wfb-config-done').addEventListener('click', closeConfig);
+
+  /* ---- Per-node config renderers --------------------------------------- */
+  function renderConfigCard(n) {
+    const cfg = n.cfg || {};
+    switch (n.type) {
+      case 'engage':
+        return `
+          <h4>Engage</h4>
+          <ds-text-input id="cfg-desc" size="medium" label="Description" placeholder="Enter description" value="${esc(cfg.description || '')}"></ds-text-input>
+          <ds-input-select id="cfg-action" size="medium" label="Action Type" placeholder="Select action"></ds-input-select>`;
+      case 'deploy':
+        return `
+          <h4>Deploy Policy</h4>
+          <ds-input-select id="cfg-policy" size="medium" required label="Select Policy" placeholder="Select a policy"></ds-input-select>
+          ${cfg.policyId ? `<div class="wfb-policy-card"><div class="n">${esc(cfg.policyName || '')}</div><div class="m">Module: ${esc(cfg.policyModule || '')}</div></div>` : ''}
+          <ds-radio-group id="cfg-onfail" label="On Failure"></ds-radio-group>`;
+      case 'conditional':
+        return `
+          <h4>Conditional</h4>
+          <ds-input-select id="cfg-if" size="medium" label="If"      placeholder="Choose condition"></ds-input-select>
+          <ds-input-select id="cfg-op" size="medium" label="Operator" placeholder="Choose operator"></ds-input-select>
+          <ds-text-input   id="cfg-val" size="medium" label="Value" placeholder="Enter value" value="${esc(cfg.value || '')}"></ds-text-input>`;
+      case 'delay':
+        return `
+          <h4>Delay</h4>
+          <ds-text-input id="cfg-dur"  size="medium" label="Duration" placeholder="15" value="${esc(cfg.duration || '')}"></ds-text-input>
+          <ds-input-select id="cfg-unit" size="medium" label="Unit" placeholder="Minutes"></ds-input-select>`;
+      case 'notify':
+        return `
+          <h4>Send Notification</h4>
+          <ds-text-input id="cfg-email" size="medium" label="Email To" placeholder="email@example.com" value="${esc(cfg.email || '')}"></ds-text-input>
+          <ds-text-area  id="cfg-msg"   size="medium" label="Message" placeholder="Enter notification message" value="${esc(cfg.message || '')}"></ds-text-area>`;
+      case 'restart':
+        return `
+          <h4>Restart</h4>
+          <ds-radio-group id="cfg-restart" label="When"></ds-radio-group>
+          <ds-text-input  id="cfg-msg-r" size="medium" label="Message to user" placeholder="Your device will restart shortly" value="${esc(cfg.message || '')}"></ds-text-input>`;
+      default:
+        return `<h4>${esc(nodeTitle(n))}</h4><p style="margin:0;color:var(--uems-text-secondary);font-size:13px;">No configuration required.</p>`;
+    }
+  }
+
+  function wireConfigCard(n, card) {
+    const cfg = n.cfg = n.cfg || {};
+    const on = (id, evt, fn) => { const el = card.querySelector('#' + id); if (el) el.addEventListener(evt, fn); };
+    if (n.type === 'engage') {
+      const action = card.querySelector('#cfg-action');
+      action.options = [
+        { value: 'confirm',  label: 'Get confirmation' },
+        { value: 'approval', label: 'Require approval' },
+        { value: 'notify',   label: 'Send notification' },
+      ];
+      if (cfg.action) action.value = cfg.action;
+      on('cfg-desc',   'ds-text-input-change',   (e) => { cfg.description = e.target.value; syncSelected(); });
+      on('cfg-action', 'ds-input-select-change', (e) => { cfg.action = (e.detail && e.detail.value) || ''; syncSelected(); });
+    }
+    if (n.type === 'deploy') {
+      const picker = card.querySelector('#cfg-policy');
+      const policies = (window.__policiesStore || []).map((p) => ({ value: p.id, label: p.name, meta: (p.type || '').split('/')[0] }));
+      picker.options = policies.length ? policies : [{ value: 'none', label: 'No policies available yet' }];
+      if (cfg.policyId) picker.value = cfg.policyId;
+      const onFail = card.querySelector('#cfg-onfail');
+      onFail.options = [
+        { value: 'halt',    label: 'Halt workflow', selected: (cfg.onFail || 'halt') === 'halt' },
+        { value: 'continue',label: 'Continue to next step', selected: cfg.onFail === 'continue' },
+        { value: 'retry',   label: 'Retry this step', selected: cfg.onFail === 'retry' },
+      ];
+      on('cfg-policy', 'ds-input-select-change', (e) => {
+        const v = e.detail && e.detail.value;
+        const p = (window.__policiesStore || []).find((x) => x.id === v);
+        cfg.policyId = v; cfg.policyName = p ? p.name : v; cfg.policyModule = p ? (p.type || '').split('/')[0] : '';
+        syncSelected();
+        /* Re-render so the selected policy card appears. */
+        openConfig(n.id);
+      });
+      on('cfg-onfail', 'ds-radio-change', (e) => { cfg.onFail = e.detail && e.detail.value; syncSelected(); });
+    }
+    if (n.type === 'conditional') {
+      const ifs = card.querySelector('#cfg-if');   ifs.options = [{ value:'device-status', label:'Device status' }, { value:'os', label:'OS' }, { value:'group', label:'Group' }];
+      const ops = card.querySelector('#cfg-op');   ops.options = [{ value:'eq', label:'equals' }, { value:'neq', label:'not equal' }, { value:'in', label:'includes' }];
+      if (cfg.field) ifs.value = cfg.field;
+      if (cfg.op)    ops.value = cfg.op;
+      on('cfg-if',  'ds-input-select-change', (e) => { cfg.field = e.detail && e.detail.value; syncSelected(); });
+      on('cfg-op',  'ds-input-select-change', (e) => { cfg.op    = e.detail && e.detail.value; syncSelected(); });
+      on('cfg-val', 'ds-text-input-change',   (e) => { cfg.value = e.target.value; syncSelected(); });
+    }
+    if (n.type === 'delay') {
+      const unit = card.querySelector('#cfg-unit');
+      unit.options = [{ value:'m', label:'Minutes' }, { value:'h', label:'Hours' }, { value:'d', label:'Days' }];
+      unit.value = cfg.unit || 'm';
+      on('cfg-dur',  'ds-text-input-change',    (e) => { cfg.duration = e.target.value; syncSelected(); });
+      on('cfg-unit', 'ds-input-select-change',  (e) => { cfg.unit     = e.detail && e.detail.value; syncSelected(); });
+    }
+    if (n.type === 'notify') {
+      on('cfg-email', 'ds-text-input-change', (e) => { cfg.email   = e.target.value; syncSelected(); });
+      on('cfg-msg',   'ds-text-area-change',  (e) => { cfg.message = e.target.value; syncSelected(); });
+    }
+    if (n.type === 'restart') {
+      const r = card.querySelector('#cfg-restart');
+      r.options = [
+        { value:'immediate', label:'Immediately',           selected: (cfg.when || 'immediate') === 'immediate' },
+        { value:'scheduled', label:'At scheduled time',     selected: cfg.when === 'scheduled' },
+        { value:'prompt',    label:'Prompt the user first', selected: cfg.when === 'prompt' },
+      ];
+      on('cfg-restart', 'ds-radio-change',    (e) => { cfg.when    = e.detail && e.detail.value; syncSelected(); });
+      on('cfg-msg-r',   'ds-text-input-change', (e) => { cfg.message = e.target.value; syncSelected(); });
+    }
+  }
+  function syncSelected() {
+    /* Description shown under the node title on the canvas comes from cfg.
+       Re-render the canvas so the node's subtitle updates live. */
+    renderCanvas();
+  }
+
+  /* ---- Save handlers --------------------------------------------------- */
+  function save(status) {
+    const name = ($('wfb-name').value || '').trim() || 'Untitled workflow';
+    const wf = { id: 'w-' + Date.now(), name, status, stages: nodes.filter((n) => n.type !== 'start' && n.type !== 'end').length };
+    window.__workflowsStore = window.__workflowsStore || [];
+    window.__workflowsStore.unshift(wf);
+    if (globalThis.dsToast) globalThis.dsToast.success({
+      title: status === 'draft' ? 'Workflow drafted' : 'Workflow saved',
+      description: name + ' — ' + wf.stages + ' stage' + (wf.stages === 1 ? '' : 's'),
+      style: 'subtle',
+    });
+    if (window.openContentView) window.openContentView('deployments-workflow');
+  }
+  $('wfb-save').addEventListener('click', () => save('active'));
+  $('wfb-save-draft').addEventListener('click', () => save('draft'));
+
+  /* Breadcrumb routing — Policies + Workflow are clickable, Add Workflows
+     is the current crumb (rendered as a non-anchor span). */
+  root.querySelector('.wfb-crumbs').addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[data-crumb]');
+    if (!a || !window.openContentView) return;
+    e.preventDefault();
+    const target = a.dataset.crumb === 'policies' ? 'deployments-policy-list' : 'deployments-workflow';
+    window.openContentView(target);
+  });
+
+  /* Add description → reveal the description row + focus the input. The
+     trigger stays labelled "Add description" — the description itself is
+     dismissed via the trailing delete icon that reveals on row hover. */
+  $('wfb-add-desc').addEventListener('click', () => {
+    const row = $('wfb-desc-row');
+    row.setAttribute('data-open', 'true');
+    $('wfb-add-desc').style.display = 'none';
+    requestAnimationFrame(() => $('wfb-desc').focus());
+  });
+  $('wfb-desc-delete').addEventListener('click', () => {
+    const row = $('wfb-desc-row');
+    row.setAttribute('data-open', 'false');
+    $('wfb-desc').value = '';
+    $('wfb-add-desc').style.display = '';
+  });
+
+  function show() {
+    root.hidden = false;
+    /* Reset canvas each time the builder opens fresh. */
+    nodes = stateInit();
+    selectedId = null;
+    openMenuId = null;
+    $('wfb-name').value = 'Unnamed Workflow';
+    $('wfb-desc').value = '';
+    $('wfb-desc-row').setAttribute('data-open', 'false');
+    $('wfb-add-desc').style.display = '';
+    closeConfig();
+    renderCanvas();
+  }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-workflow-builder'] = { show, hide };
+})();
+</script>
+</template>
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-workflow-builder'].show()));
+})();
+</script>
+</body>
+</html>

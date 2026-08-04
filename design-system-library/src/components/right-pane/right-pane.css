@@ -1,0 +1,93 @@
+/* =============================================================================
+   ds-right-pane / .ds-right-pane
+   48px-wide vertical utility rail with top + bottom icon stacks.
+   ============================================================================= */
+
+:host { display: inline-block; vertical-align: top; height: 100%; }
+
+.ds-right-pane {
+  width: 32px;
+  height: 100%;
+  /* 740px tall rail; the spacer between the top + bottom stacks expands to
+     push them apart. */
+  min-height: 740px;
+  /* Figma: no fill, no border on the rail itself — it sits transparently on
+     the app shell. (The component description mentions BG-White + a left
+     border, but the actual node carries neither.) */
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-8) 2px;
+  box-sizing: border-box;
+  font-family: var(--font-family-sans);
+}
+
+.ds-right-pane__top,
+.ds-right-pane__bottom {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-12);
+}
+
+.ds-right-pane__spacer { flex: 1; }
+
+.ds-right-pane__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Figma: Icon Button Square 28×28 with 4px padding around a 20px icon. */
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--uems-icon-tertiary);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+
+/* Update slot — persistent alert tint (Figma: bg-alert-primary). */
+.ds-right-pane__btn--highlight,
+.ds-right-pane__btn--highlight:hover {
+  background: var(--uems-bg-alert-primary);
+  color: var(--uems-icon-warning, var(--uems-text-primary));
+}
+
+/* Full-color logo items (e.g. ServiceDesk Plus) — 28×28 button, 20px logo centered. */
+.ds-right-pane__btn--logo {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+}
+.ds-right-pane__logo {
+  width: 20px;
+  height: 20px;
+  display: block;
+  object-fit: contain;
+}
+
+/* Divider between item groups — relies on parent gap for vertical spacing */
+.ds-right-pane__divider {
+  height: 1px;
+  width: 16px;
+  margin: 0;
+  background: var(--uems-border-tertiary);
+  list-style: none;
+}
+.ds-right-pane__btn:hover { background: var(--uems-bg-accent-primary-hover); color: var(--uems-text-primary); }
+.ds-right-pane__btn:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+.ds-right-pane__btn[aria-pressed="true"],
+.ds-right-pane__btn[aria-expanded="true"] {
+  background: var(--uems-bg-accent-primary);
+  color: var(--uems-text-accent-link);
+}

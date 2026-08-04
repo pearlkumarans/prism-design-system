@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<!--
+  Support PAGE — DUAL-MODE file (lives in Layout/views/, like the drawers).
+  • Open directly in a browser  → the standalone harness (bottom) mounts + shows it.
+  • Fetched by Shell.html        → injectDrawer() extracts ONLY <template id="drawer-fragment">.
+  Unlike the slide-over drawers, this is a full CONTENT page: it fills the
+  shell-area (hides L1/L2/ds-content) when the "Support" module is selected.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Support — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="../design-system-library/src/components/drawer/drawer.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-base); }
+    .sa-host { position: relative; display: flex; flex: 1; min-height: 0; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  /* ── Support page (fills the shell-area; opened by the "Support" module) ── */
+  #support-pop { display: none; flex: 1; min-width: 0; flex-direction: column; background: var(--uems-bg-secondary-subtle); border-radius: 16px; overflow-y: auto; }
+  .shell-area.support-open #support-pop { display: flex; }
+  .shell-area.support-open > ds-content,
+  .shell-area.support-open > ds-sidebar-l1,
+  .shell-area.support-open > ds-sidebar-l2 { display: none !important; }
+
+  .sup-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 12px; padding: 20px; align-items: start; }
+  @media (max-width: 1180px) { .sup-wrap { grid-template-columns: 1fr; } }
+  .sup-main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+  /* Support action cards */
+  .sup-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 900px) { .sup-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .sup-cards { grid-template-columns: 1fr; } }
+  .sup-card { min-width: 0; }
+  .sup-card__ic { width: 40px; height: 40px; border-radius: var(--radius-md, 10px); background: var(--uems-bg-secondary); display: flex; align-items: center; justify-content: center; color: var(--uems-text-secondary); margin-bottom: var(--spacing-16, 16px); }
+  .sup-card__title { font-size: var(--font-size-15); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); margin-bottom: var(--spacing-6); }
+  .sup-card__desc { font-size: var(--font-size-13); line-height: 1.5; color: var(--uems-text-secondary); margin-bottom: var(--spacing-16, 16px); }
+
+  /* Community & updates */
+  .sup-comm__head { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-16); margin-bottom: var(--spacing-12); }
+  .sup-comm__title { margin: 0; font-size: var(--font-size-18); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+  .sup-comm__tabs { margin-bottom: var(--spacing-4); }
+  .sup-topic { padding: var(--spacing-16) 0; border-top: 1px solid var(--uems-border-tertiary); }
+  .sup-topic__head { display: flex; align-items: center; gap: var(--spacing-12); margin-bottom: var(--spacing-6); }
+  .sup-topic__title { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+  .sup-topic__excerpt { font-size: var(--font-size-13); line-height: 1.5; color: var(--uems-text-secondary); }
+  .sup-comm__foot { display: flex; justify-content: center; padding-top: var(--spacing-16); }
+
+  /* Your installation */
+  .sup-install__head { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-16); margin-bottom: var(--spacing-12); }
+  .sup-install__title { margin: 0; font-size: var(--font-size-18); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+  .sup-install__tabs { margin-bottom: var(--spacing-8); }
+  .sup-row { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--spacing-16); padding: var(--spacing-16, 16px) 0; border-top: 1px solid var(--uems-border-tertiary); }
+  .sup-row:first-child { border-top: 0; }
+  .sup-row__k { flex: 0 0 44%; font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+  .sup-row__v { flex: 1; font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); text-align: end; word-break: break-word; }
+  [dir="rtl"] .sup-row__v { unicode-bidi: plaintext; }
+</style>
+
+<section id="support-pop" aria-label="Support">
+  <div class="sup-wrap">
+    <!-- LEFT — action cards + community -->
+    <div class="sup-main">
+      <div class="sup-cards" id="sup-cards"></div>
+
+      <ds-container class="sup-comm" variant="outline" radius="lg" padding="lg">
+        <div class="sup-comm__head">
+          <h2 class="sup-comm__title" data-sup="community">Community &amp; updates</h2>
+          <ds-button variant="secondary" size="small" prefix-icon="add" data-sup="newtopic">New topic</ds-button>
+        </div>
+        <ds-tab-bar-horizontal class="sup-comm__tabs" id="sup-comm-tabs" type="underline" active-id="all"></ds-tab-bar-horizontal>
+        <div id="sup-topics"></div>
+        <div class="sup-comm__foot"><ds-text-link href="#" variant="primary" size="medium" data-sup="browseall">Browse all discussions</ds-text-link></div>
+      </ds-container>
+    </div>
+
+    <!-- RIGHT — your installation -->
+    <ds-container class="sup-install" variant="outline" radius="lg" padding="lg">
+      <div class="sup-install__head">
+        <h2 class="sup-install__title" data-sup="installation">Your installation</h2>
+        <ds-text-link href="#" variant="primary" size="small" data-sup="update">Update</ds-text-link>
+      </div>
+      <ds-tab-bar-horizontal class="sup-install__tabs" id="sup-install-tabs" type="underline" active-id="product"></ds-tab-bar-horizontal>
+      <div id="sup-install-rows"></div>
+    </ds-container>
+  </div>
+</section>
+
+<script>
+(function () {
+  const shellArea = () => window.ShellCtx && window.ShellCtx.shellArea;
+
+  const MSGS = {
+    en: {
+      'sup.community': 'Community & updates',
+      'sup.newtopic': 'New topic',
+      'sup.installation': 'Your installation',
+      'sup.update': 'Update',
+      'sup.browseall': 'Browse all discussions',
+      'sup.card.0.title': 'Live Chat',
+      'sup.card.0.desc': 'Get an answer from a support engineer in under 2 minutes.',
+      'sup.card.0.cta': 'Start Chat',
+      'sup.card.1.title': 'Toll free',
+      'sup.card.1.desc': 'Call us anytime. We have regional numbers for 14 countries.',
+      'sup.card.1.cta': 'See numbers',
+      'sup.card.2.title': 'Upload logs',
+      'sup.card.2.desc': "Drag in your logs and we'll auto-diagnose common issues before you wait.",
+      'sup.card.2.cta': 'Upload now',
+      'sup.card.3.title': 'Request a feature',
+      'sup.card.3.desc': "Tell us what's missing. Top-voted ideas get into the next release.",
+      'sup.card.3.cta': 'Submit ideas',
+      'sup.card.4.title': 'Report a breach',
+      'sup.card.4.desc': 'Confidential channel for reporting security incidents or data breaches.',
+      'sup.card.4.cta': 'Report securely',
+      'sup.card.5.title': 'Request support',
+      'sup.card.5.desc': 'Open a tracked support ticket. Best for complex issues that need follow-up.',
+      'sup.card.5.cta': 'Open ticket',
+      'sup.commtab.all': 'All',
+      'sup.commtab.announcements': 'Announcements',
+      'sup.commtab.questions': 'Questions',
+      'sup.commtab.resolved': 'Resolved',
+      'sup.tag.idea': 'Idea',
+      'sup.tag.announcement': 'Announcement',
+      'sup.tag.question': 'Question',
+      'sup.tag.resolved': 'Resolved',
+      'sup.topic.0.title': 'Endpoint Central DS support for QNAP.',
+      'sup.topic.0.excerpt': 'It would be great if ManageEngine were to release support for the Distribution Server on the QNAP platform. There will be many sites, amongst your customers, who use QNAPs for...',
+      'sup.topic.1.title': 'Zero day Alert: Microsoft Defender Vulnerabilities (Actively Exploited)',
+      'sup.topic.1.excerpt': 'A newly disclosed set of vulnerabilities is being actively exploited in the wild. Patch your endpoints as soon as the fix lands in the patch database...',
+      'sup.topic.2.title': 'Agent reconnect stability on slow networks',
+      'sup.topic.2.excerpt': 'Resolved in 11.5.2613.04 — intermittent agent disconnects on high-latency links no longer occur after the retry backoff change...',
+      'sup.installtab.product': 'Product',
+      'sup.installtab.system': 'System',
+      'sup.installtab.installation': 'Installation',
+      'sup.installtab.database': 'Database',
+      'sup.install.product.0': 'Product Name',
+      'sup.install.product.1': 'Architecture',
+      'sup.install.product.2': 'Build Version',
+      'sup.install.product.3': 'Vendor',
+      'sup.install.product.4': 'Agent (Win)',
+      'sup.install.product.5': 'Agent (Mac)',
+      'sup.install.product.6': 'Agent (Linux)',
+      'sup.install.product.7': 'Distribution Server Version',
+      'sup.install.system.0': 'Operating System',
+      'sup.install.system.1': 'CPU',
+      'sup.install.system.2': 'Memory',
+      'sup.install.system.3': 'Free Disk',
+      'sup.install.system.4': 'Hostname',
+      'sup.install.system.5': 'Server Time Zone',
+      'sup.install.installation.0': 'Installed Path',
+      'sup.install.installation.1': 'Installed On',
+      'sup.install.installation.2': 'Server Port',
+      'sup.install.installation.3': 'Web Server',
+      'sup.install.installation.4': 'Run As',
+      'sup.install.database.0': 'Database Type',
+      'sup.install.database.1': 'DB Version',
+      'sup.install.database.2': 'DB Size',
+      'sup.install.database.3': 'DB Host',
+      'sup.install.database.4': 'DB Port',
+    },
+    ar: {
+      'sup.community': 'المجتمع والتحديثات',
+      'sup.newtopic': 'موضوع جديد',
+      'sup.installation': 'التثبيت الخاص بك',
+      'sup.update': 'تحديث',
+      'sup.browseall': 'تصفّح كل المناقشات',
+      'sup.card.0.title': 'الدردشة المباشرة',
+      'sup.card.0.desc': 'احصل على إجابة من مهندس دعم في أقل من دقيقتين.',
+      'sup.card.0.cta': 'ابدأ الدردشة',
+      'sup.card.1.title': 'الاتصال المجاني',
+      'sup.card.1.desc': 'اتصل بنا في أي وقت. لدينا أرقام إقليمية لـ 14 دولة.',
+      'sup.card.1.cta': 'عرض الأرقام',
+      'sup.card.2.title': 'تحميل السجلات',
+      'sup.card.2.desc': 'اسحب سجلاتك وسنشخّص المشكلات الشائعة تلقائيًا.',
+      'sup.card.2.cta': 'حمّل الآن',
+      'sup.card.3.title': 'طلب ميزة',
+      'sup.card.3.desc': 'أخبرنا بما ينقص. الأفكار الأعلى تصويتًا تدخل الإصدار التالي.',
+      'sup.card.3.cta': 'إرسال الأفكار',
+      'sup.card.4.title': 'الإبلاغ عن اختراق',
+      'sup.card.4.desc': 'قناة سرّية للإبلاغ عن الحوادث الأمنية أو خروقات البيانات.',
+      'sup.card.4.cta': 'إبلاغ آمن',
+      'sup.card.5.title': 'طلب الدعم',
+      'sup.card.5.desc': 'افتح تذكرة دعم متابَعة. الأفضل للمشكلات المعقّدة.',
+      'sup.card.5.cta': 'فتح تذكرة',
+      'sup.commtab.all': 'الكل',
+      'sup.commtab.announcements': 'الإعلانات',
+      'sup.commtab.questions': 'الأسئلة',
+      'sup.commtab.resolved': 'تم الحل',
+      'sup.tag.idea': 'فكرة',
+      'sup.tag.announcement': 'إعلان',
+      'sup.tag.question': 'سؤال',
+      'sup.tag.resolved': 'تم الحل',
+      'sup.topic.0.title': 'دعم Endpoint Central DS لمنصة QNAP.',
+      'sup.topic.0.excerpt': 'سيكون رائعًا لو أطلقت ManageEngine دعمًا لخادم التوزيع على منصة QNAP. هناك العديد من المواقع لدى عملائكم تستخدم QNAP...',
+      'sup.topic.1.title': 'تنبيه ثغرة يوم الصفر: ثغرات Microsoft Defender (مُستغلّة فعليًا)',
+      'sup.topic.1.excerpt': 'مجموعة ثغرات مكتشفة حديثًا يجري استغلالها فعليًا. صحّح أجهزتك فور توفر الإصلاح في قاعدة بيانات التصحيحات...',
+      'sup.topic.2.title': 'استقرار إعادة اتصال الوكيل على الشبكات البطيئة',
+      'sup.topic.2.excerpt': 'تم الحل في 11.5.2613.04 — لم تعد انقطاعات الوكيل المتقطعة تحدث على الروابط عالية الكمون بعد تغيير إعادة المحاولة...',
+      'sup.installtab.product': 'المنتج',
+      'sup.installtab.system': 'النظام',
+      'sup.installtab.installation': 'التثبيت',
+      'sup.installtab.database': 'قاعدة البيانات',
+      'sup.install.product.0': 'اسم المنتج',
+      'sup.install.product.1': 'البنية',
+      'sup.install.product.2': 'إصدار البناء',
+      'sup.install.product.3': 'المورّد',
+      'sup.install.product.4': 'الوكيل (ويندوز)',
+      'sup.install.product.5': 'الوكيل (ماك)',
+      'sup.install.product.6': 'الوكيل (لينكس)',
+      'sup.install.product.7': 'إصدار خادم التوزيع',
+      'sup.install.system.0': 'نظام التشغيل',
+      'sup.install.system.1': 'المعالج',
+      'sup.install.system.2': 'الذاكرة',
+      'sup.install.system.3': 'المساحة الحرة',
+      'sup.install.system.4': 'اسم المضيف',
+      'sup.install.system.5': 'المنطقة الزمنية',
+      'sup.install.installation.0': 'مسار التثبيت',
+      'sup.install.installation.1': 'تاريخ التثبيت',
+      'sup.install.installation.2': 'منفذ الخادم',
+      'sup.install.installation.3': 'خادم الويب',
+      'sup.install.installation.4': 'التشغيل كـ',
+      'sup.install.database.0': 'نوع قاعدة البيانات',
+      'sup.install.database.1': 'إصدار قاعدة البيانات',
+      'sup.install.database.2': 'حجم قاعدة البيانات',
+      'sup.install.database.3': 'مضيف قاعدة البيانات',
+      'sup.install.database.4': 'منفذ قاعدة البيانات',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+
+  const CARDS = [
+    { icon: 'message-chat-square', key: 'sup.card.0' },
+    { icon: 'calling', key: 'sup.card.1' },
+    { icon: 'file-upload', key: 'sup.card.2' },
+    { icon: 'thumbs-up', key: 'sup.card.3' },
+    { icon: 'exclamation-triangle', key: 'sup.card.4' },
+    { icon: 'message-text-square', key: 'sup.card.5' },
+  ];
+  const COMM_TABS = [
+    { id: 'all', key: 'sup.commtab.all', badge: '144' },
+    { id: 'announcements', key: 'sup.commtab.announcements', badge: '12' },
+    { id: 'questions', key: 'sup.commtab.questions', badge: '87' },
+    { id: 'resolved', key: 'sup.commtab.resolved', badge: '27' },
+  ];
+  const TAG = { idea: { key: 'sup.tag.idea', state: 'active' }, announcement: { key: 'sup.tag.announcement', state: 'important' }, question: { key: 'sup.tag.question', state: 'acknowledge' }, resolved: { key: 'sup.tag.resolved', state: 'success' } };
+  const TOPICS = [
+    { type: 'idea', tab: 'questions', key: 'sup.topic.0' },
+    { type: 'announcement', tab: 'announcements', key: 'sup.topic.1' },
+    { type: 'resolved', tab: 'resolved', key: 'sup.topic.2' },
+  ];
+  const INSTALL_TABS = [
+    { id: 'product', key: 'sup.installtab.product' },
+    { id: 'system', key: 'sup.installtab.system' },
+    { id: 'installation', key: 'sup.installtab.installation' },
+    { id: 'database', key: 'sup.installtab.database' },
+  ];
+  const INSTALL = {
+    product: [{ key: 'sup.install.product.0', value: 'ManageEngine Endpoint Central 11' }, { key: 'sup.install.product.1', value: '64-bit' }, { key: 'sup.install.product.2', value: '11.5.2613.04' }, { key: 'sup.install.product.3', value: 'ZOHO Corp.' }, { key: 'sup.install.product.4', value: '11.5.2613.04.W' }, { key: 'sup.install.product.5', value: '11.5.2613.01.M' }, { key: 'sup.install.product.6', value: '11.5.2613.04.L' }, { key: 'sup.install.product.7', value: '11.5.2613.04' }],
+    system: [{ key: 'sup.install.system.0', value: 'Windows Server 2022' }, { key: 'sup.install.system.1', value: 'Intel Xeon E5 · 8 cores' }, { key: 'sup.install.system.2', value: '32 GB' }, { key: 'sup.install.system.3', value: '412 GB' }, { key: 'sup.install.system.4', value: 'EC-PRIMARY-01' }, { key: 'sup.install.system.5', value: '(GMT+05:30) IST' }],
+    installation: [{ key: 'sup.install.installation.0', value: 'C:\\Program Files\\ManageEngine\\Endpoint Central' }, { key: 'sup.install.installation.1', value: '12 Jan 2026' }, { key: 'sup.install.installation.2', value: '8383 (HTTPS)' }, { key: 'sup.install.installation.3', value: 'Apache · TLS 1.3' }, { key: 'sup.install.installation.4', value: 'Service (Local System)' }],
+    database: [{ key: 'sup.install.database.0', value: 'PostgreSQL' }, { key: 'sup.install.database.1', value: '15.4' }, { key: 'sup.install.database.2', value: '6.8 GB' }, { key: 'sup.install.database.3', value: 'localhost' }, { key: 'sup.install.database.4', value: '5432' }],
+  };
+
+  function buildCards() {
+    const grid = document.getElementById('sup-cards'); if (!grid) return;
+    grid.innerHTML = CARDS.map((c) => `
+      <ds-container class="sup-card" variant="outline" radius="lg" padding="lg">
+        <div class="sup-card__ic"><ds-icon name="${c.icon}" size="20"></ds-icon></div>
+        <div class="sup-card__title">${t(c.key + '.title')}</div>
+        <div class="sup-card__desc">${t(c.key + '.desc')}</div>
+        <ds-text-link href="#" variant="primary" size="medium" trailing-icon="chevron-right">${t(c.key + '.cta')}</ds-text-link>
+      </ds-container>`).join('');
+  }
+  function buildTopics(filter) {
+    const box = document.getElementById('sup-topics'); if (!box) return;
+    const list = (!filter || filter === 'all') ? TOPICS : TOPICS.filter((x) => x.tab === filter);
+    box.innerHTML = list.length ? list.map((x) => {
+      const tag = TAG[x.type] || TAG.idea;
+      return `
+      <div class="sup-topic">
+        <div class="sup-topic__head">
+          <span class="sup-topic__title">${t(x.key + '.title')}</span>
+          <ds-badge variant="subtle" state="${tag.state}" size="small" shape="rounded">${t(tag.key)}</ds-badge>
+        </div>
+        <div class="sup-topic__excerpt">${t(x.key + '.excerpt')}</div>
+      </div>`;
+    }).join('') : `<div class="sup-topic" style="color:var(--uems-text-tertiary);border-top:0;">—</div>`;
+  }
+  function renderInstall(tab) {
+    const box = document.getElementById('sup-install-rows'); if (!box) return;
+    const rows = INSTALL[tab] || INSTALL.product;
+    box.innerHTML = rows.map((r) => `<div class="sup-row"><span class="sup-row__k">${t(r.key)}</span><span class="sup-row__v">${r.value}</span></div>`).join('');
+  }
+  function applyStrings() {
+    const p = document.getElementById('support-pop'); if (!p) return;
+    p.querySelectorAll('[data-sup]').forEach((el) => {
+      const k = el.getAttribute('data-sup');
+      if (MSGS.en['sup.' + k] == null) return;
+      const s = t('sup.' + k);
+      if (el.tagName === 'DS-BUTTON' || el.tagName === 'DS-TEXT-LINK') { (el.querySelector('.ds-button__label') || el.querySelector('a > span') || el).textContent = s; }
+      else el.textContent = s;
+    });
+    const ct = document.getElementById('sup-comm-tabs');
+    if (ct) ct.items = COMM_TABS.map((x) => ({ id: x.id, label: t(x.key), badge: x.badge }));
+    const it = document.getElementById('sup-install-tabs');
+    if (it) it.items = INSTALL_TABS.map((x) => ({ id: x.id, label: t(x.key) }));
+  }
+  let _wired = false;
+  function build() {
+    buildCards();
+    applyStrings();
+    buildTopics('all');
+    renderInstall('product');
+    if (!_wired) {
+      _wired = true;
+      const ct = document.getElementById('sup-comm-tabs');
+      ct && ct.addEventListener('ds-tab-change', (e) => buildTopics(e.detail && e.detail.id));
+      const it = document.getElementById('sup-install-tabs');
+      it && it.addEventListener('ds-tab-change', (e) => renderInstall(e.detail && e.detail.id));
+    }
+  }
+  function show() {
+    const sa = shellArea(); if (!sa) return;
+    sa.classList.remove('set-open', 'zia-open');
+    sa.classList.add('support-open');
+    build();
+  }
+  function hide() { const sa = shellArea(); if (sa) sa.classList.remove('support-open'); }
+  function onLang() { const sa = shellArea(); if (sa && sa.classList.contains('support-open')) build(); }
+  document.addEventListener('shell:langchange', onLang);
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers.support = { show, hide, build, onLang };
+})();
+</script>
+</template>
+
+<script>
+/* ── STANDALONE HARNESS — runs ONLY when opened directly. ── */
+(function () {
+  const KEY = 'support';
+  const host = document.createElement('div'); host.className = 'shell-area sa-host'; document.body.appendChild(host);
+  let lang = 'en';
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellCtx = window.ShellCtx || { get shellArea() { return host; }, get lang() { return lang; }, setActiveIcon() {} };
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers[KEY] && window.ShellDrawers[KEY].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

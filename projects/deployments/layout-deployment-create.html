@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<!--
+  Deployments · Create Deployment — 6 stacked section cards.
+  Basic details · What to deploy · Define target · Delivery · Schedule ·
+  Deadlines & retry & notifications. Sticky bottom bar with blocking-reason
+  strip on the left.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Create Deployment — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+<template id="drawer-fragment">
+<style>
+#dep-create-pop .lay__section { padding: 20px 0 4px; }
+#dep-create-pop .lay__fields { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; }
+#dep-create-pop .lay__field { max-width: 900px; padding-bottom: 20px; }
+#dep-create-pop .lay__control-only { padding-inline-start: 288px; }
+/* Cap the Resource multi-select at a normal input width — otherwise the
+   ds-input-select stretches to fill the whole 900px field column. The
+   custom element defaults to display:inline, so we force it to block for
+   max-width to actually kick in. */
+#dep-create-pop #dc-resource { display: block; max-width: 960px; }
+/* Left-label layout: 280px label column + field-col right, matching the
+   ds-input-select--left rhythm used by Deployment name / Type. */
+#dep-create-pop #dc-resource .ds-token-field {
+  display: grid; grid-template-columns: 280px 1fr; gap: 12px; align-items: start;
+  max-width: 960px;
+}
+#dep-create-pop #dc-resource .ds-token-field__label-row { padding-top: 8px; }
+/* Description toggle row — no left indent (link starts at column 0). */
+#dep-create-pop .dc-desc-toggle-row { padding-inline-start: 0 !important; padding-top: 4px; }
+
+/* AG chip in the header. */
+#dep-create-pop .dc-ag { display: inline-flex; align-items: center; gap: 6px; margin-inline-start: 12px; padding: 4px 10px; border-radius: 999px; background: var(--uems-bg-secondary); font-size: 12px; color: var(--uems-text-secondary); }
+/* Read-only AG stamp badge in the top-right of the page header. */
+#dep-create-pop .dc-ph-ag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--uems-bg-info-subtle, rgba(66, 133, 244, 0.08));
+  border: 1px solid var(--uems-border-info-subtle, rgba(66, 133, 244, 0.25));
+  color: var(--uems-text-info, var(--uems-text-primary));
+  font-size: 12px; font-weight: 500;
+  cursor: default; user-select: none;
+}
+
+/* Radio group inline rows. */
+#dep-create-pop #dc-type .ds-radio-group__items,
+#dep-create-pop #dc-schedule .ds-radio-group__items { display: flex; flex-direction: row; gap: 24px; flex-wrap: wrap; }
+
+/* Delivery cards — two selectable ds-cards side by side (Push / SSP).
+   Left-aligned (no 288px label-column offset) and wide enough to keep the
+   description on a single row. */
+#dep-create-pop .dc-delivery { display: flex; flex-direction: column; gap: 12px; max-width: none; }
+#dep-create-pop .lay__field.lay__control-only:has(.dc-delivery) { padding-inline-start: 0; }
+#dep-create-pop .dc-delivery-cards { display: grid; grid-template-columns: repeat(2, minmax(420px, 480px)); gap: 16px; justify-content: start; }
+#dep-create-pop .dc-delivery-card { cursor: pointer; transition: box-shadow 140ms var(--ease-standard, ease); }
+#dep-create-pop .dc-delivery-card .ds-card__body p { white-space: nowrap; }
+#dep-create-pop .dc-delivery-card:hover { box-shadow: var(--elevation-2, 0 4px 12px rgba(0,0,0,0.08)); }
+#dep-create-pop .dc-delivery-card:focus-visible { outline: 2px solid var(--uems-border-accent); outline-offset: 2px; }
+/* SSP settings — flat, no container, gated by a small toggle. */
+#dep-create-pop .dc-delivery-sub {
+  padding: 4px 0 0; display: none; flex-direction: column; gap: 12px;
+  max-width: 976px;
+}
+#dep-create-pop .dc-delivery-sub[data-open="true"] { display: flex; }
+#dep-create-pop .dc-ssp-window-fields { display: none; flex-direction: column; gap: 12px; padding-top: 4px; }
+#dep-create-pop .dc-ssp-window-fields[data-open="true"] { display: flex; }
+#dep-create-pop .dc-ssp-datetime { display: flex; align-items: center; gap: 8px; }
+#dep-create-pop .dc-ssp-datetime ds-date-picker { flex: 0 1 260px; }
+#dep-create-pop .dc-ssp-datetime ds-input-select { flex: 0 0 140px; }
+/* Kill the built-in "Select Date" label — our row already has an "Available
+   from" / "Available until" caption to the left. */
+#dep-create-pop .dc-ssp-datetime .ds-date-picker__label { display: none; }
+@media (max-width: 900px) { #dep-create-pop .dc-delivery-cards { grid-template-columns: 1fr; } }
+
+/* Target block — multiple targets combine with OR. Each target has its
+   own AG stamp plus Include / Filter / Exclude clauses (all enabled). */
+#dep-create-pop .dc-targets-wrap { display: flex; flex-direction: column; gap: 20px; max-width: 90%; width: 90%; }
+/* Common AG stamp — one label above all targets, read-only. */
+#dep-create-pop .dc-ag-row { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; }
+#dep-create-pop .dc-ag-label { font-size: 13px; color: var(--uems-text-secondary); }
+#dep-create-pop .dc-ag-value { font-size: 14px; font-weight: 600; color: var(--uems-text-primary); }
+/* Targets tile into a 2-column grid — Target 1 top-left, Target 2 top-right,
+   Target 3 bottom-left, and so on. Multiple targets combine with OR. */
+#dep-create-pop #dc-targets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 900px) { #dep-create-pop #dc-targets { grid-template-columns: 1fr; } }
+#dep-create-pop .dc-target { display: flex; flex-direction: column; gap: 12px; padding: 0 16px 16px; border: 1px dashed var(--uems-border-tertiary); border-radius: 8px; background: var(--uems-bg-primary, #fff); position: relative; overflow: hidden; }
+/* Grey title banner — extends edge-to-edge inside the dashed frame,
+   fixed to 40px tall. */
+#dep-create-pop .dc-target-title-row {
+  background: rgba(0, 0, 0, 0.06);
+  margin: 0 -16px 12px;
+  padding: 0 16px;
+  height: 40px;
+}
+:root[data-theme="dark"] #dep-create-pop .dc-target-title-row { background: rgba(255, 255, 255, 0.06); }
+/* Title row = Target N (left) | AG stamp + delete (right). Fixed 40px
+   height, vertically centered, sits inside the target card as a banner. */
+#dep-create-pop .dc-target-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
+#dep-create-pop .dc-target-title { font-weight: 600; font-size: 14px; color: var(--uems-text-primary); }
+#dep-create-pop .dc-target-ag { display: inline-flex; align-items: center; gap: 8px; margin-inline-start: auto; }
+/* AG stamp — small pill-badge with a chevron. Compact vertical rhythm
+   (24px tall) so it reads as a chip inside the 40px title band. */
+#dep-create-pop .dc-target-ag ds-input-select { min-width: 140px; font-size: 12px; }
+#dep-create-pop .dc-target-ag ds-input-select .ds-input-select__helper { display: none; }
+#dep-create-pop .dc-target-ag .ds-input-select__trigger {
+  background: var(--uems-bg-info-subtle, rgba(66, 133, 244, 0.08));
+  border: 1px solid var(--uems-border-info-subtle, rgba(66, 133, 244, 0.25));
+  border-radius: 999px;
+  padding: 0 10px;
+  min-height: 24px;
+  height: 24px;
+  color: var(--uems-text-info, var(--uems-text-primary));
+  font-weight: 500;
+  font-size: 12px;
+}
+#dep-create-pop .dc-target-ag .ds-input-select__value { color: var(--uems-text-info, var(--uems-text-primary)); font-size: 12px; }
+#dep-create-pop .dc-target-ag [data-role="ag-tag"] { flex: 0 0 auto; }
+#dep-create-pop .dc-target-ag [data-role="ag-tag"][hidden] { display: none; }
+/* Title-row actions (Add / Delete target) — hidden until the CARD is
+   hovered or one of the buttons has keyboard focus. Tooltips come from the
+   ds-icon-button's built-in label tooltip. Add is a filled primary box;
+   Delete is a filled secondary box that turns red on hover. */
+#dep-create-pop .dc-target-actions {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-inline-start: auto;
+  opacity: 0; transition: opacity 120ms var(--ease-standard, ease);
+}
+#dep-create-pop .dc-target:hover .dc-target-actions,
+#dep-create-pop .dc-target-actions:focus-within { opacity: 1; }
+/* Add target — white fill / green stroke / green icon; hover flips to a
+   solid green fill with a white icon. */
+#dep-create-pop .dc-target-actions [data-add-target] button {
+  background: var(--uems-bg-primary, #fff);
+  border: 1px solid var(--uems-border-success, var(--uems-bg-button-primary));
+  color: var(--uems-icon-success, var(--uems-bg-button-primary));
+}
+#dep-create-pop .dc-target-actions [data-add-target] button:hover {
+  background: var(--uems-bg-button-primary);
+  border-color: transparent;
+  color: var(--uems-icon-white, #fff);
+}
+/* Delete target — white fill / grey stroke / red icon; hover flips to a
+   solid red fill with a white icon. */
+#dep-create-pop .dc-target-actions [data-remove-target] button {
+  background: var(--uems-bg-primary, #fff);
+  border: 1px solid var(--uems-border-secondary, #c3c9d6);
+  color: var(--uems-icon-error, #d64545);
+}
+#dep-create-pop .dc-target-actions [data-remove-target] button:hover {
+  background: var(--uems-bg-button-error, var(--uems-icon-error, #d64545));
+  border-color: transparent;
+  color: var(--uems-icon-white, #fff);
+}
+
+/* Target cell — the OR chip sits in the horizontal grid gap between two
+   cards, vertically centered against the card body. */
+#dep-create-pop .dc-target-cell { position: relative; display: flex; flex-direction: column; }
+
+/* "Own AG" chip that appears next to the admin's own-scope AG option
+   inside every AG dropdown. Global (portaled to body). */
+.dc-own-ag-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-inline-start: 8px; padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.04em;
+  background: var(--uems-bg-info-subtle, rgba(66, 133, 244, 0.10));
+  color: var(--uems-text-info, var(--uems-text-primary));
+  border: 1px solid var(--uems-border-info-subtle, rgba(66, 133, 244, 0.25));
+  white-space: nowrap;
+}
+#dep-create-pop .dc-or-chip {
+  position: absolute; left: -26px; top: 50%; transform: translateY(-50%);
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 3px 10px; border-radius: 999px;
+  font-family: ui-monospace, 'SF Mono', Consolas, monospace; font-size: 11px;
+  font-weight: 700; letter-spacing: 0.08em;
+  background: var(--uems-bg-success-subtle, rgba(6,131,73,0.12));
+  color: var(--uems-text-success);
+  border: 1px solid var(--uems-border-success, rgba(6,131,73,0.25));
+  z-index: 2; pointer-events: none;
+}
+#dep-create-pop .dc-target-logic {
+  font-family: ui-monospace, 'SF Mono', Consolas, monospace; font-size: 12px;
+  padding: 6px 10px; border-radius: 6px; align-self: flex-start;
+  background: var(--uems-bg-accent-primary-action); color: var(--uems-text-accent);
+}
+/* Global logic pill — one instance above the target grid, not per target. */
+#dep-create-pop .dc-target-logic--global { align-self: flex-start; }
+#dep-create-pop .dc-target-row { display: grid; grid-template-columns: 90px 1fr; gap: 12px; align-items: center; }
+#dep-create-pop .dc-target-row[hidden] { display: none; }
+#dep-create-pop .dc-target-row .lbl { font-weight: 600; font-size: 13px; color: var(--uems-text-primary); align-self: center; }
+#dep-create-pop .dc-target-row .lbl.include { color: var(--uems-text-success); }
+/* Filter / Exclude labels indent 12px as sub-clauses of Include; the label
+   column width is unchanged, so the dropdown fields stay on the same x. */
+#dep-create-pop .dc-target-row .lbl.filter  { color: var(--uems-text-info);  padding-inline-start: 12px; }
+#dep-create-pop .dc-target-row .lbl.exclude { color: var(--uems-text-error); padding-inline-start: 12px; }
+/* Type + Value stay inline on the SAME row. Value is wider than Type to
+   give the actual selection more room. */
+/* All three clause rows share the same 90px label column, so the Type
+   dropdowns and Value token fields start at the same x on every row. The
+   token field shrinks inside the card (min-width: 0) so nothing clips. */
+#dep-create-pop .dc-target-row .val { display: flex; gap: 12px; flex-wrap: nowrap; align-items: center; min-width: 0; }
+#dep-create-pop .dc-target-row .val ds-input-select { min-width: 0; display: block; flex: 0 0 160px; max-width: 160px; }
+#dep-create-pop .dc-target-row .val ds-token-field  { min-width: 0; display: block; flex: 1 1 0; max-width: none; }
+#dep-create-pop .dc-target-row .val ds-input-select .ds-input-select { max-width: none; }
+#dep-create-pop .dc-target-row .val ds-input-select .ds-input-select__field-col { max-width: none; }
+#dep-create-pop .dc-target-row .val ds-token-field .ds-token-field__field-col { max-width: none; }
+@media (max-width: 640px) { #dep-create-pop .dc-target-row .val { flex-wrap: wrap; } }
+#dep-create-pop .dc-devcount {
+  display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 6px;
+  background: var(--uems-bg-secondary-subtle); font-size: 13px; color: var(--uems-text-primary);
+}
+#dep-create-pop .dc-devcount ds-icon { color: var(--uems-icon-tertiary); }
+#dep-create-pop .dc-devcount.zero { background: var(--uems-bg-warning-primary); color: var(--uems-text-warning); }
+#dep-create-pop .dc-devcount.zero ds-icon { color: var(--uems-icon-warning); }
+
+/* Schedule sub-panels — hidden until the matching radio is picked. */
+#dep-create-pop .dc-sched-sub { display: none; padding: 12px; border: 1px dashed var(--uems-border-tertiary); border-radius: 8px; margin-top: 8px; max-width: 900px; }
+#dep-create-pop .dc-sched-sub[data-open="true"] { display: flex; flex-direction: column; gap: 12px; }
+/* "Flat" schedule sub-panel — no dashed border, sits as a normal field
+   row aligned with the Schedule radio group above it. */
+#dep-create-pop .dc-sched-sub--flat { border: 0; padding: 0; margin-top: 0; max-width: 900px; }
+#dep-create-pop .dc-sched-sub--flat[data-open="true"] { display: flex; flex-direction: row; align-items: center; gap: 12px; flex-wrap: wrap; }
+#dep-create-pop .dc-sched-sub--flat > ds-input-select { display: block; flex: 1 1 auto; max-width: 640px; min-width: 320px; }
+#dep-create-pop .dc-sched-sub--flat > ds-input-select .ds-input-select { max-width: 640px; }
+/* Match the radio-group's 12px label→field gap so the input's left edge
+   lines up with the radio pills above it. */
+#dep-create-pop .dc-sched-sub--flat > ds-input-select .ds-input-select--left { gap: 12px; }
+/* The DS caps the trigger column at 320px for medium selects; widen it
+   here so long option labels ("Select a schedule policy" etc.) breathe. */
+#dep-create-pop .dc-sched-sub--flat > ds-input-select .ds-input-select__field-col { max-width: 420px; }
+#dep-create-pop .dc-sched-actions { display: inline-flex; align-items: center; gap: 8px; }
+#dep-create-pop .dc-sched-refresh {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border: 0; background: transparent; border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--uems-icon-secondary);
+}
+#dep-create-pop .dc-sched-refresh:hover { background: var(--uems-bg-secondary-hover); color: var(--uems-icon-primary); }
+
+/* Trigger sub-panel — Metrics dropdown + Alert Condition row. The row is
+   built from left-labeled sentence fragments and short number inputs. */
+#dep-create-pop .dc-trigger-alert { display: flex; align-items: center; gap: 12px; }
+#dep-create-pop .dc-trigger-alert-label {
+  width: 280px; flex-shrink: 0;
+  font-size: 13px; font-weight: 600; color: var(--uems-text-primary);
+}
+#dep-create-pop .dc-trigger-alert-row { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#dep-create-pop .dc-trigger-alert-text { font-size: 13px; color: var(--uems-text-primary); }
+#dep-create-pop .dc-trigger-alert-unit,
+#dep-create-pop .dc-trigger-alert-for { font-size: 13px; color: var(--uems-text-secondary); }
+#dep-create-pop .dc-trigger-alert-row ds-text-input { display: inline-block; width: 96px; }
+#dep-create-pop .dc-trigger-alert-row ds-text-input .ds-text-input__label-col { display: none; }
+#dep-create-pop .dc-trigger-alert-row ds-text-input .ds-text-input__field { min-width: 0; }
+/* Placeholder state — grey out the whole row when no metric picked yet. */
+#dep-create-pop .dc-trigger-alert.is-empty ds-text-input,
+#dep-create-pop .dc-trigger-alert.is-empty .dc-trigger-alert-unit,
+#dep-create-pop .dc-trigger-alert.is-empty .dc-trigger-alert-for { display: none; }
+#dep-create-pop .dc-trigger-alert.is-empty .dc-trigger-alert-text { color: var(--uems-text-secondary); font-style: italic; }
+/* Some metrics don't have a duration ("for X minutes") — hide those bits. */
+#dep-create-pop .dc-trigger-alert.no-duration #dc-trigger-for-label,
+#dep-create-pop .dc-trigger-alert.no-duration #dc-trigger-duration,
+#dep-create-pop .dc-trigger-alert.no-duration #dc-trigger-duration-unit { display: none; }
+
+/* Toggle-driven sub-cards under "Deadlines, retry & notifications". Each has
+   a header row with a ds-toggle + title, and a hidden body that opens when
+   the toggle is on. */
+#dep-create-pop .dc-toggle-card {
+  border-radius: 8px; background: var(--uems-bg-secondary-subtle, rgba(0,0,0,0.03));
+  padding: 12px 16px; margin-bottom: 12px; max-width: 900px;
+}
+#dep-create-pop .dc-toggle-row { display: flex; align-items: center; gap: 12px; }
+#dep-create-pop .dc-toggle-title { font-weight: 600; font-size: 14px; color: var(--uems-text-primary); }
+#dep-create-pop .dc-toggle-sub { display: none; padding-top: 12px; }
+#dep-create-pop .dc-toggle-card[data-open="true"] .dc-toggle-sub { display: flex; flex-direction: column; gap: 12px; }
+
+/* Retry — inline dropdown + label rows. */
+#dep-create-pop .dc-retry-row { display: grid; grid-template-columns: 120px auto 1fr; gap: 12px; align-items: center; }
+#dep-create-pop .dc-retry-row .dc-retry-lbl { font-size: 13px; font-weight: 500; color: var(--uems-text-primary); }
+#dep-create-pop .dc-retry-row ds-input-select { min-width: 200px; max-width: 260px; }
+#dep-create-pop .dc-retry-row .dc-retry-suffix { font-size: 13px; color: var(--uems-text-secondary); }
+#dep-create-pop .dc-retry-summary {
+  padding-inline-start: 132px; font-size: 12px; color: var(--uems-text-secondary);
+}
+
+/* Notification — note strip + inline schedule + email + technician. */
+#dep-create-pop .dc-notify-note {
+  font-size: 12px; line-height: 1.5; color: var(--uems-text-secondary);
+  padding: 8px 12px; border-radius: 6px; background: var(--uems-bg-primary);
+}
+#dep-create-pop .dc-notify-inline { display: grid; grid-template-columns: 120px auto auto auto auto auto 1fr; gap: 8px; align-items: center; }
+#dep-create-pop .dc-notify-inline .dc-notify-lbl { font-size: 13px; font-weight: 500; color: var(--uems-text-primary); }
+#dep-create-pop .dc-notify-inline .dc-notify-sep { font-size: 13px; color: var(--uems-text-secondary); }
+#dep-create-pop .dc-notify-inline ds-text-input { min-width: 80px; max-width: 100px; }
+#dep-create-pop .dc-notify-inline ds-text-input .ds-text-input__label-col { display: none; }
+
+/* Sticky footer with blocking-reason strip on the left. */
+#dep-create-pop ds-form-footer { flex: none; }
+#dep-create-pop .dc-blocker { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--uems-text-warning); }
+#dep-create-pop .dc-blocker[hidden] { display: none; }
+</style>
+
+<div id="dep-create-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <ds-page-header id="dc-ph" icon="settings-deploy" structure="default"
+      title="Create Deployment"
+      description="What is deployed, to whom, when, and how."
+      show-description show-breadcrumbs>
+      <span slot="actions" id="dc-ph-ag" class="dc-ph-ag" aria-label="Administrative group (read-only)">
+        <ds-icon name="shield" size="14"></ds-icon>India AG
+      </span>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+
+      <!-- 1) Basic details -->
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large" title="Basic details"></ds-section-header>
+        <div class="lay__fields">
+          <div class="lay__field">
+            <ds-text-input id="dc-name" size="medium" required label="Deployment name" label-position="left" placeholder="e.g. Onboarding — July batch" maxlength="80"></ds-text-input>
+          </div>
+          <div class="lay__field lay__control-only dc-desc-toggle-row">
+            <ds-text-link id="dc-desc-toggle" href="#" variant="primary" size="small" prefix-icon="add">Add description</ds-text-link>
+          </div>
+          <div class="lay__field" id="dc-desc-field" hidden>
+            <ds-text-area id="dc-desc" size="medium" label="Description" label-position="left" placeholder="eg. add from your end"></ds-text-area>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2) What to deploy -->
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large" title="What to deploy" description="Pick a policy for a single action, or a workflow for a multi-stage flow."></ds-section-header>
+        <div class="lay__fields">
+          <div class="lay__field">
+            <ds-radio-group id="dc-type" label="Type" label-position="left" value="policy"></ds-radio-group>
+          </div>
+          <div class="lay__field">
+            <ds-token-field id="dc-resource" class="dc-resource-left" size="medium" required
+              label="Select policy" placeholder="Choose from your AG"
+              helper="Pick one or more policies. Type switches the picker — resources can't be mixed."></ds-token-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3) Define target -->
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large" title="Define target" description="Pick who gets this deployment. Include / Filter / Exclude clauses per target — multiple targets combine with OR."></ds-section-header>
+        <div id="dc-targets-wrap" class="dc-targets-wrap" style="margin-top: 12px;">
+          <div class="dc-ag-row">
+            <span class="dc-ag-label">Administrative Group:</span>
+            <strong class="dc-ag-value" id="dc-common-ag">India AG</strong>
+          </div>
+          <div id="dc-targets"></div>
+          <div id="dc-devcount" class="dc-devcount">
+            <ds-icon name="computer" size="14"></ds-icon>
+            <span id="dc-devcount-label">~ 1,240 devices will be targeted</span>
+            <span style="margin-inline-start:auto;"><ds-text-link href="#" size="small">Preview devices</ds-text-link></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4) Delivery method -->
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large" title="Delivery method" description="Pick one or both. Deploy button stays disabled until at least one is chosen."></ds-section-header>
+        <div class="lay__fields">
+          <div class="lay__field lay__control-only">
+            <div class="dc-delivery">
+              <div class="dc-delivery-cards">
+                <ds-card id="dc-push-card" class="dc-delivery-card"
+                  type="elevated" size="small"
+                  title="Push to devices"
+                  leading-icon="computer" show-leading-icon
+                  show-header-action="false" show-footer="false"
+                  role="checkbox" aria-checked="false" tabindex="0">
+                  <p>Deploy directly to agent — admin controlled install</p>
+                </ds-card>
+                <ds-card id="dc-ssp-card" class="dc-delivery-card"
+                  type="elevated" size="small"
+                  title="Publish to SSP"
+                  leading-icon="globe" show-leading-icon
+                  show-header-action="false" show-footer="false"
+                  role="checkbox" aria-checked="false" tabindex="0">
+                  <p>Make available in Self Service Portal — user controlled install</p>
+                </ds-card>
+              </div>
+              <div class="dc-delivery-sub" id="dc-ssp-sub">
+                <ds-checkbox id="dc-ssp-window-toggle" size="medium" label="Set an SSP availability window (Available from / until)"></ds-checkbox>
+                <div id="dc-ssp-window-fields" class="dc-ssp-window-fields">
+                  <div class="dc-ssp-datetime">
+                    <span style="min-width: 120px; font-size: 13px; font-weight: 500; color: var(--uems-text-primary);">Available from</span>
+                    <ds-date-picker id="dc-ssp-from-date" type="single" size="medium" placeholder="Pick a date"></ds-date-picker>
+                    <ds-input-select id="dc-ssp-from-time" size="medium" placeholder="HH:mm"></ds-input-select>
+                  </div>
+                  <div class="dc-ssp-datetime">
+                    <span style="min-width: 120px; font-size: 13px; font-weight: 500; color: var(--uems-text-primary);">Available until</span>
+                    <ds-date-picker id="dc-ssp-until-date" type="single" size="medium" placeholder="Pick a date"></ds-date-picker>
+                    <ds-input-select id="dc-ssp-until-time" size="medium" placeholder="HH:mm"></ds-input-select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5) Schedule -->
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large" title="Schedule" description="Pick exactly one. Deployment Window is required for the Schedule option only."></ds-section-header>
+        <div class="lay__fields">
+          <div class="lay__field">
+            <ds-input-select id="dc-schedule" size="medium" required label="Schedule" label-position="left" placeholder="Pick when this deployment runs"></ds-input-select>
+          </div>
+          <div id="dc-sched-schedule" class="dc-sched-sub dc-sched-sub--flat">
+            <ds-input-select id="dc-window" size="medium" required label="Select schedule policy" label-position="left" placeholder="No policy available"></ds-input-select>
+            <span class="dc-sched-actions">
+              <ds-text-link id="dc-sched-add" href="#" size="medium" prefix-icon="add">Add policy</ds-text-link>
+              <button type="button" id="dc-sched-refresh" class="dc-sched-refresh" aria-label="Refresh policies">
+                <ds-icon name="refresh" size="16"></ds-icon>
+              </button>
+            </span>
+          </div>
+          <div id="dc-sched-trigger" class="dc-sched-sub dc-sched-sub--flat">
+            <ds-input-select id="dc-trigger" size="medium" required label="Select Metrics" label-position="left" placeholder="Pick a metric"></ds-input-select>
+            <div class="dc-trigger-alert lay__field">
+              <span class="dc-trigger-alert-label">Alert Condition for Event <span style="color: var(--uems-text-error);">*</span></span>
+              <div class="dc-trigger-alert-row">
+                <span class="dc-trigger-alert-text" id="dc-trigger-condition-text">Pick a metric first</span>
+                <ds-text-input id="dc-trigger-threshold" size="medium" placeholder=""></ds-text-input>
+                <span class="dc-trigger-alert-unit" id="dc-trigger-unit">%</span>
+                <span class="dc-trigger-alert-for" id="dc-trigger-for-label">for</span>
+                <ds-text-input id="dc-trigger-duration" size="medium" placeholder=""></ds-text-input>
+                <span class="dc-trigger-alert-unit" id="dc-trigger-duration-unit">minutes</span>
+              </div>
+            </div>
+          </div>
+          <div id="dc-sched-every" class="dc-sched-sub">
+            <ds-radio-group id="dc-every" label="Run at" label-position="left" value="refresh"></ds-radio-group>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6) Deadlines, retry, notifications — each block is toggle-gated. -->
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large" title="Deadlines, retry &amp; notifications" description="Optional — turn on any block below to configure it."></ds-section-header>
+
+        <!-- Deadline toggle -->
+        <div id="dc-deadline-card" class="dc-toggle-card" data-open="false">
+          <div class="dc-toggle-row">
+            <ds-toggle id="dc-deadline-toggle" size="medium"></ds-toggle>
+            <span class="dc-toggle-title">Set deadline for this deployment</span>
+          </div>
+          <div class="dc-toggle-sub">
+            <div class="lay__field">
+              <ds-text-input id="dc-start-nb" size="medium" required label="Start no earlier than" label-position="left" placeholder="yyyy-MM-dd HH:mm"></ds-text-input>
+            </div>
+            <div class="lay__field">
+              <ds-text-input id="dc-stop-after" size="medium" required label="Stop after" label-position="left" placeholder="yyyy-MM-dd HH:mm" helper-text="Must be after 'Start no earlier than'."></ds-text-input>
+            </div>
+          </div>
+        </div>
+
+        <!-- Retry toggle -->
+        <div id="dc-retry-card" class="dc-toggle-card" data-open="false">
+          <div class="dc-toggle-row">
+            <ds-toggle id="dc-retry-toggle" size="medium"></ds-toggle>
+            <span class="dc-toggle-title">Retry this configuration on failed targets</span>
+          </div>
+          <div class="dc-toggle-sub">
+            <div class="dc-retry-row">
+              <span class="dc-retry-lbl">Retry for</span>
+              <ds-input-select id="dc-retry-total" size="medium"></ds-input-select>
+              <span class="dc-retry-suffix">time(s), out of which retry</span>
+            </div>
+            <div class="dc-retry-row">
+              <span class="dc-retry-lbl"></span>
+              <ds-input-select id="dc-retry-startup" size="medium"></ds-input-select>
+              <span class="dc-retry-suffix">time(s) during startup</span>
+            </div>
+            <div class="dc-retry-row">
+              <span class="dc-retry-lbl"></span>
+              <ds-input-select id="dc-retry-refresh" size="medium"></ds-input-select>
+              <span class="dc-retry-suffix">time(s) during refresh</span>
+            </div>
+            <div class="dc-retry-summary" id="dc-retry-summary">10 time(s) during startup or refresh, whichever is earlier</div>
+          </div>
+        </div>
+
+        <!-- Notification toggle -->
+        <div id="dc-notify-card" class="dc-toggle-card" data-open="false">
+          <div class="dc-toggle-row">
+            <ds-toggle id="dc-notify-toggle" size="medium"></ds-toggle>
+            <span class="dc-toggle-title">Enable Notification</span>
+          </div>
+          <div class="dc-toggle-sub">
+            <div class="dc-notify-note">Note: Notification will begin only when the status is moved to "Ready to Execute". Subsequent notifications will be sent only if there is any change in the status.</div>
+
+            <div class="dc-notify-inline">
+              <span class="dc-notify-lbl">Notify via E-mail</span>
+              <span class="dc-notify-sep">every</span>
+              <ds-text-input id="dc-notify-hours" size="medium" placeholder="6"></ds-text-input>
+              <span class="dc-notify-sep">hour(s) for</span>
+              <ds-text-input id="dc-notify-days"  size="medium" placeholder="3"></ds-text-input>
+              <span class="dc-notify-sep">day(s)</span>
+              <span></span>
+            </div>
+
+            <div class="lay__field">
+              <ds-text-area id="dc-notify-emails" size="medium" required label="E-mail address" label-position="left" placeholder="[Multiple addresses to be separated by comma]"></ds-text-area>
+            </div>
+            <div class="lay__field">
+              <ds-input-select id="dc-notify-mobile" size="medium" multi label="Mobile app notification" label-position="left" placeholder="Select technician(s) to be notified"></ds-input-select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <ds-form-footer id="dc-footer" show-left="true">
+      <span slot="left" id="dc-blocker" class="dc-blocker" hidden>
+        <ds-icon name="exclamation-triangle" size="14"></ds-icon>
+        <span id="dc-blocker-text">Fill required fields</span>
+      </span>
+      <ds-button data-act="cancel"     variant="outline">Cancel</ds-button>
+      <ds-button data-act="save-draft" variant="secondary">Save as Draft</ds-button>
+      <ds-button data-act="submit"     variant="primary" id="dc-primary">Send for Approval</ds-button>
+    </ds-form-footer>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('dep-create-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+  /* Delivery-method selection state — declared at the very top of the
+     IIFE so any handler that reads it during init won't hit the TDZ. */
+  const deliveryState = { push: false, ssp: false };
+
+  const ph = $('dc-ph');
+  ph.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    if ((a.textContent || '').trim() === 'Deployments' && window.openContentView) { e.preventDefault(); window.openContentView('deployments-list'); }
+  });
+  ph.breadcrumbs = [
+    { label: 'Deployments', href: '#' },
+    { label: 'Create Deployment' },
+  ];
+
+  /* ---- Options ---------------------------------------------------------- */
+  $('dc-type').options = [
+    { value: 'policy',   label: 'Policy', selected: true },
+    { value: 'workflow', label: 'Workflow' },
+  ];
+  function refreshResources() {
+    const type = $('dc-type').value || 'policy';
+    /* Switching Type flips the picker's option set — clear previous
+       tokens so users can't mix policies with workflows. */
+    $('dc-resource').tokens = [];
+    const opts = type === 'policy'
+      ? ((window.__policiesStore || []).length
+          ? (window.__policiesStore || []).map((p) => ({ value: p.id, label: p.name + ' (v1)' }))
+          : [
+              { value: 'demo-p1', label: 'Prod Windows patch (v1)' },
+              { value: 'demo-p2', label: 'MDM baseline (v1)' },
+              { value: 'demo-p3', label: 'Firewall rules — Chennai (v1)' },
+            ])
+      : ((window.__workflowsStore || []).length
+          ? (window.__workflowsStore || []).map((w) => ({ value: w.id, label: w.name + ' (v' + Math.max(1, w.stages || 1) + ')' }))
+          : [
+              { value: 'demo-1', label: 'New-hire onboarding — Virtusa (v6)' },
+              { value: 'demo-2', label: 'Monthly security workflow (v2)' },
+              { value: 'demo-3', label: 'BitLocker baseline (v3)' },
+            ]);
+    $('dc-resource').suggestions = opts;
+  }
+  /* Update the Resource token-field label + placeholder whenever the Type
+     flips (Policy → "Policy" / Workflow → "Workflow"). */
+  const syncResourceLabel = () => {
+    const type = $('dc-type').value || 'policy';
+    const isWf = type === 'workflow';
+    $('dc-resource').setAttribute('label', isWf ? 'Workflow' : 'Policy');
+    $('dc-resource').setAttribute('placeholder', isWf ? 'Select workflow' : 'Select policy');
+  };
+  refreshResources();
+  syncResourceLabel();
+  $('dc-type').addEventListener('ds-radio-change', () => { refreshResources(); syncResourceLabel(); });
+  $('dc-type').addEventListener('ds-radio-group-change', () => { refreshResources(); syncResourceLabel(); });
+
+  /* Description is hidden by default — an "Add description" link reveals it. */
+  $('dc-desc-toggle').addEventListener('click', (e) => {
+    e.preventDefault();
+    $('dc-desc-field').hidden = false;
+    $('dc-desc-toggle').parentElement.hidden = true;
+    /* Auto-focus the textarea so the user can start typing immediately. */
+    const ta = $('dc-desc').querySelector('textarea');
+    if (ta) ta.focus();
+  });
+
+  /* ---- Targets — dynamic list, each with AG stamp + Include/Filter/Exclude
+     Multiple targets combine with OR. Admin scope decides which AGs a user
+     may pick — a child-scoped admin can't change their stamp. */
+
+  /* Simulated admin scope. When 'root' the user picks freely from every AG.
+     When set to a specific AG id, that AG is fixed and children (or self) are
+     the only pickable stamps. Read from `window.__deploymentAdminScope` if
+     provided by the shell; falls back to 'india' (an admin scoped to India
+     but with child AGs Chennai / Delhi / Mumbai available). */
+  const ADMIN_SCOPE = (window.__deploymentAdminScope || 'india');
+
+  /* AG tree — id, label, parent chain. Kept flat with parent refs for lookup. */
+  const AG_TREE = [
+    { id: 'root',    label: 'All AGs (root)',        parent: null    },
+    { id: 'india',   label: 'India AG',              parent: 'root'  },
+    { id: 'chennai', label: 'Chennai AG',            parent: 'india' },
+    { id: 'delhi',   label: 'Delhi AG',              parent: 'india' },
+    { id: 'mumbai',  label: 'Mumbai AG',             parent: 'india' },
+    { id: 'usa',     label: 'USA AG',                parent: 'root'  },
+    { id: 'usa-e',   label: 'USA East AG',           parent: 'usa'   },
+    { id: 'usa-w',   label: 'USA West AG',           parent: 'usa'   },
+    { id: 'apac',    label: 'APAC AG',               parent: 'root'  },
+    { id: 'zoho',    label: 'Zoho AG',               parent: 'root'  },
+    { id: 'tenkasi', label: 'Tenkasi AG',            parent: 'zoho'  },
+  ];
+  const AG_BY_ID = Object.fromEntries(AG_TREE.map((a) => [a.id, a]));
+  const isDescendantOf = (id, ancestor) => {
+    if (id === ancestor) return true;
+    let cur = AG_BY_ID[id]; while (cur) { if (cur.id === ancestor) return true; cur = cur.parent ? AG_BY_ID[cur.parent] : null; }
+    return false;
+  };
+  /* AGs the current admin may stamp on a target. Root-scoped admins get
+     everything, everyone else gets only their scope and its descendants. */
+  const AGS_FOR_ADMIN = () => AG_TREE.filter((a) =>
+    ADMIN_SCOPE === 'root' ? true : isDescendantOf(a.id, ADMIN_SCOPE));
+  const AG_LOCKED_TO_SCOPE = (() => {
+    /* True when the admin is scoped to a specific AG that has no descendants
+       — they can't switch stamp, so we render the field as disabled. */
+    if (ADMIN_SCOPE === 'root') return false;
+    return AG_TREE.filter((a) => a.parent === ADMIN_SCOPE).length === 0;
+  })();
+
+  /* INCLUDE type options depend on the kind of deployment being created.
+     window.__deploymentKind is set by the "Add Deployment" split menu on
+     the Deployments list (device / user). Falls back to device. */
+  const DEPLOYMENT_KIND = (window.__deploymentKind === 'user') ? 'user' : 'device';
+  const CLAUSE_TYPE_OPTS_DEVICE = [
+    { value: 'device-cg',  label: 'Device CG' },
+    { value: 'dynamic-cg', label: 'Dynamic CG' },
+    { value: 'devices',    label: 'Devices' },
+  ];
+  const CLAUSE_TYPE_OPTS_USER = [
+    { value: 'user-cg', label: 'User CG' },
+    { value: 'users',   label: 'Users' },
+  ];
+  const CLAUSE_TYPE_OPTS = DEPLOYMENT_KIND === 'user' ? CLAUSE_TYPE_OPTS_USER : CLAUSE_TYPE_OPTS_DEVICE;
+  const CLAUSE_TYPE_DEFAULT = CLAUSE_TYPE_OPTS[0].value;
+  const CLAUSE_VAL_OPTS = [
+    { value: 'lab-cg',    label: 'Lab-CG' },
+    { value: 'in-chn',    label: 'India / IN-HQ / Chennai' },
+    { value: 'devops-ad', label: 'DevOps engineers' },
+    { value: 'wfh',       label: 'Work-from-home devices' },
+    { value: 'exec',      label: 'Executive laptops' },
+    { value: 'kiosks',    label: 'Kiosks · Retail' },
+  ];
+
+  let nextTargetId = 1;
+  const targets = [];  /* [{ id, agValue }] — clause values live in the DOM per target */
+  const targetsHost = $('dc-targets');
+
+  /* When any AG dropdown opens, tag the admin's own AG option with an
+     inline "Own AG" chip. Dropdowns portal to <body>, so we watch there. */
+  const OWN_AG_LABEL_LOOKUP = () => {
+    const own = AG_TREE.find((a) => a.id === ADMIN_SCOPE);
+    return own ? own.label : null;
+  };
+  const decorateOwnAg = (listbox) => {
+    const ownLabel = OWN_AG_LABEL_LOOKUP();
+    if (!ownLabel) return;
+    listbox.querySelectorAll('.ds-dropdown-menu__item').forEach((li) => {
+      const labelEl = li.querySelector('.ds-dropdown-menu__item-label');
+      if (!labelEl) return;
+      if (li.dataset.ownAgPainted === '1') return;
+      if (labelEl.textContent.trim() === ownLabel) {
+        const chip = document.createElement('span');
+        chip.className = 'dc-own-ag-chip';
+        chip.textContent = 'Own AG';
+        labelEl.appendChild(chip);
+        li.dataset.ownAgPainted = '1';
+      }
+    });
+  };
+  const isAgDropdownFor = (listbox) => {
+    /* Match the AG dropdown by the trigger it points to — trigger sits inside
+       our own [data-role="ag"] selects, which live inside targetsHost. */
+    const triggerId = listbox.id ? listbox.id.replace(/-listbox$/, '') : null;
+    if (!triggerId) return false;
+    const trigger = document.getElementById(triggerId);
+    if (!trigger) return false;
+    return !!trigger.closest('[data-role="ag"]');
+  };
+  const bodyObserver = new MutationObserver((mutations) => {
+    mutations.forEach((m) => {
+      m.addedNodes.forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+        const listboxes = node.matches?.('.ds-input-select__dropdown')
+          ? [node]
+          : [...(node.querySelectorAll?.('.ds-input-select__dropdown') || [])];
+        listboxes.forEach((lb) => {
+          if (isAgDropdownFor(lb)) {
+            /* Menu items render after a tick — wait one frame. */
+            requestAnimationFrame(() => decorateOwnAg(lb));
+          }
+        });
+      });
+    });
+  });
+  bodyObserver.observe(document.body, { childList: true, subtree: true });
+
+  function renderTargets() {
+    targetsHost.innerHTML = '';
+    targets.forEach((t, i) => {
+      /* Wrap each target in a cell so the OR chip can sit ABOVE the card
+         (between cards), not inside it. */
+      const cell = document.createElement('div');
+      cell.className = 'dc-target-cell';
+      if (i > 0) {
+        const or = document.createElement('span');
+        or.className = 'dc-or-chip';
+        or.textContent = 'OR';
+        cell.appendChild(or);
+      }
+      const el = document.createElement('div');
+      el.className = 'dc-target';
+      el.dataset.targetId = t.id;
+      el.innerHTML = `
+        <div class="dc-target-title-row">
+          <span class="dc-target-title">Target ${i + 1}</span>
+          <span class="dc-target-actions">
+            <ds-icon-button data-add-target type="outline" size="small" icon="add" label="Add target"></ds-icon-button>
+            ${targets.length > 1
+              ? `<ds-icon-button data-remove-target type="outline" size="small" icon="delete" label="Delete target"></ds-icon-button>`
+              : ''}
+          </span>
+        </div>
+        <div class="dc-target-row">
+          <span class="lbl include">INCLUDE</span>
+          <span class="val">
+            <ds-input-select data-role="inc-type" size="small" placeholder="Type"></ds-input-select>
+            <ds-token-field data-role="inc-val" size="medium" show-label="false" show-helper-row="false" creatable="false" placeholder="Value"></ds-token-field>
+          </span>
+        </div>
+        <div class="dc-target-row">
+          <span class="lbl filter">FILTER</span>
+          <span class="val">
+            <ds-input-select data-role="flt-type" size="small" placeholder="Type"></ds-input-select>
+            <ds-token-field data-role="flt-val" size="medium" show-label="false" show-helper-row="false" creatable="false" placeholder="Value"></ds-token-field>
+          </span>
+        </div>
+        <div class="dc-target-row">
+          <span class="lbl exclude">EXCLUDE</span>
+          <span class="val">
+            <ds-input-select data-role="exc-type" size="small" placeholder="Type"></ds-input-select>
+            <ds-token-field data-role="exc-val" size="medium" show-label="false" show-helper-row="false" creatable="false" placeholder="Value"></ds-token-field>
+          </span>
+        </div>`;
+
+      /* AG stamp is now common at the section level (read-only). */
+      t.agValue = ADMIN_SCOPE;
+
+      /* Per-target selection state — created once per t, restored on every
+         re-render so switching add/remove targets doesn't wipe user picks. */
+      t.picks = t.picks || {
+        'inc-type': CLAUSE_TYPE_DEFAULT, 'inc-val': [],
+        'flt-type': '',                  'flt-val': [],
+        'exc-type': '',                  'exc-val': [],
+      };
+
+      ['inc-type','flt-type','exc-type'].forEach((role) => {
+        const sel = el.querySelector(`[data-role="${role}"]`);
+        sel.options = CLAUSE_TYPE_OPTS.slice();
+        /* Every clause type defaults to the first option (Device CG /
+           User CG); restore the user's prior pick when re-rendering. */
+        sel.setAttribute('value', t.picks[role] || CLAUSE_TYPE_DEFAULT);
+        t.picks[role] = t.picks[role] || CLAUSE_TYPE_DEFAULT;
+        sel.addEventListener('ds-input-select-change', (e) => {
+          t.picks[role] = e.detail.value;
+        });
+      });
+      ['inc-val','flt-val','exc-val'].forEach((role) => {
+        const sel = el.querySelector(`[data-role="${role}"]`);
+        /* Token field — suggestions dropdown + removable tag tokens. */
+        sel.suggestions = CLAUSE_VAL_OPTS.slice();
+        if (Array.isArray(t.picks[role]) && t.picks[role].length) {
+          sel.tokens = t.picks[role].map((v) => {
+            const opt = CLAUSE_VAL_OPTS.find((o) => o.value === v);
+            return opt ? { value: opt.value, label: opt.label } : v;
+          });
+        }
+        sel.addEventListener('ds-tokens-change', (e) => {
+          t.picks[role] = (e.detail && e.detail.tokens ? e.detail.tokens : []).map((tok) => tok.value);
+          updateValidation();
+        });
+      });
+
+      /* Clear "This field cannot be empty" errors as soon as the user picks
+         a value on the gated fields. */
+      const incType = el.querySelector('[data-role="inc-type"]');
+      incType.addEventListener('ds-input-select-change', () => {
+        if (incType.getAttribute('state') === 'error') {
+          incType.removeAttribute('state');
+          incType.removeAttribute('helper');
+        }
+      });
+      const incVal = el.querySelector('[data-role="inc-val"]');
+      incVal.addEventListener('ds-tokens-change', () => {
+        if (incVal.hasAttribute('error')) {
+          incVal.removeAttribute('error');
+          incVal.removeAttribute('helper');
+          incVal.setAttribute('show-helper-row', 'false');
+        }
+      });
+
+      /* Filter and Exclude rows only appear once INCLUDE has a value. */
+      const rows = el.querySelectorAll('.dc-target-row');
+      const filterRow  = rows[1];
+      const excludeRow = rows[2];
+      const syncClauseRows = () => {
+        const has = (incVal.values || []).length > 0;
+        filterRow.hidden  = !has;
+        excludeRow.hidden = !has;
+      };
+      syncClauseRows();
+      incVal.addEventListener('ds-tokens-change', syncClauseRows);
+
+      el.querySelector('[data-add-target]').addEventListener('click', () => addTarget());
+      const remove = el.querySelector('[data-remove-target]');
+      if (remove) remove.addEventListener('click', () => {
+        const idx = targets.findIndex((x) => x.id === t.id);
+        if (idx >= 0) targets.splice(idx, 1);
+        renderTargets();
+        updateValidation();
+      });
+
+      cell.appendChild(el);
+      targetsHost.appendChild(cell);
+    });
+  }
+  function addTarget() {
+    /* Mandatory-field gate: every existing target must have AG + INCLUDE
+       type + INCLUDE value filled before another target can be added.
+       Empty fields flip to state="error" with an inline helper. */
+    let firstMissing = null;
+    let ok = true;
+    targetsHost.querySelectorAll('.dc-target').forEach((cardEl) => {
+      const it  = cardEl.querySelector('[data-role="inc-type"]');
+      const iv  = cardEl.querySelector('[data-role="inc-val"]');
+      /* inc-type is a ds-input-select (state attr); inc-val is a
+         ds-token-field (error attr). Both take a helper message. */
+      const itVal = (it.getAttribute('value') || it.value || '').trim();
+      const ivFilled = (iv.values || []).length > 0;
+      if (itVal) { it.removeAttribute('state'); it.removeAttribute('helper'); }
+      else {
+        it.setAttribute('state', 'error'); it.setAttribute('helper', 'This field cannot be empty');
+        if (!firstMissing) firstMissing = it; ok = false;
+      }
+      if (ivFilled) { iv.removeAttribute('error'); iv.removeAttribute('helper'); iv.setAttribute('show-helper-row', 'false'); }
+      else {
+        iv.setAttribute('show-helper-row', 'true');
+        iv.setAttribute('error', ''); iv.setAttribute('helper', 'This field cannot be empty');
+        if (!firstMissing) firstMissing = iv; ok = false;
+      }
+    });
+    if (!ok) {
+      if (firstMissing) firstMissing.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      return;
+    }
+    targets.push({ id: nextTargetId++, agValue: '' });
+    renderTargets();
+    updateValidation();
+  }
+  /* Seed Target 1 without invoking the gate above. */
+  targets.push({ id: nextTargetId++, agValue: '' });
+  renderTargets();
+
+  function readTargets() {
+    /* AG stamp is now a common (read-only) label above all targets — same
+       value on every target. Include / Filter / Exclude are per-target. */
+    const commonAg = AG_TREE.find((a) => a.id === ADMIN_SCOPE);
+    return [...targetsHost.querySelectorAll('.dc-target')].map((el, i) => {
+      const q = (r) => el.querySelector(`[data-role="${r}"]`);
+      return {
+        index:    i + 1,
+        agValue:  ADMIN_SCOPE,
+        agLabel:  commonAg ? commonAg.label : '',
+        include:  { type: q('inc-type').value, values: (q('inc-val').values || []).slice() },
+        filter:   { type: q('flt-type').value, values: (q('flt-val').values || []).slice() },
+        exclude:  { type: q('exc-type').value, values: (q('exc-val').values || []).slice() },
+      };
+    });
+  }
+
+  $('dc-schedule').options = [
+    { value: 'now',     label: 'Deploy now' },
+    { value: 'next',    label: 'Next agent contact' },
+    { value: 'sched',   label: 'Schedule' },
+    { value: 'trigger', label: 'Trigger' },
+    { value: 'every',   label: 'At every' },
+  ];
+  $('dc-schedule').setAttribute('value', 'now');
+  /* Schedule policies for the "Schedule" radio option — read live from
+     window.__scheduleStore (the same list Policies → Schedule Policy edits). */
+  function refreshSchedulePolicies() {
+    const list = (window.__scheduleStore || []);
+    if (list.length === 0) {
+      $('dc-window').options = [];
+      $('dc-window').setAttribute('placeholder', 'No policy available');
+      $('dc-window').removeAttribute('value');
+    } else {
+      $('dc-window').options = list.map((p) => ({
+        value: p.id,
+        label: (p.windowId ? p.windowId + ' · ' : '') + (p.name || 'Untitled window'),
+      }));
+      $('dc-window').setAttribute('placeholder', 'Select a schedule policy');
+    }
+    updateValidation();
+  }
+  refreshSchedulePolicies();
+  $('dc-sched-refresh').addEventListener('click', refreshSchedulePolicies);
+  $('dc-sched-add').addEventListener('click', (e) => {
+    e.preventDefault();
+    /* Opens the Schedule Policy create form in a new tab so the user
+       doesn't lose the Deployment they're mid-way through. */
+    const url = location.origin + location.pathname + '?view=deployments-schedule-form';
+    window.open(url, '_blank', 'noopener');
+  });
+  /* Trigger schedule — Metrics dropdown + a dynamic Alert-condition row.
+     Each metric has a slightly different sentence and unit; some use
+     a "for N minutes" duration, others don't. */
+  const METRICS = {
+    'memory':  { label: 'Memory Usage',              text: 'Memory usage exceeds',                 unit: '%',  duration: true  },
+    'wifi':    { label: 'Wi-Fi Signal Strength',     text: 'Wi-Fi signal strength is less than',   unit: '%',  duration: true  },
+    'disk':    { label: 'Free Disk Space',           text: 'Free disk space is less than',         unit: 'GB', duration: false },
+    'cpu':     { label: 'CPU Usage',                 text: 'CPU usage exceeds',                    unit: '%',  duration: true  },
+    'disk-os': { label: 'Free Disk Space (OS drive)',text: 'Free disk space (OS drive) is less than', unit: 'GB', duration: false },
+  };
+  $('dc-trigger').options = Object.entries(METRICS).map(([value, m]) => ({ value, label: m.label }));
+
+  const alertRoot = document.querySelector('#dc-sched-trigger .dc-trigger-alert');
+  const updateTriggerAlert = () => {
+    const m = METRICS[$('dc-trigger').value];
+    if (!m) {
+      alertRoot.classList.add('is-empty');
+      alertRoot.classList.remove('no-duration');
+      $('dc-trigger-condition-text').textContent = 'Pick a metric first';
+      return;
+    }
+    alertRoot.classList.remove('is-empty');
+    alertRoot.classList.toggle('no-duration', !m.duration);
+    $('dc-trigger-condition-text').textContent = m.text;
+    $('dc-trigger-unit').textContent = m.unit;
+  };
+  updateTriggerAlert();
+  $('dc-trigger').addEventListener('ds-input-select-change', updateTriggerAlert);
+  $('dc-every').options = [
+    { value: 'refresh', label: 'At every refresh', selected: true },
+    { value: 'startup', label: 'At every startup' },
+  ];
+  /* ---- Deadlines / retry / notification toggle wiring ------------------ */
+  const countOpts = (n) => Array.from({ length: n + 1 }, (_, i) => ({ value: String(i), label: String(i) }));
+  $('dc-retry-total').options   = countOpts(25);
+  $('dc-retry-startup').options = countOpts(25);
+  $('dc-retry-refresh').options = countOpts(25);
+  $('dc-retry-total').setAttribute('value',   '10');
+  $('dc-retry-startup').setAttribute('value', '0');
+  $('dc-retry-refresh').setAttribute('value', '0');
+
+  function refreshRetrySummary() {
+    const total   = Number($('dc-retry-total').value   || 10);
+    const startup = Number($('dc-retry-startup').value || 0);
+    const refresh = Number($('dc-retry-refresh').value || 0);
+    /* Whatever's left after the explicit startup + refresh allotment is a
+       "whichever is earlier" fallback. Clamp at 0 so we don't render "-3". */
+    const flex = Math.max(0, total - startup - refresh);
+    $('dc-retry-summary').textContent = flex + ' time(s) during startup or refresh, whichever is earlier';
+  }
+  ['dc-retry-total','dc-retry-startup','dc-retry-refresh'].forEach((id) => {
+    $(id).addEventListener('ds-input-select-change', refreshRetrySummary);
+  });
+  refreshRetrySummary();
+
+  /* Mobile app notification technicians. Small seed list — real app pulls
+     from the user directory. */
+  $('dc-notify-mobile').options = [
+    { value: 't-prabakaran', label: 'Prabakaran A G' },
+    { value: 't-sarah',      label: 'Sarah Johnson' },
+    { value: 't-mike',       label: 'Mike Chen' },
+    { value: 't-emily',      label: 'Emily Davis' },
+    { value: 't-oncall',     label: 'Oncall rotation' },
+  ];
+
+  /* Notification e-mail defaults — pre-fill with the current user for demo. */
+  $('dc-notify-hours').value = '6';
+  $('dc-notify-days').value  = '3';
+  if ((window.userEmail || '').includes('@')) $('dc-notify-emails').value = window.userEmail;
+
+  /* Toggle open/close for each card. */
+  const wireToggle = (toggleId, cardId) => {
+    const toggle = $(toggleId), card = $(cardId);
+    const set = (on) => { card.setAttribute('data-open', on ? 'true' : 'false'); updateValidation(); };
+    toggle.addEventListener('ds-toggle-change', (e) => set(!!e.detail.checked));
+    set(toggle.hasAttribute('checked'));
+  };
+  wireToggle('dc-deadline-toggle', 'dc-deadline-card');
+  wireToggle('dc-retry-toggle',    'dc-retry-card');
+  wireToggle('dc-notify-toggle',   'dc-notify-card');
+
+  /* Fields under toggles re-validate live. */
+  ['dc-start-nb','dc-stop-after'].forEach((id) => $(id).addEventListener('ds-text-input-change', updateValidation));
+  $('dc-notify-emails').addEventListener('ds-text-area-change', updateValidation);
+
+  /* ---- Schedule sub-panel toggles ------------------------------------- */
+  function syncSchedule() {
+    const v = $('dc-schedule').value || 'now';
+    $('dc-sched-schedule').setAttribute('data-open', v === 'sched'   ? 'true' : 'false');
+    $('dc-sched-trigger').setAttribute('data-open',  v === 'trigger' ? 'true' : 'false');
+    $('dc-sched-every').setAttribute('data-open',    v === 'every'   ? 'true' : 'false');
+    updateValidation();
+  }
+  $('dc-schedule').addEventListener('ds-input-select-change', syncSchedule);
+  syncSchedule();
+
+  /* ---- Delivery-method cards — Push / SSP. Each card acts as a toggle.
+     Local state (`deliveryState`) drives selection + aria-checked + the
+     SSP sub-panel visibility. Both can be picked together. */
+  const pushCard = $('dc-push-card');
+  const sspCard  = $('dc-ssp-card');
+  function syncDeliveryCard(card, on) {
+    if (on) card.setAttribute('selected', ''); else card.removeAttribute('selected');
+    card.setAttribute('aria-checked', on ? 'true' : 'false');
+  }
+  function togglePush() {
+    deliveryState.push = !deliveryState.push;
+    syncDeliveryCard(pushCard, deliveryState.push);
+    updateValidation();
+  }
+  function toggleSsp() {
+    deliveryState.ssp = !deliveryState.ssp;
+    syncDeliveryCard(sspCard, deliveryState.ssp);
+    $('dc-ssp-sub').setAttribute('data-open', deliveryState.ssp ? 'true' : 'false');
+    updateValidation();
+  }
+  pushCard.addEventListener('click', togglePush);
+  sspCard.addEventListener('click', toggleSsp);
+  [pushCard, sspCard].forEach((card) => {
+    card.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); card === pushCard ? togglePush() : toggleSsp(); }
+    });
+  });
+
+  /* SSP settings — 24-hour time list in 30-minute steps for both pickers. */
+  const HHMM = [];
+  for (let h = 0; h < 24; h++) for (let m = 0; m < 60; m += 30) {
+    const label = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+    HHMM.push({ value: label, label });
+  }
+  $('dc-ssp-from-time').options  = HHMM.slice();
+  $('dc-ssp-until-time').options = HHMM.slice();
+
+  /* Availability-window toggle — hidden by default, only reveals the date/time
+     pickers when the user opts in. */
+  $('dc-ssp-window-toggle').addEventListener('ds-checkbox-change', (e) => {
+    const on = !!(e.detail && e.detail.checked);
+    $('dc-ssp-window-fields').setAttribute('data-open', on ? 'true' : 'false');
+  });
+
+  $('dc-name').addEventListener('ds-text-input-change', updateValidation);
+  $('dc-resource').addEventListener('ds-tokens-change', updateValidation);
+  $('dc-window').addEventListener('ds-input-select-change', updateValidation);
+
+  /* ---- Validation gates ----------------------------------------------- */
+  function state() {
+    const rt = readTargets();
+    return {
+      name: ($('dc-name').value || '').trim(),
+      resourceValues: ($('dc-resource').values || []).slice(),
+      targets: rt,
+      hasAnyInclude: rt.some((t) => (t.include.values || []).length > 0),
+      allAgStamped:  rt.every((t) => !!t.agValue),
+      push: deliveryState.push, ssp: deliveryState.ssp,
+      schedule: $('dc-schedule').value || 'now',
+      window: $('dc-window').value,
+      deadlineOn: $('dc-deadline-toggle').hasAttribute('checked'),
+      startNb:    ($('dc-start-nb').value || '').trim(),
+      stopAfter:  ($('dc-stop-after').value || '').trim(),
+      notifyOn:   $('dc-notify-toggle').hasAttribute('checked'),
+      notifyEmails: ($('dc-notify-emails').value || '').trim(),
+    };
+  }
+  function blockingReason() {
+    const s = state();
+    if (!s.name)                              return 'Enter a deployment name';
+    if (!s.resourceValues.length)             return 'Pick at least one resource to deploy';
+    if (!s.allAgStamped)                      return 'Pick an AG stamp for every Target';
+    if (!s.hasAnyInclude)                     return 'Add at least one INCLUDE clause across Targets';
+    if (!s.push && !s.ssp)                    return 'Choose at least one delivery method';
+    if (s.schedule === 'sched' && !s.window)  return 'Pick a Deployment Window';
+    if (s.deadlineOn && (!s.startNb || !s.stopAfter)) return 'Deadline is on — fill both Start no earlier than and Stop after';
+    if (s.notifyOn && !s.notifyEmails)        return 'Notification is on — add at least one E-mail address';
+    return '';
+  }
+  function updateValidation() {
+    const reason = blockingReason();
+    const bl = $('dc-blocker');
+    if (reason) { bl.hidden = false; $('dc-blocker-text').textContent = reason; $('dc-primary').setAttribute('disabled',''); }
+    else        { bl.hidden = true;                                                 $('dc-primary').removeAttribute('disabled'); }
+  }
+
+  /* ---- Footer handlers ------------------------------------------------- */
+  $('dc-footer').addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('[data-act]');
+    if (!btn) return;
+    const act = btn.dataset.act;
+    if (act === 'cancel') {
+      if (window.openContentView) window.openContentView('deployments-list');
+      return;
+    }
+    const s = state();
+    if (act === 'submit' && blockingReason()) return;
+    /* ds-token-field exposes suggestions (source options) and tokens (selected).
+       The submit payload uses labels, not raw ids. */
+    const resourceOpts = ($('dc-resource').suggestions || [])
+      .filter((o) => s.resourceValues.includes(o.value));
+    const resourceType = $('dc-type').value === 'workflow' ? 'Workflow' : 'Policy';
+    const agLabels = s.targets.map((t) => t.agLabel).filter(Boolean);
+    const payload = {
+      name: s.name || 'Untitled deployment',
+      status: act === 'save-draft' ? 'Draft' : 'Pending Approval',
+      ag: agLabels.length === 1 ? agLabels[0]
+                                : (agLabels.length ? agLabels.length + ' AGs' : 'Unstamped'),
+      resource: {
+        type: resourceType,
+        names: resourceOpts.map((o) => o.label),
+        name: resourceOpts.length === 1 ? resourceOpts[0].label
+                                        : resourceOpts.length + ' ' + resourceType.toLowerCase() + 's',
+        version: 'v1',
+      },
+      targetSets: s.targets,
+      target: '1,240 devices',
+      schedule: ({ now: 'Now', next: 'Next agent contact', sched: 'Schedule', trigger: 'Trigger', every: 'At every' })[s.schedule],
+      delivery: s.push && s.ssp ? 'Push + SSP' : s.push ? 'Push' : 'SSP',
+    };
+    if (window.saveDeploymentAndOpen) window.saveDeploymentAndOpen(payload);
+    else if (window.openContentView) window.openContentView('deployments-list');
+  });
+
+  function show() {
+    root.hidden = false;
+    /* Reset form each visit. */
+    $('dc-name').value = ''; $('dc-desc').value = '';
+    /* Reset description toggle back to the "Add description" state. */
+    $('dc-desc-field').hidden = true;
+    $('dc-desc-toggle').parentElement.hidden = false;
+    /* Delivery method — Push to devices pre-selected; the user can swap to
+       SSP or pick both, but at least one stays mandatory (validated). */
+    deliveryState.push = true; deliveryState.ssp = false;
+    syncDeliveryCard(pushCard, true);
+    syncDeliveryCard(sspCard, false);
+    $('dc-ssp-sub').setAttribute('data-open', 'false');
+    $('dc-ssp-window-toggle').checked = false;
+    $('dc-ssp-window-fields').setAttribute('data-open', 'false');
+    $('dc-schedule').setAttribute('value', 'now'); syncSchedule();
+    refreshResources();
+    /* Reset targets to a single blank Target 1. */
+    targets.length = 0; nextTargetId = 1;
+    addTarget();
+    /* Reset toggle-gated blocks. */
+    ['dc-deadline-toggle','dc-retry-toggle','dc-notify-toggle'].forEach((id) => $(id).removeAttribute('checked'));
+    ['dc-deadline-card','dc-retry-card','dc-notify-card'].forEach((id) => $(id).setAttribute('data-open', 'false'));
+    $('dc-start-nb').value = ''; $('dc-stop-after').value = '';
+    updateValidation();
+  }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-create'] = { show, hide };
+})();
+</script>
+</template>
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-create'].show()));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+/* =============================================================================
+   ds-scrollbar / .ds-scrollbar — custom OVERLAY scrollbar (wrapper)
+   Wraps scrollable content, hides the native bar, and overlays a synced pill
+   thumb. Thumb-only (transparent track), theme-aware, cursor-presence auto-hide.
+   Spec: design-system/handoff/Scrollbar.md (Figma ds-scrollbar/vertical 21449:586344,
+   ds-scrollbar/horizontal 21449:586382)
+   ============================================================================= */
+
+ds-scrollbar {
+  display: block;
+  position: relative;
+  box-sizing: border-box;
+  font-family: var(--font-family-sans);
+  /* token plumbing — bind to UEMS theme tokens, resolve per theme */
+  --ds-sb-thumb:        var(--uems-bg-quaternary, #d2d7e0);        /* Rest */
+  --ds-sb-thumb-strong: var(--uems-bg-quaternary-solid, #5f6c89); /* Hover / Active */
+  --ds-sb-focus:        var(--uems-border-accent, #006aff);       /* Focus ring */
+  --ds-sb-radius:       9999px;                                   /* pill */
+  --_sb-thick: 6px;            /* Regular rest */
+}
+ds-scrollbar[size="thin"]                          { --_sb-thick: 4px; } /* Thin rest */
+ds-scrollbar[size="thin"][data-sb-dragging]        { --_sb-thick: 6px; } /* Thin active */
+ds-scrollbar:not([size="thin"])[data-sb-dragging]  { --_sb-thick: 8px; } /* Regular active */
+
+/* ---- Viewport: scrolls; native scrollbar hidden ------------------------- */
+.ds-scrollbar__viewport {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;                 /* vertical (default) */
+  scrollbar-width: none;            /* Firefox */
+  -ms-overflow-style: none;         /* legacy Edge */
+  outline: none;                    /* focus shown on the thumb instead */
+}
+.ds-scrollbar__viewport::-webkit-scrollbar { width: 0; height: 0; display: none; } /* WebKit/Blink */
+ds-scrollbar[orientation="horizontal"] .ds-scrollbar__viewport { overflow-x: auto; overflow-y: hidden; }
+
+/* ---- Thumb: absolute overlay, hidden until shown ------------------------ */
+.ds-scrollbar__thumb {
+  position: absolute;
+  top: 0; right: 2px;               /* vertical: trailing gutter, 2px inset */
+  width: var(--_sb-thick);
+  min-height: 24px;                 /* runtime length floor */
+  background: var(--ds-sb-thumb);
+  border-radius: var(--ds-sb-radius);
+  opacity: 0;
+  touch-action: none;
+  transition: opacity 200ms ease-in, background 120ms ease, width 120ms ease, height 120ms ease;
+}
+/* horizontal: bottom gutter */
+ds-scrollbar[orientation="horizontal"] .ds-scrollbar__thumb {
+  top: auto; right: auto; bottom: 2px; left: 0;
+  width: auto; height: var(--_sb-thick);
+  min-height: 0; min-width: 24px;
+}
+/* RTL vertical: move the bar to the leading (left) edge */
+ds-scrollbar[dir="rtl"]:not([orientation="horizontal"]) .ds-scrollbar__thumb { right: auto; left: 2px; }
+
+/* visible — cursor over the region, drag, or keyboard focus (fade in 80ms) */
+ds-scrollbar[data-sb-visible] .ds-scrollbar__thumb {
+  opacity: 1;
+  transition: opacity 80ms ease-out, background 120ms ease, width 120ms ease, height 120ms ease;
+}
+
+/* strong fill on hover + active(drag); Rest → Hover is colour, Hover → Active is thickness */
+ds-scrollbar:hover .ds-scrollbar__thumb,
+ds-scrollbar[data-sb-dragging] .ds-scrollbar__thumb { background: var(--ds-sb-thumb-strong); }
+
+/* focus ring — keyboard focus on the scroll region (2px accent, outside) */
+ds-scrollbar:focus-within .ds-scrollbar__thumb {
+  outline: 2px solid var(--ds-sb-focus);
+  outline-offset: 2px;
+}
+
+/* no overflow / disabled → no thumb */
+ds-scrollbar[data-sb-disabled] .ds-scrollbar__thumb { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-scrollbar__thumb { transition: background 120ms ease; }
+}

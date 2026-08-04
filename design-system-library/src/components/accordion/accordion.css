@@ -1,0 +1,208 @@
+/* =============================================================================
+   Accordion Component
+   Spec: components/accordion/accordion.md
+   Naming: BEM — ds-accordion / __header / __body / --filled / --outlined ...
+   These styles work in light DOM (BEM classes) and inside the shadow DOM of
+   <ds-accordion> (the JS element copies the same selectors via :host).
+   ============================================================================= */
+
+.ds-accordion,
+:host(ds-accordion) {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  font-family: var(--font-family-sans);
+  color: var(--uems-text-primary);
+}
+
+.ds-accordion__header,
+:host ::part(header) {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  width: 100%;
+  padding: var(--spacing-8) var(--spacing-16);
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: start;
+  font: inherit;
+  color: inherit;
+  border-radius: var(--radius-md);
+  /* Smooth hover fade per MD spec — BG-Secondary-hover wash */
+  transition:
+    background-color 180ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow      180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ds-accordion__header:active {
+  background-color: var(--uems-bg-tertiary, var(--uems-bg-secondary-hover));
+}
+
+.ds-accordion__header:focus-visible,
+:host ::part(header):focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+
+/* Leading control = 24×24 icon button (radius 4) holding a 16px caret,
+   tinted Icon-Tertiary per spec §Anatomy / Design Tokens. */
+.ds-accordion__leading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border-radius: var(--radius-sm);
+  color: var(--uems-icon-tertiary);
+  transform-origin: center;
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ds-accordion__leading svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ds-accordion__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-snug);
+  color: var(--uems-text-primary);
+}
+
+.ds-accordion__badge,
+.ds-accordion__action {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── Smooth expand / collapse (grid-template-rows trick) ────────────
+   Consumers using BEM directly: wrap body content in
+   <div class="ds-accordion__body"><div class="ds-accordion__body-inner">…</div></div>
+   The OUTER body is the grid container; the inner div is the clipped child.
+*/
+.ds-accordion__body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ds-accordion__body-inner {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 var(--spacing-16);
+  /* Divider via inset shadow, not a border — a border has layout height, so
+     when collapsed (grid row 0fr) its 1px keeps the white body peeking below
+     the header. box-shadow adds zero height → true 0 collapse. */
+  transition:
+    padding 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Once the open animation has settled, let embedded dropdowns extend past
+   the body bounds. Consumers using BEM should toggle [data-open-settled]
+   on .ds-accordion__body in their own transitionend handler. */
+.ds-accordion__body[data-open-settled] .ds-accordion__body-inner {
+  overflow: visible;
+}
+
+.ds-accordion[data-expanded="true"] .ds-accordion__body,
+:host([expanded]) .ds-accordion__body {
+  grid-template-rows: 1fr;
+}
+.ds-accordion[data-expanded="true"] .ds-accordion__body-inner,
+:host([expanded]) .ds-accordion__body-inner {
+  padding: var(--spacing-12) var(--spacing-16) var(--spacing-16);
+  box-shadow: inset 0 1px 0 0 var(--uems-border-tertiary);
+}
+
+/* Per spec §States: caret points down when collapsed, up when expanded.
+   Light-DOM consumers should use the chevron-down icon as default leading
+   control; this rule rotates it 180° on expand. */
+.ds-accordion[data-expanded="true"] .ds-accordion__leading--chevron,
+:host([expanded]) .ds-accordion__leading--chevron {
+  transform: rotate(180deg);
+}
+
+/* Honor reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .ds-accordion__header,
+  .ds-accordion__body,
+  .ds-accordion__body-inner,
+  .ds-accordion__leading {
+    transition: none !important;
+  }
+}
+
+/* ---------------- Variant: Filled (default) ---------------- */
+.ds-accordion--filled,
+:host(:not([variant="outlined"])) .ds-accordion__header {
+  background-color: var(--uems-bg-secondary-alt);
+}
+
+/* Borderless at rest (spec); once Expanded the white body needs a perimeter
+   to read as a contained card. Reserve the 1px with a transparent border so
+   expanding causes no layout shift. */
+.ds-accordion--filled {
+  border: 1px solid transparent;
+}
+.ds-accordion--filled[data-expanded="true"] {
+  border-color: var(--uems-border-tertiary);
+}
+
+.ds-accordion--filled .ds-accordion__header {
+  background-color: var(--uems-bg-secondary-alt);
+}
+
+.ds-accordion--filled .ds-accordion__header:hover,
+:host(:not([variant="outlined"])) .ds-accordion__header:hover {
+  background-color: var(--uems-bg-secondary-hover);
+}
+
+/* Spec: the header is the grey BG-Secondary surface; the body is always
+   BG-Primary (white) for both Filled and Outlined. */
+.ds-accordion--filled .ds-accordion__body,
+:host(:not([variant="outlined"])) .ds-accordion__body {
+  background-color: var(--uems-bg-primary-alt);
+}
+
+/* ---------------- Variant: Outlined ---------------- */
+.ds-accordion--outlined,
+:host([variant="outlined"]) {
+  border: 1px solid var(--uems-border-tertiary);   /* #E1E4EB — both collapsed & expanded */
+  background-color: var(--uems-bg-base);
+}
+
+.ds-accordion--outlined .ds-accordion__header {
+  min-height: 40px;
+  background-color: var(--uems-bg-base);
+}
+
+/* Hover: BG-Primary-hover fill + border re-tints to Border-Tertiary (spec). */
+.ds-accordion--outlined .ds-accordion__header:hover,
+:host([variant="outlined"]) .ds-accordion__header:hover {
+  background-color: var(--uems-bg-primary-hover);
+}
+.ds-accordion--outlined:hover {
+  border-color: var(--uems-border-tertiary);
+}
+
+/* ---------------- State: Disabled ---------------- */
+.ds-accordion[aria-disabled="true"],
+:host([disabled]) {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ---------------- RTL ---------------- */
+.ds-accordion[dir="rtl"] .ds-accordion__header,
+:host([rtl]) .ds-accordion__header {
+  flex-direction: row-reverse;
+  text-align: end;
+}

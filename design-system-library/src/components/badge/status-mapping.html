@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Configuration status → ds-badge mapping</title>
+  <link rel="stylesheet" href="../../styles/index.css" />
+  <!-- Point ds-icon at the real sprite location (relative to this page),
+       otherwise the default "/icons.svg" 404s and icons render as blank boxes. -->
+  <script>window.UEMS_ICON_SPRITE = '../../icons/icons.svg';</script>
+  <script type="module">import '../../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); background: var(--uems-background, #f6f7f9); color: var(--uems-text-primary); margin: 0; }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 40px 28px 64px; }
+    h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+    .intro { margin: 8px 0 0; max-width: 72ch; color: var(--uems-text-secondary); font-size: 14px; line-height: 1.55; }
+    .controls { display: flex; gap: 8px; align-items: center; margin: 22px 0 4px; font-size: 13px; color: var(--uems-text-secondary); }
+    .controls button { font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+      border: 1px solid var(--uems-border-secondary); background: var(--uems-bg-primary-alt, #fff);
+      color: var(--uems-text-primary); padding: 6px 12px; border-radius: 8px; }
+    .controls button[aria-pressed="true"] { background: var(--uems-bg-accent-primary-action, #eaf0fc); border-color: var(--uems-border-accent, #2c66dd); color: var(--uems-text-accent, #2358e6); }
+
+    section { margin-top: 18px; background: var(--uems-bg-primary-alt, #fff); border: 1px solid var(--uems-border-tertiary, #e7eaf0);
+      border-radius: 14px; padding: 18px 20px 22px; }
+    .sec-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 12px; padding-bottom: 14px; border-bottom: 1px dashed var(--uems-border-tertiary, #e7eaf0); }
+    .sec-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+    .sec-state { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--uems-text-accent, #2358e6); background: var(--uems-bg-accent-primary-action, #eef3fe); padding: 2px 8px; border-radius: 6px; }
+    .sec-use { flex: 1 1 220px; text-align: right; font-size: 12.5px; color: var(--uems-text-secondary); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px 20px; margin-top: 16px; }
+    .item { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+    .item code { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--uems-text-tertiary, #98a1b0); }
+    .item .alias { color: var(--uems-text-secondary); }
+    footer { margin-top: 24px; font-size: 13px; line-height: 1.6; color: var(--uems-text-secondary); }
+    footer code { font-family: ui-monospace, Menlo, monospace; background: var(--uems-bg-secondary, #eef1f5); padding: 1px 6px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Configuration status → <code style="font-size:.8em">&lt;ds-badge&gt;</code></h1>
+    <p class="intro">All 20 deployment statuses rendered with the design-system <strong>Badge</strong> component only — no custom styles. Each status maps to one of the badge's seven semantic <code>state</code> values, so color, tint, icon, and shape all come from the component and adapt across themes automatically.</p>
+
+    <div class="controls">
+      <span>Emphasis:</span>
+      <button id="b-subtle" aria-pressed="true">Subtle</button>
+      <button id="b-intense" aria-pressed="false">Intense</button>
+    </div>
+
+    <!-- default -->
+    <section>
+      <div class="sec-head"><span class="sec-title">Neutral — idle / N-A / inactive</span><span class="sec-state">state="default"</span><span class="sec-use">Nothing happening yet, or no longer in effect.</span></div>
+      <div class="grid">
+        <div class="item"><ds-badge state="default" label="Draft"></ds-badge><code>config.status.draft <span class="alias">· Yet To Deploy</span></code></div>
+        <div class="item"><ds-badge state="default" label="Draft"></ds-badge><code>config.status.draft <span class="alias">· Incomplete</span></code></div>
+        <div class="item"><ds-badge state="default" label="Not Applicable"></ds-badge><code>config.status.not_applicable</code></div>
+        <div class="item"><ds-badge state="default" label="Overridden"></ds-badge><code>config.status.overridden</code></div>
+        <div class="item"><ds-badge state="default" label="Expired" icon="hourglass"></ds-badge><code>announ.status.Expired</code></div>
+      </div>
+    </section>
+
+    <!-- acknowledge -->
+    <section>
+      <div class="sec-head"><span class="sec-title">Queued — accepted, waiting to run</span><span class="sec-state">state="acknowledge"</span><span class="sec-use">Dispatched but not started. Informational.</span></div>
+      <div class="grid">
+        <div class="item"><ds-badge state="acknowledge" icon="clock" label="Ready to Execute"></ds-badge><code>config.status.ready_to_execute <span class="alias">· Deployed</span></code></div>
+        <div class="item"><ds-badge state="acknowledge" icon="clock" label="Yet To Apply"></ds-badge><code>config.status.yet_to_apply</code></div>
+        <div class="item"><ds-badge state="acknowledge" icon="send" label="Notification Sent"></ds-badge><code>mdm.status.Notification_sent</code></div>
+      </div>
+    </section>
+
+    <!-- active -->
+    <section>
+      <div class="sec-head"><span class="sec-title">In Progress — running now</span><span class="sec-state">state="active"</span><span class="sec-use">Active work currently executing.</span></div>
+      <div class="grid">
+        <div class="item"><ds-badge state="active" icon="refresh" label="In Progress"></ds-badge><code>config.status.in_progress</code></div>
+        <div class="item"><ds-badge state="active" icon="download" label="Download In Progress"></ds-badge><code>config.status.draft_download_inprogress</code></div>
+        <div class="item"><ds-badge state="active" icon="refresh" label="Retry In Progress"></ds-badge><code>config.status.retry_in_progress</code></div>
+      </div>
+    </section>
+
+    <!-- success -->
+    <section>
+      <div class="sec-head"><span class="sec-title">Success — completed cleanly</span><span class="sec-state">state="success"</span><span class="sec-use">Terminal, positive.</span></div>
+      <div class="grid">
+        <div class="item"><ds-badge state="success" icon="circle-tick" label="Executed"></ds-badge><code>config.status.executed <span class="alias">· Completed</span></code></div>
+        <div class="item"><ds-badge state="success" icon="circle-tick" label="Succeeded"></ds-badge><code>config.status.succeeded</code></div>
+      </div>
+    </section>
+
+    <!-- moderate -->
+    <section>
+      <div class="sec-head"><span class="sec-title">Warning — partial success / attention</span><span class="sec-state">state="moderate"</span><span class="sec-use">Done or running, but with failures / held.</span></div>
+      <div class="grid">
+        <div class="item"><ds-badge state="moderate" icon="exclamation-triangle" label="Executed (Failed)"></ds-badge><code>config.status.executed_failed</code></div>
+        <div class="item"><ds-badge state="moderate" icon="exclamation-triangle" label="In Progress (Failed)"></ds-badge><code>config.status.inprogress_failed</code></div>
+        <div class="item"><ds-badge state="moderate" icon="pause" label="Suspended"></ds-badge><code>config.status.suspended</code></div>
+      </div>
+    </section>
+
+    <!-- important -->
+    <section>
+      <div class="sec-head"><span class="sec-title">Action needed</span><span class="sec-state">state="important"</span><span class="sec-use">Requires a user action to finish.</span></div>
+      <div class="grid">
+        <div class="item"><ds-badge state="important" icon="reboot" label="Reboot Pending"></ds-badge><code>config.status.REBOOT_PENDING</code></div>
+      </div>
+    </section>
+
+    <!-- critical -->
+    <section>
+      <div class="sec-head"><span class="sec-title">Error — failed / blocked / rejected</span><span class="sec-state">state="critical"</span><span class="sec-use">Terminal, negative. Needs intervention.</span></div>
+      <div class="grid">
+        <div class="item"><ds-badge state="critical" icon="exclamation-circle" label="Failed"></ds-badge><code>config.status.failed</code></div>
+        <div class="item"><ds-badge state="critical" icon="exclamation-circle" label="InCompatible"></ds-badge><code>config.status.incompatible</code></div>
+        <div class="item"><ds-badge state="critical" icon="exclamation-circle" label="Declined"></ds-badge><code>config.status.DECLINED</code></div>
+      </div>
+    </section>
+
+    <footer>
+      Rendered entirely with <code>&lt;ds-badge&gt;</code> (<code>variant="subtle"</code> by default — toggle Intense above). Judgment calls: <code>Suspended</code> sits in <code>moderate</code> (move to <code>default</code> if routine); <code>Expired</code>/<code>Overridden</code> sit in <code>default</code> (bump to <code>moderate</code>/<code>critical</code> only if actionable).
+    </footer>
+  </div>
+
+  <script>
+    // Emphasis toggle — flips every badge's variant attribute (still pure ds-badge).
+    const all = () => document.querySelectorAll('ds-badge');
+    function setVariant(v) {
+      all().forEach(b => b.setAttribute('variant', v));
+      document.getElementById('b-subtle').setAttribute('aria-pressed', String(v === 'subtle'));
+      document.getElementById('b-intense').setAttribute('aria-pressed', String(v === 'intense'));
+    }
+    document.getElementById('b-subtle').addEventListener('click', () => setVariant('subtle'));
+    document.getElementById('b-intense').addEventListener('click', () => setVariant('intense'));
+    setVariant('subtle');
+  </script>
+</body>
+</html>

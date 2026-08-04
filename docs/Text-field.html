@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Text field — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/text-input/text-input.css?v=4">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/text-input/text-input.js?v=4"></script>
+<script type="module" src="../design-system-library/src/components/button/button.js"></script>
+<style>
+  .demo-tf-section { margin-bottom: 28px; }
+  /* Override page-text-field's `margin-bottom: -16px` (which pulls the
+     stack up under the label) so labels sit cleanly above each section. */
+  .page-text-field .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+  /* Stack: vertical column for top-label inputs. 460px keeps the field width
+     readable. */
+  .demo-tf-stack { display: flex; flex-direction: column; gap: 16px; max-width: 460px; }
+  /* Wide stack: needed when any input uses label-position="left" because
+     the 240px label column eats into a 460px container, squishing the field
+     and overlapping helper text. 720px gives the field ~440px of room. */
+  .demo-tf-stack--wide { max-width: 720px; }
+  .demo-tf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  /* Override page-text-field's `justify-content: center; min-height: 280px`
+     so sections stack from top with consistent spacing. */
+  .page-text-field .demo-container .demo-canvas { justify-content: flex-start !important; min-height: 0 !important; align-items: stretch !important; }
+</style>
+</head>
+<body class="page-text-field">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a><div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+
+      <div style="width: 16px;"></div>
+
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search...">
+        <span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 id="components" class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link active">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Text field</h1>
+        <p class="page-desc">
+          A text field is where the user types one line of information &mdash; a name, an email, a search term, a URL. Give it a clear label so the user knows what to enter, helper text for the format you expect, and an error that explains how to fix it when something&rsquo;s off. For longer answers like comments or descriptions, use a Text area instead.
+        </p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- TAB: OVERVIEW                               -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div class="tab-content" id="tab-overview">
+
+        <!-- Anatomy Section -->
+        <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+
+        <div style="padding:32px 0;overflow:visible;">
+          <!-- Label Top layout — live component -->
+          <div style="font-size:12px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:20px;text-align:center;">Label Top (recommended)</div>
+          <div id="anat-tf-top-wrap" style="position:relative;display:block;padding:0 100px;max-width:760px;margin:0 auto 56px;">
+            <ds-text-input id="anat-tf-top"
+              label="Label" required
+              label-position="top"
+              prefix-icon="search"
+              prefix-text="$"
+              suffix-text="kg"
+              suffix-icon="chevron-right"
+              show-clear
+              value="Input Text"
+              helper="Helper text"
+              counter="0/100" show-counter></ds-text-input>
+            <div class="anat-mk-top" data-target="label"   style="left:0;"><span class="anat-marker-inline">2</span><div class="anat-mk-vline"></div></div>
+            <div class="anat-mk anat-mk-left" data-target="field" style="top:0;"><span class="anat-marker-inline">1</span><div class="anat-mk-line"></div></div>
+            <div class="anat-mk anat-mk-right" data-target="clear" style="top:0;"><div class="anat-mk-line"></div><span class="anat-marker-inline">3</span></div>
+            <div class="anat-mk anat-mk-left" data-target="helper" style="top:0;"><span class="anat-marker-inline">4</span><div class="anat-mk-line"></div></div>
+          </div>
+
+          <!-- Label Left layout — live component -->
+          <div style="font-size:12px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:20px;text-align:center;">Label Left</div>
+          <div style="display:flex;justify-content:center;">
+            <div style="width:100%;max-width:560px;">
+              <ds-text-input
+                label="Label" required
+                label-position="left"
+                prefix-text="$"
+                suffix-text="USD"
+                value="Input Text"
+                helper="Helper text"></ds-text-input>
+            </div>
+          </div>
+        </div>
+        <style>
+          .anat-mk { position: absolute; display: flex; align-items: center; gap: 8px; white-space: nowrap; transform: translateY(-50%); }
+          .anat-mk-left  { right: calc(100% - 100px); }
+          .anat-mk-right { left:  calc(100% - 100px); }
+          .anat-mk-line  { width: 40px; height: 2px; background: #2563eb; }
+          .anat-mk-top { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; transform: translate(-50%, -100%); padding-bottom: 4px; }
+          .anat-mk-vline { width: 2px; height: 14px; background: #2563eb; }
+        </style>
+        <script type="module">
+          customElements.whenDefined('ds-text-input').then(() => {
+            // Prefix / suffix dropdown chips → open a Dropdown Menu to pick a value.
+            const phone = document.getElementById('demo-phone');
+            if (phone) phone.prefixOptions = [
+              { label: '🇺🇸 United States  +1',  value: '+1',  flag: 'us' },
+              { label: '🇮🇳 India  +91',         value: '+91', flag: 'in' },
+              { label: '🇬🇧 United Kingdom  +44', value: '+44', flag: 'gb' },
+              { label: '🇦🇪 UAE  +971',           value: '+971', flag: 'ae' },
+              { label: '🇩🇪 Germany  +49',        value: '+49', flag: 'de' },
+            ];
+            const amount = document.getElementById('demo-amount');
+            if (amount) amount.suffixOptions = [
+              { label: 'USD — US Dollar', value: 'USD' },
+              { label: 'EUR — Euro', value: 'EUR' },
+              { label: 'GBP — Pound', value: 'GBP' },
+              { label: 'INR — Rupee', value: 'INR' },
+            ];
+            const weight = document.getElementById('demo-weight');
+            if (weight) weight.suffixOptions = [
+              { label: 'kg', value: 'kg' }, { label: 'g', value: 'g' },
+              { label: 'lb', value: 'lb' }, { label: 'oz', value: 'oz' },
+            ];
+
+            const el = document.getElementById('anat-tf-top');
+            const wrap = document.getElementById('anat-tf-top-wrap');
+            if (!el || !wrap) return;
+            const place = () => {
+              const wrapRect = wrap.getBoundingClientRect();
+              const targets = {
+                label:  el.querySelector('.ds-text-input__label'),
+                field:  el.querySelector('.ds-text-input__field'),
+                clear:  el.querySelector('.ds-text-input__clear, .ds-text-input__suffix-icon, .ds-text-input__affix-icon'),
+                helper: el.querySelector('.ds-text-input__helper-row, .ds-text-input__helper'),
+              };
+              wrap.querySelectorAll('.anat-mk').forEach((mk) => {
+                const t = targets[mk.dataset.target];
+                if (!t) { mk.style.display = 'none'; return; }
+                const r = t.getBoundingClientRect();
+                mk.style.top = (r.top + r.height / 2 - wrapRect.top) + 'px';
+              });
+              wrap.querySelectorAll('.anat-mk-top').forEach((mk) => {
+                const t = targets[mk.dataset.target];
+                if (!t) { mk.style.display = 'none'; return; }
+                const r = t.getBoundingClientRect();
+                mk.style.left = (r.left + r.width / 2 - wrapRect.left) + 'px';
+                mk.style.top  = (r.top - wrapRect.top) + 'px';
+              });
+            };
+            requestAnimationFrame(() => requestAnimationFrame(place));
+            window.addEventListener('load', place, { once: true });
+            if (document.fonts?.ready) document.fonts.ready.then(place);
+            new ResizeObserver(place).observe(el);
+          });
+        </script>
+
+        <div class="anat-legend">
+          <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Container</strong><span>Holds the input field, borders, background, and all inner elements.</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Label</strong><span>Identifies the input field. Includes an optional required indicator (*).</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Input Field</strong><span>Contains prefix icon, prefix text, input text/placeholder, suffix text, suffix icon, and clear button.</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Helper Row</strong><span>Displays helper icon, helper text, and character counter below the input.</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">5</span><div><strong>Prefix Icon</strong><span>Optional leading icon to provide visual context for the input.</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">6</span><div><strong>Prefix Text</strong><span>Static text before the input (e.g., "$", "https://").</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">7</span><div><strong>Suffix Text</strong><span>Static text after the input (e.g., "kg", ".com").</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">8</span><div><strong>Suffix Icon</strong><span>Optional trailing icon for secondary context or action.</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline" style="background: linear-gradient(135deg, #f97316, #ea580c);">9</span><div><strong>Clear Button</strong><span>An "X" icon to clear the input field content.</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline" style="background: linear-gradient(135deg, #f97316, #ea580c);">10</span><div><strong>Helper Icon</strong><span>Small icon that accompanies the helper text.</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline" style="background: linear-gradient(135deg, #f97316, #ea580c);">11</span><div><strong>Helper Text</strong><span>Supporting text providing context, validation messages, or formatting guidance.</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline" style="background: linear-gradient(135deg, #ec4899, #db2777);">12</span><div><strong>Counter</strong><span>Character count display showing current/max characters (e.g., "0/100").</span></div></div>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Live Demo Section -->
+        <div style="margin-bottom: 64px;">
+          <h2 id="live-demo" class="doc-section-title" style="margin-bottom: 8px;">Preview</h2>
+          <p class="doc-section-subtitle" style="margin-bottom: 28px;">Every size, state, and prefix/suffix combination side by side, plus real-world form patterns. Type into any field &mdash; this is exactly how it behaves in production.</p>
+
+          <style>
+            .page-text-field .demo-container .demo-canvas {
+              align-items: stretch !important;
+              justify-content: flex-start !important;
+              min-height: 0 !important;
+              flex-direction: column !important;
+              padding: 32px !important;
+              gap: 32px !important;
+            }
+            .page-text-field .demo-tf-section { display: flex; flex-direction: column; gap: 14px; }
+            .page-text-field .demo-tf-section > .demo-group-label {
+              font-size: 11px !important; font-weight: 700 !important; letter-spacing: 0.08em !important;
+              color: var(--prism-text-muted) !important; text-transform: uppercase !important;
+              margin: 0 !important; text-align: left !important; width: auto !important;
+            }
+            .page-text-field .demo-tf-stack { display: flex; flex-direction: column; gap: 16px; max-width: 480px; }
+            .page-text-field .demo-tf-stack--wide { max-width: 720px; }
+            .page-text-field .demo-tf-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 16px;
+              max-width: 720px;
+            }
+            @media (max-width: 880px) {
+              .page-text-field .demo-tf-grid { grid-template-columns: 1fr; }
+            }
+            .page-text-field .demo-realworld-card {
+              padding: 20px;
+              border: 1px solid var(--prism-border);
+              border-radius: 12px;
+              background: rgba(255,255,255,0.02);
+              max-width: 560px;
+            }
+            [data-theme="light"] .page-text-field .demo-realworld-card {
+              background: rgba(255,255,255,0.55);
+              border-color: rgba(37,99,235,0.1);
+            }
+            .page-text-field .demo-realworld-card-label {
+              font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+              color: var(--prism-text-muted); text-transform: uppercase;
+              margin-bottom: 14px;
+            }
+            .page-text-field .demo-realworld-card .form-footer {
+              display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;
+            }
+          </style>
+
+          <div class="demo-container">
+            <div class="demo-toolbar">
+              <div class="demo-toolbar-left">
+                <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Text Field &middot; states &times; sizes &times; affixes + real-world form patterns</span>
+              </div>
+            </div>
+            <div class="demo-canvas">
+
+              <!-- States -->
+              <div class="demo-tf-section">
+                <div class="demo-group-label">States &mdash; default / error / success / disabled / readonly</div>
+                <div class="demo-tf-stack">
+                  <ds-text-input label="Email"     placeholder="you@example.com" required helper="We'll never share your email."></ds-text-input>
+                  <ds-text-input label="Username"  state="error"    helper="Username already taken." value="admin"></ds-text-input>
+                  <ds-text-input label="Verified"  state="success"  helper="Looks good." value="alice@example.com"></ds-text-input>
+                  <ds-text-input label="Locked"    state="disabled" value="cannot edit"></ds-text-input>
+                  <ds-text-input label="Read only" state="readonly" value="Read-only value"></ds-text-input>
+                </div>
+              </div>
+
+              <!-- Sizes -->
+              <div class="demo-tf-section">
+                <div class="demo-group-label">Sizes &mdash; small (36) / medium (40, default) / large (44)</div>
+                <div class="demo-tf-stack">
+                  <ds-text-input size="small"  label="Small"             placeholder="36px height"></ds-text-input>
+                  <ds-text-input size="medium" label="Medium (default)"  placeholder="40px height"></ds-text-input>
+                  <ds-text-input size="large"  label="Large"             placeholder="44px height"></ds-text-input>
+                </div>
+              </div>
+
+              <!-- Label position -->
+              <div class="demo-tf-section">
+                <div class="demo-group-label">Label position &mdash; <code>top</code> (mobile / long labels) vs <code>left</code> (desktop default)</div>
+                <div class="demo-tf-stack demo-tf-stack--wide">
+                  <ds-text-input label-position="top"  label="Top label"  placeholder="Stacked layout &mdash; label above the field"></ds-text-input>
+                  <ds-text-input label-position="left" label="Left label" placeholder="Inline layout &mdash; label in a 240px left column"></ds-text-input>
+                </div>
+              </div>
+
+              <!-- Prefix & suffix -->
+              <div class="demo-tf-section">
+                <div class="demo-group-label">Prefix &amp; suffix &mdash; text and icons</div>
+                <div class="demo-tf-stack">
+                  <ds-text-input label="Price"    placeholder="0.00"     prefix-text="$"  suffix-text="USD"></ds-text-input>
+                  <ds-text-input label="Weight"   placeholder="0"         suffix-text="kg"></ds-text-input>
+                  <ds-text-input label="Search"   prefix-icon="search"    placeholder="Search items&hellip;"></ds-text-input>
+                  <ds-text-input label="Date"     suffix-icon="calendar"  placeholder="Select date"></ds-text-input>
+                  <ds-text-input label="Combined" prefix-text="@"         suffix-icon="check" placeholder="username"></ds-text-input>
+                </div>
+              </div>
+
+              <!-- Prefix / suffix dropdowns -->
+              <div class="demo-tf-section">
+                <div class="demo-group-label">Prefix &amp; suffix dropdowns &mdash; <strong>click the chip</strong> to open a menu and pick a value; the phone variant shows a country flag (<code>flag="us"</code>) that updates with the dial code</div>
+                <div class="demo-tf-stack">
+                  <ds-text-input id="demo-amount" label="Amount" placeholder="0.00" value="1250"
+                    prefix-text="USD" suffix-icon="chevron-down" suffix-dropdown></ds-text-input>
+                  <ds-text-input id="demo-phone" label="Phone" placeholder="555 0100" type="tel"
+                    flag="us" prefix-text="+1" prefix-icon="chevron-down" prefix-dropdown></ds-text-input>
+                  <ds-text-input id="demo-weight" label="Weight" placeholder="0"
+                    suffix-text="kg" suffix-icon="chevron-down" suffix-dropdown></ds-text-input>
+                </div>
+              </div>
+
+              <!-- Clear button -->
+              <div class="demo-tf-section">
+                <div class="demo-group-label">Clearable &mdash; <code>show-clear</code> reveals an &times; when there is a value</div>
+                <div class="demo-tf-stack">
+                  <ds-text-input label="Search" prefix-icon="search" show-clear value="design system" placeholder="Search&hellip;"></ds-text-input>
+                  <ds-text-input label="Filter"                       show-clear value="active"        placeholder="Filter results"></ds-text-input>
+                </div>
+              </div>
+
+              <!-- Helper + counter -->
+              <div class="demo-tf-section">
+                <div class="demo-group-label">Helper text &amp; counter</div>
+                <div class="demo-tf-stack">
+                  <ds-text-input label="Username" required helper="Must be 3-20 characters" counter="0/20"  show-counter placeholder="Enter username"></ds-text-input>
+                  <ds-text-input label="Bio"               helper="Tell us about yourself"  counter="42/120" show-counter value="Designer at Zoho, building the UEMS design system."></ds-text-input>
+                  <ds-text-input label="Email"  required state="error" helper="Please enter a valid email address" value="invalid-email"></ds-text-input>
+                </div>
+              </div>
+
+              <!-- Input types -->
+              <div class="demo-tf-section">
+                <div class="demo-group-label">Input types &mdash; native HTML <code>type</code></div>
+                <div class="demo-tf-grid">
+                  <ds-text-input type="email"    label="Email"    placeholder="you@example.com"></ds-text-input>
+                  <ds-text-input type="password" label="Password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"></ds-text-input>
+                  <ds-text-input type="number"   label="Quantity" placeholder="0"></ds-text-input>
+                  <ds-text-input type="tel"      label="Phone"    placeholder="+91 90000 00000"></ds-text-input>
+                  <ds-text-input type="url"      label="Website"  placeholder="https://example.com"></ds-text-input>
+                  <ds-text-input type="date"     label="Date"></ds-text-input>
+                </div>
+              </div>
+
+              <!-- Real-world patterns -->
+              <div class="demo-tf-section">
+                <div class="demo-group-label">Real-world patterns</div>
+
+                <div class="demo-realworld-card">
+                  <div class="demo-realworld-card-label">Sign-in form &mdash; email + password + remember me</div>
+                  <div class="demo-tf-stack">
+                    <ds-text-input label-position="top" type="email"    label="Work email" placeholder="you@zohocorp.com" required></ds-text-input>
+                    <ds-text-input label-position="top" type="password" label="Password"   placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required helper="Minimum 8 characters" show-helper-row="false"></ds-text-input>
+                  </div>
+                  <div class="form-footer">
+                    <ds-button variant="primary" size="medium">Sign in</ds-button>
+                  </div>
+                </div>
+
+                <div class="demo-realworld-card">
+                  <div class="demo-realworld-card-label">Search bar &mdash; prefix icon + clear button</div>
+                  <ds-text-input size="large" prefix-icon="search" show-clear label="Search devices" show-helper-row="false" placeholder="Try a name, type, or owner&hellip;" value="MacBook"></ds-text-input>
+                </div>
+
+                <div class="demo-realworld-card">
+                  <div class="demo-realworld-card-label">Profile form &mdash; mixed states + counter</div>
+                  <div class="demo-tf-stack">
+                    <ds-text-input label-position="top" label="Display name" required value="Kumaran" counter="7/40" show-counter></ds-text-input>
+                    <ds-text-input label-position="top" label="Username"     prefix-text="prism.zoho/" placeholder="your-handle" required state="success" helper="Available"></ds-text-input>
+                    <ds-text-input label-position="top" label="Website"      type="url" prefix-icon="link" placeholder="https://"></ds-text-input>
+                  </div>
+                  <div class="form-footer">
+                    <ds-button variant="secondary" size="medium">Cancel</ds-button>
+                    <ds-button variant="primary"   size="medium">Save changes</ds-button>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- RTL -->
+              <div class="demo-tf-section">
+                <div class="demo-group-label">RTL &mdash; Arabic layout (mirrors prefix/suffix to the right)</div>
+                <div class="demo-tf-stack">
+                  <ds-text-input rtl label="&#1575;&#1604;&#1576;&#1585;&#1610;&#1583; &#1575;&#1604;&#1573;&#1604;&#1603;&#1578;&#1585;&#1608;&#1606;&#1610;" placeholder="you@example.com" helper="&#1604;&#1606; &#1606;&#1588;&#1575;&#1585;&#1603; &#1576;&#1585;&#1610;&#1583;&#1603; &#1575;&#1604;&#1573;&#1604;&#1603;&#1578;&#1585;&#1608;&#1606;&#1610;"></ds-text-input>
+                  <ds-text-input rtl label="&#1575;&#1604;&#1587;&#1593;&#1585;" placeholder="0.00" prefix-text="$" suffix-text="USD"></ds-text-input>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <!-- Do & Don't -->
+        <div class="doc-section">
+          <h2 id="do-dont" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">Recommended</span></h2>
+          <div class="do-dont-grid">
+            <div class="do-card"><span class="card-label">Do</span>
+              <ul>
+                <li>Always give the field a visible label &mdash; not a placeholder, not just context. Screen readers and users alike need a name they can refer back to.</li>
+                <li>On desktop, prefer left labels in dense settings panels and admin tables; everywhere else, top labels are the safer default.</li>
+                <li>Switch to top labels on tablet and mobile &mdash; left labels squeeze the field too narrow once the viewport shrinks.</li>
+                <li>Use placeholder text for example formats only (&ldquo;name@example.com&rdquo;, &ldquo;DD/MM/YYYY&rdquo;). It disappears once the user types &mdash; never put critical info there.</li>
+                <li>Put format rules in helper text (&ldquo;Letters and numbers only&rdquo;, &ldquo;Max 50 characters&rdquo;) so they stay visible while the user is typing.</li>
+                <li>Show a character counter when there&rsquo;s a real max &mdash; otherwise the user types blind and hits a wall.</li>
+                <li>Make every error tell the user how to fix it: &ldquo;Enter a valid email&rdquo; beats &ldquo;Invalid input.&rdquo;</li>
+                <li>Use prefix and suffix for fixed parts of the answer (&ldquo;https://&rdquo;, &ldquo;@&rdquo;, &ldquo;.com&rdquo;, &ldquo;kg&rdquo;) so the user doesn&rsquo;t have to type them.</li>
+              </ul>
+            </div>
+            <div class="dont-card"><span class="card-label">Don't</span>
+              <ul>
+                <li>Don&rsquo;t use placeholder text as the label &mdash; the moment the user starts typing, the prompt vanishes and they have to retype to remember what the field was for.</li>
+                <li>Don&rsquo;t mix Error and Success on the same field at the same time. Pick the one the user needs to act on first.</li>
+                <li>Don&rsquo;t use Read-only when you mean Disabled. Read-only says &ldquo;this is the value, you can&rsquo;t edit it here&rdquo;; Disabled says &ldquo;you can&rsquo;t do anything with this field yet.&rdquo;</li>
+                <li>Don&rsquo;t stack a prefix icon and a prefix text together unless the design genuinely calls for both &mdash; the field starts to look crowded.</li>
+                <li>Don&rsquo;t pad helper text into a paragraph. One short sentence &mdash; the user is mid-form, not reading docs.</li>
+                <li>Don&rsquo;t hide the label and assume the surrounding UI explains the field. It rarely does, and screen readers always need it.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div> <!-- End tab-overview -->
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- TAB: STYLE                                  -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="tab-content" id="tab-style" style="display: none; padding-top: 32px;">
+        <h2 id="style-overview" class="doc-section-title">Style</h2>
+        <p class="doc-section-subtitle">The exact tokens, sizes, and colours behind every state of the text field. Use this tab when you&rsquo;re aligning a Figma node to code or matching a custom skin to the system.</p>
+
+        <!-- Variant Axes -->
+        <div class="doc-section">
+          <h2 id="variant-axes" class="doc-section-title">Variant Axes</h2>
+          <p class="doc-section-subtitle">Four dials describe every text field in the system. Mix and match these &mdash; size, label position, prefix/suffix, and state &mdash; to cover any form layout.</p>
+          <div style="padding: 24px; background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 12px; margin-top: 16px;">
+            <div style="font-size: 15px; color: var(--prism-text); line-height: 1.7;">
+              <strong>3</strong> Sizes &times; <strong>8</strong> States &times; <strong>2</strong> RTL &times; <strong>2</strong> Label Positions = <strong style="color: var(--prism-violet); font-size: 18px;">96 variants</strong>
+            </div>
+          </div>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Sizes -->
+        <div class="doc-section">
+          <h2 id="sizes" class="doc-section-title">Sizes</h2>
+          <p class="doc-section-subtitle">Three sizes for three contexts. Small in toolbar filters and dense tables, Medium in standard forms, Large on mobile and any touch-first screen. Each size caps the field width (S 160 / M 320 / L 400); set <code>full-width</code> to override the cap and stretch the field to fill its container.</p>
+          <table class="size-table">
+            <thead><tr><th>Size</th><th>Min Height</th><th>Padding</th><th>Font Size</th><th>Use Case</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Small</strong></td><td>36px</td><td>8px 12px</td><td>14px</td><td>Compact forms, table inline editing</td></tr>
+              <tr><td><strong>Medium</strong></td><td>40px</td><td>10px 12px</td><td>14px</td><td>Default for most forms</td></tr>
+              <tr><td><strong>Large</strong></td><td>44px</td><td>12px 12px</td><td>16px</td><td>Standalone forms, registration pages</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- States -->
+        <div class="doc-section">
+          <h2 id="states" class="doc-section-title">States</h2>
+          <p class="doc-section-subtitle">Eight states cover the full life of a field &mdash; from empty and waiting to filled, focused, in error, or locked. Each state is feedback the user reads at a glance, so they always know what the field expects next.</p>
+          <div class="state-grid">
+            <div class="state-card">
+              <div style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #C8CDD8; border-radius:8px; background:var(--prism-surface); font-size:13px; color:#8B95A9;">Placeholder</div>
+              <div class="state-card-title">Default</div>
+              <div class="state-card-desc">Border: #C8CDD8, bg: white</div>
+            </div>
+            <div class="state-card">
+              <div style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #8B95A9; border-radius:8px; background:var(--prism-surface); font-size:13px; color:#8B95A9;">Placeholder</div>
+              <div class="state-card-title">Hover</div>
+              <div class="state-card-desc">Border darkens to #8B95A9</div>
+            </div>
+            <div class="state-card">
+              <div style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #2C66DD; border-radius:8px; background:#fff; box-shadow:0 0 0 3px rgba(44,102,221,0.15); font-size:13px; color:#8B95A9;">Placeholder</div>
+              <div class="state-card-title">Focus</div>
+              <div class="state-card-desc">Blue border + focus ring</div>
+            </div>
+            <div class="state-card">
+              <div style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #C8CDD8; border-radius:8px; background:var(--prism-surface); font-size:13px; color:#1A1A2E;">Entered text</div>
+              <div class="state-card-title">Filled</div>
+              <div class="state-card-desc">Text color: #1A1A2E</div>
+            </div>
+            <div class="state-card">
+              <div style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #C1181B; border-radius:8px; background:var(--prism-surface); font-size:13px; color:#1A1A2E;">Invalid</div>
+              <div class="state-card-title">Error</div>
+              <div class="state-card-desc">Border: #C1181B, red helper</div>
+            </div>
+            <div class="state-card">
+              <div style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #0C8844; border-radius:8px; background:var(--prism-surface); font-size:13px; color:#1A1A2E;">Valid</div>
+              <div class="state-card-title">Success</div>
+              <div class="state-card-desc">Border: #0C8844, green helper</div>
+            </div>
+            <div class="state-card">
+              <div style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid #E3E7ED; border-radius:8px; background:#F5F6F8; font-size:13px; color:#8B95A9; opacity:0.6;">Disabled</div>
+              <div class="state-card-title">Disabled</div>
+              <div class="state-card-desc">Bg: #F5F6F8, 60% opacity</div>
+            </div>
+            <div class="state-card">
+              <div style="display:inline-flex; align-items:center; padding:8px 12px; border:1px solid transparent; border-radius:8px; background:#F5F6F8; font-size:13px; color:#1A1A2E;">Read only</div>
+              <div class="state-card-title">Read Only</div>
+              <div class="state-card-desc">Bg: #F5F6F8, no border</div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Label Position -->
+        <div class="doc-section">
+          <h2 id="label-position" class="doc-section-title">Label Position</h2>
+          <p class="doc-section-subtitle">Left labels are the default &mdash; they save vertical space in dense, wide forms (settings panels, admin tables) and align cleanly down a column. Switch to top labels for responsive/mobile layouts and narrow side panels, where an inline label would break down. Use none to hide the label when context already names the field (toolbar filters, table cells) &mdash; the label text is kept as the input&rsquo;s <code>aria-label</code> for screen readers. Below 640px a left label automatically stacks on top.</p>
+          <table class="size-table">
+            <thead><tr><th>Position</th><th>Layout</th><th>Use Case</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Left</strong></td><td>Label inline with the input, horizontally aligned</td><td>Default for standard desktop forms</td></tr>
+              <tr><td><strong>Top</strong></td><td>Label stacked above the input field</td><td>Responsive/mobile layouts, narrow side panels</td></tr>
+              <tr><td><strong>None</strong></td><td>Label hidden; kept as <code>aria-label</code> for accessibility</td><td>Toolbar filters, table-cell editing, or where context already names the field</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Design Tokens -->
+        <div class="doc-section">
+          <h2 id="design-tokens" class="doc-section-title">Design Tokens</h2>
+          <p class="doc-section-subtitle">Every colour, radius, and border the field touches &mdash; ready to reference when you&rsquo;re building a related component or auditing a custom variant.</p>
+          <table class="size-table">
+            <thead><tr><th>Token</th><th>Property</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td><code>border-default</code></td><td>Border color</td><td>#C8CDD8</td></tr>
+              <tr><td><code>border-hover</code></td><td>Border hover</td><td>#8B95A9</td></tr>
+              <tr><td><code>border-focus</code></td><td>Border focus</td><td>#2C66DD</td></tr>
+              <tr><td><code>border-error</code></td><td>Border error</td><td>#C1181B</td></tr>
+              <tr><td><code>border-success</code></td><td>Border success</td><td>#0C8844</td></tr>
+              <tr><td><code>bg-disabled</code></td><td>Disabled background</td><td>#F5F6F8</td></tr>
+              <tr><td><code>text-input</code></td><td>Input text color</td><td>#1A1A2E</td></tr>
+              <tr><td><code>text-placeholder</code></td><td>Placeholder color</td><td>#8B95A9</td></tr>
+              <tr><td><code>text-helper</code></td><td>Helper text color</td><td>#5F6C89</td></tr>
+              <tr><td><code>text-label</code></td><td>Label text color</td><td>var(--prism-text)</td></tr>
+              <tr><td><code>focus-ring</code></td><td>Focus ring shadow</td><td>0 0 0 3px rgba(44, 102, 221, 0.15)</td></tr>
+              <tr><td><code>radius/radius-s</code></td><td>Border radius</td><td>8px</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- TAB: USAGE                                  -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="tab-content" id="tab-usage" style="display: none; padding-top: 32px;">
+
+        <!-- When to Use -->
+        <div class="doc-section">
+          <h2 id="when-to-use" class="doc-section-title">When to Use</h2>
+          <p class="doc-section-subtitle">Reach for a text field whenever the user has to type a single line &mdash; their name, an email, a search term, a number. For longer freeform writing, use a Text area; for picking from a fixed list, a Dropdown.</p>
+          <ul class="doc-list">
+            <li><strong>Single-line text entry:</strong> For collecting short free-text input such as names, emails, URLs, or descriptions.</li>
+            <li><strong>Form fields:</strong> As the primary building block for data collection forms across the application.</li>
+            <li><strong>Search:</strong> Combined with a prefix search icon for search bars and filter inputs.</li>
+            <li><strong>Filters:</strong> In data table toolbars and dashboards for filtering content inline.</li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Label Position Guidelines -->
+        <div class="doc-section">
+          <h2 id="label-guidelines" class="doc-section-title">Label Position Guidelines</h2>
+          <p class="doc-section-subtitle">Top labels are the safe default &mdash; they read top-to-bottom like the rest of the page and survive narrow screens. Use left labels only when vertical space is genuinely tight and the form is wide enough to give them room.</p>
+          <ul class="doc-list">
+            <li><strong>Desktop default:</strong> Always use Label Position = Left. This is the standard layout for desktop forms with sufficient horizontal space.</li>
+            <li><strong>Responsive breakpoints:</strong> Auto-switch to Label Position = Top when the viewport width drops below the mobile breakpoint or when the form is inside a narrow container.</li>
+            <li><strong>Narrow side panels:</strong> Use Label Position = Top when the text input appears inside drawers, side panels, or modal forms with limited width.</li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Prefix & Suffix Elements -->
+        <div class="doc-section">
+          <h2 id="prefix-suffix" class="doc-section-title">Prefix &amp; Suffix Elements</h2>
+          <p class="doc-section-subtitle">A prefix or suffix replaces what would otherwise need its own line of helper text. Use them for fixed units (&ldquo;https://&rdquo;, &ldquo;@&rdquo;, &ldquo;.com&rdquo;, &ldquo;kg&rdquo;) &mdash; the part of the answer the user shouldn&rsquo;t have to type.</p>
+          <table class="size-table">
+            <thead><tr><th>Element</th><th>Position</th><th>Example</th><th>Use Case</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Prefix Icon</strong></td><td>Leading</td><td>Search icon, mail icon</td><td>Provide visual context for the input purpose</td></tr>
+              <tr><td><strong>Prefix Text</strong></td><td>Leading</td><td>$, https://</td><td>Show fixed format prefix values</td></tr>
+              <tr><td><strong>Suffix Text</strong></td><td>Trailing</td><td>kg, .com, %</td><td>Show units or domain suffixes</td></tr>
+              <tr><td><strong>Suffix Icon</strong></td><td>Trailing</td><td>Calendar icon, dropdown arrow</td><td>Indicate secondary action or picker</td></tr>
+              <tr><td><strong>Clear Button</strong></td><td>Trailing (rightmost)</td><td>X icon</td><td>Allow quick clearing of entered content</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- RTL Support -->
+        <div class="doc-section">
+          <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+          <p class="doc-section-subtitle">In Arabic, Hebrew, and Persian, the whole field mirrors automatically &mdash; label, prefix/suffix, clear button, and helper text all swap sides. Set <code>dir="rtl"</code> on any ancestor and the component does the rest.</p>
+          <ul class="doc-list">
+            <li><strong>Layout mirrored:</strong> The entire input layout mirrors horizontally. Label moves to the right, input field aligns accordingly.</li>
+            <li><strong>Prefix/suffix swap:</strong> Prefix elements appear on the right side and suffix elements on the left side in RTL mode.</li>
+            <li><strong>Text alignment:</strong> Input text and placeholder text automatically right-align in RTL mode.</li>
+            <li><strong>Helper row:</strong> Helper text starts from the right, counter moves to the left.</li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Related Components -->
+        <div class="doc-section">
+          <h2 id="related-components" class="doc-section-title">Related Components</h2>
+          <p class="doc-section-subtitle">Other input controls to reach for when a single-line text field isn&rsquo;t the right shape for the answer.</p>
+          <div class="related-grid">
+            <a href="Text-area.html" class="related-chip"><ds-icon name="align-justify" size="16"></ds-icon> Text area</a>
+            <a href="Dropdown.html" class="related-chip"><ds-icon name="chevron-down" size="16"></ds-icon> Select</a>
+            <a href="Search-field.html" class="related-chip"><ds-icon name="search" size="16"></ds-icon> Search</a>
+            <a href="Date-picker.html" class="related-chip"><ds-icon name="calendar" size="16"></ds-icon> Date picker</a>
+            <a href="Text-field.html" class="related-chip"><ds-icon name="list-bullet" size="16"></ds-icon> Form</a>
+          </div>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Figma Reference -->
+        <div class="doc-section">
+          <h2 id="figma-reference" class="doc-section-title">Figma Reference</h2>
+          <p class="doc-section-subtitle">The source-of-truth Figma node and tokens for engineers and designers building or auditing the text field.</p>
+          <ul class="doc-list">
+            <li><strong>Figma Node:</strong> <code style="font-family: monospace; font-size: 13px; padding: 2px 8px; border-radius: 6px; background: rgba(37,99,235,0.06); color: var(--prism-violet);">16042:44400</code> — Component Set: Text Input</li>
+          </ul>
+        </div>
+
+        <!-- Feedback -->
+        <div id="feedback-usage" class="feedback-banner" style="display: none;">
+          <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+          <div style="display: flex; gap: 10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- TAB: CODE                                   -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="tab-content" id="tab-code" style="display: none; padding-top: 32px;">
+
+        
+
+        <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+        <p class="doc-section-subtitle">Toggle any prop on the left and watch the field react in real time. The HTML below updates as you go &mdash; copy it straight into your project.</p>
+        <div class="code-playground">
+          <div class="cp-toolbar">
+            <div class="cp-control-group"><label class="cp-label">Size</label><select class="cp-select" id="tf-pg-size"><option value="small">small</option><option value="medium" selected>medium</option><option value="large">large</option></select></div>
+            <div class="cp-control-group"><label class="cp-label">State</label><select class="cp-select" id="tf-pg-state"><option value="default" selected>default</option><option value="error">error</option><option value="success">success</option><option value="readonly">readonly</option><option value="disabled">disabled</option></select></div>
+            <div class="cp-control-group"><label class="cp-label">Label position</label><select class="cp-select" id="tf-pg-label"><option value="none">none</option><option value="top">top</option><option value="left" selected>left</option></select></div>
+            <div class="cp-control-group"><label class="cp-label">Full width</label><select class="cp-select" id="tf-pg-fullwidth"><option value="false" selected>false</option><option value="true">true</option></select></div>
+            <div class="cp-control-group"><label class="cp-label">Required</label><select class="cp-select" id="tf-pg-required"><option value="false">false</option><option value="true">true</option></select></div>
+            <div class="cp-control-group"><label class="cp-label">Show clear</label><select class="cp-select" id="tf-pg-clear"><option value="false">false</option><option value="true">true</option></select></div>
+            <div class="cp-control-group"><label class="cp-label">Show counter</label><select class="cp-select" id="tf-pg-counter"><option value="false">false</option><option value="true">true</option></select></div>
+            <div class="cp-control-group"><label class="cp-label">Prefix icon</label><select class="cp-select" id="tf-pg-pfx-icon"><option value="">none</option><option value="search">search</option><option value="link">link</option></select></div>
+            <div class="cp-control-group"><label class="cp-label">Suffix icon</label><select class="cp-select" id="tf-pg-sfx-icon"><option value="">none</option><option value="calendar">calendar</option><option value="check">check</option></select></div>
+            <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="tf-pg-rtl"><option value="false">false</option><option value="true">true</option></select></div>
+            <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Label</label><input class="cp-select" id="tf-pg-label-text" type="text" value="Email" style="font-family:inherit"></div>
+            <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Placeholder</label><input class="cp-select" id="tf-pg-ph" type="text" value="you@example.com" style="font-family:inherit"></div>
+            <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Helper</label><input class="cp-select" id="tf-pg-helper" type="text" value="We'll never share your email." style="font-family:inherit"></div>
+            <div class="cp-control-group"><label class="cp-label">Prefix text</label><input class="cp-select" id="tf-pg-pfx" type="text" value="" style="font-family:inherit"></div>
+            <div class="cp-control-group"><label class="cp-label">Suffix text</label><input class="cp-select" id="tf-pg-sfx" type="text" value="" style="font-family:inherit"></div>
+          </div>
+          <div class="cp-preview" id="tf-pg-preview" style="padding:24px;display:flex;justify-content:center"><div id="tf-pg-host" style="width:100%;max-width:720px"></div></div>
+          <div class="cp-code-header">
+            <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+            <button class="cp-action-btn" id="tf-pg-copy"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+          </div>
+          <div class="cp-code-area" id="tf-pg-code"></div>
+        </div>
+        <script>
+        (function(){
+          var els = {
+            size:      document.getElementById('tf-pg-size'),
+            state:     document.getElementById('tf-pg-state'),
+            label:     document.getElementById('tf-pg-label'),
+            fullWidth: document.getElementById('tf-pg-fullwidth'),
+            required:  document.getElementById('tf-pg-required'),
+            clear:     document.getElementById('tf-pg-clear'),
+            counter:   document.getElementById('tf-pg-counter'),
+            pfxIcon:   document.getElementById('tf-pg-pfx-icon'),
+            sfxIcon:   document.getElementById('tf-pg-sfx-icon'),
+            rtl:       document.getElementById('tf-pg-rtl'),
+            labelText: document.getElementById('tf-pg-label-text'),
+            ph:        document.getElementById('tf-pg-ph'),
+            helper:    document.getElementById('tf-pg-helper'),
+            pfx:       document.getElementById('tf-pg-pfx'),
+            sfx:       document.getElementById('tf-pg-sfx')
+          };
+          var host = document.getElementById('tf-pg-host');
+          var codeOut = document.getElementById('tf-pg-code');
+          var copyBtn = document.getElementById('tf-pg-copy');
+          var pgRawCode = '';
+          var TF_COPY_LTR = { labelText: 'Email', ph: 'you@example.com', helper: "We'll never share your email." };
+          var TF_COPY_RTL = { labelText: 'البريد الإلكتروني', ph: 'you@example.com', helper: 'لن نشارك بريدك الإلكتروني أبدًا.' };
+          function build(){
+            var size = els.size.value;
+            var state = els.state.value;
+            var labelPos = els.label.value;
+            var fullWidth = els.fullWidth.value === 'true';
+            var required = els.required.value === 'true';
+            var clear = els.clear.value === 'true';
+            var counter = els.counter.value === 'true';
+            var pfxIcon = els.pfxIcon.value;
+            var sfxIcon = els.sfxIcon.value;
+            var rtl = els.rtl.value === 'true';
+            ['labelText','ph','helper'].forEach(function(key){
+              var el = els[key];
+              if (el.value === '' || el.value === TF_COPY_LTR[key] || el.value === TF_COPY_RTL[key]) {
+                el.value = rtl ? TF_COPY_RTL[key] : TF_COPY_LTR[key];
+              }
+            });
+            var labelText = els.labelText.value || '';
+            var ph = els.ph.value || '';
+            var helper = els.helper.value || '';
+            var pfx = els.pfx.value || '';
+            var sfx = els.sfx.value || '';
+
+            host.innerHTML = '';
+            var ti = document.createElement('ds-text-input');
+            if (size !== 'medium') ti.setAttribute('size', size);
+            if (state !== 'default') ti.setAttribute('state', state);
+            if (labelPos !== 'left') ti.setAttribute('label-position', labelPos);
+            if (fullWidth) ti.setAttribute('full-width', '');
+            if (labelText) ti.setAttribute('label', labelText);
+            if (ph) ti.setAttribute('placeholder', ph);
+            if (helper) ti.setAttribute('helper', helper);
+            if (required) ti.setAttribute('required', '');
+            if (clear) ti.setAttribute('show-clear', '');
+            if (counter) ti.setAttribute('show-counter', '');
+            if (pfx) ti.setAttribute('prefix-text', pfx);
+            if (sfx) ti.setAttribute('suffix-text', sfx);
+            if (pfxIcon) ti.setAttribute('prefix-icon', pfxIcon);
+            if (sfxIcon) ti.setAttribute('suffix-icon', sfxIcon);
+            if (rtl) ti.setAttribute('rtl', '');
+            host.appendChild(ti);
+
+            var attrs = [];
+            if (size !== 'medium') attrs.push('size="' + size + '"');
+            if (state !== 'default') attrs.push('state="' + state + '"');
+            if (labelPos !== 'left') attrs.push('label-position="' + labelPos + '"');
+            if (fullWidth) attrs.push('full-width');
+            if (labelText) attrs.push('label="' + labelText.replace(/"/g, '&quot;') + '"');
+            if (ph) attrs.push('placeholder="' + ph.replace(/"/g, '&quot;') + '"');
+            if (helper) attrs.push('helper="' + helper.replace(/"/g, '&quot;') + '"');
+            if (required) attrs.push('required');
+            if (clear) attrs.push('show-clear');
+            if (counter) attrs.push('show-counter');
+            if (pfx) attrs.push('prefix-text="' + pfx.replace(/"/g, '&quot;') + '"');
+            if (sfx) attrs.push('suffix-text="' + sfx.replace(/"/g, '&quot;') + '"');
+            if (pfxIcon) attrs.push('prefix-icon="' + pfxIcon + '"');
+            if (sfxIcon) attrs.push('suffix-icon="' + sfxIcon + '"');
+            if (rtl) attrs.push('rtl');
+            pgRawCode = '<ds-text-input' + (attrs.length ? '\n  ' + attrs.join('\n  ') : '') + '>\n</ds-text-input>';
+            var colored = '&lt;<span style="color:#60a5fa">ds-text-input</span>'
+              + (attrs.length ? '\n  ' : '')
+              + attrs.map(function(p){
+                  var eq = p.indexOf('=');
+                  if (eq === -1) return '<span style="color:#38bdf8">' + p + '</span>';
+                  return '<span style="color:#38bdf8">' + p.slice(0, eq) + '</span>=<span style="color:#34d399">' + p.slice(eq + 1) + '</span>';
+                }).join('\n  ')
+              + '&gt;\n&lt;/<span style="color:#60a5fa">ds-text-input</span>&gt;';
+            codeOut.innerHTML = '<pre style="margin:0;white-space:pre-wrap;font-family:\'JetBrains Mono\',monospace;font-size:13.5px;line-height:1.6">' + colored + '</pre>';
+          }
+          Object.keys(els).forEach(function(k){ els[k].addEventListener(els[k].tagName === 'INPUT' ? 'input' : 'change', build); });
+          copyBtn.addEventListener('click', function(){
+            var t = pgRawCode;
+            var done = function(){ var o = copyBtn.innerHTML; copyBtn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!'; setTimeout(function(){ copyBtn.innerHTML = o; }, 2000); };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(t).then(done).catch(function(){ var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); });
+            } else {
+              var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+            }
+          });
+          if (window.customElements && customElements.whenDefined) {
+            customElements.whenDefined('ds-text-input').then(build);
+          }
+          build();
+        })();
+        </script>
+
+        <hr class="doc-divider"/>
+
+        <h2 id="component-properties" class="doc-section-title">Component Properties</h2>
+        <p class="doc-section-subtitle">Every prop the field accepts &mdash; size and layout first, content and state next, validation last. Most are optional; pass only what you need.</p>
+
+        <!-- Label & Required -->
+        <div class="doc-section">
+          <h3 id="label-required" class="doc-h3">Label &amp; Required<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">3 props</span></h3>
+          <table class="size-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>Label Text</code></td><td>String</td><td>"Label"</td><td>The visible label for the input field.</td></tr>
+              <tr><td><code>Show Label</code></td><td>Boolean</td><td>true</td><td>Controls whether the label is visible.</td></tr>
+              <tr><td><code>Required</code></td><td>Boolean</td><td>false</td><td>Shows the asterisk (*) indicator next to the label.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Prefix Elements -->
+        <div class="doc-section">
+          <h3 id="prefix-elements" class="doc-h3">Prefix Elements<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">4 props</span></h3>
+          <table class="size-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>Prefix Icon</code></td><td>Boolean</td><td>false</td><td>Show a leading icon in the input field.</td></tr>
+              <tr><td><code>Prefix Icon Instance</code></td><td>Instance Swap</td><td>Search</td><td>The icon component used for the prefix.</td></tr>
+              <tr><td><code>Prefix Text</code></td><td>Boolean</td><td>false</td><td>Show static prefix text (e.g., "$").</td></tr>
+              <tr><td><code>Prefix Text Value</code></td><td>String</td><td>"$"</td><td>The prefix text string displayed.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Input Content -->
+        <div class="doc-section">
+          <h3 id="input-content" class="doc-h3">Input Content<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">2 props</span></h3>
+          <table class="size-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>Input Text</code></td><td>String</td><td>""</td><td>The editable text content of the input.</td></tr>
+              <tr><td><code>Placeholder</code></td><td>String</td><td>"Placeholder"</td><td>Hint text shown when the input is empty.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Suffix Elements -->
+        <div class="doc-section">
+          <h3 id="suffix-elements" class="doc-h3">Suffix Elements<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">7 props</span></h3>
+          <table class="size-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>Suffix Text</code></td><td>Boolean</td><td>false</td><td>Show static suffix text (e.g., "kg").</td></tr>
+              <tr><td><code>Suffix Text Value</code></td><td>String</td><td>"kg"</td><td>The suffix text string displayed.</td></tr>
+              <tr><td><code>Suffix Icon</code></td><td>Boolean</td><td>false</td><td>Show a trailing icon in the input field.</td></tr>
+              <tr><td><code>Suffix Icon Instance</code></td><td>Instance Swap</td><td>Chevron</td><td>The icon component used for the suffix.</td></tr>
+              <tr><td><code>Suffix Icon Right</code></td><td>Boolean</td><td>false</td><td>Show an additional rightmost trailing icon.</td></tr>
+              <tr><td><code>Suffix Icon Right Instance</code></td><td>Instance Swap</td><td>Info</td><td>The icon component used for the right suffix.</td></tr>
+              <tr><td><code>Clear Button</code></td><td>Boolean</td><td>false</td><td>Show the clear (X) button to reset input content.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Helper Row -->
+        <div class="doc-section">
+          <h3 id="helper-row" class="doc-h3">Helper Row<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">6 props</span></h3>
+          <table class="size-table">
+            <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>Show Helper</code></td><td>Boolean</td><td>true</td><td>Controls visibility of the helper row.</td></tr>
+              <tr><td><code>Helper Icon</code></td><td>Boolean</td><td>false</td><td>Show an icon alongside the helper text.</td></tr>
+              <tr><td><code>Helper Icon Instance</code></td><td>Instance Swap</td><td>Info</td><td>The icon component used for helper.</td></tr>
+              <tr><td><code>Helper Text</code></td><td>String</td><td>"Supporting text"</td><td>Guidance or validation message below the input.</td></tr>
+              <tr><td><code>Show Counter</code></td><td>Boolean</td><td>false</td><td>Show character count on the right of the helper row.</td></tr>
+              <tr><td><code>Counter Text</code></td><td>String</td><td>"0/100"</td><td>The character count display string.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Variant Axis Reference -->
+        <div class="doc-section">
+          <h2 id="variant-axis-reference" class="doc-section-title">Variant Axis Reference</h2>
+          <p class="doc-section-subtitle">The four axes that, multiplied out, generate every variant in the Figma component set. Set these and you get the right field for any form.</p>
+          <table class="size-table">
+            <thead><tr><th>Axis</th><th>Values</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Size</strong></td><td>Small, Medium, Large</td><td>Medium</td><td>Controls the overall dimensions and font size of the input.</td></tr>
+              <tr><td><strong>State</strong></td><td>Default, Hover, Focus, Filled, Error, Success, Disabled, Read Only</td><td>Default</td><td>Controls the visual and interaction state of the component.</td></tr>
+              <tr><td><strong>RTL</strong></td><td>false, true</td><td>false</td><td>Mirrors the layout for right-to-left languages.</td></tr>
+              <tr><td><strong>Label Position</strong></td><td>None, Left, Top</td><td>Left</td><td>Label inline (Left), stacked above (Top), or hidden with the text kept as <code>aria-label</code> (None).</td></tr>
+              <tr><td><strong>Full Width</strong></td><td>false, true</td><td>false</td><td>Stretches the field to fill its container, overriding the per-size width cap (S 160 / M 320 / L 400).</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Instance Overrides -->
+        <div class="doc-section">
+          <h2 id="instance-overrides" class="doc-section-title">Instance Overrides</h2>
+          <p class="doc-section-subtitle">How to override a text field instance in Figma without detaching it &mdash; so your design stays in sync when the source component updates.</p>
+          <ol class="numbered-list">
+            <li>Drag the Text Input component from the Assets panel onto your canvas.</li>
+            <li>Select the instance and open the Properties panel on the right sidebar.</li>
+            <li>Choose the desired <strong>Size</strong> (Small, Medium, or Large) from the variant axis dropdown.</li>
+            <li>Set the <strong>State</strong> axis to match the interaction context (Default, Hover, Focus, Filled, Error, Success, Disabled, or Read Only).</li>
+            <li>Toggle <strong>RTL</strong> to true if the form is rendered in a right-to-left language.</li>
+            <li>Set <strong>Label Position</strong> to Left (desktop) or Top (responsive/mobile).</li>
+            <li>Override the <strong>Label Text</strong>, <strong>Placeholder</strong>, and <strong>Helper Text</strong> string properties to match the field's purpose.</li>
+            <li>Enable or disable <strong>Prefix Icon</strong>, <strong>Prefix Text</strong>, <strong>Suffix Text</strong>, <strong>Suffix Icon</strong>, <strong>Clear Button</strong>, and <strong>Counter</strong> as needed.</li>
+            <li>Swap icon instances (Prefix Icon Instance, Suffix Icon Instance) to the appropriate icons from the icon library.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- TAB: ACCESSIBILITY                          -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div class="tab-content" id="tab-accessibility" style="display: none; padding-top: 32px;">
+        <h2 id="accessibility-overview" class="doc-section-title">Accessibility</h2>
+        <p class="doc-section-subtitle">Most accessibility is already baked in &mdash; this section explains what your users get for free, and the few things you have to provide (a real label, helpful error text, ARIA on icon-only affixes).</p>
+
+        <!-- Color Contrast -->
+        <div class="doc-section">
+          <h3 id="color-contrast" class="doc-h3">Color Contrast<span class="h3-badge" style="background: rgba(34,197,94,0.15); color: #16a34a;">WCAG AA</span></h3>
+          <ul class="doc-list">
+            <li>Input text (#1A1A2E) on white background maintains a contrast ratio of <strong>15.1:1</strong>, exceeding WCAG AAA requirements.</li>
+            <li>Placeholder text (#8B95A9) on white background maintains a minimum contrast ratio of <strong>3.5:1</strong> for non-text UI elements.</li>
+            <li>Error state border (#C1181B) meets the <strong>3:1</strong> minimum for UI component contrast against white.</li>
+            <li>Helper text (#5F6C89) on white background maintains at least <strong>4.6:1</strong> contrast ratio for small text.</li>
+            <li>Label text uses the page's primary text color to ensure maximum readability.</li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Keyboard Navigation -->
+        <div class="doc-section">
+          <h3 id="keyboard-navigation" class="doc-h3">Keyboard Navigation</h3>
+          <table class="size-table">
+            <thead><tr><th>Key</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td><code>Tab</code></td><td>Move focus to the text input (or to the next focusable element).</td></tr>
+              <tr><td><code>Shift + Tab</code></td><td>Move focus to the previous focusable element.</td></tr>
+              <tr><td><code>Escape</code></td><td>Clear the input field (when clear button is enabled) or blur the field.</td></tr>
+              <tr><td><code>Enter</code></td><td>Submit the form (when the input is inside a form element).</td></tr>
+              <tr><td>Arrow keys</td><td>Move the text cursor within the input content.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Screen Reader -->
+        <div class="doc-section">
+          <h3 id="screen-reader" class="doc-h3">Screen Reader</h3>
+          <ul class="doc-list">
+            <li>Always associate the <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;label&gt;</code> element with the input using the <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">for</code> attribute matching the input's <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">id</code>.</li>
+            <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-describedby</code> to link helper text and error messages to the input so screen readers announce them.</li>
+            <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-required="true"</code> on required fields to communicate obligation to assistive technologies.</li>
+            <li>Prefix and suffix text should be included via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-label</code> or visible label context so the format is clear (e.g., "Price in dollars").</li>
+            <li>The clear button should have an explicit <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-label="Clear input"</code> for screen reader users.</li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Error Handling -->
+        <div class="doc-section">
+          <h3 id="error-handling" class="doc-h3">Error Handling</h3>
+          <ul class="doc-list">
+            <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-invalid="true"</code> on the input element when the field is in the Error state.</li>
+            <li>Error messages must be linked via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-describedby</code> so the error is announced when the input receives focus.</li>
+            <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-live="polite"</code> on error message containers for real-time validation so errors are announced dynamically.</li>
+            <li>Do not rely solely on color (red border) to indicate errors. Always pair with a descriptive text message.</li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- RTL Accessibility -->
+        <div class="doc-section">
+          <h3 id="rtl-accessibility" class="doc-h3">RTL Accessibility</h3>
+          <ul class="doc-list">
+            <li>Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> on the container or use CSS <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">direction: rtl</code> to ensure proper layout mirroring.</li>
+            <li>Ensure tab order remains logical in RTL mode (right-to-left reading order).</li>
+            <li>Verify that screen readers announce label and helper text in the correct reading direction.</li>
+            <li>All interactive elements (clear button, suffix icons) must remain reachable via keyboard in RTL layouts.</li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Disabled & Read Only -->
+        <div class="doc-section">
+          <h3 id="disabled-readonly" class="doc-h3">Disabled &amp; Read Only</h3>
+          <ul class="doc-list">
+            <li><strong>Disabled:</strong> Use the native HTML <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">disabled</code> attribute. The input is removed from tab order and cannot receive focus.</li>
+            <li><strong>Read Only:</strong> Use the native HTML <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">readonly</code> attribute. The input remains focusable and its value can be copied, but it cannot be edited.</li>
+            <li>If a disabled field needs to explain <em>why</em> it is disabled, use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-disabled="true"</code> instead of the native <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">disabled</code> attribute so it remains focusable for tooltip access.</li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Label Position A11y -->
+        <div class="doc-section">
+          <h3 id="label-position-a11y" class="doc-h3">Label Position</h3>
+          <ul class="doc-list">
+            <li>Regardless of visual label position (Left or Top), the <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;label&gt;</code> must always be programmatically associated with its input.</li>
+            <li>When the label is visually hidden for design reasons, use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-label</code> or a visually-hidden label element to maintain screen reader support.</li>
+            <li>Label Position = Top may improve readability for screen magnifier users who zoom into narrow viewports.</li>
+          </ul>
+        </div>
+      </div>
+
+      </div><!-- close main-content-inner -->
+
+      <aside class="toc-sidebar">
+        <h4 class="toc-heading">On this page</h4>
+        <ul class="toc-nav" id="toc-nav">
+        </ul>
+
+        <div class="quick-actions-card">
+          <div class="quick-actions-title">Resources</div>
+          <a href="MD/text-input.md" download="text-input.md" class="action-link">
+            <ds-icon name="download" size="15"></ds-icon>
+            Download MD
+          </a>
+          <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=16042-44400" target="_blank" class="action-link">
+            <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+            Figma Design
+          </a>
+        </div>
+      </aside>
+
+      </div> <!-- close main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display: flex; gap: 10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  <script>
+    // ── Scroll-spy observer reference ──
+    let _tocObserver = null;
+
+    // ── Dynamic TOC ──
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav');
+      if (!tocList) return;
+      tocList.innerHTML = '';
+      const activePanel = document.getElementById(targetId);
+      if (!activePanel) return;
+
+      const headings = activePanel.querySelectorAll('h2[id], h3[id]');
+      headings.forEach(h => {
+        if (h.style.display === 'none') return;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.className = 'toc-link';
+        let text = Array.from(h.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+        if (!text) text = h.innerText;
+        a.textContent = text;
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById(h.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+
+      // Re-init scroll-spy
+      initScrollSpy();
+    }
+
+    function initScrollSpy() {
+      // Disconnect previous observer
+      if (_tocObserver) _tocObserver.disconnect();
+
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sectionIds = Array.from(tocLinks).map(link => link.getAttribute('href').slice(1));
+      const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+      if (sections.length === 0) return;
+
+      _tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            tocLinks.forEach(link => {
+              link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+            });
+          }
+        });
+      }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+
+      sections.forEach(section => _tocObserver.observe(section));
+    }
+
+    // ── Tab switching ──
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabMap = { 'Overview': 'tab-overview', 'Style': 'tab-style', 'Usage': 'tab-usage', 'Code': 'tab-code', 'Accessibility': 'tab-accessibility' };
+        document.querySelectorAll('.tab-content').forEach(panel => panel.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) {
+          document.getElementById(target).style.display = 'block';
+          updateTOC(target);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    // Initialize TOC
+    updateTOC('tab-overview');
+// Sidebar search filter
+    (function(){
+      var searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      var items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function(){
+        var q = this.value.toLowerCase().trim();
+        items.forEach(function(li){
+          var link = li.querySelector('a');
+          if (!link) return;
+          var text = link.textContent.toLowerCase();
+          li.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+      });
+      // Cmd+K / Ctrl+K shortcut to focus search
+      document.addEventListener('keydown', function(e){
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      });
+    })();
+
+    // Scroll sidebar to active link on page load
+    (function(){
+      var active = document.querySelector('.sidebar-link.active');
+      if (active) {
+        var sidebar = active.closest('.sidebar');
+        if (sidebar) {
+          var top = active.offsetTop - sidebar.offsetTop - (sidebar.clientHeight / 3);
+          sidebar.scrollTop = Math.max(0, top);
+        }
+      }
+    })();
+
+  </script>
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/main.js"></script>
+
+
+</body>
+</html>

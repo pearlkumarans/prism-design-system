@@ -1,0 +1,184 @@
+/* =============================================================================
+   ds-text-input / .ds-text-input
+   ============================================================================= */
+
+:host { display: block; font-family: var(--font-family-sans); width: 100%; }
+/* Light-DOM component: :host doesn't apply, so style the element directly —
+   block + full width lets the per-size body max-width (160/320/400) take effect. */
+ds-text-input { display: block; width: 100%; font-family: var(--font-family-sans); container-type: inline-size; }
+
+.ds-text-input {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+}
+.ds-text-input--top,
+.ds-text-input--none { flex-direction: column; align-items: stretch; }
+.ds-text-input--left { flex-direction: row; align-items: flex-start; }
+.ds-text-input--left > .ds-text-input__label-col { width: 280px; flex-shrink: 0; padding-top: 8px; }
+.ds-text-input__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+
+/* Responsive: when the field's own container is narrow, the left-label layout
+   collapses to stacked (label on top) — same as label-position="top". Uses a
+   container query (host is `container-type: inline-size`) so it adapts in narrow
+   panels/drawers/modals, not just on small viewports. */
+@container (max-width: 520px) {
+  .ds-text-input--left { flex-direction: column; align-items: stretch; }
+  .ds-text-input--left > .ds-text-input__label-col { width: auto; flex-shrink: 1; padding-top: 0; }
+}
+
+/* Label Row: label + required(*) + optional help icon (4px gap) */
+.ds-text-input__label-row { display: inline-flex; align-items: center; gap: 4px; }
+.ds-text-input__label {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-tertiary);
+}
+.ds-text-input__required { color: var(--uems-text-error); margin-inline-start: 2px; }
+.ds-text-input__label-help {
+  background: transparent; border: 0; padding: 0; line-height: 0; cursor: pointer;
+  display: inline-flex; color: var(--uems-text-tertiary);
+}
+.ds-text-input__label-help:hover { color: var(--uems-text-secondary); }
+.ds-text-input__label-help:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; border-radius: 2px; }
+
+.ds-text-input__field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: var(--_ti-h, 40px);
+  border: 1px solid var(--uems-border-primary);
+  border-radius: var(--_ti-radius, var(--radius-md));
+  background: var(--uems-bg-primary-alt);
+  font-size: var(--font-size-14);
+  color: var(--uems-text-primary);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+.ds-text-input__field:hover { border-color: var(--uems-border-accent); }
+/* Focus (resting focused state — empty or filled) → 2px ring; padding -1px to avoid a shift. */
+.ds-text-input__field:focus-within {
+  border: 2px solid var(--uems-border-accent-focus);
+  padding: 0 11px;
+}
+/* Active (while pressed — empty or filled) → 1px. */
+.ds-text-input__field:active {
+  border: 1px solid var(--uems-border-accent-focus);
+  padding: 0 12px;
+}
+
+.ds-text-input__field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  padding: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  height: 100%;
+}
+.ds-text-input__field input::placeholder { color: var(--uems-text-placeholder, var(--uems-text-tertiary)); }
+
+/* Browser autofill: Chrome/Safari paint their own tinted background via
+   :-webkit-autofill (a UA style that ignores `background`). Mask it with an
+   inset box-shadow in the field's own colour and keep our text colour. The
+   long transition delays the UA background so it never flashes through. */
+.ds-text-input__field input:-webkit-autofill,
+.ds-text-input__field input:-webkit-autofill:hover,
+.ds-text-input__field input:-webkit-autofill:focus,
+.ds-text-input__field input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--uems-text-primary);
+  -webkit-box-shadow: 0 0 0 1000px var(--uems-bg-primary-alt) inset;
+          box-shadow: 0 0 0 1000px var(--uems-bg-primary-alt) inset;
+  caret-color: var(--uems-text-primary);
+  transition: background-color 100000s ease-in-out 0s;
+}
+/* Disabled / read-only keep their own surface colour under autofill too. */
+.ds-text-input--disabled .ds-text-input__field input:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px var(--uems-bg-secondary) inset; box-shadow: 0 0 0 1000px var(--uems-bg-secondary) inset; }
+.ds-text-input--readonly .ds-text-input__field input:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px var(--uems-bg-secondary-alt) inset; box-shadow: 0 0 0 1000px var(--uems-bg-secondary-alt) inset; }
+
+/* Prefix / Suffix groups — each its own 4px-gap frame (Figma anatomy) */
+.ds-text-input__prefix,
+.ds-text-input__suffix { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+/* Dropdown chips: interactive, hover background (Figma: BG-Secondary-hover) */
+.ds-text-input__prefix--dropdown,
+.ds-text-input__suffix--dropdown {
+  border: 0; background: transparent; font: inherit; color: inherit;
+  padding: 2px 4px; border-radius: 4px; cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+.ds-text-input__prefix--dropdown:hover,
+.ds-text-input__suffix--dropdown:hover { background: var(--uems-bg-secondary-hover); }
+.ds-text-input__prefix--dropdown:focus-visible,
+.ds-text-input__suffix--dropdown:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 0; }
+
+/* Affix text truncates past a per-size character budget; full value stays in
+   the `title` tooltip. ch ≈ one character of the current font. */
+.ds-text-input__affix-text {
+  white-space: nowrap; font-size: var(--font-size-12);
+  display: inline-block; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom;
+}
+.ds-text-input__affix-text--prefix { color: var(--uems-text-primary); }
+.ds-text-input__affix-text--suffix { color: var(--uems-text-secondary); }
+/* Hover tooltip for a truncated affix (shared, body-level, hover-only). */
+.ds-text-input__affix-tooltip {
+  position: fixed; z-index: 2000; display: none;
+  background: var(--uems-bg-base-black, #1a1a2e); color: #fff;
+  font-size: var(--font-size-12); line-height: 1.4;
+  padding: 4px 8px; border-radius: var(--radius-sm); white-space: nowrap;
+  pointer-events: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+/* Per-size limits: Small 4 chars · Medium 8 chars · Large uncapped */
+.ds-text-input--small  .ds-text-input__affix-text { max-width: 4ch; }
+.ds-text-input--medium .ds-text-input__affix-text { max-width: 8ch; }
+.ds-text-input__affix-icon { line-height: 0; color: var(--uems-text-secondary); }
+/* Country flag before the prefix code (phone-number variant). */
+.ds-text-input__affix-flag {
+  display: inline-flex; align-items: center; line-height: 1;
+  font-size: 16px; flex: 0 0 auto;
+}
+.ds-text-input--large .ds-text-input__affix-flag { font-size: 18px; }
+.ds-text-input__clear {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--uems-text-secondary);
+  line-height: 0;
+  display: none; /* shown only when the field is active AND has a value */
+}
+.ds-text-input__clear:hover { color: var(--uems-text-primary); }
+/* Clear visible only when the field is focused (active) and has characters
+   (.ds-text-input--has-value is toggled in JS from the input value). */
+.ds-text-input--has-value:focus-within .ds-text-input__clear { display: inline-flex; }
+
+/* Counter shows only while the field is active (focused) — like the clear icon.
+   Helper text stays visible always; only the counter hides when inactive. */
+.ds-text-input:not(:focus-within) .ds-field-helper__counter { display: none; }
+
+/* ---- Sizes (heights from Figma handoff) ----------------------------- */
+/* Radius is uniform (var(--radius-md)) across all sizes — the base
+   .ds-text-input__field rule owns it; sizes only drive height/typography. */
+.ds-text-input--small  .ds-text-input__field { --_ti-h: 36px; padding: 0 12px; gap: 4px; }
+.ds-text-input--medium .ds-text-input__field { --_ti-h: 40px; }
+.ds-text-input--large  .ds-text-input__field { --_ti-h: 44px; font-size: var(--font-size-16); }
+
+/* Per-size width caps (Figma reference widths). Stays responsive — fills
+   narrower containers, but small never matches medium/large in wide ones. */
+.ds-text-input--small  .ds-text-input__body { max-width: 160px; }
+.ds-text-input--medium .ds-text-input__body { max-width: 320px; }
+.ds-text-input--large  .ds-text-input__body { max-width: 400px; }
+/* Full-width: field stretches to fill the container, overriding the per-size cap. */
+ds-text-input[full-width] .ds-text-input__body { max-width: none; }
+
+/* ---- States --------------------------------------------------------- */
+.ds-text-input--error .ds-text-input__field { border-color: var(--uems-border-error); }
+.ds-text-input--success .ds-text-input__field { border-color: var(--uems-border-success); }
+.ds-text-input--readonly .ds-text-input__field { background: var(--uems-bg-secondary-alt); border-color: var(--uems-border-disabled); }
+.ds-text-input--disabled .ds-text-input__field { background: var(--uems-bg-secondary); border-color: var(--uems-border-primary); }
+.ds-text-input--disabled input { color: var(--uems-text-placeholder); cursor: not-allowed; }
+
+/* Helper/counter row is the shared <ds-field-helper> sub-component; it owns its
+   own icon, text, counter, state colour and layout (see field-helper.css). */

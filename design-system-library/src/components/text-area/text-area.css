@@ -1,0 +1,124 @@
+/* =============================================================================
+   ds-text-area / .ds-text-area
+   ============================================================================= */
+
+:host { display: block; font-family: var(--font-family-sans); width: 100%; }
+/* Light-DOM host: :host doesn't apply, so set display + the query container on
+   the element directly (drives the responsive label collapse below). */
+ds-text-area { display: block; width: 100%; container-type: inline-size; }
+
+.ds-text-area {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+}
+.ds-text-area--top  { flex-direction: column; }
+.ds-text-area--none { flex-direction: column; }
+.ds-text-area--left { flex-direction: row; align-items: flex-start; }
+.ds-text-area--left > .ds-text-area__label-col { width: 280px; flex-shrink: 0; padding-top: 8px; }
+.ds-text-area__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+
+/* Responsive: narrow screens collapse the left-label layout to stacked (label
+   on top, field below) — same as label-position="top". */
+@container (max-width: 520px) {
+  .ds-text-area--left { flex-direction: column; align-items: stretch; }
+  .ds-text-area--left > .ds-text-area__label-col { width: auto; flex-shrink: 1; padding-top: 0; }
+}
+
+/* Per-size width caps shared with ds-text-input (medium 320 / large 400) so
+   text areas line up with text fields in the same form. Stays responsive. */
+.ds-text-area--medium .ds-text-area__body { max-width: 320px; }
+.ds-text-area--large  .ds-text-area__body { max-width: 400px; }
+/* Full-width: field stretches to fill the container, overriding the per-size cap. */
+ds-text-area[full-width] .ds-text-area__body { max-width: none; }
+
+/* Label Row: label + required(*) + optional help icon (4px gap) — matches
+   ds-text-input / ds-token-field. */
+.ds-text-area__label-row { display: inline-flex; align-items: center; gap: 4px; }
+.ds-text-area__label {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-tertiary);
+}
+.ds-text-area__required { color: var(--uems-text-error); margin-inline-start: 2px; }
+.ds-text-area__label-help {
+  background: transparent; border: 0; padding: 0; line-height: 0; cursor: pointer;
+  display: inline-flex; color: var(--uems-icon-tertiary);
+}
+.ds-text-area__label-help:hover { color: var(--uems-icon-secondary); }
+.ds-text-area__label-help:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; border-radius: 2px; }
+.ds-text-area__label-help-tip { display: inline-flex; align-items: center; line-height: 0; }
+
+.ds-text-area__field {
+  position: relative;
+  display: flex;
+  /* Match Text input / Input select: Border-Primary (#B4BBCC) resting border. */
+  border: 1px solid var(--uems-border-primary);
+  /* Match the 8px corner radius used by Text input and Input select fields. */
+  border-radius: var(--radius-md);
+  /* Spec: BG-Primary-alt for the field surface, falling back to bg-base when
+     the alt token isn't defined in a theme. */
+  background: var(--uems-bg-primary-alt, var(--uems-bg-base));
+  padding: 8px 12px;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+.ds-text-area__field:hover { border-color: var(--uems-border-accent); }
+.ds-text-area__field:focus-within { border: 2px solid var(--uems-border-accent-focus); padding: 7px 11px; }
+
+.ds-text-area__field textarea {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--font-size-14);
+  color: var(--uems-text-primary);
+  /* Resizing is handled by the custom corner grip (both axes, container-bound),
+     not the native textarea grip (which sits inset of the field's padding). */
+  resize: none;
+  display: block;
+  line-height: 20px;
+}
+.ds-text-area__field textarea::placeholder { color: var(--uems-text-placeholder, var(--uems-text-tertiary)); }
+
+/* Corner resize grip — pinned to the field's bottom end edge. */
+.ds-text-area__resizer {
+  position: absolute;
+  inset-inline-end: 1px;
+  inset-block-end: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--uems-icon-tertiary);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+.ds-text-area__resizer:hover { color: var(--uems-icon-secondary); }
+.ds-text-area__resizer:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: -1px;
+  border-radius: var(--radius-xs);
+}
+/* Mirror the grip for RTL by the resolved direction — `:dir(rtl)` matches whether
+   RTL comes from the component's own `rtl` attr OR an inherited RTL page (the grip
+   position already flips via `inset-inline-end`, so the icon must flip with it).
+   `[dir="rtl"]` kept as a fallback for engines without `:dir()`. */
+.ds-text-area[dir="rtl"] .ds-text-area__resizer,
+.ds-text-area__resizer:dir(rtl) { cursor: nesw-resize; }
+.ds-text-area[dir="rtl"] .ds-text-area__resizer svg,
+.ds-text-area__resizer:dir(rtl) svg { transform: scaleX(-1); }
+
+.ds-text-area--error .ds-text-area__field { border-color: var(--uems-border-error); }
+.ds-text-area--success .ds-text-area__field { border-color: var(--uems-border-success); }
+.ds-text-area--readonly .ds-text-area__field { background: var(--uems-bg-secondary-alt); border-color: var(--uems-border-disabled); }
+.ds-text-area--disabled .ds-text-area__field { background: var(--uems-bg-disabled); border-color: var(--uems-border-disabled); }
+.ds-text-area--disabled textarea { color: var(--uems-text-disabled); cursor: not-allowed; }
+
+/* Helper/counter row is the shared <ds-field-helper> sub-component; it owns its
+   own icon, text, counter, state colour and layout (see field-helper.css). */

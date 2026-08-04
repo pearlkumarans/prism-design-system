@@ -1,0 +1,272 @@
+/* =============================================================================
+   ds-breadcrumb / .ds-breadcrumb
+   Wayfinding trail rendered as <nav><ol>…</ol></nav>.
+   2 sizes (Small default 20px row / Medium 28px row), link/current/collapsed
+   item types, overflow via the real <ds-dropdown-menu>, full RTL.
+   Spec: docs/MD/breadcrumb.md · Figma 16018:37918 + 17960:740160.
+   ============================================================================= */
+
+.ds-breadcrumb,
+:host {
+  display: block;
+  /* Size container so label caps respond to the breadcrumb's OWN width (not the
+     viewport) — a breadcrumb in a narrow panel tightens even on a wide screen. */
+  container-type: inline-size;
+  container-name: breadcrumb;
+}
+
+.ds-breadcrumb__list,
+:host .ds-breadcrumb__list {
+  display: flex;
+  align-items: center;
+  /* Single line — the JS fitter collapses the trail into the "…" overflow when
+     it can't fit (responsive), so it never wraps to a second row. */
+  flex-wrap: nowrap;
+  min-width: 0;
+  gap: var(--uems-spacing-4, 4px);           /* 4px between items AND around separators */
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-family-sans);
+  /* size vars — Small is the default */
+  font-size: var(--_bc-font, var(--uems-font-size-12, 12px));
+  line-height: var(--_bc-line, 16px);
+}
+
+/* Current crumb may shrink + ellipsis so one very long label can't blow out the
+   row (the fitter only removes ancestors, not the current page). */
+.ds-breadcrumb__item--current { min-width: 0; }
+.ds-breadcrumb__item--current > a,
+.ds-breadcrumb__item--current > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 32ch;
+}
+
+/* ---- Responsive label truncation ------------------------------------------
+   Ancestor (non-current) links cap their width. Long labels MIDDLE-truncate:
+   the JS render splits the text into a lead + tail span; the lead ellipsizes as
+   the link shrinks while the tail stays pinned, so "Threats & Patches" reads
+   "Threa…tches" rather than losing its ending. Caps are CONTAINER-based (keyed
+   to the breadcrumb's own width) — see the @container query below. The `…`
+   overflow fitter still collapses the whole trail when even capped labels
+   don't fit. */
+.ds-breadcrumb__item:not(.ds-breadcrumb__item--current) > a,
+.ds-breadcrumb__item:not(.ds-breadcrumb__item--current) > button.ds-breadcrumb__link {
+  max-width: 20ch;
+  overflow: hidden;
+  white-space: nowrap;
+  min-width: 0;
+  gap: 0;                 /* lead + tail spans sit flush so the "…" lands mid-word */
+}
+/* Middle-truncation spans: lead shrinks + ellipsizes, tail is always kept. */
+.ds-breadcrumb__label-lead {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ds-breadcrumb__label-tail {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+/* Cramped breadcrumb (narrow container, e.g. a side panel or mobile): tighten
+   every label cap. Container-based so it triggers on the breadcrumb's own
+   width, independent of the viewport. */
+@container breadcrumb (max-width: 480px) {
+  .ds-breadcrumb__item:not(.ds-breadcrumb__item--current) > a,
+  .ds-breadcrumb__item:not(.ds-breadcrumb__item--current) > button.ds-breadcrumb__link {
+    max-width: 12ch;
+  }
+  .ds-breadcrumb__item--current > a,
+  .ds-breadcrumb__item--current > span {
+    max-width: 16ch;
+  }
+}
+
+/* ---- Sizes — rows 20 / 28 (Small uses the EFFECTIVE 2px vertical padding;
+        Figma declares 4 but clamps the row to 20 — spec flag 3) ------------- */
+.ds-breadcrumb--small {
+  --_bc-font: var(--uems-font-size-12, 12px);
+  --_bc-line: 16px;
+  --_bc-pad: 2px 4px;
+  --_bc-sep: 12px;
+  --_bc-home: 14px;
+  --_bc-more: 12px;
+}
+.ds-breadcrumb--medium {
+  --_bc-font: var(--uems-font-size-13, 13px);
+  --_bc-line: var(--uems-line-height-13, 20px);
+  --_bc-pad: 4px;
+  --_bc-sep: 14px;
+  --_bc-home: 16px;
+  --_bc-more: 20px; /* drawn value — flagged as possibly oversized (spec flag 4) */
+}
+
+.ds-breadcrumb__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;                                     /* home icon sits flush against its label */
+  color: var(--uems-text-quaternary);        /* link default text */
+  font-weight: var(--font-weight-regular, 400);
+}
+
+.ds-breadcrumb__item a,
+.ds-breadcrumb__item button.ds-breadcrumb__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--uems-spacing-4, 4px);
+  color: inherit;
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: var(--_bc-pad, 2px 4px);
+  border-radius: var(--uems-radius-xs, 4px);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+/* Hover — accent link text only, no background fill; leading icon flips to
+   Icon-Accent-Button. */
+.ds-breadcrumb__item a:hover,
+.ds-breadcrumb__item button.ds-breadcrumb__link:hover {
+  color: var(--uems-text-accent-link);
+}
+.ds-breadcrumb__item a:hover .ds-breadcrumb__home,
+.ds-breadcrumb__item button.ds-breadcrumb__link:hover .ds-breadcrumb__home {
+  color: var(--uems-icon-accent-button);
+}
+.ds-breadcrumb__item a:focus-visible,
+.ds-breadcrumb__item button.ds-breadcrumb__link:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+
+/* Current page — the last item: Text-Secondary, Medium weight, inert */
+.ds-breadcrumb__item--current {
+  color: var(--uems-text-secondary);
+  font-weight: var(--font-weight-medium, 500);
+  cursor: default;
+}
+.ds-breadcrumb__item--current a,
+.ds-breadcrumb__item--current button {
+  pointer-events: none;
+  background: none !important;
+  cursor: default;
+}
+
+/* Collapsed (overflow ···) item — real button opening <ds-dropdown-menu> */
+.ds-breadcrumb__item--collapsed {
+  position: relative;
+  user-select: none;
+}
+.ds-breadcrumb__overflow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--_bc-pad, 2px 4px);
+  border: 0;
+  background: transparent;
+  color: var(--uems-icon-tertiary);
+  font: inherit;
+  line-height: 0;
+  cursor: pointer;
+  border-radius: var(--uems-radius-xs, 4px);
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+.ds-breadcrumb__overflow-btn:hover,
+.ds-breadcrumb__overflow-btn[aria-expanded="true"] {
+  background: var(--uems-bg-secondary);
+  color: var(--uems-icon-accent-button);
+}
+/* No Focus variant exists in Figma for Collapsed — reuse the standard ring
+   (spec flag 6). */
+.ds-breadcrumb__overflow-btn:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+
+/* Embedded <ds-dropdown-menu> popover — anchored below the overflow button. */
+.ds-breadcrumb__overflow-dd {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-start: 0;
+  z-index: 30;
+  display: block;
+}
+.ds-breadcrumb__overflow-dd:not([open]) {
+  display: none;
+}
+.ds-breadcrumb[dir="rtl"] .ds-breadcrumb__overflow-dd {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+
+/* Separator chevron between items — Icon-Tertiary, decorative */
+.ds-breadcrumb__separator {
+  display: inline-flex;
+  align-items: center;
+  color: var(--uems-icon-tertiary);
+  flex-shrink: 0;
+}
+
+/* Leading icon on the first item (home-icon attr) */
+.ds-breadcrumb__home {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  /* Optical centering: the home glyph sits ~1px low within its own icon viewBox
+     (3-unit top gap vs 2-unit bottom gap in the 20-unit `icon-home`), and the
+     label's visual mass sits slightly high — nudge the icon up so it reads
+     centered against the text. Transform (not margin) so layout is unaffected. */
+  transform: translateY(-1px);
+}
+/* Zero the spacing between the home icon and its label: drop the link's leading
+   padding so the text sits flush against the icon (the item gap is already 0). */
+.ds-breadcrumb__home + a,
+.ds-breadcrumb__home + button.ds-breadcrumb__link {
+  padding-left: 0;
+}
+
+/* First crumb sits flush to the trail's leading edge — no leading padding so the
+   breadcrumb starts at x=0 (inline-start, so it flips correctly in RTL).
+   Excludes the home-icon variant: when the first item carries a leading icon,
+   keep its normal padding so the icon isn't jammed against the container edge. */
+.ds-breadcrumb__item:first-child:not(:has(.ds-breadcrumb__home)) > a,
+.ds-breadcrumb__item:first-child:not(:has(.ds-breadcrumb__home)) > button.ds-breadcrumb__link {
+  padding-inline-start: 0;
+}
+/* Home-icon variant: give the leading icon the standard link inset so it keeps
+   its padding (the text-first crumb above goes flush; the icon does not). */
+.ds-breadcrumb__item:first-child > .ds-breadcrumb__home {
+  padding-inline-start: var(--uems-spacing-4, 4px);
+}
+
+/* Disabled trail — token swap ONLY, no opacity (spec flag 2: Figma
+   double-dims with 50% opacity; the system pattern is token-swap).
+   The container keeps pointer-events ON + cursor:not-allowed; the inner links /
+   separators keep pointer-events:none so their clicks are blocked AND the
+   pointer falls through to the container, surfacing the not-allowed cursor. */
+.ds-breadcrumb[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+.ds-breadcrumb[aria-disabled="true"] .ds-breadcrumb__item,
+.ds-breadcrumb[aria-disabled="true"] .ds-breadcrumb__item--current {
+  color: var(--uems-text-disabled);
+  pointer-events: none;
+}
+.ds-breadcrumb[aria-disabled="true"] .ds-breadcrumb__separator,
+.ds-breadcrumb[aria-disabled="true"] .ds-breadcrumb__overflow-btn {
+  color: var(--uems-icon-disabled);
+  pointer-events: none;
+}
+
+/* RTL flip — [dir="rtl"] on the nav reverses the inline axis natively.
+   DO NOT add flex-direction: row-reverse (double reversal). */
+:host([rtl]:not([dir])) .ds-breadcrumb__list {
+  flex-direction: row-reverse;
+}

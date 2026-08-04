@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tag — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<!-- Demo tag: single source of truth -->
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/tag/tag.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/tag/tag.js"></script>
+<style>
+  /* Force hover / focus visuals for the State grid demos. The inner .ds-tag is rendered by the web component. */
+  ds-tag.is-hover-demo .ds-tag--primary { background: var(--uems-bg-accent-primary-hover, var(--uems-bg-accent-primary)) !important; filter: brightness(0.97); }
+  ds-tag.is-focus-demo .ds-tag { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; }
+  .demo-tag-section { margin-bottom: 28px; }
+  /* Override page-tag's centered + negative margin demo-group-label so the
+     section header sits above the tag row instead of overlapping it. */
+  .page-tag .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; text-align: left; width: auto; }
+  /* Override page-tag's centered demo-tag-row so tags align left, matching
+     the section's left-aligned header. */
+  .page-tag .demo-tag-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-start; }
+  /* Override page-tag's `align-items: center; justify-content: center` on
+     demo-canvas so sections stretch full width and stack from the top. */
+  .page-tag .demo-container .demo-canvas { align-items: stretch !important; justify-content: flex-start !important; min-height: 0 !important; }
+  .demo-tag-card { padding: 16px 20px; background: var(--prism-surface, rgba(255,255,255,.02)); border: 1px solid var(--prism-border, rgba(255,255,255,.08)); border-radius: 12px; }
+</style>
+</head>
+<body class="page-tag">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">      <a href="Foundation.html" >Foundation</a>
+      <a href="Components.html" class="active">Components</a>      <a href="zia-experience.html" >Zia Experience</a><a href="llm-reference.html">LLM Reference</a><div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+
+      <div style="width: 16px;"></div> <!-- Spacer -->
+
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search...">
+        <span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 id="components" class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link active">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Tag</h1>
+        <p class="page-desc">
+          A tag is a small chip that names a piece of metadata the user can act on &mdash; a label on an item, a filter the user can remove, a category they can pick. Use a tag when the value is short, the user can usually dismiss it, and it sits inline with other tags. For static status (without a click target), use a Badge instead.
+        </p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+      <div class="main-content-area">
+        <div class="main-content-inner">
+        <div class="tab-content" id="tab-overview">
+
+        <!-- Anatomy Section -->
+        <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+        
+
+        <div class="anatomy-diagram">
+          <div class="anat-tag-container">
+            <div class="anat-tag">
+              <!-- 1 Container: left of tag, horizontal line -->
+              <div style="position: absolute; right: calc(100% + 6px); top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px;">
+                <span class="anat-marker-inline">1</span><div style="width: 28px; height: 2px; background: #2563eb;"></div>
+              </div>
+              <!-- 2 Leading Element: above dot -->
+              <div style="position: absolute; top: -30px; left: 14px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <span class="anat-marker-inline">2</span><div style="width: 2px; height: 16px; background: #2563eb;"></div>
+              </div>
+              <span style="width: 8px; height: 8px; border-radius: 9999px; background: #2C66DD;"></span>
+              <span>Label</span>
+              <ds-icon name="close" size="16"></ds-icon>
+              <!-- 3 Label: below, centered under "Label" text -->
+              <div style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column-reverse; align-items: center; gap: 4px;">
+                <span class="anat-marker-inline">3</span><div style="width: 2px; height: 16px; background: #2563eb;"></div>
+              </div>
+              <!-- 4 Close: above X icon -->
+              <div style="position: absolute; top: -30px; right: 22px; transform: translateX(50%); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <span class="anat-marker-inline">4</span><div style="width: 2px; height: 16px; background: #2563eb;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="anat-legend">
+          <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Container</strong><span>Holds the background, border, and interaction transitions.</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Leading Element</strong><span>Optional status indicator dot or icon before the label.</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Label</strong><span>The display text. Should be concise (1-3 words).</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Close Button</strong><span>Optional dismiss button to remove or deselect the tag.</span></div></div>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Live Demo -->
+        <div style="margin-bottom: 64px;">
+          <h2 id="live-demo" class="doc-section-title" style="margin-bottom: 8px;">Preview</h2>
+          <p class="doc-section-subtitle" style="margin-bottom: 28px;">Every variant, size, leading element, and state side by side. Click any tag to dismiss it &mdash; this is exactly how it behaves in production.</p>
+
+          <div class="demo-container">
+            <div class="demo-toolbar">
+              <div class="demo-toolbar-left">
+                <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Tag Variants</span>
+              </div>
+            </div>
+            <div class="demo-canvas" style="flex-direction:column;align-items:stretch;gap:24px;padding:32px;">
+
+              <!-- Variants — default (no leading, with close) -->
+              <div class="demo-tag-section">
+                <div class="demo-group-label">Variants — all 6 (default, medium, with close)</div>
+                <div class="demo-tag-row">
+                  <ds-tag variant="neutral">Neutral</ds-tag>
+                  <ds-tag variant="primary">Primary</ds-tag>
+                  <ds-tag variant="success">Success</ds-tag>
+                  <ds-tag variant="warning">Warning</ds-tag>
+                  <ds-tag variant="error">Error</ds-tag>
+                  <ds-tag variant="outline">Outline</ds-tag>
+                </div>
+              </div>
+
+              <!-- Leading: dot -->
+              <div class="demo-tag-section">
+                <div class="demo-group-label">Leading dot — status indicators</div>
+                <div class="demo-tag-row">
+                  <ds-tag variant="neutral" leading="dot">Neutral</ds-tag>
+                  <ds-tag variant="primary" leading="dot">Primary</ds-tag>
+                  <ds-tag variant="success" leading="dot">Success</ds-tag>
+                  <ds-tag variant="warning" leading="dot">Warning</ds-tag>
+                  <ds-tag variant="error" leading="dot">Error</ds-tag>
+                  <ds-tag variant="outline" leading="dot">Outline</ds-tag>
+                </div>
+              </div>
+
+              <!-- Leading: icon -->
+              <div class="demo-tag-section">
+                <div class="demo-group-label">Leading icon — <code>star</code></div>
+                <div class="demo-tag-row">
+                  <ds-tag variant="neutral" leading="icon" icon="star">Neutral</ds-tag>
+                  <ds-tag variant="primary" leading="icon" icon="star">Primary</ds-tag>
+                  <ds-tag variant="success" leading="icon" icon="star">Success</ds-tag>
+                  <ds-tag variant="warning" leading="icon" icon="star">Warning</ds-tag>
+                  <ds-tag variant="error" leading="icon" icon="star">Error</ds-tag>
+                  <ds-tag variant="outline" leading="icon" icon="star">Outline</ds-tag>
+                </div>
+              </div>
+
+              <!-- Sizes -->
+              <div class="demo-tag-section">
+                <div class="demo-group-label">Sizes — Small · Medium · Large (plain + with dot)</div>
+                <div class="demo-tag-row">
+                  <ds-tag variant="primary" size="small">Small</ds-tag>
+                  <ds-tag variant="primary" size="medium">Medium</ds-tag>
+                  <ds-tag variant="primary" size="large">Large</ds-tag>
+                  <span style="width:24px;"></span>
+                  <ds-tag variant="primary" size="small"  leading="dot">Small + dot</ds-tag>
+                  <ds-tag variant="primary" size="medium" leading="dot">Medium + dot</ds-tag>
+                  <ds-tag variant="primary" size="large"  leading="dot">Large + dot</ds-tag>
+                </div>
+              </div>
+
+              <!-- Without close button -->
+              <div class="demo-tag-section">
+                <div class="demo-group-label">Without close button — <code>show-close="false"</code></div>
+                <div class="demo-tag-row">
+                  <ds-tag variant="neutral" show-close="false">Neutral</ds-tag>
+                  <ds-tag variant="primary" show-close="false">Primary</ds-tag>
+                  <ds-tag variant="success" show-close="false">Success</ds-tag>
+                  <ds-tag variant="warning" show-close="false">Warning</ds-tag>
+                  <ds-tag variant="error" show-close="false">Error</ds-tag>
+                  <ds-tag variant="outline" show-close="false">Outline</ds-tag>
+                </div>
+              </div>
+
+              <!-- States -->
+              <div class="demo-tag-section">
+                <div class="demo-group-label">States — Default · Hover · Focus · Disabled</div>
+                <div class="demo-tag-row">
+                  <ds-tag variant="primary" leading="dot">Default</ds-tag>
+                  <ds-tag variant="primary" leading="dot" class="is-hover-demo">Hover</ds-tag>
+                  <ds-tag variant="primary" leading="dot" class="is-focus-demo">Focus</ds-tag>
+                  <ds-tag variant="primary" leading="dot" disabled>Disabled</ds-tag>
+                </div>
+              </div>
+
+              <!-- Side-by-side close vs no-close -->
+              <div class="demo-tag-section">
+                <div class="demo-group-label">Side-by-side — with close · without close</div>
+                <div class="demo-tag-row">
+                  <ds-tag variant="primary" leading="dot">With close</ds-tag>
+                  <ds-tag variant="primary" leading="dot" show-close="false">Without close</ds-tag>
+                  <span style="width:24px;"></span>
+                  <ds-tag variant="success" leading="icon" icon="star">With close</ds-tag>
+                  <ds-tag variant="success" leading="icon" icon="star" show-close="false">Without close</ds-tag>
+                </div>
+              </div>
+
+              <!-- Real-world: filter chip cluster -->
+              <div class="demo-tag-section">
+                <div class="demo-group-label">Real-world — active filter chips above a data table</div>
+                <div class="demo-tag-card">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <span style="font-size:13px;color:var(--prism-text-muted);">Filtering by:</span>
+                    <ds-tag variant="primary" leading="dot">Status: Active</ds-tag>
+                    <ds-tag variant="success" leading="dot">Region: APAC</ds-tag>
+                    <ds-tag variant="warning" leading="dot">Risk: Medium</ds-tag>
+                    <ds-tag variant="outline">Tier 1</ds-tag>
+                    <ds-tag variant="outline">Tier 2</ds-tag>
+                    <button style="font-size:13px;color:var(--prism-violet);background:none;border:none;cursor:pointer;padding:0 4px;">Clear all</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Real-world: article tags -->
+              <div class="demo-tag-section">
+                <div class="demo-group-label">Real-world — article footer categories</div>
+                <div class="demo-tag-card">
+                  <div style="font-size:14px;color:var(--prism-text);margin-bottom:12px;">"Designing accessible color systems"</div>
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <ds-tag variant="neutral" size="small" show-close="false">design-system</ds-tag>
+                    <ds-tag variant="neutral" size="small" show-close="false">accessibility</ds-tag>
+                    <ds-tag variant="neutral" size="small" show-close="false">color</ds-tag>
+                    <ds-tag variant="neutral" size="small" show-close="false">contrast</ds-tag>
+                    <ds-tag variant="neutral" size="small" show-close="false">wcag</ds-tag>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Real-world: device groups with status dots -->
+              <div class="demo-tag-section">
+                <div class="demo-group-label">Real-world &mdash; device groups (status dot follows the variant)</div>
+                <div class="demo-tag-card">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <ds-tag variant="success" size="medium" leading="status" show-close="false">Production &middot; 412</ds-tag>
+                    <ds-tag variant="warning" size="medium" leading="status" show-close="false">Staging &middot; 86</ds-tag>
+                    <ds-tag variant="error"   size="medium" leading="status" show-close="false">Quarantined &middot; 14</ds-tag>
+                    <ds-tag variant="primary" size="medium" leading="status" show-close="false">Pilot ring &middot; 28</ds-tag>
+                    <ds-tag variant="neutral" size="medium" leading="status" show-close="false">Unassigned &middot; 7</ds-tag>
+                  </div>
+                  <div style="font-size:12px;color:var(--prism-text-muted);margin-top:12px;line-height:1.5;">No <code>status</code> attribute &mdash; the dot inherits the variant (green&rarr;green, blue&rarr;blue). Pass <code>status="critical"</code> to override.</div>
+                </div>
+              </div>
+
+              <!-- Real-world: recipient picker -->
+              <div class="demo-tag-section">
+                <div class="demo-group-label">Real-world &mdash; recipient picker (removable, keyboard parity)</div>
+                <div class="demo-tag-card">
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;border:1px solid var(--uems-border-secondary);border-radius:8px;background:var(--uems-bg-primary);">
+                    <ds-tag variant="primary" size="medium" leading="icon" icon="user">aravinth@zylker.com</ds-tag>
+                    <ds-tag variant="primary" size="medium" leading="icon" icon="user">priya@zylker.com</ds-tag>
+                    <ds-tag variant="primary" size="medium" leading="icon" icon="users">IT-Admins (12)</ds-tag>
+                    <span style="font-size:13px;color:var(--uems-text-placeholder);padding:2px 4px;">Add people&hellip;</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--prism-text-muted);margin-top:12px;line-height:1.5;">Tab to a tag and press <kbd>Backspace</kbd>/<kbd>Delete</kbd> to remove it &mdash; same as clicking &times;. Focus shows the 2px accent ring.</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Do & Don't -->
+        <div class="doc-section">
+          <h2 id="do-dont" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">Recommended</span></h2>
+          <div class="do-dont-grid">
+            <div class="do-card"><span class="card-label">Do</span>
+              <ul class="doc-list" style="border: none; background: transparent; padding: 0;">
+                <li style="border: none; background: transparent; padding-left: 20px;">Use tags for user-generated or user-selectable labels (filters, categories, selections).</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Keep label text short (1-3 words).</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Use Show Close for dismissible tags in multi-select fields or filter bars.</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Use consistent semantic variants across the application for the same meaning.</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Use the Outline variant when tags appear over colored or patterned backgrounds.</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Use Status Indicator as the leading element to combine status communication with labeling.</li>
+              </ul>
+            </div>
+            <div class="dont-card"><span class="card-label">Don't</span>
+              <ul class="doc-list" style="border: none; background: transparent; padding: 0;">
+                <li style="border: none; background: transparent; padding-left: 20px;">Don't use tags for non-interactive status display (use Badge instead).</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Don't use more than 2-3 words in a tag label.</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Don't mix semantic variant colors arbitrarily within the same context.</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Don't disable the close button while keeping the tag interactive; disable the entire tag instead.</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Don't use tags as primary navigation elements.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div> <!-- End tab-overview -->
+
+      <!-- ═══ STYLE TAB ═══ -->
+      <div class="tab-content" id="tab-style" style="display: none; padding-top: 32px;">
+        <h2 id="style-overview" class="doc-section-title">Style</h2>
+        <p class="doc-section-subtitle">The exact tokens, sizes, and colours behind every state of the tag. Use this tab when you&rsquo;re aligning a Figma node to code or matching a custom skin to the system.</p>
+
+        <!-- Variant Axes -->
+        <div class="doc-section">
+          <h2 id="variant-axes" class="doc-section-title">Variant Axes</h2>
+          <p class="doc-section-subtitle">The Tag component is built from five independent variant axes, producing a comprehensive matrix of 432 unique combinations.</p>
+          <ul class="doc-list">
+            <li><strong>Variant:</strong> 6 options &mdash; Neutral, Primary, Success, Warning, Error, Outline</li>
+            <li><strong>Size:</strong> 3 options &mdash; Small, Medium, Large</li>
+            <li><strong>State:</strong> 4 options &mdash; Default, Hover, Focus, Disabled</li>
+            <li><strong>RTL:</strong> 2 options &mdash; False, True</li>
+            <li><strong>Leading Element:</strong> 3 options &mdash; None, Status Indicator, Icon</li>
+            <li><strong>Total:</strong> 6 &times; 3 &times; 4 &times; 2 &times; 3 = <strong>432 variants</strong></li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Semantic Variants -->
+        <div class="doc-section">
+          <h2 id="semantic-variants" class="doc-section-title">Semantic Variants</h2>
+          <p class="doc-section-subtitle">Each colour carries a meaning the user reads before they read the label. Neutral for everyday categories, blue for informational, green for success, amber for warnings, red for errors. Outline is for tags the user adds themselves, so they read as soft rather than system-set.</p>
+          <table class="size-table">
+            <thead><tr><th>Variant</th><th>Hue</th><th>Usage</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Neutral</strong></td><td>Grey</td><td>General-purpose, no specific semantic meaning.</td></tr>
+              <tr><td><strong>Primary</strong></td><td>Blue</td><td>Active selections, primary categorization.</td></tr>
+              <tr><td><strong>Success</strong></td><td>Green</td><td>Positive or confirmed status tags.</td></tr>
+              <tr><td><strong>Warning</strong></td><td>Amber/Orange</td><td>Tags requiring attention or caution.</td></tr>
+              <tr><td><strong>Error</strong></td><td>Red</td><td>Error, critical, or rejected state.</td></tr>
+              <tr><td><strong>Outline</strong></td><td>Grey (border)</td><td>Low-emphasis tags on colored or busy backgrounds.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Sizes -->
+        <div class="doc-section">
+          <h2 id="sizes" class="doc-section-title">Sizes</h2>
+          <p class="doc-section-subtitle">Three sizes to fit different layout contexts.</p>
+          <table class="size-table">
+            <thead><tr><th>Size</th><th>Usage</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Small</strong></td><td>Compact layouts, table cells, inline metadata, filter chips.</td></tr>
+              <tr><td><strong>Medium</strong></td><td>Default size for most contexts, form fields, toolbars.</td></tr>
+              <tr><td><strong>Large</strong></td><td>Standalone tags, page headers, prominent filter selections.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- States -->
+        <div class="doc-section">
+          <h2 id="states" class="doc-section-title">States</h2>
+          <p class="doc-section-subtitle">Tags cycle through four states, each with distinct visual treatments to communicate interactivity.</p>
+          <div class="state-grid">
+            <div class="state-card">
+              <ds-tag variant="primary" leading="dot">Tag</ds-tag>
+              <div class="state-card-title">Default</div>
+              <div class="state-card-desc">Standard resting state</div>
+            </div>
+            <div class="state-card">
+              <ds-tag variant="primary" leading="dot" class="is-hover-demo">Tag</ds-tag>
+              <div class="state-card-title">Hover</div>
+              <div class="state-card-desc">Background darkens slightly</div>
+            </div>
+            <div class="state-card">
+              <ds-tag variant="primary" leading="dot" class="is-focus-demo">Tag</ds-tag>
+              <div class="state-card-title">Focus</div>
+              <div class="state-card-desc">Visible focus ring indicator</div>
+            </div>
+            <div class="state-card">
+              <ds-tag variant="primary" leading="dot" disabled>Tag</ds-tag>
+              <div class="state-card-title">Disabled</div>
+              <div class="state-card-desc">45% opacity, no interaction</div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Design Tokens -->
+        <div class="doc-section">
+          <h2 id="design-tokens" class="doc-section-title">Design Tokens<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">Tokens</span></h2>
+          <table class="size-table">
+            <thead><tr><th>Token</th><th>Value</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>tag-border-radius</code></td><td>6px</td><td>Corner radius for all tag sizes</td></tr>
+              <tr><td><code>tag-font-family</code></td><td>Zoho Puvi</td><td>Primary font family</td></tr>
+              <tr><td><code>tag-font-weight</code></td><td>500 (Medium)</td><td>Font weight for label text</td></tr>
+              <tr><td><code>tag-sm-padding</code></td><td>2px 8px</td><td>Padding for small size</td></tr>
+              <tr><td><code>tag-md-padding</code></td><td>4px 10px</td><td>Padding for medium size</td></tr>
+              <tr><td><code>tag-lg-padding</code></td><td>6px 14px</td><td>Padding for large size</td></tr>
+              <tr><td><code>tag-sm-font-size</code></td><td>11px / 16px</td><td>Font size / line height for small</td></tr>
+              <tr><td><code>tag-md-font-size</code></td><td>12px / 18px</td><td>Font size / line height for medium</td></tr>
+              <tr><td><code>tag-lg-font-size</code></td><td>14px / 20px</td><td>Font size / line height for large</td></tr>
+              <tr><td><code>tag-gap</code></td><td>6px</td><td>Gap between internal elements</td></tr>
+              <tr><td><code>tag-dot-size</code></td><td>6px (8px lg)</td><td>Status indicator dot diameter</td></tr>
+              <tr><td><code>tag-close-size</code></td><td>12px (14px lg)</td><td>Close icon size</td></tr>
+              <tr><td><code>tag-disabled-opacity</code></td><td>0.45</td><td>Opacity when disabled</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ USAGE TAB ═══ -->
+      <div class="tab-content" id="tab-usage" style="display: none; padding-top: 32px;">
+
+        <!-- When to Use -->
+        <div class="doc-section">
+          <h2 id="when-to-use" class="doc-section-title">When to Use</h2>
+          <p class="doc-section-subtitle">Reach for a tag when the user can interact with the label &mdash; remove it, click to filter, or assign it to an item. For unclickable status pills (&ldquo;Pending&rdquo;, &ldquo;Active&rdquo;), use a Badge instead.</p>
+          <ul class="doc-list">
+            <li><strong>Categorization:</strong> Label items with categories such as department, type, or priority.</li>
+            <li><strong>Filtering:</strong> Represent active filter selections in search bars or filter panels.</li>
+            <li><strong>Metadata:</strong> Display metadata values like status, owner, or version inline with content.</li>
+            <li><strong>Multi-select inputs:</strong> Show selected values as dismissible tags inside combo boxes or multi-select fields.</li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Leading Element -->
+        <div class="doc-section">
+          <h2 id="leading-element" class="doc-section-title">Leading Element</h2>
+          <p class="doc-section-subtitle">Tags support an optional leading element to add visual context before the label text.</p>
+          <table class="size-table">
+            <thead><tr><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><strong>None</strong></td><td>No leading element. Only label and optional close button.</td></tr>
+              <tr><td><strong>Status Indicator</strong></td><td>A small colored dot before the label. Useful for showing inline status.</td></tr>
+              <tr><td><strong>Icon</strong></td><td>A swappable icon before the label. Useful for adding visual context.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- RTL Support -->
+        <div class="doc-section">
+          <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+          <p class="doc-section-subtitle">The Tag component fully supports right-to-left languages with automatic layout mirroring.</p>
+          <ul class="doc-list">
+            <li><strong>Layout direction:</strong> Mirrored &mdash; leading element moves to trailing, close button to leading.</li>
+            <li><strong>Text alignment:</strong> Adjusted to follow natural RTL reading order.</li>
+            <li><strong>Spacing and padding:</strong> Mirrored to maintain consistent visual balance.</li>
+            <li><strong>RTL Label property:</strong> Uses the dedicated RTL Label text property for localized content.</li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Tag vs Related Components -->
+        <div class="doc-section">
+          <h2 id="comparison" class="doc-section-title">Tag vs Related Components</h2>
+          <p class="doc-section-subtitle">Tags, badges, and chips look similar but do different jobs. A tag is interactive (the user can dismiss or click it). A badge is just a label (status, count, label that can&rsquo;t be clicked).</p>
+          <table class="size-table">
+            <thead><tr><th>Component</th><th>Usage</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Badge</strong></td><td>Non-interactive label for status display.</td></tr>
+              <tr><td><strong>Counter</strong></td><td>Numeric count indicator.</td></tr>
+              <tr><td><strong>Status Indicator</strong></td><td>Dot + label for minimal status.</td></tr>
+              <tr><td><strong>Button</strong></td><td>Use for actions; tags represent objects/values.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Related Components -->
+        <div class="doc-section">
+          <h2 id="related-components" class="doc-section-title">Related Components</h2>
+          <p class="doc-section-subtitle">Components that complement or can be used alongside the Tag.</p>
+          <div class="related-grid">
+            <a href="Badges.html" class="related-chip"><ds-icon name="bookmark" size="16"></ds-icon> Badge</a>
+            <a href="Counter.html" class="related-chip"><ds-icon name="add" size="16"></ds-icon> Counter</a>
+            <a href="Status-indicator.html" class="related-chip"><ds-icon name="info-circle" size="16"></ds-icon> Status Indicator</a>
+            <a href="Button.html" class="related-chip"><ds-icon name="message-chat-square" size="16"></ds-icon> Button</a>
+          </div>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Figma Reference -->
+        <div class="doc-section">
+          <h2 id="figma-reference" class="doc-section-title">Figma Reference</h2>
+          <p class="doc-section-subtitle">Design specifications and Figma component details for developer handoff.</p>
+          <ul class="doc-list">
+            <li><strong>Figma Node:</strong> <code style="font-family: monospace; font-size: 13px; padding: 2px 8px; border-radius: 6px; background: rgba(37,99,235,0.06); color: var(--prism-violet);">16462:101691</code> &mdash; File: UEMS - Design System 3.0</li>
+            <li><strong>Example variant string:</strong> <code style="font-family: monospace; font-size: 13px; padding: 2px 8px; border-radius: 6px; background: rgba(37,99,235,0.06); color: var(--prism-violet);">Variant=Primary, Size=Medium, State=Default, RTL=False, Leading Element=Icon</code></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- ═══ CODE TAB ═══ -->
+      <div class="tab-content" id="tab-code" style="display: none; padding-top: 32px;">
+        <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+        <p class="doc-section-subtitle">Configure the Tag and view the generated HTML.</p>
+
+        
+
+        <div class="tag-playground">
+          <div class="tag-pg-toolbar">
+            <div class="tag-pg-group">
+              <label class="tag-pg-label">Variant</label>
+              <select class="tag-pg-select" id="tag-pg-variant">
+                <option value="neutral">Neutral</option>
+                <option value="primary" selected>Primary</option>
+                <option value="success">Success</option>
+                <option value="warning">Warning</option>
+                <option value="error">Error</option>
+                <option value="outline">Outline</option>
+              </select>
+            </div>
+            <div class="tag-pg-group">
+              <label class="tag-pg-label">Size</label>
+              <select class="tag-pg-select" id="tag-pg-size">
+                <option value="small">Small</option>
+                <option value="medium" selected>Medium</option>
+                <option value="large">Large</option>
+              </select>
+            </div>
+            <div class="tag-pg-group">
+              <label class="tag-pg-label">Leading</label>
+              <select class="tag-pg-select" id="tag-pg-leading">
+                <option value="none">None</option>
+                <option value="dot" selected>Status dot</option>
+                <option value="icon">Icon</option>
+              </select>
+            </div>
+            <div class="tag-pg-group">
+              <label class="tag-pg-label">Close button</label>
+              <select class="tag-pg-select" id="tag-pg-close">
+                <option value="on" selected>Show</option>
+                <option value="off">Hide</option>
+              </select>
+            </div>
+            <div class="tag-pg-group">
+              <label class="tag-pg-label">Label</label>
+              <input class="tag-pg-input" id="tag-pg-text" type="text" value="Design">
+            </div>
+            <div class="tag-pg-group">
+              <label class="tag-pg-label">RTL</label>
+              <select class="tag-pg-select" id="tag-pg-rtl">
+                <option value="false" selected>No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="tag-pg-preview">
+            <ds-tag id="tag-pg-preview" variant="primary" leading="dot">Design</ds-tag>
+          </div>
+
+          <div class="tag-pg-code-header">
+            <div style="font-size: 13.5px; font-weight: 600; color: var(--prism-text);">HTML</div>
+            <button class="tag-pg-copy" id="tag-pg-copy-btn">
+              <ds-icon name="copy" size="15"></ds-icon>
+              Copy code
+            </button>
+          </div>
+          <pre class="tag-pg-code" id="tag-pg-code"></pre>
+        </div>
+
+        <script>
+          (function(){
+            const el = {
+              variant: document.getElementById('tag-pg-variant'),
+              size: document.getElementById('tag-pg-size'),
+              leading: document.getElementById('tag-pg-leading'),
+              close: document.getElementById('tag-pg-close'),
+              rtl: document.getElementById('tag-pg-rtl'),
+              text: document.getElementById('tag-pg-text'),
+              preview: document.getElementById('tag-pg-preview'),
+              code: document.getElementById('tag-pg-code'),
+              copy: document.getElementById('tag-pg-copy-btn')
+            };
+            if (!el.preview) return;
+
+            let pgRawCode = '';
+
+            const escapeHtml = (s) => String(s)
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;');
+
+            function render(){
+              const variant = el.variant.value;
+              const size = el.size.value;
+              const leading = el.leading.value;
+              const showClose = el.close.value === 'on';
+              const isRtl = el.rtl && el.rtl.value === 'true';
+              /* When RTL is on AND the user hasn't customised the label,
+                 swap the placeholder English with Arabic so they see real
+                 bidi rendering. */
+              const userLabel = el.text.value;
+              const isDefault = userLabel === '' || userLabel === 'Design' || userLabel === 'تصميم';
+              const label = isDefault ? (isRtl ? 'تصميم' : 'Design') : (userLabel || 'Tag');
+
+              // Sync ds-tag attributes
+              el.preview.setAttribute('variant', variant);
+              el.preview.setAttribute('size', size);
+              if (leading === 'none') {
+                el.preview.removeAttribute('leading');
+                el.preview.removeAttribute('icon');
+              } else if (leading === 'dot') {
+                el.preview.setAttribute('leading', 'dot');
+                el.preview.removeAttribute('icon');
+              } else if (leading === 'icon') {
+                el.preview.setAttribute('leading', 'icon');
+                el.preview.setAttribute('icon', 'star');
+              }
+              if (showClose) el.preview.removeAttribute('show-close');
+              else el.preview.setAttribute('show-close', 'false');
+              if (isRtl) el.preview.setAttribute('rtl', '');
+              else el.preview.removeAttribute('rtl');
+
+              // Update label: prefer the .ds-tag__label inside the inner _root span
+              const labelEl = el.preview.querySelector('.ds-tag__label');
+              if (labelEl) labelEl.textContent = label;
+              else el.preview.textContent = label;
+
+              const attrs = [`variant="${variant}"`, `size="${size}"`];
+              if (leading === 'dot') attrs.push('leading="dot"');
+              else if (leading === 'icon') attrs.push('leading="icon"', 'icon="star"');
+              if (!showClose) attrs.push('show-close="false"');
+              if (isRtl) attrs.push('rtl');
+              pgRawCode = `<ds-tag ${attrs.join(' ')}>${label}</ds-tag>`;
+
+              el.code.innerHTML = escapeHtml(pgRawCode)
+                .replace(/([a-zA-Z-]+)=&quot;(.*?)&quot;/g, '<span class="tk-attr">$1</span>=<span class="tk-str">"$2"</span>')
+                .replace(/&lt;(\/?)(ds-tag)([^&]*?)&gt;/g, '<span class="tk-punct">&lt;$1</span><span class="tk-tag">$2</span>$3<span class="tk-punct">&gt;</span>');
+            }
+
+            ['variant','size','leading','close','rtl'].forEach(k => el[k] && el[k].addEventListener('change', render));
+            el.text.addEventListener('input', render);
+
+            el.copy.addEventListener('click', async () => {
+              try {
+                if (navigator.clipboard) await navigator.clipboard.writeText(pgRawCode);
+                else {
+                  const ta = document.createElement('textarea');
+                  ta.value = pgRawCode;
+                  document.body.appendChild(ta);
+                  ta.select();
+                  document.execCommand('copy');
+                  document.body.removeChild(ta);
+                }
+                const orig = el.copy.innerHTML;
+                el.copy.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Copied';
+                setTimeout(() => { el.copy.innerHTML = orig; }, 1800);
+              } catch (e) {
+                console.error('Copy failed', e);
+              }
+            });
+
+            render();
+            if (window.customElements && customElements.whenDefined) {
+              customElements.whenDefined('ds-tag').then(render);
+            }
+          })();
+        </script>
+
+        <hr class="doc-divider" />
+
+        <h2 id="code-overview" class="doc-section-title">Code</h2>
+        <p class="doc-section-subtitle">Component properties, variant axes, and instance override instructions for the Tag component.</p>
+
+        <!-- Component Properties -->
+        <div class="doc-section">
+          <h2 id="component-properties" class="doc-section-title">Component API & Properties</h2>
+          <p class="doc-section-subtitle">HTML attributes for <code>&lt;ds-tag&gt;</code>. Source: <code>design-system-library/src/components/tag/tag.js</code>.</p>
+          <table class="size-table">
+            <thead><tr><th>Attribute</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>variant</code></td><td>'neutral' | 'primary' | 'success' | 'warning' | 'error' | 'outline'</td><td>'neutral'</td><td>Visual color treatment.</td></tr>
+              <tr><td><code>size</code></td><td>'small' | 'medium' | 'large'</td><td>'medium'</td><td>Height + padding tier.</td></tr>
+              <tr><td><code>label</code></td><td>string</td><td>\u2014</td><td>Optional explicit label. Defaults to default-slot text content.</td></tr>
+              <tr><td><code>leading</code></td><td>'dot' | 'icon' | (absent)</td><td>absent</td><td>Selects what shows before the label.</td></tr>
+              <tr><td><code>icon</code></td><td>icon name (e.g. <code>"star"</code>)</td><td>\u2014</td><td>Used only with <code>leading="icon"</code>. Renders <code>&lt;ds-icon&gt;</code> from the sprite.</td></tr>
+              <tr><td><code>show-close</code></td><td>'true' | 'false'</td><td>'true'</td><td>Defaults to true; set <code>show-close="false"</code> to hide the close button.</td></tr>
+              <tr><td><code>disabled</code></td><td>boolean attr</td><td>absent</td><td>45% opacity, no pointer events.</td></tr>
+              <tr><td><code>rtl</code></td><td>boolean attr</td><td>absent</td><td>Sets <code>dir="rtl"</code> on the inner badge \u2014 flips leading + close ordering.</td></tr>
+            </tbody>
+          </table>
+          <p class="doc-section-subtitle" style="margin-top: 16px;">Event: <code>ds-tag-close</code> bubbles when the close button is clicked, with <code>{ detail: { label } }</code>. The component removes itself from the DOM by default.</p>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Variant Axis Reference -->
+        <div class="doc-section">
+          <h3 id="variant-axis-reference" class="doc-h3">Variant Axis Reference</h3>
+          <table class="size-table">
+            <thead><tr><th>Axis</th><th>Values</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Variant</strong></td><td>Neutral, Primary, Success, Warning, Error, Outline</td></tr>
+              <tr><td><strong>Size</strong></td><td>Small, Medium, Large</td></tr>
+              <tr><td><strong>State</strong></td><td>Default, Hover, Focus, Disabled</td></tr>
+              <tr><td><strong>RTL</strong></td><td>False, True</td></tr>
+              <tr><td><strong>Leading Element</strong></td><td>None, Status Indicator, Icon</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Instance Overrides -->
+        <div class="doc-section">
+          <h3 id="instance-overrides" class="doc-h3">Instance Overrides</h3>
+          <p class="doc-section-subtitle">Steps to customize a Tag instance in your design tool or codebase.</p>
+          <ul class="doc-list">
+            <li><strong>1.</strong> Select the Tag instance.</li>
+            <li><strong>2.</strong> Toggle Show Close on/off.</li>
+            <li><strong>3.</strong> Edit the Label text directly.</li>
+            <li><strong>4.</strong> Change Leading Element variant to add icon or status indicator.</li>
+            <li><strong>5.</strong> Swap the Leading Icon or Status Indicator.</li>
+            <li><strong>6.</strong> Toggle RTL for right-to-left language support.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ═══ ACCESSIBILITY TAB ═══ -->
+      <div class="tab-content" id="tab-accessibility" style="display: none; padding-top: 32px;">
+        <h2 id="accessibility-overview" class="doc-section-title">Accessibility</h2>
+        <p class="doc-section-subtitle">Guidelines for ensuring all tag interactions are accessible across assistive technologies.</p>
+
+        <!-- Color Contrast -->
+        <div class="doc-section">
+          <h3 id="color-contrast" class="doc-h3">Color Contrast<span class="h3-badge" style="background: rgba(34,197,94,0.15); color: #16a34a;">WCAG AA Pass</span></h3>
+          <p class="doc-section-subtitle">All filled tag variants meet WCAG 2.1 AA contrast ratio requirements (4.5:1 for text). The tinted background and darker foreground text combination ensures legibility across all semantic variants.</p>
+          <div style="margin-top: 24px; padding: 16px 20px; background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.2); border-radius: 12px; display: flex; gap: 12px; align-items: flex-start;">
+             <ds-icon name="info-circle" size="20" style="flex-shrink: 0; margin-top: 2px; color:#16a34a;"></ds-icon>
+             <p style="font-size: 14px; color: var(--prism-text); line-height: 1.6; margin: 0;"><strong>WCAG 2.1 Level AA:</strong> All UEMS Tag variants use tinted backgrounds with high-contrast foreground text, meeting the minimum <strong>4.5:1</strong> contrast ratio for normal text.</p>
+          </div>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Keyboard Navigation -->
+        <div class="doc-section">
+          <h3 id="keyboard-navigation" class="doc-h3">Keyboard Navigation</h3>
+          <p class="doc-section-subtitle">Tags and their close buttons are fully keyboard accessible.</p>
+          <ul class="doc-list">
+            <li><strong>Tab:</strong> Tags are focusable via the Tab key, allowing keyboard users to navigate to them.</li>
+            <li><strong>Close button focus:</strong> The close button is independently focusable, so users can dismiss a tag without affecting adjacent elements.</li>
+            <li><strong>Focus indicator:</strong> A visible focus ring is displayed around the tag or close button when focused.</li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Screen Reader -->
+        <div class="doc-section">
+          <h3 id="screen-reader" class="doc-h3">Screen Reader</h3>
+          <p class="doc-section-subtitle">Ensure tag content and actions are properly announced to screen readers.</p>
+          <ul class="doc-list">
+            <li><strong>Label text:</strong> The tag label is read as text content by screen readers.</li>
+            <li><strong>Close button:</strong> The close button should have an accessible label such as "Remove [tag name]" to clearly communicate its purpose.</li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- RTL Accessibility -->
+        <div class="doc-section">
+          <h3 id="rtl-accessibility" class="doc-h3">RTL Accessibility</h3>
+          <ul class="doc-list">
+            <li>Full RTL support with mirrored layout ensures the tag reads naturally in right-to-left languages.</li>
+            <li>The localized RTL Label property provides proper text content for assistive technologies in RTL contexts.</li>
+          </ul>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Disabled State -->
+        <div class="doc-section">
+          <h3 id="disabled-state" class="doc-h3">Disabled State</h3>
+          <ul class="doc-list">
+            <li>Disabled tags are excluded from the tab order, preventing keyboard users from focusing on non-interactive elements.</li>
+            <li>The disabled state is conveyed to assistive technology via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-disabled="true"</code>, ensuring screen readers communicate the inactive state.</li>
+          </ul>
+        </div>
+      </div>
+
+      </div> <!-- close main-content-inner -->
+
+      <aside class="toc-sidebar">
+        <h4 class="toc-heading">On this page</h4>
+        <ul class="toc-nav" id="toc-nav">
+        </ul>
+
+        <div class="quick-actions-card">
+          <div class="quick-actions-title">Resources</div>
+          <a href="MD/tag.md" download="tag.md" class="action-link">
+            <ds-icon name="download" size="15"></ds-icon>
+            Download MD
+          </a>
+          <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=16462-101691" target="_blank" class="action-link">
+            <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+            Figma Design
+          </a>
+        </div>
+      </aside>
+
+      </div> <!-- close main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display: flex; gap: 10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  <script>
+    // ── Scroll-spy observer reference ──
+    let _tocObserver = null;
+
+    // ── Dynamic TOC ──
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav');
+      if (!tocList) return;
+      tocList.innerHTML = '';
+      const activePanel = document.getElementById(targetId);
+      if (!activePanel) return;
+
+      const headings = activePanel.querySelectorAll('h2[id], h3[id]');
+      headings.forEach(h => {
+        if (h.style.display === 'none') return;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.className = 'toc-link';
+        let text = Array.from(h.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+        if (!text) text = h.innerText;
+        a.textContent = text;
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById(h.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+
+      // Re-init scroll-spy
+      initScrollSpy();
+    }
+
+    function initScrollSpy() {
+      // Disconnect previous observer
+      if (_tocObserver) _tocObserver.disconnect();
+
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sectionIds = Array.from(tocLinks).map(link => link.getAttribute('href').slice(1));
+      const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+      if (sections.length === 0) return;
+
+      _tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            tocLinks.forEach(link => {
+              link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+            });
+          }
+        });
+      }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+
+      sections.forEach(section => _tocObserver.observe(section));
+    }
+
+    // ── Tab switching ──
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabMap = { 'Overview': 'tab-overview', 'Usage': 'tab-usage', 'Style': 'tab-style', 'Code': 'tab-code', 'Accessibility': 'tab-accessibility' };
+        document.querySelectorAll('.tab-content').forEach(panel => panel.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) {
+          document.getElementById(target).style.display = 'block';
+          updateTOC(target);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    // Initialize TOC
+    updateTOC('tab-overview');
+// Sidebar search filter
+    (function(){
+      var searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      var items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function(){
+        var q = this.value.toLowerCase().trim();
+        items.forEach(function(li){
+          var link = li.querySelector('a');
+          if (!link) return;
+          var text = link.textContent.toLowerCase();
+          li.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+      });
+      // Cmd+K / Ctrl+K shortcut to focus search
+      document.addEventListener('keydown', function(e){
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      });
+    })();
+
+    // Scroll sidebar to active link on page load
+    (function(){
+      var active = document.querySelector('.sidebar-link.active');
+      if (active) {
+        var sidebar = active.closest('.sidebar');
+        if (sidebar) {
+          var top = active.offsetTop - sidebar.offsetTop - (sidebar.clientHeight / 3);
+          sidebar.scrollTop = Math.max(0, top);
+        }
+      }
+    })();
+
+  </script>
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/main.js"></script>
+
+
+</body>
+</html>

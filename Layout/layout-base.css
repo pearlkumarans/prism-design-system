@@ -1,0 +1,34 @@
+/* =============================================================================
+   layout-base.css — shared scaffold for full-height shell views (the ".lay"
+   pattern). ONE source of truth for the frame every generated page is built on:
+   the root flex column, the internal scroll area, and the show/hide hook.
+
+   Loaded in TWO places (because views are dual-mode):
+     • Shell.html <head> — persists across injections, so every INJECTED view
+       inherits the scaffold (injected views' own <head> is discarded; only their
+       <template> is hoisted, so they can't link this themselves in injected mode).
+     • Each standalone view's <head> — so opening the file directly is styled too.
+
+   Consumers: the five archetypes in Layout/views/ (sectioned-form, tabbed-form,
+   list-view, list-detail, module-dashboard), the project pages under projects/,
+   and every future page generated from those archetypes.
+
+   Rule of thumb: rules here are the scaffold shared by ALL such views. A view's
+   UNIQUE styling stays in its own root-id-scoped <style> (e.g. `#foo-pop .thing`),
+   never here — this file is intentionally global.
+   ============================================================================= */
+
+/* Root: the view's outermost element. Fills <ds-content> as a flex column so the
+   header/scroll/footer stack and .lay__scroll can scroll internally. The shell
+   toggles the `hidden` attribute to show/hide the view. */
+.lay-root { flex: 1 1 auto; min-width: 0; height: 100%; display: flex; flex-direction: column; background: var(--uems-bg-base); }
+.lay-root[hidden] { display: none; }
+
+/* Inner column + internal scroller. */
+.lay { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+/* position:relative makes this the containing block for absolutely-positioned
+   control internals (ds-radio/ds-toggle hidden inputs, popovers) so they can't
+   escape to ds-content and inflate its scrollHeight — which would make ds-content
+   scroll and drag a pinned ds-form-footer up. Keep it. ds-page-header owns its own
+   20px inline padding, so the header sits flush and only the scroll body is inset. */
+.lay__scroll { position: relative; flex: 1 1 auto; overflow: auto; padding: 0 20px 24px; }

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Icon Font Pilot — SVG vs Prism font (Phase 0)</title>
+<script>
+  /* Point ds-icon at this folder's sprite + the pilot font CSS. */
+  window.UEMS_ICON_SPRITE   = './icons.svg';
+  window.UEMS_ICON_FONT_CSS = './prism-font/css/icons.css';
+</script>
+<script type="module">import './icon.js?v=phase0-2';</script>
+<style>
+  :root {
+    --bg: #ffffff; --panel: #f7f8fa; --line: #e1e4eb; --text: #15181e; --muted: #55607a;
+    --accent: #006aff; --cell: #ffffff;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a0b0f; --panel: #15181e; --line: #2a303d; --text: #e1e4eb; --muted: #8893ad;
+    --accent: #00a6ff; --cell: #15181e;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+         background: var(--bg); color: var(--text); padding: 28px 32px 80px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
+  .bar { display: flex; gap: 10px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+  .bar button { font: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px;
+                border: 1px solid var(--line); background: var(--cell); color: var(--text); cursor: pointer; }
+  .bar .note { color: var(--muted); font-size: 12px; }
+  h2 { font-size: 14px; margin: 28px 0 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+
+  table { border-collapse: collapse; width: 100%; background: var(--cell); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  th, td { border: 1px solid var(--line); padding: 10px 8px; text-align: center; font-size: 12px; }
+  th { background: var(--panel); color: var(--muted); font-weight: 700; }
+  td.name { text-align: left; font-weight: 600; font-size: 13px; white-space: nowrap; padding-left: 14px; }
+  .pair { display: inline-flex; gap: 14px; align-items: center; justify-content: center; }
+  .cell-svg, .cell-font { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text); }
+  .cell-svg small, .cell-font small { font-size: 9px; color: var(--muted); }
+  .cell-font ds-icon { color: var(--accent); }   /* tint font col so it's easy to spot */
+  .cell-svg  ds-icon { color: var(--text); }
+
+  /* zoom strip */
+  .zoom { display: grid; grid-template-columns: 120px 1fr 1fr; gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .zoom > div { padding: 14px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
+  .zoom .hd { background: var(--panel); color: var(--muted); font-weight: 700; font-size: 12px; }
+  .zoom .z { transform: scale(6); transform-origin: left center; image-rendering: pixelated; }
+
+  /* realistic toolbar mock */
+  .toolbar { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line);
+             border-radius: 10px; background: var(--cell); margin-bottom: 14px; }
+  .toolbar .search { flex: 1 1 auto; display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px;
+                     border: 1px solid var(--line); border-radius: 8px; color: var(--muted); font-size: 13px; }
+  .tbtn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--line);
+          border-radius: 8px; background: var(--cell); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; }
+  .iconbtn { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+             border: 1px solid var(--line); border-radius: 8px; background: var(--cell); color: var(--muted); }
+  .modelabel { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); width: 44px; }
+</style>
+</head>
+<body>
+  <h1>Icon Font Pilot — SVG sprite vs Prism font</h1>
+  <p class="sub">Phase 0 proof-of-concept. Same <code>&lt;ds-icon&gt;</code>, same <code>size</code>, two render modes.
+     Judge crispness at <strong>13–16px</strong> (≈68% of product usage). Font column is tinted accent to spot it.</p>
+
+  <div class="bar">
+    <button id="theme">Toggle light / dark</button>
+    <span class="note">Zoom the "6× pixel zoom" section to inspect anti-aliasing. Reload after editing the font.</span>
+  </div>
+
+  <h2>Side by side · real sizes</h2>
+  <table id="grid"></table>
+
+  <h2>6× pixel zoom · the small sizes that matter</h2>
+  <div class="zoom" id="zoom"></div>
+
+  <h2>In context · real toolbar (SVG then Font)</h2>
+  <div id="toolbars"></div>
+
+<script type="module">
+  // ds-icon name : label
+  const ICONS = ['delete','edit','filter','add','add-circle','refresh','more-vertical','more-horizontal','search','chevron-down','check','close'];
+  const SIZES = [13, 14, 16, 20, 24];
+
+  const icon = (name, size, mode) =>
+    `<ds-icon name="${name}" size="${size}" render-mode="${mode}"></ds-icon>`;
+
+  // ---- grid ----
+  const grid = document.getElementById('grid');
+  let html = '<thead><tr><th>icon</th>' + SIZES.map(s => `<th>${s}px<br><small>svg · font</small></th>`).join('') + '</tr></thead><tbody>';
+  for (const n of ICONS) {
+    html += `<tr><td class="name">${n}</td>`;
+    for (const s of SIZES) {
+      html += `<td><span class="pair">`
+        + `<span class="cell-svg">${icon(n, s, 'svg')}</span>`
+        + `<span class="cell-font">${icon(n, s, 'font')}</span>`
+        + `</span></td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody>';
+  grid.innerHTML = html;
+
+  // ---- 6x zoom on 16px ----
+  const zoom = document.getElementById('zoom');
+  let zhtml = '<div class="hd">icon</div><div class="hd">SVG · 16px @6×</div><div class="hd">Font · 16px @6×</div>';
+  for (const n of ['delete','edit','filter','search','more-vertical']) {
+    zhtml += `<div style="font-weight:600;font-size:12px">${n}</div>`
+      + `<div><span class="z">${icon(n, 16, 'svg')}</span></div>`
+      + `<div><span class="z">${icon(n, 16, 'font')}</span></div>`;
+  }
+  zoom.innerHTML = zhtml;
+
+  // ---- toolbars ----
+  const toolbar = (mode) => `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <span class="modelabel">${mode}</span>
+      <div class="toolbar" style="flex:1">
+        <div class="search">${icon('search', 16, mode)} Search devices…</div>
+        <button class="tbtn">${icon('filter', 14, mode)} Filter</button>
+        <span class="iconbtn">${icon('refresh', 16, mode)}</span>
+        <span class="iconbtn">${icon('more-vertical', 16, mode)}</span>
+        <button class="tbtn" style="color:var(--accent);border-color:var(--accent)">${icon('add', 14, mode)} Add Device</button>
+      </div>
+    </div>`;
+  document.getElementById('toolbars').innerHTML = toolbar('svg') + toolbar('font');
+
+  // ---- theme toggle ----
+  document.getElementById('theme').addEventListener('click', () => {
+    const r = document.documentElement;
+    r.setAttribute('data-theme', r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+</script>
+</body>
+</html>

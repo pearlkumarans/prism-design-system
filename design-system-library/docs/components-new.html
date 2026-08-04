@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  {
+    "imports": {
+      "@uems/design-system": "../src/index.js"
+    }
+  }
+  </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UEMS — New Components (Dropdown Menu / Input Select / List)</title>
+  <script type="module">import '@uems/design-system';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../src/icons/illustrations.svg';
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: var(--font-family-sans);
+      background: var(--uems-background);
+      color: var(--uems-text-primary);
+      min-height: 100vh;
+    }
+    h1 { margin: 0 0 24px; font-size: 24px; }
+    h2 { margin: 32px 0 12px; font-size: 16px; color: var(--uems-text-secondary); }
+    section { margin-bottom: 40px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+    .card {
+      background: var(--uems-bg-base);
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .card h3 { margin: 0 0 12px; font-size: 13px; color: var(--uems-text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; }
+    .stack { display: flex; flex-direction: column; gap: 16px; }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+  </style>
+</head>
+<body>
+  <h1>New Components</h1>
+  <p style="color:var(--uems-text-tertiary);margin:-12px 0 24px">
+    Dropdown Menu (5 types) · Input Select (single + multi) · List (ordered + unordered)
+  </p>
+
+  <!-- Dropdown Menu -->
+  <section>
+    <h2>Dropdown Menu</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Default</h3>
+        <ds-dropdown-menu id="dm-default" type="default" open></ds-dropdown-menu>
+      </div>
+      <div class="card">
+        <h3>Select (radio)</h3>
+        <ds-dropdown-menu id="dm-select" type="select" open></ds-dropdown-menu>
+      </div>
+      <div class="card">
+        <h3>Multi-select (checkbox + footer)</h3>
+        <ds-dropdown-menu id="dm-multi" type="multi-select" show-title title="Filter status" open></ds-dropdown-menu>
+      </div>
+      <div class="card">
+        <h3>Action (icons + danger)</h3>
+        <ds-dropdown-menu id="dm-action" type="action" open></ds-dropdown-menu>
+      </div>
+      <div class="card">
+        <h3>Select-tick</h3>
+        <ds-dropdown-menu id="dm-tick" type="select-tick" open></ds-dropdown-menu>
+      </div>
+    </div>
+  </section>
+
+  <!-- Input Select -->
+  <section>
+    <h2>Input Select</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Single — Default</h3>
+        <ds-input-select id="is-default" label="Region" placeholder="Select region" required show-clear
+          helper="Choose data residency"></ds-input-select>
+      </div>
+      <div class="card">
+        <h3>Single — Filled</h3>
+        <ds-input-select id="is-filled" label="Country" value="us" show-clear></ds-input-select>
+      </div>
+      <div class="card">
+        <h3>Multi — With chips + badge</h3>
+        <ds-input-select id="is-multi" multi label="Asset tags" placeholder="Select tags"
+          show-badge badge-text="+2"
+          helper="Pick all that apply"></ds-input-select>
+      </div>
+      <div class="card">
+        <h3>Error</h3>
+        <ds-input-select id="is-error" state="error" label="Region" placeholder="Select" required
+          helper="Region is required"></ds-input-select>
+      </div>
+      <div class="card">
+        <h3>Disabled / Read only</h3>
+        <div class="stack">
+          <ds-input-select state="disabled" label="Locked" value="us" placeholder="Select"></ds-input-select>
+          <ds-input-select state="readonly" label="Read only" value="us" placeholder="Select"></ds-input-select>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Sizes</h3>
+        <div class="stack">
+          <ds-input-select id="is-s" size="small"  label="Small"  placeholder="Select"></ds-input-select>
+          <ds-input-select id="is-m" size="medium" label="Medium" placeholder="Select"></ds-input-select>
+          <ds-input-select id="is-l" size="large"  label="Large"  placeholder="Select"></ds-input-select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- List -->
+  <section>
+    <h2>List</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Unordered — Small</h3>
+        <ds-list id="ls-us" size="small"></ds-list>
+      </div>
+      <div class="card">
+        <h3>Unordered — Medium</h3>
+        <ds-list id="ls-um" size="medium"></ds-list>
+      </div>
+      <div class="card">
+        <h3>Unordered — Large with levels</h3>
+        <ds-list id="ls-ul" size="large"></ds-list>
+      </div>
+      <div class="card">
+        <h3>Ordered — Small</h3>
+        <ds-list id="ls-os" size="small" ordered></ds-list>
+      </div>
+      <div class="card">
+        <h3>Ordered — Medium</h3>
+        <ds-list id="ls-om" size="medium" ordered></ds-list>
+      </div>
+      <div class="card">
+        <h3>Ordered — Levels (1, 2, a/b/c)</h3>
+        <ds-list id="ls-ol" size="medium" ordered></ds-list>
+      </div>
+    </div>
+  </section>
+
+  <script type="module">
+    // ---- Dropdown Menu seed data ----
+    document.getElementById('dm-default').items = [
+      { label: 'Profile' },
+      { label: 'Settings' },
+      { label: 'Help' },
+      { label: 'About' },
+    ];
+    document.getElementById('dm-select').items = [
+      { label: 'Newest first', value: 'newest', selected: true },
+      { label: 'Oldest first', value: 'oldest' },
+      { label: 'Name (A → Z)', value: 'az' },
+      { label: 'Name (Z → A)', value: 'za' },
+    ];
+    document.getElementById('dm-multi').items = [
+      { label: 'Active users',    value: 'active',    selected: true },
+      { label: 'Inactive users',  value: 'inactive' },
+      { label: 'Suspended',       value: 'suspended', selected: true },
+      { label: 'Archived',        value: 'archived' },
+    ];
+    document.getElementById('dm-action').items = [
+      { label: 'Edit',      value: 'edit',      icon: 'edit' },
+      { label: 'Duplicate', value: 'duplicate', icon: 'add' },
+      { label: 'Share',     value: 'share',     icon: 'share' },
+      { type: 'divider' },
+      { label: 'Delete',    value: 'delete',    icon: 'delete', danger: true },
+    ];
+    document.getElementById('dm-tick').items = [
+      { label: 'Newest first', value: 'newest', selected: true },
+      { label: 'Oldest first', value: 'oldest' },
+      { label: 'Name (A → Z)', value: 'az' },
+    ];
+
+    // ---- Input Select seed data ----
+    const REGION = [
+      { label: 'United States', value: 'us' },
+      { label: 'Germany',       value: 'de' },
+      { label: 'India',         value: 'in' },
+      { label: 'Japan',         value: 'jp' },
+      { label: 'Brazil',        value: 'br', disabled: true },
+    ];
+    const TAGS = [
+      { label: 'Production', value: 'prod' },
+      { label: 'Critical',   value: 'crit' },
+      { label: 'EU',         value: 'eu' },
+      { label: 'Staging',    value: 'stage' },
+      { label: 'Internal',   value: 'int' },
+    ];
+    document.getElementById('is-default').options = REGION;
+    document.getElementById('is-filled').options  = REGION;
+    document.getElementById('is-error').options   = REGION;
+    document.getElementById('is-s').options       = REGION;
+    document.getElementById('is-m').options       = REGION;
+    document.getElementById('is-l').options       = REGION;
+    const m = document.getElementById('is-multi');
+    m.options = TAGS;
+    m.values  = ['prod', 'crit', 'eu'];
+
+    // ---- List seed data ----
+    document.getElementById('ls-us').items = ['Profile', 'Settings', 'Help', 'About'];
+    document.getElementById('ls-um').items = ['Run an inventory scan', 'Review missing patches', 'Schedule deployment'];
+    document.getElementById('ls-ul').items = [
+      'Top-level item',
+      { text: 'Sub item', level: 2 },
+      { text: 'Deepest item', level: 3 },
+      'Back to top',
+    ];
+    document.getElementById('ls-os').items = ['Step one', 'Step two', 'Step three'];
+    document.getElementById('ls-om').items = ['Add device', 'Verify policy', 'Apply changes'];
+    document.getElementById('ls-ol').items = [
+      'First',
+      { text: 'Sub of first', level: 2 },
+      { text: 'Even deeper', level: 3 },
+      'Second',
+    ];
+  </script>
+</body>
+</html>

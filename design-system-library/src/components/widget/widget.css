@@ -1,0 +1,188 @@
+/* =============================================================================
+   ds-widget / .ds-widget
+   Spec source: design-system/handoff/widget.md (Figma 20766:5044, 24-variant set)
+
+   Type × State × RTL = 24 variants. The widget owns its surface (bg, border,
+   radius) — same contract as ds-card. The chrome (Header · Body · Footer) lives
+   in a clipped .ds-widget__surface so its rounded corners stay clean; the
+   selection ring + resize handles are separate layers on the host, which stays
+   overflow:visible so they can sit 4px OUTSIDE the surface.
+   ============================================================================= */
+
+ds-widget {
+  display: block;
+  font-family: var(--font-family-sans);
+  position: relative;
+  /* 580 is the Figma reference width; the widget fills its dashboard cell. */
+  width: 100%;
+  max-width: 580px;
+}
+
+/* ── Surface (the visible, clipped box) ─────────────────────────────────── */
+.ds-widget__surface {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  border-radius: var(--uems-radius-l, 16px);
+  background: var(--uems-bg-primary);
+  border: 1px solid var(--uems-border-tertiary); /* #E1E4EB */
+  overflow: hidden;
+  color: var(--uems-text-secondary);
+}
+
+/* ── Header (60h, pad 8/16) ─────────────────────────────────────────────
+   Plain HORIZONTAL row, space-between — dir="rtl" mirrors it natively.
+   Do NOT add row-reverse. */
+.ds-widget__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px;
+  min-height: 48px;
+  box-sizing: border-box;
+  /* Hairline divider under the header (Figma: Border-Quaternary #F0F2F5). */
+  border-bottom: 1px solid var(--uems-border-quaternary, #f0f2f5);
+}
+.ds-widget__title-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;        /* let the title truncate */
+  flex: 1 1 auto;
+}
+/* Drag handle is a dashboard-EDIT affordance: hidden in view mode; in edit
+   mode it reserves its slot (no layout shift) and only becomes visible on
+   hover or while the widget is selected. */
+.ds-widget__drag { cursor: grab; flex-shrink: 0; display: none; }
+.ds-widget--edit .ds-widget__drag { display: inline-flex; visibility: hidden; }
+.ds-widget--edit:hover .ds-widget__drag,
+.ds-widget--edit.ds-widget--selected .ds-widget__drag { visibility: visible; }
+.ds-widget__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold, 600);
+  line-height: 20px;
+  color: var(--uems-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ds-widget__info { color: var(--uems-icon-secondary); flex-shrink: 0; }
+.ds-widget__trailing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+/* Slot wrappers keep their component on the trailing edge, never shrinking. */
+.ds-widget__filter,
+.ds-widget__action { display: inline-flex; align-items: center; flex-shrink: 0; }
+
+/* ── Body — swappable content area ─────────────────────────────────────── */
+.ds-widget__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 12px 0px;   /* header's own 8px bottom pad + this = the section gap */
+}
+/* Chart / table are full-bleed (they own their internal insets). 
+.ds-widget--chart .ds-widget__body { padding: 0; }*/
+.ds-widget--chart .ds-widget__body > * { display: block; width: 100%; }
+/* Table h-scrolls INSIDE the widget — never widens it. */
+.ds-widget--table .ds-widget__body { padding: 0; overflow-x: auto; }
+/* The widget owns the surface border + dividers, so drop the data-table's own
+   outer frame (its scroll container ships a 1px border + 8px radius). */
+.ds-widget--table .ds-widget__body .ds-data-table__scroll {
+  border: 0;
+  border-radius: 0;
+}
+/* A list widget can host a property view (<ds-description-list>). Its rows
+   left-align to the widget gutter even when the horizontal layout collapses in
+   a narrow tile (the component centers items by default when stacked). */
+.ds-widget--list .ds-widget__body .ds-description-list__item { align-items: flex-start; }
+/* Keep a list body from overrunning a pinned footer when the card height is
+   externally constrained (e.g. a fixed-height dashboard bento cell). Without
+   min-height:0 a flex body refuses to shrink below its content and paints over
+   the footer; here it shrinks and scrolls instead. In a natural-height card this
+   is a no-op — content fits, no scrollbar shows. overflow-x stays hidden (the
+   surface already clips) so overflow-y:auto can't induce a stray h-scrollbar. */
+.ds-widget--list .ds-widget__body { min-height: 0; overflow-y: auto; overflow-x: hidden; }
+
+/* State placeholder (error / empty / no-data) — centered, 240 tall. */
+.ds-widget__body--state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  padding: 8px 16px;
+}
+.ds-widget__body--state ds-empty-state { width: 100%; }
+
+/* ── Footer (44h, pad 12/16, space-between) ─────────────────────────────
+   Plain HORIZONTAL row — dir="rtl" mirrors it natively. */
+.ds-widget__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  min-height: 44px;
+  box-sizing: border-box;
+  /* Hairline divider above the footer (Figma: Border-Quaternary #F0F2F5). */
+  border-top: 1px solid var(--uems-border-quaternary, #f0f2f5);
+}
+.ds-widget__summary {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--uems-text-quaternary, var(--uems-text-tertiary));
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ds-widget__view-all { flex-shrink: 0; }
+
+/* ── Accent ring + 4 corner resize handles (visual only) ────────────────
+   Layers on the HOST (overflow:visible) so they sit 4px outside the surface.
+   These are dashboard-EDIT affordances: they appear only in edit mode, and
+   then only on hover — or persistently while the widget is selected. In view
+   mode there is no ring/resize chrome at all. */
+.ds-widget__selected-ring,
+.ds-widget__handles { display: none; }
+.ds-widget--edit:hover .ds-widget__selected-ring,
+.ds-widget--edit:hover .ds-widget__handles,
+.ds-widget--edit.ds-widget--selected .ds-widget__selected-ring,
+.ds-widget--edit.ds-widget--selected .ds-widget__handles { display: block; }
+
+.ds-widget__selected-ring {
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid var(--uems-border-accent); /* #006AFF */
+  border-radius: var(--uems-radius-l, 16px);
+  pointer-events: none;
+}
+.ds-widget__handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--uems-bg-base-white, #fff);
+  border: 1.5px solid var(--uems-border-accent);
+  box-sizing: border-box;
+}
+/* Centered on each corner (offset half the 8px handle). */
+.ds-widget__handle--tl { top: -4px; left: -4px; cursor: nwse-resize; }
+.ds-widget__handle--tr { top: -4px; right: -4px; cursor: nesw-resize; }
+.ds-widget__handle--bl { bottom: -4px; left: -4px; cursor: nesw-resize; }
+.ds-widget__handle--br { bottom: -4px; right: -4px; cursor: nwse-resize; }
+
+/* ── RTL — text-align only; header/footer are plain flex rows and mirror on
+   their own via inherited direction:rtl. Adding row-reverse would double-
+   reverse them (same bug fixed in ds-card / ds-kpi-card). ─────────────── */
+.ds-widget[dir="rtl"] .ds-widget__title,
+.ds-widget[dir="rtl"] .ds-widget__summary { text-align: right; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-widget__surface { transition: none; }
+}

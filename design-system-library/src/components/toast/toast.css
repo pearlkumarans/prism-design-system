@@ -1,0 +1,183 @@
+/* =============================================================================
+   ds-toast / .ds-toast
+   Transient notification: status icon + title + optional description / CTA /
+   close + 4px auto-dismiss timeout bar. 2 styles × 4 statuses × hover × RTL.
+   Spec: docs/MD/toast.md · Figma node 15938:44865 (32 variants).
+   No left status stripe — never drawn in Figma (spec flag 1).
+   ============================================================================= */
+
+:host { display: block; font-family: var(--font-family-sans); }
+
+.ds-toast {
+  display: flex;
+  flex-direction: column;          /* content row + timeout bar */
+  width: 400px;
+  max-width: calc(100vw - 32px);
+  border-radius: var(--uems-radius-s, 8px);
+  overflow: hidden;                /* clips the timeout bar into the corners */
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .12), 0 1px 4px rgba(0, 0, 0, .06);
+  background: var(--_toast-bg, var(--uems-bg-secondary-subtle));
+  font-family: inherit;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+/* Exit slide-up + fade is run via the Web Animations API in _dismiss(). */
+
+/* ---- Content row ----------------------------------------------------- */
+.ds-toast__content {
+  display: flex;
+  gap: var(--uems-spacing-12, 12px);
+  padding: var(--uems-spacing-12, 12px) var(--uems-spacing-16, 16px);
+  align-items: flex-start;
+}
+.ds-toast__icon { line-height: 0; flex-shrink: 0; color: var(--_toast-icon); }
+.ds-toast__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--uems-spacing-4, 4px);
+}
+.ds-toast__title {
+  font-size: var(--uems-font-size-13, 13px);
+  line-height: var(--uems-line-height-13, 20px);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--_toast-title, var(--uems-text-primary));
+}
+.ds-toast__description {
+  font-size: var(--uems-font-size-12, 12px);
+  line-height: 16px;
+  color: var(--_toast-desc, var(--uems-text-secondary));
+}
+
+/* CTA — separate row item, always underlined, bottom-aligned per the
+   Figma drawing (the frame is justify-end, not centered). */
+.ds-toast__cta {
+  align-self: flex-end;
+  flex-shrink: 0;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--uems-font-size-12, 12px);
+  line-height: 16px;
+  font-weight: var(--font-weight-medium, 500);
+  text-decoration: underline;
+  color: var(--_toast-cta);
+}
+.ds-toast__cta:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; }
+
+.ds-toast__close {
+  background: transparent; border: 0; padding: 0; cursor: pointer; line-height: 0;
+  width: 16px; height: 16px;
+  display: inline-flex; align-items: center; justify-content: center;
+  align-self: flex-start;
+  flex-shrink: 0;
+  color: var(--_toast-close, var(--uems-icon-subtle));
+}
+.ds-toast__close:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; border-radius: var(--uems-radius-xs, 4px); }
+
+/* ---- Timeout bar — 4px, full width, in-flow at the bottom ------------ */
+.ds-toast__timeout {
+  height: 4px;
+  width: 100%;
+  background: var(--_toast-track, var(--uems-bg-quaternary));
+}
+.ds-toast__timeout > div {
+  height: 100%;
+  width: 100%;
+  background: var(--_toast-fill);
+}
+.ds-toast__timeout > div[data-animating="true"] {
+  animation: ds-toast-countdown linear forwards;
+}
+@keyframes ds-toast-countdown { from { width: 100%; } to { width: 0%; } }
+@media (prefers-reduced-motion: reduce) {
+  /* keep the bar — it's information, not decoration */
+  .ds-toast__timeout > div[data-animating="true"] { animation-duration: 0.01ms !important; animation: none; }
+}
+
+/* =============================================================================
+   Subtle style (default) — light neutral surface, status carried by icon/CTA
+   ============================================================================= */
+.ds-toast--subtle {
+  --_toast-bg: var(--uems-bg-secondary-subtle);
+  --_toast-title: var(--uems-text-primary);
+  --_toast-desc: var(--uems-text-secondary);
+  --_toast-close: var(--uems-icon-subtle);
+  --_toast-track: var(--uems-bg-quaternary);
+}
+.ds-toast--subtle:hover { --_toast-bg: var(--uems-bg-primary-hover); }
+
+/* Info icon: dedicated Icon-Info token (Figma fix 2026-06-12); other
+   statuses bind Text-{status} per the drawing (see spec flag 4). */
+.ds-toast--subtle.ds-toast--info    { --_toast-icon: var(--uems-icon-info);    --_toast-cta: var(--uems-text-accent-primary); --_toast-fill: var(--uems-bg-info-solid); }
+.ds-toast--subtle.ds-toast--success { --_toast-icon: var(--uems-text-success); --_toast-cta: var(--uems-text-success);        --_toast-fill: var(--uems-bg-success-solid); }
+.ds-toast--subtle.ds-toast--warning { --_toast-icon: var(--uems-text-warning); --_toast-cta: var(--uems-text-warning);        --_toast-fill: var(--uems-bg-warning-solid); }
+.ds-toast--subtle.ds-toast--error   { --_toast-icon: var(--uems-text-error);   --_toast-cta: var(--uems-text-error);          --_toast-fill: var(--uems-bg-error-solid); }
+
+/* =============================================================================
+   Filled style — solid status surface, ALL foreground white (warning too),
+   close = per-status subtle border tint, bar = black track / white fill
+   ============================================================================= */
+.ds-toast--filled {
+  --_toast-title: var(--uems-text-white);
+  --_toast-desc: var(--uems-text-white);
+  --_toast-cta: var(--uems-text-white);
+  --_toast-icon: var(--uems-text-white);
+  --_toast-track: var(--uems-bg-base-black);
+  --_toast-fill: var(--uems-bg-base-white);
+}
+/* Figma: the Filled timeout bar CONTAINER renders at 25% opacity — the solid
+   status colour shows through both the black track and the white fill, so the
+   loader reads as a tint of the toast colour, not a harsh black/white strip. */
+.ds-toast--filled .ds-toast__timeout { opacity: 0.25; }
+/* Figma: Filled description sits at 80% opacity over the solid colour. */
+.ds-toast--filled .ds-toast__description { opacity: 0.8; }
+
+.ds-toast--filled.ds-toast--info    { --_toast-bg: var(--uems-bg-info-solid);    --_toast-close: var(--uems-border-accent-subtle); }
+.ds-toast--filled.ds-toast--info:hover    { --_toast-bg: var(--uems-bg-info-solid-hover); }
+.ds-toast--filled.ds-toast--success { --_toast-bg: var(--uems-bg-success-solid); --_toast-close: var(--uems-border-success-subtle); }
+.ds-toast--filled.ds-toast--success:hover { --_toast-bg: var(--uems-bg-success-solid-hover); }
+.ds-toast--filled.ds-toast--warning { --_toast-bg: var(--uems-bg-warning-solid); --_toast-close: var(--uems-border-warning-subtle); }
+.ds-toast--filled.ds-toast--warning:hover { --_toast-bg: var(--uems-bg-warning-solid-hover); }
+.ds-toast--filled.ds-toast--error   { --_toast-bg: var(--uems-bg-error-solid);   --_toast-close: var(--uems-border-error-subtle); }
+.ds-toast--filled.ds-toast--error:hover   { --_toast-bg: var(--uems-bg-error-solid-hover); }
+
+/* RTL — logical flow handles order; text alignment follows direction */
+.ds-toast[dir="rtl"] .ds-toast__body { text-align: right; }
+
+/* =============================================================================
+   ds-toaster — Sonner-style stacked region (same file as the toast). Toasts
+   overlap absolutely; JS sets each one's transform (collapsed ↔ expanded ↔
+   enter/exit).
+   ============================================================================= */
+ds-toaster {
+  position: fixed;
+  z-index: 1000;
+  width: min(400px, calc(100vw - 32px));
+  box-sizing: border-box;
+  pointer-events: none;                 /* gaps don't block the page */
+  transition: height 320ms cubic-bezier(0.2, 0, 0, 1);
+}
+ds-toaster > ds-toast {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  pointer-events: auto;
+  transform-origin: var(--_sonner-origin, top center);
+  transition: transform 340ms cubic-bezier(0.2, 0, 0, 1),
+              opacity 300ms cubic-bezier(0.2, 0, 0, 1);
+  will-change: transform, opacity;
+}
+ds-toaster[data-position^="top"]    { top: 50px; } /* clears the app header so top menus stay reachable */
+ds-toaster[data-position^="top"]    > ds-toast { top: 0; --_sonner-origin: top center; }
+ds-toaster[data-position^="bottom"] { bottom: 16px; }
+ds-toaster[data-position^="bottom"] > ds-toast { bottom: 0; --_sonner-origin: bottom center; }
+ds-toaster[data-position$="right"]  { right: 16px; }
+ds-toaster[data-position$="left"]   { left: 16px; }
+ds-toaster[data-position$="center"] { left: 50%; transform: translateX(-50%); }
+@media (prefers-reduced-motion: reduce) {
+  ds-toaster,
+  ds-toaster > ds-toast { transition: none; }
+}

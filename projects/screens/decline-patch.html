@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Decline Patch — Endpoint Central · Prism</title>
+
+  <link rel="stylesheet" href="../../design-system-library/src/styles/index.css" />
+  <!-- drawer.css is not bundled in styles/index.css — link it directly for the auto-decline drawer -->
+  <link rel="stylesheet" href="../../design-system-library/src/components/drawer/drawer.css" />
+
+  <script>
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+    window.UEMS_ICON_SPRITE = '../../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body { margin: 0; font-family: var(--font-family-sans); background: var(--cobalt-15); }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+    .body { display: flex; flex: 1; min-height: 0; padding: 0 0 var(--spacing-12) var(--spacing-12); gap: 0; }
+    .shell-area {
+      flex: 1; display: flex; min-width: 0; min-height: 0;
+      border: 1px solid var(--uems-border-accent-subtle); border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle); overflow: hidden;
+    }
+    ds-sidebar-l1, ds-sidebar-l2 { max-width: 400px; overflow: hidden; }
+    ds-sidebar-l1.is-hidden, ds-sidebar-l2.is-hidden { max-width: 0 !important; opacity: 0 !important; pointer-events: none; }
+    .shell-area .ds-sidebar-l1 { border: 0 !important; border-radius: 0 !important; padding-top: 4px !important; }
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+
+    .page { display: flex; flex-direction: column; min-width: 0; height: 100%; }
+    .dp { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--spacing-20); padding: 0 var(--spacing-20) var(--spacing-16); }
+
+    /* Auto-decline config card (mirrors the reliability page's rule card). */
+    .dp-auto {
+      border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md, 10px);
+      padding: var(--spacing-16); background: var(--uems-bg-base);
+    }
+    .dp-auto__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--spacing-16); }
+    .dp-auto__title { margin: 0; font-size: var(--font-size-14, 14px); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+    .dp-auto__desc { margin: 4px 0 0; font-size: var(--font-size-12, 12px); color: var(--uems-text-secondary); line-height: 1.5; }
+    .dp-auto__body { margin-top: var(--spacing-16); display: none; }
+    .dp-auto[data-on="true"] .dp-auto__body { display: block; }
+
+    /* Group table region */
+    .dp-table-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .dp-table-wrap ds-data-table { flex: 0 1 auto; min-height: 0; display: flex; }
+    .dp ds-section-header { margin-bottom: calc(-1 * var(--spacing-8)); }
+
+    /* Page-header wraps all slotted actions in one block; make it a flex row so
+       the two action buttons are spaced. */
+    #ph .ds-page-header__action-slot { display: inline-flex; align-items: center; gap: var(--spacing-8); }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+  <div class="body">
+    <div class="shell-area">
+      <ds-sidebar-l1 id="shell-l1" class="is-hidden" style="height:100%;"></ds-sidebar-l1>
+      <ds-sidebar-l2 id="shell-l2" class="is-hidden" style="height:100%;"></ds-sidebar-l2>
+
+      <ds-content role="main">
+        <div class="page">
+          <ds-page-header id="ph"
+            structure="default"
+            title="Decline Patch"
+            description="Decline specific patches for selected groups, or auto-decline low-reliability patches across the organization."
+            show-description show-breadcrumbs show-overflow="false">
+            <!-- Actions sit on the right; primary (Select Group) rightmost -->
+            <ds-button slot="actions" id="auto-decline-btn" variant="secondary" size="small" prefix-icon="settings">Auto-decline</ds-button>
+            <ds-button slot="actions" id="select-group" variant="primary" size="small" prefix-icon="add">Select Group &amp; Decline Patch</ds-button>
+          </ds-page-header>
+
+          <div class="dp">
+            <!-- Active-automation banner — shown only while auto-decline is on -->
+            <div class="dp-notice" id="autodecline-notice" style="display:none;">
+              <ds-inline-alert id="autodecline-alert"
+                type="warning" style-variant="subtle" accent-bar show-icon
+                title="Auto-decline is active organization-wide" description=""
+                action="Manage" action-position="inline"></ds-inline-alert>
+            </div>
+            <div class="dp-table-wrap">
+              <ds-data-table id="decline-table"
+                row-height="comfortable"
+                show-footer
+                sticky-header
+                rows-per-page="10"
+                page="1"></ds-data-table>
+            </div>
+          </div>
+        </div>
+      </ds-content>
+    </div>
+  </div>
+</div>
+
+<!-- Toast stack — save confirmations -->
+<div id="toast-host" style="position:fixed; top:24px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; z-index:1400; pointer-events:none;"></div>
+
+<!-- Auto-decline config — opened by the page-header "Auto-decline" button -->
+<ds-drawer id="auto-decline-drawer"
+  title="Auto-decline"
+  subtitle="Applies organization-wide — one rule for every group">
+  <div class="dp-auto" id="rule-auto-decline" data-on="false" slot="body">
+    <div class="dp-auto__head">
+      <div>
+        <h3 class="dp-auto__title">Auto-decline low-reliability patches</h3>
+        <p class="dp-auto__desc">Applies organization-wide. Every patch scoring below the reliability threshold is declined automatically across all groups and excluded from deployment. Individual patches can still be overridden manually.</p>
+      </div>
+      <ds-toggle id="tg-auto-decline" size="medium"></ds-toggle>
+    </div>
+    <div class="dp-auto__body">
+      <ds-input-select id="auto-decline-th" label="Decline when reliability score is below"
+        required="false" show-helper-row="false" placeholder="Select threshold" style="max-width:280px;"></ds-input-select>
+    </div>
+  </div>
+  <ds-button slot="footer" id="ad-cancel" variant="outline" size="medium">Cancel</ds-button>
+  <ds-button slot="footer" id="ad-save" variant="primary" size="medium">Save changes</ds-button>
+</ds-drawer>
+
+<script type="module">
+  import '../../design-system-library/src/components/index.js';
+
+  /* Header tabs — Threats & Patches active */
+  document.getElementById('ec-header').tabs = [
+    { id: 'home',    label: 'Home' },
+    { id: 'configs', label: 'Configurations' },
+    { id: 'tp',      label: 'Threats & Patches', active: true },
+    { id: 'sd',      label: 'Software Deployment' },
+    { id: 'inv',     label: 'Inventory' },
+    { id: 'osd',     label: 'OS Deployment' },
+    { id: 'mdm',     label: 'MDM' },
+    { id: 'tools',   label: 'Tools' },
+    { id: 'agent',   label: 'Agent' },
+    { id: 'browsers', label: 'Browsers' },
+    { id: 'app-ctrl', label: 'Application Control' },
+    { id: 'malware',  label: 'Malware Protection' },
+    { id: 'dlp',      label: 'Endpoint DLP', newTag: true },
+    { id: 'bitlocker', label: 'BitLocker Management' },
+    { id: 'dev-ctrl',  label: 'Device Control' },
+    { id: 'reports',   label: 'Reports' },
+    { id: 'support',   label: 'Support' },
+    { id: 'dex',       label: 'DEX' },
+  ];
+
+  /* L1 rail — Patches active (Decline Patch lives under Patches, not Settings) */
+  const l1El = document.getElementById('shell-l1');
+  l1El.items = [
+    { id: 'dash', label: 'Dashboard', icon: 'add-widget', href: 'patches-dashboard.html' },
+    { id: 'threats', label: 'Threats', icon: 'bug' },
+    { id: 'patches', label: 'Patches', icon: 'file-shield', active: true },
+    { id: 'sys', label: 'Systems', icon: 'computer' },
+    { id: 'deploy', label: 'Deployment', icon: 'settings-deploy' },
+    { id: 'comp', label: 'Compliance', icon: 'checklist-01' },
+    { id: 'rep', label: 'Reports', icon: 'file-report' },
+    { id: 'set', label: 'Settings', icon: 'settings' },
+  ];
+  l1El.bottomItems = [{ id: 'update', label: 'Update Now', icon: 'refresh-time' }];
+  l1El.classList.remove('is-hidden');
+
+  /* L2 — Patches sub-nav (mirrors Reliability Alerts), Decline Patch active */
+  const l2El = document.getElementById('shell-l2');
+  l2El.groups = [
+    { id: 'patches', label: 'Patches', expanded: true, items: [
+      { id: 'missing',    label: 'Missing Patches' },
+      { id: 'installed',  label: 'Installed Patches',  count: 81 },
+      { id: 'applicable', label: 'Applicable Patches', count: 397 },
+      { id: 'priority',   label: 'Top-Priority Patches' },
+      { id: 'supported',  label: 'Supported Patches',  count: '554 K' },
+      { id: 'latest',     label: 'Latest Patches',     count: '78 K' },
+      { id: 'detailed',   label: 'Detailed View' },
+      { id: 'downloaded', label: 'Downloaded Patches' },
+      { id: 'decline',    label: 'Decline Patch', active: true },
+    ] },
+    { id: 'attention', label: 'Attention Required', expanded: true, items: [
+      { id: 'reliability', label: 'Reliability Alerts', count: 4, href: 'reliability-alerts.html' },
+      { id: 'upload',      label: 'Upload Pending',     count: 1 },
+    ] },
+  ];
+  l2El.classList.remove('is-hidden');
+
+  /* Breadcrumbs */
+  const ph = document.getElementById('ph');
+  customElements.whenDefined('ds-page-header').then(() => {
+    ph.breadcrumbs = [
+      { id: 'tp', label: 'Threats & Patches' },
+      { id: 'patches', label: 'Patches' },
+      { id: 'decline', label: 'Decline Patch' },
+    ];
+  });
+
+  /* Auto-decline toggle → reveal threshold; shares the reliability thresholds. */
+  customElements.whenDefined('ds-input-select').then(() => {
+    const sel = document.getElementById('auto-decline-th');
+    sel.options = [
+      { label: 'Below 20 (very strict)', value: '20' },
+      { label: 'Below 30 (recommended)', value: '30' },
+      { label: 'Below 40', value: '40' },
+      { label: 'Below 50', value: '50' },
+    ];
+    sel.value = '30';
+  });
+  document.getElementById('tg-auto-decline').addEventListener('ds-toggle-change', (e) => {
+    document.getElementById('rule-auto-decline').setAttribute('data-on', e.detail?.checked ? 'true' : 'false');
+  });
+
+  /* Page-header actions — Auto-decline opens its drawer; Select Group is the primary action. */
+  const adDrawer  = document.getElementById('auto-decline-drawer');
+  const adBtn     = document.getElementById('auto-decline-btn');
+  const adRule    = document.getElementById('rule-auto-decline');
+  const adTh      = document.getElementById('auto-decline-th');
+  const adTg      = document.getElementById('tg-auto-decline');
+  const adBanner  = document.getElementById('autodecline-alert');
+  const adBannerWrap = document.getElementById('autodecline-notice');
+
+  /* Toast — save confirmations (mirrors the Reliability Alerts page). */
+  function showToast(status, title, description) {
+    const host = document.getElementById('toast-host');
+    const t = document.createElement('ds-toast');
+    t.setAttribute('status', status);
+    t.setAttribute('title', title);
+    if (description) t.setAttribute('description', description);
+    t.setAttribute('duration', '6000');
+    t.style.pointerEvents = 'auto';
+    t.addEventListener('ds-toast-close', () => t.remove());
+    host.appendChild(t);
+  }
+
+  /* Last applied (saved) state — the page reflects this, not the draft.
+     Shared with the Reliability Alerts page via localStorage so enabling
+     auto-decline on either page reflects on the other. */
+  const AUTO_DECLINE_KEY = 'ec:auto-decline';
+  function readAutoDecline() {
+    try { return JSON.parse(localStorage.getItem(AUTO_DECLINE_KEY) || 'null'); } catch (_) { return null; }
+  }
+  function writeAutoDecline(state) {
+    try { localStorage.setItem(AUTO_DECLINE_KEY, JSON.stringify(state)); } catch (_) {}
+  }
+  let applied = readAutoDecline() || { on: false, threshold: '30' };
+  applied = { on: !!applied.on, threshold: String(applied.threshold || '30') };
+
+  function reflectAutoDecline() {
+    /* The notice is the active-state indicator; the button icon stays static.
+       NOTE: the element id must NOT contain "ad"/"banner" — ad blockers hide
+       anything matching `#ad-banner*` with `display:none !important` (a
+       higher-origin rule author CSS can't override), which is why this is named
+       "autodecline-notice", not "ad-banner-wrap". `!important` is belt-and-braces. */
+    if (applied.on) {
+      adBanner.setAttribute('description',
+        `Every patch scoring below ${applied.threshold} is declined automatically across the whole organization.`);
+      adBannerWrap.style.setProperty('display', 'block', 'important');
+    } else {
+      adBannerWrap.style.setProperty('display', 'none', 'important');
+    }
+  }
+  /* Sync the drawer's draft controls to the applied state (used on open / cancel). */
+  function syncDraftToApplied() {
+    adTg.checked = applied.on;
+    adRule.setAttribute('data-on', applied.on ? 'true' : 'false');
+    if (adTh) adTh.value = applied.threshold;
+  }
+
+  const openAutoDecline = () => { syncDraftToApplied(); adDrawer.open(); };
+  adBtn.addEventListener('click', openAutoDecline);
+  /* Banner "Manage" action → open the same drawer. */
+  adBanner.addEventListener('ds-inline-alert-action', openAutoDecline);
+  adBanner.addEventListener('click', (e) => { if (e.target.closest('[data-action]')) { e.preventDefault(); openAutoDecline(); } });
+  document.getElementById('ad-cancel').addEventListener('click', () => { syncDraftToApplied(); adDrawer.close(); });
+  document.getElementById('ad-save').addEventListener('click', () => {
+    /* Read the toggle's own state as the source of truth — don't rely solely on
+       the data-on attribute (which depends on ds-toggle-change having fired with
+       the expected detail shape). Fall back to data-on for older toggles. */
+    const on = (adTg && typeof adTg.checked === 'boolean')
+      ? adTg.checked
+      : adRule.getAttribute('data-on') === 'true';
+    applied = { on, threshold: (adTh && adTh.value) || '30' };
+    writeAutoDecline(applied);   /* share with the Reliability Alerts page */
+    reflectAutoDecline();
+    adDrawer.close();
+    showToast('success', 'Auto-decline updated',
+      on
+        ? `Auto-decline is now on organization-wide for reliability scores below ${applied.threshold}.`
+        : 'Auto-decline is off across the organization. Patches won’t be declined automatically.');
+  });
+
+  /* Paint the banner from the (possibly shared) applied state on load, and keep
+     it live when the other page changes it in another tab. */
+  reflectAutoDecline();
+  window.addEventListener('storage', (e) => {
+    if (e.key !== AUTO_DECLINE_KEY) return;
+    const s = readAutoDecline();
+    if (s) applied = { on: !!s.on, threshold: String(s.threshold || '30') };
+    reflectAutoDecline();
+  });
+
+  /* Group table */
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const tbl = document.getElementById('decline-table');
+  tbl.columns = [
+    { id: 'group',    header: 'Group Name',      render: (r) => `<ds-text-link variant="primary" size="medium" underline="hover" href="#">${esc(r.name)}</ds-text-link>` },
+    { id: 'modified', header: 'Modified Time',   render: (r) => esc(r.modified) },
+    { id: 'by',       header: 'Last Modified By', render: (r) => esc(r.by) },
+    { id: 'action',   header: 'Action', align: 'start',
+      render: () => `<ds-icon-button shape="square" type="tertiary-grey" size="small" icon="more-horizontal" label="More actions"></ds-icon-button>` },
+  ];
+  tbl.rows = [
+    { id: 'g1',  name: '12',                  modified: 'Apr 7, 2026 12:20 PM', by: 'vishlesh.k' },
+    { id: 'g2',  name: '123',                 modified: 'Oct 2, 2025 11:09 PM', by: 'deepson' },
+    { id: 'g3',  name: '.jgjyrs_copy',        modified: 'Feb 25, 2026 08:08 PM', by: 'charan' },
+    { id: 'g4',  name: '7 zip',               modified: 'Jun 24, 2025 02:46 PM', by: 'mashiya' },
+    { id: 'g5',  name: '2025TEST',            modified: 'Jun 2, 2025 03:45 PM', by: 'uems-ux' },
+    { id: 'g6',  name: 'All computer static', modified: 'Apr 2, 2025 07:12 PM', by: 'ramprabu' },
+    { id: 'g7',  name: 'kkaaa',               modified: 'Jun 9, 2025 10:15 AM', by: 'karthikeyan hk' },
+    { id: 'g8',  name: 'admin testing',       modified: 'Mar 20, 2025 03:57 PM', by: 'karthick y' },
+    { id: 'g9',  name: '7Zip',                modified: 'Jun 10, 2025 07:39 PM', by: 'test patch' },
+    { id: 'g10', name: 'Patch tuesday',       modified: 'Mar 16, 2023 12:36 PM', by: 'ems-mktg' },
+    { id: 'g11', name: '5',                   modified: 'Sep 6, 2024 01:23 PM', by: 'gokulakrishnan.p' },
+    { id: 'g12', name: 'AAA2',                modified: 'Aug 2, 2023 04:33 PM', by: 'harish.rc' },
+  ];
+  tbl.setAttribute('total-rows', String(tbl.rows.length));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Widget — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css?v=4">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/widget/widget.css?v=7">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg?v=2';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/description-list/description-list.js"></script>
+<script type="module" src="../design-system-library/src/components/widget/widget.js?v=10"></script>
+<style>
+  .page-widget .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-widget .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    padding: 32px !important;
+    gap: 36px !important;
+  }
+  .page-widget .demo-mod-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-widget .demo-mod-section > .demo-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+    margin: 0; text-align: left; width: auto;
+  }
+  .page-widget .demo-mod-section > .demo-mod-desc { font-size: 12px; color: var(--prism-text-muted); line-height: 1.5; }
+  .page-widget .demo-mod-card { display: flex; flex-direction: column; gap: 10px; }
+  .page-widget .demo-mod-card .card-cap {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+  }
+  .page-widget .demo-mod-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 20px; align-items: start;
+  }
+  @media (max-width: 900px) { .page-widget .demo-mod-grid { grid-template-columns: 1fr; } }
+
+  .page-widget .anat-marker-inline {
+    background: #2563eb; color: #fff; font-size: 11px; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  /* "Show code" toggle blocks */
+  .page-widget .code-toggle-btn {
+    display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+    background: transparent; border: 1px solid var(--prism-border);
+    font-family: inherit; font-size: 12.5px; font-weight: 600;
+    color: var(--prism-text-muted); cursor: pointer; padding: 5px 10px; border-radius: 8px; transition: all 0.2s;
+  }
+  .page-widget .code-toggle-btn:hover { color: var(--prism-violet); border-color: rgba(37,99,235,0.25); }
+  .page-widget .code-block { display: none; margin-top: 8px; background: #0a0a0c; border-radius: 10px; overflow: hidden; }
+  .page-widget .code-block.open, .page-widget .code-block.is-static { display: block; }
+  .page-widget .code-block .code-block-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .page-widget .code-block .code-block-head span { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+  .page-widget .code-block .cb-copy {
+    display: inline-flex; align-items: center; gap: 5px; background: transparent; border: none;
+    font-family: inherit; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.6); cursor: pointer;
+  }
+  .page-widget .code-block .cb-copy:hover { color: #fff; }
+  .page-widget .code-block pre {
+    margin: 0; padding: 16px; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0;
+  }
+  .page-widget .code-block .token-tag { color: #a78bfa; }
+  .page-widget .code-block .token-attr { color: #38bdf8; }
+  .page-widget .code-block .token-string { color: #34d399; }
+
+  .page-widget .palette-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .page-widget .palette-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--prism-text-muted); }
+  .page-widget .palette-dot { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.06); }
+
+  /* Slotted list rows for the List-type demo */
+  .page-widget .wl-row { display:flex; align-items:center; gap:12px; padding:8px 16px; }
+  .page-widget .wl-ico { width:28px; height:28px; border-radius:8px; background:var(--uems-bg-secondary-alt,#eef1f6); display:inline-flex; align-items:center; justify-content:center; color:var(--uems-icon-secondary,#55607a); flex-shrink:0; }
+  .page-widget .wl-label { flex:1 1 auto; min-width:0; font-size:14px; color:var(--uems-text-accent-link,#006aff); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .page-widget .wl-count { font-size:14px; font-weight:500; color:var(--uems-text-primary,#15181e); }
+  /* Table-type widget uses <ds-data-table> (toolbar + footer off) for the grid. */
+  .page-widget ds-widget[type="table"] ds-data-table { display:block; width:100%; }
+</style>
+</head>
+<body class="page-widget">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">      <a href="Foundation.html" >Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html" >Zia Experience</a><a href="llm-reference.html">LLM Reference</a><div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+
+      <div style="width: 16px;"></div> <!-- Spacer -->
+
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search...">
+        <span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 id="components" class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link active">Widgets</a></li>
+      </ul>
+    </aside>
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Widget</h1>
+        <p class="page-desc">
+          The dashboard tile / panel container — a <strong>self-contained surface</strong> with a fixed chrome (header + optional footer) wrapping a <strong>swappable body</strong>. Set <code>type</code> to <code>chart</code>, <code>list</code>, or <code>table</code> and drop the matching component into the default slot; set it to <code>error</code>, <code>empty</code>, or <code>no-data</code> and the widget renders a built-in placeholder. The header carries a drag handle, title, optional info icon, a trend badge, a filter, and an action; the footer carries a summary + a "view all" link. <code>selected</code> adds the dashboard-edit ring + resize handles. It <em>contains</em> a <code>&lt;ds-chart&gt;</code> — it is never itself a chart.
+        </p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══════════════ OVERVIEW ═══════════════ -->
+        <div class="tab-content" id="tab-overview">
+
+          <!-- ───── Anatomy ───── -->
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <p class="doc-section-subtitle" style="margin-bottom:24px;">A live <code>&lt;ds-widget type="chart"&gt;</code> with its parts called out. The widget owns its surface (radius 16, <code>--uems-border-tertiary</code>) — the chart inside is a bare <code>&lt;ds-chart&gt;</code>.</p>
+
+          <div class="anatomy-diagram" style="overflow:visible;">
+            <div style="display:flex;justify-content:center;margin:24px 0;padding:40px 72px;">
+              <div style="position:relative;width:520px;max-width:100%;">
+                <ds-widget id="anat-widget" type="chart" edit-mode selected title="Drivers By Class" trend="12%" trend-status="critical" filter-label="Last 7 days" footer-summary="+41 more Drivers"></ds-widget>
+                <span class="anat-marker-inline" style="position:absolute;top:16px;left:-30px;">1</span>
+                <span class="anat-marker-inline" style="position:absolute;top:16px;right:-30px;">2</span>
+                <span class="anat-marker-inline" style="position:absolute;top:50%;left:-30px;">3</span>
+                <span class="anat-marker-inline" style="position:absolute;bottom:16px;right:-30px;">4</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="anat-legend" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Title area</strong><span>Drag handle (<code>ds-icon-button</code> <code>move-vertical</code>) — <em>edit-mode only, reveals on hover</em> — + Title (14px Semibold, <code>--uems-text-primary</code>, truncates) + optional info icon.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Trailing controls</strong><span>Optional trend badge (<code>ds-badge</code>, status-colored), filter/period pill (<code>ds-button</code> outline), and action button (<code>ds-icon-button</code>, default <code>settings</code>).</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Body — swappable</strong><span>Default slot for <code>chart</code>/<code>list</code>/<code>table</code>; built-in <code>ds-empty-state</code> for <code>error</code>/<code>empty</code>/<code>no-data</code>. Fills width; table h-scrolls inside.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Footer</strong><span>Summary text + a <code>ds-text-link</code> "view all". Toggle with <code>show-footer</code>; hidden for state types.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- ───── Type family ───── -->
+          <div class="doc-section">
+            <h2 id="type-family" class="doc-section-title">Type — content vs. state</h2>
+            <p class="doc-section-subtitle">Three content types host slotted content; three state types render a built-in placeholder (and hide the footer).</p>
+            <div class="demo-mod-grid" style="margin-top:8px;">
+              <div class="demo-mod-card">
+                <span class="card-cap">chart</span>
+                <ds-widget type="chart" title="Drivers By Class" trend="12%" trend-status="critical" filter-label="Last 7 days" footer-summary="+41 more Drivers"></ds-widget>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">list</span>
+                <ds-widget type="list" title="Configurations" footer-summary="+41 more Drivers">
+                  <div class="wl-row"><span class="wl-ico"><ds-icon name="settings" size="16"></ds-icon></span><span class="wl-label">Configuration 2832</span><ds-badge variant="subtle" state="success" size="medium" shape="pill" label="Executed"></ds-badge></div>
+                  <div class="wl-row"><span class="wl-ico"><ds-icon name="settings" size="16"></ds-icon></span><span class="wl-label">Configuration 1187</span><ds-badge variant="subtle" state="success" size="medium" shape="pill" label="Executed"></ds-badge></div>
+                  <div class="wl-row"><span class="wl-ico"><ds-icon name="settings" size="16"></ds-icon></span><span class="wl-label">Configuration 0459</span><ds-badge variant="subtle" state="moderate" size="medium" shape="pill" label="Pending"></ds-badge></div>
+                  <div class="wl-row"><span class="wl-ico"><ds-icon name="settings" size="16"></ds-icon></span><span class="wl-label">Configuration 7720</span><ds-badge variant="subtle" state="critical" size="medium" shape="pill" label="Failed"></ds-badge></div>
+                </ds-widget>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">table</span>
+                <ds-widget type="table" title="Applications" footer-summary="+120 more">
+                  <ds-data-table class="widget-demo-table" selection-mode="none"></ds-data-table>
+                </ds-widget>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">error</span>
+                <ds-widget type="error" title="Drivers By Class" filter-label="Last 7 days"></ds-widget>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">empty</span>
+                <ds-widget type="empty" title="Drivers By Class" filter-label="Last 7 days"></ds-widget>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">no-data</span>
+                <ds-widget type="no-data" title="Drivers By Class" filter-label="Last 7 days"></ds-widget>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- ───── Preview ───── -->
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">A dashboard built from live widgets — mixed content types, a selected tile, and a state placeholder.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Widgets &middot; device dashboard</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Overview &middot; mixed content</div>
+                  <div class="demo-mod-grid">
+                    <ds-widget type="chart" title="Drivers By Class" trend="12%" trend-status="critical" filter-label="Last 7 days" footer-summary="+41 more Drivers"></ds-widget>
+                    <ds-widget type="list" title="Recent Configurations" footer-summary="+41 more">
+                      <div class="wl-row"><span class="wl-ico"><ds-icon name="settings" size="16"></ds-icon></span><span class="wl-label">Configuration 2832</span><ds-badge variant="subtle" state="success" size="medium" shape="pill" label="Executed"></ds-badge></div>
+                      <div class="wl-row"><span class="wl-ico"><ds-icon name="settings" size="16"></ds-icon></span><span class="wl-label">Configuration 1187</span><ds-badge variant="subtle" state="success" size="medium" shape="pill" label="Executed"></ds-badge></div>
+                      <div class="wl-row"><span class="wl-ico"><ds-icon name="settings" size="16"></ds-icon></span><span class="wl-label">Configuration 0459</span><ds-badge variant="subtle" state="moderate" size="medium" shape="pill" label="Pending"></ds-badge></div>
+                    </ds-widget>
+                  </div>
+                </div>
+
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Selected (dashboard-edit) &amp; state placeholder</div>
+                  <div class="demo-mod-grid">
+                    <ds-widget type="chart" edit-mode selected title="Patch Compliance" trend="4%" trend-status="success" trend-icon="up-trend" filter-label="30 days" footer-summary="+18 more"></ds-widget>
+                    <ds-widget type="no-data" title="Threat Feed" filter-label="Last 24h"></ds-widget>
+                  </div>
+                </div>
+
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">RTL &middot; dir="rtl"</div>
+                  <div class="demo-mod-grid">
+                    <ds-widget type="chart" dir="rtl" title="السائقون حسب الفئة" trend="12%" trend-status="critical" filter-label="آخر 7 أيام" footer-summary="+41 سائق آخر" footer-label="عرض الكل"></ds-widget>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /tab-overview -->
+
+        <!-- ═══════════════ STYLE ═══════════════ -->
+        <div class="tab-content" id="tab-style" style="display:none;">
+
+          <h2 id="content-types" class="doc-section-title">Content types</h2>
+          <p class="doc-section-subtitle">The body swaps by <code>type</code>. Content types (chart/list/table) host slotted children; state types render a built-in <code>ds-empty-state</code>.</p>
+          <div class="demo-mod-grid" style="margin-top:8px;">
+            <div class="demo-mod-card">
+              <span class="card-cap">chart (default slot → ds-chart)</span>
+              <ds-widget type="chart" title="Drivers By Class" filter-label="Last 7 days" footer-summary="+41 more"></ds-widget>
+            </div>
+            <div class="demo-mod-card">
+              <span class="card-cap">error / empty / no-data (built-in)</span>
+              <ds-widget type="error" title="Drivers By Class"></ds-widget>
+            </div>
+            <div class="demo-mod-card">
+              <span class="card-cap">no-data + per-type empty (state-illustration="empty-bar")</span>
+              <ds-widget type="no-data" title="Drivers By Class" state-illustration="empty-bar" state-title="No data to chart" state-description="Once devices report in, the bar chart appears here."></ds-widget>
+            </div>
+            <div class="demo-mod-card">
+              <span class="card-cap">list → property view (ds-description-list)</span>
+              <ds-widget type="list" title="Device details" footer-summary="Last synced 2h ago" footer-label="View device">
+                <ds-description-list class="widget-property-view" orientation="horizontal"></ds-description-list>
+              </ds-widget>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="states" class="doc-section-title">States &amp; edit mode</h2>
+          <p class="doc-section-subtitle">The drag handle and resize handles are <strong>dashboard-edit affordances</strong> — they only exist when <code>edit-mode</code> is set, and then reveal <strong>on hover</strong> (or stay while <code>selected</code>). In view mode the widget shows no drag/resize chrome. All visual only; the frame has no click/keyboard behavior.</p>
+          <div class="demo-mod-grid" style="margin-top:8px;">
+            <div class="demo-mod-card">
+              <span class="card-cap">view mode — no chrome</span>
+              <ds-widget type="chart" title="View mode" filter-label="7 days" footer-summary="+41 more"></ds-widget>
+            </div>
+            <div class="demo-mod-card">
+              <span class="card-cap">edit-mode — hover to reveal</span>
+              <ds-widget type="chart" edit-mode title="Edit mode (hover me)" filter-label="7 days" footer-summary="+41 more"></ds-widget>
+            </div>
+            <div class="demo-mod-card">
+              <span class="card-cap">edit-mode + selected — persistent</span>
+              <ds-widget type="chart" edit-mode selected title="Selected" filter-label="7 days" footer-summary="+41 more"></ds-widget>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="header-controls" class="doc-section-title">Header controls</h2>
+          <p class="doc-section-subtitle">Every trailing control is optional and composes an existing component. Trend badge status recolors it; the filter is a <code>ds-button</code> outline; the action is a <code>ds-icon-button</code>.</p>
+          <div class="demo-mod-grid" style="margin-top:8px;">
+            <div class="demo-mod-card"><span class="card-cap">trend + filter + action</span><ds-widget type="chart" title="All controls" trend="12%" trend-status="critical" filter-label="Last 7 days"></ds-widget></div>
+            <div class="demo-mod-card"><span class="card-cap">success trend, no filter</span><ds-widget type="chart" title="Trend only" trend="8%" trend-status="success" trend-icon="up-trend"></ds-widget></div>
+            <div class="demo-mod-card"><span class="card-cap">info icon, no action</span><ds-widget type="chart" title="Minimal" show-info show-action="false" show-footer="false"></ds-widget></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="tokens" class="doc-section-title">Tokens</h2>
+          <div class="palette-grid">
+            <div class="palette-item"><span class="palette-dot" style="background:var(--uems-bg-primary-alt,#fff);border-color:#ccc;"></span>Surface / header / footer — <code>--uems-bg-primary-alt</code></div>
+            <div class="palette-item"><span class="palette-dot" style="background:var(--uems-border-tertiary,#e1e4eb);"></span>Surface border — <code>--uems-border-tertiary</code></div>
+            <div class="palette-item"><span class="palette-dot" style="background:var(--uems-border-quaternary,#f0f2f5);"></span>Header / footer divider — <code>--uems-border-quaternary</code></div>
+            <div class="palette-item"><span class="palette-dot" style="background:var(--uems-border-accent,#006aff);"></span>Selected ring + handles — <code>--uems-border-accent</code></div>
+            <div class="palette-item"><span class="palette-dot" style="background:var(--uems-text-primary,#15181e);"></span>Title — <code>--uems-text-primary</code></div>
+            <div class="palette-item"><span class="palette-dot" style="background:var(--uems-text-quaternary,#55607a);"></span>Footer summary — <code>--uems-text-quaternary</code></div>
+            <div class="palette-item"><span class="palette-dot" style="background:var(--uems-text-accent-link,#006aff);"></span>View-all link — <code>--uems-text-accent-link</code></div>
+          </div>
+
+        </div><!-- /tab-style -->
+
+        <!-- ═══════════════ USAGE ═══════════════ -->
+        <div class="tab-content" id="tab-usage" style="display:none;">
+
+          <h2 id="when-to-use" class="doc-section-title">When to use</h2>
+          <ul class="doc-list">
+            <li>Any dashboard tile that needs a titled frame around a chart, list, or table with header controls (trend, filter, menu) and a "view all" footer.</li>
+            <li>A resizable/reorderable panel in an editable dashboard grid — use <code>selected</code> for the chosen tile.</li>
+            <li>A content region that must gracefully show <strong>error / empty / no-data</strong> placeholders without the host drawing them.</li>
+          </ul>
+
+          <h2 id="when-not" class="doc-section-title" style="margin-top:24px;">When not to use</h2>
+          <ul class="doc-list">
+            <li>A single metric value + trend (no chart chrome) — use <code>ds-kpi-card</code>.</li>
+            <li>A bare chart with no title/footer/surface — use <code>ds-chart</code> directly.</li>
+            <li>A generic content card that isn't a dashboard tile — use <code>ds-card</code>.</li>
+          </ul>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="composition" class="doc-section-title">Composition — reuse, don't re-implement</h2>
+          <p class="doc-section-subtitle">Every interactive part is an existing component. The widget only owns the surface + layout.</p>
+          <div class="demo-mod-card" style="margin-top:8px;">
+            <span class="card-cap">Chart widget</span>
+            <button class="code-toggle-btn" data-toggle>Show code</button>
+            <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-widget</span> <span class="token-attr">type</span>=<span class="token-string">"chart"</span> <span class="token-attr">title</span>=<span class="token-string">"Drivers By Class"</span>
+  <span class="token-attr">trend</span>=<span class="token-string">"12%"</span> <span class="token-attr">trend-status</span>=<span class="token-string">"critical"</span>
+  <span class="token-attr">filter-label</span>=<span class="token-string">"Last 7 days"</span> <span class="token-attr">footer-summary</span>=<span class="token-string">"+41 more Drivers"</span><span class="token-tag">&gt;</span>
+  <span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"column"</span> <span class="token-attr">mode</span>=<span class="token-string">"single"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span>
+<span class="token-tag">&lt;/ds-widget&gt;</span></pre></div>
+          </div>
+          <div class="demo-mod-card" style="margin-top:16px;">
+            <span class="card-cap">List widget — two shapes (pick by data)</span>
+            <button class="code-toggle-btn" data-toggle>Show code</button>
+            <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span style="color:#6b7280">&lt;!-- A) Collection — a list of entities (icon + name + status) --&gt;</span>
+<span class="token-tag">&lt;ds-widget</span> <span class="token-attr">type</span>=<span class="token-string">"list"</span> <span class="token-attr">title</span>=<span class="token-string">"Configurations"</span> <span class="token-attr">footer-summary</span>=<span class="token-string">"+41 more"</span><span class="token-tag">&gt;</span>
+  <span class="token-tag">&lt;ds-list&gt;</span> … <span class="token-tag">&lt;/ds-list&gt;</span>   <span style="color:#6b7280">&lt;!-- or your own item rows --&gt;</span>
+<span class="token-tag">&lt;/ds-widget&gt;</span>
+
+<span style="color:#6b7280">&lt;!-- B) Property view — one entity's term→value details --&gt;</span>
+<span class="token-tag">&lt;ds-widget</span> <span class="token-attr">type</span>=<span class="token-string">"list"</span> <span class="token-attr">title</span>=<span class="token-string">"Device details"</span> <span class="token-attr">footer-label</span>=<span class="token-string">"View device"</span><span class="token-tag">&gt;</span>
+  <span class="token-tag">&lt;ds-description-list</span> <span class="token-attr">orientation</span>=<span class="token-string">"horizontal"</span><span class="token-tag">&gt;&lt;/ds-description-list&gt;</span>  <span style="color:#6b7280">&lt;!-- items set via JS --&gt;</span>
+<span class="token-tag">&lt;/ds-widget&gt;</span></pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="rtl" class="doc-section-title">RTL</h2>
+          <p class="doc-section-subtitle">Header and footer are plain flex rows — <code>dir="rtl"</code> mirrors them for free (title moves right, controls move left, footer link to the visual left). No duplicate content props.</p>
+          <div class="demo-mod-grid" style="margin-top:8px;">
+            <div class="demo-mod-card">
+              <span class="card-cap">dir="rtl"</span>
+              <ds-widget type="chart" dir="rtl" title="السائقون حسب الفئة" trend="12%" trend-status="critical" filter-label="آخر 7 أيام" footer-summary="+41 سائق آخر" footer-label="عرض الكل"></ds-widget>
+            </div>
+          </div>
+
+        </div><!-- /tab-usage -->
+
+        <!-- ═══════════════ CODE ═══════════════ -->
+        <div class="tab-content" id="tab-code" style="display:none;">
+
+          <h2 id="basic-usage" class="doc-section-title">Basic usage</h2>
+          <div class="code-block is-static" style="margin-top:8px;"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-widget</span>
+  <span class="token-attr">type</span>=<span class="token-string">"chart"</span>          <span style="color:#6b7280">&lt;!-- chart | list | table | error | empty | no-data --&gt;</span>
+  <span class="token-attr">title</span>=<span class="token-string">"Drivers By Class"</span>
+  <span class="token-attr">trend</span>=<span class="token-string">"12%"</span> <span class="token-attr">trend-status</span>=<span class="token-string">"critical"</span>
+  <span class="token-attr">filter-label</span>=<span class="token-string">"Last 7 days"</span>
+  <span class="token-attr">footer-summary</span>=<span class="token-string">"+41 more Drivers"</span> <span class="token-attr">footer-label</span>=<span class="token-string">"View all"</span>
+  <span class="token-attr">selected</span> <span class="token-attr">dir</span>=<span class="token-string">"rtl"</span><span class="token-tag">&gt;</span>
+  <span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"column"</span> <span class="token-attr">mode</span>=<span class="token-string">"single"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span>  <span style="color:#6b7280">&lt;!-- default slot --&gt;</span>
+<span class="token-tag">&lt;/ds-widget&gt;</span></pre></div>
+
+          <h2 id="attributes" class="doc-section-title" style="margin-top:32px;">Attributes</h2>
+          <table class="size-table">
+            <thead><tr><th>Attribute</th><th>Values</th><th>Default</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>type</code></td><td><code>chart</code> | <code>list</code> | <code>table</code> | <code>error</code> | <code>empty</code> | <code>no-data</code></td><td><code>chart</code></td><td>Selects the body mode. State types render a built-in placeholder + hide the footer.</td></tr>
+              <tr><td><code>title</code></td><td>text</td><td>&mdash;</td><td>Header title (captured then stripped to avoid the native-tooltip collision).</td></tr>
+              <tr><td><code>show-drag</code></td><td>boolean</td><td><code>true</code></td><td>Drag handle in the title area.</td></tr>
+              <tr><td><code>show-info</code></td><td>boolean</td><td><code>false</code></td><td>Info icon after the title.</td></tr>
+              <tr><td><code>info-icon</code></td><td>icon name</td><td><code>info-circle</code></td><td>Glyph for the info icon.</td></tr>
+              <tr><td><code>trend</code></td><td>text</td><td>&mdash;</td><td>Trend-badge label (e.g. "12%"). Empty → no badge.</td></tr>
+              <tr><td><code>trend-status</code></td><td><code>success</code> | <code>warning</code> | <code>critical</code> | <code>info</code></td><td><code>info</code></td><td>Recolors the trend badge.</td></tr>
+              <tr><td><code>trend-icon</code></td><td>icon name</td><td><code>up-trend</code></td><td>Trend badge icon (e.g. <code>down-trend</code>).</td></tr>
+              <tr><td><code>filter-label</code></td><td>text</td><td>&mdash;</td><td>Filter pill label (e.g. "Last 7 days"). Empty → no filter.</td></tr>
+              <tr><td><code>show-action</code></td><td>boolean</td><td><code>true</code></td><td>Trailing action icon button.</td></tr>
+              <tr><td><code>action-icon</code></td><td>icon name</td><td><code>settings</code></td><td>Action button glyph.</td></tr>
+              <tr><td><code>show-footer</code></td><td>boolean</td><td><code>true</code></td><td>Footer visibility. Forced off for state types.</td></tr>
+              <tr><td><code>footer-summary</code></td><td>text</td><td>&mdash;</td><td>Footer left text.</td></tr>
+              <tr><td><code>footer-label</code> / <code>footer-href</code></td><td>text / url</td><td><code>View all</code> / <code>#</code></td><td>Footer link.</td></tr>
+              <tr><td><code>state-title</code> / <code>state-description</code> / <code>retry-label</code></td><td>text</td><td>per type</td><td>Override the built-in placeholder copy (error/empty/no-data).</td></tr>
+              <tr><td><code>state-illustration</code></td><td>illustration name</td><td>per type</td><td>Override the placeholder illustration — e.g. the per-chart-type empties <code>empty-bar</code>, <code>empty-line</code>, <code>empty-donut</code>, <code>empty-pie</code>, <code>empty-funnel</code>, <code>empty-gauge</code>, <code>empty-area</code>, <code>empty-heatmap</code>, <code>empty-list</code>, <code>empty-table</code>.</td></tr>
+              <tr><td><code>edit-mode</code></td><td>boolean</td><td><code>false</code></td><td>Enables the dashboard-edit affordances: the header drag handle + the resize handles/ring. They reveal on hover (or stay while <code>selected</code>). Off = no drag/resize chrome.</td></tr>
+              <tr><td><code>selected</code></td><td>boolean</td><td><code>false</code></td><td>Keeps the ring + resize handles persistently shown (only meaningful with <code>edit-mode</code>). Visual only — no click/keyboard semantics.</td></tr>
+              <tr><td><code>dir="rtl"</code></td><td>&mdash;</td><td>ltr</td><td>Mirrors layout; text-align flips.</td></tr>
+            </tbody>
+          </table>
+
+          <h2 id="slots" class="doc-section-title" style="margin-top:32px;">Slots</h2>
+          <table class="size-table">
+            <thead><tr><th>Slot</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>default</td><td>Body content for <code>chart</code>/<code>list</code>/<code>table</code> — <code>ds-chart</code>, a <code>ds-data-table</code>, or for <code>list</code> either a <strong>collection</strong> (<code>ds-list</code> / item rows) or a <strong>property view</strong> (<code>ds-description-list</code>). A bare <code>type="chart"</code> auto-renders a default <code>ds-chart</code>.</td></tr>
+              <tr><td><code>slot="header-action"</code></td><td>Overrides the default action icon button.</td></tr>
+              <tr><td><code>slot="filter"</code></td><td>Overrides the default filter pill (e.g. a real dropdown/date-picker).</td></tr>
+            </tbody>
+          </table>
+
+          <h2 id="events" class="doc-section-title" style="margin-top:32px;">Events</h2>
+          <table class="size-table">
+            <thead><tr><th>Event</th><th>Detail</th><th>Fires when</th></tr></thead>
+            <tbody>
+              <tr><td><code>ds-widget-action</code></td><td>&mdash;</td><td>The header action button is activated.</td></tr>
+              <tr><td><code>ds-widget-view-all</code></td><td><code>{ href }</code></td><td>The footer link is activated.</td></tr>
+              <tr><td><code>ds-widget-retry</code></td><td>&mdash;</td><td>The state-body primary action (error/empty/no-data) is activated.</td></tr>
+            </tbody>
+          </table>
+
+        </div><!-- /tab-code -->
+
+        <!-- ═══════════════ ACCESSIBILITY ═══════════════ -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;">
+
+          <h2 id="a11y-roles" class="doc-section-title">Roles &amp; semantics</h2>
+          <ul class="doc-list">
+            <li>The frame is a static <code>role="group"</code> with an <code>aria-label</code> derived from <code>title</code> — not a button.</li>
+            <li>Header action, filter, and footer link are real <code>&lt;button&gt;</code>/<code>&lt;a&gt;</code> elements (via <code>ds-icon-button</code> / <code>ds-button</code> / <code>ds-text-link</code>) with their own focus rings.</li>
+            <li><code>selected</code> is exposed via <code>aria-selected="true"</code> on the host — the ring color alone isn't sufficient for screen readers.</li>
+            <li>State illustrations are <code>aria-hidden</code>; the placeholder title/description are readable text and the "Retry" action is a real focusable button.</li>
+          </ul>
+
+          <h2 id="a11y-keyboard" class="doc-section-title" style="margin-top:24px;">Keyboard</h2>
+          <table class="size-table">
+            <thead><tr><th>Key</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td><kbd>Tab</kbd></td><td>Drag handle → info → filter → action → body content → footer link, in DOM order (matches visual order in LTR and RTL).</td></tr>
+              <tr><td><kbd>Enter</kbd> / <kbd>Space</kbd></td><td>Activates the focused control. The widget frame itself is never a tab stop.</td></tr>
+            </tbody>
+          </table>
+
+          <h2 id="a11y-contrast" class="doc-section-title" style="margin-top:24px;">Contrast &amp; RTL</h2>
+          <ul class="doc-list">
+            <li>Text tokens (<code>Text-Primary</code>, <code>Text-Secondary</code>, <code>Text-Quaternary</code>) meet AA on the widget surface.</li>
+            <li>Trend badge conveys status with an arrow glyph + <code>%</code> label, not color alone.</li>
+            <li><code>dir="rtl"</code> mirrors layout and focus order — the footer link moves to the visual left, matching reading order.</li>
+          </ul>
+
+        </div><!-- /tab-accessibility -->
+
+        </div><!-- close main-content-inner -->
+
+        <aside class="toc-sidebar" style="padding: 20px;">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/widget.md" download="widget.md" class="action-link">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Download MD
+            </a>
+
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=20766-5044" target="_blank" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+
+      </div> <!-- close main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+      <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+      <div style="display: flex; gap: 10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  <!-- "Show code" toggles + copy buttons -->
+  <script>
+    document.querySelectorAll('.code-toggle-btn[data-toggle]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const block = btn.nextElementSibling;
+        if (!block || !block.classList.contains('code-block')) return;
+        const open = block.classList.toggle('open');
+        btn.textContent = open ? 'Hide code' : 'Show code';
+      });
+    });
+    document.querySelectorAll('.code-block .cb-copy').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const pre = btn.closest('.code-block').querySelector('pre');
+        if (!pre) return;
+        try {
+          await navigator.clipboard.writeText(pre.textContent);
+          const original = btn.innerHTML;
+          btn.innerHTML = '<ds-icon name="check" size="13"></ds-icon> Copied';
+          setTimeout(() => { btn.innerHTML = original; }, 2000);
+        } catch {}
+      });
+    });
+  </script>
+
+  <script>
+    let _tocObserver = null;
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav');
+      if (!tocList) return;
+      tocList.innerHTML = '';
+      const activePanel = document.getElementById(targetId);
+      if (!activePanel) return;
+      /* Only real doc-section headings — exclude headings emitted by demo
+         components (e.g. ds-empty-state renders its title as an <h2 id>). */
+      const headings = [...activePanel.querySelectorAll('h2[id], h3[id]')]
+        .filter(h => !h.closest('ds-widget, ds-empty-state, .demo-container, .demo-mod-card'));
+      headings.forEach(h => {
+        if (h.style.display === 'none') return;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.className = 'toc-link';
+        let text = Array.from(h.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+        if (!text) text = h.innerText;
+        a.textContent = text;
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById(h.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+      initScrollSpy();
+    }
+    function initScrollSpy() {
+      if (_tocObserver) _tocObserver.disconnect();
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sectionIds = Array.from(tocLinks).map(link => link.getAttribute('href').slice(1));
+      const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+      if (sections.length === 0) return;
+      _tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            tocLinks.forEach(link => {
+              link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+            });
+          }
+        });
+      }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+      sections.forEach(section => _tocObserver.observe(section));
+    }
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabMap = { 'Overview': 'tab-overview', 'Usage': 'tab-usage', 'Style': 'tab-style', 'Code': 'tab-code', 'Accessibility': 'tab-accessibility' };
+        document.querySelectorAll('.tab-content').forEach(panel => panel.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) {
+          document.getElementById(target).style.display = 'block';
+          updateTOC(target);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+    updateTOC('tab-overview');
+    (function(){
+      var searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      var items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function(){
+        var q = this.value.toLowerCase().trim();
+        items.forEach(function(li){
+          var link = li.querySelector('a');
+          if (!link) return;
+          var text = link.textContent.toLowerCase();
+          li.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+      });
+      document.addEventListener('keydown', function(e){
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      });
+    })();
+    (function(){
+      var active = document.querySelector('.sidebar-link.active');
+      if (active) {
+        var sidebar = active.closest('.sidebar');
+        if (sidebar) {
+          var top = active.offsetTop - sidebar.offsetTop - (sidebar.clientHeight / 3);
+          sidebar.scrollTop = Math.max(0, top);
+        }
+      }
+    })();
+  </script>
+
+<!-- Populate the demo <ds-data-table> inside table-type widgets -->
+<script type="module">
+  customElements.whenDefined('ds-data-table').then(() => {
+    const COLUMNS = [
+      { id: 'app',      header: 'Application Name', accessor: 'app' },
+      { id: 'type',     header: 'Type',            accessor: 'type' },
+      { id: 'computer', header: 'Computer',        accessor: 'computer' },
+      { id: 'time',     header: 'Event Time',      accessor: 'time' },
+    ];
+    const ROWS = [
+      { id: '1', app: 'Create New Shortcut',   type: 'Executables', computer: 'Frasquito', time: 'Feb 12, 2025' },
+      { id: '2', app: 'Network and Sharing',   type: 'Executables', computer: 'Frasquito', time: 'Feb 12, 2025' },
+      { id: '3', app: 'Windows Update Publish', type: 'Executables', computer: 'Frasquito', time: 'Feb 12, 2025' },
+      { id: '4', app: 'Remote Desktop',        type: 'Executables', computer: 'Frasquito', time: 'Feb 12, 2025' },
+      { id: '5', app: 'Disk Cleanup Manager',  type: 'Executables', computer: 'Frasquito', time: 'Feb 11, 2025' },
+    ];
+    document.querySelectorAll('.widget-demo-table').forEach((t) => {
+      t.columns = COLUMNS;
+      t.rows = ROWS;
+    });
+  });
+
+  // Property-view list: <ds-description-list> inside a type="list" widget
+  customElements.whenDefined('ds-description-list').then(() => {
+    const ITEMS = [
+      { term: 'Status',   description: 'Active',       type: 'status', status: 'success' },
+      { term: 'OS',       description: 'Windows 11 Pro' },
+      { term: 'Owner',    description: 'Jane Doe' },
+      { term: 'Patch',    description: 'Pending',      type: 'badge', state: 'moderate' },
+      { term: 'Last seen', description: 'Feb 12, 2025' },
+    ];
+    document.querySelectorAll('.widget-property-view').forEach((dl) => { dl.items = ITEMS; });
+  });
+</script>
+
+<!-- Floating Feedback Button -->
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/main.js"></script>
+<script src="js/components/toc.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,202 @@
+/* =============================================================================
+   ds-card / .ds-card
+   Spec source: design-system/handoff/card.md (Figma 21949:806025, 36-variant set)
+
+   Type × Size × State(Default/Hover/Disabled) = 36 variants. Card owns its
+   own surface (background, border/shadow, radius) — same contract as
+   ds-kpi-card. Body/Content is height:auto by design — a fixed height there
+   was a real bug found while building the Figma set (content clipped the
+   footer); never reintroduce a fixed body height.
+   ============================================================================= */
+
+ds-card {
+  display: block;
+  font-family: var(--font-family-sans);
+}
+
+.ds-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--uems-radius-l, 16px);
+  overflow: hidden;
+  box-sizing: border-box;
+  color: var(--uems-text-secondary);
+  transition: background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+/* ── Type (surface treatment) — every token verified against the Figma
+   source (node 21949:806025). All four types sit on a real opaque surface;
+   only the differentiator (shadow / border / tint) changes.
+     elevated : BG-Primary #FFFFFF + Shadow-Small
+     outlined : BG-Primary #FFFFFF + 1px Border-Tertiary #E1E4EB
+     filled   : BG-Accent-Primary_subtle #F0F4FD
+     plain    : BG-Primary #FFFFFF, flat (no border/shadow) — NOT transparent */
+.ds-card--elevated {
+  background: var(--uems-bg-primary);
+  box-shadow: 0 1px 4px rgba(13, 17, 29, 0.12); /* Shadow-Small (no exact --uems-shadow-* token) */
+}
+.ds-card--outlined {
+  background: var(--uems-bg-primary);
+  border: 1px solid var(--uems-border-tertiary); /* #E1E4EB */
+}
+.ds-card--filled {
+  background: var(--uems-bg-accent-primary-subtle); /* #F0F4FD */
+}
+.ds-card--plain {
+  background: var(--uems-bg-primary); /* #FFFFFF — flat white */
+}
+
+/* ── Hover — the source shifts the whole surface (opt-in: only fires when the
+   card sits inside a hoverable wrapper, e.g. an <a>). Guarded against disabled.
+     elevated/outlined/plain → BG-Primary-hover #F0F2F5 (elevated also → Shadow-Medium)
+     filled                  → BG-Accent-Primary_action #EAF0FC
+   Outlined border stays #E1E4EB (source uses Border-Disabled, same colour). */
+.ds-card--elevated:not(.ds-card--disabled):hover {
+  background: var(--uems-bg-primary-hover);
+  box-shadow: 0 2px 8px rgba(13, 17, 29, 0.12); /* Shadow-Medium */
+}
+.ds-card--outlined:not(.ds-card--disabled):hover {
+  background: var(--uems-bg-primary-hover);
+}
+.ds-card--filled:not(.ds-card--disabled):hover {
+  background: var(--uems-bg-accent-primary-action); /* #EAF0FC */
+}
+.ds-card--plain:not(.ds-card--disabled):hover {
+  background: var(--uems-bg-primary-hover);
+}
+
+/* ── Disabled — source = opacity 0.5 + surface → BG-Disabled_subtle #F0F2F5;
+   outlined border → Border-Secondary #C3C9D6. Elevated keeps Shadow-Small. */
+.ds-card--disabled {
+  opacity: 0.5;
+  background: var(--uems-bg-disabled-subtle); /* #F0F2F5 */
+}
+.ds-card--disabled.ds-card--outlined { border-color: var(--uems-border-secondary); } /* #C3C9D6 */
+
+/* ── Selected — accent ring overlay, visual only (no click/keyboard
+   semantics; driven by a parent list/grid marking a card chosen) ──────── */
+.ds-card__selected-ring {
+  display: none;
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--uems-border-accent);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.ds-card--selected .ds-card__selected-ring { display: block; }
+
+/* ── Media — full-bleed, top corners match the card, bottom square where
+   it meets the header ──────────────────────────────────────────────── */
+.ds-card__media {
+  width: 100%;
+  aspect-ratio: 320 / 140; /* Figma media frame proportion */
+  overflow: hidden;
+  border-radius: var(--uems-radius-l, 16px) var(--uems-radius-l, 16px) 0 0;
+  flex-shrink: 0;
+}
+.ds-card__media > * { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ds-card__media-placeholder { width: 100%; height: 100%; background: var(--uems-bg-disabled); }
+
+/* ── Header ───────────────────────────────────────────────────────────
+   Plain HORIZONTAL row, space-between — dir="rtl" mirrors this natively
+   (title moves right, action moves left). Do NOT add row-reverse. */
+.ds-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+/* Leading icon-badge (synced to Figma v2): 36×36 tinted square, radius 6,
+   info-circle glyph. Fixed size — never grows/shrinks. */
+.ds-card__leading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: var(--uems-bg-info-primary);
+  color: var(--uems-icon-info);
+}
+/* header-text fills the row so the badge + text group on the leading edge and
+   the action stays on the trailing edge (Figma: Header Text layoutGrow 1). */
+.ds-card__header-text { flex: 1 1 auto; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ds-card__title {
+  margin: 0;
+  font-size: 14px;                 /* Small */
+  font-weight: var(--font-weight-semibold, 600);
+  line-height: 20px;
+  color: var(--uems-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Medium + Large title = 16px/24 (Figma v2 — was previously 14px on Medium). */
+.ds-card--medium .ds-card__title,
+.ds-card--large .ds-card__title { font-size: 16px; line-height: 24px; }
+.ds-card__subtitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  color: var(--uems-text-secondary);
+}
+/* Header action = the shared <ds-icon-button> component (owns its own
+   size/type/states/focus ring) — no custom button styling here, just
+   placement: keep it on the trailing edge and never let it shrink. */
+.ds-card__header-action { display: inline-flex; flex-shrink: 0; }
+
+/* Dividers removed in Figma v2 — sections are separated by padding alone. */
+
+/* ── Body / Content slot — height:auto is load-bearing, see file header. */
+.ds-card__body { flex: 1 1 auto; min-width: 0; }
+.ds-card__default-content {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--uems-text-secondary);
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────
+   Plain HORIZONTAL row, flex-end — dir="rtl" mirrors this natively too
+   (the link moves to the visual left). Do NOT add row-reverse. */
+/* Footer action = the shared <ds-text-link> component (owns its own type/
+   colour/states) — no custom link styling here, just placement. */
+.ds-card__footer { display: flex; justify-content: flex-end; }
+
+/* ── Size — padding + inter-section spacing (verified against the Figma
+   source). Body top-padding is 0 at every size: the header's bottom padding
+   already provides the header↔body gap, so the body only pads R/B/L. */
+.ds-card--small .ds-card__header,
+.ds-card--small .ds-card__body,
+.ds-card--small .ds-card__footer { padding-left: 12px; padding-right: 12px; }
+.ds-card--small .ds-card__header { padding-top: 12px; padding-bottom: 12px; }
+.ds-card--small .ds-card__body { padding-top: 0; padding-bottom: 12px; }
+.ds-card--small .ds-card__footer { padding-top: 8px; padding-bottom: 8px; }
+
+.ds-card--medium .ds-card__header,
+.ds-card--medium .ds-card__body { padding-left: 16px; padding-right: 16px; }
+.ds-card--medium .ds-card__header { padding-top: 16px; padding-bottom: 16px; }
+.ds-card--medium .ds-card__body { padding-top: 0; padding-bottom: 16px; }
+.ds-card--medium .ds-card__footer { padding: 12px 16px; }
+
+.ds-card--large .ds-card__header,
+.ds-card--large .ds-card__body { padding-left: 20px; padding-right: 20px; }
+.ds-card--large .ds-card__header { padding-top: 20px; padding-bottom: 20px; }
+.ds-card--large .ds-card__body { padding-top: 0; padding-bottom: 20px; }
+.ds-card--large .ds-card__footer { padding: 16px 20px; }
+
+/* ── RTL — text-align is the only explicit rule needed; Header/Footer are
+   plain flex rows and mirror on their own via inherited direction:rtl.
+   Adding flex-direction:row-reverse here would double-reverse them back
+   to LTR order — the same bug already fixed in ds-kpi-card/ds-badge. */
+.ds-card[dir="rtl"] .ds-card__title,
+.ds-card[dir="rtl"] .ds-card__subtitle,
+.ds-card[dir="rtl"] .ds-card__default-content { text-align: right; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-card { transition: none; }
+}

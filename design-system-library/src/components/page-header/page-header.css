@@ -1,0 +1,356 @@
+/* =============================================================================
+   ds-page-header / .ds-page-header
+   Composition: breadcrumb + title + actions + summary + tabs.
+   ============================================================================= */
+
+/* `:host` never matches — page-header renders in LIGHT DOM — so style the tag
+   too. Without this the host stays display:inline and its block children get an
+   unreliable (often 0) width, breaking measurement, sticky, and the RO fitter. */
+:host,
+ds-page-header { display: block; font-family: var(--font-family-sans); width: 100%; }
+
+.ds-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 0;
+  width: 100%;
+  background: var(--uems-bg-base);
+  /* Responsive to the header's OWN width (works in a narrow panel, not just a
+     narrow viewport) — see @container rule below. */
+  container-type: inline-size;
+}
+
+/* Breadcrumb is a real <ds-breadcrumb> now — it owns crumb colors, separators,
+   hover and current-page styling. Here we only position it within the header. */
+.ds-page-header__breadcrumbs {
+  display: block;
+  padding: 0 20px;
+}
+
+.ds-page-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+}
+/* Title-main: back + leading icon + the title/description stack, laid out as a
+   row. Default: centre the icon on the title line (correct for a title-only
+   header — a 40px tile beside a lone 24px title). */
+.ds-page-header__title-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+/* With a subtitle (summary or description) the block is taller, so centring
+   drags the icon down to the middle. Top-align it to the title instead. */
+.ds-page-header__title-main:has(.ds-page-header__summary),
+.ds-page-header__title-main:has(.ds-page-header__description) {
+  align-items: flex-start;
+}
+/* Title stack: leading row + optional description, vertically stacked with
+   4px gap per spec. */
+.ds-page-header__title-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.ds-page-header__leading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+/* Leading icon — a grey tile beside the title+description block. */
+.ds-page-header__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md, 8px);
+  background: var(--uems-bg-tertiary);
+  color: var(--uems-icon-primary, var(--uems-text-primary));
+  transition: width 200ms var(--ease-standard, ease), height 200ms var(--ease-standard, ease);
+}
+.ds-page-header__icon svg {
+  transition: width 200ms var(--ease-standard, ease), height 200ms var(--ease-standard, ease);
+}
+.ds-page-header__description {
+  margin: 0;
+  font-size: var(--font-size-13);
+  line-height: 20px;
+  color: var(--uems-text-secondary);
+}
+.ds-page-header__title {
+  margin: 0;
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-semibold);
+  line-height: 24px;
+  color: var(--uems-text-primary);
+  /* Truncate a long title instead of pushing the actions off-screen. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Star + back are bare icon buttons; the chevron is now a <ds-icon-button>
+   (styles itself). */
+.ds-page-header__star,
+.ds-page-header__back {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--uems-text-secondary);
+  line-height: 0;
+  display: inline-flex;
+}
+.ds-page-header__star { color: var(--uems-text-primary); }
+.ds-page-header__star[aria-pressed="true"] { color: var(--uems-text-warning, #E78700); }
+
+/* Advanced-filter affordance — hidden until the title row is hovered or focused
+   (keyboard-accessible via :focus-within), then fades in. Reveals in place so the
+   layout doesn't jump. */
+.ds-page-header__title-filter {
+  position: relative;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast, 140ms) var(--ease-standard, ease);
+}
+.ds-page-header__leading:hover .ds-page-header__title-filter,
+.ds-page-header__leading:focus-within .ds-page-header__title-filter {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* Stay visible while its popover is open (`filter-active`) or a filter is in
+   effect (`filter-applied`) — even after hover/focus moves into the popover.
+   Set by the host consumer; the attribute lives on the <ds-page-header> host. */
+ds-page-header[filter-active] .ds-page-header__title-filter,
+ds-page-header[filter-applied] .ds-page-header__title-filter {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* Applied indicator — an accent dot on the filter icon. */
+ds-page-header[filter-applied] .ds-page-header__title-filter::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  inset-inline-end: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full, 999px);
+  background: var(--uems-bg-accent-solid, var(--uems-icon-accent-button, #0C8844));
+  box-shadow: 0 0 0 1.5px var(--uems-bg-primary, #fff);
+}
+
+/* Title chevron dropdown (opened by the chevron when `titleMenu` has items). */
+.ds-page-header__title-menu { position: relative; display: inline-flex; align-items: center; }
+.ds-page-header__title-menu-dd {
+  position: absolute;
+  top: calc(100% + var(--spacing-4, 4px));
+  inset-inline-start: 0;
+  z-index: var(--z-dropdown, 50);
+}
+
+.ds-page-header__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+/* Consumer-slotted action buttons live inside this span — lay them out with a
+   gap so adjacent buttons don't touch (spec: 8px between actions). */
+.ds-page-header__action-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Summary metadata is a <ds-description-list> now — the component owns
+   term/value styling. Here we only inset it to match the header content and
+   strip the list's own container padding so it lines up at 20px. No divider
+   above the summary — it sits directly under the title row, spaced by the
+   header's column gap. */
+/* Summary now lives inside the title-stack (as the subtitle, in place of the
+   description) — the title-row already owns the 20px inline padding, so none here. */
+.ds-page-header__summary {
+  padding: 0;
+}
+/* Lay the description-list out as a wrapping horizontal strip (term beside value,
+   pairs flow left-to-right and wrap). Flex overrides the component's CSS-columns;
+   the `!important`s keep pairs horizontal even under the list's mobile @media. */
+/* Host must be block/full-width, else the inline custom element collapses to 0
+   and squashes the inner flex strip. */
+.ds-page-header__summary ds-description-list { display: block; width: 100%; }
+.ds-page-header__summary .ds-description-list {
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;   /* all pairs share a baseline row */
+  gap: 4px 20px;
+}
+.ds-page-header__summary .ds-description-list__item {
+  flex-direction: row !important;
+  align-items: baseline !important;
+  gap: 8px !important;
+  /* Strip the component's own item spacing so the summary lines up with the
+     title. `margin-block-end` (16 on all but :last-child) made the last item
+     taller in the stretch row; `padding` (8 all sides) both pushed the summary
+     text ~8px below the title (perceived "big gap") AND indented it 8px past the
+     title's left edge (the left-alignment break). The dl's flex gap owns spacing. */
+  margin-block-end: 0 !important;
+  padding: 0 !important;
+  break-inside: avoid;
+}
+.ds-page-header__summary .ds-description-list__value { flex: 0 0 auto !important; }
+
+.ds-page-header__tabs {
+  padding: 0 20px;
+  /* Keep the page-header's own bottom border as the single header separator. */
+  border-bottom: 1px solid var(--uems-border-tertiary);
+  transition: margin-top 260ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+/* Hide only the tab bar component's own underline so it doesn't draw a second,
+   duplicate line over the wrapper's border. The active tab's accent underline
+   still sits on top of the wrapper border (standard tab pattern). Scoped to the
+   page header so standalone ds-tab-bar-horizontal instances keep their underline. */
+.ds-page-header__tabs .ds-tab-bar-horizontal--underline {
+  border-bottom: 0;
+}
+
+/* ── Collapse-on-scroll (opt-in via `collapse-on-scroll`) ─────────────────
+   The JS adds these classes to the host. `--sticky` pins the header when it
+   lives inside the scroll container. `--collapsed` (scroll-down) condenses the
+   header to the title row + actions — breadcrumbs, description and summary are
+   hidden; tabs stay pinned/visible. Scroll-up removes `--collapsed`. */
+.ds-page-header--sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--uems-bg-primary, var(--uems-bg-base));
+}
+/* Smooth collapse: the parts that hide on scroll-down animate their height +
+   opacity. Generous max-heights keep normal content from clipping while still
+   giving max-height a numeric value to transition from. Only applied when the
+   feature is on (host carries `--sticky`) so non-collapsing headers are untouched. */
+.ds-page-header--collapsible .ds-page-header__breadcrumbs { max-height: 48px; }
+.ds-page-header--collapsible .ds-page-header__description  { max-height: 96px; }
+.ds-page-header--collapsible .ds-page-header__summary      { max-height: 240px; }
+.ds-page-header--collapsible .ds-page-header__breadcrumbs,
+.ds-page-header--collapsible .ds-page-header__description,
+.ds-page-header--collapsible .ds-page-header__summary {
+  overflow: hidden;
+  transition: max-height 260ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+              opacity    180ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+              margin     260ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+/* Collapsed: shrink to 0 and pull back the surrounding flex `gap` (12px between
+   header parts, 4px between title and description) so nothing leaves a hole. */
+.ds-page-header--collapsed .ds-page-header__breadcrumbs { max-height: 0; opacity: 0; margin-bottom: -12px; }
+.ds-page-header--collapsed .ds-page-header__description  { max-height: 0; opacity: 0; margin-top: -4px; }
+/* Summary lives INSIDE the title-stack (4px internal gap), so reclaim only that
+   4px on collapse — using -12px over-pulls and shrinks the stack below the
+   title's own height, which knocks the title off-centre from the icon/button. */
+.ds-page-header--collapsed .ds-page-header__summary      { max-height: 0; opacity: 0; margin-top: -4px; }
+/* Collapsed: shrink the leading icon tile to 28px so it matches the xsmall
+   action button's height (40→28 tile, 24→16 glyph), and pull the tabs up so the
+   title row sits closer to the tab bar. */
+.ds-page-header--collapsed .ds-page-header__icon { width: 28px; height: 28px; }
+.ds-page-header--collapsed .ds-page-header__icon svg { width: 16px; height: 16px; }
+.ds-page-header--collapsed .ds-page-header__tabs { margin-top: -10px; }
+@media (prefers-reduced-motion: reduce) {
+  .ds-page-header--collapsible .ds-page-header__breadcrumbs,
+  .ds-page-header--collapsible .ds-page-header__description,
+  .ds-page-header--collapsible .ds-page-header__summary { transition: none; }
+}
+/* Bottom rule — shown only when there are no tabs (the tab bar's own underline
+   is the separator otherwise). Inset 20px to match the header content. */
+/* Full-width divider — edge to edge, matching the tab-row border-bottom so the
+   separator width is consistent across every structure variant (not inset like
+   the header content). */
+.ds-page-header__divider { padding: 0; }
+.ds-page-header__tab-list {
+  display: inline-flex;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ds-page-header__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  color: var(--uems-text-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  font-family: inherit;
+  margin-bottom: -1px;
+}
+.ds-page-header__tab--active {
+  color: var(--uems-text-accent-primary);
+  border-bottom-color: var(--uems-border-accent);
+}
+.ds-page-header__tab-count {
+  font-size: 10px;
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-secondary);
+  background: var(--uems-bg-secondary-alt);
+  border-radius: var(--radius-full);
+  padding: 1px 6px;
+}
+.ds-page-header__tab--active .ds-page-header__tab-count { background: var(--uems-bg-accent-primary); color: var(--uems-text-accent-link); }
+
+/* RTL — dir="rtl" alone reverses the flex inline axis for the title row and
+   the actions cluster, putting the title on the right and actions on the
+   left. We only add text-align and a manual flip for the chevron-down icon
+   inside the title-row (since the title menu chevron isn't directional in
+   the same way as the back arrow). */
+.ds-page-header[dir="rtl"] { text-align: right; }
+.ds-page-header[dir="rtl"] .ds-page-header__breadcrumbs { direction: rtl; text-align: right; }
+.ds-page-header[dir="rtl"] .ds-page-header__chevron ds-icon { transform: scaleY(1); }
+
+/* ---- Responsive (container-query, at the END so it wins by source order) ----
+   When the header's own width is narrow, the title takes the full first row and
+   the actions drop to their own row, right-aligned — instead of crushing the
+   title. Works in a narrow panel, not just a narrow viewport. */
+@container (max-width: 560px) {
+  .ds-page-header__title-row { flex-wrap: wrap; }
+  .ds-page-header__title-main { flex: 0 0 100%; }
+  /* Actions wrap to their own row; anchor the group to the LEADING edge so it
+     lines up with the left-aligned title/summary instead of floating far right.
+     Button ORDER is unchanged — the primary is still the rightmost of the group. */
+  .ds-page-header__actions { margin-inline-start: 0; }
+}
+
+/* Narrow tier (≤400px) — true phone / very narrow panel. Reclaim horizontal
+   space: tighten the content inset and shrink the leading icon. (The actions
+   already sit on their own right-aligned row from the 560 tier; secondary
+   actions fold into the ⋮ overflow via the JS fitter below.) */
+@container (max-width: 400px) {
+  .ds-page-header__breadcrumbs,
+  .ds-page-header__title-row,
+  .ds-page-header__tabs { padding-inline: 12px; }
+  .ds-page-header__icon { width: 32px; height: 32px; }
+  .ds-page-header__icon svg { width: 20px; height: 20px; }
+}
+
+/* Auto actions-overflow — the JS folds secondary actions into this ⋮ + dropdown
+   when the header is narrow (≤480px) and carries 2+ actions. The ⋮ stays compact
+   even when the kept primary action goes full-width above. */
+.ds-page-header__actions-overflow { position: relative; display: inline-flex; flex: none; }
+.ds-page-header__actions-overflow-dd {
+  position: absolute;
+  top: calc(100% + var(--spacing-4, 4px));
+  inset-inline-end: 0;
+}

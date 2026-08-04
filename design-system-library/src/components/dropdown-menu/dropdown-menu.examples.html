@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Dropdown Menu — examples</title>
+  <link rel="stylesheet" href="../../styles/index.css" />
+  <script type="module" src="../../index.js"></script>
+  <style>
+    body { padding: 24px; font-family: var(--font-family-sans); display: flex; gap: 32px; flex-wrap: wrap; }
+    .col { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+    h3 { margin: 0; }
+  </style>
+</head>
+<body>
+  <h1 style="flex-basis:100%">Dropdown Menu</h1>
+
+  <div class="col">
+    <h3>Single select</h3>
+    <ds-dropdown-menu id="m1" type="single" open></ds-dropdown-menu>
+  </div>
+
+  <div class="col">
+    <h3>Multi select</h3>
+    <ds-dropdown-menu id="m2" type="multi" header-text="Filter by status" open></ds-dropdown-menu>
+  </div>
+
+  <div class="col">
+    <h3>With sections</h3>
+    <ds-dropdown-menu id="m3" type="sections" open></ds-dropdown-menu>
+  </div>
+
+  <script type="module">
+    import '../../index.js';
+    const m1 = document.getElementById('m1');
+    m1.items = [
+      { label: 'Edit', value: 'edit', icon: 'edit' },
+      { label: 'Duplicate', value: 'duplicate', icon: 'add' },
+      { label: 'Archive', value: 'archive', icon: 'file-shield' },
+      { label: 'Delete', value: 'delete', icon: 'delete' },
+    ];
+
+    const m2 = document.getElementById('m2');
+    m2.items = [
+      { label: 'Active', value: 'active', selected: true },
+      { label: 'Pending', value: 'pending' },
+      { label: 'Archived', value: 'archived' },
+      { label: 'Deleted', value: 'deleted', disabled: true },
+    ];
+
+    const m3 = document.getElementById('m3');
+    m3.items = [
+      { type: 'heading', label: 'Recent' },
+      { label: 'Dashboard',  value: 'dash',  icon: 'add-widget' },
+      { label: 'Reports',    value: 'rep',   icon: 'chart-emptystate' },
+      { type: 'divider' },
+      { type: 'heading', label: 'Account' },
+      { label: 'Settings',   value: 'set',   icon: 'config' },
+      { label: 'Sign out',   value: 'out',   icon: 'close' },
+    ];
+  </script>
+</body>
+</html>

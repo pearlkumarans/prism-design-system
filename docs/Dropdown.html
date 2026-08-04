@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dropdown Menu — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/dropdown-menu/dropdown-menu.css">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/button/button.js"></script>
+<script type="module" src="../design-system-library/src/components/dropdown-menu/dropdown-menu.js"></script>
+<style>
+  .demo-dd-section { margin-bottom: 28px; }
+  .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+  .demo-dd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+  .demo-dd-frame { padding: 24px; background: var(--prism-surface, rgba(255,255,255,.02)); border: 1px solid var(--prism-border, rgba(255,255,255,.08)); border-radius: 14px; display: flex; align-items: flex-start; justify-content: center; min-height: 280px; }
+  .demo-dd-frame ds-dropdown-menu { position: relative; }
+  /* Footer links shouldn't wrap onto 2 lines when the panel is narrow. */
+  .ds-dropdown-menu__footer-link { white-space: nowrap; }
+  /* (Width override removed — the component now hugs content with a min-width
+     of 280px for multi-select, so the 320px fixed width is no longer needed.) */
+  /* Apply button visually touches the right edge with the spec's 12px footer
+     padding because the primary fill is strong; bump to 16px for breathing room. */
+  ds-dropdown-menu[type="multi-select"] .ds-dropdown-menu__footer { padding: var(--spacing-8) var(--spacing-16); }
+</style>
+</head>
+<body class="page-dropdown">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link active">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Dropdown Menu</h1>
+        <p class="page-desc">A dropdown opens a short list under a trigger &mdash; the row actions for a table, the user menu under an avatar, the filter options under a chip. Pick it when the choices live tucked away until the user asks for them. For a long, searchable list of options inside a form, use a Dropdown Select; for filtering across many tags at once, use a Tab filter.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram" style="padding:72px 100px;">
+            <div style="display:flex;gap:60px;align-items:flex-start;justify-content:center;flex-wrap:wrap;margin:20px 0;">
+              <!-- Single Select anatomy -->
+              <div style="position:relative;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--prism-text-muted);margin-bottom:10px;text-align:center;">Single Select</div>
+                <div class="dd-panel" style="position:relative;overflow:visible;">
+                  <!-- 1 Panel Container: marker left of panel, horizontal line right -->
+                  <div style="position:absolute;right:calc(100% + 6px);top:10px;display:flex;align-items:center;gap:6px;z-index:5;"><span class="anat-marker-inline">1</span><div style="width:28px;height:2px;background:#2563eb;"></div></div>
+                  <div class="dd-item" style="position:relative;">
+                    <!-- 2 Action Item: marker right of Edit row, horizontal line left -->
+                    <div style="position:absolute;left:calc(100% + 6px);top:50%;transform:translateY(-50%);display:flex;flex-direction:row-reverse;align-items:center;gap:6px;z-index:5;"><span class="anat-marker-inline">2</span><div style="width:28px;height:2px;background:#2563eb;"></div></div>
+                    <ds-icon class="dd-item-icon" name="file-edit" size="16" style="color:#626870;"></ds-icon>
+                    <span>Edit</span>
+                  </div>
+                  <div class="dd-item">
+                    <ds-icon class="dd-item-icon" name="copy" size="16" style="color:#626870;"></ds-icon>
+                    <span>Duplicate</span>
+                  </div>
+                  <div class="dd-item">
+                    <ds-icon class="dd-item-icon" name="share-01" size="16" style="color:#626870;"></ds-icon>
+                    <span>Share</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Multi Select anatomy -->
+              <div style="position:relative;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--prism-text-muted);margin-bottom:10px;text-align:center;">Multi Select</div>
+                <div class="dd-panel" style="position:relative;overflow:visible;">
+                  <div class="dd-header" style="position:relative;">
+                    <!-- 6 Header: marker above, vertical line down -->
+                    <div style="position:absolute;left:20px;bottom:calc(100% + 6px);display:flex;flex-direction:column;align-items:center;gap:4px;z-index:5;"><span class="anat-marker-inline">6</span><div style="width:2px;height:14px;background:#2563eb;"></div></div>
+                    <span>Select Options</span>
+                    <ds-icon class="dd-header-dismiss" name="close" size="16" style="color:#626870;"></ds-icon>
+                  </div>
+                  <div class="dd-item" style="position:relative;">
+                    <!-- 3 Checkbox Item: marker right of Option A, horizontal line left -->
+                    <div style="position:absolute;left:calc(100% + 6px);top:50%;transform:translateY(-50%);display:flex;flex-direction:row-reverse;align-items:center;gap:6px;z-index:5;"><span class="anat-marker-inline">3</span><div style="width:28px;height:2px;background:#2563eb;"></div></div>
+                    <div class="dd-item-check checked"><ds-icon name="check" size="10" style="color:#fff;"></ds-icon></div>
+                    <span>Option A</span>
+                  </div>
+                  <div class="dd-item">
+                    <div class="dd-item-check"></div>
+                    <span>Option B</span>
+                  </div>
+                  <div class="dd-item">
+                    <div class="dd-item-check"></div>
+                    <span>Option C</span>
+                  </div>
+                  <div class="dd-footer" style="position:relative;">
+                    <!-- 7 Footer: marker below, vertical line up -->
+                    <div style="position:absolute;right:20px;top:calc(100% + 6px);display:flex;flex-direction:column-reverse;align-items:center;gap:4px;z-index:5;"><span class="anat-marker-inline">7</span><div style="width:2px;height:14px;background:#2563eb;"></div></div>
+                    <button class="dd-clear-btn">Clear All</button>
+                    <button class="dd-apply-btn">Apply</button>
+                  </div>
+                </div>
+              </div>
+              <!-- With Sections anatomy -->
+              <div style="position:relative;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--prism-text-muted);margin-bottom:10px;text-align:center;">With Sections</div>
+                <div class="dd-panel" style="position:relative;overflow:visible;">
+                  <div class="dd-section-heading" style="position:relative;">
+                    Actions
+                    <!-- 4 Section Heading: marker right, horizontal line left -->
+                    <div style="position:absolute;left:calc(100% + 6px);top:50%;transform:translateY(-50%);display:flex;flex-direction:row-reverse;align-items:center;gap:6px;z-index:5;"><span class="anat-marker-inline">4</span><div style="width:28px;height:2px;background:#2563eb;"></div></div>
+                  </div>
+                  <div class="dd-item">
+                    <ds-icon class="dd-item-icon" name="file-edit" size="16" style="color:#626870;"></ds-icon>
+                    <span>Edit</span>
+                  </div>
+                  <div class="dd-item">
+                    <ds-icon class="dd-item-icon" name="copy" size="16" style="color:#626870;"></ds-icon>
+                    <span>Duplicate</span>
+                  </div>
+                  <div class="dd-divider" style="position:relative;">
+                    <!-- 5 Divider: marker right, horizontal line left -->
+                    <div style="position:absolute;left:calc(100% + 6px);top:50%;transform:translateY(-50%);display:flex;flex-direction:row-reverse;align-items:center;gap:6px;z-index:5;"><span class="anat-marker-inline">5</span><div style="width:28px;height:2px;background:#2563eb;"></div></div>
+                  </div>
+                  <div class="dd-section-heading">More</div>
+                  <div class="dd-item">
+                    <ds-icon class="dd-item-icon" name="share-01" size="16" style="color:#626870;"></ds-icon>
+                    <span>Share</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Panel Container</strong><span>White background (#FFFFFF), 8px border-radius, elevation shadow, 240px min-width, 4px vertical padding.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Action Item</strong><span>Icon + label row. Used in Single Select and With Sections. Closes menu on click.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Checkbox Item</strong><span>Checkbox + label row. Used in Multi Select. Toggles selection without closing.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Section Heading</strong><span>Uppercase muted label for grouping items. Used in With Sections type.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Divider</strong><span>1px horizontal rule separating groups in the With Sections type.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Header Bar</strong><span>Title text + dismiss button. Shown in Multi Select when Show Header is ON.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">7</span><div><strong>Footer Bar</strong><span>Clear All text button + Apply primary button. Shown in Multi Select when Show Footer is ON.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Every dropdown type plus real triggers (avatar menu, row actions, filter chip) side by side. Click any trigger and pick an option &mdash; this is exactly how it behaves in production.</p>
+
+            <style>
+              .page-dropdown .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+              .page-dropdown .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; }
+              .page-dropdown .demo-container .demo-canvas {
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+                min-height: 0 !important;
+                flex-direction: column !important;
+                padding: 32px !important;
+                gap: 32px !important;
+              }
+              .page-dropdown .demo-dd-section { display: flex; flex-direction: column; gap: 14px; }
+              .page-dropdown .demo-dd-section > .demo-group-label {
+                font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+                color: var(--prism-text-muted); text-transform: uppercase;
+                margin: 0; text-align: left; width: auto;
+              }
+              .page-dropdown .demo-dd-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px 24px;
+                align-items: start;
+              }
+              @media (max-width: 880px) {
+                .page-dropdown .demo-dd-grid { grid-template-columns: 1fr; }
+              }
+              .page-dropdown .demo-dd-frame {
+                display: flex; align-items: flex-start; justify-content: flex-start;
+                padding: 16px;
+                border: 1px solid var(--prism-border);
+                border-radius: 12px;
+                background: rgba(255,255,255,0.02);
+                min-height: 180px;
+              }
+              [data-theme="light"] .page-dropdown .demo-dd-frame {
+                background: rgba(255,255,255,0.55);
+                border-color: rgba(37,99,235,0.1);
+              }
+              .page-dropdown .demo-dd-caption {
+                font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+                color: var(--prism-text-muted); text-transform: uppercase;
+                margin-bottom: 8px;
+              }
+              .page-dropdown .demo-realworld-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+              }
+              @media (max-width: 880px) {
+                .page-dropdown .demo-realworld-grid { grid-template-columns: 1fr; }
+              }
+              .page-dropdown .demo-realworld-card {
+                padding: 18px;
+                border: 1px solid var(--prism-border);
+                border-radius: 12px;
+                background: rgba(255,255,255,0.02);
+              }
+              [data-theme="light"] .page-dropdown .demo-realworld-card {
+                background: rgba(255,255,255,0.55);
+                border-color: rgba(37,99,235,0.1);
+              }
+              .page-dropdown .demo-realworld-card-label {
+                font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+                color: var(--prism-text-muted); text-transform: uppercase;
+                margin-bottom: 14px;
+              }
+              .page-dropdown .demo-trigger-stack {
+                position: relative;
+                display: inline-flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+              }
+              .page-dropdown .demo-trigger-btn {
+                display: inline-flex; align-items: center; gap: 6px;
+                padding: 6px 12px;
+                background: rgba(37,99,235,0.08);
+                color: var(--prism-violet);
+                border: 1px solid rgba(37,99,235,0.2);
+                border-radius: 8px;
+                font-size: 13px; font-weight: 500;
+                cursor: default;
+              }
+              .page-dropdown .demo-trigger-btn svg { width: 12px; height: 12px; }
+              .page-dropdown .demo-trigger-avatar {
+                display: inline-flex; align-items: center; gap: 8px;
+                padding: 4px 12px 4px 4px;
+                background: rgba(37,99,235,0.08);
+                border: 1px solid rgba(37,99,235,0.2);
+                border-radius: 999px;
+                font-size: 13px; font-weight: 500;
+                color: var(--prism-violet);
+                cursor: default;
+                white-space: nowrap;
+                width: max-content;
+                max-width: 100%;
+              }
+              .page-dropdown .demo-trigger-avatar .av {
+                width: 24px; height: 24px;
+                min-width: 24px; min-height: 24px;
+                border-radius: 50%;
+                background: linear-gradient(135deg,#7c3aed,#2563eb);
+                color:#fff; display:inline-flex; align-items:center; justify-content:center;
+                font-size: 11px; font-weight: 600;
+                flex-shrink: 0;
+              }
+              .page-dropdown .demo-trigger-avatar > svg {
+                flex-shrink: 0;
+                width: 12px; height: 12px;
+              }
+              .page-dropdown .demo-trigger-btn {
+                white-space: nowrap;
+                width: max-content;
+                max-width: 100%;
+              }
+              .page-dropdown .demo-trigger-btn > svg {
+                flex-shrink: 0;
+                width: 14px; height: 14px;
+              }
+              .page-dropdown .demo-trigger-row-action {
+                display: inline-flex; align-items: center; justify-content: center;
+                width: 28px; height: 28px;
+                border-radius: 6px;
+                color: var(--prism-text-muted);
+                cursor: default;
+                background: rgba(37,99,235,0.08);
+              }
+              .page-dropdown .demo-trigger-row-action svg { width: 16px; height: 16px; }
+              .page-dropdown .demo-row-card {
+                display: flex; align-items: center; justify-content: space-between;
+                padding: 8px 12px;
+                border: 1px solid var(--prism-border);
+                border-radius: 8px;
+                font-size: 13px;
+              }
+              .page-dropdown .demo-dd-frame ds-dropdown-menu { position: relative; }
+            </style>
+
+            <div class="demo-container">
+              <!-- Mac-window toolbar -->
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Dropdown Menu &middot; 5 types + real-world trigger patterns</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Default -->
+                <div class="demo-dd-section">
+                  <div class="demo-group-label">Default &mdash; plain action list (<code>type="default"</code>)</div>
+                  <div class="demo-dd-grid">
+                    <div class="demo-dd-frame">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <div class="demo-dd-caption">Plain list</div>
+                        <ds-dropdown-menu id="ov-default" type="default" open></ds-dropdown-menu>
+                      </div>
+                    </div>
+                    <div class="demo-dd-frame">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <div class="demo-dd-caption">With title row</div>
+                        <ds-dropdown-menu id="ov-default-title" type="default" show-title title="Account" open></ds-dropdown-menu>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Select / Select-tick -->
+                <div class="demo-dd-section">
+                  <div class="demo-group-label">Select &mdash; single-choice (<code>type="select"</code> radios &middot; <code>type="select-tick"</code> trailing tick)</div>
+                  <div class="demo-dd-grid">
+                    <div class="demo-dd-frame">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <div class="demo-dd-caption">Radios &mdash; sort order</div>
+                        <ds-dropdown-menu id="ov-select" type="select" open></ds-dropdown-menu>
+                      </div>
+                    </div>
+                    <div class="demo-dd-frame">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <div class="demo-dd-caption">Trailing tick &mdash; "View as" density</div>
+                        <ds-dropdown-menu id="ov-select-tick" type="select-tick" open></ds-dropdown-menu>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Multi-select -->
+                <div class="demo-dd-section">
+                  <div class="demo-group-label">Multi-select &mdash; checkbox rows + Apply / Cancel footer (<code>type="multi-select"</code>)</div>
+                  <div class="demo-dd-grid">
+                    <div class="demo-dd-frame">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <div class="demo-dd-caption">Default &mdash; checkboxes + select-all</div>
+                        <ds-dropdown-menu id="ov-multi" type="multi-select" show-select-all="false" show-reset open></ds-dropdown-menu>
+                      </div>
+                    </div>
+                    <div class="demo-dd-frame" dir="rtl">
+                      <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                        <div class="demo-dd-caption" style="text-align:right;">RTL &mdash; mirrored layout</div>
+                        <ds-dropdown-menu id="ov-multi-rtl" type="multi-select" rtl show-select-all="false" show-reset
+                          reset-text="استعادة الإعدادات الافتراضية" apply-label="تطبيق" cancel-label="إلغاء" open></ds-dropdown-menu>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action -->
+                <div class="demo-dd-section">
+                  <div class="demo-group-label">Action &mdash; leading icons + destructive last row (<code>type="action"</code>)</div>
+                  <div class="demo-dd-grid">
+                    <div class="demo-dd-frame">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <div class="demo-dd-caption">Row actions</div>
+                        <ds-dropdown-menu id="ov-action" type="action" open></ds-dropdown-menu>
+                      </div>
+                    </div>
+                    <div class="demo-dd-frame">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <div class="demo-dd-caption">With title row</div>
+                        <ds-dropdown-menu id="ov-action-title" type="action" show-title title="Row actions" open></ds-dropdown-menu>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Real-world trigger patterns -->
+                <div class="demo-dd-section">
+                  <div class="demo-group-label">Real-world trigger patterns</div>
+                  <div class="demo-realworld-grid">
+
+                    <!-- Avatar menu (default) -->
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">Avatar trigger &mdash; account menu</div>
+                      <div class="demo-trigger-stack">
+                        <span class="demo-trigger-avatar"><span class="av">A</span>Kumaran M
+                          <ds-icon name="chevron-down" size="16"></ds-icon>
+                        </span>
+                        <ds-dropdown-menu id="rw-avatar" type="action" show-title title="user@company.com" open></ds-dropdown-menu>
+                      </div>
+                    </div>
+
+                    <!-- Filter chip (multi-select) -->
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">Filter chip trigger &mdash; multi-select dropdown</div>
+                      <div class="demo-trigger-stack">
+                        <span class="demo-trigger-btn">
+                          <ds-icon name="filter" size="16"></ds-icon>
+                          Status &middot; 2 selected
+                          <ds-icon name="chevron-down" size="16"></ds-icon>
+                        </span>
+                        <ds-dropdown-menu id="rw-filter" type="multi-select" show-select-all="false" show-reset open></ds-dropdown-menu>
+                      </div>
+                    </div>
+
+                    <!-- Row kebab (action) -->
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">Row kebab trigger &mdash; contextual actions</div>
+                      <div class="demo-row-card" style="margin-bottom:14px;">
+                        <span style="font-weight:500;color:var(--prism-text);">MacBook-Pro-14</span>
+                        <span class="demo-trigger-row-action">
+                          <ds-icon name="more-vertical" size="16"></ds-icon>
+                        </span>
+                      </div>
+                      <ds-dropdown-menu id="rw-rowaction" type="action" open></ds-dropdown-menu>
+                    </div>
+
+                    <!-- View density (select-tick) -->
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">View-as trigger &mdash; single-select with tick</div>
+                      <div class="demo-trigger-stack">
+                        <span class="demo-trigger-btn">
+                          <ds-icon name="align-justify" size="16"></ds-icon>
+                          View as &middot; Comfortable
+                          <ds-icon name="chevron-down" size="16"></ds-icon>
+                        </span>
+                        <ds-dropdown-menu id="rw-density" type="select-tick" open></ds-dropdown-menu>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            </div>
+            <script type="module">
+              const setItems = (id, items) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                customElements.whenDefined('ds-dropdown-menu').then(() => { el.items = items; });
+              };
+              setItems('ov-default', [
+                { label: 'Profile', value: 'profile' },
+                { label: 'Settings', value: 'settings' },
+                { label: 'Help', value: 'help' },
+                { label: 'About', value: 'about' },
+              ]);
+              setItems('ov-default-title', [
+                { label: 'Profile', value: 'profile' },
+                { label: 'Settings', value: 'settings' },
+                { label: 'Sign out', value: 'signout' },
+              ]);
+              setItems('ov-select', [
+                { label: 'Newest first', value: 'new', selected: true },
+                { label: 'Oldest first', value: 'old' },
+                { label: 'Name (A → Z)', value: 'az' },
+                { label: 'Name (Z → A)', value: 'za' },
+              ]);
+              setItems('ov-select-tick', [
+                { label: 'Comfortable', value: 'comfortable', selected: true },
+                { label: 'Compact', value: 'compact' },
+                { label: 'Spacious', value: 'spacious' },
+              ]);
+              setItems('ov-multi', [
+                { type: 'selection-bar' },
+                { label: 'Active users', value: 'active', selected: true },
+                { label: 'Inactive users', value: 'inactive' },
+                { label: 'Suspended', value: 'suspended', selected: true },
+                { label: 'Invited', value: 'invited' },
+              ]);
+              setItems('ov-multi-rtl', [
+                { type: 'selection-bar', selectAllText: 'تحديد الكل', deselectAllText: 'إلغاء تحديد الكل', selectedText: '{n} محدد' },
+                { label: 'المستخدمون النشطون', value: 'active', selected: true },
+                { label: 'المستخدمون غير النشطين', value: 'inactive' },
+                { label: 'موقوف', value: 'suspended', selected: true },
+              ]);
+              setItems('ov-action', [
+                { label: 'Edit',      value: 'edit',      icon: 'edit' },
+                { label: 'Duplicate', value: 'duplicate', icon: 'copy' },
+                { label: 'Share',     value: 'share',     icon: 'share-01' },
+                { type: 'divider' },
+                { label: 'Delete',    value: 'delete',    icon: 'delete', danger: true },
+              ]);
+              setItems('ov-action-title', [
+                { label: 'Rename',         value: 'rename',  icon: 'edit' },
+                { label: 'Move',           value: 'move',    icon: 'folder' },
+                { label: 'Archive',        value: 'archive', icon: 'archive' },
+                { type: 'divider' },
+                { label: 'Delete forever', value: 'delete',  icon: 'delete', danger: true },
+              ]);
+              // Real-world trigger menus
+              setItems('rw-avatar', [
+                { label: 'Profile',  value: 'profile',  icon: 'user' },
+                { label: 'Settings', value: 'settings', icon: 'settings' },
+                { label: 'Help',     value: 'help',     icon: 'help-circle' },
+                { type: 'divider' },
+                { label: 'Sign out', value: 'signout',  icon: 'logout-01', danger: true },
+              ]);
+              setItems('rw-filter', [
+                { type: 'selection-bar' },
+                { label: 'Online',  value: 'online',  selected: true },
+                { label: 'Idle',    value: 'idle' },
+                { label: 'Offline', value: 'offline', selected: true },
+                { label: 'Unknown', value: 'unknown' },
+              ]);
+              setItems('rw-rowaction', [
+                { label: 'View details', value: 'view',      icon: 'eye' },
+                { label: 'Rename',       value: 'rename',    icon: 'edit' },
+                { label: 'Duplicate',    value: 'duplicate', icon: 'copy' },
+                { label: 'Export',       value: 'export',    icon: 'download' },
+                { type: 'divider' },
+                { label: 'Remove from inventory', value: 'remove', icon: 'delete', danger: true },
+              ]);
+              setItems('rw-density', [
+                { label: 'Comfortable', value: 'comfortable', selected: true },
+                { label: 'Compact',     value: 'compact' },
+                { label: 'Spacious',    value: 'spacious' },
+              ]);
+            </script>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Keep item labels short and scannable (1&#8211;4 words).</li>
+                <li>Use Multi Select when the user needs to confirm before applying.</li>
+                <li>Use With Sections when 2+ logical groupings exist with 3+ items each.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Use sentence-long descriptions as item labels.</li>
+                <li>Use Multi Select for single-pick scenarios (creates unnecessary friction).</li>
+                <li>Add a section with only 1 item &#8212; just place it in the flat list.</li>
+              </ul></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">The exact tokens, sizes, and colours behind every state of the dropdown. Use this tab when you&rsquo;re aligning a Figma node to code or matching a custom skin to the system.</p>
+
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">6 variants across Type (3) &times; Size (1) &times; RTL (2).</p>
+            <table class="size-table">
+              <thead><tr><th>Axis</th><th>Values</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Type</strong></td><td><code>Single Select</code>, <code>Multi Select</code>, <code>With Sections</code></td><td>Controls item type, header, and footer presence.</td></tr>
+                <tr><td><strong>Size</strong></td><td><code>Small</code></td><td>Currently only Small is available (Medium planned).</td></tr>
+                <tr><td><strong>RTL</strong></td><td><code>False</code>, <code>True</code></td><td>Mirrors the entire panel layout for RTL locales.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="states" class="doc-section-title">States</h2>
+            <p class="doc-section-subtitle">Each item in the panel has its own state &mdash; idle, hovered, keyboard-focused, selected, disabled. The user reads these the same way they read buttons: hover tells them what&rsquo;s clickable, focus tells them where the keyboard is, disabled tells them what they can&rsquo;t do right now.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-top:24px;">
+              <div style="padding:20px 12px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div class="dd-panel" style="width:auto;padding:0;box-shadow:none;border:none;margin:0 auto 12px;">
+                  <div class="dd-item" style="justify-content:center;">
+                    <ds-icon class="dd-item-icon" name="file-edit" size="16" style="color:#626870;"></ds-icon>
+                    <span>Edit</span>
+                  </div>
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Default</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Normal state</div>
+              </div>
+              <div style="padding:20px 12px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div class="dd-panel" style="width:auto;padding:0;box-shadow:none;border:none;margin:0 auto 12px;">
+                  <div class="dd-item" style="justify-content:center;background:rgba(37,99,235,0.06);">
+                    <ds-icon class="dd-item-icon" name="file-edit" size="16" style="color:#626870;"></ds-icon>
+                    <span>Edit</span>
+                  </div>
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Hover</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Light blue tint</div>
+              </div>
+              <div style="padding:20px 12px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div class="dd-panel" style="width:auto;padding:0;box-shadow:none;border:none;margin:0 auto 12px;">
+                  <div class="dd-item active" style="justify-content:center;">
+                    <ds-icon class="dd-item-icon" name="file-edit" size="16" style="color:#0C66E4;"></ds-icon>
+                    <span>Edit</span>
+                  </div>
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Active</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Blue text #0C66E4</div>
+              </div>
+              <div style="padding:20px 12px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div class="dd-panel" style="width:auto;padding:0;box-shadow:none;border:none;margin:0 auto 12px;">
+                  <div class="dd-item disabled" style="justify-content:center;">
+                    <ds-icon class="dd-item-icon" name="file-edit" size="16" style="color:#A5ADBA;"></ds-icon>
+                    <span>Edit</span>
+                  </div>
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Disabled</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Gray text #A5ADBA</div>
+              </div>
+              <div style="padding:20px 12px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div class="dd-panel" style="width:auto;padding:0;box-shadow:none;border:none;margin:0 auto 12px;">
+                  <div class="dd-item" style="justify-content:center;outline:2px solid #006AFF;outline-offset:-2px;border-radius:6px;">
+                    <ds-icon class="dd-item-icon" name="file-edit" size="16" style="color:#626870;"></ds-icon>
+                    <span>Edit</span>
+                  </div>
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Focus</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">2 px <code>border-accent-focus</code> ring</div>
+              </div>
+              <div style="padding:20px 12px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div class="dd-panel" style="width:auto;padding:0;box-shadow:none;border:none;margin:0 auto 12px;">
+                  <div class="dd-item" style="justify-content:space-between;gap:10px;">
+                    <span style="display:inline-flex;align-items:center;gap:8px;"><ds-icon class="dd-item-icon" name="file-edit" size="16" style="color:#626870;"></ds-icon><span>Edit</span></span>
+                    <ds-icon name="check" size="14" style="color:#006AFF;"></ds-icon>
+                  </div>
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Selected</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Multi Select &mdash; trailing check mark</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="sizes" class="doc-section-title">Sizes</h2>
+            <p class="doc-section-subtitle">Small is the only size available today &mdash; it sits comfortably under most triggers without dominating the row. A Medium variant is on the roadmap for hero menus.</p>
+            <table class="size-table">
+              <thead><tr><th>Size</th><th>Item Height</th><th>Item Padding</th><th>Font Size</th><th>Font Weight</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Small</strong></td><td>~32px</td><td>8px 12px</td><td>13px</td><td>400</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="color-tokens" class="doc-section-title">Color Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Token / Value</th><th>Hex</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Panel Background</strong></td><td><code>BG-White</code></td><td>#FFFFFF</td></tr>
+                <tr><td><strong>Item Text</strong></td><td><code>text-primary</code></td><td>#292A2E</td></tr>
+                <tr><td><strong>Item Hover Background</strong></td><td><code>bg-accent-hover</code></td><td>rgba(37,99,235,0.06)</td></tr>
+                <tr><td><strong>Active Item Text</strong></td><td><code>text-accent</code></td><td>#0C66E4</td></tr>
+                <tr><td><strong>Disabled Item Text</strong></td><td><code>text-disabled</code></td><td>#A5ADBA</td></tr>
+                <tr><td><strong>Section Heading Text</strong></td><td><code>text-secondary</code></td><td>#626870</td></tr>
+                <tr><td><strong>Icon Default</strong></td><td><code>icon-secondary</code></td><td>#626870</td></tr>
+                <tr><td><strong>Apply Button BG</strong></td><td><code>bg-accent-solid</code></td><td>#0C66E4</td></tr>
+                <tr><td><strong>Apply Button Text</strong></td><td><code>text-white</code></td><td>#FFFFFF</td></tr>
+                <tr><td><strong>Clear All Text</strong></td><td><code>text-secondary</code></td><td>#626870</td></tr>
+                <tr><td><strong>Divider / Border</strong></td><td><code>Border-Secondary</code></td><td>#E0E3E8</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="spacing-tokens" class="doc-section-title">Spacing Tokens</h2>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Property</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Panel</td><td>Vertical Padding</td><td>4px</td></tr>
+                <tr><td>Action Item</td><td>Padding</td><td>8px 12px</td></tr>
+                <tr><td>Action Item</td><td>Icon Gap</td><td>8px</td></tr>
+                <tr><td>Header Bar</td><td>Padding</td><td>8px 12px</td></tr>
+                <tr><td>Footer Bar</td><td>Padding</td><td>8px 12px</td></tr>
+                <tr><td>Footer Bar</td><td>Button Gap</td><td>8px</td></tr>
+                <tr><td>Section Heading</td><td>Padding</td><td>8px 12px 4px</td></tr>
+                <tr><td>Divider</td><td>Margin</td><td>4px 0</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="corner-radius-border-radius" class="doc-section-title">Corner Radius (Border Radius)</h2>
+            <p class="doc-section-subtitle">The panel uses the same soft corner as the trigger that opened it, so the dropdown reads as an extension of the control rather than a separate floating box.</p>
+            <div style="display:flex;gap:24px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:200px;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;text-align:center;">
+                <div style="width:60px;height:40px;border:2px dashed #006AFF;border-radius:8px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:rgba(0,106,255,0.05);color:#006AFF;font-weight:600;font-size:11px;">8px</div>
+                <div style="font-size:14px;font-weight:600;color:var(--prism-text);">Panel Container</div>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:4px;">border-radius: 8px</div>
+              </div>
+              <div style="flex:1;min-width:200px;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;text-align:center;">
+                <div style="width:60px;height:28px;border:2px dashed #006AFF;border-radius:8px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:rgba(0,106,255,0.05);color:#006AFF;font-weight:600;font-size:11px;">8px</div>
+                <div style="font-size:14px;font-weight:600;color:var(--prism-text);">Apply Button</div>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:4px;">border-radius: 8px</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="typography-family" class="doc-section-title">Typography Family</h2>
+            <p class="doc-section-subtitle">Item labels and group headers all use <strong>Zoho Puvi</strong> &mdash; same family as the trigger and the rest of the form system, so the panel never reads as foreign.</p>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Font Size</th><th>Weight</th><th>Line Height</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>Item Label</td><td>13px</td><td>400</td><td>1.4</td><td>Primary text for all item types</td></tr>
+                <tr><td>Section Heading</td><td>11px</td><td>600</td><td>1.4</td><td>Uppercase, letter-spacing 0.06em</td></tr>
+                <tr><td>Header Title</td><td>13px</td><td>600</td><td>1.4</td><td>Semi-bold for header bar text</td></tr>
+                <tr><td>Apply Button</td><td>12px</td><td>600</td><td>1.4</td><td>Primary action in footer</td></tr>
+                <tr><td>Clear All</td><td>12px</td><td>500</td><td>1.4</td><td>Text button in footer</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">Reach for a dropdown when you have a short list of actions or options tied to one control &mdash; row menus, avatar menus, filter chips. For form selection from a known set, use a Dropdown Select; for navigation, use a Menu in the header.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><ds-icon name="check" size="20" style="color:#2563eb;"></ds-icon>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Offer a contextual list of actions or options attached to a trigger element (button, icon button, field).</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When there are too many options to display inline (typically 3 or more).</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When the user needs to select one option and immediately apply it (Single Select).</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When the user needs to select multiple options before committing (Multi Select).</li>
+                  <li style="border:none;background:transparent;">When options fall into distinct logical groups (With Sections).</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><ds-icon name="close" size="20" style="color:#e42527;"></ds-icon>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For navigation &#8212; use a Nav Menu or Sidebar instead.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When there are only 2 options &#8212; use a Toggle or two Buttons.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When options need descriptions or rich content &#8212; use a Popover or Dialog.</li>
+                  <li style="border:none;background:transparent;">As a form select input &#8212; use a Select Field component instead.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="alignment-placement" class="doc-section-title">Alignment &amp; Placement</h2>
+            <p class="doc-section-subtitle">The panel opens below the trigger by default and flips up when the viewport runs out of room. That predictability matters: the user&rsquo;s eye should land on the first option without scanning around for the menu.</p>
+            <ul class="doc-list">
+              <li><strong>Below Trigger:</strong> The panel should appear directly below the trigger element, aligned to its left edge.</li>
+              <li><strong>Left-Aligned:</strong> Default alignment is left-aligned with the trigger. In RTL mode, the panel aligns to the right.</li>
+              <li><strong>Z-Index:</strong> Dropdown panels must appear above all page content. Use a z-index of at least 1000.</li>
+              <li><strong>Viewport Boundary:</strong> If the panel would extend beyond the viewport, flip it above the trigger or shift it horizontally to remain visible.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do's and Don'ts</h2>
+            <p class="doc-section-subtitle">Specifics &mdash; how many items is too many, when to group, when destructive items warrant a confirmation. Each rule has a reason; read both before you bend one.</p>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li><strong>Keep labels short:</strong> 1&#8211;4 words per item for fast scanning.</li>
+                <li><strong>Close Single Select immediately</strong> on item selection.</li>
+                <li><strong>Use Show Header=OFF</strong> when the trigger label already provides context.</li>
+                <li><strong>Provide a "Clear All" path</strong> in Multi Select (<code>Show Footer=ON</code>).</li>
+                <li><strong>Use With Sections</strong> when 2+ logical groupings exist with 3+ items each.</li>
+                <li><strong>Use Multi Select</strong> when the user needs to confirm before applying.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li><strong>No sentence labels:</strong> Don't use sentence-long descriptions as item labels.</li>
+                <li><strong>No single-pick multi:</strong> Don't use Multi Select for single-pick scenarios.</li>
+                <li><strong>No single-item sections:</strong> Don't add a section with only 1 item.</li>
+                <li><strong>Don't leave Single Select open</strong> after a choice is made.</li>
+                <li><strong>Don't always show header</strong> even when it duplicates the trigger label.</li>
+                <li><strong>Don't force manual reset:</strong> Don't make users uncheck each item to clear.</li>
+              </ul></div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Other ways to surface options when a tucked-away menu isn&rsquo;t the right shape &mdash; for form selection, filtering, or always-visible actions.</p>
+            <div class="related-grid">
+              <a href="#" class="related-chip"><ds-icon name="list-bullet" size="16"></ds-icon> Action Dropdown Item</a>
+              <a href="Button.html" class="related-chip"><ds-icon name="message-chat-square" size="16"></ds-icon> Button</a>
+              <a href="#" class="related-chip"><ds-icon name="chevron-down" size="16"></ds-icon> Select Field</a>
+              <a href="#" class="related-chip"><ds-icon name="message-chat-square" size="16"></ds-icon> Popover</a>
+              <a href="Checkbox.html" class="related-chip"><ds-icon name="check" size="16"></ds-icon> Checkbox</a>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <p class="doc-section-subtitle">Design tokens and resources for implementing the Dropdown Menu component.</p>
+            <ul class="doc-list">
+              <li><strong>Figma Node:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">17286:257780</code> &#8212; Component Set: Dropdown Menu</li>
+              <li><strong>Total Variants:</strong> 3 Types &times; 1 Size &times; 2 RTL = <strong>6 variants</strong></li>
+              <li><strong>Typography:</strong> Zoho Puvi Regular (400) for items, Semi-bold (600) for headings/header</li>
+              <li><strong>Border Radius:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">8px</code> (panel and apply button)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Toggle props on the left and watch the panel react in real time. The HTML below updates as you go &mdash; copy it straight into your project.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Type</label><select class="cp-select" id="pg-type"><option value="default">Default</option><option value="select">Select</option><option value="multi-select">Multi-select</option><option value="action">Action</option><option value="select-tick">Select-tick</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show title</label><div class="cp-checkbox-wrap"><button class="cp-toggle" id="pg-title-toggle"></button><span style="font-size:13px;color:var(--prism-text-muted);" id="pg-title-label">OFF</span></div></div>
+              <div class="cp-control-group" id="pg-clearall-group"><label class="cp-label">Show clear all</label><div class="cp-checkbox-wrap"><button class="cp-toggle on" id="pg-clearall-toggle"></button><span style="font-size:13px;color:var(--prism-text-muted);" id="pg-clearall-label">ON</span></div></div>
+              <div class="cp-control-group"><label class="cp-label">Direction</label><select class="cp-select" id="pg-dir"><option value="ltr">LTR</option><option value="rtl">RTL</option></select></div>
+            </div>
+            <div class="cp-preview" id="pg-preview-area" style="min-height:280px;display:flex;align-items:flex-start;justify-content:center;padding:24px;"></div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-copy-btn"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+            </div>
+            <div class="cp-code-area" id="pg-code-output"></div>
+          </div>
+          <script>
+          (function(){
+            var typeEl = document.getElementById('pg-type');
+            var titleToggle = document.getElementById('pg-title-toggle');
+            var clearAllToggle = document.getElementById('pg-clearall-toggle');
+            var titleLabel = document.getElementById('pg-title-label');
+            var clearAllLabel = document.getElementById('pg-clearall-label');
+            var clearAllGroup = document.getElementById('pg-clearall-group');
+            var dirEl = document.getElementById('pg-dir');
+            var previewArea = document.getElementById('pg-preview-area');
+            var codeOut = document.getElementById('pg-code-output');
+            var copyBtn = document.getElementById('pg-copy-btn');
+
+            var showTitle = false, showClearAll = true;
+            var rawCode = '';
+
+            titleToggle.addEventListener('click', function(){ showTitle = !showTitle; titleToggle.classList.toggle('on', showTitle); titleLabel.textContent = showTitle ? 'ON' : 'OFF'; update(); });
+            clearAllToggle.addEventListener('click', function(){ showClearAll = !showClearAll; clearAllToggle.classList.toggle('on', showClearAll); clearAllLabel.textContent = showClearAll ? 'ON' : 'OFF'; update(); });
+
+            function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+            var ITEMS_LTR = {
+              'default': [
+                { label: 'Profile', value: 'profile' },
+                { label: 'Settings', value: 'settings' },
+                { label: 'Help', value: 'help' },
+                { label: 'About', value: 'about' },
+              ],
+              'select': [
+                { label: 'Newest first', value: 'new', selected: true },
+                { label: 'Oldest first', value: 'old' },
+                { label: 'Name (A → Z)', value: 'az' },
+              ],
+              'multi-select': [
+                { label: 'Active users', value: 'active', selected: true },
+                { label: 'Inactive users', value: 'inactive' },
+                { label: 'Suspended', value: 'suspended' },
+              ],
+              'action': [
+                { label: 'Edit', value: 'edit', icon: 'edit' },
+                { label: 'Duplicate', value: 'duplicate', icon: 'copy' },
+                { label: 'Share', value: 'share', icon: 'share-01' },
+                { type: 'divider' },
+                { label: 'Delete', value: 'delete', icon: 'delete', danger: true },
+              ],
+              'select-tick': [
+                { label: 'Comfortable', value: 'comfortable', selected: true },
+                { label: 'Compact', value: 'compact' },
+                { label: 'Spacious', value: 'spacious' },
+              ],
+            };
+            var ITEMS_RTL = {
+              'default': [
+                { label: 'الملف الشخصي', value: 'profile' },
+                { label: 'الإعدادات', value: 'settings' },
+                { label: 'المساعدة', value: 'help' },
+                { label: 'حول', value: 'about' },
+              ],
+              'select': [
+                { label: 'الأحدث أولاً', value: 'new', selected: true },
+                { label: 'الأقدم أولاً', value: 'old' },
+                { label: 'الاسم (أ → ي)', value: 'az' },
+              ],
+              'multi-select': [
+                { label: 'المستخدمون النشطون', value: 'active', selected: true },
+                { label: 'المستخدمون غير النشطين', value: 'inactive' },
+                { label: 'موقوف', value: 'suspended' },
+              ],
+              'action': [
+                { label: 'تعديل', value: 'edit', icon: 'edit' },
+                { label: 'نسخ', value: 'duplicate', icon: 'copy' },
+                { label: 'مشاركة', value: 'share', icon: 'share-01' },
+                { type: 'divider' },
+                { label: 'حذف', value: 'delete', icon: 'delete', danger: true },
+              ],
+              'select-tick': [
+                { label: 'مريح', value: 'comfortable', selected: true },
+                { label: 'مضغوط', value: 'compact' },
+                { label: 'واسع', value: 'spacious' },
+              ],
+            };
+            var TITLE_COPY = { ltr: 'Menu', rtl: 'القائمة' };
+
+            function update(){
+              var type = typeEl.value;
+              var dir = dirEl.value;
+              var isMulti = type === 'multi-select';
+              var isRtl = dir === 'rtl';
+              var ITEMS = isRtl ? ITEMS_RTL : ITEMS_LTR;
+              var titleText = isRtl ? TITLE_COPY.rtl : TITLE_COPY.ltr;
+              clearAllGroup.style.display = isMulti ? '' : 'none';
+
+              var attrs = ['type="' + type + '"'];
+              if (showTitle) attrs.push('show-title', 'title="' + titleText + '"');
+              if (isMulti && showClearAll) attrs.push('show-clear-all');
+              if (dir === 'rtl') attrs.push('rtl');
+              attrs.push('open');
+              var openTag = '<ds-dropdown-menu ' + attrs.join(' ') + '></ds-dropdown-menu>';
+              var itemsJson = JSON.stringify(ITEMS[type], null, 2);
+              rawCode = openTag + '\n<script>\n  document.querySelector(\'ds-dropdown-menu\').items = ' + itemsJson + ';\n<\/script>';
+
+              previewArea.innerHTML = '';
+              var el = document.createElement('ds-dropdown-menu');
+              el.setAttribute('type', type);
+              if (showTitle) { el.setAttribute('show-title', ''); el.setAttribute('title', titleText); }
+              if (isMulti && showClearAll) el.setAttribute('show-clear-all', '');
+              if (dir === 'rtl') el.setAttribute('rtl', '');
+              el.setAttribute('open', '');
+              previewArea.appendChild(el);
+              if (window.customElements && customElements.whenDefined) {
+                customElements.whenDefined('ds-dropdown-menu').then(function(){ el.items = ITEMS[type]; });
+              } else { el.items = ITEMS[type]; }
+
+              codeOut.innerHTML = esc(rawCode)
+                .replace(/&lt;(\/?)(ds-dropdown-menu|script)(.*?)&gt;/g,'&lt;$1<span style="color:#60a5fa;">$2</span>$3&gt;')
+                .replace(/(\s)(type|title|show-title|show-clear-all|rtl|open)(=?)/g,'$1<span style="color:#38bdf8;">$2</span>$3')
+                .replace(/=&quot;(.*?)&quot;/g,'=<span style="color:#34d399;">"$1"</span>');
+            }
+
+            typeEl.addEventListener('change', update);
+            dirEl.addEventListener('change', update);
+            copyBtn.addEventListener('click', function(){
+              var done = function(){ var o = copyBtn.innerHTML; copyBtn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!'; setTimeout(function(){ copyBtn.innerHTML = o; }, 2000); };
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(rawCode).then(done).catch(function(){ var ta=document.createElement('textarea'); ta.value=rawCode; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); });
+              } else { var ta=document.createElement('textarea'); ta.value=rawCode; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); }
+            });
+            if (window.customElements && customElements.whenDefined) {
+              customElements.whenDefined('ds-dropdown-menu').then(update);
+            } else { update(); }
+          })();
+          </script>
+
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="component-api-properties" class="doc-section-title">Component API &amp; Properties</h2>
+            <p class="doc-section-subtitle">Reflects the real <code>&lt;ds-dropdown-menu&gt;</code> web component (<code>design-system-library/src/components/dropdown-menu/dropdown-menu.js</code>).</p>
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Attributes</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Attribute</th><th>Values</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>type</code></td><td><code>default</code> &middot; <code>select</code> &middot; <code>multi-select</code> &middot; <code>action</code> &middot; <code>select-tick</code></td><td><code>default</code></td><td>Item composition and selection semantics.</td></tr>
+                <tr><td><code>show-title</code></td><td>boolean</td><td>off</td><td>Renders the optional title row.</td></tr>
+                <tr><td><code>title</code></td><td>string</td><td>&#8212;</td><td>Title text shown when <code>show-title</code> is set.</td></tr>
+                <tr><td><code>show-footer</code></td><td>boolean</td><td>auto for multi-select</td><td>Force-show or hide the footer row.</td></tr>
+                <tr><td><code>show-select-all</code></td><td>boolean</td><td>on (multi-select)</td><td>Footer "Select all" link.</td></tr>
+                <tr><td><code>show-clear-all</code></td><td>boolean</td><td>off</td><td>Footer "Clear all" link.</td></tr>
+                <tr><td><code>show-apply</code></td><td>boolean</td><td>on (multi-select)</td><td>Footer Apply button.</td></tr>
+                <tr><td><code>show-cancel</code></td><td>boolean</td><td>on (multi-select)</td><td>Footer Cancel button.</td></tr>
+                <tr><td><code>select-all-text</code> &middot; <code>clear-all-text</code></td><td>string</td><td>"Select all" / "Clear all"</td><td>Footer link labels.</td></tr>
+                <tr><td><code>apply-label</code> &middot; <code>cancel-label</code></td><td>string</td><td>"Apply" / "Cancel"</td><td>Footer button labels.</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td>off</td><td>Mirrors layout for RTL locales.</td></tr>
+                <tr><td><code>open</code></td><td>boolean</td><td>off</td><td>Visibility toggle. Use <code>.open()</code> / <code>.close()</code> methods too.</td></tr>
+              </tbody>
+            </table>
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">DOM Property &mdash; <code>items</code></h4>
+            <p class="doc-section-subtitle" style="margin-bottom:16px;">Item objects assigned via JavaScript, e.g. <code>menu.items = [&hellip;]</code>.</p>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>label</code></td><td>string</td><td>Display text.</td></tr>
+                <tr><td><code>value</code></td><td>string</td><td>Identifier returned in events.</td></tr>
+                <tr><td><code>icon</code></td><td>string</td><td>Leading icon name (used by <code>action</code> type).</td></tr>
+                <tr><td><code>danger</code></td><td>boolean</td><td>Renders the row in the destructive style.</td></tr>
+                <tr><td><code>selected</code></td><td>boolean</td><td>Initial selection (select / multi-select / select-tick).</td></tr>
+                <tr><td><code>disabled</code></td><td>boolean</td><td>Disables the row.</td></tr>
+                <tr><td><code>type: 'heading'</code></td><td>literal</td><td>Section heading row; pair with <code>label</code>.</td></tr>
+                <tr><td><code>type: 'divider'</code></td><td>literal</td><td>Visual separator row.</td></tr>
+              </tbody>
+            </table>
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Events</h4>
+            <table class="size-table">
+              <thead><tr><th>Event</th><th>Detail</th><th>Fires when</th></tr></thead>
+              <tbody>
+                <tr><td><code>ds-dropdown-select</code></td><td><code>{ value, item }</code></td><td>default / select / select-tick / action row activated.</td></tr>
+                <tr><td><code>ds-dropdown-toggle</code></td><td><code>{ value, selected, values, item }</code></td><td>multi-select row toggled (live).</td></tr>
+                <tr><td><code>ds-dropdown-apply</code></td><td><code>{ values }</code></td><td>Multi-select footer Apply.</td></tr>
+                <tr><td><code>ds-dropdown-cancel</code></td><td>&#8212;</td><td>Multi-select footer Cancel.</td></tr>
+                <tr><td><code>ds-dropdown-select-all</code></td><td>&#8212;</td><td>Footer Select-all link.</td></tr>
+                <tr><td><code>ds-dropdown-clear</code></td><td>&#8212;</td><td>Footer Clear-all link.</td></tr>
+                <tr><td><code>ds-dropdown-close</code></td><td>&#8212;</td><td>Menu closed (Esc or programmatic).</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="implementation-idea-ember-hook-form" class="doc-section-title">Implementation Idea: Ember Hook Form</h2>
+            <div class="cp-code-area" style="border-radius:12px;margin-top:16px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#94a3b8;">&lt;!-- dropdown-menu.hbs --&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">UemsDropdownMenu</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@type</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"multi"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@showHeader</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">true</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@headerText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Select Priority"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@showFooter</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">true</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@onApply</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.handleApply</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@onClear</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.handleClear</span><span style="color:#C678DD;">}}</span><br>
+                <span style="color:#ABB2BF;">&nbsp;&nbsp;as |menu|</span><br>
+                <span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">menu.Item</span>
+                &nbsp;<span style="color:#D19A66;">@label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"High"</span>
+                &nbsp;<span style="color:#D19A66;">@selected</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">true</span><span style="color:#C678DD;">}}</span>
+                <span style="color:#ABB2BF;"> /&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">menu.Item</span>
+                &nbsp;<span style="color:#D19A66;">@label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Medium"</span>
+                <span style="color:#ABB2BF;"> /&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">menu.Item</span>
+                &nbsp;<span style="color:#D19A66;">@label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Low"</span>
+                <span style="color:#ABB2BF;"> /&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">UemsDropdownMenu</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+            <ul class="doc-list">
+              <li>When <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">RTL=True</code>, the entire panel is mirrored: header title moves right, dismiss icon moves left.</li>
+              <li>Item icons appear on the <strong>right</strong> side, labels align <strong>right</strong>.</li>
+              <li>Footer: "Apply" button moves to the <strong>left</strong>, "Clear All" to the <strong>right</strong>.</li>
+              <li>Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> on the containing wrapper &#8212; do not mirror manually with CSS transforms.</li>
+              <li>Use logical CSS properties (<code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">margin-inline-start</code>, <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">padding-inline-end</code>) for proper bidirectional support.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Most accessibility is built in &mdash; this section explains what your users get for free, and the few things you have to provide: a clear trigger label, ARIA on icon-only triggers, and sensible keyboard semantics for the panel.</p>
+          <div class="doc-section">
+            <h3 id="keyboard-interaction" class="doc-h3">Keyboard Interaction</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><code>&#8595; / &#8593;</code></td><td>Move focus between menu items.</td></tr>
+                <tr><td><code>Enter / Space</code></td><td>Activate the focused item or toggle a checkbox.</td></tr>
+                <tr><td><code>Escape</code></td><td>Close the menu and return focus to the trigger element.</td></tr>
+                <tr><td><code>Home</code></td><td>Move focus to the first menu item.</td></tr>
+                <tr><td><code>End</code></td><td>Move focus to the last menu item.</td></tr>
+                <tr><td><code>Tab</code></td><td>Move focus to the next focusable element (footer buttons in Multi Select).</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:16px;padding:16px 20px;background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.15);border-radius:12px;">
+              <p style="font-size:14px;color:var(--prism-text);line-height:1.6;margin:0;">On open, focus moves to the first item in the list. On close (via Escape or selection in Single Select), focus returns to the trigger element that opened the menu.</p>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="aria-attributes-screen-reader-guidance" class="doc-h3">ARIA Attributes &amp; Screen Reader Guidance</h3>
+            <ul class="doc-list">
+              <li><strong>role="menu"</strong> on the panel container to identify it as a menu to assistive technologies.</li>
+              <li><strong>role="menuitem"</strong> for Single Select items; <strong>role="menuitemcheckbox"</strong> for Multi Select items.</li>
+              <li><strong>aria-haspopup="menu"</strong> on the trigger element, combined with <strong>aria-expanded</strong> toggled on open/close.</li>
+              <li><strong>aria-labelledby:</strong> Header text should be announced as the menu label via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-labelledby</code>.</li>
+              <li><strong>Focus management:</strong> On open, focus moves to the first item. On close, focus returns to the trigger.</li>
+              <li><strong>Multi Select Apply:</strong> The "Apply" button must be keyboard reachable and labeled <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-label="Apply selection"</code> if icon-only.</li>
+              <li><strong>RTL:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> on the panel wrapper; rely on logical CSS properties.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="focus-state-design" class="doc-h3">Focus State Design</h3>
+            <ul class="doc-list">
+              <li>Focused menu items should display a visible focus ring (2px outline in the accent color, offset 2px).</li>
+              <li>The focus indicator must be visible in both light and dark themes.</li>
+              <li>Focus should not be trapped inside the menu &#8212; Tab key moves to footer buttons, then out of the panel.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="color-contrast-minimums" class="doc-h3">Color Contrast Minimums<span class="h3-badge" style="background:rgba(34,197,94,0.15);color:#16a34a;">WCAG AA Pass</span></h3>
+            <p class="doc-section-subtitle">All text elements meet WCAG 2.1 AA contrast requirements against the white panel background.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:24px;">
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#FFFFFF;padding:28px 24px;text-align:center;color:#292A2E;border:1px solid #E0E3E8;border-radius:8px 8px 0 0;"><div style="font-size:24px;font-weight:600;">Edit</div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">ITEM TEXT</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#292A2E on #FFFFFF</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 15.4:1</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AAA Pass</div></div></div>
+              </div>
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#FFFFFF;padding:28px 24px;text-align:center;color:#626870;border:1px solid #E0E3E8;border-radius:8px 8px 0 0;"><div style="font-size:18px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">ACTIONS</div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">SECTION HEADING</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#626870 on #FFFFFF</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 5.5:1</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AA Pass (3:1 min)</div></div></div>
+              </div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="touch-target-size" class="doc-h3">Touch Target Size</h3>
+            <p class="doc-section-subtitle">Menu items must meet minimum touch target sizes on mobile devices.</p>
+            <div style="margin-top:16px;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;display:flex;align-items:center;gap:24px;">
+              <div style="width:44px;height:44px;background:rgba(37,99,235,0.1);border:1px dashed var(--prism-violet);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--prism-violet);font-size:13px;font-weight:600;flex-shrink:0;">44px</div>
+              <div><div style="font-weight:600;font-size:15px;color:var(--prism-text);">Menu Item: 44px minimum height on mobile</div><div style="font-size:14px;color:var(--prism-text-muted);margin-top:4px;">Each menu item should have at least 44px of touch target height on mobile devices. On desktop, the smaller 32px height is acceptable since users have a mouse pointer.</div></div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/dropdown-menu.md" download="dropdown-menu.md" class="action-link"><ds-icon name="download" size="15"></ds-icon> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=17286-257780" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/components/toc.js"></script>
+<script src="js/main.js"></script>
+
+
+</body>
+</html>

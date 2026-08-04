@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Token Field — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<!-- Demo token-field: single source of truth -->
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/token-field/token-field.css?v=21">
+<link rel="stylesheet" href="../design-system-library/src/components/tag/tag.css">
+<link rel="stylesheet" href="../design-system-library/src/components/dropdown-menu/dropdown-menu.css">
+<link rel="stylesheet" href="../design-system-library/src/components/field-helper/field-helper.css">
+<link rel="stylesheet" href="../design-system-library/src/components/tooltip/tooltip.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/tag/tag.js"></script>
+<script type="module" src="../design-system-library/src/components/dropdown-menu/dropdown-menu.js"></script>
+<script type="module" src="../design-system-library/src/components/tooltip/tooltip.js"></script>
+<script type="module" src="../design-system-library/src/components/token-field/token-field.js?v=21"></script>
+<style>
+  .page-token-field .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .page-token-field .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    padding: 32px !important;
+    gap: 28px !important;
+  }
+  .page-token-field .demo-tf-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-token-field .demo-tf-section > .demo-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+    margin: 0; text-align: left; width: auto;
+  }
+  .page-token-field .demo-tf-stack { display: flex; flex-direction: column; gap: 16px; max-width: 540px; }
+  .page-token-field .demo-tf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 880px) { .page-token-field .demo-tf-row { grid-template-columns: 1fr; } }
+  .page-token-field .demo-tf-item { display: flex; flex-direction: column; gap: 8px; }
+  .page-token-field .demo-tf-item .mini-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+  }
+  /* Playground uses the shared .code-playground / .cp-* chrome (same as the
+     OTP Input and other field pages) — no bespoke playground styles needed. */
+  /* Code sample blocks in the Examples section */
+  .page-token-field .code-block {
+    background: #F8FAFE; border: 1px solid rgba(37, 99, 235, 0.10); border-radius: 8px;
+    padding: 16px 18px; margin: 12px 0 24px; overflow-x: auto;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px; line-height: 1.55; color: var(--prism-text);
+  }
+  [data-theme="light"] .page-token-field .code-block { background: #F8FAFE; }
+  .page-token-field .code-block code { background: transparent !important; border: 0 !important; padding: 0 !important; font: inherit; color: inherit; white-space: pre; }
+  .page-token-field .demo-realworld-card {
+    padding: 20px; border: 1px solid var(--prism-border); border-radius: 12px;
+    background: rgba(255,255,255,0.02); max-width: 560px;
+  }
+  [data-theme="light"] .page-token-field .demo-realworld-card { background: rgba(255,255,255,0.55); border-color: rgba(37,99,235,0.1); }
+  .page-token-field .demo-realworld-card-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--prism-text-muted); text-transform: uppercase; margin-bottom: 14px; }
+</style>
+</head>
+<body class="page-token-field">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">      <a href="Foundation.html" >Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html" >Zia Experience</a><a href="llm-reference.html">LLM Reference</a><div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+
+      <div style="width: 16px;"></div>
+
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search...">
+        <span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 id="components" class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link active">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Token Field</h1>
+        <p class="page-desc">
+          A token field is a multi-select input where each chosen value becomes a removable <strong>token</strong> sitting inside the field — skills on a profile, recipients on a message, labels on a ticket. Type to filter suggestions, press Enter to add, click a token's × to remove it. At rest it collapses to a single tidy row with a <code>+N</code> total; while you're picking, it expands to show up to three rows of tokens — as a floating overlay, so the page below never shifts.
+        </p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══ OVERVIEW TAB ═══ -->
+        <div class="tab-content" id="tab-overview">
+
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram">
+            <div style="display:flex;justify-content:center;padding:32px 0;">
+              <div style="position:relative;width:440px;">
+                <ds-token-field id="anat-tf" size="medium" label="Skills" show-clear show-label-help-icon label-help="Pick the skills this technician is certified for." helper="Type to add, Enter to confirm"></ds-token-field>
+                <span class="anat-marker-inline" style="position:absolute;top:18px;left:8px;">1</span>
+                <span class="anat-marker-inline" style="position:absolute;top:46px;left:30px;">2</span>
+                <span class="anat-marker-inline" style="position:absolute;top:46px;left:150px;">3</span>
+                <span class="anat-marker-inline" style="position:absolute;top:46px;right:8px;">4</span>
+              </div>
+            </div>
+          </div>
+          <div class="anat-legend" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Label + required</strong><span>13&nbsp;px Semibold, Text-Tertiary. Optional <code>*</code> in Text-Error.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Tokens</strong><span>Each chosen value is a <code>ds-tag</code> with a close ×. Filled = single row; Active = wrap.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Caret</strong><span>Inline text input. Type to filter, Enter to add, Backspace removes the last token.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Clear / chevron</strong><span>Optional clear-all ×; chevron opens the suggestions dropdown.</span></div></div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div style="margin-bottom: 64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom: 8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom: 28px;">Sizes and states side by side. Click into any field and type — suggestions filter live, Enter adds a token, the close × removes one. Watch <strong>Filled</strong> collapse to one row with a <code>+N</code> total, and <strong>Active</strong> expand to wrap.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Token Field · sizes × states</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+                <!-- Sizes -->
+                <div class="demo-tf-section">
+                  <div class="demo-group-label">Sizes — Medium 320×40 · Large 400×44</div>
+                  <div class="demo-tf-stack" style="align-items:flex-start;">
+                    <ds-token-field class="demo-sugg" size="medium" style="width:320px;" label="Skills (Medium)" helper="Type to add"></ds-token-field>
+                    <ds-token-field class="demo-sugg" size="large"  style="width:400px;" label="Skills (Large)"  helper="Type to add"></ds-token-field>
+                  </div>
+                </div>
+
+                <!-- States -->
+                <div class="demo-tf-section">
+                  <div class="demo-group-label">States</div>
+                  <div class="demo-tf-row">
+                    <div class="demo-tf-item">
+                      <span class="mini-label">Default</span>
+                      <ds-token-field class="demo-sugg" size="medium" label="Tags" required="false" helper="Empty — placeholder caret"></ds-token-field>
+                    </div>
+                    <div class="demo-tf-item">
+                      <span class="mini-label">Filled — single row + total</span>
+                      <ds-token-field class="demo-prefilled" data-fill="6" size="medium" label="Tags" required="false" show-clear helper="Resting: collapses to +N"></ds-token-field>
+                    </div>
+                    <div class="demo-tf-item">
+                      <span class="mini-label">Error</span>
+                      <ds-token-field class="demo-prefilled" data-fill="2" size="medium" label="Recipients" error helper="At least one internal address required"></ds-token-field>
+                    </div>
+                    <div class="demo-tf-item">
+                      <span class="mini-label">Disabled</span>
+                      <ds-token-field class="demo-prefilled" data-fill="3" size="medium" label="Tags" disabled required="false" helper="Not editable"></ds-token-field>
+                    </div>
+                    <div class="demo-tf-item">
+                      <span class="mini-label">Read only — all tags, ≤3 rows + scroll</span>
+                      <ds-token-field id="uc-readonly" size="medium" label="Tags" readonly required="false" show-chevron="false" helper="View only — scrolls past 3 rows"></ds-token-field>
+                    </div>
+                    <div class="demo-tf-item">
+                      <span class="mini-label">RTL</span>
+                      <ds-token-field class="demo-prefilled" data-fill="3" size="medium" label="الوسوم" rtl required="false" helper="من اليمين إلى اليسار"></ds-token-field>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Real world -->
+                <div class="demo-tf-section">
+                  <div class="demo-group-label">In context — assign skills to a technician</div>
+                  <div class="demo-realworld-card">
+                    <div class="demo-realworld-card-label">Edit technician · Skills</div>
+                    <ds-token-field id="rw-tf" size="medium" label="Skills" required="false"
+                      helper="Start typing to search the catalog" show-clear></ds-token-field>
+                    <p id="rw-tf-out" style="margin:12px 0 0;font-size:13px;color:var(--prism-text-muted);">No skills assigned yet.</p>
+                  </div>
+                </div>
+
+                <!-- Common use cases -->
+                <div class="demo-tf-section">
+                  <div class="demo-group-label">Common use cases</div>
+                  <div class="demo-tf-row">
+                    <div class="demo-tf-item">
+                      <span class="mini-label">Recipients — paste / comma-separated (invalid = red)</span>
+                      <ds-token-field id="uc-recipients" size="medium" label="To" required="false"
+                        show-prefix-icon prefix-icon="mail" show-clear
+                        placeholder="Add people…" helper="Type, comma-separate, or paste a list — bad addresses turn red"></ds-token-field>
+                    </div>
+                    <div class="demo-tf-item">
+                      <span class="mini-label">Ticket labels (free entry)</span>
+                      <ds-token-field id="uc-labels" size="medium" label="Labels" required="false"
+                        placeholder="Add a label…" helper="Create new labels on the fly"></ds-token-field>
+                    </div>
+                    <div class="demo-tf-item">
+                      <span class="mini-label">Table filter — catalog only</span>
+                      <ds-token-field id="uc-filter" size="medium" label="Status" required="false"
+                        show-prefix-icon prefix-icon="filter" creatable="false"
+                        placeholder="Filter by status…" helper="Pick from the list — no free text"></ds-token-field>
+                    </div>
+                    <div class="demo-tf-item">
+                      <span class="mini-label">Product categories</span>
+                      <ds-token-field id="uc-categories" size="medium" label="Categories" required="false"
+                        show-clear placeholder="Assign categories…" helper="Up to 3 rows when active"></ds-token-field>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Error case: stale selection (source-validated) -->
+                <div class="demo-tf-section">
+                  <div class="demo-group-label">Error case — stale selection (source-validated)</div>
+                  <div class="demo-realworld-card">
+                    <div class="demo-realworld-card-label">Assign devices · <code>require-source</code></div>
+                    <ds-token-field id="uc-devices" size="medium" label="Devices" required="false"
+                      require-source show-clear error-text="This device is no longer available — remove it"
+                      helper="Selected devices must still exist in the catalog"></ds-token-field>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
+                      <button type="button" id="uc-devices-decom" class="ds-button ds-button--secondary" style="font-size:12px;padding:6px 12px;border:1px solid var(--prism-border);border-radius:6px;background:transparent;color:var(--prism-text);cursor:pointer;">Decommission “Printer-04”</button>
+                      <button type="button" id="uc-devices-reset" class="ds-button" style="font-size:12px;padding:6px 12px;border:1px solid var(--prism-border);border-radius:6px;background:transparent;color:var(--prism-text-muted);cursor:pointer;">Restore source</button>
+                    </div>
+                    <p id="uc-devices-out" style="margin:12px 0 0;font-size:13px;color:var(--prism-text-muted);">Remove a device from the source — its token turns red (invalid).</p>
+                  </div>
+                </div>
+
+                <!-- Optional elements -->
+                <div class="demo-tf-section">
+                  <div class="demo-group-label">Optional elements — toggle each piece on/off</div>
+                  <div class="demo-tf-stack">
+                    <div class="demo-tf-item">
+                      <span class="mini-label">Prefix icon</span>
+                      <ds-token-field class="demo-sugg" size="medium" label="Search tags" required="false" show-prefix-icon prefix-icon="search" show-chevron="false" show-helper-row="false"></ds-token-field>
+                    </div>
+                    <div class="demo-tf-item">
+                      <span class="mini-label">Clear-all button (filled)</span>
+                      <ds-token-field class="demo-prefilled" data-fill="3" size="medium" label="Tags" required="false" show-clear show-helper-row="false"></ds-token-field>
+                    </div>
+                    <div class="demo-tf-item">
+                      <span class="mini-label">Label help icon + tooltip</span>
+                      <ds-token-field class="demo-sugg" size="medium" label="Skills" required="false" show-label-help-icon label-help="Pick the skills this person is certified for." show-helper-row="false"></ds-token-field>
+                    </div>
+                    <div class="demo-tf-item">
+                      <span class="mini-label">No chevron (free-entry only)</span>
+                      <ds-token-field size="medium" label="Keywords" required="false" show-chevron="false" placeholder="Type and press Enter" show-helper-row="false"></ds-token-field>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ STYLE TAB ═══ -->
+        <div class="tab-content" id="tab-style" style="display:none; padding-top: 32px;">
+          <h2 id="sizing" class="doc-section-title">Sizing</h2>
+          <table class="size-table">
+            <thead><tr><th>Token</th><th>Medium</th><th>Large</th></tr></thead>
+            <tbody>
+              <tr><td>Field padding</td><td>4&nbsp;/&nbsp;12 (<code>spacing-4</code> / <code>spacing-12</code>)</td><td>4&nbsp;/&nbsp;12</td></tr>
+              <tr><td>Min height (resting)</td><td>40&nbsp;px</td><td>44&nbsp;px</td></tr>
+              <tr><td>Corner radius</td><td><code>radius-md</code> (8)</td><td><code>radius-md</code> (8)</td></tr>
+              <tr><td>Border width</td><td>1&nbsp;px (2&nbsp;px focus/active)</td><td>1&nbsp;px (2&nbsp;px)</td></tr>
+              <tr><td>Caret / token text</td><td>14&nbsp;px Regular</td><td>16&nbsp;px Regular</td></tr>
+              <tr><td>Active wrap cap</td><td>3 rows (<code>max-rows</code>)</td><td>3 rows</td></tr>
+            </tbody>
+          </table>
+
+          <h2 id="state-tokens" class="doc-section-title">State → token map</h2>
+          <table class="size-table">
+            <thead><tr><th>State</th><th>Border</th><th>Background</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Default</td><td><code>--uems-border-primary</code></td><td><code>--uems-bg-primary-alt</code></td><td>placeholder caret</td></tr>
+              <tr><td>Hover</td><td><code>--uems-border-accent</code></td><td><code>--uems-bg-primary-alt</code></td><td>—</td></tr>
+              <tr><td>Focus / Active</td><td><code>--uems-border-accent-focus</code> (2px)</td><td><code>--uems-bg-primary-alt</code></td><td>wrap ≤ 3 rows; dropdown open</td></tr>
+              <tr><td>Filled</td><td><code>--uems-border-primary</code></td><td><code>--uems-bg-primary-alt</code></td><td>single row + <code>+N</code> badge</td></tr>
+              <tr><td>Error</td><td><code>--uems-border-error</code></td><td><code>--uems-bg-primary-alt</code></td><td>helper in <code>--uems-text-error</code></td></tr>
+              <tr><td>Disabled</td><td><code>--uems-border-disabled</code></td><td><code>--uems-bg-disabled</code></td><td>50% opacity, not focusable</td></tr>
+              <tr><td>Read only</td><td><code>--uems-border-tertiary</code></td><td><code>--uems-bg-secondary-alt</code></td><td>all tokens shown — wrap ≤3 rows then scroll; no caret</td></tr>
+            </tbody>
+          </table>
+
+          <h2 id="typography" class="doc-section-title">Typography</h2>
+          <table class="size-table">
+            <thead><tr><th>Element</th><th>Style</th><th>Color</th></tr></thead>
+            <tbody>
+              <tr><td>Label</td><td>13&nbsp;px Semibold</td><td><code>--uems-text-tertiary</code></td></tr>
+              <tr><td>Required *</td><td>14&nbsp;px Medium</td><td><code>--uems-text-error</code></td></tr>
+              <tr><td>Placeholder / token / typed</td><td>14&nbsp;px Regular</td><td><code>--uems-text-placeholder</code> / <code>--uems-text-primary</code></td></tr>
+              <tr><td>+N total badge</td><td>12&nbsp;px Medium</td><td><code>--uems-text-secondary</code> on <code>--uems-bg-secondary</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ═══ USAGE TAB ═══ -->
+        <div class="tab-content" id="tab-usage" style="display:none; padding-top: 32px;">
+          <h2 id="when" class="doc-section-title">When to use</h2>
+          <ul class="doc-list">
+            <li><strong>Use a token field</strong> when a user picks several values from a (possibly large) set and needs to see and remove each choice — skills, tags, recipients, filters, label assignment.</li>
+            <li><strong>Use Input Select instead</strong> when only one value is chosen, or when the field should stay a fixed single line and never expand.</li>
+            <li><strong>Use a Text Field</strong> for a single free-form value with no tokens.</li>
+          </ul>
+
+          <h2 id="best-practices" class="doc-section-title">Best practices</h2>
+          <div class="do-dont-grid">
+            <div class="do-card"><span class="card-label">Do</span><ul>
+              <li>Collapse the resting field to one row with a <code>+N</code> total so dense forms stay scannable.</li>
+              <li>Expand on focus so the user can review every token while picking (cap at 3 rows, then scroll).</li>
+              <li>Offer suggestions where a known catalog exists; allow free entry (<code>creatable</code>) only for open vocabularies like tags.</li>
+              <li>Make every token removable and keep Backspace-removes-last working.</li>
+            </ul></div>
+            <div class="dont-card"><span class="card-label">Don't</span><ul>
+              <li>Don't let the field grow unbounded — three rows is the ceiling, then scroll inside.</li>
+              <li>Don't hide the count: if tokens overflow the resting row, always show <code>+N</code>.</li>
+              <li>Don't use it for a single choice — that's an Input Select.</li>
+              <li>Don't rely on color alone for error; pair the red border with helper text.</li>
+            </ul></div>
+          </div>
+
+          <h2 id="related" class="doc-section-title">Related components</h2>
+          <div class="related-grid">
+            <a href="Tag.html" class="related-chip">Tag</a>
+            <a href="Dropdown.html" class="related-chip">Dropdown</a>
+            <a href="Search-field.html" class="related-chip">Search Field</a>
+            <a href="Text-field.html" class="related-chip">Text field</a>
+          </div>
+        </div>
+
+        <!-- ═══ CODE TAB ═══ -->
+        <div class="tab-content" id="tab-code" style="display:none; padding-top: 32px;">
+          <h2 id="playground" class="doc-section-title">Interactive playground</h2>
+          <p class="doc-section-subtitle" style="margin-bottom: 20px;">Toggle props and watch the live component + generated markup update. The field itself is fully interactive — type to add tokens.</p>
+
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Size</label><select class="cp-select" id="pg-size"><option value="medium" selected>medium</option><option value="large">large</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Label position</label><select class="cp-select" id="pg-labelpos"><option value="top" selected>top</option><option value="left">left</option><option value="none">none</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Max rows</label><select class="cp-select" id="pg-maxrows"><option value="3" selected>3</option><option value="2">2</option><option value="4">4</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Dropdown style</label><select class="cp-select" id="pg-menuvariant"><option value="checkbox" selected>checkbox</option><option value="tick">tick</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">State</label><select class="cp-select" id="pg-state"><option value="" selected>default</option><option value="error">error</option><option value="disabled">disabled</option><option value="readonly">read-only</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Required</label><select class="cp-select" id="pg-required"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Prefix icon</label><select class="cp-select" id="pg-prefix"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Clear</label><select class="cp-select" id="pg-clear"><option value="true" selected>true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Chevron</label><select class="cp-select" id="pg-chevron"><option value="true" selected>true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Selection bar</label><select class="cp-select" id="pg-selbar"><option value="true" selected>true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Creatable</label><select class="cp-select" id="pg-creatable"><option value="true" selected>true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Label help</label><select class="cp-select" id="pg-help"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="pg-rtl"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Label</label><input class="cp-select" id="pg-label" type="text" value="Skills" style="font-family:inherit"></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Placeholder</label><input class="cp-select" id="pg-ph" type="text" value="Add tags…" style="font-family:inherit"></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Helper text</label><input class="cp-select" id="pg-helper" type="text" value="Type to add, Enter to confirm" style="font-family:inherit"></div>
+            </div>
+            <div class="cp-preview" id="pg-preview-area" style="padding:32px;display:flex;justify-content:center">
+              <ds-token-field id="pg-tf" size="medium" label="Skills" helper="Type to add, Enter to confirm" show-clear style="width:100%;max-width:600px"></ds-token-field>
+            </div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-copy-btn"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+            </div>
+            <div class="cp-code-area" id="pg-code-output"></div>
+          </div>
+
+          <h2 id="examples" class="doc-section-title">Examples</h2>
+          <h3 class="doc-h3">Basic with suggestions</h3>
+          <div class="code-block"><code>&lt;ds-token-field label="Skills" helper="Type to add"&gt;&lt;/ds-token-field&gt;
+
+&lt;script type="module"&gt;
+  const tf = document.querySelector('ds-token-field');
+  tf.suggestions = [
+    { label: 'Networking', value: 'net' },
+    { label: 'Windows',    value: 'win' },
+    { label: 'macOS',      value: 'mac' },
+    { label: 'Security',   value: 'sec' },
+  ];
+  tf.tokens = ['Networking'];                 // pre-fill (string or {label,value})
+  tf.addEventListener('ds-tokens-change', (e) =&gt; {
+    console.log(e.detail.tokens);             // [{value,label}, …]
+  });
+&lt;/script&gt;</code></div>
+
+          <h3 class="doc-h3">Large, RTL, no free entry</h3>
+          <div class="code-block"><code>&lt;ds-token-field size="large" rtl label="الوسوم"
+  creatable="false" max-rows="3" show-clear&gt;&lt;/ds-token-field&gt;</code></div>
+
+          <h3 class="doc-h3">Events</h3>
+          <table class="size-table">
+            <thead><tr><th>Event</th><th>Detail</th><th>Fires when</th></tr></thead>
+            <tbody>
+              <tr><td><code>ds-token-add</code></td><td><code>{ value, label }</code></td><td>a token is added</td></tr>
+              <tr><td><code>ds-token-remove</code></td><td><code>{ value, label }</code></td><td>a token's × (or Backspace) removes it</td></tr>
+              <tr><td><code>ds-tokens-change</code></td><td><code>{ tokens }</code></td><td>any add / remove / clear</td></tr>
+              <tr><td><code>ds-token-clear</code></td><td>—</td><td>the clear-all × is clicked</td></tr>
+              <tr><td><code>ds-token-input</code></td><td><code>{ query }</code></td><td>the caret text changes</td></tr>
+              <tr><td><code>ds-token-focus</code> / <code>ds-token-blur</code></td><td>—</td><td>the field opens / closes</td></tr>
+              <tr><td><code>ds-token-invalid</code></td><td><code>{ value, label }</code></td><td>an added token failed validation (rendered as a red error tag)</td></tr>
+              <tr><td><code>ds-token-edit</code></td><td><code>{ value, label }</code></td><td>a token is double-clicked to edit — it returns to the caret for correction</td></tr>
+              <tr><td><code>ds-token-help</code></td><td>—</td><td>the label help (?) icon is clicked</td></tr>
+            </tbody>
+          </table>
+
+          <h2 id="api" class="doc-section-title">API</h2>
+          <table class="size-table">
+            <thead><tr><th>Attribute / prop</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>size</code></td><td>medium · large</td><td>medium</td><td>Field size</td></tr>
+              <tr><td><code>label</code> / <code>show-label</code></td><td>text / bool</td><td>— / true</td><td>Label row</td></tr>
+              <tr><td><code>label-position</code></td><td>none · left · top</td><td>top</td><td><code>top</code> stacks the label above the field; <code>left</code> puts it in a 280px column beside the field (auto-stacks below 640px); <code>none</code> hides it (kept as the field's <code>aria-label</code>, same as <code>show-label="false"</code>).</td></tr>
+              <tr><td><code>required</code></td><td>bool</td><td>true</td><td>Shows the <code>*</code></td></tr>
+              <tr><td><code>placeholder</code></td><td>text</td><td>Add tags…</td><td>Empty-state caret text</td></tr>
+              <tr><td><code>show-prefix-icon</code> / <code>prefix-icon</code></td><td>bool / name</td><td>false / search</td><td>Leading icon</td></tr>
+              <tr><td><code>show-clear</code></td><td>bool</td><td>false</td><td>Trailing clear-all ×</td></tr>
+              <tr><td><code>show-chevron</code></td><td>bool</td><td>true</td><td>Dropdown affordance</td></tr>
+              <tr><td><code>show-helper-row</code> / <code>helper</code></td><td>bool / text</td><td>true / —</td><td>Supporting text</td></tr>
+              <tr><td><code>show-label-help-icon</code> / <code>label-help</code></td><td>bool / text</td><td>false / —</td><td>Help-circle (?) icon beside the label; <code>label-help</code> shows it in a tooltip (matches Input Select / Text Field)</td></tr>
+              <tr><td><code>pattern</code></td><td>regex string</td><td>—</td><td>Entries whose label fails the regex are <strong>rejected</strong> (not added)</td></tr>
+              <tr><td><code>validate</code> <em>(property)</em></td><td><code>(value,label) =&gt; boolean</code></td><td>—</td><td>Custom validator; returning false rejects the entry (overrides <code>pattern</code>)</td></tr>
+              <tr><td><code>require-source</code></td><td>bool</td><td>false</td><td>A token turns invalid (red) if its value is no longer in <code>suggestions</code> — re-checked whenever the source changes (e.g. a decommissioned device)</td></tr>
+              <tr><td><code>error-text</code></td><td>text</td><td>Invalid value</td><td>Helper message shown when an entry is rejected</td></tr>
+              <tr><td><code>invalidTokens</code> <em>(read-only prop)</em></td><td><code>{value,label}[]</code></td><td>—</td><td>Any tokens flagged invalid (e.g. programmatically-loaded bad data, which renders as a red tag)</td></tr>
+              <tr><td><code>max-rows</code></td><td>number</td><td>3</td><td>Active-state wrap cap</td></tr>
+              <tr><td><code>menu-variant</code></td><td>checkbox · tick</td><td>checkbox</td><td>Dropdown selection style — leading checkbox or trailing tick (both multi-select)</td></tr>
+              <tr><td><code>show-selection-bar</code></td><td>bool</td><td>true</td><td>Bulk-action row (selected count + Select all / Deselect all) — on by default since the field is multi-select</td></tr>
+              <tr><td><code>empty-text</code></td><td>text</td><td>No results found</td><td>Row shown in the dropdown when the typed query matches no option (menu stays open)</td></tr>
+              <tr><td><code>creatable</code></td><td>bool</td><td>true</td><td>Enter commits the typed value</td></tr>
+              <tr><td><code>error</code> / <code>disabled</code> / <code>readonly</code> / <code>rtl</code></td><td>bool</td><td>false</td><td>States</td></tr>
+              <tr><td><code>tokens</code> <em>(property)</em></td><td><code>string[]</code> or <code>{label,value}[]</code></td><td><code>[]</code></td><td>Current tokens</td></tr>
+              <tr><td><code>suggestions</code> <em>(property)</em></td><td><code>{label,value,disabled?}[]</code></td><td><code>[]</code></td><td>Dropdown options</td></tr>
+            </tbody>
+          </table>
+
+          <div class="figma-ref-card" style="margin-top:24px;">
+            <strong>Figma source</strong> — Token Field set · node <code>21854:797291</code> · page “Token field” · UEMS Design System 3.0 · 32 variants (Size × State × RTL).
+          </div>
+        </div>
+
+        <!-- ═══ ACCESSIBILITY TAB ═══ -->
+        <div class="tab-content" id="tab-accessibility" style="display:none; padding-top: 32px;">
+          <h2 id="a11y-roles" class="doc-section-title">Roles & semantics</h2>
+          <ul class="doc-list">
+            <li>The caret is a <code>combobox</code> (<code>aria-autocomplete="list"</code>, <code>aria-expanded</code>); the suggestions are a <code>listbox</code> of <code>option</code>s.</li>
+            <li>Tokens form a labelled <code>group</code>; each token's close × is a real button labelled “Remove&nbsp;{label}”.</li>
+            <li>The field is described by the helper row (<code>aria-describedby</code>); error state sets <code>aria-invalid</code>.</li>
+            <li>Token count changes are announced via an <code>aria-live="polite"</code> region.</li>
+          </ul>
+
+          <h2 id="a11y-keyboard" class="doc-section-title">Keyboard</h2>
+          <table class="size-table">
+            <thead><tr><th>Key</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td>Type</td><td>Filter suggestions</td></tr>
+              <tr><td>Enter</td><td>Add the highlighted suggestion, or commit the typed value — invalid → <strong>red error tag</strong> (consistent with comma / paste / blur)</td></tr>
+              <tr><td>Comma / newline / semicolon</td><td>Commits the current entry — add several at once (each validated; invalid → red tag)</td></tr>
+              <tr><td>Paste a list</td><td>Splits a comma / newline / semicolon list and adds every value at once (invalid → red)</td></tr>
+              <tr><td>Blur (focus out)</td><td>Commits the pending text as a token instead of discarding it</td></tr>
+              <tr><td>Double-click a token</td><td>Edit it — pulls its text back into the caret (select-all) to fix &amp; re-commit</td></tr>
+              <tr><td>Backspace (empty caret)</td><td>Remove the last token</td></tr>
+              <tr><td>Esc</td><td>Close the suggestions / blur</td></tr>
+              <tr><td>Click token ×</td><td>Remove that token, focus returns to the caret</td></tr>
+            </tbody>
+          </table>
+
+          <h2 id="a11y-rtl" class="doc-section-title">Internationalisation</h2>
+          <ul class="doc-list">
+            <li><code>rtl</code> mirrors the whole field: tokens flow right-to-left, chevron flips, label and helper right-align.</li>
+            <li>Long token labels truncate with ellipsis (full text in <code>title</code>); the close × never truncates.</li>
+            <li>App supplies localized token + suggestion labels; the <code>+N</code> badge has an accessible label.</li>
+          </ul>
+        </div>
+
+        </div><!-- /main-content-inner -->
+
+        <aside class="toc-sidebar" style="padding: 20px;">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+        </aside>
+
+      </div><!-- /main-content-area -->
+
+      <div id="feedback" class="feedback-banner" style="display: none;">
+        <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+        <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Token-field demo wiring -->
+  <script type="module">
+    const SUGGESTIONS = [
+      { label: 'Networking' }, { label: 'Windows' }, { label: 'macOS' }, { label: 'Linux' },
+      { label: 'Security' }, { label: 'Firewall' }, { label: 'VPN' }, { label: 'Active Directory' },
+      { label: 'Patching' }, { label: 'Hardware' },
+    ];
+    const FILL = ['Networking', 'Windows', 'macOS', 'Security', 'Firewall', 'VPN', 'Patching', 'Hardware'];
+
+    customElements.whenDefined('ds-token-field').then(() => {
+      // suggestion-only fields
+      document.querySelectorAll('.demo-sugg').forEach((el) => { el.suggestions = SUGGESTIONS; });
+      // prefilled fields
+      document.querySelectorAll('.demo-prefilled').forEach((el) => {
+        const n = parseInt(el.getAttribute('data-fill'), 10) || 3;
+        el.suggestions = SUGGESTIONS;
+        el.tokens = FILL.slice(0, n);
+      });
+      // real-world
+      const rw = document.getElementById('rw-tf');
+      const out = document.getElementById('rw-tf-out');
+      if (rw) {
+        rw.suggestions = SUGGESTIONS;
+        rw.addEventListener('ds-tokens-change', (e) => {
+          const t = e.detail.tokens;
+          out.textContent = t.length ? `${t.length} skill${t.length > 1 ? 's' : ''} assigned: ${t.map((x) => x.label).join(', ')}` : 'No skills assigned yet.';
+        });
+      }
+      // anatomy
+      const anat = document.getElementById('anat-tf');
+      if (anat) { anat.suggestions = SUGGESTIONS; anat.tokens = ['Networking', 'Security']; }
+
+      // ── Use-case fields ──
+      const set = (id, sugg, tokens) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.suggestions = sugg;
+        if (tokens) el.tokens = tokens;
+      };
+      // Recipients: email validation — invalid addresses are rejected (not added).
+      const rec = document.getElementById('uc-recipients');
+      if (rec) {
+        rec.setAttribute('pattern', '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
+        rec.setAttribute('error-text', 'Enter a valid email address');
+        rec.suggestions = [{label:'priya@acme.io'},{label:'sam@acme.io'},{label:'dev-team@acme.io'},{label:'ops@acme.io'},{label:'kumaran@acme.io'}];
+        rec.tokens = ['priya@acme.io', 'sam@acme.io'];
+      }
+      set('uc-labels',
+        [{label:'bug'},{label:'urgent'},{label:'backend'},{label:'frontend'},{label:'needs-triage'},{label:'wontfix'}],
+        ['bug','urgent','backend']);
+      set('uc-filter',
+        [{label:'Open'},{label:'In progress'},{label:'On hold'},{label:'Resolved'},{label:'Closed'}],
+        ['Open','In progress']);
+      set('uc-categories',
+        [{label:'Laptops'},{label:'Monitors'},{label:'Phones'},{label:'Accessories'},{label:'Networking'},{label:'Software'}],
+        ['Laptops']);
+
+      // Read only — many tokens so it wraps past 3 rows and scrolls (all shown, none collapsed).
+      const ro = document.getElementById('uc-readonly');
+      if (ro) ro.tokens = ['Networking','Windows','macOS','Linux','Security','Firewall','VPN','Active Directory','Patching','Hardware','Backup','Monitoring','Compliance','Encryption','DNS','DHCP','Proxy','Antivirus','Kernel','Storage','Virtualisation','Containers','Load Balancer','Telemetry','Logging','Scheduler','Failover','Provisioning'];
+
+      // Error case: source validation — removing a device from the source turns its token red.
+      const dev = document.getElementById('uc-devices');
+      if (dev) {
+        const FULL_SOURCE = [
+          { label: 'Laptop-12', value: 'd-laptop-12' },
+          { label: 'Printer-04', value: 'd-printer-04' },
+          { label: 'Router-A1', value: 'd-router-a1' },
+          { label: 'Switch-09', value: 'd-switch-09' },
+          { label: 'Server-Node-3', value: 'd-server-3' },
+        ];
+        dev.suggestions = FULL_SOURCE;
+        dev.tokens = [
+          { label: 'Laptop-12', value: 'd-laptop-12' },
+          { label: 'Printer-04', value: 'd-printer-04' },
+          { label: 'Router-A1', value: 'd-router-a1' },
+        ];
+        const out = document.getElementById('uc-devices-out');
+        const report = () => {
+          const bad = dev.invalidTokens;
+          out.textContent = bad.length
+            ? `${bad.length} selected device${bad.length > 1 ? 's are' : ' is'} no longer in the source: ${bad.map((t) => t.label).join(', ')}`
+            : 'All selected devices are valid.';
+        };
+        document.getElementById('uc-devices-decom').addEventListener('click', () => {
+          // remove Printer-04 from the source → its already-selected token becomes invalid
+          dev.suggestions = dev.suggestions.filter((o) => o.value !== 'd-printer-04');
+          report();
+        });
+        document.getElementById('uc-devices-reset').addEventListener('click', () => {
+          dev.suggestions = FULL_SOURCE.slice();
+          report();
+        });
+        dev.addEventListener('ds-tokens-change', report);
+        report();
+      }
+
+      initPlayground();
+    });
+
+    function initPlayground() {
+      const tf = document.getElementById('pg-tf');
+      if (!tf) return;
+      tf.suggestions = SUGGESTIONS;
+      tf.tokens = ['Networking', 'Security'];
+      const code = document.getElementById('pg-code-output');
+      const $ = (id) => document.getElementById(id);
+      const bool = (id) => $(id).value === 'true';
+      const ctrls = ['pg-size','pg-labelpos','pg-maxrows','pg-menuvariant','pg-state','pg-required','pg-prefix','pg-clear','pg-chevron','pg-selbar','pg-creatable','pg-help','pg-rtl','pg-label','pg-ph','pg-helper'];
+
+      function apply() {
+        const set = (name, on) => on ? tf.setAttribute(name, '') : tf.removeAttribute(name);
+        const st = $('pg-state').value;
+        tf.setAttribute('size', $('pg-size').value);
+        tf.setAttribute('label', $('pg-label').value);
+        if ($('pg-labelpos').value !== 'top') tf.setAttribute('label-position', $('pg-labelpos').value);
+        else tf.removeAttribute('label-position');
+        tf.setAttribute('placeholder', $('pg-ph').value);
+        tf.setAttribute('helper', $('pg-helper').value);
+        tf.setAttribute('max-rows', $('pg-maxrows').value);
+        tf.setAttribute('menu-variant', $('pg-menuvariant').value);
+        tf.setAttribute('show-selection-bar', bool('pg-selbar') ? 'true' : 'false');
+        tf.setAttribute('required', bool('pg-required') ? 'true' : 'false');
+        set('show-prefix-icon', bool('pg-prefix'));
+        if (bool('pg-clear')) tf.setAttribute('show-clear', ''); else tf.removeAttribute('show-clear');
+        tf.setAttribute('show-chevron', bool('pg-chevron') ? 'true' : 'false');
+        tf.setAttribute('creatable', bool('pg-creatable') ? 'true' : 'false');
+        set('show-label-help-icon', bool('pg-help'));
+        if (bool('pg-help')) tf.setAttribute('label-help', 'What skills should go here?');
+        else tf.removeAttribute('label-help');
+        set('error', st === 'error');
+        set('disabled', st === 'disabled');
+        set('readonly', st === 'readonly');
+        set('rtl', bool('pg-rtl'));
+        render();
+      }
+      function render() {
+        const st = $('pg-state').value;
+        const a = [];
+        a.push(`size="${$('pg-size').value}"`);
+        a.push(`label="${$('pg-label').value}"`);
+        if ($('pg-labelpos').value !== 'top') a.push(`label-position="${$('pg-labelpos').value}"`);
+        if ($('pg-ph').value !== 'Add tags…') a.push(`placeholder="${$('pg-ph').value}"`);
+        if ($('pg-helper').value) a.push(`helper="${$('pg-helper').value}"`);
+        if ($('pg-maxrows').value !== '3') a.push(`max-rows="${$('pg-maxrows').value}"`);
+        if ($('pg-menuvariant').value !== 'checkbox') a.push(`menu-variant="${$('pg-menuvariant').value}"`);
+        if (!bool('pg-selbar')) a.push('show-selection-bar="false"');
+        if (!bool('pg-required')) a.push('required="false"');
+        if (bool('pg-prefix')) a.push('show-prefix-icon');
+        if (bool('pg-clear')) a.push('show-clear');
+        if (!bool('pg-chevron')) a.push('show-chevron="false"');
+        if (!bool('pg-creatable')) a.push('creatable="false"');
+        if (bool('pg-help')) a.push('show-label-help-icon label-help="What skills should go here?"');
+        if (st) a.push(st);
+        if (bool('pg-rtl')) a.push('rtl');
+        code.textContent = `<ds-token-field ${a.join(' ')}></ds-token-field>`;
+      }
+      ctrls.forEach((id) => {
+        const el = $(id);
+        el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', apply);
+      });
+      const copyBtn = $('pg-copy-btn');
+      if (copyBtn) copyBtn.addEventListener('click', () => {
+        if (navigator.clipboard) navigator.clipboard.writeText(code.textContent);
+        const o = copyBtn.innerHTML; copyBtn.textContent = 'Copied!';
+        setTimeout(() => { copyBtn.innerHTML = o; }, 1500);
+      });
+      apply();
+    }
+  </script>
+
+  <script>
+    // ── Scroll-spy + dynamic TOC ──
+    let _tocObserver = null;
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav');
+      if (!tocList) return;
+      tocList.innerHTML = '';
+      const panel = document.getElementById(targetId);
+      if (!panel) return;
+      const headings = panel.querySelectorAll('h2[id]');
+      headings.forEach(h => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.className = 'toc-link';
+        let text = h.getAttribute('data-toc');
+        if (!text) text = h.innerText;
+        a.textContent = text;
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById(h.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+      initScrollSpy();
+    }
+    function initScrollSpy() {
+      if (_tocObserver) _tocObserver.disconnect();
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sectionIds = Array.from(tocLinks).map(link => link.getAttribute('href').slice(1));
+      const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+      if (sections.length === 0) return;
+      _tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            tocLinks.forEach(link => {
+              link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+            });
+          }
+        });
+      }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+      sections.forEach(section => _tocObserver.observe(section));
+    }
+
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabMap = { 'Overview': 'tab-overview', 'Usage': 'tab-usage', 'Style': 'tab-style', 'Code': 'tab-code', 'Accessibility': 'tab-accessibility' };
+        document.querySelectorAll('.tab-content').forEach(panel => panel.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) {
+          document.getElementById(target).style.display = 'block';
+          updateTOC(target);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+    updateTOC('tab-overview');
+
+    // Sidebar search filter + Cmd/Ctrl+K
+    (function(){
+      var searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      var items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function(){
+        var q = this.value.toLowerCase().trim();
+        items.forEach(function(li){
+          var link = li.querySelector('a');
+          if (!link) return;
+          var text = link.textContent.toLowerCase();
+          li.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+      });
+      document.addEventListener('keydown', function(e){
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault(); searchInput.focus(); searchInput.select();
+        }
+      });
+    })();
+    (function(){
+      var active = document.querySelector('.sidebar-link.active');
+      if (active) {
+        var sidebar = active.closest('.sidebar');
+        if (sidebar) {
+          var top = active.offsetTop - sidebar.offsetTop - (sidebar.clientHeight / 3);
+          sidebar.scrollTop = Math.max(0, top);
+        }
+      }
+    })();
+  </script>
+
+<!-- Floating Feedback Button -->
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+/* =============================================================================
+   ds-calendar / .ds-calendar
+   Date-picker calendar surface — Single + Range, Day/Month/Year views.
+   Token-driven so themes flow through. Spec: docs/MD/calendar.md · Figma 17189:1121070.
+   ============================================================================= */
+
+.ds-calendar {
+  display: inline-flex;
+  flex-direction: column;
+  background: var(--uems-bg-primary-alt);                 /* #FFFFFF surface */
+  border: 1px solid var(--uems-border-tertiary);          /* #E1E4EB */
+  border-radius: var(--radius-md);                        /* 8px */
+  box-shadow: 0 2px 8px rgba(13, 17, 29, 0.12);           /* Shadow-Medium */
+  color: var(--uems-text-primary);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-14);
+  user-select: none;
+  padding: var(--spacing-16) var(--spacing-20) var(--spacing-20);  /* 16 / 20 / 20 */
+  box-sizing: border-box;
+}
+
+/* Panels wrapper — column for single, row for range (dual months) */
+.ds-calendar__panels {
+  display: flex;
+  flex-direction: row;
+  gap: var(--spacing-24);
+}
+
+.ds-calendar__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);                                  /* section gap 8 */
+  width: 252px;
+  flex-shrink: 0;
+}
+
+/* ---- Header --------------------------------------------------------- */
+.ds-calendar__header {
+  display: grid;
+  grid-template-columns: 28px 1fr 28px;
+  align-items: center;
+  justify-items: center;                                 /* centre nav buttons + title in each column */
+  height: 28px;
+  padding: 0 var(--spacing-8);                           /* 28px-tall row; 24px nav buttons centre within it */
+  box-sizing: border-box;
+}
+/* Prev/Next are <ds-icon-button> instances (Square / Tertiary) — the component
+   owns the chevron colour, hover tint and focus ring. Nothing to style here. */
+/* Header title. Day + Month views render a <ds-text-link> (climbs the zoom
+   level on click — the Link component owns its colour, hover underline and
+   focus ring). The top-level Year range is a static, non-clickable span. */
+.ds-calendar__title { text-align: center; font-family: inherit; }
+/* The clickable Day/Month title is a <ds-text-link variant="primary"> whose
+   anchor sets --_l-color to accent-link. Override it to Text-Primary — the
+   descendant selector outranks .ds-text-link--primary so inheritance can't
+   be beaten by the anchor's own declaration. */
+.ds-calendar__title .ds-text-link { --_l-color: var(--uems-text-primary); }
+.ds-calendar__title--static {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);              /* 14px Semibold */
+  color: var(--uems-text-primary);
+}
+
+/* ---- Weekday row ---------------------------------------------------- */
+.ds-calendar__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  height: 36px;
+  align-items: center;
+}
+.ds-calendar__weekday {
+  text-align: center;
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-semibold);              /* 12px Semibold */
+  color: var(--uems-text-secondary);                     /* Text-Secondary */
+}
+
+/* ---- Day grid ------------------------------------------------------- */
+.ds-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 36px);                /* 7 × 36px columns */
+  row-gap: var(--spacing-4);                              /* row gap 4; cols touch */
+  align-content: start;
+  isolation: isolate;
+}
+.ds-calendar__day {
+  /* The cell is the range-band canvas: full 36×36, cells touch horizontally
+     so range caps + in-range squares fuse into one bar. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  width: 36px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-size-14);                        /* day digit 14px */
+  color: var(--uems-text-secondary);                     /* Default = Text-Secondary */
+  cursor: pointer;
+  position: relative;
+  z-index: 0;
+  border-radius: 0;
+}
+
+/* The inner span is the visible circle — 36×36 for single states. */
+.ds-calendar__day-inner {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  position: relative;
+  z-index: 1;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+/* Hover circle — but NOT on already-active dates (selected / range endpoints):
+   they keep their solid accent fill with no hover wash on top. */
+.ds-calendar__day:hover:not(:disabled):not(.ds-calendar__day--selected):not(.ds-calendar__day--range-start):not(.ds-calendar__day--range-end) .ds-calendar__day-inner {
+  background: var(--uems-bg-accent-primary);             /* Hover: #EAF0FC circle */
+}
+.ds-calendar__day:focus-visible { outline: none; }
+.ds-calendar__day:focus-visible .ds-calendar__day-inner {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+.ds-calendar__day:disabled,
+.ds-calendar__day[aria-disabled="true"] {
+  color: var(--uems-text-disabled);                      /* Disabled #8893AD */
+  cursor: not-allowed;
+}
+.ds-calendar__day:disabled:hover .ds-calendar__day-inner,
+.ds-calendar__day[aria-disabled="true"]:hover .ds-calendar__day-inner { background: none; }
+
+/* Today — 1.5px accent ring, no fill (when not selected). */
+.ds-calendar__day--today:not(.ds-calendar__day--selected):not(.ds-calendar__day--range-start):not(.ds-calendar__day--range-end) .ds-calendar__day-inner {
+  box-shadow: inset 0 0 0 1.5px var(--uems-border-accent);   /* 1.5px accent ring */
+  color: var(--uems-text-accent-primary);                    /* #0E2553 */
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Adjacent-month (Empty) day — greyed real number. */
+.ds-calendar__day--outside { color: var(--uems-text-disabled); }
+
+/* Selected single date — solid accent circle. */
+.ds-calendar__day--selected .ds-calendar__day-inner {
+  background: var(--uems-bg-button-primary);             /* #006AFF */
+  color: var(--uems-text-white);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* In-range — full-cell square tint, day number on top. */
+.ds-calendar__day--in-range {
+  background: var(--uems-bg-accent-primary);             /* #EAF0FC square (radius 0) */
+  color: var(--uems-text-primary);                       /* #15181E */
+}
+
+/* Range endpoints — the CELL is painted as a pill cap (outer 9999 / inner 6)
+   so it fuses with the abutting in-range squares into one connected bar. */
+.ds-calendar__day--range-start,
+.ds-calendar__day--range-end {
+  background: var(--uems-bg-button-primary);             /* #006AFF */
+  color: var(--uems-text-white);
+}
+.ds-calendar__day--range-start .ds-calendar__day-inner,
+.ds-calendar__day--range-end .ds-calendar__day-inner {
+  background: none;
+  color: inherit;
+  font-weight: var(--font-weight-semibold);
+}
+.ds-calendar__day--range-start { border-radius: 9999px 6px 6px 9999px; }   /* left cap */
+.ds-calendar__day--range-end   { border-radius: 6px 9999px 9999px 6px; }   /* right cap */
+/* RTL mirrors the caps. */
+.ds-calendar[dir="rtl"] .ds-calendar__day--range-start { border-radius: 6px 9999px 9999px 6px; }
+.ds-calendar[dir="rtl"] .ds-calendar__day--range-end   { border-radius: 9999px 6px 6px 9999px; }
+
+/* ---- Month / Year views — _Period Cell (84×44 stadium, 3×4 grid) ---- */
+.ds-calendar__periods {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  row-gap: var(--spacing-8);
+  align-content: center;
+  justify-items: center;
+  min-height: 196px;                                     /* keep popover height stable */
+  align-content: space-between;
+  padding-block: var(--spacing-8);
+}
+.ds-calendar__period {
+  width: 84px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-size-14);                        /* 14px */
+  color: var(--uems-text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-full);                     /* stadium pill */
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+.ds-calendar__period:hover:not(:disabled):not(.ds-calendar__period--selected) { background: var(--uems-bg-accent-primary); }   /* #EAF0FC — not on the active period */
+.ds-calendar__period:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+.ds-calendar__period--today:not(.ds-calendar__period--selected) {
+  box-shadow: inset 0 0 0 1.5px var(--uems-border-accent);   /* ring */
+  color: var(--uems-text-accent-primary);
+  font-weight: var(--font-weight-semibold);
+}
+.ds-calendar__period--selected {
+  background: var(--uems-bg-button-primary);             /* #006AFF solid */
+  color: var(--uems-text-white);
+  font-weight: var(--font-weight-semibold);
+}
+.ds-calendar__period:disabled,
+.ds-calendar__period[aria-disabled="true"] {
+  color: var(--uems-text-disabled);
+  cursor: not-allowed;
+}
+.ds-calendar__period:disabled:hover { background: none; }
+
+/* ---- Footer (vestigial — host Date Picker owns Clear/Cancel/Apply) -- */
+.ds-calendar__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-8);
+  align-items: center;
+  margin-top: var(--spacing-12);
+  border-top: 1px solid var(--uems-border-tertiary);
+  padding-top: var(--spacing-12);
+}

@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<!--
+  Command palette ("Search or jump to") — DUAL-MODE file.
+  Global popup opened by the header search (and ⌘K / Ctrl+K) instead of the full
+  search page; the footer's "Advanced search" action hands off to that page
+  (views/search.html via ShellCtx.showSearch). Quick-action chips, grouped
+  Endpoint Central results (quick actions / go to / create / devices / patches /
+  configurations / reports), keyboard navigation.
+  • Open directly → standalone harness mounts + shows the palette.
+  • Fetched by Shell → injectDrawer('command-palette','body') extracts only
+    <template id="drawer-fragment">.
+  Built ONLY from ds-* components + --uems-* / design-system tokens.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Command palette — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-base); }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* == Command palette — scope EVERY selector to #cmdk-pop ================== */
+/* Sits above the shell header (z-index:40 in Shell) like the apps drawer.
+   The scrim is the ds-overlay component (type="dim") — it owns the dim fill,
+   click-dismiss (ds-dismiss) and body scroll-lock; the panel floats above it. */
+#cmdk-pop {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 10vh var(--spacing-16) var(--spacing-16);
+}
+#cmdk-pop[hidden] { display: none; }
+#cmdk-pop .cmdk-panel {
+  position: relative; z-index: calc(var(--z-overlay, 1300) + 1);
+  width: 720px; max-width: 100%;
+  display: flex; flex-direction: column; min-height: 0; max-height: 72vh;
+  background: var(--uems-bg-primary);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--uems-radius-l);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+#cmdk-pop .cmdk-panel__search {
+  position: relative;
+  display: flex; align-items: center; gap: var(--spacing-8);
+  padding: var(--spacing-4, 4px) var(--spacing-12);
+  border-bottom: 1px solid var(--uems-border-tertiary);   /* hairline under search (matches the target) */
+}
+#cmdk-pop .cmdk-panel__search ds-search-field { flex: 1 1 auto; min-width: 0; }
+/* Seamless search line (Raycast/Linear feel) — no box, no focus ring; the
+   leading icon + large text carry it. Calmer than a bordered input. */
+#cmdk-pop .cmdk-panel__search .ds-search-field {
+  border: 0 !important; background: transparent !important; box-shadow: none !important;
+  border-radius: 0; padding-inline: 0; height: 48px;
+}
+#cmdk-pop .cmdk-panel__search .ds-search-field__input { font-size: var(--font-size-16); }
+#cmdk-pop .cmdk-panel__search .ds-search-field__icon { color: var(--uems-icon-tertiary); }
+/* Customize trigger — quiet, tucked to the end of the search line */
+#cmdk-pop #cmdk-cfg-btn .ds-button { color: var(--uems-icon-tertiary); }
+/* Zia toggle button (top-right of search) — accent-tinted; navy + white when
+   Ask-Zia mode is on. */
+#cmdk-pop .cmdk-search-div { flex: none; width: 1px; height: 22px; background: var(--uems-border-tertiary); }
+#cmdk-pop .cmdk-zia-btn {
+  flex: none; width: 32px; height: 32px; border: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md, 8px);
+  background: var(--uems-bg-accent-primary);   /* normal: light chip + coloured Zia logo */
+}
+#cmdk-pop .cmdk-zia-btn:hover { filter: brightness(0.97); }
+#cmdk-pop .cmdk-zia-btn .cmdk-zia-logo { width: 18px; height: 18px; display: block; }
+/* Active (Ask-Zia mode): navy chip + white Zia mark. */
+#cmdk-pop.is-zia .cmdk-zia-btn { background: #2a3350; }
+#cmdk-pop.is-zia .cmdk-zia-btn .cmdk-zia-logo { filter: brightness(0) invert(1); }
+/* Leading sparkle shown only in Ask-Zia mode (hides the search-field's own icon). */
+/* ds-icon sets its own inline display, so force the toggle with !important. */
+#cmdk-pop .cmdk-zia-lead { display: none !important; position: absolute; inset-inline-start: var(--spacing-16); color: var(--uems-text-accent-link); z-index: 1; }
+#cmdk-pop.is-zia .cmdk-zia-lead { display: inline-flex !important; }
+#cmdk-pop.is-zia .cmdk-panel__search .ds-search-field__icon { visibility: hidden; }
+#cmdk-pop.is-zia .cmdk-panel__chips { display: none; }
+/* Group header — label left, "Edit" link right */
+#cmdk-pop .cmdk-group__label { display: flex; align-items: center; justify-content: space-between; }
+#cmdk-pop .cmdk-group__edit { border: 0; background: none; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: var(--font-weight-medium, 500); color: var(--uems-text-accent-link); padding: 0; }
+#cmdk-pop .cmdk-group__edit:hover { text-decoration: underline; }
+/* Row trailing bits: recency stamp + Open affordance */
+#cmdk-pop .cmdk-row__ts { font-size: var(--font-size-12); color: var(--uems-text-placeholder); white-space: nowrap; }
+#cmdk-pop .cmdk-row__open { display: inline-flex; align-items: center; gap: var(--spacing-4, 4px); font-size: var(--font-size-13); font-weight: var(--font-weight-medium, 500); color: var(--uems-text-accent-link); white-space: nowrap; }
+/* Ask-Zia "Try asking" suggestions view */
+#cmdk-pop .cmdk-zia-hint { padding: var(--spacing-12) var(--spacing-8) var(--spacing-4, 4px); font-size: var(--font-size-13); color: var(--uems-text-tertiary); }
+
+/* ── Customize-actions modal ─────────────────────────────────────────────
+   IMPORTANT: ds-modal PORTALS itself to <body> on open (to escape ancestor
+   stacking contexts), so it leaves #cmdk-pop — scope everything to the
+   modal's own id (#cmdk-cfg), which travels with it. */
+/* +40px over md so the 2-col cards get a little more room. */
+#cmdk-cfg .ds-modal__dialog { width: 680px; }
+/* Body: fixed header (search) + banner, then a self-scrolling card list. */
+#cmdk-cfg .ds-modal__body {
+  display: flex; flex-direction: column;
+  overflow: hidden; padding: 0;
+}
+/* Search-as-header */
+#cmdk-cfg .cmdk-cfg__hdr {
+  flex: none; display: flex; align-items: center; gap: var(--spacing-8);
+  padding: var(--spacing-4, 4px) var(--spacing-16);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+}
+#cmdk-cfg .cmdk-cfg__hdr ds-search-field { flex: 1 1 auto; min-width: 0; }
+#cmdk-cfg .cmdk-cfg__hdr .ds-search-field { border: 0 !important; background: transparent !important; box-shadow: none !important; padding-inline: 0; height: 46px; }
+#cmdk-cfg .cmdk-cfg__hdr .ds-search-field__input { font-size: var(--font-size-15, 15px); }
+#cmdk-cfg .cmdk-cfg__back { flex: none; width: 30px; height: 30px; border: 0; background: transparent; border-radius: var(--radius-md, 8px); cursor: pointer; color: var(--uems-icon-secondary); display: inline-flex; align-items: center; justify-content: center; }
+#cmdk-cfg .cmdk-cfg__back:hover { background: var(--uems-bg-secondary); }
+/* Info banner + "N of 16" pill */
+#cmdk-cfg .cmdk-cfg__banner {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-12);
+  padding: var(--spacing-4, 4px) var(--spacing-16); min-height: 34px;
+  background: var(--uems-bg-accent-primary); border-bottom: 1px solid var(--uems-border-tertiary);
+}
+#cmdk-cfg .cmdk-cfg__banner-text { display: inline-flex; align-items: center; gap: var(--spacing-8); font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+#cmdk-cfg .cmdk-cfg__banner-text ds-icon { color: var(--uems-text-accent-link); flex: none; }
+#cmdk-cfg .cmdk-cfg__banner-text b { color: var(--uems-text-primary); font-weight: var(--font-weight-semibold, 600); }
+#cmdk-cfg .cmdk-cfg__pill { flex: none; font-size: 11px; font-weight: var(--font-weight-medium, 500); color: var(--uems-text-accent-link); background: var(--uems-bg-primary); border: 1px solid var(--uems-border-tertiary); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+/* Max reached: banner + pill turn amber (informative, never disabling). */
+#cmdk-cfg .cmdk-cfg__banner.is-full { background: var(--uems-bg-warning-primary, #fff1e8); }
+#cmdk-cfg .cmdk-cfg__banner.is-full .cmdk-cfg__banner-text ds-icon,
+#cmdk-cfg .cmdk-cfg__banner.is-full .cmdk-cfg__banner-text { color: var(--uems-text-alert, #b54708); }
+#cmdk-cfg .cmdk-cfg__pill.is-full { color: var(--uems-text-alert, #b54708); background: #fdecd7; }
+/* Locked cards (at max): muted +Add + tile, still clickable → warm toast. */
+#cmdk-cfg .cmdk-cfg-card.is-locked .cmdk-cfg-card__add { color: var(--uems-text-disabled, #8893ad); }
+#cmdk-cfg .cmdk-cfg-card.is-locked .cmdk-cfg-card__tile { opacity: 0.55; }
+#cmdk-cfg .cmdk-cfg-card.is-locked .cmdk-cfg-card__title { color: var(--uems-text-secondary); }
+/* List */
+#cmdk-cfg .cmdk-cfg__list { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: var(--spacing-8) var(--spacing-12) var(--spacing-12); }
+/* Category pill header */
+#cmdk-cfg .cmdk-cfg__cat {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: var(--font-weight-semibold, 600); letter-spacing: 0.4px;
+  padding: 3px 8px; border-radius: 999px;
+}
+#cmdk-cfg .cmdk-cfg__cat ds-icon { flex: none; }
+#cmdk-cfg .cmdk-cfg__cat-line { display: flex; align-items: center; gap: var(--spacing-8); margin: var(--spacing-12) 0 var(--spacing-4, 4px); }
+#cmdk-cfg .cmdk-cfg__cat-line:first-child { margin-top: var(--spacing-4, 4px); }
+#cmdk-cfg .cmdk-cfg__cat-line::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--uems-border-tertiary); }
+#cmdk-cfg .cmdk-cfg__cat-count { font-weight: var(--font-weight-regular); opacity: .8; }
+/* 2-column grid */
+#cmdk-cfg .cmdk-cfg__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px var(--spacing-8); }
+@media (max-width: 520px) { #cmdk-cfg .cmdk-cfg__grid { grid-template-columns: 1fr; } }
+#cmdk-cfg .cmdk-cfg-card {
+  display: flex; align-items: center; gap: var(--spacing-8);
+  padding: 6px var(--spacing-8); border-radius: var(--radius-md, 8px);
+  border: 1px solid transparent; cursor: pointer;
+  transition: background 130ms var(--ease-standard, ease), box-shadow 130ms var(--ease-standard, ease);
+}
+#cmdk-cfg .cmdk-cfg-card__tile,
+#cmdk-cfg .cmdk-cfg-card__check,
+#cmdk-cfg .cmdk-cfg-card__add,
+#cmdk-cfg .cmdk-zia-btn,
+#cmdk-pop .cmdk-zia-btn { transition: transform 130ms var(--ease-standard, ease), background 130ms var(--ease-standard, ease), color 130ms var(--ease-standard, ease); }
+#cmdk-cfg .cmdk-cfg-card:active { transform: scale(0.99); }
+@media (prefers-reduced-motion: reduce) {
+  #cmdk-pop .cmdk-row, #cmdk-cfg .cmdk-cfg-card, #cmdk-pop .cmdk-zia-btn { transition: none; }
+}
+#cmdk-cfg .cmdk-cfg-card:hover { background: var(--uems-bg-secondary); }
+#cmdk-cfg .cmdk-cfg-card.is-sel { background: var(--uems-bg-accent-primary); }
+#cmdk-cfg .cmdk-cfg-card__tile {
+  flex: none; width: 30px; height: 30px; border-radius: var(--radius-sm, 6px);
+  display: inline-flex; align-items: center; justify-content: center; background: var(--uems-bg-secondary); color: var(--uems-icon-tertiary);
+}
+#cmdk-cfg .cmdk-cfg-card__body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+/* +Add / ✓N hug the card's right edge (body grows to push them there). */
+#cmdk-cfg .cmdk-cfg-card__add,
+#cmdk-cfg .cmdk-cfg-card__check { flex: none; margin-inline-start: var(--spacing-8); }
+#cmdk-cfg .cmdk-cfg-card__title { font-size: var(--font-size-13); font-weight: var(--font-weight-medium, 500); color: var(--uems-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#cmdk-cfg .cmdk-cfg-card__desc { font-size: var(--font-size-12); color: var(--uems-text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#cmdk-cfg .cmdk-cfg-card__add { flex: none; font-size: var(--font-size-13); font-weight: var(--font-weight-medium, 500); color: var(--uems-text-accent-link); white-space: nowrap; }
+#cmdk-cfg .cmdk-cfg-card__check { flex: none; display: inline-flex; align-items: center; gap: var(--spacing-4, 4px); font-size: var(--font-size-13); font-weight: var(--font-weight-semibold, 600); color: var(--uems-text-accent-link); white-space: nowrap; }
+#cmdk-cfg .cmdk-hl { color: var(--uems-text-accent-link); font-weight: var(--font-weight-medium, 500); }
+#cmdk-cfg .cmdk-cfg__meta { font-size: var(--font-size-13); color: var(--uems-text-tertiary); }
+#cmdk-cfg .cmdk-cfg__empty { padding: var(--spacing-24) 0; }
+/* "Your quick actions" — pinned, ordered, removable, drag-reorderable strip. */
+#cmdk-cfg .cmdk-cfg__pinned { border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md, 8px); padding: var(--spacing-12); margin-bottom: var(--spacing-8); background: var(--uems-bg-secondary); }
+#cmdk-cfg .cmdk-cfg__pinned-head { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-8); font-size: 11px; font-weight: var(--font-weight-semibold, 600); letter-spacing: 0.4px; color: var(--uems-text-secondary); margin-bottom: var(--spacing-8); }
+#cmdk-cfg .cmdk-cfg__pinned-title { display: inline-flex; align-items: center; gap: var(--spacing-8); }
+#cmdk-cfg .cmdk-cfg__pinned-head .cmdk-cfg__cat-count { font-size: 10px; font-weight: var(--font-weight-medium, 500); letter-spacing: 0; color: var(--uems-text-accent-link); background: var(--uems-bg-accent-primary); border-radius: 999px; padding: 1px 7px; }
+#cmdk-cfg .cmdk-cfg__pinned-list { display: flex; flex-wrap: wrap; gap: 6px; }
+#cmdk-cfg .cmdk-cfg-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 4px 3px 5px; background: var(--uems-bg-primary); border: 1px solid var(--uems-border-tertiary); border-radius: 999px; font-size: var(--font-size-13); color: var(--uems-text-primary); cursor: grab; transition: box-shadow 120ms ease, opacity 120ms ease, border-color 120ms ease; }
+#cmdk-cfg .cmdk-cfg-chip:hover { border-color: var(--uems-border-primary); box-shadow: 0 1px 6px rgba(13,17,29,0.08); }
+#cmdk-cfg .cmdk-cfg-chip:active { cursor: grabbing; }
+#cmdk-cfg .cmdk-cfg-chip.is-drag { opacity: 0.4; }
+#cmdk-cfg .cmdk-cfg-chip.is-over { border-color: var(--uems-text-accent-link); box-shadow: inset 2px 0 0 var(--uems-text-accent-link); }
+#cmdk-cfg .cmdk-cfg-chip > ds-icon { flex: none; color: var(--uems-icon-tertiary); }
+#cmdk-cfg .cmdk-cfg-chip__n { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--uems-text-accent-link); color: #fff; font-size: 10px; font-weight: var(--font-weight-semibold, 600); display: inline-flex; align-items: center; justify-content: center; }
+#cmdk-cfg .cmdk-cfg-chip__t { white-space: nowrap; padding-inline-end: 2px; }
+#cmdk-cfg .cmdk-cfg-chip__x { flex: none; width: 18px; height: 18px; border: 0; background: transparent; cursor: pointer; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: var(--uems-icon-tertiary); transition: background 120ms ease, color 120ms ease; }
+#cmdk-cfg .cmdk-cfg-chip__x:hover { background: var(--uems-bg-error-secondary, #fee4e2); color: var(--uems-text-error, #d5304a); }
+#cmdk-cfg .cmdk-cfg__pinned-hint { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: var(--font-weight-regular); letter-spacing: 0; color: var(--uems-text-tertiary); }
+#cmdk-cfg .cmdk-cfg__pinned-empty { font-size: var(--font-size-13); color: var(--uems-text-tertiary); }
+#cmdk-pop .cmdk-panel__chips {
+  display: flex;
+  padding: var(--spacing-8) var(--spacing-12);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+}
+
+#cmdk-pop .cmdk-panel__results {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  padding: var(--spacing-8) var(--spacing-8) var(--spacing-12);
+}
+#cmdk-pop .cmdk-group__label {
+  font-size: 11px; font-weight: var(--font-weight-medium, 500);
+  letter-spacing: 0.4px; color: var(--uems-text-tertiary);
+  padding: var(--spacing-16) var(--spacing-8) var(--spacing-4, 4px);
+}
+#cmdk-pop .cmdk-group:first-child .cmdk-group__label { padding-top: var(--spacing-8); }
+#cmdk-pop .cmdk-row {
+  position: relative;
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; border: 0; background: transparent; cursor: pointer;
+  padding: 7px var(--spacing-8); border-radius: var(--uems-radius-s);
+  font-family: var(--font-family-sans); text-align: start;
+  color: var(--uems-text-primary); font-size: var(--font-size-14);
+}
+/* Mouse hover = neutral grey; keyboard-active = accent tint + left bar, so
+   "Enter targets THIS row" is unmistakable and distinct from hover. */
+#cmdk-pop .cmdk-row { transition: background 120ms var(--ease-standard, ease); }
+#cmdk-pop .cmdk-row:hover { background: var(--uems-bg-secondary-hover); }
+#cmdk-pop .cmdk-row.is-active:not(.cmdk-row--zia):not(.cmdk-row--confirm) { background: var(--uems-bg-accent-primary); }
+#cmdk-pop .cmdk-row:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: -2px; }
+/* Filled icon tile — neutral by default; group tone (accent / critical)
+   overrides the fill via inline style so actions read blue, attention reads red. */
+#cmdk-pop .cmdk-row__tile {
+  flex: none; width: 34px; height: 34px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--uems-bg-secondary); border-radius: var(--radius-md, 8px);
+  color: var(--uems-icon-tertiary);
+}
+#cmdk-pop .cmdk-row__tile ds-icon { color: inherit; }
+/* On the active (accent-tinted) row, tile turns white so it pops off the blue. */
+#cmdk-pop .cmdk-row.is-active .cmdk-row__tile { background: var(--uems-bg-primary) !important; color: var(--uems-text-accent-link); }
+/* Ask Zia row — Zia branding, matching the Ask Zia view: an ANIMATED gradient
+   border (masked pseudo-ring, same technique as the Ask Zia pane's shimmer —
+   the gradient paints only the 1px border band, the centre is masked out so
+   content stays visible + clickable), Zia logo tile, gradient wordmark. */
+#cmdk-pop .cmdk-row--zia {
+  position: relative;
+  border: 1.5px solid transparent;   /* slightly thicker band — the gradient reads clearly */
+  background: var(--uems-bg-primary);
+  border-radius: var(--radius-lg, 12px);   /* matches the recovery-card set */
+  padding-inline: var(--spacing-12);
+}
+#cmdk-pop .cmdk-row--zia::before {
+  content: ""; position: absolute; inset: -1.5px; border-radius: inherit; padding: 1.5px;
+  background: linear-gradient(115deg, #d138c4, #2C66DD, #0EA5A0, #7A5AF8, #d138c4);
+  background-size: 300% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: cmdk-zia-border 3s linear infinite;
+  pointer-events: none;
+}
+#cmdk-pop .cmdk-row--zia:hover::before,
+#cmdk-pop .cmdk-row--zia.is-active::before { animation-duration: 1.2s; }   /* sweep speeds up on focus */
+#cmdk-pop .cmdk-row--zia:hover,
+#cmdk-pop .cmdk-row--zia.is-active { background: var(--uems-bg-primary); }
+@keyframes cmdk-zia-border {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #cmdk-pop .cmdk-row--zia::before { animation: none; }
+}
+
+/* "Try this" recovery rows — outlined cards with breathing room, no grey fill;
+   hover / keyboard-active shows as an accent outline instead. */
+#cmdk-pop .cmdk-group--try { display: flex; flex-direction: column; gap: var(--spacing-8); }
+#cmdk-pop .cmdk-group--try .cmdk-group__label { padding-bottom: 0; }
+/* Every recovery row shares one geometry — 12px cards, consistent set. */
+#cmdk-pop .cmdk-row--try { border-radius: var(--radius-lg, 12px); padding-inline: var(--spacing-12); }
+#cmdk-pop .cmdk-row--try:not(.cmdk-row--zia) { border: 1px solid var(--uems-border-tertiary); }
+#cmdk-pop .cmdk-row--try:not(.cmdk-row--zia):hover,
+#cmdk-pop .cmdk-row--try:not(.cmdk-row--zia).is-active {
+  background: transparent;
+  border-color: var(--uems-border-primary);   /* stays grey — just a step darker when active */
+}
+#cmdk-pop .cmdk-row__tile--zia { background: transparent; }
+#cmdk-pop .cmdk-zia-logo { width: 20px; height: 20px; display: block; }
+#cmdk-pop .cmdk-zia-name {
+  background: linear-gradient(90deg, #6B4FD8, #2C66DD);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  font-weight: var(--font-weight-medium, 500);
+}
+#cmdk-pop .cmdk-hl { color: var(--uems-text-accent-link); font-weight: var(--font-weight-medium, 500); }
+#cmdk-pop .cmdk-group__count { color: var(--uems-text-placeholder); }   /* meta — quietest tier, matches the path annotation */
+#cmdk-pop .cmdk-row__qa { display: none; align-items: center; gap: var(--spacing-4, 4px); }
+#cmdk-pop .cmdk-row:hover .cmdk-row__qa,
+#cmdk-pop .cmdk-row.is-active .cmdk-row__qa { display: inline-flex; }
+/* Keyboard shortcut chips beside the quick actions — only while the row is
+   the keyboard-active one (hover users have the mouse, they don't need them). */
+#cmdk-pop .cmdk-qa-kbd { display: none; }
+#cmdk-pop .cmdk-row.is-active .cmdk-qa-kbd { display: inline-flex; }
+#cmdk-pop .cmdk-zia-sep { border-top: 1px solid var(--uems-border-tertiary); margin: var(--spacing-8) var(--spacing-8) var(--spacing-4, 4px); }
+/* Inline: title then its path/detail on the same line (title bold, path muted). */
+#cmdk-pop .cmdk-row__text { flex: 1 1 auto; min-width: 0; display: flex; align-items: baseline; gap: var(--spacing-8); overflow: hidden; }
+#cmdk-pop .cmdk-row__title { font-size: var(--font-size-14); color: var(--uems-text-primary); font-weight: var(--font-weight-medium, 500); white-space: nowrap; flex: 0 0 auto; }
+#cmdk-pop .cmdk-row__desc { font-size: var(--font-size-13); color: var(--uems-text-quaternary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+#cmdk-pop .cmdk-row__sub { color: var(--uems-text-quaternary); }   /* legacy inline (Zia name suffix) */
+#cmdk-pop .cmdk-row__trail { flex: none; display: inline-flex; align-items: center; gap: var(--spacing-8); }
+#cmdk-pop .cmdk-row__trail .ds-badge { font-size: var(--font-size-12); }
+#cmdk-pop .cmdk-empty { padding: var(--spacing-24) var(--spacing-16); }
+/* Fleet-action consequence gate — armed row gets a warning tint + the inline
+   "Run on N systems?" confirm in place of its trail. */
+#cmdk-pop .cmdk-row--confirm,
+#cmdk-pop .cmdk-row--confirm.is-active { background: var(--uems-bg-warning-primary); }
+#cmdk-pop .cmdk-confirm {
+  display: inline-flex; align-items: center; gap: var(--spacing-4, 4px);
+  font-size: var(--font-size-12); color: var(--uems-text-primary); white-space: nowrap;
+}
+
+/* Compact footer bar — low height, quiet hints left, actions right. */
+#cmdk-pop .cmdk-panel__footer {
+  display: flex; align-items: center; gap: var(--spacing-12);
+  padding: 0 var(--spacing-12); min-height: 40px;
+  border-top: 1px solid var(--uems-border-tertiary);
+  background: var(--uems-bg-secondary);
+}
+#cmdk-pop .cmdk-panel__hints {
+  display: inline-flex; align-items: center; gap: var(--spacing-12); flex-wrap: nowrap;
+  font-size: 11px; color: var(--uems-text-tertiary); white-space: nowrap;
+}
+#cmdk-pop .cmdk-panel__hints span { display: inline-flex; align-items: center; gap: var(--spacing-4, 4px); }
+#cmdk-pop .cmdk-kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 17px; height: 17px; padding-inline: 3px;
+  background: var(--uems-bg-primary); border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-sm, 4px); color: var(--uems-text-quaternary);
+  font-size: 11px; line-height: 1; font-family: var(--font-family-sans);
+}
+#cmdk-pop .cmdk-panel__cfg { margin-inline-start: auto; flex: none; }
+#cmdk-pop .cmdk-panel__cfg .ds-button { color: var(--uems-text-secondary); font-size: 12px; }
+#cmdk-pop .cmdk-panel__adv { flex: none; }
+#cmdk-pop .cmdk-panel__adv .ds-text-link { font-size: 12px; }
+/* A subtle divider between the Customise + Advanced-search cluster. */
+#cmdk-pop .cmdk-panel__footer .cmdk-panel__cfg + .cmdk-panel__adv::before {
+  content: ""; display: inline-block; width: 1px; height: 14px;
+  background: var(--uems-border-tertiary); margin-inline-end: var(--spacing-12); vertical-align: middle;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #cmdk-pop .cmdk-panel { animation: cmdk-pop-in 160ms var(--ease-standard, ease); }
+  @keyframes cmdk-pop-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+}
+</style>
+
+<div id="cmdk-pop" role="dialog" aria-modal="true" hidden>
+  <ds-overlay id="cmdk-scrim" type="dim"></ds-overlay>
+  <div class="cmdk-panel" id="cmdk-panel">
+    <div class="cmdk-panel__search">
+      <ds-icon class="cmdk-zia-lead" name="sparkles" size="20"></ds-icon>
+      <ds-search-field id="cmdk-input" size="large" show-shortcut shortcut-label="⌘K" placeholder="Search or jump to"></ds-search-field>
+      <span class="cmdk-search-div" aria-hidden="true"></span>
+      <button type="button" class="cmdk-zia-btn" id="cmdk-zia-btn" aria-label="Ask Zia"><img class="cmdk-zia-logo" src="../design-system-library/src/icons/logos/Zia-logo.svg" alt="" /></button>
+    </div>
+    <div class="cmdk-panel__chips">
+      <ds-tab-filter id="cmdk-modes" size="small" aria-label="Result type"></ds-tab-filter>
+    </div>
+    <div class="cmdk-panel__results" id="cmdk-results" role="listbox"></div>
+    <div class="cmdk-panel__footer">
+      <div class="cmdk-panel__hints" id="cmdk-hints"></div>
+      <ds-button id="cmdk-cfg-btn" class="cmdk-panel__cfg" variant="tertiary" size="small"
+        prefix-icon="settings-custom">Customize</ds-button>
+      <ds-text-link id="cmdk-adv" class="cmdk-panel__adv" variant="primary" size="medium"
+        underline="hover" trailing-icon="arrow-narrow-right" href="Shell.html#search">Advanced search</ds-text-link>
+    </div>
+  </div>
+
+  <!-- Customize actions modal — pick actions to pin into the palette.
+       Kept simple: search → one-line category chips → list. -->
+  <ds-modal id="cmdk-cfg" size="md" show-header="false">
+    <div class="cmdk-cfg__hdr">
+      <button type="button" class="cmdk-cfg__back" id="cmdk-cfg-back" aria-label="Back"><ds-icon name="arrow-narrow-left" size="18"></ds-icon></button>
+      <ds-search-field id="cmdk-cfg-search" size="large" show-shortcut shortcut-label="⌘K" placeholder="Filter 50+ actions & links…"></ds-search-field>
+    </div>
+    <div class="cmdk-cfg__banner">
+      <span class="cmdk-cfg__banner-text"><ds-icon name="settings-custom" size="16"></ds-icon> <span id="cmdk-cfg-banner"></span></span>
+      <span class="cmdk-cfg__pill" id="cmdk-cfg-count"></span>
+    </div>
+    <div class="cmdk-cfg__list" id="cmdk-cfg-list"></div>
+    <span slot="footer-start" class="cmdk-cfg__meta" id="cmdk-cfg-order"></span>
+    <ds-button slot="footer" id="cmdk-cfg-save" variant="primary">Done</ds-button>
+  </ds-modal>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('cmdk-pop');
+  if (!root || root.__init) return; root.__init = true;
+  /* Scope EVERY query to root — the palette shares <body> with the whole shell. */
+  const $ = (id) => root.querySelector('#' + id) || document.getElementById(id);
+
+  /* ── i18n ──────────────────────────────────────────────────────────────── */
+  const MSGS = {
+    en: {
+      'cmdk.ph': 'Search 50+ actions, pages, devices…',
+      'cmdk.aria': 'Search actions, pages and devices',
+      'cmdk.chip.all': 'Everything', 'cmdk.chip.commands': 'Actions', 'cmdk.chip.goto': 'Go to',
+      'cmdk.chip.create': 'Create', 'cmdk.chip.devices': 'Devices',
+      'cmdk.g.actions': 'Quick actions', 'cmdk.g.goto': 'Go to', 'cmdk.g.create': 'Create',
+      'cmdk.g.devices': 'Devices', 'cmdk.g.patches': 'Patches',
+      'cmdk.g.configs': 'Configurations', 'cmdk.g.reports': 'Reports',
+      'cmdk.g.recent': 'Recent',
+      'cmdk.g.best': 'Best match',
+      'cmdk.g.attention': 'Needs attention',
+      'cmdk.g.edit': 'Edit',
+      'cmdk.f.nav': 'navigate', 'cmdk.f.open': 'open', 'cmdk.f.close': 'close',
+      'cmdk.f.scope': 'filter',
+      'cmdk.open': 'Open',
+      'cmdk.zia': 'Ask Zia',
+      'cmdk.zia.row': 'Ask Zia — describe it in plain words instead',
+      'cmdk.zia.rowsub': '— describe it in plain words instead',
+      'cmdk.zia.ph': 'Ask Zia in plain words…',
+      'cmdk.zia.try': 'Try asking',
+      'cmdk.zia.hint': 'Type a question in plain words and press ↵ — esc goes back to search.',
+      'cmdk.zia.q1': 'Which devices failed patching this week?',
+      'cmdk.zia.q2': 'Show machines with critical vulnerabilities',
+      'cmdk.zia.q3': 'Why did deployment DEP-1042 fail?',
+      'cmdk.f.zia': 'Ask Zia',
+      'cmdk.i.reboot': 'Restart devices pending reboot', 'cmdk.i.reboot.d': 'Threats & Patches > Deployment',
+      'cmdk.b.devices': '14 devices', 'cmdk.b.patchfail': 'Patch failed',
+      'cmdk.ts.2h': '2h ago', 'cmdk.ts.yst': 'Yesterday',
+      'cmdk.zia.sub': 'Get AI help with “{q}”',
+      'cmdk.qa.remote': 'Remote', 'cmdk.qa.scan': 'Scan',
+      'cmdk.qa.toast.remote': 'Starting remote session with {d}',
+      'cmdk.qa.toast.scan': 'Inventory scan queued for {d}',
+      'cmdk.adv': 'Advanced search',
+      'cmdk.g.custom': 'Custom actions',
+      'cmdk.cfg.btn': 'Customize',
+      'cmdk.cfg.title': 'Add custom actions',
+      'cmdk.cfg.desc': 'Pick the actions to pin in the palette’s quick actions.',
+      'cmdk.cfg.ph': 'Search actions',
+      'cmdk.cfg.cancel': 'Cancel', 'cmdk.cfg.save': 'Save',
+      'cmdk.cfg.saved': 'Quick actions updated',
+      'cmdk.cfg.none': 'No actions match',
+      'cmdk.cfg.none.desc': 'Try a different term — actions are grouped by module.',
+      'cmdk.cfg.count': '{n} selected',
+      'cmdk.cfg.clear': 'Clear all',
+      'cmdk.cfg.all': 'All categories',
+      'cmdk.cfg.ph2': 'Filter 50+ actions & links…',
+      'cmdk.cfg.banner': 'Pick the actions & links you use most — type to filter, ↵ adds the first match.',
+      'cmdk.cfg.of': '{n} of {max}',
+      'cmdk.cfg.order': '{n} of {max} — shown in the order you add them',
+      'cmdk.cfg.done': 'Done', 'cmdk.cfg.add': 'Add',
+      'cmdk.cfg.pinned': 'Your quick actions', 'cmdk.cfg.pinned.hint': 'Drag to reorder · they appear in this order',
+      'cmdk.cfg.pinned.empty': 'Nothing pinned yet — add actions below to build your quick actions.',
+      'cmdk.cfg.remove': 'Remove',
+      'cmdk.cfg.max': 'You’ve pinned the max — remove one to add another.',
+      'cmdk.cfg.maxtip': 'Remove one to add another (16 max)',
+      'cmdk.cfg.saven': 'Save {n} actions',
+      'cmdk.cat.configs': 'Configurations', 'cmdk.cat.patch': 'Patch management',
+      'cmdk.cat.sd': 'Software deployment', 'cmdk.cat.inv': 'Asset & inventory',
+      'cmdk.cat.mdm': 'Mobile device management', 'cmdk.cat.sec': 'Security & privilege',
+      'cmdk.cat.edr': 'Endpoint security (EDR)', 'cmdk.cat.remote': 'Remote support',
+      'cmdk.cat.reports': 'Reports', 'cmdk.cat.users': 'Users & access',
+      'cmdk.cat.notif': 'Notifications', 'cmdk.cat.system': 'System',
+      'cmdk.empty.title': 'No matches for “{q}”',
+      'cmdk.empty.desc': 'Check the spelling, or pick a way forward below.',
+      'cmdk.g.try': 'Try this',
+      'cmdk.try.everywhere': 'Search everywhere',
+      'cmdk.try.everywhere.sub': '{n} matches outside this filter',
+      'cmdk.try.dym': 'Did you mean “{s}”?',
+      'cmdk.try.adv': 'Search all of Endpoint Central',
+      'cmdk.try.adv.sub': 'Advanced search — settings, knowledge base, and more',
+      'cmdk.toast.title': 'Jumping to {label}',
+      'cmdk.toast.run': 'Started: {label}',
+      'cmdk.confirm': 'Run on {n} systems?',
+      'cmdk.f.confirm': 'confirm', 'cmdk.f.cancel': 'cancel',
+      'cmdk.g.synth': 'Suggested action — parsed by Zia ✦',
+      'cmdk.undo': 'Undo',
+      'cmdk.undo.done': 'Cancelled before dispatch — nothing ran',
+      'cmdk.ok.scan': 'Inventory scan queued · 186 systems',
+      'cmdk.ok.remote': 'Remote session starting — pick a computer',
+      'cmdk.ok.wol': 'Wake on LAN — pick target computers',
+      'cmdk.ok.syncdb': 'Patch database sync queued',
+      'cmdk.hold': 'Dispatching in 10 s',
+      'cmdk.scope': 'Scope: All systems · 1,248',
+      'cmdk.audit': 'audit logged',
+      'cmdk.b.online': 'Online', 'cmdk.b.offline': 'Offline',
+      'cmdk.b.critical': 'Critical', 'cmdk.b.important': 'Important', 'cmdk.b.moderate': 'Moderate',
+      'cmdk.b.pending': '12 pending', 'cmdk.b.failed': '8 failed',
+      'cmdk.i.scan': 'Scan all systems now', 'cmdk.i.scan.d': 'Inventory > Scan systems',
+      'cmdk.i.approve': 'Approve pending patches', 'cmdk.i.approve.d': 'Threats & Patches > Test and approve',
+      'cmdk.i.attention': 'Open Attention Required', 'cmdk.i.attention.d': 'Threats & Patches > Systems',
+      'cmdk.i.remote': 'Start remote control session', 'cmdk.i.remote.d': 'Tools > Remote control',
+      'cmdk.i.wol': 'Wake on LAN', 'cmdk.i.wol.d': 'Tools > Wake on LAN',
+      'cmdk.i.syncdb': 'Sync patch database', 'cmdk.i.syncdb.d': 'Threats & Patches > Settings',
+      'cmdk.i.apd': 'Automate patch deployment', 'cmdk.i.apd.d': 'Threats & Patches > Deployment',
+      'cmdk.i.testapprove': 'Test and approve patches', 'cmdk.i.testapprove.d': 'Threats & Patches > Deployment',
+      'cmdk.i.deppol': 'Deployment policies', 'cmdk.i.deppol.d': 'Threats & Patches > Deployment',
+      'cmdk.i.ssp': 'Self-service portal', 'cmdk.i.ssp.d': 'Software Deployment > Deployment',
+      'cmdk.i.packages': 'Packages', 'cmdk.i.packages.d': 'Software Deployment > Package creation',
+      'cmdk.i.swinv': 'Software inventory', 'cmdk.i.swinv.d': 'Inventory > View details',
+      'cmdk.i.allconfigs': 'All configurations', 'cmdk.i.allconfigs.d': 'Configurations',
+      'cmdk.i.enroll': 'MDM enrollment', 'cmdk.i.enroll.d': 'Device Mgmt > Enrollment',
+      'cmdk.i.rchist': 'Remote control history', 'cmdk.i.rchist.d': 'Tools > Remote control',
+      'cmdk.i.som': 'Scope of management', 'cmdk.i.som.d': 'Admin > General settings',
+      'cmdk.i.newpatchtask': 'New patch deployment task', 'cmdk.i.newpatchtask.d': 'Threats & Patches > Deployment',
+      'cmdk.i.newpkg': 'New software package', 'cmdk.i.newpkg.d': 'Software Deployment > Packages',
+      'cmdk.i.newconfig': 'New configuration', 'cmdk.i.newconfig.d': 'Configurations > Add (choose OS)',
+      'cmdk.i.newgroup': 'New custom group', 'cmdk.i.newgroup.d': 'Admin > Custom groups',
+      'cmdk.i.newpolicy': 'New deployment policy', 'cmdk.i.newpolicy.d': 'Threats & Patches > Deployment policies',
+      'cmdk.i.newreport': 'New custom report', 'cmdk.i.newreport.d': 'Reports > Custom reports',
+    },
+    /* Machine-translated — flag for native review. */
+    ar: {
+      'cmdk.ph': 'ابحث في 50+ إجراء وصفحة وجهاز…',
+      'cmdk.aria': 'ابحث في الإجراءات والصفحات والأجهزة',
+      'cmdk.chip.all': 'الكل', 'cmdk.chip.commands': 'الإجراءات', 'cmdk.chip.goto': 'انتقال إلى',
+      'cmdk.chip.create': 'إنشاء', 'cmdk.chip.devices': 'الأجهزة',
+      'cmdk.g.actions': 'إجراءات سريعة', 'cmdk.g.goto': 'انتقال إلى', 'cmdk.g.create': 'إنشاء',
+      'cmdk.g.devices': 'الأجهزة', 'cmdk.g.patches': 'التصحيحات',
+      'cmdk.g.configs': 'التكوينات', 'cmdk.g.reports': 'التقارير',
+      'cmdk.g.recent': 'الأخيرة',
+      'cmdk.g.best': 'أفضل تطابق',
+      'cmdk.g.attention': 'يتطلب الانتباه',
+      'cmdk.g.edit': 'تعديل',
+      'cmdk.f.nav': 'تنقّل', 'cmdk.f.open': 'فتح', 'cmdk.f.close': 'إغلاق',
+      'cmdk.f.scope': 'تصفية',
+      'cmdk.open': 'فتح',
+      'cmdk.zia': 'اسأل Zia',
+      'cmdk.zia.row': 'اسأل Zia — صفه بكلماتك بدلاً من ذلك',
+      'cmdk.zia.rowsub': '— صفه بكلماتك بدلاً من ذلك',
+      'cmdk.zia.ph': 'اسأل Zia بكلمات بسيطة…',
+      'cmdk.zia.try': 'جرّب أن تسأل',
+      'cmdk.zia.hint': 'اكتب سؤالاً بكلمات بسيطة واضغط ↵ — esc يعود إلى البحث.',
+      'cmdk.zia.q1': 'ما الأجهزة التي فشل تصحيحها هذا الأسبوع؟',
+      'cmdk.zia.q2': 'اعرض الأجهزة ذات الثغرات الحرجة',
+      'cmdk.zia.q3': 'لماذا فشل النشر DEP-1042؟',
+      'cmdk.f.zia': 'اسأل Zia',
+      'cmdk.i.reboot': 'إعادة تشغيل الأجهزة المعلّقة', 'cmdk.i.reboot.d': 'التهديدات والتصحيحات > النشر',
+      'cmdk.b.devices': '14 جهازًا', 'cmdk.b.patchfail': 'فشل التصحيح',
+      'cmdk.ts.2h': 'قبل ساعتين', 'cmdk.ts.yst': 'أمس',
+      'cmdk.zia.sub': 'مساعدة الذكاء الاصطناعي حول “{q}”',
+      'cmdk.qa.remote': 'عن بُعد', 'cmdk.qa.scan': 'فحص',
+      'cmdk.qa.toast.remote': 'بدء جلسة عن بُعد مع {d}',
+      'cmdk.qa.toast.scan': 'تمت جدولة فحص المخزون لـ {d}',
+      'cmdk.adv': 'بحث متقدم',
+      'cmdk.g.custom': 'إجراءات مخصصة',
+      'cmdk.cfg.btn': 'تخصيص',
+      'cmdk.cfg.title': 'إضافة إجراءات مخصصة',
+      'cmdk.cfg.desc': 'اختر الإجراءات لتثبيتها ضمن الإجراءات السريعة.',
+      'cmdk.cfg.ph': 'ابحث في الإجراءات',
+      'cmdk.cfg.cancel': 'إلغاء', 'cmdk.cfg.save': 'حفظ',
+      'cmdk.cfg.saved': 'تم تحديث الإجراءات السريعة',
+      'cmdk.cfg.none': 'لا إجراءات مطابقة',
+      'cmdk.cfg.none.desc': 'جرّب مصطلحًا آخر — الإجراءات مجمّعة حسب الوحدة.',
+      'cmdk.cfg.count': '{n} محدد',
+      'cmdk.cfg.clear': 'مسح الكل',
+      'cmdk.cfg.all': 'كل الفئات',
+      'cmdk.cfg.ph2': 'تصفية 50+ إجراء ورابط…',
+      'cmdk.cfg.banner': 'اختر الإجراءات والروابط الأكثر استخدامًا — اكتب للتصفية، ↵ يضيف أول تطابق.',
+      'cmdk.cfg.of': '{n} من {max}',
+      'cmdk.cfg.order': '{n} من {max} — تظهر بترتيب إضافتها',
+      'cmdk.cfg.done': 'تم', 'cmdk.cfg.add': 'إضافة',
+      'cmdk.cfg.pinned': 'إجراءاتك السريعة', 'cmdk.cfg.pinned.hint': 'اسحب لإعادة الترتيب · تظهر بهذا الترتيب',
+      'cmdk.cfg.pinned.empty': 'لا شيء مثبّت بعد — أضف إجراءات من الأسفل.',
+      'cmdk.cfg.remove': 'إزالة',
+      'cmdk.cfg.max': 'وصلت للحد الأقصى — أزل واحدًا لإضافة آخر.',
+      'cmdk.cfg.maxtip': 'أزل واحدًا لإضافة آخر (16 كحد أقصى)',
+      'cmdk.cfg.saven': 'حفظ {n} إجراءات',
+      'cmdk.cat.configs': 'التكوينات', 'cmdk.cat.patch': 'إدارة التصحيحات',
+      'cmdk.cat.sd': 'نشر البرامج', 'cmdk.cat.inv': 'الأصول والمخزون',
+      'cmdk.cat.mdm': 'إدارة الأجهزة المحمولة', 'cmdk.cat.sec': 'الأمان والامتيازات',
+      'cmdk.cat.edr': 'أمان النقاط الطرفية (EDR)', 'cmdk.cat.remote': 'الدعم عن بُعد',
+      'cmdk.cat.reports': 'التقارير', 'cmdk.cat.users': 'المستخدمون والوصول',
+      'cmdk.cat.notif': 'الإشعارات', 'cmdk.cat.system': 'النظام',
+      'cmdk.empty.title': 'لا تطابقات لـ “{q}”',
+      'cmdk.empty.desc': 'تحقق من الإملاء أو اختر أحد المسارات أدناه.',
+      'cmdk.g.try': 'جرّب هذا',
+      'cmdk.try.everywhere': 'ابحث في كل مكان',
+      'cmdk.try.everywhere.sub': '{n} نتائج خارج هذا المرشّح',
+      'cmdk.try.dym': 'هل تقصد “{s}”؟',
+      'cmdk.try.adv': 'ابحث في كل Endpoint Central',
+      'cmdk.try.adv.sub': 'بحث متقدم — الإعدادات وقاعدة المعرفة والمزيد',
+      'cmdk.toast.title': 'الانتقال إلى {label}',
+      'cmdk.toast.run': 'بدأ: {label}',
+      'cmdk.confirm': 'التشغيل على {n} نظامًا؟',
+      'cmdk.f.confirm': 'تأكيد', 'cmdk.f.cancel': 'إلغاء',
+      'cmdk.g.synth': 'إجراء مقترح — بتحليل Zia ✦',
+      'cmdk.undo': 'تراجع',
+      'cmdk.undo.done': 'أُلغي قبل الإرسال — لم يُنفَّذ شيء',
+      'cmdk.ok.scan': 'فحص المخزون في قائمة الانتظار · 186 نظامًا',
+      'cmdk.ok.remote': 'جارٍ بدء جلسة عن بُعد — اختر جهازًا',
+      'cmdk.ok.wol': 'التنبيه عبر الشبكة — اختر الأجهزة المستهدفة',
+      'cmdk.ok.syncdb': 'مزامنة قاعدة البيانات في قائمة الانتظار',
+      'cmdk.hold': 'الإرسال خلال 10 ثوانٍ',
+      'cmdk.scope': 'النطاق: جميع الأنظمة · 1,248',
+      'cmdk.audit': 'مسجّل للتدقيق',
+      'cmdk.b.online': 'متصل', 'cmdk.b.offline': 'غير متصل',
+      'cmdk.b.critical': 'حرج', 'cmdk.b.important': 'مهم', 'cmdk.b.moderate': 'متوسط',
+      'cmdk.b.pending': '12 قيد الانتظار', 'cmdk.b.failed': '8 فشلت',
+      'cmdk.i.scan': 'فحص جميع الأنظمة الآن', 'cmdk.i.scan.d': 'المخزون > فحص الأنظمة',
+      'cmdk.i.approve': 'اعتماد التصحيحات المعلّقة', 'cmdk.i.approve.d': 'التهديدات والتصحيحات > الاختبار والاعتماد',
+      'cmdk.i.attention': 'فتح "يتطلب الانتباه"', 'cmdk.i.attention.d': 'التهديدات والتصحيحات > الأنظمة',
+      'cmdk.i.remote': 'بدء جلسة تحكم عن بُعد', 'cmdk.i.remote.d': 'الأدوات > التحكم عن بُعد',
+      'cmdk.i.wol': 'التنبيه عبر الشبكة', 'cmdk.i.wol.d': 'الأدوات > التنبيه عبر الشبكة',
+      'cmdk.i.syncdb': 'مزامنة قاعدة بيانات التصحيحات', 'cmdk.i.syncdb.d': 'التهديدات والتصحيحات > الإعدادات',
+      'cmdk.i.apd': 'نشر التصحيحات تلقائيًا', 'cmdk.i.apd.d': 'التهديدات والتصحيحات > النشر',
+      'cmdk.i.testapprove': 'اختبار التصحيحات واعتمادها', 'cmdk.i.testapprove.d': 'التهديدات والتصحيحات > النشر',
+      'cmdk.i.deppol': 'سياسات النشر', 'cmdk.i.deppol.d': 'التهديدات والتصحيحات > النشر',
+      'cmdk.i.ssp': 'بوابة الخدمة الذاتية', 'cmdk.i.ssp.d': 'نشر البرامج > النشر',
+      'cmdk.i.packages': 'الحزم', 'cmdk.i.packages.d': 'نشر البرامج > إنشاء الحزم',
+      'cmdk.i.swinv': 'مخزون البرامج', 'cmdk.i.swinv.d': 'المخزون > عرض التفاصيل',
+      'cmdk.i.allconfigs': 'جميع التكوينات', 'cmdk.i.allconfigs.d': 'التكوينات',
+      'cmdk.i.enroll': 'تسجيل إدارة الأجهزة المحمولة', 'cmdk.i.enroll.d': 'إدارة الأجهزة > التسجيل',
+      'cmdk.i.rchist': 'سجل التحكم عن بُعد', 'cmdk.i.rchist.d': 'الأدوات > التحكم عن بُعد',
+      'cmdk.i.som': 'نطاق الإدارة', 'cmdk.i.som.d': 'الإدارة > الإعدادات العامة',
+      'cmdk.i.newpatchtask': 'مهمة نشر تصحيح جديدة', 'cmdk.i.newpatchtask.d': 'التهديدات والتصحيحات > النشر',
+      'cmdk.i.newpkg': 'حزمة برامج جديدة', 'cmdk.i.newpkg.d': 'نشر البرامج > الحزم',
+      'cmdk.i.newconfig': 'تكوين جديد', 'cmdk.i.newconfig.d': 'التكوينات > إضافة (اختر نظام التشغيل)',
+      'cmdk.i.newgroup': 'مجموعة مخصصة جديدة', 'cmdk.i.newgroup.d': 'الإدارة > المجموعات المخصصة',
+      'cmdk.i.newpolicy': 'سياسة نشر جديدة', 'cmdk.i.newpolicy.d': 'التهديدات والتصحيحات > سياسات النشر',
+      'cmdk.i.newreport': 'تقرير مخصص جديد', 'cmdk.i.newreport.d': 'التقارير > التقارير المخصصة',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+
+  /* ── Data — realistic Endpoint Central entities ────────────────────────── */
+  /* UI-owned labels use i18n keys (k/dk); admin-created / device data stays
+     canonical English (label/sub) per the localization rule. */
+  const GROUPS = [
+    /* `ok` = an EXECUTE action: its toast reports the started outcome
+       (verb + consequence), never navigation copy. Rows without `ok` navigate.
+       `tone` colours the icon tile; `ts` shows a recency stamp. */
+    { id: 'actions', mode: 'commands', tone: 'accent', editable: true, items: [
+      { icon: 'sync', k: 'cmdk.i.syncdb', dk: 'cmdk.i.syncdb.d', ok: 'cmdk.ok.syncdb', ts: 'cmdk.ts.2h' },
+      { icon: 'tick', k: 'cmdk.i.approve', dk: 'cmdk.i.approve.d', badge: { k: 'cmdk.b.pending', state: 'important' } },
+      { icon: 'computer-scan', k: 'cmdk.i.scan', dk: 'cmdk.i.scan.d', ok: 'cmdk.ok.scan', fleet: 186, ts: 'cmdk.ts.yst' },
+      { icon: 'desktop-remote', k: 'cmdk.i.remote', dk: 'cmdk.i.remote.d', ok: 'cmdk.ok.remote', noHold: true },   /* a session opens now — cannot be held, so no undo offered */
+      { icon: 'power', k: 'cmdk.i.wol', dk: 'cmdk.i.wol.d', ok: 'cmdk.ok.wol' },
+    ] },
+    /* Needs attention — the daily "exceptions" surface: failures + pending work. */
+    { id: 'attention', mode: 'commands', tone: 'critical', items: [
+      { icon: 'exclamation-triangle', k: 'cmdk.i.attention', dk: 'cmdk.i.attention.d', badge: { k: 'cmdk.b.failed', state: 'critical' } },
+      { icon: 'reboot', k: 'cmdk.i.reboot', dk: 'cmdk.i.reboot.d', badge: { k: 'cmdk.b.devices', state: 'important' } },
+      { icon: 'computer-exclamation', label: 'WIN-KIOSK-3', sub: 'Windows 10 · Patch failed', kw: 'kiosk failed', badge: { k: 'cmdk.b.patchfail', state: 'critical' } },
+    ] },
+    { id: 'goto', mode: 'goto', items: [
+      { icon: 'settings-deploy', k: 'cmdk.i.apd', dk: 'cmdk.i.apd.d', kw: 'apd' },
+      { icon: 'checklist-01', k: 'cmdk.i.testapprove', dk: 'cmdk.i.testapprove.d', kw: 'pilot' },
+      { icon: 'task-schedule', k: 'cmdk.i.deppol', dk: 'cmdk.i.deppol.d', kw: 'window reboot' },
+      { icon: 'software', k: 'cmdk.i.ssp', dk: 'cmdk.i.ssp.d', kw: 'ssp app catalogue' },
+      { icon: 'installation', k: 'cmdk.i.packages', dk: 'cmdk.i.packages.d', kw: 'msi exe' },
+      { icon: 'computers', k: 'cmdk.i.swinv', dk: 'cmdk.i.swinv.d', kw: 'apps applications installed' },
+      { icon: 'settings', k: 'cmdk.i.allconfigs', dk: 'cmdk.i.allconfigs.d' },
+      { icon: 'mobile-tick', k: 'cmdk.i.enroll', dk: 'cmdk.i.enroll.d', kw: 'mobile byod' },
+      { icon: 'event-history', k: 'cmdk.i.rchist', dk: 'cmdk.i.rchist.d', kw: 'recordings' },
+      { icon: 'hierarchy-square', k: 'cmdk.i.som', dk: 'cmdk.i.som.d', kw: 'som scope' },
+    ] },
+    { id: 'create', mode: 'create', items: [
+      { icon: 'patch', k: 'cmdk.i.newpatchtask', dk: 'cmdk.i.newpatchtask.d' },
+      { icon: 'installation', k: 'cmdk.i.newpkg', dk: 'cmdk.i.newpkg.d' },
+      { icon: 'settings-custom', k: 'cmdk.i.newconfig', dk: 'cmdk.i.newconfig.d' },
+      { icon: 'users', k: 'cmdk.i.newgroup', dk: 'cmdk.i.newgroup.d' },
+      { icon: 'task-schedule', k: 'cmdk.i.newpolicy', dk: 'cmdk.i.newpolicy.d' },
+      { icon: 'query-rep', k: 'cmdk.i.newreport', dk: 'cmdk.i.newreport.d' },
+    ] },
+    { id: 'devices', mode: 'devices', items: [
+      { icon: 'laptop', label: 'EC-FIN-LT-042', sub: 'finance.zylker.com', qa: true, kw: 'windows laptop', badge: { k: 'cmdk.b.online', state: 'success' } },
+      { icon: 'computer', label: 'EC-HR-WS-118', sub: 'corp.zylker.com', qa: true, kw: 'windows workstation', badge: { k: 'cmdk.b.online', state: 'success' } },
+      { icon: 'laptop', label: 'EC-DEV-MBP-07', sub: 'dev.zylker.com', kw: 'mac macbook', badge: { k: 'cmdk.b.offline', state: 'default' } },
+      { icon: 'server-01', label: 'EC-WHS-SRV-03', sub: 'warehouse.zylker.com', qa: true, kw: 'windows server', badge: { k: 'cmdk.b.online', state: 'success' } },
+    ] },
+    { id: 'patches', mode: 'all', searchOnly: true, items: [
+      { icon: 'patch', label: 'KB5044281', sub: 'Windows 11 23H2 cumulative update', badge: { k: 'cmdk.b.critical', state: 'critical' } },
+      { icon: 'patch', label: 'KB5043125', sub: 'Windows Server 2022 security update', badge: { k: 'cmdk.b.important', state: 'important' } },
+      { icon: 'patch', label: 'KB5041580', sub: 'Microsoft Edge 126 update', badge: { k: 'cmdk.b.moderate', state: 'moderate' } },
+      { icon: 'patch', label: 'APSB24-107', sub: 'Adobe Acrobat DC update', badge: { k: 'cmdk.b.important', state: 'important' } },
+    ] },
+    /* Config identity in EC = platform + computer/user type + status (same
+       name can exist per-OS) — the sub carries all three. */
+    { id: 'configs', mode: 'all', searchOnly: true, items: [
+      { icon: 'firewall', label: 'Firewall baseline', sub: 'Windows · computer config · Executed' },
+      { icon: 'usb-drive', label: 'USB restriction policy', sub: 'Windows · computer config · Executed', kw: 'secure usb' },
+      { icon: 'power', label: 'Power scheme — office hours', sub: 'Windows · user config · Suspended' },
+    ] },
+    { id: 'reports', mode: 'all', searchOnly: true, items: [
+      { icon: 'file-report', label: 'Patch compliance summary', sub: 'Reports' },
+      { icon: 'calendar-exclamation', label: 'Warranty expiring in 90 days', sub: 'Reports' },
+    ] },
+  ];
+  const MODES = [
+    { id: 'all', k: 'cmdk.chip.all', icon: 'search' },
+    { id: 'commands', k: 'cmdk.chip.commands', icon: 'zap' },
+    { id: 'goto', k: 'cmdk.chip.goto', icon: 'arrow-narrow-right' },
+    { id: 'create', k: 'cmdk.chip.create', icon: 'add' },
+    { id: 'devices', k: 'cmdk.chip.devices', icon: 'computer' },
+  ];
+  /* How many rows each group shows in "Everything" mode with an empty query. */
+  const ALL_MODE_LIMIT = { actions: 5, attention: 3, goto: 4, create: 3 };
+  /* Icon-tile tint per group tone. */
+  const TONE_TILE = {
+    accent: 'background:var(--uems-bg-accent-primary);color:var(--uems-text-accent-link)',
+    critical: 'background:var(--uems-bg-error-secondary,#FEE4E2);color:var(--uems-text-error,#D5304A)',
+  };
+  const groupTone = (gid) => { const g = GROUPS.find((x) => x.id === gid); return g && g.tone; };
+
+  const input = root.querySelector('#cmdk-input');
+  const modesEl = root.querySelector('#cmdk-modes');
+  const resultsEl = root.querySelector('#cmdk-results');
+  const hintsEl = root.querySelector('#cmdk-hints');
+  const advBtn = root.querySelector('#cmdk-adv');
+
+  let mode = 'all';
+  let activeIdx = 0;
+  let flatRows = [];   /* the currently rendered, activatable items in order */
+  let confirmItem = null;   /* fleet-scale action awaiting its second Enter (consequence gate) */
+  let kbNav = false;   /* highlight shows only after the user actually navigates (hover/arrows) */
+  let ziaMode = false;   /* Ask-Zia mode: "describe it in plain words" state (Tab toggles) */
+
+  /* ── Screen-reader wiring ─────────────────────────────────────────────────
+     Focus never leaves the input; the arrow-keyed active option is announced
+     via aria-activedescendant (combobox pattern). */
+  function wireAria() {
+    const ni = input.querySelector('input');
+    if (!ni || ni.getAttribute('role') === 'combobox') return;
+    ni.setAttribute('role', 'combobox');
+    ni.setAttribute('aria-expanded', 'true');
+    ni.setAttribute('aria-controls', 'cmdk-results');
+    ni.setAttribute('aria-autocomplete', 'list');
+  }
+  function syncAria() {
+    const id = (kbNav && flatRows.length) ? 'cmdk-opt-' + activeIdx : '';
+    resultsEl.setAttribute('aria-activedescendant', id);
+    const ni = input.querySelector('input');
+    if (ni) ni.setAttribute('aria-activedescendant', id);
+  }
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const itemLabel = (it) => it.k ? t(it.k) : it.label;
+  const itemDesc = (it) => it.dk ? t(it.dk) : (it.sub || '');
+  const acronym = (s) => s.split(/[^a-zA-Z0-9]+/).filter(Boolean).map((w) => w[0]).join('').toLowerCase();
+  /* Token AND-match across label/desc/keywords, plus acronym prefixes —
+     "apd" finds Automate patch deployment, "ssp" the self-service portal. */
+  const matches = (it, q) => {
+    if (!q) return true;
+    const hay = (itemLabel(it) + ' ' + itemDesc(it) + ' ' + (it.label || '') + ' ' + (it.sub || '') + ' ' + (it.kw || '')).toLowerCase();
+    const acr = acronym(itemLabel(it));
+    return q.split(/\s+/).every((tok) => hay.includes(tok) || acr.startsWith(tok));
+  };
+  /* Highlight query tokens in a label (single pass over the escaped string). */
+  function hl(text, q) {
+    const safe = esc(text);
+    const toks = q ? q.split(/\s+/).filter(Boolean).map(escRe) : [];
+    if (!toks.length) return safe;
+    return safe.replace(new RegExp('(' + toks.join('|') + ')', 'ig'), '<span class="cmdk-hl">$1</span>');
+  }
+  const groupInMode = (g, m, q) => m === 'all' ? !(g.searchOnly && !q) : g.mode === m;
+  /* Did-you-mean: nearest word (edit distance ≤ 1–2) from the palette's own
+     vocabulary — labels + keywords — so "pacth" recovers to "patch". */
+  function lev(a, b) {
+    if (Math.abs(a.length - b.length) > 2) return 99;
+    const d = Array.from({ length: a.length + 1 }, (_, i) => { const r = new Array(b.length + 1).fill(0); r[0] = i; return r; });
+    for (let j = 1; j <= b.length; j++) d[0][j] = j;
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      }
+    }
+    return d[a.length][b.length];
+  }
+  function bestSuggestion(q) {
+    if (q.length < 3 || /\s/.test(q)) return null;
+    let best = null, bestD = q.length <= 4 ? 1 : 2;
+    const seen = new Set();
+    GROUPS.forEach((g) => g.items.forEach((it) => {
+      (itemLabel(it) + ' ' + (it.kw || '')).toLowerCase().split(/[^a-z0-9]+/).forEach((w) => {
+        if (w.length < 3 || seen.has(w)) return;
+        seen.add(w);
+        const d = lev(q, w);
+        if (d > 0 && d <= bestD) { bestD = d; best = w; }
+      });
+    }));
+    return best;
+  }
+  /* Scope prefixes — power-user speed: ">" commands, "#" devices, "+" create. */
+  const PREFIX_MODE = { '>': 'commands', '#': 'devices', '+': 'create' };
+  function parseQuery() {
+    let raw = (input.value || '').trim();
+    let m = mode;
+    if (PREFIX_MODE[raw[0]]) { m = PREFIX_MODE[raw[0]]; raw = raw.slice(1); }
+    return { m, q: raw.trim().toLowerCase() };
+  }
+  const stripPrefix = () => {
+    const v = (input.value || '').trim();
+    if (PREFIX_MODE[v[0]]) input.value = v.slice(1).trim();
+  };
+
+  /* Frecency-lite: remember what was launched, resurface it first. */
+  const RECENT_KEY = 'uems-cmdk-recent';
+  const ITEM_BY_ID = {};
+  GROUPS.forEach((g) => g.items.forEach((it) => { it._id = it.k || it.label; it._gid = g.id; ITEM_BY_ID[it._id] = it; }));
+  const loadRecent = () => {
+    try { return (JSON.parse(localStorage.getItem(RECENT_KEY)) || []).map((id) => ITEM_BY_ID[id]).filter(Boolean); }
+    catch (_) { return []; }
+  };
+  const pushRecent = (it) => {
+    if (!it._id) return;
+    try {
+      const ids = (JSON.parse(localStorage.getItem(RECENT_KEY)) || []).filter((x) => x !== it._id);
+      ids.unshift(it._id);
+      localStorage.setItem(RECENT_KEY, JSON.stringify(ids.slice(0, 4)));
+    } catch (_) {}
+  };
+
+  /* ── Custom quick actions — the "Add custom actions" catalog (⚙ modal).
+     Category labels are localized; action names/descriptions are product
+     feature terminology and stay canonical English. */
+  /* Customize catalog — grouped by module, each category carries a colour
+     `cat` (drives its pill + card icon tiles). */
+  const ACTION_CATALOG = [
+    { id: 'patch', label: 'Patch management', icon: 'patch', cat: 'blue', items: [
+      { id: 'pm-sync', icon: 'sync', label: 'Sync patch database', desc: 'Threats & Patches › Settings' },
+      { id: 'pm-approve', icon: 'checklist-02', label: 'Approve pending patches', desc: 'Threats & Patches › Test and approve' },
+      { id: 'pm-deploy', icon: 'install-patch', label: 'Deploy missing patches', desc: 'Threats & Patches › Deployment' },
+      { id: 'pm-decline', icon: 'uninstall-patch', label: 'Decline low-priority patches', desc: 'Threats & Patches › All patches' },
+      { id: 'pm-testgrp', icon: 'layers', label: 'Deploy to test group', desc: 'Threats & Patches › Test and approve' },
+      { id: 'pm-reboot', icon: 'reboot', label: 'Restart devices pending reboot', desc: 'Threats & Patches › Deployment' },
+      { id: 'pm-uninstall', icon: 'patch-block', label: 'Uninstall a deployed patch', desc: 'Threats & Patches › Deployment' },
+      { id: 'pm-apd', icon: 'settings-deploy', label: 'Automate patch deployment', desc: 'Threats & Patches › Deployment' },
+      { id: 'pm-all', icon: 'patch', label: 'All patches', desc: 'Threats & Patches › All patches' },
+      { id: 'pm-supported', icon: 'circle-tick', label: 'Supported patches', desc: 'Threats & Patches › Supported' },
+      { id: 'pm-status', icon: 'focus', label: 'Deployment status', desc: 'Threats & Patches › Deployment' },
+      { id: 'pm-attention', icon: 'exclamation-triangle', label: 'Open Attention Required', desc: 'Threats & Patches › Systems' },
+    ] },
+    { id: 'inv', label: 'Inventory', icon: 'computers', cat: 'green', items: [
+      { id: 'inv-scan', icon: 'computer-scan', label: 'Scan all systems now', desc: 'Inventory › Scan systems' },
+      { id: 'inv-usb', icon: 'usb-drive', label: 'Block USB device class', desc: 'Inventory › USB devices' },
+      { id: 'inv-prohibit', icon: 'computer-uninstall', label: 'Uninstall prohibited software', desc: 'Inventory › Software' },
+      { id: 'inv-sw', icon: 'software', label: 'Software inventory', desc: 'Inventory › Software' },
+      { id: 'inv-hw', icon: 'cpu-chip', label: 'Hardware inventory', desc: 'Inventory › Hardware' },
+      { id: 'inv-license', icon: 'certificate', label: 'Software license management', desc: 'Inventory › Licenses' },
+      { id: 'inv-prohibited', icon: 'block', label: 'Prohibited software list', desc: 'Inventory › Software' },
+    ] },
+    { id: 'sd', label: 'Software deployment', icon: 'software', cat: 'purple', items: [
+      { id: 'sd-deploy', icon: 'computer-install', label: 'Deploy software package', desc: 'Software Deployment › Install' },
+      { id: 'sd-repo', icon: 'disk-library', label: 'Package repository', desc: 'Software Deployment › Packages' },
+      { id: 'sd-templates', icon: 'copy', label: 'Deployment templates', desc: 'Software Deployment › Templates' },
+      { id: 'sd-policy', icon: 'layers-add', label: 'Create deployment policy', desc: 'Software Deployment › Policies' },
+      { id: 'sd-addpkg', icon: 'add-circle', label: 'Add package to repository', desc: 'Software Deployment › Packages' },
+    ] },
+    { id: 'tools', label: 'Tools', icon: 'terminal-square', cat: 'orange', items: [
+      { id: 'tl-remote', icon: 'desktop-remote', label: 'Start remote control session', desc: 'Tools › Remote control' },
+      { id: 'tl-wol', icon: 'power', label: 'Wake on LAN', desc: 'Tools › Wake on LAN' },
+      { id: 'tl-power', icon: 'power-triangle', label: 'Shut down / restart systems', desc: 'Tools › Power management' },
+      { id: 'tl-chat', icon: 'message-chat-square', label: 'Chat with logged-in user', desc: 'Tools › Chat' },
+      { id: 'tl-announce', icon: 'announcement', label: 'Broadcast announcement', desc: 'Tools › Announcements' },
+      { id: 'tl-cmd', icon: 'terminal-square', label: 'Open system command prompt', desc: 'Tools › System manager' },
+    ] },
+    { id: 'agent', label: 'Agent', icon: 'download', cat: 'blue', items: [
+      { id: 'ag-install', icon: 'download', label: 'Install agent', desc: 'Agent › Computers' },
+      { id: 'ag-upgrade', icon: 'refresh', label: 'Upgrade all agents', desc: 'Agent › Settings' },
+      { id: 'ag-scope', icon: 'hierarchy-square', label: 'Scope of management', desc: 'Agent › Scope' },
+    ] },
+    { id: 'security', label: 'Security', icon: 'shield', cat: 'red', items: [
+      { id: 'sec-dash', icon: 'shield', label: 'Security Dashboard', desc: 'Threats & Patches › Dashboard' },
+      { id: 'sec-vuln', icon: 'bug', label: 'Vulnerability list', desc: 'Threats & Patches › Vulnerabilities' },
+      { id: 'sec-fw', icon: 'firewall', label: 'Firewall policies', desc: 'Security › Firewall' },
+      { id: 'sec-dlp', icon: 'file-shield', label: 'Data loss prevention reports', desc: 'Security › DLP' },
+      { id: 'sec-bitlocker', icon: 'encryption-lock', label: 'BitLocker encryption status', desc: 'Security › Encryption' },
+      { id: 'sec-browser', icon: 'terminal-browser', label: 'Browser security insights', desc: 'Browsers › Insights' },
+      { id: 'sec-appctl', icon: 'product-block', label: 'Application control policies', desc: 'Application Control › Policies' },
+    ] },
+    { id: 'mdm', label: 'Mobile device management', icon: 'mobile', cat: 'yellow', items: [
+      { id: 'mdm-devices', icon: 'mobile-devices', label: 'MDM enrolled devices', desc: 'MDM › Devices' },
+      { id: 'mdm-profile', icon: 'mobile-tick', label: 'Create MDM profile', desc: 'MDM › Profiles' },
+    ] },
+    { id: 'osd', label: 'OS deployment', icon: 'disk', cat: 'yellow', items: [
+      { id: 'osd-image', icon: 'disk', label: 'OS imaging & deployment', desc: 'OS Deployment › Imaging' },
+      { id: 'osd-create', icon: 'floppy', label: 'Create OS image', desc: 'OS Deployment › Imaging' },
+    ] },
+    { id: 'configs', label: 'Configurations & reports', icon: 'settings', cat: 'grey', items: [
+      { id: 'cf-all', icon: 'settings', label: 'All configurations', desc: 'Configurations › All' },
+      { id: 'cf-create', icon: 'settings-custom', label: 'Create configuration', desc: 'Configurations › New' },
+      { id: 'cf-group', icon: 'add-circle', label: 'Create custom group', desc: 'Configurations › Custom groups' },
+      { id: 'cf-patchrep', icon: 'file-report', label: 'Patch reports', desc: 'Reports › Patch management' },
+      { id: 'cf-query', icon: 'query-rep', label: 'Query reports', desc: 'Reports › Query' },
+      { id: 'cf-compliance', icon: 'checklist-01', label: 'Compliance summary', desc: 'Reports › Compliance' },
+      { id: 'cf-custom', icon: 'file-report', label: 'Custom reports', desc: 'Reports › User-defined' },
+      { id: 'cf-schedule', icon: 'calendar-clock', label: 'Schedule report', desc: 'Reports › Scheduled' },
+    ] },
+  ];
+  /* Category colour tones → pill + card-tile hex. */
+  const CAT_COLOR = {
+    blue:   { pill: 'background:var(--uems-bg-accent-primary);color:#2c66dd', tile: 'background:var(--uems-bg-accent-primary);color:#2c66dd' },
+    green:  { pill: 'background:#e7f4ec;color:#0c8844', tile: 'background:#e7f4ec;color:#0c8844' },
+    purple: { pill: 'background:#efeafc;color:#6b4fd8', tile: 'background:#efeafc;color:#6b4fd8' },
+    orange: { pill: 'background:#fff1e8;color:#c4501a', tile: 'background:#fff1e8;color:#c4501a' },
+    red:    { pill: 'background:var(--uems-bg-error-secondary,#fee4e2);color:#d5304a', tile: 'background:var(--uems-bg-error-secondary,#fee4e2);color:#d5304a' },
+    yellow: { pill: 'background:#fdf3d7;color:#a8791a', tile: 'background:#fdf3d7;color:#a8791a' },
+    grey:   { pill: 'background:var(--uems-bg-secondary);color:var(--uems-text-secondary)', tile: 'background:var(--uems-bg-secondary);color:var(--uems-icon-tertiary)' },
+  };
+  const CATALOG_BY_ID = {};
+  ACTION_CATALOG.forEach((c) => c.items.forEach((a) => { a._cat = c.cat; CATALOG_BY_ID[a.id] = a; }));
+  const CUSTOM_KEY = 'uems-cmdk-custom';
+  const CUSTOM_GROUP = { id: 'custom', mode: 'commands', items: [] };
+  GROUPS.splice(1, 0, CUSTOM_GROUP);   /* pinned right after Quick actions */
+  const loadCustom = () => { try { return JSON.parse(localStorage.getItem(CUSTOM_KEY)) || []; } catch (_) { return []; } };
+  function syncCustom() {
+    CUSTOM_GROUP.items = loadCustom().map((id) => {
+      const a = CATALOG_BY_ID[id];
+      if (!a) return null;
+      const it = { icon: a.icon, label: a.label, sub: a.desc, _id: 'custom:' + a.id, _gid: 'custom' };
+      ITEM_BY_ID[it._id] = it;
+      return it;
+    }).filter(Boolean);
+  }
+  syncCustom();
+
+  /* Zia tile — the real Zia logo, same asset as the Ask Zia view. Resolves
+     from Layout/ in both modes (injected: relative to Shell.html; standalone:
+     via <base href="../">). */
+  const ZIA_TILE = '<span class="cmdk-row__tile cmdk-row__tile--zia">' +
+    '<img class="cmdk-zia-logo" src="../design-system-library/src/icons/logos/Zia-logo.svg" alt="" /></span>';
+
+  /* ── Ranking ──────────────────────────────────────────────────────────────
+     Score a match so the FIRST row is the row the admin meant — exact label >
+     label prefix > word prefix > acronym > label substring > description/
+     keyword hit, with a frecency boost for recently launched items. */
+  function score(it, q, recentIds) {
+    const label = itemLabel(it).toLowerCase();
+    const hayDesc = (itemDesc(it) + ' ' + (it.sub || '') + ' ' + (it.kw || '')).toLowerCase();
+    const acr = acronym(itemLabel(it));
+    let total = 0;
+    q.split(/\s+/).filter(Boolean).forEach((tok) => {
+      if (label === tok) total += 100;
+      else if (label.startsWith(tok)) total += 80;
+      else if (new RegExp('(^|[^a-z0-9])' + escRe(tok)).test(label)) total += 60;
+      else if (acr.startsWith(tok)) total += 55;
+      else if (label.includes(tok)) total += 40;
+      else if (hayDesc.includes(tok)) total += 20;
+    });
+    const pos = recentIds.indexOf(it._id);
+    if (pos >= 0) total += Math.max(0, 15 - pos * 3);
+    return total;
+  }
+
+  /* ── Zia command synthesis — natural language → a reviewable action ──────
+     "scan finance laptops offline" → Run: Inventory scan · Finance OU ·
+     offline > 7 days · 23 systems. The synthesized row goes through the SAME
+     fleet confirm gate and undo window as every other execute action —
+     NL never bypasses safety. Triggers only for verb + scope/qualifier
+     sentences (a lone verb is just a search term). */
+  const NL_VERBS = [
+    { re: /\b(scan|rescan|audit)\b/, icon: 'computer-scan', label: 'Inventory scan', done: 'Inventory scan queued' },
+    { re: /\b(wake|wol)\b/, icon: 'power', label: 'Wake on LAN', done: 'Wake on LAN queued' },
+    { re: /\b(deploy|push)\b/, icon: 'settings-deploy', label: 'Software deployment', done: 'Deployment queued' },
+    { re: /\bblock\b/, icon: 'usb-drive', label: 'USB block policy', done: 'USB block policy queued' },
+    { re: /\b(restart|reboot)\b/, icon: 'reboot', label: 'Restart', done: 'Restart queued' },
+  ];
+  const NL_SCOPES = [
+    { re: /\bfinance|fin\b/, label: 'Finance OU', n: 23 },
+    { re: /\bwarehouse|whs\b/, label: 'Warehouse OU', n: 41 },
+    { re: /\bhr\b/, label: 'HR OU', n: 58 },
+    { re: /\bdev(eloper)?s?\b/, label: 'Dev OU', n: 36 },
+    { re: /\b(all|every|fleet)\b/, label: 'All systems', n: 1248 },
+  ];
+  function parseCommand(q) {
+    const verb = NL_VERBS.find((v) => v.re.test(q));
+    if (!verb) return null;
+    const scope = NL_SCOPES.find((s) => s.re.test(q));
+    const offline = /\boffline\b/.test(q);
+    const laptops = /\blaptops?\b/.test(q);
+    if (!scope && !offline && !laptops) return null;
+    const sc = scope || { label: 'All systems', n: 1248 };
+    let n = sc.n;
+    if (laptops) n = Math.max(2, Math.round(n * 0.6));
+    if (offline) n = Math.max(2, Math.round(n * 0.12));
+    const filters = (laptops ? ' · laptops' : '') + (offline ? ' · offline > 7 days' : '');
+    return {
+      synth: true, fleet: n, icon: verb.icon,
+      label: verb.label,
+      /* RBAC visibility: parse resolves within the caller's scope, and every
+         NL action carries its audit promise right on the row. */
+      sub: sc.label + filters + ' · ' + n + ' systems · ' + t('cmdk.audit'),
+      okText: verb.done + ' · ' + n + ' systems',
+    };
+  }
+
+  /* ── Rendering ─────────────────────────────────────────────────────────── */
+  function visibleGroups(m, q) {
+    const out = [];
+    const recentIds = (() => { try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } catch (_) { return []; } })();
+    if (!q && m === 'all') {
+      const rec = loadRecent();
+      if (rec.length) out.push({ id: 'recent', items: rec, total: rec.length });
+    }
+    GROUPS.forEach((g) => {
+      if (!groupInMode(g, m, q)) return;
+      let matched = q ? g.items.filter((it) => matches(it, q)) : g.items;
+      if (!matched.length) return;
+      /* Within a group, strongest match first. */
+      if (q) matched = matched.slice().sort((a, b) => score(b, q, recentIds) - score(a, q, recentIds));
+      const shown = (!q && m === 'all' && ALL_MODE_LIMIT[g.id]) ? matched.slice(0, ALL_MODE_LIMIT[g.id]) : matched;
+      out.push({ id: g.id, items: shown, total: matched.length });
+    });
+    /* Best match — pull the single strongest hit across ALL groups to the top,
+       so row 1 + Enter is always the row the admin meant. */
+    if (q && out.length) {
+      let bestG = null, bestS = -1;
+      out.forEach((g) => {
+        const s = score(g.items[0], q, recentIds);
+        if (s > bestS) { bestS = s; bestG = g; }
+      });
+      if (bestG && bestS > 0) {
+        const bestIt = bestG.items[0];
+        bestG.items = bestG.items.slice(1);
+        bestG.total -= 1;
+        const rest = out.filter((g) => g.items.length);
+        rest.unshift({ id: 'best', items: [bestIt], total: 1 });
+        return rest;
+      }
+    }
+    return out;
+  }
+
+  /* Result count per mode for the segmented control's badges (untruncated). */
+  function modeCount(m, q) {
+    return GROUPS.reduce((n, g) => {
+      if (!groupInMode(g, m, q)) return n;
+      return n + (q ? g.items.filter((it) => matches(it, q)).length : g.items.length);
+    }, 0);
+  }
+
+  /* ── Ask-Zia mode ─────────────────────────────────────────────────────────
+     A distinct in-palette state: "describe it in plain words". Shows starter
+     prompts; Enter (typed or on a prompt) hands the question to the Zia drawer;
+     Tab/esc returns to search. */
+  const ZIA_QS = ['cmdk.zia.q1', 'cmdk.zia.q2', 'cmdk.zia.q3'];
+  function renderZia() {
+    flatRows = [];
+    let html = '<div class="cmdk-group"><div class="cmdk-group__label"><span>' + esc(t('cmdk.zia.try')) + '</span></div>';
+    ZIA_QS.forEach((k) => {
+      const it = { ziaAsk: t(k), icon: 'message-chat-square' };
+      const idx = flatRows.length; flatRows.push(it);
+      const active = kbNav && idx === activeIdx;
+      html += '<div class="cmdk-row' + (active ? ' is-active' : '') + '" role="option" id="cmdk-opt-' + idx + '" aria-selected="' + active + '" data-idx="' + idx + '">' +
+        '<span class="cmdk-row__tile" style="background:transparent;color:var(--uems-text-accent-link)"><ds-icon name="message-chat-square" size="16"></ds-icon></span>' +
+        '<span class="cmdk-row__text"><span class="cmdk-row__title" style="font-weight:var(--font-weight-regular)">' + esc(t(k)) + '</span></span>' +
+        '</div>';
+    });
+    html += '</div><div class="cmdk-zia-hint">' + esc(t('cmdk.zia.hint')) + '</div>';
+    resultsEl.innerHTML = html;
+    syncAria();
+  }
+  function enterZia() {
+    if (ziaMode) return;
+    ziaMode = true; activeIdx = 0; kbNav = false;
+    root.classList.add('is-zia');
+    input.value = '';
+    input.setAttribute('placeholder', t('cmdk.zia.ph'));
+    renderZia();
+    input.focus();
+  }
+  function exitZia() {
+    if (!ziaMode) return;
+    ziaMode = false; activeIdx = 0; kbNav = false;
+    root.classList.remove('is-zia');
+    input.setAttribute('placeholder', t('cmdk.ph'));
+    renderChips(); renderResults();
+    input.focus();
+  }
+  function askZia(text) {
+    const qv = String(text || input.value || '').trim();
+    hide();
+    if (window.ShellCtx && window.ShellCtx.showAskZia) window.ShellCtx.showAskZia(qv);
+    else if (globalThis.dsToast) globalThis.dsToast.info({ title: t('cmdk.zia'), style: 'subtle' });
+  }
+
+  function renderResults() {
+    if (ziaMode) { renderZia(); return; }
+    const { m, q } = parseQuery();
+    const groups = visibleGroups(m, q);
+    /* A parsed NL command outranks everything — it IS the intent. */
+    const synth = q ? parseCommand(q) : null;
+    if (synth) groups.unshift({ id: 'synth', items: [synth], total: 1 });
+    flatRows = [];
+    let html = '';
+    /* Diagnostic intent: question-shaped queries put Ask Zia FIRST — keyword
+       results can't answer "why/how"; the AI can. Lookups keep results first. */
+    const looksQuestion = !!q && (
+      /^(why|how|what|when|where|who|can|does|is|will|should|help)\b/.test(q) ||
+      q.split(/\s+/).length > 4 || q.endsWith('?'));
+    const ziaRow = () => {
+      const qv = input.value.trim();
+      const zi = qv ? { zia: true, act: 'zia', icon: 'sparkles' } : { zia: true, icon: 'sparkles' };
+      const idx = flatRows.length;
+      flatRows.push(zi);
+      const descTxt = qv ? t('cmdk.zia.sub').replace('{q}', qv) : t('cmdk.zia.rowsub');
+      return '<div class="cmdk-row cmdk-row--zia' + ((kbNav && idx === activeIdx) ? ' is-active' : '') + '" role="option" id="cmdk-opt-' + idx + '" aria-selected="' + (kbNav && idx === activeIdx) + '" data-idx="' + idx + '">' +
+        ZIA_TILE +
+        '<span class="cmdk-row__text"><span class="cmdk-row__title cmdk-zia-name">' + esc(t('cmdk.zia')) + '</span>' +
+        '<span class="cmdk-row__desc">' + esc(descTxt) + '</span></span>' +
+        '<span class="cmdk-row__trail"><span class="cmdk-kbd">Tab</span></span>' +
+        '</div>';
+    };
+    if (looksQuestion && groups.length) html += ziaRow() + '<div class="cmdk-zia-sep"></div>';
+    groups.forEach((g) => {
+      const editable = groupTone(g.id) && GROUPS.find((x) => x.id === g.id && x.editable);
+      const editLink = editable
+        ? '<button type="button" class="cmdk-group__edit" data-cmdk-edit>' + esc(t('cmdk.g.edit')) + '</button>' : '';
+      html += '<div class="cmdk-group"><div class="cmdk-group__label">' +
+        '<span>' + esc(t('cmdk.g.' + g.id)) + ' <span class="cmdk-group__count">· ' + g.total + '</span></span>' +
+        editLink + '</div>';
+      const tone = groupTone(g.id);
+      g.items.forEach((it) => {
+        const idx = flatRows.length;
+        flatRows.push(it);
+        /* Description line = the row's detail (device domain / config status)
+           or its console path — stacked under the title, modal-row style. */
+        const descText = (it.sub || (it.dk ? itemDesc(it) : '')).replace(/\s*>\s*/g, ' › ');
+        const desc = descText ? '<span class="cmdk-row__desc">' + hl(descText, q) + '</span>' : '';
+        /* Device rows: inline quick actions revealed on hover / keyboard focus —
+           labelled secondary buttons so the action reads at a glance. */
+        const qa = it.qa
+          ? '<span class="cmdk-row__qa">' +
+            '<ds-button variant="secondary" size="xsmall" prefix-icon="desktop-remote" data-qa="remote" data-idx="' + idx + '">' + esc(t('cmdk.qa.remote')) + '</ds-button>' +
+            '<span class="cmdk-kbd cmdk-qa-kbd">⌘↵</span>' +
+            '<ds-button variant="secondary" size="xsmall" prefix-icon="computer-scan" data-qa="scan" data-idx="' + idx + '">' + esc(t('cmdk.qa.scan')) + '</ds-button>' +
+            '<span class="cmdk-kbd cmdk-qa-kbd">⌥↵</span>' +
+            '</span>'
+          : '';
+        let badge = it.badge
+          ? '<ds-badge variant="subtle" state="' + it.badge.state + '" size="medium">' + esc(t(it.badge.k)) + '</ds-badge>'
+          : '';
+        /* Consequence gate: a fleet action awaiting confirmation swaps its
+           trail for "Run on N systems? ↵ confirm · esc cancel". */
+        const confirming = it === confirmItem;
+        if (confirming) {
+          badge = '<span class="cmdk-confirm">' + esc(t('cmdk.confirm').replace('{n}', it.fleet)) +
+            ' <span class="cmdk-kbd">↵</span> ' + esc(t('cmdk.f.confirm')) +
+            ' · <span class="cmdk-kbd">esc</span> ' + esc(t('cmdk.f.cancel')) + '</span>';
+        }
+        const active = kbNav && idx === activeIdx;
+        /* Timestamp (recency) unless a badge/qa already owns the trail. */
+        const ts = (it.ts && !it.badge && !it.qa) ? '<span class="cmdk-row__ts">' + esc(t(it.ts)) + '</span>' : '';
+        /* Active row shows the "Open ↵" affordance (unless it carries a badge). */
+        const openAff = (active && !confirming && !it.badge && !it.qa)
+          ? '<span class="cmdk-row__open">' + esc(t('cmdk.open')) + ' <span class="cmdk-kbd">↵</span></span>' : '';
+        const tileStyle = (tone && TONE_TILE[tone]) ? ' style="' + TONE_TILE[tone] + '"' : '';
+        html += '<div class="cmdk-row' + (active ? ' is-active' : '') + (confirming ? ' cmdk-row--confirm' : '') + '" role="option" id="cmdk-opt-' + idx + '" aria-selected="' + active + '" data-idx="' + idx + '">' +
+          '<span class="cmdk-row__tile' + (tone ? ' cmdk-row__tile--' + tone : '') + '"' + tileStyle + '><ds-icon name="' + it.icon + '" size="16"></ds-icon></span>' +
+          '<span class="cmdk-row__text"><span class="cmdk-row__title">' + hl(itemLabel(it), q) + '</span>' + desc + '</span>' +
+          '<span class="cmdk-row__trail">' + (confirming ? badge : (qa + badge + ts + openAff)) + '</span>' +
+          '</div>';
+      });
+      html += '</div>';
+    });
+    if (!groups.length && q) {
+      /* No-results = a recovery ladder, not a dead end: widen the scope,
+         fix the typo, go deep (advanced search), or ask the AI. Every option
+         is a real palette row — reachable with ↑↓ + Enter like anything else. */
+      html += '<div class="cmdk-empty"><ds-empty-state show-illustration="false" size="sm" ' +
+        'title="' + esc(t('cmdk.empty.title').replace('{q}', input.value.trim())) + '" ' +
+        'description="' + esc(t('cmdk.empty.desc')) + '" ' +
+        'show-primary="false" show-secondary="false"></ds-empty-state></div>';
+      const recovery = [];
+      if (m !== 'all') {
+        const n = modeCount('all', q);
+        if (n) recovery.push({ act: 'everywhere', icon: 'search', label: t('cmdk.try.everywhere'), sub: t('cmdk.try.everywhere.sub').replace('{n}', n) });
+      }
+      const sug = bestSuggestion(q);
+      if (sug) recovery.push({ act: 'dym', icon: 'edit', label: t('cmdk.try.dym').replace('{s}', sug), sug: sug });
+      recovery.push({ act: 'advanced', icon: 'filter', label: t('cmdk.try.adv'), sub: t('cmdk.try.adv.sub') });
+      const ziaRec = { zia: true, act: 'zia', icon: 'sparkles', label: t('cmdk.zia'), sub: t('cmdk.zia.sub').replace('{q}', input.value.trim()) };
+      if (looksQuestion) recovery.unshift(ziaRec); else recovery.push(ziaRec);
+      html += '<div class="cmdk-group cmdk-group--try"><div class="cmdk-group__label">' + esc(t('cmdk.g.try')) + '</div>';
+      recovery.forEach((it) => {
+        const idx = flatRows.length;
+        flatRows.push(it);
+        const tile = it.zia ? ZIA_TILE : '<span class="cmdk-row__tile"><ds-icon name="' + it.icon + '" size="16"></ds-icon></span>';
+        const label = '<span class="cmdk-row__title' + (it.zia ? ' cmdk-zia-name' : '') + '">' + esc(it.label) + '</span>';
+        html += '<div class="cmdk-row cmdk-row--try' + (it.zia ? ' cmdk-row--zia' : '') + ((kbNav && idx === activeIdx) ? ' is-active' : '') + '" role="option" id="cmdk-opt-' + idx + '" aria-selected="' + (kbNav && idx === activeIdx) + '" data-idx="' + idx + '">' +
+          tile +
+          '<span class="cmdk-row__text">' + label +
+          (it.sub ? '<span class="cmdk-row__desc">' + esc(it.sub) + '</span>' : '') + '</span>' +
+          '</div>';
+      });
+      html += '</div>';
+    } else if (groups.length && !looksQuestion) {
+      /* Ask Zia — always the last row (Tab also enters it); question-shaped
+         queries already rendered it at the TOP. */
+      html += '<div class="cmdk-zia-sep"></div>' + ziaRow();
+    }
+    resultsEl.innerHTML = html;
+    syncAria();
+  }
+
+  function setActive(idx, scroll) {
+    if (!flatRows.length) return;
+    kbNav = true;
+    activeIdx = (idx + flatRows.length) % flatRows.length;
+    /* Moving away from an armed fleet confirm cancels it. */
+    if (confirmItem && flatRows[activeIdx] !== confirmItem) { confirmItem = null; renderResults(); }
+    resultsEl.querySelectorAll('.cmdk-row').forEach((el) => {
+      const on = Number(el.dataset.idx) === activeIdx;
+      el.classList.toggle('is-active', on);
+      el.setAttribute('aria-selected', String(on));
+    });
+    syncAria();
+    if (scroll) {
+      const el = resultsEl.querySelector('.cmdk-row[data-idx="' + activeIdx + '"]');
+      if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  function renderChips() {
+    const { m, q } = parseQuery();
+    /* ds-tab-filter: segmented control — icons + live per-mode counts. */
+    modesEl.options = MODES.map((mm) => ({
+      value: mm.id, label: t(mm.k), icon: mm.icon,
+      badge: modeCount(mm.id, q) || false,
+    }));
+    modesEl.setAttribute('value', m);
+    if (document.documentElement.dir === 'rtl') modesEl.setAttribute('rtl', '');
+    else modesEl.removeAttribute('rtl');
+  }
+
+  function renderHints() {
+    hintsEl.innerHTML =
+      '<span><span class="cmdk-kbd">↑</span><span class="cmdk-kbd">↓</span> ' + esc(t('cmdk.f.nav')) + '</span>' +
+      '<span><span class="cmdk-kbd">↵</span> ' + esc(t('cmdk.f.open')) + '</span>' +
+      '<span><span class="cmdk-kbd">Tab</span> ' + esc(t('cmdk.f.zia')) + '</span>' +
+      '<span><span class="cmdk-kbd">esc</span> ' + esc(t('cmdk.f.close')) + '</span>';
+  }
+
+  function applyStrings() {
+    input.setAttribute('placeholder', ziaMode ? t('cmdk.zia.ph') : t('cmdk.ph'));
+    input.setAttribute('aria-label', ziaMode ? t('cmdk.zia.ph') : t('cmdk.ph'));
+    root.setAttribute('aria-label', t('cmdk.aria'));
+    /* ds-text-link renders from its captured slotted text (_slottedText) and
+       rebuilds the anchor on every attribute change — update THAT source and
+       re-render, rather than poking rendered spans (the last span is the
+       trailing-icon span, and edits get wiped on the next re-render). */
+    if ('_slottedText' in advBtn) {
+      advBtn._slottedText = t('cmdk.adv');
+      if (typeof advBtn._render === 'function') advBtn._render();
+    }
+    if (document.documentElement.dir === 'rtl') advBtn.setAttribute('rtl', '');
+    else advBtn.removeAttribute('rtl');
+    /* Customize trigger (footer) — visible label + accessible name. */
+    const cfgBtnLabel = cfgBtn.querySelector('.ds-button__label');
+    if (cfgBtnLabel) cfgBtnLabel.textContent = t('cmdk.cfg.btn');
+    cfgSearch.setAttribute('placeholder', t('cmdk.cfg.ph2'));
+    const doneLbl = cfg.querySelector('#cmdk-cfg-save .ds-button__label');
+    if (doneLbl) doneLbl.textContent = t('cmdk.cfg.done');
+    if (cfg.hasAttribute('open')) renderCfgList();
+    renderChips();
+    renderHints();
+    renderResults();
+  }
+
+  /* ── Open / close / activate ───────────────────────────────────────────── */
+  const scrim = root.querySelector('#cmdk-scrim');
+  function show(m) {
+    mode = m || 'all';
+    activeIdx = 0;
+    kbNav = false;
+    ziaMode = false; root.classList.remove('is-zia');
+    input.value = '';
+    input.setAttribute('placeholder', t('cmdk.ph'));
+    root.hidden = false;
+    scrim.setAttribute('open', '');   /* ds-overlay owns the dim + scroll lock */
+    wireAria();   /* inner input exists by now even on slow standalone loads */
+    renderChips();
+    renderResults();
+    requestAnimationFrame(() => requestAnimationFrame(() => input.focus()));
+  }
+  function hide() { root.hidden = true; scrim.removeAttribute('open'); confirmItem = null; ziaMode = false; root.classList.remove('is-zia'); }
+  function isOpen() { return !root.hidden; }
+  function activate(it) {
+    /* Ask-Zia suggestion prompt → send it straight to Zia. */
+    if (it.ziaAsk) { askZia(it.ziaAsk); return; }
+    /* The bottom "Ask Zia" row enters Ask-Zia mode (describe in plain words). */
+    if (it.zia && !it.act) { enterZia(); return; }
+    /* Recovery/top Zia row hands the current query straight to Zia. */
+    if (it.act === 'zia') { askZia(input.value); return; }
+    /* Recovery actions that refine the search keep the palette open. */
+    if (it.act === 'everywhere') {
+      mode = 'all'; stripPrefix(); activeIdx = 0;
+      renderChips(); renderResults(); input.focus();
+      return;
+    }
+    if (it.act === 'dym') {
+      input.value = it.sug; activeIdx = 0;
+      renderChips(); renderResults(); updateAdvHref(); input.focus();
+      return;
+    }
+    if (it.act === 'advanced') { openAdvanced(); return; }
+    /* Consequence gate — first Enter on a fleet-scale action arms the inline
+       confirm; only the second Enter executes. Friction scales with blast radius. */
+    if (it.fleet && confirmItem !== it) {
+      confirmItem = it;
+      renderResults();
+      return;
+    }
+    if (it.fleet) confirmItem = null;
+    /* Capture the typed question BEFORE hiding (prefix stripped, casing kept). */
+    let ziaQ = (input.value || '').trim();
+    if (PREFIX_MODE[ziaQ[0]]) ziaQ = ziaQ.slice(1).trim();
+    hide();
+    if (it.zia) {
+      /* Hand the question to the Ask Zia drawer — it opens and immediately
+         "researches" the query (thinking steps → data answer). */
+      if (window.ShellCtx && window.ShellCtx.showAskZia) window.ShellCtx.showAskZia(ziaQ);
+      else if (globalThis.dsToast) globalThis.dsToast.info({ title: t('cmdk.zia'), style: 'subtle' });
+      return;
+    }
+    pushRecent(it);
+    /* Execute actions report their OUTCOME (verb + consequence) and get a
+       10-second UNDO window; navigation rows keep plain jump copy. */
+    const isExec = !!(it.okText || it.ok || it._gid === 'custom');
+    let title;
+    if (it.okText) title = it.okText;
+    else if (it.ok) title = t(it.ok);
+    else if (it._gid === 'custom') title = t('cmdk.toast.run').replace('{label}', itemLabel(it));
+    else title = t('cmdk.toast.title').replace('{label}', itemLabel(it));
+    if (isExec && !it.noHold) undoToast(title, itemDesc(it));
+    else if (globalThis.dsToast) globalThis.dsToast.success({ title: title, description: itemDesc(it), style: 'subtle' });
+  }
+  /* Dispatch window — executed commands HOLD for 10 s before dispatch (the
+     patch grace-period pattern), and Undo cancels within the hold. Never
+     "un-send": actions that can't hold (noHold) simply don't offer undo. */
+  function undoToast(title, desc) {
+    if (!globalThis.dsToast) return;
+    const tEl = globalThis.dsToast.success({
+      title: title,
+      description: t('cmdk.hold') + (desc ? ' · ' + desc : ''),
+      style: 'subtle',
+      cta: t('cmdk.undo'), duration: 10000,
+    });
+    if (tEl && tEl.addEventListener) {
+      tEl.addEventListener('ds-toast-cta', () => {
+        globalThis.dsToast.info({ title: t('cmdk.undo.done'), style: 'subtle' });
+      });
+    }
+  }
+  /* Advanced search → hand off to the full search page (views/search.html),
+     carrying the typed query over (scope prefix stripped, casing kept).
+     The href is a standalone fallback; inside the shell we route via ShellCtx. */
+  function openAdvanced(e) {
+    let q = (input.value || '').trim();
+    if (PREFIX_MODE[q[0]]) q = q.slice(1).trim();
+    if (window.ShellCtx && window.ShellCtx.showSearch) {
+      if (e) e.preventDefault();
+      hide();
+      window.ShellCtx.showSearch(q);
+    } else {
+      hide();   /* standalone: let the link navigate to Shell.html#search */
+    }
+  }
+
+  /* ── Wiring ────────────────────────────────────────────────────────────── */
+  advBtn.addEventListener('click', openAdvanced);
+
+  /* ⚙ Customize actions modal — search + categorized checklist; Save persists
+     the picks and pins them as a "Custom actions" group in the palette. */
+  const cfg = root.querySelector('#cmdk-cfg');
+  const cfgBtn = root.querySelector('#cmdk-cfg-btn');
+  const cfgList = root.querySelector('#cmdk-cfg-list');
+  const cfgSearch = root.querySelector('#cmdk-cfg-search');
+  const CFG_MAX = 16;   /* quick-action slots you can pin */
+  let cfgOrder = [];    /* ordered ids — the ✓N number is the add position */
+  const inSel = (id) => cfgOrder.indexOf(id) >= 0;
+  function toggleSel(id) {
+    const i = cfgOrder.indexOf(id);
+    if (i >= 0) { cfgOrder.splice(i, 1); return; }
+    if (cfgOrder.length < CFG_MAX) { cfgOrder.push(id); return; }
+    /* Full — never disable; explain warmly instead. */
+    if (globalThis.dsToast) globalThis.dsToast.warning({ title: t('cmdk.cfg.max'), style: 'subtle' });
+  }
+  function updateCfgMeta() {
+    const n = cfgOrder.length, full = n >= CFG_MAX;
+    const pill = cfg.querySelector('#cmdk-cfg-count');
+    if (pill) { pill.textContent = t('cmdk.cfg.of').replace('{n}', n).replace('{max}', CFG_MAX); pill.classList.toggle('is-full', full); }
+    const order = cfg.querySelector('#cmdk-cfg-order');
+    if (order) order.textContent = t('cmdk.cfg.order').replace('{n}', n).replace('{max}', CFG_MAX);
+    const banner = cfg.querySelector('#cmdk-cfg-banner');
+    const bannerWrap = cfg.querySelector('.cmdk-cfg__banner');
+    if (banner) banner.innerHTML = full ? esc(t('cmdk.cfg.max')) : esc(t('cmdk.cfg.banner'));
+    if (bannerWrap) bannerWrap.classList.toggle('is-full', full);
+    /* Done button reflects the outcome contextually. */
+    const doneLbl = cfg.querySelector('#cmdk-cfg-save .ds-button__label');
+    if (doneLbl) doneLbl.textContent = n ? t('cmdk.cfg.saven').replace('{n}', n) : t('cmdk.cfg.done');
+  }
+  function pinnedStrip() {
+    /* "Your quick actions" — the ordered, removable, drag-reorderable result
+       set, so the user sees WHAT they pinned and in WHAT order, up front. */
+    const chips = cfgOrder.map((id, i) => {
+      const a = CATALOG_BY_ID[id]; if (!a) return '';
+      return '<span class="cmdk-cfg-chip" draggable="true" data-pin="' + id + '" data-i="' + i + '">' +
+        '<span class="cmdk-cfg-chip__n">' + (i + 1) + '</span>' +
+        '<ds-icon name="' + a.icon + '" size="14"></ds-icon>' +
+        '<span class="cmdk-cfg-chip__t">' + esc(a.label) + '</span>' +
+        '<button type="button" class="cmdk-cfg-chip__x" data-unpin="' + id + '" aria-label="' + esc(t('cmdk.cfg.remove')) + '"><ds-icon name="close" size="12"></ds-icon></button>' +
+        '</span>';
+    }).join('');
+    const body = cfgOrder.length
+      ? '<div class="cmdk-cfg__pinned-list" id="cmdk-cfg-pinned-list">' + chips + '</div>'
+      : '<div class="cmdk-cfg__pinned-empty">' + esc(t('cmdk.cfg.pinned.empty')) + '</div>';
+    const hint = cfgOrder.length > 1
+      ? '<span class="cmdk-cfg__pinned-hint"><ds-icon name="move-vertical" size="12"></ds-icon>' + esc(t('cmdk.cfg.pinned.hint')) + '</span>' : '';
+    return '<div class="cmdk-cfg__pinned">' +
+      '<div class="cmdk-cfg__pinned-head"><span class="cmdk-cfg__pinned-title">' + esc(t('cmdk.cfg.pinned')) +
+      ' <span class="cmdk-cfg__cat-count">' + cfgOrder.length + '/' + CFG_MAX + '</span></span>' + hint + '</div>' + body + '</div>';
+  }
+  function renderCfgList() {
+    const q = (cfgSearch.value || '').trim().toLowerCase();
+    /* Show the pinned strip only when not filtering (a stable "your set" panel). */
+    const pinned = q ? '' : pinnedStrip();
+    const html = pinned + ACTION_CATALOG.map((c) => {
+      const items = c.items.filter((a) => !q || (a.label + ' ' + a.desc).toLowerCase().includes(q));
+      if (!items.length) return '';
+      const col = CAT_COLOR[c.cat] || CAT_COLOR.grey;
+      const head = '<div class="cmdk-cfg__cat-line"><span class="cmdk-cfg__cat" style="' + col.pill + '">' +
+        '<ds-icon name="' + c.icon + '" size="14"></ds-icon>' + esc(c.label) +
+        ' <span class="cmdk-cfg__cat-count">' + items.length + '</span></span></div>';
+      const full = cfgOrder.length >= CFG_MAX;
+      const cards = '<div class="cmdk-cfg__grid">' + items.map((a) => {
+        const on = inSel(a.id);
+        const n = on ? (cfgOrder.indexOf(a.id) + 1) : 0;
+        const locked = !on && full;   /* at max: muted + tooltip, NOT disabled */
+        const trail = on
+          ? '<span class="cmdk-cfg-card__check"><ds-icon name="check" size="14"></ds-icon>' + n + '</span>'
+          : '<span class="cmdk-cfg-card__add"' + (locked ? ' title="' + esc(t('cmdk.cfg.maxtip')) + '"' : '') + '>+ ' + esc(t('cmdk.cfg.add')) + '</span>';
+        return '<div class="cmdk-cfg-card' + (on ? ' is-sel' : '') + (locked ? ' is-locked' : '') + '" data-act="' + a.id + '" role="button" tabindex="0"' + (locked ? ' title="' + esc(t('cmdk.cfg.maxtip')) + '"' : '') + '>' +
+          '<span class="cmdk-cfg-card__tile" style="' + col.tile + '"><ds-icon name="' + a.icon + '" size="15"></ds-icon></span>' +
+          '<span class="cmdk-cfg-card__body"><span class="cmdk-cfg-card__title">' + hl(a.label, q) + '</span>' +
+          '<span class="cmdk-cfg-card__desc">' + hl(a.desc, q) + '</span></span>' + trail + '</div>';
+      }).join('') + '</div>';
+      return head + cards;
+    }).join('');
+    cfgList.innerHTML = html ||
+      '<div class="cmdk-cfg__empty"><ds-empty-state show-illustration="false" size="sm" ' +
+      'title="' + esc(t('cmdk.cfg.none')) + '" description="' + esc(t('cmdk.cfg.none.desc')) + '" ' +
+      'show-primary="false" show-secondary="false"></ds-empty-state></div>';
+    updateCfgMeta();
+  }
+  function firstMatch() {
+    const q = (cfgSearch.value || '').trim().toLowerCase();
+    if (!q) return null;
+    for (const c of ACTION_CATALOG) { for (const a of c.items) { if ((a.label + ' ' + a.desc).toLowerCase().includes(q)) return a; } }
+    return null;
+  }
+  /* One overlay at a time (launcher pattern): the palette CLOSES when the
+     modal opens, and reopens when Done / Back. */
+  let cfgBackMode = 'all';
+  function openCfg() {
+    cfgBackMode = mode;
+    hide();
+    cfgOrder = loadCustom().filter((id) => CATALOG_BY_ID[id]);
+    cfgSearch.value = '';
+    renderCfgList();
+    cfg.open();
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const ni = cfgSearch.querySelector('input');
+      if (ni && document.activeElement === ni) ni.blur();
+    }));
+  }
+  function saveCfg() {
+    try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(cfgOrder)); } catch (_) {}
+    syncCustom();
+    cfg.close();
+    show('commands');
+    if (globalThis.dsToast) globalThis.dsToast.success({ title: t('cmdk.cfg.saved'), style: 'subtle' });
+  }
+  cfgBtn.addEventListener('click', openCfg);
+  cfg.addEventListener('ds-modal-close', () => show(cfgBackMode));
+  cfgSearch.addEventListener('ds-search-field-input', renderCfgList);
+  cfgSearch.addEventListener('ds-search-field-clear', renderCfgList);
+  /* Enter in the filter → add the first match. */
+  cfgSearch.addEventListener('ds-search-field-submit', () => {
+    const a = firstMatch();
+    if (a && !inSel(a.id)) { toggleSel(a.id); renderCfgList(); }
+  });
+  cfgList.addEventListener('click', (e) => {
+    /* Remove from the pinned strip. */
+    const x = e.target.closest && e.target.closest('[data-unpin]');
+    if (x) { const i = cfgOrder.indexOf(x.dataset.unpin); if (i >= 0) cfgOrder.splice(i, 1); renderCfgList(); return; }
+    const card = e.target.closest && e.target.closest('.cmdk-cfg-card');
+    if (!card) return;
+    toggleSel(card.dataset.act);
+    renderCfgList();
+  });
+  /* Drag-to-reorder the pinned chips (they render in this order). */
+  let dragId = null;
+  cfgList.addEventListener('dragstart', (e) => {
+    const chip = e.target.closest && e.target.closest('.cmdk-cfg-chip');
+    if (!chip) return;
+    dragId = chip.dataset.pin; chip.classList.add('is-drag');
+    if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', dragId); } catch (_) {} }
+  });
+  cfgList.addEventListener('dragover', (e) => {
+    const chip = e.target.closest && e.target.closest('.cmdk-cfg-chip');
+    if (!chip || !dragId) return;
+    e.preventDefault();
+    cfgList.querySelectorAll('.cmdk-cfg-chip.is-over').forEach((c) => c.classList.remove('is-over'));
+    if (chip.dataset.pin !== dragId) chip.classList.add('is-over');
+  });
+  cfgList.addEventListener('drop', (e) => {
+    const chip = e.target.closest && e.target.closest('.cmdk-cfg-chip');
+    if (!chip || !dragId) return;
+    e.preventDefault();
+    const from = cfgOrder.indexOf(dragId), to = cfgOrder.indexOf(chip.dataset.pin);
+    if (from >= 0 && to >= 0 && from !== to) {
+      cfgOrder.splice(to, 0, cfgOrder.splice(from, 1)[0]);
+      renderCfgList();
+    }
+    dragId = null;
+  });
+  cfgList.addEventListener('dragend', () => {
+    dragId = null;
+    cfgList.querySelectorAll('.is-drag,.is-over').forEach((c) => c.classList.remove('is-drag', 'is-over'));
+  });
+  cfgList.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const card = e.target.closest && e.target.closest('.cmdk-cfg-card');
+    if (!card) return;
+    e.preventDefault(); toggleSel(card.dataset.act); renderCfgList();
+  });
+  root.querySelector('#cmdk-cfg-back').addEventListener('click', () => { cfg.close(); show(cfgBackMode); });
+  root.querySelector('#cmdk-cfg-save').addEventListener('click', saveCfg);
+
+  modesEl.addEventListener('ds-tab-filter-change', (e) => {
+    mode = e.detail.value; activeIdx = 0;
+    stripPrefix();   /* an explicit chip pick beats a typed scope prefix */
+    renderResults();
+    input.focus();
+  });
+
+  /* Keep the Advanced-search fallback href carrying the current query too
+     (Shell.html?q=…#search — the search page reads ?q= on build). */
+  const updateAdvHref = () => {
+    let q = (input.value || '').trim();
+    if (PREFIX_MODE[q[0]]) q = q.slice(1).trim();
+    advBtn.setAttribute('href', q ? 'Shell.html?q=' + encodeURIComponent(q) + '#search' : 'Shell.html#search');
+  };
+
+  /* Query changes re-render results AND the per-mode count badges (and
+     disarm any pending fleet confirm — the context changed). */
+  /* Announce result count to screen readers on each query change. */
+  function announceCount() {
+    let live = root.querySelector('#cmdk-live');
+    if (!live) { live = document.createElement('div'); live.id = 'cmdk-live'; live.className = 'ds-sr-only'; live.setAttribute('aria-live', 'polite'); root.appendChild(live); }
+    live.textContent = flatRows.length + ' results';
+  }
+  /* Typing highlights the best match (so Enter's target is visible); an empty
+     query stays calm (no highlight) as on open. */
+  const onQuery = () => {
+    activeIdx = 0; confirmItem = null;
+    kbNav = !!input.value.trim();
+    renderResults(); renderChips(); updateAdvHref(); announceCount();
+  };
+  input.addEventListener('ds-search-field-input', onQuery);
+  input.addEventListener('ds-search-field-clear', () => { kbNav = false; onQuery(); });
+  /* Ticket-paste hygiene: device names pasted from tickets arrive with stray
+     whitespace/newlines — normalize so matching doesn't silently fail. */
+  input.addEventListener('paste', () => {
+    requestAnimationFrame(() => {
+      const v = input.value;
+      const cleaned = v.replace(/\s+/g, ' ').trim();
+      if (cleaned !== v) {
+        input.value = cleaned;
+        activeIdx = 0; kbNav = false; confirmItem = null;
+        renderResults(); renderChips(); updateAdvHref();
+      }
+    });
+  });
+
+  /* Device quick actions — shared by click AND keyboard (⌘↵ / ⌥↵). */
+  function runQa(kind, it) {
+    if (!it) return;
+    hide();
+    const title = t(kind === 'remote' ? 'cmdk.qa.toast.remote' : 'cmdk.qa.toast.scan').replace('{d}', it.label);
+    /* A queued scan is undoable; a remote session just opens. */
+    if (kind === 'scan') undoToast(title, it.sub || '');
+    else if (globalThis.dsToast) globalThis.dsToast.success({ title: title, style: 'subtle' });
+  }
+  resultsEl.addEventListener('click', (e) => {
+    /* Inline device quick actions (remote / scan) run without navigating. */
+    const qa = e.target.closest && e.target.closest('[data-qa]');
+    if (qa) { runQa(qa.dataset.qa, flatRows[Number(qa.dataset.idx)]); return; }
+    const row = e.target.closest && e.target.closest('.cmdk-row');
+    if (row) activate(flatRows[Number(row.dataset.idx)]);
+  });
+
+  /* Pointer/keyboard unified selection: moving the mouse over a row makes it
+     the active row, so Enter always fires what the cursor is on (no desync).
+     Gated on real mousemove so keyboard-scrolling a row under a still cursor
+     doesn't hijack the selection. */
+  resultsEl.addEventListener('mousemove', (e) => {
+    const row = e.target.closest && e.target.closest('.cmdk-row');
+    if (!row) return;
+    const idx = Number(row.dataset.idx);
+    if (idx !== activeIdx || !kbNav) setActive(idx, false);
+  });
+
+  /* Scrim click closes; clicks inside the panel don't (ds-overlay fires
+     ds-dismiss only for clicks landing on the scrim itself). */
+  scrim.addEventListener('ds-dismiss', hide);
+
+  /* Arrows + enter + esc while open. Capture phase so Esc sees the search
+     field's value PRE-clear — one Esc clears a filled field, the next closes. */
+  root.addEventListener('keydown', (e) => {
+    /* While the customize modal is open it owns the keyboard (incl. its own Esc). */
+    if (cfg && cfg.hasAttribute('open')) return;
+    /* ⌘1–5 (or Ctrl) jumps straight to a category (search mode only). */
+    if ((e.metaKey || e.ctrlKey) && /^[1-5]$/.test(e.key) && !ziaMode) {
+      e.preventDefault();
+      mode = MODES[Number(e.key) - 1].id; stripPrefix(); activeIdx = 0;
+      renderChips(); renderResults();
+      return;
+    }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(activeIdx + 1, true); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(activeIdx - 1, true); }
+    else if (e.key === 'Enter') {
+      const it = flatRows[activeIdx];
+      /* Ask-Zia mode: Enter with typed text (no row picked) sends the question. */
+      if (ziaMode && (!it || input.value.trim())) { e.preventDefault(); askZia(input.value); return; }
+      if (it) {
+        e.preventDefault();
+        /* Device rows: ⌘↵ (or Ctrl↵) = remote session, ⌥↵ = scan. */
+        if (it.qa && (e.metaKey || e.ctrlKey)) runQa('remote', it);
+        else if (it.qa && e.altKey) runQa('scan', it);
+        else activate(it);
+      }
+    }
+    else if (e.key === 'Tab') {
+      /* Tab toggles Ask-Zia mode (categories moved to ⌘1–5). */
+      e.preventDefault();
+      if (ziaMode) exitZia(); else enterZia();
+    }
+    else if (e.key === 'Escape') {
+      /* Zia mode → back to search; armed confirm → cancel; else clear/close. */
+      if (ziaMode) { e.stopPropagation(); exitZia(); return; }
+      if (confirmItem) { e.stopPropagation(); confirmItem = null; renderResults(); return; }
+      if (!input.value) hide();
+    }
+  }, true);
+
+  /* Zia toggle button (top-right of search). */
+  root.querySelector('#cmdk-zia-btn')?.addEventListener('click', () => { if (ziaMode) exitZia(); else enterZia(); });
+  /* "Edit" link in the Quick actions group header → customize modal. */
+  resultsEl.addEventListener('click', (e) => {
+    if (e.target.closest && e.target.closest('[data-cmdk-edit]')) { e.stopPropagation(); openCfg(); }
+  });
+
+  applyStrings();
+  if (window.ShellCtx && window.ShellCtx.onLangChange) window.ShellCtx.onLangChange(applyStrings);
+
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['command-palette'] = { show, hide, isOpen };
+})();
+</script>
+</template>
+
+<script>
+/* ── STANDALONE HARNESS — runs ONLY when opened directly. ── */
+(function () {
+  const KEY = 'command-palette';
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  document.body.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers[KEY] && window.ShellDrawers[KEY].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

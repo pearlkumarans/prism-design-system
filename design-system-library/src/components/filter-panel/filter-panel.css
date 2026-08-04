@@ -1,0 +1,174 @@
+/* =============================================================================
+   <ds-filter-panel> — Phase 1 (docked). Tokens only; scoped to the root.
+   ============================================================================= */
+/* Host: a flex/height context so a bounded height (max-height/height on the
+   custom element) cascades to the card and the body scrolls internally instead
+   of overflowing past the box. `display:none` from a host (e.g. list-view's
+   toggle) still wins via higher specificity. */
+ds-filter-panel { display: flex; min-width: 0; min-height: 0; }
+
+.ds-filter-panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--uems-bg-base);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-md, 12px);
+  font-family: var(--font-family-sans);
+  color: var(--uems-text-primary);
+  overflow: hidden;
+}
+
+/* ---- Header --------------------------------------------------------------- */
+.ds-filter-panel__header {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-8);
+  padding: var(--spacing-12) var(--spacing-16);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+}
+.ds-filter-panel__title { font-size: var(--font-size-14); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+.ds-filter-panel__header-end { display: inline-flex; align-items: center; gap: var(--spacing-8); }
+.ds-fp-close {
+  display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+  border: 0; background: transparent; border-radius: var(--radius-sm, 6px); cursor: pointer;
+  color: var(--uems-icon-secondary); transition: background-color 140ms var(--ease-standard, ease);
+}
+.ds-fp-close:hover { background: var(--uems-bg-secondary-hover); }
+.ds-fp-close:focus-visible { outline: 2px solid var(--uems-border-accent); outline-offset: 1px; }
+.ds-filter-panel__count {
+  font-size: var(--font-size-12); font-weight: var(--font-weight-medium); color: var(--uems-text-secondary);
+  padding: 2px 8px; background: var(--uems-bg-secondary); border-radius: var(--radius-full, 999px);
+}
+
+/* ---- Active-filter chips -------------------------------------------------- */
+.ds-filter-panel__summary {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-8);
+  padding: var(--spacing-12) var(--spacing-16);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+}
+.ds-filter-panel__summary[hidden] { display: none; }
+.ds-fp-clear {
+  border: 0; background: transparent; cursor: pointer; font: inherit;
+  font-size: var(--font-size-13); font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-accent-link); padding: 2px 4px; border-radius: var(--radius-sm, 6px);
+}
+.ds-fp-clear:hover { text-decoration: underline; }
+.ds-fp-clear:focus-visible { outline: 2px solid var(--uems-border-accent); outline-offset: 2px; }
+/* A chip never exceeds the panel width; a long value (e.g. a date range) truncates
+   with an ellipsis so the close (×) stays visible and nothing overflows the box. */
+.ds-fp-chip { max-width: 100%; min-width: 0; }
+.ds-fp-chip .ds-tag__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---- Body / groups -------------------------------------------------------- */
+.ds-filter-panel__body {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  padding: var(--spacing-4) 0;
+}
+.ds-fp-group { border-bottom: 1px solid var(--uems-border-tertiary); }
+.ds-fp-group:last-child { border-bottom: 0; }
+.ds-fp-group__head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-8);
+  width: 100%; padding: var(--spacing-12) var(--spacing-16);
+  border: 0; background: transparent; cursor: pointer; font: inherit; text-align: start;
+  color: var(--uems-text-primary);
+}
+div.ds-fp-group__head { cursor: default; }
+.ds-fp-group__label {
+  font-size: var(--font-size-12); font-weight: var(--font-weight-bold);
+  color: var(--uems-text-tertiary);
+}
+.ds-fp-group__chevron { color: var(--uems-icon-tertiary); transition: transform var(--duration-fast, 140ms) var(--ease-standard, ease); flex: 0 0 auto; }
+.ds-fp-group.is-collapsed .ds-fp-group__chevron { transform: rotate(-90deg); }
+.ds-fp-group__body { padding: 0 var(--spacing-16) var(--spacing-16); }
+.ds-fp-group.is-collapsed .ds-fp-group__body { display: none; }
+
+/* Search-within-filters toolbar */
+.ds-filter-panel__toolbar { padding: var(--spacing-12) var(--spacing-16) 0; }
+.ds-filter-panel__toolbar .ds-fp-search { display: block; width: 100%; }
+
+/* A date field fills the panel width — the picker's default fixed range width
+   (320px) would overflow a narrow filter panel, so shrink it to fit the column. */
+.ds-fp-group__body ds-date-picker { display: block; width: 100%; }
+.ds-fp-group__body ds-date-picker .ds-date-picker__input,
+.ds-fp-group__body ds-date-picker .ds-date-picker__input--range { width: 100%; min-width: 0; }
+
+/* Checkbox field stack + "Show all / Show less" toggle */
+.ds-fp-field { display: flex; flex-direction: column; gap: var(--spacing-8); }
+.ds-fp-checks { display: flex; flex-direction: column; gap: var(--spacing-8); }
+.ds-fp-more {
+  align-self: flex-start; border: 0; background: transparent; cursor: pointer; font: inherit;
+  font-size: var(--font-size-12); font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-accent-link); padding: 2px 2px; border-radius: var(--radius-sm, 6px);
+}
+.ds-fp-more:hover { text-decoration: underline; }
+.ds-fp-more:focus-visible { outline: 2px solid var(--uems-border-accent); outline-offset: 2px; }
+
+/* Empty state (no groups) */
+.ds-fp-empty { padding: var(--spacing-24) var(--spacing-16); text-align: center; font-size: var(--font-size-13); color: var(--uems-text-tertiary); }
+
+/* Loading skeleton */
+.ds-fp-skel-group { padding: var(--spacing-16); border-bottom: 1px solid var(--uems-border-tertiary); display: flex; flex-direction: column; gap: var(--spacing-12); }
+.ds-fp-skel { border-radius: var(--radius-sm, 6px); background: var(--uems-bg-secondary); position: relative; overflow: hidden; }
+.ds-fp-skel--title { width: 40%; height: 10px; }
+.ds-fp-skel--row { width: 80%; height: 14px; }
+.ds-fp-skel::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--uems-bg-base) 60%, transparent), transparent);
+  transform: translateX(-100%); animation: ds-fp-shimmer 1.3s infinite;
+}
+@keyframes ds-fp-shimmer { 100% { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .ds-fp-skel::after { animation: none; } }
+
+/* The panel supplies each group's label, so suppress the wrapped inputs' own
+   header/label rows (radio-group's header forces display:flex, overriding its
+   own [hidden] attribute, so its empty info "?" row would otherwise leak). */
+.ds-fp-group__body .ds-radio-group__header,
+.ds-fp-group__body .ds-checkbox-group__header { display: none; }
+
+/* ---- Footer (apply mode) -------------------------------------------------- */
+.ds-filter-panel__footer {
+  display: flex; align-items: center; gap: var(--spacing-8);
+  padding: var(--spacing-12) var(--spacing-16);
+  border-top: 1px solid var(--uems-border-tertiary);
+}
+.ds-filter-panel__footer[hidden] { display: none; }
+.ds-filter-panel__footer .ds-fp-apply-btn { margin-inline-start: auto; }
+
+/* =============================================================================
+   Presentation modes (Phase 3): drawer (off-canvas) · popover (anchored flyout).
+   Docked is the default (in-flow, styled above). Overlay modes fix the root over
+   the viewport; visibility is gated by `.is-open`.
+   ============================================================================= */
+.ds-fp-host--drawer, .ds-fp-host--popover { position: fixed; inset: 0; z-index: 1500; pointer-events: none; }
+
+/* ---- Drawer: scrim + end-docked sliding sheet ---- */
+.ds-fp-host--drawer .ds-fp-backdrop {
+  position: absolute; inset: 0; background: rgba(15, 23, 42, 0.40);
+  opacity: 0; transition: opacity 200ms var(--ease-standard, ease);
+}
+.ds-fp-host--drawer.is-open { pointer-events: auto; }
+.ds-fp-host--drawer.is-open .ds-fp-backdrop { opacity: 1; }
+.ds-fp-host--drawer .ds-filter-panel {
+  position: absolute; top: 0; bottom: 0; inset-inline-end: 0;
+  width: min(360px, 90vw); height: 100%; max-height: none;
+  border-radius: 0; border: 0; border-inline-start: 1px solid var(--uems-border-tertiary);
+  box-shadow: -8px 0 32px rgba(15, 23, 42, 0.12);
+  transform: translateX(100%); transition: transform 250ms var(--ease-standard, ease);
+}
+[dir="rtl"].ds-fp-host--drawer .ds-filter-panel { transform: translateX(-100%); }
+.ds-fp-host--drawer.is-open .ds-filter-panel { transform: none; }
+
+/* ---- Popover: light-dismiss anchored card (position set by JS) ---- */
+.ds-fp-host--popover .ds-fp-backdrop { display: none; }
+.ds-fp-host--popover .ds-filter-panel {
+  position: fixed; width: min(300px, 92vw); max-height: min(70vh, 520px);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.16);
+  opacity: 0; transform: translateY(-4px) scale(0.99);
+  transition: opacity 150ms var(--ease-standard, ease), transform 150ms var(--ease-standard, ease);
+}
+.ds-fp-host--popover.is-open { pointer-events: auto; }
+.ds-fp-host--popover.is-open .ds-filter-panel { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-fp-host--drawer .ds-filter-panel, .ds-fp-host--popover .ds-filter-panel, .ds-fp-host .ds-fp-backdrop { transition: none; }
+}

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Avatar · UEMS Design System</title>
+  <link rel="stylesheet" href="../../styles/index.css">
+  <script type="module" src="../../index.js"></script>
+  <style>
+    body { padding: var(--spacing-32); background: var(--uems-background); }
+    h1 { font: var(--text-title-weight) var(--text-title-size)/var(--text-title-line) var(--font-family-sans); margin-bottom: var(--spacing-24); }
+    h2 { font: var(--text-heading-weight) var(--text-heading-size)/var(--text-heading-line) var(--font-family-sans); margin: var(--spacing-32) 0 var(--spacing-12); }
+    .row { display: flex; align-items: center; gap: var(--spacing-16); margin-bottom: var(--spacing-12); }
+    .row > span { font-size: var(--font-size-12); color: var(--uems-text-tertiary); }
+
+    /* Figma-parity matrix: 12 size/type rows × {Default, Disabled} */
+    .matrix { display: grid; grid-template-columns: 180px 96px 96px; align-items: center; row-gap: var(--spacing-16); }
+    .matrix .hdr { font-size: var(--font-size-12); font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); text-align: center; }
+    .matrix .rlabel { font-size: var(--font-size-12); color: var(--uems-text-tertiary); }
+    .matrix .cell { display: flex; justify-content: center; }
+  </style>
+</head>
+<body>
+  <h1>Avatar</h1>
+
+  <h2>Matrix — 3 sizes × 4 types × 2 states (Figma parity)</h2>
+  <div class="matrix">
+    <span></span><span class="hdr">Default</span><span class="hdr">Disabled</span>
+
+    <span class="rlabel">Small / Image</span>
+    <span class="cell"><ds-avatar size="small" src="https://i.pravatar.cc/96?img=12" name="Jane Doe"></ds-avatar></span>
+    <span class="cell"><ds-avatar size="small" disabled src="https://i.pravatar.cc/96?img=12" name="Jane Doe"></ds-avatar></span>
+
+    <span class="rlabel">Small / Initials</span>
+    <span class="cell"><ds-avatar size="small" name="Jane Doe"></ds-avatar></span>
+    <span class="cell"><ds-avatar size="small" disabled name="Jane Doe"></ds-avatar></span>
+
+    <span class="rlabel">Small / Placeholder Icon</span>
+    <span class="cell"><ds-avatar size="small"></ds-avatar></span>
+    <span class="cell"><ds-avatar size="small" disabled></ds-avatar></span>
+
+    <span class="rlabel">Small / Hover</span>
+    <span class="cell"><ds-avatar size="small" type="hover"></ds-avatar></span>
+    <span class="cell"><ds-avatar size="small" type="hover" disabled></ds-avatar></span>
+
+    <span class="rlabel">Medium / Image</span>
+    <span class="cell"><ds-avatar size="medium" src="https://i.pravatar.cc/96?img=12" name="Jane Doe"></ds-avatar></span>
+    <span class="cell"><ds-avatar size="medium" disabled src="https://i.pravatar.cc/96?img=12" name="Jane Doe"></ds-avatar></span>
+
+    <span class="rlabel">Medium / Initials</span>
+    <span class="cell"><ds-avatar size="medium" name="Jane Doe"></ds-avatar></span>
+    <span class="cell"><ds-avatar size="medium" disabled name="Jane Doe"></ds-avatar></span>
+
+    <span class="rlabel">Medium / Placeholder Icon</span>
+    <span class="cell"><ds-avatar size="medium"></ds-avatar></span>
+    <span class="cell"><ds-avatar size="medium" disabled></ds-avatar></span>
+
+    <span class="rlabel">Medium / Hover</span>
+    <span class="cell"><ds-avatar size="medium" type="hover"></ds-avatar></span>
+    <span class="cell"><ds-avatar size="medium" type="hover" disabled></ds-avatar></span>
+
+    <span class="rlabel">Large / Image</span>
+    <span class="cell"><ds-avatar size="large" src="https://i.pravatar.cc/96?img=12" name="Jane Doe"></ds-avatar></span>
+    <span class="cell"><ds-avatar size="large" disabled src="https://i.pravatar.cc/96?img=12" name="Jane Doe"></ds-avatar></span>
+
+    <span class="rlabel">Large / Initials</span>
+    <span class="cell"><ds-avatar size="large" name="Jane Doe"></ds-avatar></span>
+    <span class="cell"><ds-avatar size="large" disabled name="Jane Doe"></ds-avatar></span>
+
+    <span class="rlabel">Large / Placeholder Icon</span>
+    <span class="cell"><ds-avatar size="large"></ds-avatar></span>
+    <span class="cell"><ds-avatar size="large" disabled></ds-avatar></span>
+
+    <span class="rlabel">Large / Hover</span>
+    <span class="cell"><ds-avatar size="large" type="hover"></ds-avatar></span>
+    <span class="cell"><ds-avatar size="large" type="hover" disabled></ds-avatar></span>
+  </div>
+
+  <h2>Initials rule</h2>
+  <div class="row">
+    <ds-avatar size="medium" name="Jane Doe"></ds-avatar>
+    <ds-avatar size="medium" name="Javier"></ds-avatar>
+    <ds-avatar size="medium" name="Jane Marie Doe"></ds-avatar>
+    <span>JD · J · JD (first + last word)</span>
+  </div>
+
+  <h2>Editable (live hover overlay — hover me)</h2>
+  <div class="row">
+    <ds-avatar size="large" editable name="Jane Doe" src="https://i.pravatar.cc/96?img=12"></ds-avatar>
+    <ds-avatar size="large" editable name="Javier"></ds-avatar>
+    <ds-avatar size="large" editable></ds-avatar>
+  </div>
+
+  <h2>Fallback chain</h2>
+  <div class="row">
+    <ds-avatar name="Broken Source" src="https://example.invalid/missing.png" size="medium"></ds-avatar>
+    <span>(broken src → falls back to initials)</span>
+  </div>
+</body>
+</html>

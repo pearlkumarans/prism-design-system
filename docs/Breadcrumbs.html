@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breadcrumb — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/breadcrumb/breadcrumb.css?v=2">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/breadcrumb/breadcrumb.js?v=2"></script>
+<style>
+  .demo-bc-section { margin-bottom: 28px; }
+  .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+  .demo-bc-card { padding: 16px 20px; background: var(--prism-surface, rgba(255,255,255,.02)); border: 1px solid var(--prism-border, rgba(255,255,255,.08)); border-radius: 12px; }
+  .demo-bc-card + .demo-bc-card { margin-top: 12px; }
+</style>
+</head>
+<body class="page-breadcrumbs">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width: 16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search...">
+        <span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link active">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Breadcrumb</h1>
+        <p class="page-desc">Breadcrumbs tell the user where they are in the structure and offer a one-click way back up &mdash; All sites &rsaquo; Acme Corp &rsaquo; Endpoints &rsaquo; Mac-Studio-01. Use them on pages two or more levels deep so users always have an anchor home; skip them on top-level pages where there&rsquo;s nowhere to go up to. When the trail gets long, collapse the middle into an &hellip; the user can expand.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- =============== OVERVIEW TAB =============== -->
+        <div class="tab-content" id="tab-overview">
+
+          <!-- Anatomy Section -->
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram">
+            <div style="display: flex; justify-content: center; margin: 40px 0;">
+              <div style="display: inline-flex; align-items: center; padding: 20px 32px; border-radius: 12px; border: 2px dashed rgba(37,99,235,0.4); font-size: 16px; font-weight: 500; color: var(--prism-text); position: relative; gap: 0;">
+                <!-- Home Icon -->
+                <div style="position: relative; display: inline-flex; align-items: center;">
+                  <div style="position: absolute; top: -38px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                    <span class="anat-marker-inline">1</span><div style="width: 2px; height: 12px; background: #2563eb;"></div>
+                  </div>
+                  <ds-icon name="home" size="16" style="opacity:0.6;"></ds-icon>
+                </div>
+                <span style="padding: 0 8px; color: #8993A4;">Home</span>
+                <!-- Separator -->
+                <div style="position: relative; display: inline-flex; align-items: center;">
+                  <div style="position: absolute; bottom: -38px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column-reverse; align-items: center; gap: 4px;">
+                    <span class="anat-marker-inline">2</span><div style="width: 2px; height: 12px; background: #2563eb;"></div>
+                  </div>
+                  <span style="padding: 0 6px; color: #8993A4; font-size: 14px;">&#8250;</span>
+                </div>
+                <!-- Default Item -->
+                <div style="position: relative; display: inline-flex; align-items: center;">
+                  <div style="position: absolute; top: -38px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                    <span class="anat-marker-inline">3</span><div style="width: 2px; height: 12px; background: #2563eb;"></div>
+                  </div>
+                  <span style="padding: 0 8px; color: #8993A4;">Settings</span>
+                </div>
+                <span style="padding: 0 6px; color: #8993A4; font-size: 14px;">&#8250;</span>
+                <!-- Collapsed -->
+                <div style="position: relative; display: inline-flex; align-items: center;">
+                  <div style="position: absolute; bottom: -38px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column-reverse; align-items: center; gap: 4px;">
+                    <span class="anat-marker-inline">4</span><div style="width: 2px; height: 12px; background: #2563eb;"></div>
+                  </div>
+                  <span style="padding: 0 8px; color: #8993A4; letter-spacing: 2px;">&#183;&#183;&#183;</span>
+                </div>
+                <span style="padding: 0 6px; color: #8993A4; font-size: 14px;">&#8250;</span>
+                <span style="padding: 0 8px; color: #8993A4;">Profile</span>
+                <span style="padding: 0 6px; color: #8993A4; font-size: 14px;">&#8250;</span>
+                <!-- Current Item -->
+                <div style="position: relative; display: inline-flex; align-items: center;">
+                  <div style="position: absolute; top: -38px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                    <span class="anat-marker-inline">5</span><div style="width: 2px; height: 12px; background: #2563eb;"></div>
+                  </div>
+                  <span style="padding: 0 8px; color: #292A2E; font-weight: 700;">Edit Account</span>
+                </div>
+                <!-- Container callout -->
+                <div style="position: absolute; left: -32px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 8px;">
+                  <span class="anat-marker-inline">6</span><div style="width: 16px; height: 2px; background: #2563eb;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Home Icon</strong><span>Optional leading icon on the first item. Toggle via Show Home Icon property.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Separator</strong><span>Chevron &#8250; between items. Swappable via instance swap. Uses &#8249; for RTL.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Default Item</strong><span>Ancestor page link. Rendered in lighter text (#8993A4). Interactive.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Collapsed Item</strong><span>Overflow placeholder (&#183;&#183;&#183;) shown when Overflow=True. Hides middle items.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Current Item</strong><span>Active page label. Bold, dark text (#292A2E). Non-interactive.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Container</strong><span>Horizontal flex wrapper. Houses all items, separators, and overflow tokens.</span></div></div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Live Demo -->
+          <div style="margin-bottom: 64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom: 8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom: 28px;">Every level count &times; home-icon &times; overflow &times; RTL combination from <code>breadcrumb.css</code>, plus real-world page-header patterns &mdash; rendered with the live <code>&lt;ds-breadcrumb&gt;</code> web component.</p>
+
+            <style>
+              .page-breadcrumbs .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; }
+              .page-breadcrumbs .demo-container .demo-canvas {
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+                min-height: 0 !important;
+                padding: 32px !important;
+                gap: 28px !important;
+              }
+              .page-breadcrumbs .demo-bc-section { display: flex; flex-direction: column; gap: 12px; }
+              .page-breadcrumbs .demo-bc-section > .demo-group-label {
+                font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+                color: var(--prism-text-muted); text-transform: uppercase;
+                margin: 0; text-align: left; width: auto;
+              }
+              .page-breadcrumbs .demo-bc-card {
+                padding: 14px 18px;
+                border: 1px solid var(--prism-border);
+                border-radius: 10px;
+                background: rgba(255,255,255,0.02);
+              }
+              [data-theme="light"] .page-breadcrumbs .demo-bc-card {
+                background: rgba(255,255,255,0.55);
+                border-color: rgba(37,99,235,0.08);
+              }
+              .page-breadcrumbs .demo-realworld-card {
+                padding: 18px;
+                border: 1px solid var(--prism-border);
+                border-radius: 12px;
+                background: rgba(255,255,255,0.02);
+              }
+              [data-theme="light"] .page-breadcrumbs .demo-realworld-card {
+                background: rgba(255,255,255,0.55);
+                border-color: rgba(37,99,235,0.1);
+              }
+              .page-breadcrumbs .demo-realworld-card-label {
+                font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+                color: var(--prism-text-muted); text-transform: uppercase;
+                margin-bottom: 12px;
+              }
+              .page-breadcrumbs .demo-page-title {
+                font-size: 22px; font-weight: 700; color: var(--prism-text);
+                margin: 8px 0 4px;
+              }
+              .page-breadcrumbs .demo-page-meta {
+                font-size: 13px; color: var(--prism-text-muted);
+              }
+            </style>
+
+            <div class="demo-container">
+              <!-- Mac-window toolbar -->
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Breadcrumb &middot; level counts &times; overflow + page-header patterns</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Sizes -->
+                <div class="demo-bc-section">
+                  <div class="demo-group-label">Sizes &mdash; Small (default, 20px row &middot; 12/16) / Medium (28px row &middot; 13/20)</div>
+                  <div class="demo-bc-card">
+                    <div style="font-size:10px;font-weight:600;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Small &mdash; default &middot; dense headers, tables, side panels</div>
+                    <ds-breadcrumb size="small">
+                      <a href="#">Inventory</a>
+                      <a href="#">Devices</a>
+                      <span>MacBook Pro</span>
+                    </ds-breadcrumb>
+                  </div>
+                  <div class="demo-bc-card">
+                    <div style="font-size:10px;font-weight:600;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Medium &mdash; page headers &middot; 13px Special-Sizes text, 14px separators</div>
+                    <ds-breadcrumb size="medium">
+                      <a href="#">Inventory</a>
+                      <a href="#">Devices</a>
+                      <span>MacBook Pro</span>
+                    </ds-breadcrumb>
+                  </div>
+                  <div class="demo-bc-card">
+                    <div style="font-size:10px;font-weight:600;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Medium + home icon (16px) &amp; overflow (20px &middot;&middot;&middot;)</div>
+                    <ds-breadcrumb size="medium" home-icon overflow>
+                      <a href="#">Home</a>
+                      <a href="#">Organization</a>
+                      <a href="#">Settings</a>
+                      <a href="#">Members</a>
+                      <span>Edit Admin</span>
+                    </ds-breadcrumb>
+                  </div>
+                </div>
+
+                <!-- Level counts -->
+                <div class="demo-bc-section">
+                  <div class="demo-group-label">Level counts &mdash; 2 / 3 / 4 / 5 levels (deep hierarchies)</div>
+                  <div class="demo-bc-card">
+                    <div style="font-size:10px;font-weight:600;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">2 levels &mdash; minimal trail</div>
+                    <ds-breadcrumb>
+                      <a href="#">Settings</a>
+                      <span>Security</span>
+                    </ds-breadcrumb>
+                  </div>
+                  <div class="demo-bc-card">
+                    <div style="font-size:10px;font-weight:600;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">3 levels &mdash; common page depth</div>
+                    <ds-breadcrumb>
+                      <a href="#">Inventory</a>
+                      <a href="#">Devices</a>
+                      <span>MacBook Pro</span>
+                    </ds-breadcrumb>
+                  </div>
+                  <div class="demo-bc-card">
+                    <div style="font-size:10px;font-weight:600;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">4 levels &mdash; deeper hierarchy</div>
+                    <ds-breadcrumb>
+                      <a href="#">Workspaces</a>
+                      <a href="#">Engineering</a>
+                      <a href="#">Frontend</a>
+                      <span>Endpoint Central</span>
+                    </ds-breadcrumb>
+                  </div>
+                  <div class="demo-bc-card">
+                    <div style="font-size:10px;font-weight:600;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">5 levels &mdash; full trail (no overflow)</div>
+                    <ds-breadcrumb>
+                      <a href="#">Organization</a>
+                      <a href="#">Settings</a>
+                      <a href="#">Members</a>
+                      <a href="#">Roles</a>
+                      <span>Edit Admin</span>
+                    </ds-breadcrumb>
+                  </div>
+                </div>
+
+                <!-- Home icon -->
+                <div class="demo-bc-section">
+                  <div class="demo-group-label">Home icon &mdash; <code>home-icon</code> attribute replaces the first label with a house glyph</div>
+                  <div class="demo-bc-card">
+                    <ds-breadcrumb home-icon>
+                      <a href="#">Home</a>
+                      <a href="#">Devices</a>
+                      <span>MacBook Pro</span>
+                    </ds-breadcrumb>
+                  </div>
+                  <div class="demo-bc-card">
+                    <ds-breadcrumb home-icon>
+                      <a href="#">Home</a>
+                      <a href="#">Workspaces</a>
+                      <a href="#">Engineering</a>
+                      <span>Frontend</span>
+                    </ds-breadcrumb>
+                  </div>
+                </div>
+
+                <!-- Overflow behaviour -->
+                <div class="demo-bc-section">
+                  <div class="demo-group-label">Overflow &mdash; <code>overflow</code> attribute collapses middle items into &middot;&middot;&middot;</div>
+                  <div class="demo-bc-card">
+                    <div style="font-size:10px;font-weight:600;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Without overflow</div>
+                    <ds-breadcrumb home-icon>
+                      <a href="#">Home</a>
+                      <a href="#">Organization</a>
+                      <a href="#">Settings</a>
+                      <a href="#">Members</a>
+                      <span>Edit Role</span>
+                    </ds-breadcrumb>
+                  </div>
+                  <div class="demo-bc-card">
+                    <div style="font-size:10px;font-weight:600;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">With overflow &mdash; first, &hellip; , last two visible</div>
+                    <ds-breadcrumb overflow home-icon>
+                      <a href="#">Home</a>
+                      <a href="#">Organization</a>
+                      <a href="#">Settings</a>
+                      <a href="#">Members</a>
+                      <span>Edit Role</span>
+                    </ds-breadcrumb>
+                  </div>
+                </div>
+
+                <!-- RTL -->
+                <div class="demo-bc-section">
+                  <div class="demo-group-label">RTL &mdash; Arabic layout (chevron-left separators, right-to-left flow)</div>
+                  <div class="demo-bc-card">
+                    <ds-breadcrumb rtl home-icon>
+                      <a href="#">&#1575;&#1604;&#1585;&#1574;&#1610;&#1587;&#1610;&#1577;</a>
+                      <a href="#">&#1575;&#1604;&#1573;&#1593;&#1583;&#1575;&#1583;&#1575;&#1578;</a>
+                      <span>&#1575;&#1604;&#1571;&#1605;&#1575;&#1606;</span>
+                    </ds-breadcrumb>
+                  </div>
+                </div>
+
+                <!-- Real-world: page header -->
+                <div class="demo-bc-section">
+                  <div class="demo-group-label">Real-world &mdash; page header pattern (breadcrumb above title)</div>
+                  <div class="demo-realworld-card">
+                    <div class="demo-realworld-card-label">Device detail page</div>
+                    <ds-breadcrumb home-icon>
+                      <a href="#">Home</a>
+                      <a href="#">Inventory</a>
+                      <a href="#">Devices</a>
+                      <span>MacBook-Pro-14</span>
+                    </ds-breadcrumb>
+                    <h1 class="demo-page-title">MacBook-Pro-14</h1>
+                    <p class="demo-page-meta">Laptop &middot; Online &middot; Last seen 2 min ago &middot; Owned by Kumaran M</p>
+                  </div>
+                </div>
+
+                <!-- Real-world: deep nav with overflow -->
+                <div class="demo-bc-section">
+                  <div class="demo-group-label">Real-world &mdash; deep navigation with overflow (5+ levels)</div>
+                  <div class="demo-realworld-card">
+                    <div class="demo-realworld-card-label">Configuration editor &mdash; collapsed trail keeps the layout compact</div>
+                    <ds-breadcrumb overflow home-icon>
+                      <a href="#">Home</a>
+                      <a href="#">Configurations</a>
+                      <a href="#">Windows</a>
+                      <a href="#">Security baselines</a>
+                      <a href="#">CIS Level 1</a>
+                      <a href="#">Account policies</a>
+                      <span>Password length</span>
+                    </ds-breadcrumb>
+                    <h1 class="demo-page-title">Password length policy</h1>
+                    <p class="demo-page-meta">Inherited from CIS Level 1 baseline &middot; Applied to 248 devices</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Guidelines -->
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span>
+                <ul>
+                  <li>Reflect the real page hierarchy in the trail.</li>
+                  <li>Mark only the last item as Current (bold).</li>
+                  <li>Keep labels concise and meaningful (e.g. "Settings", "Profile").</li>
+                  <li>Use the home icon for app root level entries.</li>
+                </ul>
+              </div>
+              <div class="dont-card"><span class="card-label">Don't</span>
+                <ul>
+                  <li>Show the user's click history instead of the actual path.</li>
+                  <li>Bold or highlight intermediate items.</li>
+                  <li>Truncate labels mid-word with ellipsis; abbreviate instead.</li>
+                  <li>Place the home icon on every item.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- =============== STYLE TAB =============== -->
+        <div class="tab-content" id="tab-style" style="display: none; padding-top: 32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Design tokens, color mappings, and spacing tokens that define the Breadcrumb's visual language.</p>
+
+          <!-- Variants -->
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">The component set contains 12 variants across three axes: Count, Overflow, and RTL.</p>
+            <table class="size-table">
+              <thead><tr><th>Axis</th><th>Values</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Count</strong></td><td><code>2</code>, <code>3</code>, <code>4</code>, <code>5</code></td><td>Number of breadcrumb levels shown</td></tr>
+                <tr><td><strong>Overflow</strong></td><td><code>False</code>, <code>True</code></td><td>Collapses middle items into &#183;&#183;&#183; (only for Count 4 and 5)</td></tr>
+                <tr><td><strong>RTL</strong></td><td><code>False</code>, <code>True</code></td><td>Reverses item order with &#8249; separators and Arabic text</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top: 24px; padding: 16px 20px; background: rgba(37,99,235,0.05); border: 1px solid rgba(37,99,235,0.15); border-radius: 12px; display: flex; gap: 12px; align-items: flex-start;">
+              <ds-icon name="info-circle" size="20" style="flex-shrink: 0; margin-top: 2px; color:#2563eb;"></ds-icon>
+              <p style="font-size: 14px; color: var(--prism-text); line-height: 1.6; margin: 0;"><strong>Overflow behaviour:</strong> When <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Overflow=True</code>, middle items are hidden and replaced with a &#183;&#183;&#183; ellipsis token, keeping the first and last two items visible.</p>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- States -->
+          <div class="doc-section">
+            <h2 id="states" class="doc-section-title">States</h2>
+            <p class="doc-section-subtitle">Breadcrumb items cycle through distinct visual states to communicate interactivity. Default ancestor links carry hover and keyboard focus; the Current item is non-interactive; the Collapsed (&middot;&middot;&middot;) item is a clickable popover trigger.</p>
+            <div class="state-grid">
+              <div class="state-card">
+                <nav aria-label="Breadcrumb demo"><ol class="bc-nav" style="justify-content:center;"><li><a class="bc-item" href="#" onclick="return false;">Settings</a></li></ol></nav>
+                <div class="state-card-title">Default</div>
+                <div class="state-card-desc">Ancestor link at rest. Token: <code>text-secondary</code>.</div>
+              </div>
+              <div class="state-card">
+                <nav aria-label="Breadcrumb demo"><ol class="bc-nav" style="justify-content:center;"><li><a class="bc-item" href="#" onclick="return false;" style="color:#2563eb;background:rgba(0,0,0,0.04);border-radius:4px;padding:2px 6px;">Settings</a></li></ol></nav>
+                <div class="state-card-title">Hover</div>
+                <div class="state-card-desc">Text &rarr; <code>text-primary</code>, soft <code>bg-secondary-hover</code> chip.</div>
+              </div>
+              <div class="state-card">
+                <nav aria-label="Breadcrumb demo"><ol class="bc-nav" style="justify-content:center;"><li><a class="bc-item" href="#" onclick="return false;" style="outline:2px solid #2563eb;outline-offset:2px;border-radius:4px;">Settings</a></li></ol></nav>
+                <div class="state-card-title">Focus</div>
+                <div class="state-card-desc">2 px <code>border-accent-focus</code> ring on keyboard reach.</div>
+              </div>
+              <div class="state-card">
+                <nav aria-label="Breadcrumb demo"><ol class="bc-nav" style="justify-content:center;"><li><span class="bc-item current">Current Page</span></li></ol></nav>
+                <div class="state-card-title">Current</div>
+                <div class="state-card-desc">Bold <code>text-primary</code>. Non-interactive &mdash; last item only.</div>
+              </div>
+              <div class="state-card">
+                <nav aria-label="Breadcrumb demo"><ol class="bc-nav" style="justify-content:center;"><li><button class="bc-item" type="button" style="font-weight:600;letter-spacing:0.1em;padding:0 6px;background:transparent;border:0;cursor:pointer;color:var(--prism-text-muted);">&middot;&middot;&middot;</button></li></ol></nav>
+                <div class="state-card-title">Collapsed</div>
+                <div class="state-card-desc">Overflow trigger. Click to reveal hidden middle items in a popover.</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Sizes -->
+          <div class="doc-section">
+            <h2 id="sizes" class="doc-section-title">Sizes</h2>
+            <p class="doc-section-subtitle">Breadcrumbs use a single size profile that adapts naturally to the surrounding typography context.</p>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Font Size</th><th>Line Height</th><th>Font Weight</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Default item</strong></td><td>14px</td><td>20px</td><td>400 (Regular)</td></tr>
+                <tr><td><strong>Current item</strong></td><td>14px</td><td>20px</td><td>700 (Bold)</td></tr>
+                <tr><td><strong>Separator</strong></td><td>14px</td><td>20px</td><td>400</td></tr>
+                <tr><td><strong>Overflow token</strong></td><td>14px</td><td>20px</td><td>500 (Medium)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Color Tokens -->
+          <div class="doc-section">
+            <h2 id="color-tokens" class="doc-section-title">Color Tokens<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">Tokens</span></h2>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Token / Style</th><th>Light Value</th><th>Dark Value</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Default item text</strong></td><td><code>text-secondary</code></td><td>#8993A4</td><td>rgba(255,255,255,0.48)</td></tr>
+                <tr><td><strong>Current item text</strong></td><td><code>text-primary</code></td><td>#292A2E</td><td>rgba(255,255,255,0.92)</td></tr>
+                <tr><td><strong>Separator</strong></td><td><code>text-secondary</code></td><td>#8993A4</td><td>rgba(255,255,255,0.3)</td></tr>
+                <tr><td><strong>Hover text</strong></td><td><code>text-link</code></td><td>#2563EB</td><td>#60A5FA</td></tr>
+                <tr><td><strong>Overflow token</strong></td><td><code>text-secondary</code></td><td>#8993A4</td><td>rgba(255,255,255,0.48)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Spacing Tokens -->
+          <div class="doc-section">
+            <h2 id="spacing-tokens" class="doc-section-title">Spacing Tokens</h2>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Value</th><th>Token</th></tr></thead>
+              <tbody>
+                <tr><td>Separator horizontal padding</td><td>8px (each side)</td><td><code>spacing/8px</code></td></tr>
+                <tr><td>Icon-to-label gap</td><td>4px</td><td><code>spacing/4px</code></td></tr>
+                <tr><td>Home icon size</td><td>16 x 16px</td><td><code>icon/sm</code></td></tr>
+                <tr><td>Component vertical padding</td><td>0px</td><td>Inline element</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Corner Radius -->
+          <div class="doc-section">
+            <h2 id="corner-radius-border-radius" class="doc-section-title">Corner Radius (Border Radius)</h2>
+            <p class="doc-section-subtitle">Breadcrumb items are inline text elements with no explicit border radius. Focus rings use a 4px radius for accessibility visibility.</p>
+            <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px;">
+              <div style="flex: 1; min-width: 200px; padding: 24px; background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 12px; text-align: center;">
+                <div style="width: 100%; height: 36px; border: 2px dashed #006AFF; border-radius: 4px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; background: rgba(0, 106, 255, 0.05); color: #006AFF; font-weight: 600;">4px</div>
+                <div style="font-size: 14px; font-weight: 600; color: var(--prism-text);">radius/radius-xxs</div>
+                <div style="font-size: 12px; color: var(--prism-text-muted); margin-top: 4px;">Focus ring radius</div>
+              </div>
+              <div style="flex: 1; min-width: 200px; padding: 24px; background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 12px; text-align: center;">
+                <div style="width: 100%; height: 36px; border: 2px dashed rgba(137,147,164,0.5); border-radius: 0px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; background: rgba(137,147,164,0.05); color: #8993A4; font-weight: 600;">0px</div>
+                <div style="font-size: 14px; font-weight: 600; color: var(--prism-text);">None</div>
+                <div style="font-size: 12px; color: var(--prism-text-muted); margin-top: 4px;">Item container (inline text)</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Typography Family -->
+          <div class="doc-section">
+            <h2 id="typography-family" class="doc-section-title">Typography Family</h2>
+            <p class="doc-section-subtitle">The primary font family is <strong>Zoho Puvi</strong>. Breadcrumb uses Regular for default items and Bold for the current page.</p>
+            <div style="background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 16px; padding: 32px; margin-bottom: 32px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; border-bottom: 1px solid var(--prism-border); padding-bottom: 24px;">
+                <div style="font-size: 64px; font-weight: 400; line-height: 1; color: var(--prism-text); letter-spacing: -2px;">Aa</div>
+                <div style="text-align: right;">
+                  <div style="font-size: 20px; font-weight: 600; color: var(--prism-text);">Zoho Puvi</div>
+                  <div style="font-size: 14px; color: var(--prism-text-muted); margin-top: 4px;">Primary System Font</div>
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+                <div style="padding: 16px; background: rgba(37,99,235,0.05); border-radius: 8px; border-bottom: 2px solid #2563eb;">
+                  <div style="font-size: 24px; font-weight: 400; color: var(--prism-text); margin-bottom: 8px;">Regular</div>
+                  <div style="font-size: 12px; color: var(--prism-text-muted);">Weight: 400 (Default items)</div>
+                </div>
+                <div style="padding: 16px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                  <div style="font-size: 24px; font-weight: 500; color: var(--prism-text); margin-bottom: 8px;">Medium</div>
+                  <div style="font-size: 12px; color: var(--prism-text-muted);">Weight: 500 (Overflow token)</div>
+                </div>
+                <div style="padding: 16px; background: rgba(255,255,255,0.02); border-radius: 8px;">
+                  <div style="font-size: 24px; font-weight: 700; color: var(--prism-text); margin-bottom: 8px;">Bold</div>
+                  <div style="font-size: 12px; color: var(--prism-text-muted);">Weight: 700 (Current item)</div>
+                </div>
+              </div>
+            </div>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Token</th><th>Font Size</th><th>Line Height</th><th>Weight</th></tr></thead>
+              <tbody>
+                <tr><td>Default item</td><td><code>body/Default/Regular</code></td><td>14px</td><td>20px</td><td>400</td></tr>
+                <tr><td>Current item</td><td><code>body/Default/Bold</code></td><td>14px</td><td>20px</td><td>700</td></tr>
+                <tr><td>Overflow token</td><td><code>body/Default/Medium</code></td><td>14px</td><td>20px</td><td>500</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- =============== USAGE TAB =============== -->
+        <div class="tab-content" id="tab-usage" style="display: none; padding-top: 32px;">
+
+          <!-- When and Where to Use -->
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">A breadcrumb trail shows the user's current position within a page hierarchy and provides quick navigation back to parent pages.</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+              <div style="padding: 24px; background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 12px; transition: all 0.25s ease;">
+                <h3 id="when-to-use-details" class="doc-h4">
+                  <ds-icon name="check" size="20" style="color:#2563eb;"></ds-icon>
+                  When to use
+                </h3>
+                <ul class="doc-list" style="border: none; background: transparent; padding-left: 20px; font-size: 14.5px;">
+                  <li style="border: none; background: transparent; margin-bottom: 8px;">To show a user's position within a multi-level hierarchy (e.g. settings, category pages, admin dashboards).</li>
+                  <li style="border: none; background: transparent; margin-bottom: 8px;">When users need a reliable way to navigate back to parent pages without the browser back button.</li>
+                  <li style="border: none; background: transparent;">In deep navigation trees with 3 or more levels.</li>
+                </ul>
+              </div>
+              <div style="padding: 24px; background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 12px; transition: all 0.25s ease;">
+                <h3 id="when-not-to-use" class="doc-h4">
+                  <ds-icon name="close" size="20" style="color:#e42527;"></ds-icon>
+                  When NOT to use
+                </h3>
+                <ul class="doc-list" style="border: none; background: transparent; padding-left: 20px; font-size: 14.5px;">
+                  <li style="border: none; background: transparent; margin-bottom: 8px;">For flat, single-level navigation &#8212; a back link or tab bar is more appropriate.</li>
+                  <li style="border: none; background: transparent; margin-bottom: 8px;">When the path has only one level above the current page &#8212; a back link is sufficient.</li>
+                  <li style="border: none; background: transparent;">As a primary navigation mechanism; breadcrumbs are supplementary wayfinding.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Alignment & Placement -->
+          <div class="doc-section">
+            <h2 id="alignment-placement" class="doc-section-title">Alignment &amp; Placement</h2>
+            <p class="doc-section-subtitle">Consistent placement makes breadcrumbs predictable and easy to find.</p>
+            <ul class="doc-list">
+              <li><strong>Page Headers:</strong> Place breadcrumbs above the page title within the page header area, left-aligned.</li>
+              <li><strong>Admin Dashboards:</strong> Position below the top navigation bar and above content area for consistent context.</li>
+              <li><strong>Mobile:</strong> Consider collapsing to show only the parent and current page, using overflow for deeper paths.</li>
+              <li><strong>Settings Pages:</strong> Place at the top of the content panel to show the full settings hierarchy path.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Complete Do's and Don'ts -->
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do's and Don'ts</h2>
+            <p class="doc-section-subtitle">Visual and interaction guidelines to ensure breadcrumbs are effective, scalable, and accessible.</p>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span>
+                <ul>
+                  <li><strong>Reflect true hierarchy:</strong> The trail must mirror the actual page structure, not user click history.</li>
+                  <li><strong>Use overflow for deep paths:</strong> Enable <code style="font-family:monospace;font-size:13px;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Overflow=True</code> for 4+ level paths in space-constrained layouts.</li>
+                  <li><strong>Show home icon at root:</strong> Use <code style="font-family:monospace;font-size:13px;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Show Home Icon=ON</code> for the first item when it represents the app root.</li>
+                  <li><strong>Use RTL variant for RTL locales:</strong> Apply the RTL variant for Arabic, Hebrew, and other RTL languages.</li>
+                  <li><strong>Keep labels concise:</strong> Use short, recognizable page titles (1-3 words) for each breadcrumb item.</li>
+                </ul>
+              </div>
+              <div class="dont-card"><span class="card-label">Don't</span>
+                <ul>
+                  <li><strong>Don't show click history:</strong> Breadcrumbs represent structure, not navigation history.</li>
+                  <li><strong>Don't bold intermediates:</strong> Only the Current (last) item should be bold and non-interactive.</li>
+                  <li><strong>Don't truncate mid-word:</strong> Avoid clipping labels with &#8230; mid-word. Abbreviate the label instead.</li>
+                  <li><strong>Don't place home icon everywhere:</strong> The home icon belongs only on the first item.</li>
+                  <li><strong>Don't manually mirror for RTL:</strong> Use the RTL variant; don't apply CSS transforms to an LTR breadcrumb.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Related -->
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Components that complement or can be used alongside the Breadcrumb.</p>
+            <div class="related-grid">
+              <a href="Link.html" class="related-chip"><ds-icon name="link" size="16"></ds-icon> Link</a>
+              <a href="Header-navigation.html" class="related-chip"><ds-icon name="bento-menu" size="16"></ds-icon> Navigation Bar</a>
+              <a href="Button.html" class="related-chip"><ds-icon name="add" size="16"></ds-icon> Icon Button</a>
+              <a href="Tab-bar-horizontal.html" class="related-chip"><ds-icon name="align-justify" size="16"></ds-icon> Tabs</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- References -->
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <p class="doc-section-subtitle">Design tokens and resources for implementing the Breadcrumb component.</p>
+            <ul class="doc-list">
+              <li><strong>Figma Node:</strong> <code style="font-family: monospace; font-size: 13px; padding: 2px 8px; border-radius: 6px; background: rgba(37,99,235,0.06); color: var(--prism-violet);">16018:37918</code> &#8212; Component Set: Breadcrumb</li>
+              <li><strong>Sub-component:</strong> <code style="font-family: monospace; font-size: 13px; padding: 2px 8px; border-radius: 6px; background: rgba(37,99,235,0.06); color: var(--prism-violet);">17960:740160</code> &#8212; _Breadcrumb Item</li>
+              <li><strong>Total Variants:</strong> 4 Counts &#215; 2 Overflow &#215; 2 RTL = <strong>12 variants</strong> (overflow only for Count 4 and 5)</li>
+              <li><strong>Typography:</strong> Zoho Puvi Regular (400) for default items, Bold (700) for current item</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- =============== CODE TAB =============== -->
+        <div class="tab-content" id="tab-code" style="display: none; padding-top: 32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Use the controls below to configure the Breadcrumb component and view the generated HTML code.</p>
+
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group">
+                <label class="cp-label">Count</label>
+                <select class="cp-select" id="pg-count">
+                  <option value="2">2 levels</option>
+                  <option value="3" selected>3 levels</option>
+                  <option value="4">4 levels</option>
+                  <option value="5">5 levels</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Overflow</label>
+                <select class="cp-select" id="pg-overflow">
+                  <option value="false">false</option>
+                  <option value="true">true</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Home icon</label>
+                <select class="cp-select" id="pg-home-icon">
+                  <option value="false">false</option>
+                  <option value="true">true</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Max visible</label>
+                <input class="cp-select" id="pg-max-visible" type="number" min="2" max="10" value="4" style="width:100%;">
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">RTL</label>
+                <select class="cp-select" id="pg-direction">
+                  <option value="ltr">false</option>
+                  <option value="rtl">true</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="cp-preview" id="pg-preview-area" style="padding:24px;display:flex;justify-content:center"><div id="pg-host" style="width:100%"></div></div>
+
+            <div class="cp-code-header">
+              <div style="font-size: 13.5px; font-weight: 600; color: var(--prism-text);">HTML</div>
+              <div class="cp-code-actions">
+                <button class="cp-action-btn" id="pg-copy-btn">
+                  <ds-icon name="copy" size="15"></ds-icon>
+                  Copy code
+                </button>
+              </div>
+            </div>
+            <div class="cp-code-area" id="pg-code-output"></div>
+          </div>
+
+          <script>
+          (function() {
+            var pgCount = document.getElementById('pg-count');
+            var pgOverflow = document.getElementById('pg-overflow');
+            var pgHomeIcon = document.getElementById('pg-home-icon');
+            var pgMaxVisible = document.getElementById('pg-max-visible');
+            var pgDirection = document.getElementById('pg-direction');
+            var pgHost = document.getElementById('pg-host');
+            var pgCodeOutput = document.getElementById('pg-code-output');
+            var pgCopyBtn = document.getElementById('pg-copy-btn');
+            var pgRawCode = '';
+
+            var ltrLabels = ['Home', 'Settings', 'Organization', 'Members', 'Edit Role'];
+            var rtlLabels = ['\u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629', '\u0627\u0644\u0625\u0639\u062F\u0627\u062F\u0627\u062A', '\u0627\u0644\u0645\u0646\u0638\u0645\u0629', '\u0627\u0644\u0623\u0639\u0636\u0627\u0621', '\u062A\u0639\u062F\u064A\u0644 \u0627\u0644\u062F\u0648\u0631'];
+
+            function build() {
+              var count = parseInt(pgCount.value, 10);
+              var overflow = pgOverflow.value === 'true';
+              var showHome = pgHomeIcon.value === 'true';
+              var maxVisible = parseInt(pgMaxVisible.value, 10) || 4;
+              var isRtl = pgDirection.value === 'rtl';
+              var labels = (isRtl ? rtlLabels : ltrLabels).slice(0, count);
+
+              pgHost.innerHTML = '';
+              var bc = document.createElement('ds-breadcrumb');
+              if (showHome) bc.setAttribute('home-icon', '');
+              if (overflow) bc.setAttribute('overflow', '');
+              if (maxVisible !== 4) bc.setAttribute('max-visible', String(maxVisible));
+              if (isRtl) bc.setAttribute('rtl', '');
+              labels.forEach(function(label, i){
+                var node = i === labels.length - 1 ? document.createElement('span') : document.createElement('a');
+                if (node.tagName === 'A') node.setAttribute('href', '#');
+                node.textContent = label;
+                bc.appendChild(node);
+              });
+              pgHost.appendChild(bc);
+
+              var attrs = [];
+              if (showHome) attrs.push('home-icon');
+              if (overflow) attrs.push('overflow');
+              if (maxVisible !== 4) attrs.push('max-visible="' + maxVisible + '"');
+              if (isRtl) attrs.push('rtl');
+              var head = '&lt;<span style="color:#60a5fa">ds-breadcrumb</span>'
+                + (attrs.length ? ' ' : '')
+                + attrs.map(function(a){
+                    var eq = a.indexOf('=');
+                    if (eq === -1) return '<span style="color:#38bdf8">' + a + '</span>';
+                    return '<span style="color:#38bdf8">' + a.slice(0, eq) + '</span>=<span style="color:#34d399">' + a.slice(eq + 1) + '</span>';
+                  }).join(' ')
+                + '&gt;';
+              var body = labels.map(function(label, i){
+                if (i === labels.length - 1) return '\n  &lt;<span style="color:#60a5fa">span</span>&gt;' + label + '&lt;/<span style="color:#60a5fa">span</span>&gt;';
+                return '\n  &lt;<span style="color:#60a5fa">a</span> <span style="color:#38bdf8">href</span>=<span style="color:#34d399">"#"</span>&gt;' + label + '&lt;/<span style="color:#60a5fa">a</span>&gt;';
+              }).join('');
+              var tail = '\n&lt;/<span style="color:#60a5fa">ds-breadcrumb</span>&gt;';
+              pgCodeOutput.innerHTML = '<pre style="margin:0;white-space:pre-wrap;font-family:\'JetBrains Mono\',monospace;font-size:13.5px;line-height:1.6">' + head + body + tail + '</pre>';
+
+              var raw = '<ds-breadcrumb' + (attrs.length ? ' ' + attrs.join(' ') : '') + '>';
+              labels.forEach(function(label, i){
+                raw += '\n  ' + (i === labels.length - 1 ? '<span>' + label + '</span>' : '<a href="#">' + label + '</a>');
+              });
+              raw += '\n</ds-breadcrumb>';
+              pgRawCode = raw;
+            }
+
+            [pgCount, pgOverflow, pgHomeIcon, pgDirection].forEach(function(el){ el.addEventListener('change', build); });
+            pgMaxVisible.addEventListener('input', build);
+
+            pgCopyBtn.addEventListener('click', function(){
+              var t = pgRawCode;
+              var done = function(){ var o = pgCopyBtn.innerHTML; pgCopyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!'; setTimeout(function(){ pgCopyBtn.innerHTML = o; }, 2000); };
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(t).then(done).catch(function(){ var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); });
+              } else {
+                var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+              }
+            });
+
+            if (window.customElements && customElements.whenDefined) {
+              customElements.whenDefined('ds-breadcrumb').then(build);
+            }
+            build();
+          })();
+          </script>
+
+          <hr class="doc-divider" />
+
+          <!-- Component API & Properties -->
+          <div class="doc-section">
+            <h2 id="component-api-properties" class="doc-section-title">Component API &amp; Properties</h2>
+            <p class="doc-section-subtitle">Attributes exposed on the <code>&lt;ds-breadcrumb&gt;</code> custom element.</p>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>home-icon</code></td><td>boolean</td><td>unset</td><td>Prepends a home icon to the first item.</td></tr>
+                <tr><td><code>overflow</code></td><td>boolean</td><td>unset</td><td>Collapses middle items into a <code>&middot;&middot;&middot;</code> token.</td></tr>
+                <tr><td><code>max-visible</code></td><td>number</td><td><code>4</code></td><td>Threshold beyond which <code>overflow</code> activates.</td></tr>
+                <tr><td><code>separator</code></td><td>icon name</td><td><code>chevron-right</code> (or <code>chevron-left</code> if <code>rtl</code>)</td><td>Sprite icon used between items.</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td>unset</td><td>Reverses item order; sets <code>dir="rtl"</code>.</td></tr>
+              </tbody>
+            </table>
+
+            <h3 style="font-size: 18px; font-weight: 600; color: var(--prism-text); margin: 32px 0 16px;">Children API</h3>
+            <p class="doc-section-subtitle">Each direct child becomes a breadcrumb item. The <strong>last</strong> child is treated as the current page (gets <code>aria-current="page"</code>, bolded, non-interactive). Earlier children stay as real <code>&lt;a&gt;</code> elements so routing libraries keep working.</p>
+            <pre style="background:rgba(0,0,0,.25);padding:14px 16px;border-radius:10px;overflow:auto;font-size:13px;line-height:1.6"><code>&lt;ds-breadcrumb home-icon&gt;
+  &lt;a href="/"&gt;Settings&lt;/a&gt;            &lt;!-- default link --&gt;
+  &lt;a href="/security"&gt;Security&lt;/a&gt;     &lt;!-- default link --&gt;
+  &lt;span&gt;Password Policy&lt;/span&gt;         &lt;!-- current (auto-marked) --&gt;
+&lt;/ds-breadcrumb&gt;</code></pre>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Implementation Idea: Ember Hook Form -->
+          <div class="doc-section">
+            <h2 id="implementation-idea-ember-hook-form" class="doc-section-title">Implementation Idea: Ember Hook Form</h2>
+            <p class="doc-section-subtitle">A common pattern in Ember applications involves dynamically building breadcrumbs from the route hierarchy.</p>
+            <div class="cp-code-area" style="border-radius: 12px; margin-top: 16px;">
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 13.5px; line-height: 1.6;">
+                <span style="color:#94a3b8;">&lt;!-- MyApp/templates/components/page-breadcrumb.hbs --&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">UemsBreadcrumb</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@count</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.breadcrumbItems.length</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@overflow</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.shouldOverflow</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@showHomeIcon</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#98C379;">true</span><span style="color:#C678DD;">}}</span><br>
+                <span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#C678DD;">{{#each</span> <span style="color:#E5C07B;">this.breadcrumbItems</span> <span style="color:#D19A66;">as</span> <span style="color:#56B6C2;">|item|</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">UemsBreadcrumbItem</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">@label</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">item.label</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">@href</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">item.route</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">/&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#C678DD;">{{/each}}</span><br>
+                <span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">UemsBreadcrumb</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- RTL Support -->
+          <div class="doc-section">
+            <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+            <ul class="doc-list">
+              <li>When <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">RTL = True</code>, the full layout is mirrored &#8212; item order reverses and separators change from &#8250; to &#8249;.</li>
+              <li>Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> on the <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;nav&gt;</code> wrapper; do not rely on CSS alone.</li>
+              <li>Text content is in Arabic by default when RTL is enabled. All spacing and padding values mirror automatically.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- =============== ACCESSIBILITY TAB =============== -->
+        <div class="tab-content" id="tab-accessibility" style="display: none; padding-top: 32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for ensuring breadcrumb navigation is accessible across all assistive technologies.</p>
+
+          <!-- Keyboard Interaction -->
+          <div class="doc-section">
+            <h3 id="keyboard-interaction" class="doc-h3">Keyboard Interaction</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><code>Tab</code></td><td>Move focus to the next breadcrumb link (Default items only). Current item is not focusable.</td></tr>
+                <tr><td><code>Shift + Tab</code></td><td>Move focus to the previous breadcrumb link.</td></tr>
+                <tr><td><code>Enter</code></td><td>Activate the focused breadcrumb link and navigate to that page.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- ARIA Attributes & Screen Reader Guidance -->
+          <div class="doc-section">
+            <h3 id="aria-attributes-screen-reader-guidance" class="doc-h3">ARIA Attributes &amp; Screen Reader Guidance</h3>
+            <p class="doc-section-subtitle">Ensure breadcrumb intent is explicitly communicated to all assistive technologies.</p>
+            <ul class="doc-list">
+              <li><strong>Landmark:</strong> Wrap in <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;nav aria-label="Breadcrumb"&gt;</code> to identify it as a navigation landmark.</li>
+              <li><strong>List structure:</strong> Render items as an <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;ol&gt;</code> with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;li&gt;</code> elements so screen readers announce "list of N items".</li>
+              <li><strong>Current page:</strong> Add <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-current="page"</code> to the last (Current) item; do not make it a link.</li>
+              <li><strong>Overflow token:</strong> The &#183;&#183;&#183; token should have <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-label="More items"</code> and be expandable if interactive.</li>
+              <li><strong>RTL:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> on the <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;nav&gt;</code> wrapper to ensure correct reading order.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Focus State Design -->
+          <div class="doc-section">
+            <h3 id="focus-state-design" class="doc-h3">Focus State Design</h3>
+            <ul class="doc-list">
+              <li>Focus ring: <strong>2px solid</strong> using the brand accent color (#2563EB).</li>
+              <li>Focus ring offset: <strong>2px</strong> from the item text, with <strong>4px</strong> border-radius.</li>
+              <li>Current item is non-interactive and does not receive focus.</li>
+              <li>Overflow token (&#183;&#183;&#183;) receives focus only if it is interactive (expandable).</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Color Contrast Minimums -->
+          <div class="doc-section">
+            <h3 id="color-contrast-minimums" class="doc-h3">Color Contrast Minimums<span class="h3-badge" style="background: rgba(34,197,94,0.15); color: #16a34a;">WCAG AA Pass</span></h3>
+            <p class="doc-section-subtitle">Breadcrumb text and separators must maintain sufficient contrast against the page background per WCAG 2.1.</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 24px;">
+              <!-- Default item contrast -->
+              <div style="background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 12px; overflow: hidden;">
+                <div style="background: #ffffff; padding: 32px 24px; text-align: center; color: #8993A4;">
+                  <div style="font-size: 20px; font-weight: 400;">Settings&nbsp;&nbsp;&#8250;&nbsp;&nbsp;Profile</div>
+                </div>
+                <div style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--prism-border);">
+                  <div>
+                    <div style="font-size: 13px; color: var(--prism-text-muted); font-weight: 600;">DEFAULT ITEM</div>
+                    <div style="font-size: 15px; color: var(--prism-text); font-family: monospace; margin-top: 4px;">#8993A4 on #FFFFFF</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(34,197,94,0.1); color: #16a34a; padding: 4px 10px; border-radius: 100px; font-size: 12px; font-weight: 700;">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 4.6:1
+                    </div>
+                    <div style="font-size: 11px; color: var(--prism-text-muted); margin-top: 4px; font-weight: 600;">WCAG AA Pass</div>
+                  </div>
+                </div>
+              </div>
+              <!-- Current item contrast -->
+              <div style="background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 12px; overflow: hidden;">
+                <div style="background: #ffffff; padding: 32px 24px; text-align: center; color: #292A2E;">
+                  <div style="font-size: 20px; font-weight: 700;">Current Page</div>
+                </div>
+                <div style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--prism-border);">
+                  <div>
+                    <div style="font-size: 13px; color: var(--prism-text-muted); font-weight: 600;">CURRENT ITEM</div>
+                    <div style="font-size: 15px; color: var(--prism-text); font-family: monospace; margin-top: 4px;">#292A2E on #FFFFFF</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(34,197,94,0.1); color: #16a34a; padding: 4px 10px; border-radius: 100px; font-size: 12px; font-weight: 700;">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 14.7:1
+                    </div>
+                    <div style="font-size: 11px; color: var(--prism-text-muted); margin-top: 4px; font-weight: 600;">WCAG AAA Pass</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 24px; padding: 16px 20px; background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.2); border-radius: 12px; display: flex; gap: 12px; align-items: flex-start;">
+              <ds-icon name="info-circle" size="20" style="flex-shrink: 0; margin-top: 2px; color:#16a34a;"></ds-icon>
+              <p style="font-size: 14px; color: var(--prism-text); line-height: 1.6; margin: 0;"><strong>WCAG 2.1 Level AA Requires:</strong> A contrast ratio of at least <strong>4.5:1</strong> for normal text. All UEMS breadcrumb text colors pass this standard against both light and dark backgrounds.</p>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Touch Target Size -->
+          <div class="doc-section">
+            <h3 id="touch-target-size" class="doc-h3">Touch Target Size</h3>
+            <p class="doc-section-subtitle">Mobile and tablet platforms require specific tap areas to prevent accidental clicks.</p>
+            <div style="margin-top: 16px; padding: 24px; background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 12px; display: flex; align-items: center; gap: 24px;">
+              <div style="width: 44px; height: 44px; background: rgba(37,99,235,0.1); border: 1px dashed var(--prism-violet); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--prism-violet); font-size: 13px; font-weight: 600; flex-shrink: 0;">44px</div>
+              <div>
+                <div style="font-weight: 600; font-size: 15px; color: var(--prism-text);">Minimum Target: 44&#215;44px</div>
+                <div style="font-size: 14px; color: var(--prism-text-muted); margin-top: 4px;">Breadcrumb links should have at least 44px touch target height on mobile. Use transparent padding if the text height is smaller than the minimum target.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/breadcrumb.md" download="breadcrumb.md" class="action-link">
+              <ds-icon name="download" size="15"></ds-icon>
+              Download MD
+            </a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=16018-37918" target="_blank" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display: flex; gap: 10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  <script>
+    // ── Scroll-spy observer reference ──
+    let _tocObserver = null;
+
+    // ── Dynamic TOC ──
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav');
+      if (!tocList) return;
+      tocList.innerHTML = '';
+      const activePanel = document.getElementById(targetId);
+      if (!activePanel) return;
+
+      const headings = activePanel.querySelectorAll('h2[id], h3[id]');
+      headings.forEach(h => {
+        if (h.style.display === 'none') return;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.className = 'toc-link';
+        let text = Array.from(h.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+        if (!text) text = h.innerText;
+        a.textContent = text;
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById(h.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+      initScrollSpy();
+    }
+
+    function initScrollSpy() {
+      if (_tocObserver) _tocObserver.disconnect();
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sectionIds = Array.from(tocLinks).map(link => link.getAttribute('href').slice(1));
+      const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+      if (sections.length === 0) return;
+
+      _tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            tocLinks.forEach(link => {
+              link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+            });
+          }
+        });
+      }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+
+      sections.forEach(section => _tocObserver.observe(section));
+    }
+
+    // ── Tab switching ──
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabMap = { 'Overview': 'tab-overview', 'Usage': 'tab-usage', 'Style': 'tab-style', 'Code': 'tab-code', 'Accessibility': 'tab-accessibility' };
+        document.querySelectorAll('.tab-content').forEach(panel => panel.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) {
+          document.getElementById(target).style.display = 'block';
+          updateTOC(target);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    // Initialize TOC
+    updateTOC('tab-overview');
+
+    // Theme toggle
+// Sidebar search filter
+    (function(){
+      var searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      var items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function(){
+        var q = this.value.toLowerCase().trim();
+        items.forEach(function(li){
+          var link = li.querySelector('a');
+          if (!link) return;
+          var text = link.textContent.toLowerCase();
+          li.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+      });
+      // Cmd+K / Ctrl+K shortcut to focus search
+      document.addEventListener('keydown', function(e){
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      });
+    })();
+
+    // Scroll sidebar to active link on page load
+    (function(){
+      var active = document.querySelector('.sidebar-link.active');
+      if (active) {
+        var sidebar = active.closest('.sidebar');
+        if (sidebar) {
+          var top = active.offsetTop - sidebar.offsetTop - (sidebar.clientHeight / 3);
+          sidebar.scrollTop = Math.max(0, top);
+        }
+      }
+    })();
+
+  </script>
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/main.js"></script>
+
+
+</body>
+</html>

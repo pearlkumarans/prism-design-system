@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!--
+  Product Updates — DUAL-MODE drawer (ds-drawer, .ec-drawer in .shell-area).
+  Self-contained: date groups + per-category icon/colour/badge. Shell's showUpdates()
+  coordinates mutual exclusion, lazy-loads, then calls ShellDrawers.updates.show().
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Product Updates — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="../design-system-library/src/components/drawer/drawer.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-base); }
+    .sa-host { position: relative; display: flex; flex: 1; min-height: 0; height: 100vh; overflow: clip; }
+    .shell-area ds-drawer.ec-drawer { position: absolute !important; inset: 0 !important; z-index: 30; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  .pu-ghead { display: flex; align-items: center; gap: 8px; padding: 16px 0 4px; }
+  /* Gap between the drawer header and the first day group = 24px. */
+  #updates-pop .ds-drawer__body { padding-top: var(--spacing-24); }
+  .pu-group:first-child .pu-ghead { padding-top: 0; }
+  .pu-date { font-size: var(--font-size-13); font-weight: var(--font-weight-bold); letter-spacing: 0.04em; text-transform: uppercase; color: var(--uems-text-secondary); }
+  .pu-item { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid color-mix(in srgb, var(--uems-border-tertiary) 55%, transparent); }
+  .pu-ic { flex: 0 0 34px; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .pu-ic--platform    { background: var(--uems-bg-secondary); color: var(--uems-text-secondary); }
+  .pu-ic--performance { background: var(--uems-bg-success-secondary); color: var(--uems-text-success); }
+  .pu-ic--feature     { background: var(--uems-bg-info-secondary); color: var(--uems-icon-info); }
+  .pu-ic--security    { background: var(--uems-bg-alert-secondary); color: var(--uems-text-alert); }
+  .pu-ic--integration { background: var(--uems-bg-accent-secondary); color: var(--uems-text-accent); }
+  .pu-ic--fix         { background: var(--uems-bg-warning-secondary); color: var(--uems-text-warning); }
+  .pu-item__body { flex: 1; min-width: 0; }
+  .pu-item__tag { margin-bottom: 4px; }
+  .pu-item__title { font-size: var(--font-size-15); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); margin-bottom: 4px; }
+  .pu-item__desc { font-size: var(--font-size-14); line-height: 20px; color: var(--uems-text-secondary); }
+  .pu-item__more { margin-top: 8px; }
+</style>
+
+<ds-drawer id="updates-pop" class="ec-drawer" title="Product Updates" side="right" size="m" modal="false" show-footer="false">
+  <div id="updates-body"></div>
+</ds-drawer>
+
+<script>
+(function () {
+  const lang = () => (window.ShellCtx && window.ShellCtx.lang) || 'en';
+  const PU_ICON  = { platform: 'layers', performance: 'zap', feature: 'sparkles', security: 'shield', integration: 'puzzle', fix: 'bug' };
+  const PU_TAG   = { platform: 'default', performance: 'success', feature: 'active', security: 'moderate', integration: 'acknowledge', fix: 'important' };
+  const PU_LABEL = { platform: 'Platform', performance: 'Performance', feature: 'Feature', security: 'Security', integration: 'Integration', fix: 'Fix' };
+  const PU_LABEL_AR = { platform: 'النظام الأساسي', performance: 'الأداء', feature: 'ميزة', security: 'الأمان', integration: 'تكامل', fix: 'إصلاح' };
+  const MSGS = {
+    en: {
+      'upd.title': 'Product Updates', 'upd.view': 'View details', 'upd.today': 'Today',
+      'upd.grp.0.date': 'Today',
+      'upd.grp.0.item.0.title': 'Dark mode is available in Endpoint Central!', 'upd.grp.0.item.0.desc': 'Enable Dark Mode from User Account — theme options are at the bottom of the panel.',
+      'upd.grp.0.item.1.title': 'AlmaLinux patching is now available', 'upd.grp.0.item.1.desc': 'Patch management now supports AlmaLinux systems.',
+      'upd.grp.1.date': '2 Apr 2026',
+      'upd.grp.1.item.0.title': 'Faster remote troubleshooting', 'upd.grp.1.item.0.desc': 'Quicker remote connections with reduced latency.',
+      'upd.grp.1.item.1.title': 'ServiceNow integration', 'upd.grp.1.item.1.desc': 'Sync incidents and assets directly with your ServiceNow instance.',
+      'upd.grp.2.date': '17 Mar 2026',
+      'upd.grp.2.item.0.title': 'Security compliance dashboard', 'upd.grp.2.item.0.desc': 'Track device compliance and security risks from one place.',
+      'upd.grp.2.item.1.title': 'Agent reconnect stability fix', 'upd.grp.2.item.1.desc': 'Resolved intermittent agent disconnects on slow networks.',
+    },
+    ar: {
+      'upd.title': 'تحديثات المنتج', 'upd.view': 'عرض التفاصيل', 'upd.today': 'اليوم',
+      'upd.grp.0.date': 'اليوم',
+      'upd.grp.0.item.0.title': 'الوضع الداكن متاح الآن في Endpoint Central!', 'upd.grp.0.item.0.desc': 'فعّل الوضع الداكن من حساب المستخدم — خيارات السمة في أسفل اللوحة.',
+      'upd.grp.0.item.1.title': 'تصحيح AlmaLinux متاح الآن', 'upd.grp.0.item.1.desc': 'إدارة التصحيحات تدعم الآن أنظمة AlmaLinux.',
+      'upd.grp.1.date': '2 أبريل 2026',
+      'upd.grp.1.item.0.title': 'استكشاف الأخطاء عن بُعد أسرع', 'upd.grp.1.item.0.desc': 'اتصالات عن بُعد أسرع مع زمن استجابة أقل.',
+      'upd.grp.1.item.1.title': 'تكامل ServiceNow', 'upd.grp.1.item.1.desc': 'مزامنة الحوادث والأصول مباشرة مع مثيل ServiceNow الخاص بك.',
+      'upd.grp.2.date': '17 مارس 2026',
+      'upd.grp.2.item.0.title': 'لوحة معلومات الامتثال الأمني', 'upd.grp.2.item.0.desc': 'تتبّع امتثال الأجهزة والمخاطر الأمنية من مكان واحد.',
+      'upd.grp.2.item.1.title': 'إصلاح استقرار إعادة اتصال الوكيل', 'upd.grp.2.item.1.desc': 'تم حل انقطاعات الوكيل المتقطعة على الشبكات البطيئة.',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+  const PUPDATES = [
+    { key: 'grp.0', version: '13.6.5', items: [
+      { key: 'grp.0.item.0', cat: 'feature' },
+      { key: 'grp.0.item.1', cat: 'platform' },
+    ] },
+    { key: 'grp.1', version: '12.8.3', items: [
+      { key: 'grp.1.item.0', cat: 'performance' },
+      { key: 'grp.1.item.1', cat: 'integration' },
+    ] },
+    { key: 'grp.2', version: '12.5.2', items: [
+      { key: 'grp.2.item.0', cat: 'security' },
+      { key: 'grp.2.item.1', cat: 'fix' },
+    ] },
+  ];
+  const panel = () => document.getElementById('updates-pop');
+  function renderUpdates() {
+    const body = document.getElementById('updates-body'); if (!body) return;
+    const ar = lang() === 'ar';
+    const p = panel(); if (p) { p.setAttribute('title', t('upd.title')); if (ar) p.setAttribute('rtl', ''); else p.removeAttribute('rtl'); }
+    const LBL = ar ? PU_LABEL_AR : PU_LABEL;
+    body.innerHTML = PUPDATES.map((g) => `
+      <div class="pu-group">
+        <div class="pu-ghead"><span class="pu-date">${t('upd.' + g.key + '.date')}</span><ds-badge variant="subtle" state="default" size="small" shape="rounded">v${g.version}</ds-badge></div>
+        ${g.items.map((it) => `
+          <div class="pu-item">
+            <span class="pu-ic pu-ic--${it.cat}"><ds-icon name="${PU_ICON[it.cat]}" size="17"></ds-icon></span>
+            <div class="pu-item__body">
+              <div class="pu-item__tag"><ds-badge variant="subtle" state="${PU_TAG[it.cat]}" size="small" shape="rounded">${LBL[it.cat]}</ds-badge></div>
+              <div class="pu-item__title">${t('upd.' + it.key + '.title')}</div>
+              <div class="pu-item__desc">${t('upd.' + it.key + '.desc')}</div>
+              <div class="pu-item__more"><ds-text-link href="#" variant="primary" size="small" trailing-icon="chevron-right">${t('upd.view')}</ds-text-link></div>
+            </div>
+          </div>`).join('')}
+      </div>`).join('');
+  }
+  document.addEventListener('shell:langchange', () => { const p = panel(); if (p && p.hasAttribute('open')) renderUpdates(); });
+  function show() { renderUpdates(); const p = panel(); if (p) p.open(); }
+  function hide() { const p = panel(); if (p) p.close(); }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers.updates = { show, hide, render: renderUpdates };
+})();
+</script>
+</template>
+
+<script>
+/* ── STANDALONE HARNESS — runs ONLY when opened directly. ── */
+(function () {
+  const KEY = 'updates';
+  const host = document.createElement('div'); host.className = 'shell-area sa-host'; document.body.appendChild(host);
+  let lang = 'en';
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellCtx = window.ShellCtx || { get shellArea() { return host; }, get lang() { return lang; }, setActiveIcon() {} };
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); s.textContent = o.textContent; document.body.appendChild(s); });
+  customElements.whenDefined('ds-drawer').then(() => requestAnimationFrame(() => window.ShellDrawers[KEY] && window.ShellDrawers[KEY].show()));
+})();
+</script>
+</body>
+</html>

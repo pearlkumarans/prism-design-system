@@ -1,0 +1,236 @@
+/* =============================================================================
+   ds-tab-bar-horizontal / .ds-tab-bar-horizontal
+   Full-width horizontal tablist. Two treatments:
+     • Underline (default) — text tabs over a full-width 1px baseline; the active
+       tab carries a 2px accent bar (rounded top) that overlaps the baseline.
+     • Fill — segmented; active/hover tab is a filled accent pill.
+   Tabs overflow-scroll horizontally when they exceed the width. Built from
+   _Tab Item (Horizontal · Medium). Icons hidden by default.
+   ============================================================================= */
+
+:host { display: block; }
+
+.ds-tab-bar-horizontal {
+  position: relative;
+  display: flex;
+  width: 100%;                                 /* fills container → baseline spans full width */
+  font-family: var(--font-family-sans);
+  box-sizing: border-box;
+}
+/* Underline baseline — full container width (sits under the scroller too). */
+.ds-tab-bar-horizontal--underline {
+  border-bottom: 1px solid var(--uems-border-tertiary);
+}
+
+/* ---- Scroller (the tablist) — scrolls horizontally on overflow ------ */
+.ds-tab-bar-horizontal__scroller {
+  position: relative;                          /* anchors the indicator; it scrolls with the tabs */
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;                       /* Firefox — hide the bar */
+}
+.ds-tab-bar-horizontal__scroller::-webkit-scrollbar { display: none; }
+.ds-tab-bar-horizontal--underline .ds-tab-bar-horizontal__scroller { gap: var(--spacing-20); }
+.ds-tab-bar-horizontal--fill .ds-tab-bar-horizontal__scroller { gap: var(--spacing-4); padding: var(--spacing-4); }
+/* While overflowing, reserve trailing room so the last tab can scroll clear of
+   the pagination pager pinned to the trailing edge. */
+.ds-tab-bar-horizontal[data-overflow] .ds-tab-bar-horizontal__scroller { padding-inline-end: 72px; }
+
+/* =====================================================================
+   Overflow affordances — edge fade + pagination pager (auto when tabs
+   exceed the width). Per TabBarHorizontal handoff: a fade on whichever edge
+   hides content, plus a prev/next chevron pager on the trailing edge.
+   data-overflow / -start / -end are toggled from JS by scroll position.
+   ===================================================================== */
+/* Edge fade — colour matches the surface the bar sits on (--uems-bg-primary). */
+.ds-tab-bar-horizontal[data-overflow-start]::before,
+.ds-tab-bar-horizontal[data-overflow-end]::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 48px;
+  pointer-events: none;
+  z-index: 2;
+}
+.ds-tab-bar-horizontal[data-overflow-start]::before {
+  inset-inline-start: 0;
+  background: linear-gradient(to right, var(--uems-bg-primary), transparent);
+}
+.ds-tab-bar-horizontal[data-overflow-start][dir="rtl"]::before {
+  background: linear-gradient(to left, var(--uems-bg-primary), transparent);
+}
+.ds-tab-bar-horizontal[data-overflow-end]::after {
+  inset-inline-end: 0;
+  background: linear-gradient(to left, var(--uems-bg-primary), transparent);
+}
+.ds-tab-bar-horizontal[data-overflow-end][dir="rtl"]::after {
+  background: linear-gradient(to right, var(--uems-bg-primary), transparent);
+}
+
+/* Pagination pager — bordered pill with two circle chevron buttons; shown only
+   while overflowing, pinned to the trailing edge and vertically centred. */
+.ds-tab-bar-horizontal__pagination {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  display: none;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-sm);
+  background: var(--uems-bg-primary);
+}
+.ds-tab-bar-horizontal[data-overflow] .ds-tab-bar-horizontal__pagination { display: inline-flex; }
+/* Circle chevrons carry the spec drop shadow (no --shadow-* token exists — same
+   raw-shadow precedent as toast.css). */
+.ds-tab-bar-horizontal__pagination .ds-icon-button { box-shadow: 0 1px 4px rgba(13, 17, 29, .12); }
+
+/* ---- Sliding indicator --------------------------------------------- */
+.ds-tab-bar-horizontal__indicator {
+  position: absolute;
+  left: 0; top: 0; width: 0; height: 0;
+  box-sizing: border-box;
+  z-index: 0;
+  pointer-events: none;
+  transition: left 220ms cubic-bezier(0.4, 0, 0.2, 1),
+              width 220ms cubic-bezier(0.4, 0, 0.2, 1),
+              top 220ms cubic-bezier(0.4, 0, 0.2, 1),
+              height 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ds-tab-bar-horizontal--fill .ds-tab-bar-horizontal__indicator {
+  background: var(--uems-bg-accent-primary-action);  /* #EAF0FC pill */
+  border-radius: var(--radius-sm);
+}
+/* Underline indicator = a 2px bar with ROUNDED TOP corners; JS sets it to the
+   active tab's bottom edge (left/width animate). */
+.ds-tab-bar-horizontal--underline .ds-tab-bar-horizontal__indicator {
+  background: var(--uems-border-accent);             /* #006AFF */
+  border-radius: 2px 2px 0 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-tab-bar-horizontal__indicator { transition: none; }
+}
+
+/* ---- Item ---------------------------------------------------------- */
+.ds-tab-bar-horizontal__item {
+  position: relative;
+  z-index: 1;                                  /* above the indicator */
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  height: 36px;
+  flex: 0 0 auto;                              /* never squash — overflow scrolls instead */
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--font-size-14);
+  line-height: 20px;
+  font-weight: var(--font-weight-regular);     /* Default = Regular */
+  color: var(--uems-text-secondary);
+  box-sizing: border-box;
+  white-space: nowrap;
+  transition: color var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard);
+}
+.ds-tab-bar-horizontal--fill .ds-tab-bar-horizontal__item {
+  padding: var(--spacing-8);
+  border-radius: var(--radius-sm);
+}
+.ds-tab-bar-horizontal--underline .ds-tab-bar-horizontal__item {
+  padding: var(--spacing-8) 0;                 /* horizontal spacing = 20px gap */
+  border-radius: 0;
+}
+
+/* ---- Hover (non-active, non-disabled) ----------------------------- */
+/* Underline — Text-Primary + a faint preview underline (rounded top). */
+.ds-tab-bar-horizontal--underline .ds-tab-bar-horizontal__item:hover:not(.ds-tab-bar-horizontal__item--disabled):not(.ds-tab-bar-horizontal__item--active) {
+  color: var(--uems-text-primary);
+}
+.ds-tab-bar-horizontal--underline .ds-tab-bar-horizontal__item:hover:not(.ds-tab-bar-horizontal__item--disabled):not(.ds-tab-bar-horizontal__item--active)::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--uems-border-secondary);    /* faint hover preview #C3C9D6 */
+  border-radius: 2px 2px 0 0;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+/* Fill — deeper accent card. */
+.ds-tab-bar-horizontal--fill .ds-tab-bar-horizontal__item:hover:not(.ds-tab-bar-horizontal__item--disabled):not(.ds-tab-bar-horizontal__item--active) {
+  background: var(--uems-bg-accent-primary-hover);
+  color: var(--uems-text-secondary);
+}
+
+/* ---- Focus -------------------------------------------------------- */
+.ds-tab-bar-horizontal__item:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: -2px;                        /* inset so the scroller's overflow doesn't clip it */
+  border-radius: 6px;
+  color: var(--uems-text-primary);
+  z-index: 2;
+}
+
+/* ---- Active — label only; the bar/pill is the sliding indicator ---- */
+.ds-tab-bar-horizontal__item--active {
+  color: var(--uems-text-accent-link);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ---- Disabled — token recolor only -------------------------------- */
+/* Each item is a native <button disabled> (set in JS) AND the click/keydown
+   handlers bail when item.disabled, so clicks are already blocked — keep
+   pointer-events on so the not-allowed cursor shows (pointer-events:none would
+   suppress the cursor entirely). */
+.ds-tab-bar-horizontal__item--disabled {
+  cursor: not-allowed;
+  color: var(--uems-text-disabled);
+}
+
+/* ---- Inner slots --------------------------------------------------- */
+.ds-tab-bar-horizontal__item-icon {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  color: currentColor;
+}
+/* Label reserves its Medium-weight width via a hidden bold ::after, so
+   activating (Regular → Medium) never reflows the row — kills the switch jerk. */
+.ds-tab-bar-horizontal__item-label {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ds-tab-bar-horizontal__item-label > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ds-tab-bar-horizontal__item-label::after {
+  content: attr(data-label);
+  font-weight: var(--font-weight-medium);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+.ds-tab-bar-horizontal__item-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ---- Reduced motion ----------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .ds-tab-bar-horizontal__item { transition: none; }
+}

@@ -1,0 +1,184 @@
+/* =============================================================================
+   ds-confirmation-modal / .ds-confirmation-modal
+   480px confirmation dialog — left-aligned: leading icon beside the title/body
+   column, with a right-aligned button row (primary rightmost).
+   Three semantic variants drive the leading icon tint and primary button color.
+   ============================================================================= */
+
+:host { display: block; }
+
+.ds-confirmation-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 1000);
+  display: none;
+  align-items: flex-start;            /* pin to the top … */
+  justify-content: center;            /* … horizontally centered */
+  padding: 80px var(--spacing-16) var(--spacing-16);   /* 80px from the top */
+  font-family: var(--font-family-sans);
+  overflow-y: auto;                   /* tall dialogs scroll instead of clipping above the fold */
+}
+.ds-confirmation-modal[open] { display: flex; }
+
+/* ---- Overlay ------------------------------------------------------- */
+.ds-confirmation-modal__overlay {
+  position: absolute;
+  inset: 0;
+  /* `--uems-bg-overlay` is a SOLID colour (#0A0B0F); the fade-in animation drives
+     opacity 0→1, so the dim must live in the background alpha — not element opacity. */
+  background: rgba(10, 11, 15, 0.7);
+  animation: ds-confirmation-fade 200ms var(--ease-standard, ease-out);
+}
+
+/* ---- Dialog -------------------------------------------------------- */
+.ds-confirmation-modal__dialog {
+  position: relative;
+  width: 480px;
+  max-width: 100%;
+  background: var(--uems-bg-primary-alt);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 16px 32px rgba(13, 18, 31, 0.18);
+  padding: var(--spacing-24) var(--spacing-24) var(--spacing-0);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: start;
+  animation: ds-confirmation-pop 200ms var(--ease-standard, ease-out);
+  outline: none;
+}
+
+/* ---- Header row (leading icon + titles column, left-aligned) ------- */
+.ds-confirmation-modal__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-12);
+}
+/* Title-only (no description): center the single-line title against the icon
+   instead of top-pinning it, so the short header reads balanced. With a
+   description the taller column top-aligns to the icon (above). */
+.ds-confirmation-modal__header:has(.ds-confirmation-modal__description[hidden]) {
+  align-items: center;
+}
+.ds-confirmation-modal__titles {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ---- Close button (top-right) -------------------------------------- */
+/* ---- Close (ds-icon-button, top-right) ----------------------------- */
+.ds-confirmation-modal__close {
+  position: absolute;
+  top: var(--spacing-8);
+  inset-inline-end: var(--spacing-8);
+}
+.ds-confirmation-modal__close .ds-icon-button,
+.ds-confirmation-modal__close .ds-icon-button:hover { color: var(--uems-icon-subtle); }
+.ds-confirmation-modal__close[hidden] { display: none; }
+
+/* ---- Leading icon block ------------------------------------------- */
+.ds-confirmation-modal__leading {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+/* Per-variant icon circle — Figma binds the circle bg to BG-{family}-Primary
+   and the glyph to the dedicated Icon-{family} token (NOT Text-*). Warning uses
+   the AMBER Alert family (#FEF8EB / Icon-Alert #956B11), not the orange Warning
+   family — the orange is only the Continue *button* (Warning-Solid). */
+.ds-confirmation-modal[data-variant="information"] .ds-confirmation-modal__leading {
+  background: var(--uems-bg-info-primary, #EAF0FC);
+  color: var(--uems-icon-info, #1E52BB);
+}
+.ds-confirmation-modal[data-variant="warning"] .ds-confirmation-modal__leading {
+  background: var(--uems-bg-alert-primary, #FEF8EB);
+  color: var(--uems-icon-alert, #956B11);
+}
+.ds-confirmation-modal[data-variant="destructive"] .ds-confirmation-modal__leading {
+  background: var(--uems-bg-error-primary, #FDEBEB);
+  color: var(--uems-icon-error, #C1181B);
+}
+
+/* ---- Title + description ----------------------------------------- */
+.ds-confirmation-modal__title {
+  margin: 0;
+  font-size: var(--font-size-16, 16px);   /* Figma: Title = 16px SemiBold (was 18) */
+  line-height: 24px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-primary);
+}
+.ds-confirmation-modal__description {
+  margin: var(--spacing-4) 0 0;
+  font-size: var(--font-size-14);
+  line-height: 20px;
+  color: var(--uems-text-secondary);       /* Figma: Description = Text-Secondary */
+}
+
+/* ---- Drag handle (header zone moves the dialog) -------------------- */
+.ds-confirmation-modal__leading { cursor: move; user-select: none; }
+/* Title & description are not drag handles — keep them selectable. */
+.ds-confirmation-modal__title,
+.ds-confirmation-modal__description { cursor: text; user-select: text; }
+.ds-confirmation-modal__dialog.is-dragging { cursor: grabbing; }
+
+/* ---- Dividers ----------------------------------------------------- */
+.ds-confirmation-modal__divider {
+  width: calc(100% + var(--spacing-24) * 2);
+  margin: var(--spacing-16) calc(-1 * var(--spacing-24)) 0;
+  border: 0;
+  border-top: 1px solid var(--uems-border-tertiary);
+}
+.ds-confirmation-modal__divider[hidden] { display: none; }
+
+/* ---- Body --------------------------------------------------------- */
+.ds-confirmation-modal__body {
+  /* Indent to align under the titles column (icon width + header gap), so body
+     content lines up with the title rather than the icon. */
+  margin-top: var(--spacing-16);
+  margin-inline-start: calc(48px + var(--spacing-12));
+  font-size: var(--font-size-14);
+  line-height: 20px;
+  color: var(--uems-text-tertiary);
+}
+.ds-confirmation-modal__body:empty { display: none; }
+.ds-confirmation-modal__body:empty + .ds-confirmation-modal__divider { display: none; }
+
+/* ---- Footer (right-aligned button row; primary rightmost) --------- */
+.ds-confirmation-modal__footer {
+  width: 100%;
+  margin: var(--spacing-24) 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+.ds-confirmation-modal__footer ds-button[hidden] { display: none; }
+/* When a tertiary action is present, treat it as a utility — anchor it
+   to the leading edge and let the primary/secondary group sit on the
+   trailing edge, so the user can clearly distinguish "secondary info" from
+   the binary decision. Without this, three buttons sharing the centered
+   row read as three equal choices. */
+.ds-confirmation-modal__footer:has([data-act="tertiary"]:not([hidden])) {
+  justify-content: space-between;
+}
+.ds-confirmation-modal__footer [data-act="tertiary"] { margin-inline-end: auto; }
+
+/* ---- Animations --------------------------------------------------- */
+@keyframes ds-confirmation-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes ds-confirmation-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-confirmation-modal__overlay,
+  .ds-confirmation-modal__dialog { animation: none; }
+}
+
+/* ---- RTL ---------------------------------------------------------- */
+.ds-confirmation-modal[dir="rtl"] .ds-confirmation-modal__footer { flex-direction: row-reverse; }

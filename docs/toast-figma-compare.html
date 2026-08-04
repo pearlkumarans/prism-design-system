@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<title>toast ↔ figma compare</title>
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/toast/toast.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/toast/toast.js"></script>
+<style>body{background:#fff;padding:20px;display:flex;flex-direction:column;gap:12px;align-items:flex-start;} pre{font-size:11px;}</style>
+</head>
+<body>
+  <ds-toast id="s-info" status="info" title="Toast title here" description="Supporting description." cta-text="View Details" duration="0"></ds-toast>
+  <ds-toast id="s-succ" status="success" title="Saved" description="Done." cta-text="View" duration="0"></ds-toast>
+  <ds-toast id="s-err"  status="error" title="Failed" description="Try again." cta-text="Retry" duration="0"></ds-toast>
+  <ds-toast id="f-info" style-variant="filled" status="info" title="Update" description="Ready." duration="0"></ds-toast>
+  <ds-toast id="f-warn" style-variant="filled" status="warning" title="Expiring" description="Soon." duration="0"></ds-toast>
+  <ds-toast id="f-err"  style-variant="filled" status="error" title="Failed" description="Err." duration="0"></ds-toast>
+  <ds-toast id="timed" status="info" title="Timed" description="Counting." duration="60000"></ds-toast>
+  <ds-toast id="esc" status="info" title="EscMe" duration="0"></ds-toast>
+  <pre id="report">measuring…</pre>
+<script type="module">
+const hex = (rgb) => { const m = rgb.match(/\d+/g); return m ? '#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join('').toUpperCase() : rgb; };
+await customElements.whenDefined('ds-toast');
+await new Promise(r => setTimeout(r, 600));
+const lines = []; let pass=0, fail=0;
+const check = (id, what, got, want) => { const ok = String(got)===String(want); ok?pass++:fail++; lines.push(`${ok?'PASS':'FAIL'} ${id} ${what}: got=${got} want=${want}`); };
+const root = id => document.getElementById(id).querySelector('.ds-toast');
+const q = (id, sel) => document.getElementById(id).querySelector(sel);
+// geometry
+{ const el=root('s-info'), cs=getComputedStyle(el), r=el.getBoundingClientRect();
+  check('s-info','width',Math.round(r.width),400);
+  check('s-info','radius',cs.borderRadius,'8px');
+  check('s-info','shadow-has-both',cs.boxShadow.includes('4px 16px') && cs.boxShadow.includes('1px 4px'),true);
+  check('s-info','no-stripe',getComputedStyle(el,'::before').content==='none',true);
+  const ct=q('s-info','.ds-toast__content'), ccs=getComputedStyle(ct);
+  check('s-info','content-pad',ccs.paddingTop+'/'+ccs.paddingLeft,'12px/16px');
+  check('s-info','content-gap',ccs.gap,'12px');
+  check('s-info','body-gap',getComputedStyle(q('s-info','.ds-toast__body')).gap,'4px');
+  const t=getComputedStyle(q('s-info','.ds-toast__title'));
+  check('s-info','title-font',t.fontSize+'/'+t.lineHeight+'/'+t.fontWeight,'13px/20px/500');
+  check('s-info','title-color',hex(t.color),'#15181E');
+  check('s-info','desc-color',hex(getComputedStyle(q('s-info','.ds-toast__description')).color),'#2A303D'); }
+// subtle tokens
+check('s-info','bg',hex(getComputedStyle(root('s-info')).backgroundColor),'#F9FAFB');
+check('s-info','icon(Icon-Info)',hex(getComputedStyle(q('s-info','.ds-toast__icon')).color),'#1E52BB');
+check('s-succ','icon(Text-Success)',hex(getComputedStyle(q('s-succ','.ds-toast__icon')).color),'#0A7138');
+check('s-info','close(icon-subtle)',hex(getComputedStyle(q('s-info','.ds-toast__close')).color),'#96A0B7');
+{ const c=getComputedStyle(q('s-info','.ds-toast__cta'));
+  check('s-info','cta-color(accent-primary)',hex(c.color),'#0E2553');
+  check('s-info','cta-underline',c.textDecorationLine,'underline');
+  check('s-info','cta-bottom',c.alignSelf,'flex-end'); }
+check('s-err','cta-color(error)',hex(getComputedStyle(q('s-err','.ds-toast__cta')).color),'#C1181B');
+// filled
+check('f-info','bg(info-solid NOT button-primary)',hex(getComputedStyle(root('f-info')).backgroundColor),'#2C66DD');
+check('f-warn','bg',hex(getComputedStyle(root('f-warn')).backgroundColor),'#E65100');
+check('f-warn','title-WHITE',hex(getComputedStyle(q('f-warn','.ds-toast__title')).color),'#FFFFFF');
+check('f-err','bg',hex(getComputedStyle(root('f-err')).backgroundColor),'#E42527');
+check('f-info','close(accent-subtle)',hex(getComputedStyle(q('f-info','.ds-toast__close')).color),'#C0D1F5');
+// timeout bar
+check('s-info','no-bar-when-persistent',q('s-info','.ds-toast__timeout')===null,true);
+{ const bar=q('timed','.ds-toast__timeout');
+  check('timed','bar-present',!!bar,true);
+  check('timed','bar-height',Math.round(bar.getBoundingClientRect().height),4);
+  check('timed','track(bg-quaternary)',hex(getComputedStyle(bar).backgroundColor),'#D2D7E0');
+  check('timed','fill(info-solid)',hex(getComputedStyle(bar.firstElementChild).backgroundColor),'#2C66DD');
+  check('timed','animating',bar.firstElementChild.dataset.animating,'true'); }
+// filled loader: 25% container opacity + desc 80%
+{ const ft = document.createElement('ds-toast');
+  ft.setAttribute('style-variant','filled'); ft.setAttribute('status','success');
+  ft.setAttribute('title','T'); ft.setAttribute('description','D'); ft.setAttribute('duration','60000');
+  document.body.insertBefore(ft, document.getElementById('report'));
+  await new Promise(r=>setTimeout(r,200));
+  const bar = ft.querySelector('.ds-toast__timeout');
+  check('f-bar','container-opacity-25',getComputedStyle(bar).opacity,'0.25');
+  check('f-bar','track-black',hex(getComputedStyle(bar).backgroundColor),'#000000');
+  check('f-bar','fill-white',hex(getComputedStyle(bar.firstElementChild).backgroundColor),'#FFFFFF');
+  check('f-bar','desc-opacity-80',getComputedStyle(ft.querySelector('.ds-toast__description')).opacity,'0.8');
+  ft.remove(); }
+// roles
+check('s-info','role',root('s-info').getAttribute('role'),'status');
+check('f-warn','role(alert)',root('f-warn').getAttribute('role'),'alert');
+check('f-err','role(alert)',root('f-err').getAttribute('role'),'alert');
+// escape dismiss
+{ let closed=false;
+  document.getElementById('esc').addEventListener('ds-toast-close',()=>{closed=true;});
+  document.getElementById('esc').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+  await new Promise(r=>setTimeout(r,50));
+  check('esc','escape-dismisses',closed && !document.getElementById('esc'),true); }
+// subtle hover rule present
+const css = await (await fetch('../design-system-library/src/components/toast/toast.css')).text();
+check('css','subtle-hover-rule',css.includes('.ds-toast--subtle:hover { --_toast-bg: var(--uems-bg-primary-hover); }'),true);
+check('css','filled-track-black',css.includes('--_toast-track: var(--uems-bg-base-black)'),true);
+lines.unshift(`RESULT: ${pass} pass / ${fail} fail`);
+document.getElementById('report').textContent = lines.join('\n');
+</script>
+</body>
+</html>

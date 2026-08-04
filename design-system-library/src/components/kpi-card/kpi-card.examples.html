@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../styles/index.css">
+  <script type="module" src="../../index.js"></script>
+  <style>
+    body {
+      padding: 24px;
+      font-family: var(--font-family-sans);
+      background: var(--cobalt-15);
+      display: grid;
+      gap: 24px;
+      max-width: 1100px;
+    }
+    .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .row--wide { grid-template-columns: 1fr; }
+    h2 { margin: 0; font-size: 14px; font-weight: 600; color: var(--uems-text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; }
+  </style>
+</head>
+<body>
+
+  <h2>Default — states</h2>
+  <div class="row">
+    <ds-kpi-card label="Active sensors" value="1,248" description="Up 12% vs. last week"></ds-kpi-card>
+    <ds-kpi-card state="success" label="On-track tasks" value="84%" description="3 points above target" gauge="0.84"></ds-kpi-card>
+    <ds-kpi-card state="warning" label="At-risk SLAs" value="7" description="Down from 9 yesterday"></ds-kpi-card>
+    <ds-kpi-card state="alert" label="Critical incidents" value="3" description="2 unassigned"></ds-kpi-card>
+  </div>
+
+  <h2>Default — accessory types</h2>
+  <div class="row">
+    <ds-kpi-card label="Endpoints" value="2,310"></ds-kpi-card>
+    <ds-kpi-card label="Endpoints" value="2,310" description="Up 4% this week"></ds-kpi-card>
+    <ds-kpi-card label="Endpoints" value="2,310" date="Updated 5 min ago"></ds-kpi-card>
+    <ds-kpi-card label="Disk used" value="68%" gauge="0.68"></ds-kpi-card>
+  </div>
+
+  <div class="row">
+    <ds-kpi-card label="Disk used" value="68%" description="of 12 TB allocated" gauge="0.68"></ds-kpi-card>
+    <ds-kpi-card label="Endpoints" value="2,310" description="Up 4%" date="Updated 5 min ago"></ds-kpi-card>
+    <ds-kpi-card label="Sync status" value="94%" date="Updated 5 min ago" gauge="0.94"></ds-kpi-card>
+    <ds-kpi-card label="Loading" value="—" loading></ds-kpi-card>
+  </div>
+
+  <h2>Wide</h2>
+  <div class="row row--wide">
+    <ds-kpi-card variant="wide" label="Open work orders" value="42" description="18 marked urgent · 12 awaiting parts" link-label="View all" link-href="#"></ds-kpi-card>
+    <ds-kpi-card variant="wide" state="success" label="Patches deployed today" value="1,184" description="Across 12 patch groups · 0 failures" gauge="0.92"></ds-kpi-card>
+  </div>
+
+  <h2>Single & grouped</h2>
+  <ds-kpi-group variant="two">
+    <ds-kpi-card variant="single" label="Allocated" value="68%"></ds-kpi-card>
+    <ds-kpi-card variant="single" label="Free" value="32%"></ds-kpi-card>
+  </ds-kpi-group>
+
+  <ds-kpi-group variant="multi">
+    <ds-kpi-card variant="single" label="Online" value="812"></ds-kpi-card>
+    <ds-kpi-card variant="single" label="Offline" value="18"></ds-kpi-card>
+    <ds-kpi-card variant="single" label="Idle" value="214"></ds-kpi-card>
+    <ds-kpi-card variant="single" label="Error" value="4"></ds-kpi-card>
+    <ds-kpi-card variant="single" label="Pending" value="60"></ds-kpi-card>
+    <ds-kpi-card variant="single" label="Total" value="1,108"></ds-kpi-card>
+  </ds-kpi-group>
+
+  <h2>Clickable card</h2>
+  <div class="row">
+    <ds-kpi-card label="Compliance score" value="98%" description="Click for breakdown" clickable></ds-kpi-card>
+  </div>
+
+  <script>
+    document.addEventListener('ds-kpi-card-select', (e) => {
+      console.log('kpi select', e.detail);
+    });
+  </script>
+</body>
+</html>

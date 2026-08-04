@@ -1,0 +1,120 @@
+/* =============================================================================
+   ds-checkbox-group / .ds-checkbox-group
+   Group label + help text + child <ds-checkbox> items.
+   Layouts: left (default, web) and top (constrained / mobile / long labels).
+   ============================================================================= */
+
+/* Host is a query container; the flex layout lives on __frame so the left↔
+   stacked switch can respond to the field's OWN width (container query below). */
+.ds-checkbox-group {
+  display: block;
+  container-type: inline-size;
+  font-family: var(--font-family-sans);
+  color: var(--uems-text-primary);
+}
+.ds-checkbox-group__frame {
+  display: flex;
+  gap: var(--spacing-12);
+}
+
+/* ---- Left layout (default) ----------------------------------------- */
+.ds-checkbox-group--left .ds-checkbox-group__frame {
+  flex-direction: row;
+  align-items: flex-start;
+}
+.ds-checkbox-group--left .ds-checkbox-group__header {
+  width: 280px;
+  flex-shrink: 0;
+}
+
+/* Responsive: when the field's own container is narrow, collapse the left-label
+   layout to stacked, matching label-position="top" (header above the options). */
+@container (max-width: 520px) {
+  .ds-checkbox-group--left .ds-checkbox-group__frame { flex-direction: column; gap: var(--spacing-12); }
+  .ds-checkbox-group--left .ds-checkbox-group__header { width: auto; flex-shrink: 1; }
+}
+
+/* ---- Top layout ----------------------------------------------------- */
+.ds-checkbox-group--top .ds-checkbox-group__frame {
+  flex-direction: column;
+  gap: var(--spacing-12); /* spec: Top root Header→body gap = 12 */
+}
+.ds-checkbox-group--top .ds-checkbox-group__header {
+  width: auto;
+}
+
+/* ---- None layout — header hidden (label kept as items aria-label) --- */
+.ds-checkbox-group--none .ds-checkbox-group__frame {
+  flex-direction: column;
+}
+/* Explicitly hide the header: the [hidden] attribute alone loses to the
+   `.ds-checkbox-group__header { display: inline-flex }` rule below. */
+.ds-checkbox-group--none .ds-checkbox-group__header { display: none; }
+
+/* ---- Header: group label + optional info icon ---------------------- */
+.ds-checkbox-group__header {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  min-height: 20px;
+}
+.ds-checkbox-group__label {
+  color: var(--uems-text-tertiary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+}
+.ds-checkbox-group__info {
+  display: inline-flex;
+  align-items: center;
+  color: var(--uems-icon-tertiary, var(--uems-text-tertiary));
+  cursor: help;
+}
+
+/* ---- Body: items + helper row -------------------------------------- */
+.ds-checkbox-group__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ds-checkbox-group__items {
+  display: flex;
+  flex-wrap: wrap;
+}
+/* Left layout = horizontal row of options (16px gap)
+   Top  layout = vertical stack (12px gap) */
+.ds-checkbox-group--left .ds-checkbox-group__items {
+  flex-direction: row;
+  gap: var(--spacing-16);
+  align-items: center;
+}
+.ds-checkbox-group--top .ds-checkbox-group__items,
+.ds-checkbox-group--none .ds-checkbox-group__items {
+  flex-direction: column;
+  gap: var(--spacing-12);
+  align-items: flex-start;
+}
+
+/* ---- Helper row ---------------------------------------------------- */
+/* The whole row (leading icon + text + trailing counter, state colour, layout)
+   is the shared <ds-field-helper> sub-component — see field-helper.css. The
+   wrapper just lets it span the body width. */
+.ds-checkbox-group__helper { display: block; }
+.ds-checkbox-group__help { width: 100%; }
+
+/* ---- State: disabled — FULLY token-driven (no blanket opacity, per spec).
+   Children are natively <input disabled>, so clicks are already blocked — we
+   keep pointer-events on so the not-allowed cursor shows on hover (a blanket
+   pointer-events:none would suppress the cursor entirely). -------------- */
+.ds-checkbox-group--disabled {
+  cursor: not-allowed;
+}
+.ds-checkbox-group--disabled .ds-checkbox-group__label {
+  color: var(--uems-text-disabled);
+}
+
+/* ---- RTL — dir="rtl" on the host flips the flex inline axis on its own
+   (header → trailing, helper icon → leading, counter → trailing). DO NOT add
+   flex-direction: row-reverse: that double-flips back to an LTR-looking row. -- */

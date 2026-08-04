@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Message Box — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<!-- Live web component: ds-message-box + its dependencies (message-box.js imports all its JS deps) -->
+<link rel="stylesheet" href="../design-system-library/src/components/message-box/message-box.css">
+<link rel="stylesheet" href="../design-system-library/src/components/tab-bar-horizontal/tab-bar-horizontal.css">
+<link rel="stylesheet" href="../design-system-library/src/components/scrollbar/scrollbar.css">
+<link rel="stylesheet" href="../design-system-library/src/components/inline-alert/inline-alert.css">
+<link rel="stylesheet" href="../design-system-library/src/components/badge/badge.css">
+<link rel="stylesheet" href="../design-system-library/src/components/icon-button/icon-button.css">
+<link rel="stylesheet" href="../design-system-library/src/components/text-link/text-link.css">
+<script type="module" src="../design-system-library/src/components/message-box/message-box.js"></script>
+<style>
+  /* ============================================================
+     Message Box — previews are driven by the LIVE web component
+     <ds-message-box> (design-system-library/src/components/message-box). Its styles
+     are loaded via the linked component stylesheet in <head>; this
+     page only defines doc-scaffolding below. message-box.js imports
+     all of its JS deps, so the single module script registers
+     ds-message-box, ds-inline-alert, the tab bar and scrollbar.
+     ============================================================ */
+
+  /* Demo scaffolding for this page */
+  .page-message-box .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-message-box .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .page-message-box .demo-container .demo-canvas {
+    align-items: stretch !important; justify-content: flex-start !important; min-height: 0 !important;
+    flex-direction: column !important; padding: 32px !important; gap: 28px !important;
+  }
+  .demo-mb-section { display: flex; flex-direction: column; gap: 10px; }
+  .demo-mb-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--prism-text-muted); text-transform: uppercase; margin: 0; text-align: left; }
+  .demo-mb-desc { font-size: 12px; color: var(--prism-text-muted); line-height: 1.5; margin: 0; }
+  .demo-mb-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px,1fr)); gap: 24px; }
+
+  /* Anatomy */
+  .mb-anat-wrap { background: var(--uems-bg-base); border: 1px solid var(--uems-border-tertiary); border-radius: 12px; padding: 28px 24px; }
+  .mb-marker { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#2563eb; color:#fff; font-size:12px; font-weight:700; flex:0 0 auto; }
+  .anat-legend { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; margin-top:28px; }
+  .anat-legend-item { display:flex; gap:12px; align-items:flex-start; }
+  .anat-legend-item strong { display:block; font-size:14.5px; color:var(--prism-text); margin-bottom:2px; }
+  .anat-legend-item span { font-size:13px; color:var(--prism-text-muted); line-height:1.5; }
+
+  /* Style tab live cells */
+  .mb-variant-cell { background: var(--uems-bg-base); border:1px solid var(--uems-border-tertiary); border-radius:10px; padding:16px; min-width:300px; }
+  .state-card { background: var(--prism-surface); border:1px solid var(--prism-border); border-radius:12px; padding:18px; }
+  .state-card .sc-title { font-size:13px; font-weight:700; color:var(--prism-text); margin-bottom:4px; }
+  .state-card .sc-desc { font-size:12.5px; color:var(--prism-text-muted); line-height:1.5; }
+
+  /* Contrast cards */
+  .mb-contrast-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; }
+  .contrast-card { border:1px solid var(--prism-border); border-radius:14px; overflow:hidden; }
+  .contrast-swatch { padding:28px 18px; font-size:18px; font-weight:600; }
+  .contrast-meta { padding:14px 16px; background:var(--prism-surface); }
+  .contrast-meta .cc-name { font-size:13.5px; font-weight:700; color:var(--prism-text); }
+  .contrast-meta .cc-val { font-size:12.5px; color:var(--prism-text-muted); margin:4px 0 8px; font-family:monospace; }
+  .pass-chip { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; background:rgba(34,197,94,0.15); color:#16a34a; }
+  .ratio-chip { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; background:rgba(37,99,235,0.12); color:var(--prism-violet); margin-right:6px; }
+
+  .info-callout { margin-top:16px; padding:16px 20px; background:rgba(37,99,235,0.05); border:1px solid rgba(37,99,235,0.15); border-radius:12px; }
+  .info-callout p { font-size:14px; color:var(--prism-text); line-height:1.6; margin:0; }
+  .touch-box { width:48px; height:48px; border:2px dashed var(--prism-violet); border-radius:8px; flex:0 0 auto; }
+  .inline-code { font-family:monospace; font-size:13px; padding:2px 8px; border-radius:6px; background:rgba(37,99,235,0.06); color:var(--prism-violet); }
+</style>
+</head>
+<body class="page-message-box">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link active">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Message Box</h1>
+        <p class="page-desc">The Message Box is an in-app <strong>notification panel</strong> &mdash; a collapsible card that groups system messages under two tabs (<strong>Alerts</strong> and <strong>Information</strong>) and lists them as stacked message rows in a scrollable region. It is a composition: an Accordion disclosure shell, a horizontal Tab Bar switcher, a custom overlay scrollbar, and slotted Inline Alert rows. Title is fixed (&ldquo;Notifications&rdquo;); RTL-aware &mdash; 8 Figma variants.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <p class="doc-section-subtitle">A Message Box is a card with a fixed header (chevron + &ldquo;Notifications&rdquo; title + a Tab Bar switcher) over a collapsible body that holds a scrollable list of message rows, with an overlay scrollbar in the trailing gutter.</p>
+
+          <div class="mb-anat-wrap">
+            <!-- Live <ds-message-box> · expanded specimen (canonical usage) -->
+            <ds-message-box tab="alerts" alerts-count="12" information-count="3">
+              <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar
+                description="This is a description of the alert message that provides additional context for the user."
+                action="Action" action-position="inline"></ds-inline-alert>
+              <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar show-title
+                title="Unsupported operating systems detected"
+                description="Support for operating systems older than Windows 7 / Windows Server 2008 R2 and macOS 11 has ended."
+                action="View affected devices" action-position="inline"></ds-inline-alert>
+              <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar
+                description="This is a description of the alert message that provides additional context for the user."></ds-inline-alert>
+              <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar
+                description="Fourth alert — only reachable by scrolling past the 3-row cap."
+                action="Action" action-position="inline"></ds-inline-alert>
+              <ds-inline-alert slot="information" type="info" style-variant="subtle" accent-bar
+                description="This is a description of the alert message that provides additional context for the user."
+                action="Action" action-position="inline"></ds-inline-alert>
+            </ds-message-box>
+            <!-- numbered callouts -->
+            <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:18px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="mb-marker">1</span> Chevron (expand / collapse)</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="mb-marker">2</span> Title &ldquo;Notifications&rdquo; (fixed)</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="mb-marker">3</span> Tab switcher (Alerts / Information)</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="mb-marker">4</span> Body (scrollable list)</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="mb-marker">5</span> Message Banner rows</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="mb-marker">6</span> Overlay scrollbar</span>
+            </div>
+          </div>
+
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="mb-marker">1</span><div><strong>Chevron</strong><span>Toggles State (Expanded &harr; Collapsed). Rotates &#9650;/&#9660;; decorative (<code>aria-hidden</code>) &mdash; the whole header is the disclosure button.</span></div></div>
+            <div class="anat-legend-item"><span class="mb-marker">2</span><div><strong>Title</strong><span>Fixed &ldquo;Notifications&rdquo;, 14 / Semibold, Text-Primary. Not a configurable prop.</span></div></div>
+            <div class="anat-legend-item"><span class="mb-marker">3</span><div><strong>Tab switcher</strong><span>A horizontal Tab Bar (Alerts &amp; Information, each with a count). The active tab is indicated <strong>only when Expanded</strong>.</span></div></div>
+            <div class="anat-legend-item"><span class="mb-marker">4</span><div><strong>Body</strong><span>The collapsible region, present only when Expanded. Focusable, keyboard-scrollable; holds the message list for the active tab.</span></div></div>
+            <div class="anat-legend-item"><span class="mb-marker">5</span><div><strong>Message Banner rows</strong><span>Slotted <code>&lt;ds-inline-alert&gt;</code> rows (gap 8). Alerts &rarr; <code>type="warning"</code>; Information &rarr; <code>type="info"</code>; both subtle with an accent bar.</span></div></div>
+            <div class="anat-legend-item"><span class="mb-marker">6</span><div><strong>Overlay scrollbar</strong><span>A thumb-only overlay scrollbar in the right gutter (<strong>left</strong> in RTL). Auto-hides; the keyboard/wheel path is the accessible one.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Live Demo</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Real rendered <code>&lt;ds-message-box&gt;</code> instances &mdash; Alerts expanded, Information active, Collapsed (note: <strong>no active tab</strong> when collapsed), and RTL. Each loads slotted <code>&lt;ds-inline-alert&gt;</code> rows for both tab groups.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Message Box &middot; tabs, state &amp; RTL</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Alerts expanded -->
+                <div class="demo-mb-section">
+                  <p class="demo-mb-label">Alerts &mdash; expanded (default)</p>
+                  <p class="demo-mb-desc">The default state: Alerts tab active, body showing warning-styled rows in a scrollable list.</p>
+                  <ds-message-box tab="alerts" alerts-count="12" information-count="3">
+                    <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar
+                      description="This is a description of the alert message that provides additional context for the user."
+                      action="Action" action-position="inline"></ds-inline-alert>
+                    <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar show-title
+                      title="Unsupported operating systems detected"
+                      description="Support for operating systems older than Windows 7 / Windows Server 2008 R2 and macOS 11 has ended."
+                      action="View affected devices" action-position="inline"></ds-inline-alert>
+                    <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar
+                      description="This is a description of the alert message that provides additional context for the user."></ds-inline-alert>
+                    <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar
+                      description="Fourth alert — only reachable by scrolling past the 3-row cap."
+                      action="Action" action-position="inline"></ds-inline-alert>
+                    <ds-inline-alert slot="information" type="info" style-variant="subtle" accent-bar
+                      description="This is a description of the alert message that provides additional context for the user."
+                      action="Action" action-position="inline"></ds-inline-alert>
+                  </ds-message-box>
+                </div>
+
+                <!-- Information active -->
+                <div class="demo-mb-section">
+                  <p class="demo-mb-label">Information &mdash; tab active</p>
+                  <p class="demo-mb-desc">Switching the active tab to Information swaps the visible list to info-styled rows. Counts in the tab labels reflect each group.</p>
+                  <ds-message-box tab="information" alerts-count="12" information-count="3">
+                    <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar
+                      description="A warning row (hidden while Information is active)."
+                      action="Action" action-position="inline"></ds-inline-alert>
+                    <ds-inline-alert slot="information" type="info" style-variant="subtle" accent-bar show-title
+                      title="Scheduled maintenance window"
+                      description="A platform maintenance window is scheduled for this weekend; some services may be briefly unavailable."
+                      action="View schedule" action-position="inline"></ds-inline-alert>
+                    <ds-inline-alert slot="information" type="info" style-variant="subtle" accent-bar
+                      description="This is a description of the information message that provides additional context for the user."
+                      action="Action" action-position="inline"></ds-inline-alert>
+                    <ds-inline-alert slot="information" type="info" style-variant="subtle" accent-bar
+                      description="This is a description of the information message that provides additional context for the user."></ds-inline-alert>
+                  </ds-message-box>
+                </div>
+
+                <!-- Collapsed -->
+                <div class="demo-mb-section">
+                  <p class="demo-mb-label">Collapsed &mdash; header only</p>
+                  <p class="demo-mb-desc">Only the header renders. <strong>No tab is highlighted</strong> when collapsed; re-expanding restores the active tab.</p>
+                  <ds-message-box tab="alerts" expanded="false" alerts-count="12" information-count="3">
+                    <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar
+                      description="Hidden until expanded."></ds-inline-alert>
+                    <ds-inline-alert slot="information" type="info" style-variant="subtle" accent-bar
+                      description="Hidden until expanded."></ds-inline-alert>
+                  </ds-message-box>
+                </div>
+
+                <!-- RTL -->
+                <div class="demo-mb-section">
+                  <p class="demo-mb-label">RTL &mdash; mirrored</p>
+                  <p class="demo-mb-desc">With <code>rtl</code>, the title and chevron lead from the right, the tab switcher and scrollbar move to the left, and rows mirror.</p>
+                  <ds-message-box tab="alerts" rtl alerts-count="12" information-count="3">
+                    <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar
+                      description="This is a description of the alert message that provides additional context for the user."
+                      action="Action" action-position="inline"></ds-inline-alert>
+                    <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar
+                      description="This is a description of the alert message that provides additional context for the user."></ds-inline-alert>
+                    <ds-inline-alert slot="information" type="info" style-variant="subtle" accent-bar
+                      description="An information row."></ds-inline-alert>
+                  </ds-message-box>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Group persistent notifications into the two tabs &mdash; Alerts for warnings/issues, Information for advisories.</li>
+                <li>Keep the active tab indicated only when expanded; show both tabs at rest when collapsed.</li>
+                <li>Hide the whole component when there are no messages &mdash; there is no empty state.</li>
+                <li>Pair each row's meaning with icon + text + accent bar, never colour alone.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Don't show an active tab while the panel is collapsed.</li>
+                <li>Don't render an empty panel when there are no messages.</li>
+                <li>Don't put blocking confirmations or destructive prompts inside a row &mdash; use a Modal.</li>
+              </ul></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Variant axes, states, colour and spacing tokens that define the Message Box's visual language. The Message Box is a composition &mdash; most visual detail lives in the sub-components it embeds.</p>
+
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">8 Figma variants = Tab (Alerts / Information) &times; State (Expanded / Collapsed) &times; RTL (2). The title is fixed; there is no Disabled and no empty state.</p>
+            <table class="size-table">
+              <thead><tr><th>Tab</th><th>State</th><th>Notes</th><th>Example</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><code>Alerts</code></td><td><code>Expanded</code></td>
+                  <td>Alerts active; warning-styled rows visible in the scroll region.</td>
+                  <td><div class="mb-variant-cell"><ds-message-box tab="alerts" alerts-count="12" information-count="3" style="max-width:480px">
+                    <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar description="A warning notification row."></ds-inline-alert>
+                    <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar description="Another warning row." action="Action" action-position="inline"></ds-inline-alert>
+                    <ds-inline-alert slot="information" type="info" style-variant="subtle" accent-bar description="An info row."></ds-inline-alert>
+                  </ds-message-box></div></td>
+                </tr>
+                <tr>
+                  <td><code>Information</code></td><td><code>Expanded</code></td>
+                  <td>Information active; info-styled rows visible.</td>
+                  <td><div class="mb-variant-cell"><ds-message-box tab="information" alerts-count="12" information-count="3" style="max-width:480px">
+                    <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar description="A warning row."></ds-inline-alert>
+                    <ds-inline-alert slot="information" type="info" style-variant="subtle" accent-bar description="An info notification row."></ds-inline-alert>
+                    <ds-inline-alert slot="information" type="info" style-variant="subtle" accent-bar description="Another info row." action="Action" action-position="inline"></ds-inline-alert>
+                  </ds-message-box></div></td>
+                </tr>
+                <tr>
+                  <td><code>&mdash;</code></td><td><code>Collapsed</code></td>
+                  <td>Header only; no tab highlighted. Both Collapsed variants are visually identical apart from RTL.</td>
+                  <td><div class="mb-variant-cell"><ds-message-box tab="alerts" expanded="false" alerts-count="12" information-count="3" style="max-width:480px">
+                    <ds-inline-alert slot="alerts" type="warning" style-variant="subtle" accent-bar description="Hidden until expanded."></ds-inline-alert>
+                  </ds-message-box></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="states" class="doc-section-title">States</h2>
+            <p class="doc-section-subtitle">The Message Box is a <strong>composition</strong> &mdash; it has no styling state of its own beyond Expanded/Collapsed and the active tab. Interaction states live in its sub-components (Tab Bar, Inline Alert rows, scrollbar). The live demos above show expanded, collapsed and active-tab behaviour.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+              <div class="state-card"><div class="sc-title">Expanded</div><div class="sc-desc">Body + scrollbar present; active tab highlighted; chevron points up. Default.</div></div>
+              <div class="state-card"><div class="sc-title">Collapsed</div><div class="sc-desc">Header only; body and scrollbar removed; <strong>no tab highlighted</strong>; chevron points down.</div></div>
+              <div class="state-card"><div class="sc-title">Tab &mdash; active</div><div class="sc-desc">The selected tab (Fill) drives which slotted list renders; counts reflect each group.</div></div>
+              <div class="state-card"><div class="sc-title">Row &mdash; hover / action</div><div class="sc-desc">Per Inline Alert: subtle row hover; the inline action is a Text Link inheriting its states.</div></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="color-tokens" class="doc-section-title">Color Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+            <p class="doc-section-subtitle">Hex = Light theme; bind to the token, never the hex. Font is <strong>Zoho Puvi</strong>.</p>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Token</th><th>Light hex</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>Panel border</td><td><code>--uems-border-tertiary</code></td><td><code>#E1E4EB</code></td><td>1px card border; transparent fill.</td></tr>
+                <tr><td>Header title</td><td><code>--uems-text-primary</code></td><td><code>#15181E</code></td><td>&ldquo;Notifications&rdquo; &mdash; 14 / Semibold.</td></tr>
+                <tr><td>Alert row surface</td><td><code>--uems-bg-alert-primary</code></td><td>&mdash;</td><td>Warning-styled row background (Alerts tab).</td></tr>
+                <tr><td>Alert row title</td><td><code>--uems-text-alert</code></td><td>&mdash;</td><td>Row heading &mdash; 14 / Semibold.</td></tr>
+                <tr><td>Scrollbar track / thumb</td><td><code>--uems-bg-quaternary</code> / <code>-solid</code></td><td>&mdash;</td><td>Overlay scrollbar; thumb-only.</td></tr>
+                <tr><td>Scrollbar accent</td><td><code>--uems-border-accent</code></td><td>&mdash;</td><td>Thumb on active drag.</td></tr>
+                <tr><td>Divider between rows</td><td><code>--uems-border-tertiary</code></td><td><code>#E1E4EB</code></td><td>1px rule, hidden by default.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="measurements" class="doc-section-title">Anatomy &amp; Measurements</h2>
+            <p class="doc-section-subtitle">Heights are content-driven &mdash; don't hard-code them. The panel is fluid (<code>width: 100%</code>); 720px is only the Figma frame. The scroll region height is capped via <code class="inline-code">--ds-mb-max-height</code> (default 320px).</p>
+            <table class="size-table">
+              <thead><tr><th>Region</th><th>Layout</th><th>Padding</th><th>Gap / radius</th></tr></thead>
+              <tbody>
+                <tr><td>Header</td><td>row, align center</td><td>8 top/btm</td><td>16 (title group &harr; tab switcher)</td></tr>
+                <tr><td>Title group</td><td>row, hug</td><td>0</td><td>4 (chevron &harr; title &harr; badge)</td></tr>
+                <tr><td>Body</td><td>column (slot)</td><td>4 top &middot; 12 btm</td><td>8</td></tr>
+                <tr><td>Body Scroll</td><td>column</td><td>0</td><td>8 (between rows)</td></tr>
+                <tr><td>Message row</td><td>row</td><td>12 y &middot; 16 x</td><td>radius 8</td></tr>
+              </tbody>
+            </table>
+            <div class="info-callout"><p>The scroll region defaults to a <strong>320px</strong> max height (override with <code class="inline-code">--ds-mb-max-height</code>); when the list overflows, the overlay scrollbar appears in the trailing gutter (left in RTL).</p></div>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">Use the Message Box for persistent in-app notifications grouped under two tabs. Reserve transient feedback for a Toast and single inline messages for an Inline Message.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For <strong>persistent notifications</strong> a user can review at their own pace.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When messages fall into <strong>two clear groups</strong> &mdash; Alerts and Information.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When the list may be <strong>long</strong> and needs a scrollable region.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When users should be able to <strong>collapse</strong> the panel to reclaim space.</li>
+                  <li style="border:none;background:transparent;">As a <strong>notifications centre</strong> opened from a header bell or similar.</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#e42527" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For <strong>transient feedback</strong> &mdash; use a <a href="Snackbar.html">Toast</a>.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For a <strong>single inline message</strong> &mdash; use an <a href="Inline-message.html">Inline Message</a>.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For <strong>blocking confirmations</strong> or destructive prompts &mdash; use a Modal.</li>
+                  <li style="border:none;background:transparent;">When there are <strong>no messages</strong> &mdash; hide the component entirely.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do's and Don'ts</h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li><strong>Group by type:</strong> Alerts for warnings/issues, Information for advisories &mdash; rows follow the tab's type.</li>
+                <li><strong>Keep tab counts live:</strong> update Alerts / Information counts as messages arrive or dismiss.</li>
+                <li><strong>Collapse by default in dense shells:</strong> prefer Collapsed on narrow / crowded layouts.</li>
+                <li><strong>Announce new messages:</strong> push arrivals into an <code>aria-live</code> region so screen readers hear them.</li>
+                <li><strong>Let rows wrap:</strong> keep the panel fluid and never truncate the message body.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li><strong>Don't highlight a tab when collapsed:</strong> both tabs sit at rest until expanded.</li>
+                <li><strong>Don't render an empty panel:</strong> hide the whole component when there are no messages.</li>
+                <li><strong>Don't nest blocking flows in rows:</strong> a row's action is a Text Link, not a modal trigger for destructive work.</li>
+                <li><strong>Don't hard-code height/width:</strong> the panel is fluid; the scroll region is capped by a token.</li>
+                <li><strong>Don't rely on colour alone:</strong> pair each row's type with an icon and text.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Components that compose into, complement, or are commonly confused with the Message Box.</p>
+            <div class="related-grid">
+              <a href="Inline-message.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h10M7 14h6"/></svg> Inline Message</a>
+              <a href="Accordion.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="6" rx="1"/><path d="M7 14l5 5 5-5"/></svg> Accordion</a>
+              <a href="Tab-bar-horizontal.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6v10H3zM9 7h12"/></svg> Tab Bar Horizontal</a>
+              <a href="Scrollbar.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="18" rx="3"/></svg> Scrollbar</a>
+              <a href="Snackbar.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="14" width="18" height="6" rx="2"/></svg> Toast</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <ul class="doc-list">
+              <li><strong>Figma Node:</strong> <code class="inline-code">18844:338665</code> &mdash; Component Set: Message Box</li>
+              <li><strong>Typography:</strong> Zoho Puvi &mdash; title 14 / Semibold; row title 14 / Semibold; row description 13 / Regular</li>
+              <li><strong>Total Variants:</strong> 8 = Tab(2) &times; State(2) &times; RTL(2); no Disabled, no empty state</li>
+              <li><strong>Composition:</strong> Accordion shell + Tab Bar Horizontal + ds-scrollbar + slotted Inline Alert rows</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div id="feedback-inline" class="feedback-banner">
+            <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+            <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+          </div>
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live Playground</h2>
+          <p class="doc-section-subtitle">Configure the Message Box and copy the generated HTML. The preview is a real <code>&lt;ds-message-box&gt;</code> with a fixed set of slotted Inline Alert rows in both tab groups.</p>
+
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group">
+                <label class="cp-label">Theme</label>
+                <select class="cp-select" id="mb-theme"><option value="light" selected>Light</option><option value="dark">Dark</option></select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Tab</label>
+                <select class="cp-select" id="mb-tab"><option value="alerts" selected>Alerts</option><option value="information">Information</option></select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">State</label>
+                <select class="cp-select" id="mb-state"><option value="expanded" selected>Expanded</option><option value="collapsed">Collapsed</option></select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Show Badge</label>
+                <select class="cp-select" id="mb-badge"><option value="off" selected>Off</option><option value="on">On</option></select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Direction</label>
+                <select class="cp-select" id="mb-dir"><option value="ltr" selected>LTR</option><option value="rtl">RTL</option></select>
+              </div>
+            </div>
+
+            <div class="cp-preview" id="mb-preview-area" style="padding:32px;flex-direction:column;align-items:stretch;">
+              <div id="mb-preview-frame">
+                <!-- preview injected by JS -->
+              </div>
+            </div>
+
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="mb-copy-btn">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                Copy code
+              </button>
+            </div>
+            <div style="background:#0a0a0c;">
+              <div class="cp-code-area" id="mb-code-output" style="white-space:pre;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;padding:20px;color:#e2e8f0;max-height:280px;overflow:auto;"></div>
+            </div>
+            <div style="background:#0a0a0c;padding:0 20px 16px;">
+              <button class="cp-action-btn" id="mb-more-btn" style="font-size:12.5px;">Show more</button>
+            </div>
+          </div>
+
+          <script>
+          (function(){
+            var tab = document.getElementById('mb-tab');
+            var state = document.getElementById('mb-state');
+            var badge = document.getElementById('mb-badge');
+            var dir = document.getElementById('mb-dir');
+            var theme = document.getElementById('mb-theme');
+            var frame = document.getElementById('mb-preview-frame');
+            var codeOut = document.getElementById('mb-code-output');
+            var copyBtn = document.getElementById('mb-copy-btn');
+            var moreBtn = document.getElementById('mb-more-btn');
+            if (!frame) return;
+
+            function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+            // Fixed slotted rows (both groups) used in the preview + generated code.
+            var ROWS = [
+              { slot:'alerts', type:'warning', desc:'This is a description of the alert message that provides additional context for the user.', action:'Action' },
+              { slot:'alerts', type:'warning', title:'Unsupported operating systems detected', desc:'Support for operating systems older than Windows 7 / Windows Server 2008 R2 and macOS 11 has ended.', action:'View affected devices' },
+              { slot:'alerts', type:'warning', desc:'This is a description of the alert message that provides additional context for the user.' },
+              { slot:'information', type:'info', desc:'This is a description of the information message that provides additional context for the user.', action:'Action' }
+            ];
+
+            function rowEl(r){
+              var el = document.createElement('ds-inline-alert');
+              el.setAttribute('slot', r.slot);
+              el.setAttribute('type', r.type);
+              el.setAttribute('style-variant', 'subtle');
+              el.setAttribute('accent-bar', '');
+              if (r.title){ el.setAttribute('show-title',''); el.setAttribute('title', r.title); }
+              el.setAttribute('description', r.desc);
+              if (r.action){ el.setAttribute('action', r.action); el.setAttribute('action-position','inline'); }
+              return el;
+            }
+
+            function rowMarkup(r){
+              var a = ['slot="'+r.slot+'"','type="'+r.type+'"','style-variant="subtle"','accent-bar'];
+              if (r.title){ a.push('show-title'); a.push('title="'+r.title+'"'); }
+              a.push('description="'+r.desc+'"');
+              if (r.action){ a.push('action="'+r.action+'"'); a.push('action-position="inline"'); }
+              return '  <ds-inline-alert ' + a.join(' ') + '></ds-inline-alert>';
+            }
+
+            function render(){
+              var isRtl = dir.value === 'rtl';
+              var isCollapsed = state.value === 'collapsed';
+              var hasBadge = badge.value === 'on';
+
+              // ---- live <ds-message-box> element (the real web component) ----
+              var el = document.createElement('ds-message-box');
+              if (tab.value === 'information') el.setAttribute('tab','information');
+              if (isCollapsed) el.setAttribute('expanded','false');
+              if (hasBadge) el.setAttribute('show-badge','');
+              if (isRtl) el.setAttribute('rtl','');
+              el.setAttribute('alerts-count','12');
+              el.setAttribute('information-count','3');
+              ROWS.forEach(function(r){ el.appendChild(rowEl(r)); });
+              frame.replaceChildren(el);
+              frame.closest('.cp-preview').setAttribute('data-theme-preview', theme.value);
+
+              // ---- generated markup (mirrors the attributes above) ----
+              var attrs = [];
+              if (tab.value === 'information') attrs.push('tab="information"');
+              if (isCollapsed) attrs.push('expanded="false"');
+              if (hasBadge) attrs.push('show-badge');
+              if (isRtl) attrs.push('rtl');
+              attrs.push('alerts-count="12"');
+              attrs.push('information-count="3"');
+
+              var rows = ROWS.map(rowMarkup).join('\n');
+              var code = '<ds-message-box ' + attrs.join(' ') + '>\n' + rows + '\n</ds-message-box>';
+
+              codeOut.dataset.raw = code;
+              codeOut.innerHTML = highlight(code);
+            }
+
+            function highlight(code){
+              return esc(code)
+                .replace(/([a-z][a-z-]*)=/g, '<span style="color:#38bdf8;">$1</span>=')
+                .replace(/&lt;(\/?)(ds-message-box|ds-inline-alert)/g, '&lt;$1<span style="color:#a78bfa;">$2</span>')
+                .replace(/&quot;(.*?)&quot;/g, '<span style="color:#34d399;">&quot;$1&quot;</span>');
+            }
+
+            [tab, state, badge, dir, theme].forEach(function(el){ if (el) el.addEventListener('change', render); });
+
+            copyBtn.addEventListener('click', function(){
+              var raw = codeOut.dataset.raw || '';
+              navigator.clipboard.writeText(raw).then(function(){
+                var o = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+                setTimeout(function(){ copyBtn.innerHTML = o; }, 2000);
+              });
+            });
+
+            moreBtn.addEventListener('click', function(){
+              var expanded = codeOut.style.maxHeight === 'none';
+              codeOut.style.maxHeight = expanded ? '280px' : 'none';
+              moreBtn.textContent = expanded ? 'Show more' : 'Show less';
+            });
+
+            render();
+          })();
+          </script>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="component-api" class="doc-section-title">Component API &amp; Properties</h2>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>tab</code></td><td><code>'alerts' | 'information'</code></td><td><code>'alerts'</code></td><td>Active tab; selects which slotted message group renders. Indicated only when expanded.</td></tr>
+                <tr><td><code>expanded</code></td><td>boolean</td><td><code>true</code></td><td>Expanded vs Collapsed (disclosure). Set <code>expanded="false"</code> to collapse.</td></tr>
+                <tr><td><code>show-badge</code></td><td>boolean</td><td><code>false</code></td><td>Count badge beside the title.</td></tr>
+                <tr><td><code>alerts-count</code></td><td>number</td><td>&mdash;</td><td>Count shown in the Alerts tab label.</td></tr>
+                <tr><td><code>information-count</code></td><td>number</td><td>&mdash;</td><td>Count shown in the Information tab label.</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td><code>false</code></td><td>Mirrors the panel (prefer host <code>dir="rtl"</code>).</td></tr>
+              </tbody>
+            </table>
+            <div class="info-callout"><p>The <strong>title is fixed</strong> &mdash; always &ldquo;Notifications&rdquo;; it is not a configurable prop. Events: <code>toggle</code> (expand/collapse) and <code>tab-change</code> (<code>{tab}</code>). Style hook: <code class="inline-code">--ds-mb-max-height</code> caps the scroll region (default 320px).</p></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="implementation-example" class="doc-section-title">Implementation Example</h2>
+            <p class="doc-section-subtitle">Ember / Handlebars usage &mdash; a notifications panel with slotted alert &amp; information rows.</p>
+            <div class="cp-code-area" style="border-radius:12px;margin-top:16px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.7;">
+                <span style="color:#94a3b8;">{{!-- MyApp/templates/components/notifications.hbs --}}</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#a78bfa;">UemsMessageBox</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@tab</span>=<span style="color:#34d399;">"alerts"</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@expanded</span>=<span style="color:#C678DD;">{{true}}</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@alertsCount</span>=<span style="color:#E5C07B;">{{12}}</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@informationCount</span>=<span style="color:#E5C07B;">{{3}}</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@onToggle</span>=<span style="color:#E5C07B;">{{this.handleToggle}}</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@onTabChange</span>=<span style="color:#E5C07B;">{{this.handleTabChange}}</span><br>
+                <span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#a78bfa;">UemsInlineAlert</span> <span style="color:#38bdf8;">@slot</span>=<span style="color:#34d399;">"alerts"</span> <span style="color:#38bdf8;">@type</span>=<span style="color:#34d399;">"warning"</span> <span style="color:#38bdf8;">@accentBar</span>=<span style="color:#C678DD;">{{true}}</span> <span style="color:#38bdf8;">@description</span>=<span style="color:#34d399;">"…"</span> <span style="color:#ABB2BF;">/&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#a78bfa;">UemsInlineAlert</span> <span style="color:#38bdf8;">@slot</span>=<span style="color:#34d399;">"information"</span> <span style="color:#38bdf8;">@type</span>=<span style="color:#34d399;">"info"</span> <span style="color:#38bdf8;">@accentBar</span>=<span style="color:#C678DD;">{{true}}</span> <span style="color:#38bdf8;">@description</span>=<span style="color:#34d399;">"…"</span> <span style="color:#ABB2BF;">/&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;/</span><span style="color:#a78bfa;">UemsMessageBox</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+            <ul class="doc-list">
+              <li>The <strong>title and chevron lead from the right</strong>; the tab switcher moves to the <strong>left</strong>.</li>
+              <li>The vertical <strong>overlay scrollbar moves to the left</strong> edge.</li>
+              <li>Message rows mirror: <strong>accent bar on the right</strong>, text right-aligns, row actions on the left.</li>
+              <li>Implement with <code class="inline-code">dir="rtl"</code> + logical properties; a single host <code>dir</code> should cascade &mdash; don't author per-element RTL CSS.</li>
+              <li>Counts / digits stay LTR within the RTL layout; localize all strings.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">The Message Box layers three ARIA patterns &mdash; <strong>disclosure</strong> (expand/collapse), <strong>tabs</strong> (Alerts/Information), and a focusable scrollable <strong>list</strong>.</p>
+
+          <div class="doc-section">
+            <h3 id="keyboard-interaction" class="doc-h3">Keyboard Interaction</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><code>Enter</code> / <code>Space</code></td><td>On the header button: toggles Expanded &harr; Collapsed.</td></tr>
+                <tr><td><code>Tab</code></td><td>Moves focus header button &rarr; tabs (Alerts &rarr; Information) &rarr; into the body list (row links, dismiss) &rarr; out.</td></tr>
+                <tr><td><code>&larr;</code> / <code>&rarr;</code></td><td>Switches the active tab when focus is in the tablist.</td></tr>
+                <tr><td><code>Home</code> / <code>End</code></td><td>Moves to the first / last tab in the tablist.</td></tr>
+                <tr><td><code>&uarr;</code> / <code>&darr;</code></td><td>Scrolls the focused message list by a line.</td></tr>
+                <tr><td><code>PageUp</code> / <code>PageDown</code></td><td>Scrolls the list by a page.</td></tr>
+                <tr><td><code>Home</code> / <code>End</code> (in list)</td><td>Jumps to the top / bottom of the message list.</td></tr>
+              </tbody>
+            </table>
+            <div class="info-callout"><p>Focus order is logical and never trapped. The scroll region itself is focusable (<code>tabindex=0</code>) and keyboard-scrollable so the list is reachable without a pointer.</p></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="aria-screen-reader" class="doc-h3">ARIA Attributes &amp; Screen Reader Guidance</h3>
+            <ul class="doc-list">
+              <li><strong>Disclosure:</strong> the header control is a <code>&lt;button&gt;</code> with <code>aria-expanded</code> reflecting State and <code>aria-controls</code> pointing at the body id.</li>
+              <li><strong>Tabs:</strong> render the switcher as <code>role="tablist"</code> with <code>role="tab"</code> (<code>aria-selected</code>) per tab and the list as the matching <code>role="tabpanel"</code> (<code>aria-labelledby</code> the active tab).</li>
+              <li><strong>Focusable scroll region:</strong> the scroll container is <code>tabindex=0</code> with an accessible name (<code>aria-label</code>, e.g. &ldquo;Alerts&rdquo;), keyboard-scrollable.</li>
+              <li><strong>Live announcements:</strong> push new messages into an <code>aria-live="polite"</code> region; critical ones via <code>assertive</code> / <code>role="alert"</code>.</li>
+              <li><strong>Decorative chrome:</strong> the chevron and the scrollbar thumb are decorative (<code>aria-hidden</code>); the keyboard/wheel path is the accessible one.</li>
+              <li><strong>Not colour alone:</strong> each row conveys its type via icon + text + accent bar, not colour by itself.</li>
+              <li><strong>RTL:</strong> mirror via <code>dir="rtl"</code> + logical properties; counts/digits stay LTR within the layout.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="focus-state" class="doc-h3">Focus State Design</h3>
+            <ul class="doc-list">
+              <li><strong>Focus ring:</strong> 2px solid accent ring on the header button, each tab, the scroll region, and row links.</li>
+              <li><strong>Offset:</strong> 2px from each focus target's edge.</li>
+              <li><strong>Trigger:</strong> shown on <code>:focus-visible</code> so mouse clicks don't leave a lingering ring.</li>
+              <li><strong>Roving tabstop:</strong> within the tablist only the active tab is in the tab order; arrows move between tabs.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="color-contrast" class="doc-h3">Color Contrast<span class="h3-badge" style="background:rgba(34,197,94,0.15);color:#16a34a;">WCAG AA</span></h3>
+            <p class="doc-section-subtitle">Title and message text meet WCAG 2.1 AA on white.</p>
+            <div class="mb-contrast-grid">
+              <div class="contrast-card">
+                <div class="contrast-swatch" style="background:#FFFFFF;color:#15181E;">Notifications</div>
+                <div class="contrast-meta"><div class="cc-name">Header title</div><div class="cc-val">#15181E on #FFFFFF</div><span class="ratio-chip">16.1:1</span><span class="pass-chip">WCAG AA Pass</span></div>
+              </div>
+              <div class="contrast-card">
+                <div class="contrast-swatch" style="background:#FFFFFF;color:#15181E;">Alert message text</div>
+                <div class="contrast-meta"><div class="cc-name">Row description</div><div class="cc-val">#15181E on row surface</div><span class="ratio-chip">&ge;7:1</span><span class="pass-chip">WCAG AA Pass</span></div>
+              </div>
+            </div>
+            <div class="info-callout"><p><strong>WCAG 2.1 Level AA Requires:</strong> a contrast ratio of at least <strong>4.5:1</strong> for normal text and <strong>3.0:1</strong> for large text and UI components (icons, focus rings, accent bars). Accent bars are non-text indicators always paired with icon + text.</p></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="touch-target" class="doc-h3">Touch Target Size</h3>
+            <div style="display:flex;align-items:center;gap:20px;padding:20px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:14px;">
+              <div class="touch-box"></div>
+              <div style="font-size:14px;color:var(--prism-text);line-height:1.6;">
+                <strong>Minimum target: 48&times;48px.</strong> The chevron / header button, each tab, and row action links read compactly &mdash; give them transparent padding and surrounding spacing so each hit area reaches at least 48&times;48px, especially on touch.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/message-box.md" download="message-box.md" class="action-link"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=18844-338665" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/components/toc.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>

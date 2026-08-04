@@ -1,0 +1,190 @@
+/* =============================================================================
+   ds-fullscreen-modal / .ds-fullscreen-modal
+   Full-viewport modal with a 40px top overlay band. Pinned header + footer
+   sandwich a single scrollable body region. Use for multi-step flows,
+   immersive editors, and mobile-first sheets.
+   ============================================================================= */
+
+:host { display: block; }
+
+.ds-fullscreen-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 1000);
+  display: none;
+  flex-direction: column;
+  font-family: var(--font-family-sans);
+}
+.ds-fullscreen-modal[open] { display: flex; }
+
+/* ---- Overlay (covers whole viewport, including the 40px band on top) -- */
+.ds-fullscreen-modal__overlay {
+  position: absolute;
+  inset: 0;
+  /* Derive the scrim from the overlay token (a SOLID colour) so it stays
+     theme-aware — no hardcoded rgba. */
+  background: color-mix(in srgb, var(--uems-bg-overlay) 70%, transparent);
+  animation: ds-fullscreen-fade 200ms var(--ease-standard, ease-out);
+}
+
+/* ---- Dialog -------------------------------------------------------- */
+/* 40px top inset shows the overlay through; bottom is flush with viewport. */
+.ds-fullscreen-modal__dialog {
+  position: relative;
+  margin-top: 40px;
+  width: 100%;
+  height: calc(100vh - 40px);
+  max-height: calc(100vh - 40px);
+  background: var(--uems-bg-primary-alt);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  outline: none;
+  animation: ds-fullscreen-slide-up 220ms var(--ease-standard, ease-out);
+}
+
+/* ---- Header (pinned) ---------------------------------------------- */
+.ds-fullscreen-modal__header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-12);                    /* Figma: header gap 12 */
+  padding: var(--spacing-20) var(--spacing-24);
+}
+
+.ds-fullscreen-modal__leading {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Optional icon (off by default). Explicit rule needed because the base
+   `display: inline-flex` would otherwise beat the [hidden] attribute. */
+.ds-fullscreen-modal__leading[hidden] { display: none; }
+.ds-fullscreen-modal[data-tone="info"] .ds-fullscreen-modal__leading {
+  background: var(--uems-bg-info-primary);
+  color: var(--uems-icon-info);
+}
+.ds-fullscreen-modal[data-tone="warning"] .ds-fullscreen-modal__leading {
+  background: var(--uems-bg-warning-primary);
+  color: var(--uems-text-warning);
+}
+.ds-fullscreen-modal[data-tone="success"] .ds-fullscreen-modal__leading {
+  background: var(--uems-bg-success-primary);
+  color: var(--uems-text-success);
+}
+.ds-fullscreen-modal[data-tone="brand"] .ds-fullscreen-modal__leading {
+  background: var(--uems-bg-accent-primary);
+  color: var(--uems-text-accent-link);
+}
+
+.ds-fullscreen-modal__titles {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding-top: var(--spacing-4);
+}
+.ds-fullscreen-modal__title {
+  margin: 0;
+  font-size: var(--font-size-16);            /* Figma: Title = 16px SemiBold / 24 */
+  line-height: 24px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-primary);
+}
+.ds-fullscreen-modal__description {
+  margin: 0;
+  font-size: var(--font-size-14);
+  line-height: 20px;
+  color: var(--uems-text-secondary);         /* Figma: Description = Text-Secondary */
+}
+
+/* Close = <ds-icon-button> (owns its hover / focus ring / disabled styling).
+   Only keep it from shrinking in the header flex row. */
+.ds-fullscreen-modal__close { flex: 0 0 auto; }
+.ds-fullscreen-modal__close .ds-icon-button,
+.ds-fullscreen-modal__close .ds-icon-button:hover { color: var(--uems-icon-subtle); }
+
+/* ---- Dividers ----------------------------------------------------- */
+/* Header/footer rules = <ds-divider> (draws its own full-width line). The
+   [hidden] rule is explicit because .ds-divider sets display:block, which
+   would otherwise beat the [hidden] attribute. */
+.ds-fullscreen-modal__divider { flex: 0 0 auto; }
+.ds-fullscreen-modal__divider[hidden] { display: none; }
+/* Header divider gets a soft shadow when the body has scrolled below it. */
+.ds-fullscreen-modal__divider--scrolled {
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+/* ---- Body (single scroll container) ------------------------------- */
+.ds-fullscreen-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--spacing-20) var(--spacing-24);
+  font-size: var(--font-size-14);
+  line-height: 20px;
+  color: var(--uems-text-primary);
+}
+/* Body left edge aligns with the header title. No icon (default): both sit at
+   the 24px header padding. With an icon: indent the body past the 48px icon +
+   12px gap so it lines up under the title, not under the icon gutter. */
+.ds-fullscreen-modal[data-has-icon] .ds-fullscreen-modal__body {
+  padding-inline-start: calc(var(--spacing-24) + 48px + var(--spacing-12));
+}
+
+/* ---- Footer (pinned, split layout) -------------------------------- */
+.ds-fullscreen-modal__footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;          /* action buttons always pinned right */
+  gap: var(--spacing-16);
+  padding: var(--spacing-16) var(--spacing-24);
+}
+.ds-fullscreen-modal__footer-left {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  min-width: 0;
+  margin-inline-end: auto;            /* float optional left utility content to the far left */
+}
+.ds-fullscreen-modal__footer-left:empty { display: none; }
+.ds-fullscreen-modal__footer-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+.ds-fullscreen-modal__footer-right ds-button[hidden] { display: none; }
+
+/* ---- Animations --------------------------------------------------- */
+@keyframes ds-fullscreen-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes ds-fullscreen-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-fullscreen-modal__overlay,
+  .ds-fullscreen-modal__dialog { animation: none; }
+}
+
+/* ---- Mobile responsive: drop the 40px band on narrow viewports ---- */
+@media (max-width: 600px) {
+  .ds-fullscreen-modal__dialog {
+    margin-top: 0;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+}
+
+/* ---- RTL ---------------------------------------------------------- */

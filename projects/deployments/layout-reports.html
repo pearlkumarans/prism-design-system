@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!-- Deployments · Reports — placeholder empty state; no page header. -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Deployments · Reports — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+<template id="drawer-fragment">
+<style>
+#dep-reports-pop .dep-empty { flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--spacing-32); }
+</style>
+
+<div id="dep-reports-pop" class="lay-root" hidden>
+  <div class="lay">
+    <div class="lay__scroll">
+      <div class="dep-empty">
+        <ds-empty-state
+          state-illustration="file-report"
+          title="Reports coming soon"
+          description="Audit export (rows = machines · columns = stages · each cell = success / failed / skipped + output) and canned reports land here in the next iteration."
+          show-primary="false"
+          show-secondary="false"></ds-empty-state>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('dep-reports-pop');
+  if (!root || root.__init) return; root.__init = true;
+  function show() { root.hidden = false; }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-reports'] = { show, hide };
+})();
+</script>
+</template>
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-reports'].show()));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overlay — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<!-- Demo overlay: single source of truth -->
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/overlay/overlay.css">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/overlay/overlay.js"></script>
+<script type="module" src="../design-system-library/src/components/button/button.js"></script>
+<style>
+  .demo-overlay-section { margin-bottom: 28px; }
+  .page-overlay .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; text-align: left; }
+  .page-overlay .demo-overlay-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: flex-start; }
+  .page-overlay .demo-container .demo-canvas { align-items: stretch !important; justify-content: flex-start !important; min-height: 0 !important; }
+
+  /* Demo dialog surface that sits above the live ds-overlay */
+  .overlay-demo-surface {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: calc(var(--z-overlay, 1300) + 10);
+    display: none; width: min(360px, calc(100vw - 48px)); padding: 24px;
+    background: var(--uems-bg-primary); color: var(--uems-text-primary);
+    border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+  }
+  .overlay-demo-surface[data-open] { display: block; }
+  .overlay-demo-surface h3 { margin: 0 0 8px; font-size: 16px; }
+  .overlay-demo-surface p { margin: 0 0 16px; font-size: 14px; color: var(--uems-text-tertiary); }
+
+  /* Static thumbnails for the Style tab — miniature scrims over a sample card */
+  .scrim-thumb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-top: 24px; }
+  .scrim-thumb { border: 1px solid var(--prism-border); border-radius: 12px; overflow: hidden; }
+  .scrim-thumb-stage { position: relative; height: 110px; background: var(--uems-bg-primary); }
+  .scrim-thumb-stage .fake-content { position: absolute; inset: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .scrim-thumb-stage .fake-line { height: 8px; border-radius: 4px; background: var(--uems-bg-tertiary); }
+  .scrim-thumb-stage .fake-line.short { width: 60%; }
+  .scrim-thumb-scrim { position: absolute; inset: 0; }
+  .scrim-thumb-scrim.t-dim { background: var(--uems-bg-overlay); opacity: .7; }
+  .scrim-thumb-scrim.t-light { background: var(--uems-bg-quaternary-solid); opacity: .7; }
+  .scrim-thumb-scrim.t-transparent { background: transparent; }
+  .scrim-thumb-scrim.t-blur { background: rgba(95,108,137,.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .scrim-thumb-scrim.t-dim-blur { background: rgba(21,24,30,.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .scrim-thumb-label { padding: 10px 12px; font-size: 12.5px; font-weight: 600; color: var(--prism-text-muted); border-top: 1px solid var(--prism-border); }
+  /* Real-world static stages */
+  .ov-rw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .ov-rw-card { border: 1px solid var(--prism-border); border-radius: 12px; overflow: hidden; background: var(--prism-surface); }
+  .ov-rw-stage { position: relative; height: 170px; background: var(--uems-bg-primary); overflow: hidden; }
+  .ov-rw-label { padding: 10px 12px; font-size: 12.5px; font-weight: 600; color: var(--prism-text-muted); border-top: 1px solid var(--prism-border); }
+  .ov-rw-fakerow { height: 12px; border-radius: 6px; background: var(--uems-bg-tertiary); margin: 10px 14px 0; }
+  .ov-rw-dialog { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 72%; background: var(--uems-bg-primary); border: 1px solid var(--uems-border-tertiary); border-radius: 10px; box-shadow: var(--shadow-xl); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .ov-rw-dialog .t { font-size: 13px; font-weight: 600; color: var(--uems-text-primary); }
+  .ov-rw-dialog .d { font-size: 11.5px; color: var(--uems-text-tertiary); line-height: 1.45; }
+</style>
+</head>
+<body class="page-overlay">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">      <a href="Foundation.html" >Foundation</a>
+      <a href="Components.html" class="active">Components</a>      <a href="zia-experience.html" >Zia Experience</a><a href="llm-reference.html">LLM Reference</a><div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+
+      <div style="width: 16px;"></div> <!-- Spacer -->
+
+
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search...">
+        <span class="search-shortcut">⌘K</span>
+      </div>
+      <h3 id="components" class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link active">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Overlay</h1>
+        <p class="page-desc">
+          A scrim/backdrop placed behind modals, dialogs, drawers, and popovers to obscure background content and trap focus. Always rendered as a full-viewport fixed layer. Pick the type that matches the surface: Dim for standard modals, Transparent for popover click-traps, Blur for premium frosted backdrops.
+        </p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+      <div class="main-content-area">
+        <div class="main-content-inner">
+        <div class="tab-content" id="tab-overview">
+
+        <!-- Anatomy Section -->
+        <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+        <p class="doc-section-subtitle">The overlay is a single rectangle with no child elements. In Figma each variant is drawn at 1440&times;900; in code it must always stretch to the full viewport (<code>position: fixed; inset: 0</code>).</p>
+
+        <div class="anatomy-diagram">
+          <div style="position: relative; width: min(440px, 100%); height: 250px; margin: 24px auto; border: 2px dashed var(--prism-border); border-radius: 12px; background: var(--uems-bg-primary); overflow: visible;">
+            <!-- page content hints -->
+            <div style="position:absolute; inset: 16px; display:flex; flex-direction:column; gap:8px; opacity:.8;">
+              <div style="height:10px; width:45%; border-radius:5px; background: var(--uems-bg-tertiary);"></div>
+              <div style="height:10px; width:80%; border-radius:5px; background: var(--uems-bg-tertiary);"></div>
+              <div style="height:10px; width:65%; border-radius:5px; background: var(--uems-bg-tertiary);"></div>
+            </div>
+            <!-- scrim -->
+            <div style="position:absolute; inset:0; border-radius:10px; background: var(--uems-bg-overlay); opacity:.7;"></div>
+            <!-- dialog surface -->
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:55%; height:42%; border-radius:10px; background: var(--uems-bg-primary); border:1px solid var(--uems-border-tertiary); box-shadow: var(--shadow-lg);"></div>
+            <!-- marker 1: overlay -->
+            <div style="position: absolute; top: 14px; right: -14px; display: flex; align-items: center; gap: 6px;">
+              <div style="width: 28px; height: 2px; background: #2563eb;"></div><span class="anat-marker-inline">1</span>
+            </div>
+            <!-- marker 2: surface -->
+            <div style="position: absolute; top: 50%; left: -14px; transform: translateY(-50%); display: flex; align-items: center; gap: 6px;">
+              <span class="anat-marker-inline">2</span><div style="width: 28px; height: 2px; background: #2563eb;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="anat-legend">
+          <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Overlay (scrim)</strong><span>Single full-viewport layer. <code>position: fixed; inset: 0</code>; z-index below the dialog, above all page content. No children, no content.</span></div></div>
+          <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Overlaid surface</strong><span>The modal / drawer / popover the overlay backs. Owns focus trap, <code>Escape</code> handling, and its own z-index above the scrim.</span></div></div>
+        </div>
+
+        <hr class="doc-divider" />
+        <!-- Live demo -->
+        <div style="margin-bottom: 64px;">
+          <h2 id="live-demo" class="doc-section-title" style="margin-bottom: 8px;">Preview</h2>
+          <p class="doc-section-subtitle" style="margin-bottom: 28px;">All 5 types, live. Click a trigger to raise the overlay with a demo dialog on top &mdash; click the scrim (or press <kbd>Esc</kbd>) to dismiss. The Static example ignores scrim clicks, exactly like a blocking dialog.</p>
+
+          <div class="demo-container">
+            <div class="demo-toolbar">
+              <div class="demo-toolbar-left">
+                <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Overlay Types</span>
+              </div>
+            </div>
+            <div class="demo-canvas" style="flex-direction:column;align-items:stretch;gap:24px;padding:32px;">
+
+              <div class="demo-overlay-section">
+                <div class="demo-group-label">Types &mdash; click to preview</div>
+                <div class="demo-overlay-row">
+                  <ds-button variant="secondary" data-overlay-type="dim">Dim (default)</ds-button>
+                  <ds-button variant="secondary" data-overlay-type="light">Light</ds-button>
+                  <ds-button variant="secondary" data-overlay-type="transparent">Transparent</ds-button>
+                  <ds-button variant="secondary" data-overlay-type="blur">Blur</ds-button>
+                  <ds-button variant="secondary" data-overlay-type="dim-blur">Dim Blur</ds-button>
+                </div>
+              </div>
+
+              <div class="demo-overlay-section">
+                <div class="demo-group-label">Blocking &mdash; scrim click suppressed</div>
+                <div class="demo-overlay-row">
+                  <ds-button variant="outline" data-overlay-type="dim" data-overlay-static>Dim + static</ds-button>
+                </div>
+              </div>
+
+              <!-- Real-world patterns (static stages) -->
+              <div class="demo-overlay-section">
+                <div class="demo-group-label">Real-world patterns &mdash; static stages</div>
+                <div class="ov-rw-grid">
+
+                  <div class="ov-rw-card">
+                    <div class="ov-rw-stage">
+                      <div class="ov-rw-fakerow" style="width:55%;"></div>
+                      <div class="ov-rw-fakerow" style="width:80%;"></div>
+                      <div class="ov-rw-fakerow" style="width:70%;"></div>
+                      <div class="ov-rw-fakerow" style="width:76%;"></div>
+                      <div style="position:absolute;inset:0;background:var(--uems-bg-overlay);opacity:.7;"></div>
+                      <div class="ov-rw-dialog">
+                        <div class="t">Delete 3 devices?</div>
+                        <div class="d">They will be removed from all groups and policies. This can&rsquo;t be undone.</div>
+                        <div style="display:flex;gap:8px;justify-content:flex-end;">
+                          <ds-button variant="secondary" size="xsmall">Cancel</ds-button>
+                          <ds-button variant="destructive" size="xsmall">Delete</ds-button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="ov-rw-label">Destructive confirm &mdash; Dim behind a dialog</div>
+                  </div>
+
+                  <div class="ov-rw-card">
+                    <div class="ov-rw-stage">
+                      <div style="position:absolute;inset:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <div style="border-radius:8px;background:linear-gradient(135deg,var(--cobalt-200),var(--cobalt-500));"></div>
+                        <div style="border-radius:8px;background:linear-gradient(135deg,var(--fern-200),var(--fern-500));"></div>
+                        <div style="border-radius:8px;background:linear-gradient(135deg,var(--sunshine-200),var(--persimmon-400));"></div>
+                        <div style="border-radius:8px;background:linear-gradient(135deg,var(--charoite-200),var(--charoite-500));"></div>
+                      </div>
+                      <div style="position:absolute;inset:0;background:rgba(21,24,30,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);"></div>
+                      <div class="ov-rw-dialog" style="width:60%;align-items:center;text-align:center;">
+                        <div class="t">screenshot-2026.png</div>
+                        <div class="d">Quick look &middot; 1.2 MB</div>
+                      </div>
+                    </div>
+                    <div class="ov-rw-label">Quick look &mdash; Dim Blur frosted backdrop</div>
+                  </div>
+
+                  <div class="ov-rw-card">
+                    <div class="ov-rw-stage">
+                      <div class="ov-rw-fakerow" style="width:40%;margin-top:14px;"></div>
+                      <div style="position:absolute;top:36px;left:14px;width:58%;background:var(--uems-bg-primary);border:1px solid var(--uems-border-tertiary);border-radius:8px;box-shadow:var(--shadow-lg);padding:6px;display:flex;flex-direction:column;gap:2px;">
+                        <div style="font-size:11.5px;color:var(--uems-text-primary);padding:6px 8px;border-radius:6px;background:var(--uems-bg-secondary);">Scan now</div>
+                        <div style="font-size:11.5px;color:var(--uems-text-primary);padding:6px 8px;">Deploy agent</div>
+                        <div style="font-size:11.5px;color:var(--uems-text-primary);padding:6px 8px;">Move to group&hellip;</div>
+                      </div>
+                      <div class="ov-rw-fakerow" style="width:72%;margin-top:96px;"></div>
+                      <div class="ov-rw-fakerow" style="width:64%;"></div>
+                    </div>
+                    <div class="ov-rw-label">Menu click-trap &mdash; Transparent (no dimming)</div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Types -->
+        <div class="doc-section">
+          <h2 id="types" class="doc-section-title">Types</h2>
+          <p class="doc-section-subtitle">One axis, five values. The component set contains 5 variants total &mdash; the overlay carries no content, so there are no size or state axes.</p>
+          <table class="size-table">
+            <thead><tr><th>Type</th><th>Visual</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Dim</strong> <em>(default)</em></td><td>Dark scrim &mdash; <code>BG-Overlay</code> at 70% opacity</td><td>Default modal/dialog/drawer scrim</td></tr>
+              <tr><td><strong>Light</strong></td><td>Mid-tone slate scrim &mdash; <code>BG-Quaternary-Solid</code> at 70% opacity</td><td>Scrim for dark-themed surfaces where a dark scrim loses contrast</td></tr>
+              <tr><td><strong>Transparent</strong></td><td>Fully invisible (layer opacity 0)</td><td>Click-trap behind popovers, menus, and non-modal overlays &mdash; captures outside clicks without dimming content</td></tr>
+              <tr><td><strong>Blur</strong></td><td><code>#5F6C89</code> at 70% fill alpha + backdrop blur 8px</td><td>Premium/iOS-style frosted modal backdrop</td></tr>
+              <tr><td><strong>Dim Blur</strong></td><td><code>#15181E</code> at 70% fill alpha + backdrop blur 8px</td><td>Dark frosted backdrop &mdash; strongest background suppression</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <!-- Related -->
+        <div class="doc-section">
+          <h2 id="related" class="doc-section-title">Related</h2>
+          <p class="doc-section-subtitle">Surfaces that sit on top of an overlay &mdash; each pairs with exactly one scrim layer.</p>
+          <ul class="doc-list">
+            <li><strong><a href="Confirmation-modal.html" style="color: var(--prism-violet);">Confirmation Modal</a></strong> &mdash; discrete confirm/cancel decision over a Dim overlay.</li>
+            <li><strong><a href="Fullscreen-modal.html" style="color: var(--prism-violet);">Fullscreen Modal</a></strong> &mdash; full-screen flow; the overlay covers whatever remains visible.</li>
+            <li><strong><a href="Dropdown.html" style="color: var(--prism-violet);">Dropdown</a></strong> &mdash; non-modal layer; pair with a Transparent overlay as the outside-click trap.</li>
+          </ul>
+        </div>
+
+        <!-- References -->
+        <div class="doc-section">
+          <h2 id="references" class="doc-section-title">References</h2>
+          <p class="doc-section-subtitle">Source files, Figma node, and tokens for engineers and designers shipping or auditing the overlay.</p>
+          <ul class="doc-list">
+            <li><strong>Figma Node:</strong> <code style="font-family: monospace; font-size: 13px; padding: 2px 8px; border-radius: 6px; background: rgba(37,99,235,0.06); color: var(--prism-violet);">18413:617583</code> &mdash; Component Set: Overlay</li>
+            <li><strong>Source:</strong> <code>design-system-library/src/components/overlay/overlay.css</code> + <code>overlay.js</code> (<code>&lt;ds-overlay&gt;</code>)</li>
+            <li><strong>Total Variants:</strong> 5 (single <code>Type</code> axis &mdash; no boolean, text, or instance-swap properties)</li>
+          </ul>
+        </div>
+
+      </div> <!-- End tab-overview -->
+
+      <!-- ═══ STYLE TAB ═══ -->
+      <div class="tab-content" id="tab-style" style="display: none; padding-top: 32px;">
+        <h2 id="style-overview" class="doc-section-title">Style</h2>
+        <p class="doc-section-subtitle">The exact fills, opacities, and blur values behind every overlay type. Use this tab when aligning a Figma node to code or auditing a custom scrim.</p>
+
+        <div class="doc-section">
+          <h2 id="style-types" class="doc-section-title">Type previews</h2>
+          <p class="doc-section-subtitle">Miniature stages &mdash; each scrim rendered over the same sample content so the suppression level is comparable.</p>
+          <div class="scrim-thumb-grid">
+            <div class="scrim-thumb"><div class="scrim-thumb-stage"><div class="fake-content"><div class="fake-line"></div><div class="fake-line short"></div><div class="fake-line"></div></div><div class="scrim-thumb-scrim t-dim"></div></div><div class="scrim-thumb-label">Dim — BG-Overlay @ 70%</div></div>
+            <div class="scrim-thumb"><div class="scrim-thumb-stage"><div class="fake-content"><div class="fake-line"></div><div class="fake-line short"></div><div class="fake-line"></div></div><div class="scrim-thumb-scrim t-light"></div></div><div class="scrim-thumb-label">Light — BG-Quaternary-Solid @ 70%</div></div>
+            <div class="scrim-thumb"><div class="scrim-thumb-stage"><div class="fake-content"><div class="fake-line"></div><div class="fake-line short"></div><div class="fake-line"></div></div><div class="scrim-thumb-scrim t-transparent"></div></div><div class="scrim-thumb-label">Transparent — invisible click-trap</div></div>
+            <div class="scrim-thumb"><div class="scrim-thumb-stage"><div class="fake-content"><div class="fake-line"></div><div class="fake-line short"></div><div class="fake-line"></div></div><div class="scrim-thumb-scrim t-blur"></div></div><div class="scrim-thumb-label">Blur — #5F6C89 @ 70% + 8px blur</div></div>
+            <div class="scrim-thumb"><div class="scrim-thumb-stage"><div class="fake-content"><div class="fake-line"></div><div class="fake-line short"></div><div class="fake-line"></div></div><div class="scrim-thumb-scrim t-dim-blur"></div></div><div class="scrim-thumb-label">Dim Blur — #15181E @ 70% + 8px blur</div></div>
+          </div>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <div class="doc-section">
+          <h2 id="style-tokens" class="doc-section-title">Design Tokens<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">Tokens</span></h2>
+          <p class="doc-section-subtitle">Dim, Light, and Transparent fills are bound to the UEMS Theme Tokens collection and resolve per theme mode &mdash; use the CSS custom property, not the raw hex. The two blur variants use fixed (theme-independent) fills.</p>
+          <table class="size-table">
+            <thead><tr><th>Type</th><th>Token</th><th>Resolves (Light theme)</th><th>Layer opacity</th><th>Backdrop blur</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Dim</strong></td><td><code>--uems-bg-overlay</code></td><td>#0A0B0F</td><td>70%</td><td>&mdash;</td></tr>
+              <tr><td><strong>Light</strong></td><td><code>--uems-bg-quaternary-solid</code></td><td>#5F6C89</td><td>70%</td><td>&mdash;</td></tr>
+              <tr><td><strong>Transparent</strong></td><td><code>--uems-bg-base</code></td><td>#0A0B0F at 0% layer opacity</td><td>0%</td><td>&mdash;</td></tr>
+              <tr><td><strong>Blur</strong></td><td>&mdash; (hardcoded)</td><td>#5F6C89 at 70% fill alpha</td><td>100%</td><td>8px</td></tr>
+              <tr><td><strong>Dim Blur</strong></td><td>&mdash; (hardcoded)</td><td>#15181E at 70% fill alpha</td><td>100%</td><td>8px</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="doc-section">
+          <h2 id="style-theme-matrix" class="doc-section-title">Token values per theme</h2>
+          <table class="size-table">
+            <thead><tr><th>Token</th><th>Light</th><th>Dark</th><th>Night</th><th>Green light</th><th>Green dark</th></tr></thead>
+            <tbody>
+              <tr><td><code>--uems-bg-overlay</code></td><td>#0A0B0F</td><td>#15181E</td><td>#313746</td><td>#0A0B0F</td><td>#15181E</td></tr>
+              <tr><td><code>--uems-bg-quaternary-solid</code></td><td>#5F6C89</td><td>#55607A</td><td>#4A546B</td><td>#5F6C89</td><td>#55607A</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div> <!-- End tab-style -->
+
+      <!-- ═══ USAGE TAB ═══ -->
+      <div class="tab-content" id="tab-usage" style="display: none; padding-top: 32px;">
+
+        <div class="doc-section">
+          <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+          <p class="doc-section-subtitle">Reach for an overlay whenever a layered surface needs the page behind it pushed back &mdash; visually, or just interactively. The surface decides the scrim; the user never interacts with the overlay as a thing in itself.</p>
+          <table class="size-table">
+            <thead><tr><th>Scenario</th><th>Type</th></tr></thead>
+            <tbody>
+              <tr><td>Standard modal, dialog, or drawer</td><td><strong>Dim</strong></td></tr>
+              <tr><td>Dark-themed surface where a dark scrim has insufficient contrast</td><td><strong>Light</strong></td></tr>
+              <tr><td>Popover, dropdown menu, or non-modal layer that needs outside-click dismissal without dimming</td><td><strong>Transparent</strong></td></tr>
+              <tr><td>Elevated/premium modal experience with frosted background</td><td><strong>Blur</strong></td></tr>
+              <tr><td>Frosted background with maximum content suppression</td><td><strong>Dim Blur</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <div class="doc-section">
+          <h2 id="behaviour" class="doc-section-title">Behaviour</h2>
+          <table class="size-table">
+            <thead><tr><th>Interaction</th><th>Expected handling</th></tr></thead>
+            <tbody>
+              <tr><td>Click/tap on overlay</td><td>Dismiss the overlaid surface (modal, drawer, popover) &mdash; unless the dialog is blocking/required</td></tr>
+              <tr><td><code>Escape</code></td><td>Dismiss the overlaid surface (handled by the surface, not the overlay)</td></tr>
+              <tr><td>Scroll</td><td>Lock body scroll while the overlay is visible (<code>overflow: hidden</code> on <code>&lt;body&gt;</code> or scroll-lock utility)</td></tr>
+              <tr><td>Focus</td><td>The overlay itself is never focusable; focus is trapped inside the overlaid surface</td></tr>
+              <tr><td>Stacking</td><td>One overlay per layered surface; nested surfaces (modal &rarr; popover) each manage their own overlay/z-index</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr class="doc-divider" />
+
+        <div class="doc-section">
+          <h2 id="detailed-guidelines" class="doc-section-title">Do's and Don'ts</h2>
+          <div class="do-dont-grid">
+            <div class="do-card"><span class="card-label">Do</span>
+              <ul class="doc-list" style="border: none; background: transparent; padding: 0;">
+                <li style="border: none; background: transparent; padding-left: 20px;">Always use the theme tokens (<code>--uems-bg-overlay</code>, <code>--uems-bg-quaternary-solid</code>) rather than raw hex &mdash; the scrim must adapt across Dark/Night/Green theme modes.</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Render exactly one overlay per modal layer; nested surfaces each manage their own overlay and z-index.</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Lock body scroll while the overlay is visible, and release it on dismiss.</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Give overlay-click dismissal keyboard parity &mdash; <code>Escape</code> must close the same surface.</li>
+              </ul>
+            </div>
+            <div class="dont-card"><span class="card-label">Don't</span>
+              <ul class="doc-list" style="border: none; background: transparent; padding: 0;">
+                <li style="border: none; background: transparent; padding-left: 20px;">Don&rsquo;t stack dim overlays &mdash; stacked scrims compound opacity and over-darken the page.</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Don&rsquo;t rely on the scrim for text contrast &mdash; content on top of the overlay belongs to the dialog surface, not the overlay.</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Don&rsquo;t apply 70% via element <code>opacity</code> on the blur variants &mdash; it would also fade the <code>backdrop-filter</code>. Put the alpha on the background colour.</li>
+                <li style="border: none; background: transparent; padding-left: 20px;">Don&rsquo;t make the overlay focusable or give it a role &mdash; it is decorative, <code>aria-hidden="true"</code>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div> <!-- End tab-usage -->
+
+      <!-- ═══ CODE TAB ═══ -->
+      <div class="tab-content" id="tab-code" style="display: none; padding-top: 32px;">
+        <h2 id="code-html" class="doc-section-title">HTML structure</h2>
+        <p class="doc-section-subtitle">Rendered as a sibling immediately before the surface it backs. The component ships from <code>design-system-library/src/components/overlay/</code> &mdash; load <code>overlay.css</code> and <code>overlay.js</code> (or the aggregate <code>design-system-library/src/components/index.js</code>).</p>
+
+        <div class="cp-code-area" style="border-radius: 12px; margin-top: 16px;"><pre style="margin:0;"><code>&lt;!-- Scrim + surface pair --&gt;
+&lt;ds-overlay type="dim" open&gt;&lt;/ds-overlay&gt;
+
+&lt;div role="dialog" aria-modal="true" class="modal"&gt;
+  &lt;!-- modal content --&gt;
+&lt;/div&gt;</code></pre></div>
+
+        <div class="doc-section" style="margin-top: 40px;">
+          <h2 id="code-attributes" class="doc-section-title">Attributes</h2>
+          <table class="size-table">
+            <thead><tr><th>Attribute</th><th>Values</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>type</code></td><td><code>dim</code> | <code>light</code> | <code>transparent</code> | <code>blur</code> | <code>dim-blur</code></td><td><code>dim</code></td><td>Selects the scrim treatment</td></tr>
+              <tr><td><code>open</code></td><td>boolean</td><td>&mdash;</td><td>Overlay is visible while present. Also exposed as a JS property: <code>overlay.open = true</code></td></tr>
+              <tr><td><code>static</code></td><td>boolean</td><td>&mdash;</td><td>Suppresses click-dismiss for blocking/required dialogs</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="doc-section">
+          <h2 id="code-events" class="doc-section-title">Events</h2>
+          <table class="size-table">
+            <thead><tr><th>Event</th><th>Fired when</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>ds-dismiss</code></td><td>User clicks the scrim (unless <code>static</code>)</td><td>Bubbles + composed. The surface owns its state &mdash; listen and close there. <code>Escape</code> handling also belongs to the surface.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="doc-section">
+          <h2 id="code-wiring" class="doc-section-title">Wiring example</h2>
+          <div class="cp-code-area" style="border-radius: 12px; margin-top: 16px;"><pre style="margin:0;"><code>const overlay = document.querySelector('ds-overlay');
+const dialog  = document.querySelector('.modal');
+
+function openDialog()  { overlay.open = true;  dialog.hidden = false; }
+function closeDialog() { overlay.open = false; dialog.hidden = true;  }
+
+overlay.addEventListener('ds-dismiss', closeDialog);          // scrim click
+document.addEventListener('keydown', (e) =&gt; {                 // keyboard parity
+  if (e.key === 'Escape') closeDialog();
+});</code></pre></div>
+        </div>
+
+        <div class="doc-section">
+          <h2 id="code-css-notes" class="doc-section-title">CSS notes</h2>
+          <ul class="doc-list">
+            <li>For <strong>Blur / Dim Blur</strong>, the 70% alpha sits on the <strong>background colour</strong> (rgba), not on <code>opacity</code> &mdash; element-level opacity would also fade the <code>backdrop-filter</code> effect.</li>
+            <li>A non-blurred fallback ships built-in: <code>@supports not (backdrop-filter: blur(8px))</code> degrades Blur &rarr; Light and Dim Blur &rarr; Dim.</li>
+            <li><code>prefers-reduced-transparency</code> is honoured the same way &mdash; blur variants swap to the solid styles.</li>
+            <li>Z-index comes from <code>var(--z-overlay)</code> (1300) &mdash; below the dialog surface, above all page content.</li>
+          </ul>
+        </div>
+
+      </div> <!-- End tab-code -->
+
+      <!-- ═══ ACCESSIBILITY TAB ═══ -->
+      <div class="tab-content" id="tab-accessibility" style="display: none; padding-top: 32px;">
+        <h2 id="a11y-overview" class="doc-section-title">Accessibility</h2>
+        <p class="doc-section-subtitle">The overlay is decorative chrome &mdash; everything interactive lives on the surface above it. These minimums are non-negotiable.</p>
+        <table class="size-table">
+          <thead><tr><th>Concern</th><th>Guidance</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Semantics</strong></td><td>The overlay is decorative: <code>aria-hidden="true"</code>, no role, not focusable (set automatically by <code>&lt;ds-overlay&gt;</code>)</td></tr>
+            <tr><td><strong>Modality</strong></td><td>Pair with <code>aria-modal="true"</code> on the dialog and inert/<code>aria-hidden</code> background content</td></tr>
+            <tr><td><strong>Focus trap</strong></td><td>Focus must remain within the overlaid surface while the overlay is visible</td></tr>
+            <tr><td><strong>Dismissal</strong></td><td>Overlay click dismissal must have keyboard parity (<code>Escape</code>)</td></tr>
+            <tr><td><strong>Reduced transparency/motion</strong></td><td>Honour <code>prefers-reduced-transparency</code> by swapping Blur/Dim Blur to the solid Dim style (built into <code>overlay.css</code>)</td></tr>
+            <tr><td><strong>Contrast</strong></td><td>The scrim must not be relied on for text contrast &mdash; content on top of the overlay belongs to the dialog surface, not the overlay</td></tr>
+          </tbody>
+        </table>
+      </div> <!-- End tab-accessibility -->
+
+        </div>
+      </div>
+
+      <aside class="toc-sidebar">
+        <h4 class="toc-heading">On this page</h4>
+        <ul class="toc-nav" id="toc-nav">
+        </ul>
+
+        <div class="quick-actions-card">
+          <div class="quick-actions-title">Resources</div>
+          <a href="MD/overlay.md" download="overlay.md" class="action-link">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download MD
+          </a>
+          <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=18413-617583" target="_blank" class="action-link">
+            <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+            Figma Design
+          </a>
+        </div>
+      </aside>
+
+      </div> <!-- close main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display: flex; gap: 10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  <!-- Live demo: one shared ds-overlay + demo dialog surface -->
+  <ds-overlay id="overlay-demo"></ds-overlay>
+  <div class="overlay-demo-surface" id="overlay-demo-surface" role="dialog" aria-modal="true" aria-labelledby="overlay-demo-title">
+    <h3 id="overlay-demo-title">Dialog surface</h3>
+    <p id="overlay-demo-desc">The <code>dim</code> overlay sits behind this card. Click the scrim or press <kbd>Esc</kbd> to dismiss.</p>
+    <ds-button variant="primary" id="overlay-demo-close">Close</ds-button>
+  </div>
+
+  <script type="module">
+    const overlay = document.getElementById('overlay-demo');
+    const surface = document.getElementById('overlay-demo-surface');
+    const desc = document.getElementById('overlay-demo-desc');
+
+    const close = () => { overlay.removeAttribute('open'); surface.removeAttribute('data-open'); };
+
+    document.querySelectorAll('ds-button[data-overlay-type]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.overlayType;
+        const isStatic = 'overlayStatic' in btn.dataset;
+        overlay.setAttribute('type', type);
+        if (isStatic) overlay.setAttribute('static', '');
+        else overlay.removeAttribute('static');
+        desc.innerHTML = isStatic
+          ? 'This overlay is <code>static</code> &mdash; scrim clicks are suppressed. Use the Close button or <kbd>Esc</kbd>.'
+          : `The <code>${type}</code> overlay sits behind this card. Click the scrim or press <kbd>Esc</kbd> to dismiss.`;
+        overlay.setAttribute('open', '');
+        surface.setAttribute('data-open', '');
+      });
+    });
+
+    overlay.addEventListener('ds-dismiss', close);
+    document.getElementById('overlay-demo-close').addEventListener('click', close);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  </script>
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/main.js"></script>
+<script src="js/components/toc.js"></script>
+
+
+</body>
+</html>

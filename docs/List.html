@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>List — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<!-- Demo list: single source of truth -->
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/list/list.css?v=20260613b">
+<script type="module" src="../design-system-library/src/components/list/list.js?v=20260613b"></script>
+<script type="module" src="../design-system-library/src/icons/icon.js?v=20260613b"></script>
+<style>
+  .page-list .demo-realworld-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:880px){ .page-list .demo-realworld-grid { grid-template-columns:1fr; } }
+  .page-list .demo-realworld-card { padding:20px; border:1px solid var(--prism-border); border-radius:12px; background:rgba(255,255,255,0.02); }
+  [data-theme="light"] .page-list .demo-realworld-card { background:rgba(255,255,255,0.6); border-color:rgba(37,99,235,0.1); }
+  .page-list .demo-realworld-card-label { font-size:10px; font-weight:700; letter-spacing:0.08em; color:var(--prism-text-muted); text-transform:uppercase; margin-bottom:14px; }
+</style>
+</head>
+<body class="page-list">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link active">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">List</h1>
+        <p class="page-desc">A styled list block — the design-system equivalent of <code>&lt;ul&gt;</code>/<code>&lt;ol&gt;</code> with seven marker styles (disc, circle, square, custom icon, number, letter, and numbered pill badge), three sizes, and three nesting levels. Purely presentational: it carries typography and markers, no states or interaction. Reach for it whenever you would write a bulleted or numbered list — feature lists, steps, summaries — and compose with Link or Checkbox when items must become interactive.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <p class="doc-section-subtitle">A list is a stack of rows; each row is a marker plus text. The marker is centred to the first text line, so multi-line items hang under the text.</p>
+          <div class="anatomy-diagram">
+            <div style="position:relative; max-width:460px; margin:48px auto;">
+              <!-- row 1 -->
+              <div style="display:flex; align-items:flex-start; gap:8px; position:relative; margin-bottom:8px;">
+                <span style="flex:none; width:6px; height:6px; border-radius:50%; background:#5f6c89; margin-top:7px; position:relative;">
+                  <span style="position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); display:flex; flex-direction:column-reverse; align-items:center; gap:4px;"><span class="anat-marker-inline">1</span><span style="width:2px; height:14px; background:#2563eb;"></span></span>
+                </span>
+                <span style="position:relative; color:var(--prism-text);">List item text
+                  <span style="position:absolute; top:calc(100% + 6px); left:40px; display:flex; flex-direction:column; align-items:center; gap:4px;"><span style="width:2px; height:14px; background:#2563eb;"></span><span class="anat-marker-inline">2</span></span>
+                </span>
+                <span style="position:absolute; right:calc(100% + 6px); top:50%; transform:translateY(-50%); display:flex; align-items:center; gap:6px;"><span class="anat-marker-inline">4</span><span style="width:26px; height:2px; background:#2563eb;"></span></span>
+              </div>
+              <!-- row 2 -->
+              <div style="display:flex; align-items:flex-start; gap:8px;">
+                <span style="flex:none; width:6px; height:6px; border-radius:50%; background:#5f6c89; margin-top:7px;"></span>
+                <span style="color:var(--prism-text);">List item text</span>
+              </div>
+              <!-- row 3 nested -->
+              <div style="display:flex; align-items:flex-start; gap:8px; padding-left:24px; position:relative;">
+                <span style="position:absolute; left:0; top:8px; display:flex; align-items:center; gap:4px;"><span style="width:18px; height:2px; background:#2563eb;"></span><span class="anat-marker-inline">3</span></span>
+                <span style="flex:none; width:6px; height:6px; border-radius:50%; background:#5f6c89; margin-top:7px;"></span>
+                <span style="color:var(--prism-text);">Nested item (Level 2)</span>
+              </div>
+            </div>
+          </div>
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Marker</strong><span>Disc, circle, square, custom icon, number, letter, or pill badge. Centred to the first text line.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Item text</strong><span>The content. Wraps freely; the marker stays on the first line while the text hangs beneath.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Indent</strong><span>+24px per nesting level (1&ndash;3). Logical, so it mirrors in RTL.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Marker&ndash;text gap</strong><span>8px at Small/Medium, 12px at Large. Row gap is 8px everywhere.</span></div></div>
+          </div>
+
+          <hr class="doc-divider" />
+          <div style="margin-bottom:48px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">All seven marker styles at Medium, plus nesting and RTL &mdash; exactly how they behave in production.</p>
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">List styles</span>
+                </div>
+              </div>
+              <div class="demo-canvas" style="align-items:flex-start; gap:40px; padding:32px; flex-wrap:wrap;">
+                <div class="demo-list-cell"><div class="demo-group-label">Disc</div><ds-list style-variant="disc" size="medium" style="max-width:220px;"><ds-list-item>List item text</ds-list-item><ds-list-item>List item text</ds-list-item></ds-list></div>
+                <div class="demo-list-cell"><div class="demo-group-label">Circle</div><ds-list style-variant="circle" size="medium" style="max-width:220px;"><ds-list-item>List item text</ds-list-item><ds-list-item>List item text</ds-list-item></ds-list></div>
+                <div class="demo-list-cell"><div class="demo-group-label">Square</div><ds-list style-variant="square" size="medium" style="max-width:220px;"><ds-list-item>List item text</ds-list-item><ds-list-item>List item text</ds-list-item></ds-list></div>
+                <div class="demo-list-cell"><div class="demo-group-label">Custom Icon</div><ds-list style-variant="icon" size="medium" style="max-width:220px;"><ds-list-item icon="arrow-narrow-right">List item text</ds-list-item><ds-list-item icon="arrow-narrow-right">List item text</ds-list-item></ds-list></div>
+                <div class="demo-list-cell"><div class="demo-group-label">Number</div><ds-list style-variant="number" size="medium" style="max-width:220px;"><ds-list-item>List item text</ds-list-item><ds-list-item>List item text</ds-list-item></ds-list></div>
+                <div class="demo-list-cell"><div class="demo-group-label">Letter</div><ds-list style-variant="letter" size="medium" style="max-width:220px;"><ds-list-item>List item text</ds-list-item><ds-list-item>List item text</ds-list-item></ds-list></div>
+                <div class="demo-list-cell"><div class="demo-group-label">Custom Number (badge)</div><ds-list style-variant="badge" size="medium" style="max-width:220px;"><ds-list-item>List item text</ds-list-item><ds-list-item>List item text</ds-list-item></ds-list></div>
+                <div class="demo-list-cell"><div class="demo-group-label">Nesting + RTL</div><ds-list style-variant="disc" size="medium" rtl style="max-width:220px;"><ds-list-item>عنصر القائمة</ds-list-item><ds-list-item level="2">عنصر متداخل</ds-list-item></ds-list></div>
+                <div style="width:100%; border-top:1px solid var(--prism-border); margin-top:8px; padding-top:28px;">
+                  <div class="demo-group-label">Real-world patterns</div>
+                  <div class="demo-realworld-grid">
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">Onboarding checklist &mdash; custom icon (status)</div>
+                      <ds-list style-variant="icon" size="medium">
+                        <ds-list-item icon="circle-tick">Workspace created</ds-list-item>
+                        <ds-list-item icon="circle-tick">Team invited &amp; roles assigned</ds-list-item>
+                        <ds-list-item icon="circle-tick">First integration connected</ds-list-item>
+                        <ds-list-item icon="circle">Baseline device policy set</ds-list-item>
+                      </ds-list>
+                    </div>
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">Setup steps &mdash; numbered badge (sequence)</div>
+                      <ds-list style-variant="badge" size="medium">
+                        <ds-list-item>Invite your team and pick their roles</ds-list-item>
+                        <ds-list-item>Connect your first integration (Slack, GitHub, Jira)</ds-list-item>
+                        <ds-list-item>Set baseline policies for new devices</ds-list-item>
+                      </ds-list>
+                    </div>
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">What&rsquo;s new &mdash; disc bullets (enumeration)</div>
+                      <ds-list style-variant="disc" size="medium">
+                        <ds-list-item>Confirmation &amp; fullscreen modals with built-in focus management</ds-list-item>
+                        <ds-list-item>Three tab-navigation primitives &mdash; vertical, horizontal, segmented</ds-list-item>
+                        <ds-list-item>Input Select with live multi-select chips</ds-list-item>
+                      </ds-list>
+                    </div>
+                    <div class="demo-realworld-card">
+                      <div class="demo-realworld-card-label">Policy outline &mdash; nested levels (hierarchy)</div>
+                      <ds-list style-variant="disc" size="medium">
+                        <ds-list-item>Endpoint protection</ds-list-item>
+                        <ds-list-item level="2">Disk encryption required</ds-list-item>
+                        <ds-list-item level="2">Firewall enabled</ds-list-item>
+                        <ds-list-item>Access control</ds-list-item>
+                        <ds-list-item level="2">Two-factor authentication</ds-list-item>
+                        <ds-list-item level="3">Hardware keys for admins</ds-list-item>
+                      </ds-list>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">Seven marker styles across two orders, three sizes, and three nesting levels.</p>
+            <table class="size-table">
+              <thead><tr><th>Axis</th><th>Values</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Order</strong></td><td><code>Unordered</code>, <code>Ordered</code></td><td>Unordered &rarr; <code>&lt;ul&gt;</code>; Ordered &rarr; <code>&lt;ol&gt;</code></td></tr>
+                <tr><td><strong>Style</strong></td><td><code>disc</code>, <code>circle</code>, <code>square</code>, <code>icon</code> &middot; <code>number</code>, <code>letter</code>, <code>badge</code></td><td>Marker treatment, partitioned by order</td></tr>
+                <tr><td><strong>Size</strong></td><td><code>small</code>, <code>medium</code>, <code>large</code></td><td>Text 12/16 &middot; 14/20 &middot; 16/24; marker + gap scale with it</td></tr>
+                <tr><td><strong>Level</strong></td><td><code>1</code>, <code>2</code>, <code>3</code></td><td>Indent +24px per level (logical &mdash; mirrors in RTL)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <hr class="doc-divider" />
+          <div class="doc-section">
+            <h2 id="sizes" class="doc-section-title">Sizes</h2>
+            <p class="doc-section-subtitle">Small 12/16 &middot; Medium 14/20 &middot; Large 16/24. Marker&ndash;text gap is 8px (S/M) and 12px (L).</p>
+            <div class="anatomy-diagram" style="display:flex;gap:56px;flex-wrap:wrap;padding:28px;">
+              <div><div style="font-size:12px;font-weight:600;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Small</div><ds-list style-variant="disc" size="small" style="max-width:240px;"><ds-list-item>List item text</ds-list-item><ds-list-item>List item text</ds-list-item><ds-list-item>List item text</ds-list-item></ds-list></div>
+              <div><div style="font-size:12px;font-weight:600;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Medium</div><ds-list style-variant="disc" size="medium" style="max-width:240px;"><ds-list-item>List item text</ds-list-item><ds-list-item>List item text</ds-list-item><ds-list-item>List item text</ds-list-item></ds-list></div>
+              <div><div style="font-size:12px;font-weight:600;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Large</div><ds-list style-variant="disc" size="large" style="max-width:240px;"><ds-list-item>List item text</ds-list-item><ds-list-item>List item text</ds-list-item><ds-list-item>List item text</ds-list-item></ds-list></div>
+            </div>
+          </div>
+          <hr class="doc-divider" />
+          <div class="doc-section">
+            <h2 id="marker-tokens" class="doc-section-title">Marker tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+            <p class="doc-section-subtitle">Colours are identical for every size and level. Hex shown for the Light theme.</p>
+            <table class="size-table">
+              <thead><tr><th>Style</th><th>Marker</th><th>Token</th><th>Light hex</th></tr></thead>
+              <tbody>
+                <tr><td>All</td><td>Item text</td><td><code>--uems-text-primary</code></td><td>#15181E</td></tr>
+                <tr><td>Disc / Square</td><td>Filled shape</td><td><code>--uems-bg-quaternary-solid</code></td><td>#5F6C89</td></tr>
+                <tr><td>Circle / Custom Icon</td><td>Stroke</td><td><code>--uems-icon-tertiary</code></td><td>#55607A</td></tr>
+                <tr><td>Number / Letter</td><td>"1." / "a." text</td><td><code>--uems-text-quaternary</code></td><td>#55607A</td></tr>
+                <tr><td>Custom Number</td><td>Pill badge bg / text</td><td><code>--uems-bg-secondary</code> / <code>--uems-text-quaternary</code></td><td>#F0F2F5 / #55607A</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <hr class="doc-divider" />
+          <div class="doc-section">
+            <h2 id="sizing-tokens" class="doc-section-title">Sizing</h2>
+            <table class="size-table">
+              <thead><tr><th>Size</th><th>Text</th><th>Shape marker</th><th>Custom icon</th><th>Badge</th><th>Gap</th></tr></thead>
+              <tbody>
+                <tr><td>Small</td><td>12 / 16</td><td>4&times;4</td><td>8</td><td>16&times;16, text 10/14</td><td>8</td></tr>
+                <tr><td>Medium</td><td>14 / 20</td><td>6&times;6</td><td>12</td><td>20&times;20, text 12/16</td><td>8</td></tr>
+                <tr><td>Large</td><td>16 / 24</td><td>8&times;8</td><td>16</td><td>24&times;24, text 14/20</td><td>12</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and where to use</h2>
+            <p class="doc-section-subtitle">A list carries typography and markers only &mdash; keep it presentational.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Bulleted feature or summary lists (unordered styles).</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Sequential steps or ranked items (ordered styles).</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Status checklists with the custom-icon style.</li>
+                  <li style="border:none;background:transparent;">Short nested hierarchies (up to 3 levels).</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#e42527" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For interactive rows &mdash; use Link, Checkbox, or a menu.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For tabular data &mdash; use the Data table.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Nesting beyond ~3 levels &mdash; hard to scan.</li>
+                  <li style="border:none;background:transparent;">Mixing marker styles within one list.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <hr class="doc-divider" />
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <div class="related-grid">
+              <a href="Checkbox.html" class="related-chip">Checkbox</a>
+              <a href="Link.html" class="related-chip">Link</a>
+              <a href="Data-table.html" class="related-chip">Data table</a>
+              <a href="Icon.html" class="related-chip">Icon</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Pick a style, size, and direction &mdash; the list updates live and the HTML below updates with it.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group">
+                <label class="cp-label">Style</label>
+                <select class="cp-select" id="lpg-style">
+                  <option value="disc">Disc</option>
+                  <option value="circle">Circle</option>
+                  <option value="square">Square</option>
+                  <option value="icon">Custom Icon</option>
+                  <option value="number">Number</option>
+                  <option value="letter">Letter</option>
+                  <option value="badge">Custom Number (badge)</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Size</label>
+                <select class="cp-select" id="lpg-size">
+                  <option value="small">Small</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="large">Large</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Nesting</label>
+                <select class="cp-select" id="lpg-nest">
+                  <option value="flat">Flat</option>
+                  <option value="nested" selected>With a nested item</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Direction</label>
+                <select class="cp-select" id="lpg-dir">
+                  <option value="ltr">LTR</option>
+                  <option value="rtl">RTL (Arabic)</option>
+                </select>
+              </div>
+            </div>
+            <div class="cp-preview" id="lpg-preview">
+              <ds-list id="lpg-list" style-variant="disc" size="medium" style="max-width:320px;"></ds-list>
+            </div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <div class="cp-code-actions">
+                <button class="cp-action-btn" id="lpg-copy">
+                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                  Copy code
+                </button>
+              </div>
+            </div>
+            <div style="background:#0a0a0c;"><div class="cp-code-area" id="lpg-code"></div></div>
+          </div>
+          <script>
+          (function(){
+            const el = document.getElementById('lpg-list');
+            const sStyle = document.getElementById('lpg-style');
+            const sSize = document.getElementById('lpg-size');
+            const sNest = document.getElementById('lpg-nest');
+            const sDir = document.getElementById('lpg-dir');
+            const preview = document.getElementById('lpg-preview');
+            const codeOut = document.getElementById('lpg-code');
+            const copyBtn = document.getElementById('lpg-copy');
+            let raw = '';
+            const esc = (s)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            function update(){
+              const style = sStyle.value, size = sSize.value, nested = sNest.value==='nested', rtl = sDir.value==='rtl';
+              const icon = style==='icon';
+              const t = rtl ? ['عنصر القائمة','عنصر آخر','عنصر متداخل'] : ['List item one','List item two','Nested item'];
+              const items = [{text:t[0]},{text:t[1]}];
+              if (nested) items.push({text:t[2], level:2});
+              if (icon) items.forEach(it=>it.icon='circle-tick');
+              el.setAttribute('style-variant', style);
+              el.setAttribute('size', size);
+              if (rtl) el.setAttribute('rtl',''); else el.removeAttribute('rtl');
+              el.items = items;
+              preview.style.direction = rtl ? 'rtl' : 'ltr';
+              const iconAttr = icon ? ' icon="circle-tick"' : '';
+              const rtlAttr = rtl ? ' rtl' : '';
+              const lines = items.map(it=>`  <ds-list-item${it.level?` level="${it.level}"`:''}${iconAttr}>${it.text}</ds-list-item>`).join('\n');
+              raw = `<ds-list style-variant="${style}" size="${size}"${rtlAttr}>\n${lines}\n</ds-list>`;
+              codeOut.innerHTML = esc(raw)
+                .replace(/([a-zA-Z-]+)=&quot;(.*?)&quot;/g,'<span class="token-attr">$1</span>=<span class="token-string">"$2"</span>')
+                .replace(/&lt;(\/?)(ds-list-item|ds-list)(.*?)&gt;/g,'&lt;$1<span class="token-tag">$2</span>$3&gt;')
+                .replace(/\n/g,'<br/>').replace(/  /g,'&nbsp;&nbsp;');
+            }
+            ['change'].forEach(ev=>{[sStyle,sSize,sNest,sDir].forEach(s=>s.addEventListener(ev,update));});
+            copyBtn.addEventListener('click', async ()=>{
+              try { if(navigator.clipboard) await navigator.clipboard.writeText(raw);
+                const o=copyBtn.innerHTML; copyBtn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+                setTimeout(()=>copyBtn.innerHTML=o,2000);
+              } catch(e){}
+            });
+            update();
+            if (window.customElements && customElements.whenDefined) customElements.whenDefined('ds-list').then(update);
+          })();
+          </script>
+
+          <hr class="doc-divider" />
+          <div class="doc-section">
+            <h2 id="props" class="doc-section-title">Component API &amp; Properties</h2>
+            <p class="doc-section-subtitle">Source: <code>design-system-library/src/components/list/list.js</code>.</p>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Element</th><th>Values</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>style-variant</code></td><td>ds-list</td><td>disc &middot; circle &middot; square &middot; icon &middot; number &middot; letter &middot; badge</td><td>disc</td><td>Marker style (<code>style</code> is reserved; <code>list-style</code> also accepted)</td></tr>
+                <tr><td><code>size</code></td><td>ds-list</td><td>small &middot; medium &middot; large</td><td>small</td><td>Text + marker scale and the marker&ndash;text gap</td></tr>
+                <tr><td><code>ordered</code></td><td>ds-list</td><td>boolean</td><td>&mdash;</td><td>Legacy: maps to the <code>number</code> style</td></tr>
+                <tr><td><code>rtl</code></td><td>ds-list</td><td>boolean</td><td>&mdash;</td><td>Mirrors layout (marker trails right-aligned text)</td></tr>
+                <tr><td><code>items</code></td><td>ds-list (prop)</td><td>array</td><td>&mdash;</td><td><code>['a', {text:'b', level:2}, {text:'c', icon:'check'}]</code></td></tr>
+                <tr><td><code>level</code></td><td>ds-list-item</td><td>1 &middot; 2 &middot; 3</td><td>1</td><td>Indent +24px per level</td></tr>
+                <tr><td><code>icon</code></td><td>ds-list-item</td><td>icon name</td><td>arrow-narrow-right</td><td>Marker icon (<code>style-variant="icon"</code> only)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="a11y" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Lists render as real semantic elements so assistive tech announces size and position.</p>
+          <table class="size-table">
+            <thead><tr><th>Concern</th><th>Guidance</th></tr></thead>
+            <tbody>
+              <tr><td>Semantics</td><td>Renders real <code>&lt;ul&gt;</code>/<code>&lt;ol&gt;</code> + <code>&lt;li&gt;</code> &mdash; screen readers announce list size and position</td></tr>
+              <tr><td>Markers</td><td>Drawn via CSS <code>::before</code> / <code>aria-hidden</code> SVG, so they are not read as content</td></tr>
+              <tr><td>Ordered semantics</td><td>number / letter / badge render as <code>&lt;ol&gt;</code> &mdash; order carries meaning</td></tr>
+              <tr><td>Nesting</td><td>Prefer real nested lists where the hierarchy must be announced; <code>level</code> is a visual fallback</td></tr>
+              <tr><td>Contrast</td><td>Item text #15181E on white passes AAA; markers are decorative (#5F6C89 &ge; 3:1 anyway)</td></tr>
+            </tbody>
+          </table>
+        </div>
+</div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/divider.md" download="divider.md" class="action-link"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=17009-925007" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/components/toc.js"></script>
+<script src="js/main.js"></script>
+
+
+</body>
+</html>

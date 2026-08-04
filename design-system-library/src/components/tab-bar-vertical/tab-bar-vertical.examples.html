@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ds-tab-bar-vertical — examples</title>
+  <script type="module">import '../../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 24px; background: var(--uems-background); color: var(--uems-text-primary); }
+    section { margin-bottom: 32px; }
+    h2 { font-size: var(--font-size-14); color: var(--uems-text-tertiary); margin: 0 0 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .row { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <section>
+    <h2>Underline (default) × active second row</h2>
+    <div class="row">
+      <ds-tab-bar-vertical id="ex-underline" type="underline" active-id="notify" aria-label="Settings sections"></ds-tab-bar-vertical>
+    </div>
+  </section>
+
+  <section>
+    <h2>Fill</h2>
+    <div class="row">
+      <ds-tab-bar-vertical id="ex-fill" type="fill" active-id="general" aria-label="Settings sections"></ds-tab-bar-vertical>
+    </div>
+  </section>
+
+  <section>
+    <h2>With icons + badge + disabled row</h2>
+    <div class="row">
+      <ds-tab-bar-vertical id="ex-icons" type="fill" active-id="general" aria-label="Account sections"></ds-tab-bar-vertical>
+    </div>
+  </section>
+
+  <section>
+    <h2>RTL</h2>
+    <div class="row">
+      <ds-tab-bar-vertical id="ex-rtl" type="underline" rtl active-id="notify" aria-label="أقسام الإعدادات"></ds-tab-bar-vertical>
+    </div>
+  </section>
+
+  <script type="module">
+    const settingsItems = [
+      { id: 'general',  label: 'General' },
+      { id: 'notify',   label: 'Notifications' },
+      { id: 'security', label: 'Security' },
+      { id: 'audit',    label: 'Audit logs' },
+    ];
+
+    document.getElementById('ex-underline').items = settingsItems;
+    document.getElementById('ex-fill').items = settingsItems;
+
+    document.getElementById('ex-icons').items = [
+      { id: 'general',  label: 'General',       icon: 'config' },
+      { id: 'notify',   label: 'Notifications', icon: 'bell', badge: '12' },
+      { id: 'security', label: 'Security',      icon: 'shield' },
+      { id: 'audit',    label: 'Audit logs',    icon: 'file-report', disabled: true },
+    ];
+
+    document.getElementById('ex-rtl').items = [
+      { id: 'general',  label: 'General',       labelRtl: 'عام', icon: 'config' },
+      { id: 'notify',   label: 'Notifications', labelRtl: 'الإشعارات', icon: 'bell', badge: '12' },
+      { id: 'security', label: 'Security',      labelRtl: 'الأمان', icon: 'shield' },
+    ];
+  </script>
+</body>
+</html>

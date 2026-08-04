@@ -1,0 +1,225 @@
+/* =============================================================================
+   ds-split-button / .ds-split-button
+   ============================================================================= */
+
+:host { display: inline-block; vertical-align: middle; font-family: var(--font-family-sans); }
+
+.ds-split-button {
+  position: relative;                /* anchors the dropdown menu */
+  display: inline-flex;
+  align-items: stretch;
+  font-family: inherit;
+  border-radius: var(--radius-md);
+  /* Gradient like the Primary button (top-left bright → bottom-right dark),
+     drawn ONCE on the container so it reads continuous across both segments
+     (segments are transparent over it). */
+  background: linear-gradient(135deg,
+      var(--uems-bg-button-primary, var(--hyperlink)) 0%,
+      var(--uems-bg-button-primary-hover, var(--cobalt-600)) 100%);
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.ds-split-button__main,
+.ds-split-button__chev {
+  position: relative;                /* anchors the hover-shine ::after */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  color: var(--uems-text-white);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: var(--font-weight-medium);
+  height: var(--_sb-h, 40px);
+  padding: 0 var(--_sb-px, 16px);
+  font-size: var(--_sb-font, var(--font-size-14));
+  line-height: 1;
+  /* Transparent over the container gradient; hover fades a solid tint in/out. */
+  background-color: transparent;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+.ds-split-button__main {
+  gap: 4px;
+  /* The divider = main's 1px Border-Accent-Secondary inline-end stroke. Logical
+     property → always faces the caret (inner edge), mirrors for RTL. */
+  border-inline-end: 1px solid var(--uems-border-accent-secondary);
+  /* Leading outer corners rounded; inner (caret-facing) edge square. */
+  border-start-start-radius: var(--radius-md);
+  border-end-start-radius: var(--radius-md);
+}
+.ds-split-button__chev {
+  padding: 0 var(--_sb-chev-px, 8px);
+  /* Trailing outer corners rounded; inner edge square. */
+  border-start-end-radius: var(--radius-md);
+  border-end-end-radius: var(--radius-md);
+}
+/* Per-segment hover — like the Primary button, the gradient DIRECTION reverses
+   (135deg → 315deg: darker now sits top-left). The hovered half shows the
+   flipped gradient; the other half keeps the container's base gradient, so the
+   hovered side reads clearly. */
+.ds-split-button__main:hover:not(:disabled),
+.ds-split-button__chev:hover:not(:disabled) {
+  background: linear-gradient(315deg,
+      var(--uems-bg-button-primary, var(--hyperlink)) 0%,
+      var(--uems-bg-button-primary-hover, var(--cobalt-600)) 100%);
+}
+
+/* Hover shine — same soft currentColor band that sweeps across the Primary
+   button. Clipped to each segment via inset:0 + inherited (per-corner) radius,
+   so no overflow:hidden is needed (which would clip the focus ring). */
+.ds-split-button__main::after,
+.ds-split-button__chev::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(120deg,
+    transparent 35%,
+    color-mix(in srgb, currentColor 20%, transparent) 50%,
+    transparent 65%);
+  background-size: 220% 100%;
+  background-position: 150% 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.ds-split-button__main:hover:not(:disabled)::after,
+.ds-split-button__chev:hover:not(:disabled)::after {
+  opacity: 1;
+  animation: ds-split-button-shine 600ms var(--ease-standard, ease);
+}
+@keyframes ds-split-button-shine {
+  from { background-position: 150% 0; }
+  to   { background-position: -60% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-split-button__main:hover:not(:disabled)::after,
+  .ds-split-button__chev:hover:not(:disabled)::after { animation: none; opacity: 0; }
+}
+/* Per spec: focus ring is PER-SEGMENT (each half is independently focusable);
+   z-index lifts the focused half so its ring isn't covered by the sibling. */
+.ds-split-button__main:focus-visible,
+.ds-split-button__chev:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Disabled — keep the blue gradient + divider, dim the whole control to 40%
+   (matches the Primary button's disabled); white labels stay white (just
+   dimmed by the opacity). */
+.ds-split-button[aria-disabled="true"] {
+  opacity: 0.4;
+}
+/* The segments are natively <button disabled>, so clicks are already blocked —
+   we keep pointer-events:auto so the not-allowed cursor shows on hover (a bare
+   pointer-events:none would suppress the cursor entirely). */
+.ds-split-button[aria-disabled="true"] .ds-split-button__main,
+.ds-split-button[aria-disabled="true"] .ds-split-button__chev {
+  cursor: not-allowed;
+}
+
+/* ---- Outline variant -------------------------------------------------- */
+/* Mirrors the ds-button "outline" variant: transparent fill, 1px Border-Primary
+   frame, Text-Primary labels, BG-Secondary-alt hover, no gradient/shine sweep.
+   The 1px group border lives on the container; segments shrink by 2px so the
+   overall height still matches the primary split button. */
+.ds-split-button--outline {
+  background: transparent;
+  border: 1px solid var(--uems-border-primary);
+}
+.ds-split-button--outline .ds-split-button__main,
+.ds-split-button--outline .ds-split-button__chev {
+  height: calc(var(--_sb-h, 40px) - 2px);
+  color: var(--uems-text-primary);
+}
+/* Divider between the two segments follows the outline colour. */
+.ds-split-button--outline .ds-split-button__main {
+  border-inline-end-color: var(--uems-border-primary);
+}
+/* Plain token hover — no reversed gradient, no shine sweep. */
+.ds-split-button--outline .ds-split-button__main:hover:not(:disabled),
+.ds-split-button--outline .ds-split-button__chev:hover:not(:disabled) {
+  background: var(--uems-bg-secondary-alt);
+}
+.ds-split-button--outline .ds-split-button__main::after,
+.ds-split-button--outline .ds-split-button__chev::after { content: none; }
+
+/* Disabled — no 40% dim; swap to disabled text + border tokens (like ds-button). */
+.ds-split-button--outline[aria-disabled="true"] {
+  opacity: 1;
+  border-color: var(--uems-border-disabled);
+}
+.ds-split-button--outline[aria-disabled="true"] .ds-split-button__main,
+.ds-split-button--outline[aria-disabled="true"] .ds-split-button__chev {
+  color: var(--uems-text-disabled);
+}
+.ds-split-button--outline[aria-disabled="true"] .ds-split-button__main {
+  border-inline-end-color: var(--uems-border-disabled);
+}
+
+/* Loading — keep the transparent framed look; spinner in Text-Primary. */
+.ds-split-button--outline.ds-split-button--loading { background: transparent; }
+.ds-split-button--outline .ds-split-button__spinner { color: var(--uems-text-primary); }
+
+/* ---- Dropdown menu ---------------------------------------------------- */
+/* Default: opens below, aligned under the trailing (caret) edge. JS adds the
+   modifier classes below to flip the menu toward whichever side/direction has
+   room (see _placeMenu), so it never spills off the viewport. */
+.ds-split-button__menu {
+  position: absolute;
+  top: calc(100% + var(--spacing-4));
+  bottom: auto;
+  inset-inline-end: 0;
+  inset-inline-start: auto;
+  z-index: 50;
+}
+/* Clipped horizontally → align under the leading edge instead. */
+.ds-split-button__menu--align-start {
+  inset-inline-start: 0;
+  inset-inline-end: auto;
+}
+/* No room below → open upward. */
+.ds-split-button__menu--above {
+  top: auto;
+  bottom: calc(100% + var(--spacing-4));
+}
+
+/* ---- Sizes ---------------------------------------------------------- */
+/* Per spec: button-part / chevron-part horizontal padding differs per size:
+   Large 16/12 · Medium 16/8 · Small 12/8 · Xsmall 8/4. */
+.ds-split-button--large  { --_sb-h: 48px; --_sb-px: 16px; --_sb-chev-px: 12px; --_sb-font: var(--font-size-16); }
+.ds-split-button--medium { --_sb-h: 40px; --_sb-px: 16px; --_sb-chev-px: 8px;  --_sb-font: var(--font-size-14); }
+.ds-split-button--small  { --_sb-h: 36px; --_sb-px: 12px; --_sb-chev-px: 8px;  --_sb-font: var(--font-size-14); }
+.ds-split-button--xsmall { --_sb-h: 28px; --_sb-px: 8px;  --_sb-chev-px: 4px;  --_sb-font: var(--font-size-12); }
+
+/* ---- Loading state -------------------------------------------------- */
+/* Spinner replaces both parts; container preserves min-width per size so the
+   surrounding layout doesn't shift. */
+.ds-split-button--loading {
+  background: var(--uems-bg-button-primary);
+  pointer-events: none;
+}
+.ds-split-button--loading.ds-split-button--large  { min-width: 152px; }
+.ds-split-button--loading.ds-split-button--medium { min-width: 137px; }
+.ds-split-button--loading.ds-split-button--small  { min-width: 121px; }
+.ds-split-button--loading.ds-split-button--xsmall { min-width: 99px;  }
+.ds-split-button__spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: var(--_sb-h, 40px);
+  color: var(--uems-text-white);
+}
+.ds-split-button__spinner svg {
+  animation: ds-split-button-spin 0.8s linear infinite;
+  transform-origin: 50% 50%;
+}
+@keyframes ds-split-button-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-split-button__spinner svg { animation: none; }
+}

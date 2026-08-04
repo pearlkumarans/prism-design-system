@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mail Server Settings — Endpoint Central · Prism</title>
+
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+
+  <script>
+    /* Theme persistence — sync with ds-right-pane toggle */
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+      document.addEventListener('ds-right-pane-theme', function (e) {
+        document.documentElement.setAttribute('data-theme', e.detail.theme);
+        try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+      });
+      window.addEventListener('DOMContentLoaded', function () {
+        customElements.whenDefined('ds-right-pane').then(function () {
+          document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+            rp.setAttribute('theme', t);
+          });
+        });
+      });
+    })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body {
+      margin: 0;
+      font-family: var(--font-family-sans);
+      background: var(--cobalt-15);
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    /* Smooth theme + chrome transitions across the page */
+    .shell-area,
+    .content,
+    ds-sidebar-l1,
+    ds-sidebar-l2,
+    ds-right-pane,
+    ds-header-nav {
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard),
+                  border-color var(--duration-standard, 240ms) var(--ease-standard),
+                  color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+
+    /* App shell */
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ─────────────────────────────────────────────────────────────
+       UI Transitions — super-smooth across every interaction
+       ───────────────────────────────────────────────────────────── */
+
+    /* L1 / L2 sidebar hide & show — slide out + fade instead of display:none. */
+    ds-sidebar-l1,
+    ds-sidebar-l2 {
+      max-width: 400px;
+      opacity: 1;
+      overflow: hidden;
+      will-change: max-width, opacity, transform;
+      transition:
+        max-width   360ms cubic-bezier(0.16, 1, 0.3, 1),
+        opacity     240ms cubic-bezier(0.16, 1, 0.3, 1) 40ms,
+        transform   360ms cubic-bezier(0.16, 1, 0.3, 1),
+        margin      360ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    ds-sidebar-l1.is-hidden,
+    ds-sidebar-l2.is-hidden {
+      max-width: 0 !important;
+      opacity: 0 !important;
+      transform: translateX(-12px);
+      margin-inline-end: 0 !important;
+      pointer-events: none;
+    }
+
+    /* Right pane — subtle fade-in */
+    ds-right-pane {
+      transition:
+        opacity 220ms cubic-bezier(0.16, 1, 0.3, 1),
+        transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    ds-right-pane.is-hidden {
+      opacity: 0;
+      transform: translateX(12px);
+      pointer-events: none;
+    }
+
+
+    /* Tab active highlight — silky bottom-border slide */
+    .ds-header-nav__tab {
+      position: relative;
+    }
+
+    /* L1 items — color-only hover (matches L2 and the base component). A prior
+       translateY(-1px) lift jerked on hover and detached the active item's icon
+       from its absolutely-positioned sliding chip, so it's removed. */
+    .ds-sidebar-l1__item {
+      transition: background-color 160ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* L2 items — color-only hover (no horizontal shift) */
+    .ds-sidebar-l2__item {
+      transition:
+        background-color 180ms cubic-bezier(0.4, 0, 0.2, 1),
+        color 180ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Right-pane buttons — gentle scale on press */
+    .ds-right-pane__btn {
+      transition:
+        background-color 100ms cubic-bezier(0.4, 0, 0.2, 1),
+        transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ds-right-pane__btn:active { transform: scale(0.92); }
+
+    /* Customer dropdown + search pill — soft focus halo */
+    .ds-header-nav__customer,
+    .ds-header-nav__search-pill {
+      transition:
+        background-color 130ms cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 130ms cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 130ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ds-header-nav__customer:hover,
+    .ds-header-nav__search-pill:hover {
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+
+    /* Reduce motion for users who prefer it */
+    @media (prefers-reduced-motion: reduce) {
+      ds-sidebar-l1, ds-sidebar-l2, ds-right-pane,
+      .ds-sidebar-l1__item, .ds-sidebar-l2__item,
+      .ds-right-pane__btn,
+      .ds-header-nav__tab, .ds-header-nav__customer, .ds-header-nav__search-pill {
+        transition: none !important;
+        transform: none !important;
+      }
+    }
+
+    /* When L1 collapses, pull L2 back so the right padding doesn't show as a gap */
+    ds-sidebar-l1[collapsed] + ds-sidebar-l2 { margin-left: -8px; }
+
+    .body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      padding: 0 0 var(--spacing-12) var(--spacing-12);
+      gap: 0;
+    }
+
+    /* One outer border wrapping L1 + L2 + content */
+    .shell-area {
+      flex: 1;
+      display: flex;
+      min-width: 0;
+      min-height: 0;
+      border: 1px solid var(--uems-border-accent-subtle);
+      border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle);
+      overflow: hidden;
+    }
+    /* Hide the individual borders on L1 and content — wrapper owns the perimeter */
+    .shell-area ds-sidebar-l1 { border: 0 !important; }
+    .shell-area ds-sidebar-l2 { border: 0 !important; }
+    /* Right-side border on the inner L2 card (visible element) */
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+    /* The L1 component's INNER div has its own border + radius — flatten + remove top padding */
+    .shell-area .ds-sidebar-l1 {
+      border: 0 !important;
+      border-radius: 0 !important;
+      padding-top: 4px !important;
+    }
+
+    /* Content area styling now lives in the ds-content component
+       (design-system-library/src/components/content/content.css). The component auto-toggles
+       its .ds-content--framed class when the adjacent ds-sidebar-l2 gains
+       `is-hidden`, so we don't need a sibling selector here. */
+
+    /* Empty-state wrapper — centers ds-empty-state inside the content area */
+    /* ── Mail Server Settings form (content area only) ── */
+    .lay { display:flex; flex-direction:column; min-width:0; }
+    .lay__head { padding: var(--spacing-20) var(--spacing-24); border-bottom: 1px solid var(--uems-border-tertiary); background: var(--uems-bg-secondary-subtle); }
+    .lay__title { margin:0; font-size: var(--uems-font-size-16, 16px); font-weight: var(--font-weight-semibold,600); color: var(--uems-text-primary); }
+    .frm { display:flex; flex-direction:column; gap: var(--spacing-20); padding: var(--spacing-24); max-width: 820px; }
+    .frm-row { display:grid; grid-template-columns: 240px minmax(0, 420px); column-gap: var(--spacing-24); align-items:center; }
+    .frm-row--top { align-items: start; }
+    .frm-label { font-size: var(--uems-font-size-14,14px); color: var(--uems-text-secondary); padding-top: 2px; }
+    .frm-field { min-width:0; display:flex; flex-direction:column; gap: 6px; }
+    .frm-field ds-text-input, .frm-field-inline ds-text-input { width: 100%; }
+    /* empty component label (we use our own .frm-label) — collapse it */
+    .frm ds-text-input .ds-text-input__label:empty { display:none; }
+    .frm ds-text-input .ds-text-input__body { gap: 0; }
+    .frm-field-inline { display:flex; align-items:center; gap: var(--spacing-16); }
+    /* horizontal radios for the inline option rows */
+    .frm-row ds-radio-group .ds-radio-group__options { flex-direction: row; gap: var(--spacing-24); }
+    .frm-hint { display:flex; align-items:center; gap:6px; font-size: var(--uems-font-size-12,12px); color: var(--uems-text-tertiary); }
+    .frm-hint ds-icon { color: var(--uems-icon-tertiary); }
+    /* Help icons next to labels/hints trigger a ds-tooltip on hover/focus */
+    .frm-hint ds-tooltip, .frm-label ds-tooltip { display:inline-flex; align-items:center; cursor:help; }
+    .frm-hint ds-tooltip ds-icon, .frm-label ds-tooltip ds-icon { cursor:help; }
+    .frm-check { padding-left: 0; }
+    .frm-actions { padding-top: var(--spacing-8); }
+    /* toast host */
+    .set-toast-host { position: fixed; top: var(--spacing-16); left: 50%; transform: translateX(-50%); z-index: 2000; display:flex; flex-direction:column; gap: var(--spacing-8); align-items:center; }
+
+    .content-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-32);
+    }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- TOP — Header navigation -->
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+  <div class="body">
+
+    <!-- ONE border wraps L1 + L2 + content -->
+    <div class="shell-area">
+
+      <!-- LEFT — Sidebar L1 (module rail). Starts hidden so the initial
+           Home state shows a clean view without a flash of patch menu. -->
+      <ds-sidebar-l1 id="shell-l1" class="is-hidden" style="height: 100%;"></ds-sidebar-l1>
+
+      <!-- LEFT — Sidebar L2 (sub-nav). Same: starts hidden until JS decides
+           which menu to apply for the active tab. -->
+      <ds-sidebar-l2 id="shell-l2" class="is-hidden" style="height: 100%;"></ds-sidebar-l2>
+
+      <!-- CENTER — Mail Server Settings form -->
+      <ds-content role="main">
+        <div class="lay">
+          <div class="lay__head"><h1 class="lay__title">Mail Server Settings</h1></div>
+          <form class="frm" id="mail-form" onsubmit="return false">
+
+            <div class="frm-row">
+              <span class="frm-label">Authentication Type</span>
+              <div class="frm-field"><ds-radio-group id="auth-type" name="auth" size="s"></ds-radio-group></div>
+            </div>
+
+            <div class="frm-row">
+              <span class="frm-label">Server Name (Outgoing)</span>
+              <div class="frm-field"><ds-text-input label-position="top" placeholder="server name"></ds-text-input></div>
+            </div>
+
+            <div class="frm-row frm-row--top">
+              <span class="frm-label">Port (Outgoing)</span>
+              <div class="frm-field">
+                <ds-text-input label-position="top" placeholder="1-65535" style="max-width:220px;"></ds-text-input>
+                <span class="frm-hint"><ds-tooltip text="Outgoing mail server port. Default SMTP port is 25 — use 587 for TLS or 465 for SSL." show-icon="false" position="up-center"><ds-icon name="help-circle" size="14"></ds-icon></ds-tooltip>Default Value: 25</span>
+              </div>
+            </div>
+
+            <div class="frm-row">
+              <span class="frm-label">User Name</span>
+              <div class="frm-field"><ds-text-input label-position="top" value="Administrator"></ds-text-input></div>
+            </div>
+
+            <div class="frm-row">
+              <span class="frm-label">Sender email address</span>
+              <div class="frm-field"><ds-text-input label-position="top" type="email" placeholder="example@example.com"></ds-text-input></div>
+            </div>
+
+            <div class="frm-row">
+              <span class="frm-label">Test email address</span>
+              <div class="frm-field-inline">
+                <ds-text-input label-position="top" type="email" placeholder="example@example.com" style="flex:1; min-width:0;"></ds-text-input>
+                <ds-text-link id="send-test" href="#">Send a test mail</ds-text-link>
+              </div>
+            </div>
+
+            <div class="frm-row">
+              <span class="frm-label"><span style="display:inline-flex;align-items:center;gap:6px;">Email Type <ds-tooltip text="Format for outgoing mails — HTML for rich formatting or Plain Text for simple messages." show-icon="false" position="up-center"><ds-icon name="help-circle" size="14" style="color:var(--uems-icon-tertiary)"></ds-icon></ds-tooltip></span></span>
+              <div class="frm-field"><ds-radio-group id="email-type" name="etype" size="s"></ds-radio-group></div>
+            </div>
+
+            <div class="frm-row">
+              <span class="frm-label"><span style="display:inline-flex;align-items:center;gap:6px;">Enable TLS <ds-tooltip text="Encrypt the connection to your mail server using TLS. Recommended for secure delivery." show-icon="false" position="up-center"><ds-icon name="help-circle" size="14" style="color:var(--uems-icon-tertiary)"></ds-icon></ds-tooltip></span></span>
+              <div class="frm-field"><ds-radio-group id="enable-tls" name="tls" size="s"></ds-radio-group></div>
+            </div>
+
+            <div class="frm-row">
+              <span></span>
+              <div class="frm-field frm-check"><ds-checkbox id="req-auth" label="Requires Authentication" size="medium"></ds-checkbox></div>
+            </div>
+
+            <div class="frm-row">
+              <span></span>
+              <div class="frm-actions"><ds-button id="save-btn" variant="primary" size="medium">Save Mail Server Settings</ds-button></div>
+            </div>
+
+          </form>
+        </div>
+      </ds-content>
+
+    </div><!-- /.shell-area -->
+
+    <!-- RIGHT — Utility rail (outside the unified shell) -->
+    <ds-right-pane id="shell-rp" show-accessibility style="height: 100%;"></ds-right-pane>
+
+  </div>
+</div>
+
+<script type="module">
+  import '../design-system-library/src/components/index.js';
+  import { applyL2For, wireL1ToL2 } from '../design-system-library/src/data/ec-menus.js';
+
+  /* Standard header tabs — Inventory active (settings opened from this context) */
+  document.getElementById('ec-header').tabs = [
+    { id: 'home', label: 'Home' },
+    { id: 'configs', label: 'Configurations' },
+    { id: 'inv', label: 'Inventory', active: true },
+    { id: 'tp', label: 'Threats & Patches' },
+    { id: 'mdm', label: 'MDM' },
+    { id: 'osd', label: 'OS Deployment' },
+    { id: 'sd', label: 'Software Deployment' },
+    { id: 'tools', label: 'Tools' },
+  ];
+
+  const l1El = document.getElementById('shell-l1');
+  const l2El = document.getElementById('shell-l2');
+
+  /* Settings layout: L1 module rail hidden, L2 shows the Settings menu */
+  l1El.classList.add('is-hidden');
+  l2El.classList.remove('is-hidden');
+  l2El.setAttribute('title', 'Settings Home');
+  l2El.setAttribute('show-back', '');
+  l2El.setAttribute('show-search', '');
+  l2El.setAttribute('search-placeholder', 'Search...');
+  l2El.groups = [
+    { id: 'global', label: 'Global Settings', expanded: true, items: [
+      { id: 'custom-group', label: 'Custom Group' },
+      { id: 'rebranding',   label: 'Rebranding' },
+      { id: 'ssp',          label: 'Self Service Portal Settings' },
+      { id: 'cred',         label: 'Credential Manager' },
+      { id: 'custom-field', label: 'Custom Field' },
+      { id: 'custom-data',  label: 'Add Custom Data for Computers' },
+      { id: 'dex',          label: 'DEX Manager' },
+    ] },
+    { id: 'user-admin', label: 'User Administration', expanded: true, items: [
+      { id: 'users',  label: 'Users' },
+      { id: 'role',   label: 'Role' },
+      { id: 'mapp',   label: 'Mobile App' },
+      { id: 'saml',   label: 'SAML Authentication' },
+    ] },
+    { id: 'agent', label: 'Agent', expanded: true, items: [
+      { id: 'agent-set', label: 'Agent Settings' },
+      { id: 'som',       label: 'SoM Settings' },
+      { id: 'azure',     label: 'Azure Autopilot' },
+      { id: 'abm',       label: 'Apple Enrollment (ABM)' },
+      { id: 'apns',      label: 'APNS Certificate' },
+    ] },
+    { id: 'server', label: 'Server Settings', expanded: true, items: [
+      { id: 'nav-item', label: 'Nav Item' },
+      { id: 'proxy',    label: 'Proxy Server' },
+      { id: 'mail',     label: 'Mail Server', active: true },
+    ] },
+  ];
+  l2El.addEventListener('ds-sidebar-l2-back', () => { /* back to Settings Home */ });
+
+  /* In-page navigation — header tabs swap the L2 module panel (same as base-page) */
+  document.getElementById('ec-header').addEventListener('ds-header-nav-tab-select', (e) => {
+    applyL2For(l1El, l2El, e.detail?.id);
+  });
+  document.getElementById('ec-header').addEventListener('ds-header-nav-action', (e) => {
+    if (e.detail?.action === 'settings') {
+      applyL2For(l1El, l2El, 'admin');
+      document.querySelectorAll('.ds-header-nav__tab').forEach((el) => {
+        el.classList.remove('ds-header-nav__tab--active');
+        el.removeAttribute('aria-current');
+      });
+    }
+  });
+  wireL1ToL2(l1El, l2El);
+
+  /* ── Form controls ── */
+  document.getElementById('auth-type').options  = [{ value:'basic', label:'Basic', selected:true }, { value:'oauth', label:'OAuth' }];
+  document.getElementById('email-type').options = [{ value:'smtp', label:'SMTP' }, { value:'smtps', label:'SMTPS', selected:true }];
+  document.getElementById('enable-tls').options = [{ value:'yes', label:'Yes', selected:true }, { value:'no', label:'No' }];
+
+  /* ── Toast on Save / Send test (functional) ── */
+  const toastHost = document.createElement('div');
+  toastHost.className = 'set-toast-host';
+  document.body.appendChild(toastHost);
+  const toast = (status, title, description) => {
+    const el = document.createElement('ds-toast');
+    el.setAttribute('status', status);
+    el.setAttribute('style-variant', 'subtle');
+    el.setAttribute('title', title);
+    if (description) { el.setAttribute('description', description); el.setAttribute('show-description',''); }
+    el.setAttribute('duration', '4000');
+    el.addEventListener('ds-toast-close', () => el.remove());
+    toastHost.appendChild(el);
+  };
+  document.getElementById('save-btn').addEventListener('click', () =>
+    toast('success', 'Mail server settings saved', 'Your outgoing mail configuration was updated.'));
+  document.getElementById('send-test').addEventListener('click', (e) => {
+    e.preventDefault();
+    toast('info', 'Test mail sent', 'Check the test inbox to confirm delivery.');
+  });
+</script>
+
+</body>
+</html>

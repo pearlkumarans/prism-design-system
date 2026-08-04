@@ -1,0 +1,2084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patch — Threats &amp; Vulnerabilities · Endpoint Central · Prism</title>
+
+  <link rel="stylesheet" href="../../design-system-library/src/styles/index.css" />
+  <!-- ds-drawer ships its CSS separately and isn't in the global bundle — load it -->
+  <link rel="stylesheet" href="../../design-system-library/src/components/drawer/drawer.css" />
+  <!-- selectable product fonts (Personalize → Font) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;700&family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600&display=swap" />
+  <script type="module">import '../../design-system-library/src/components/index.js';</script>
+
+  <script>
+    /* Theme persistence — sync with ds-right-pane toggle */
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+      document.addEventListener('ds-right-pane-theme', function (e) {
+        document.documentElement.setAttribute('data-theme', e.detail.theme);
+        try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+      });
+      window.addEventListener('DOMContentLoaded', function () {
+        customElements.whenDefined('ds-right-pane').then(function () {
+          document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+            rp.setAttribute('theme', t);
+          });
+        });
+      });
+    })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body {
+      margin: 0;
+      font-family: var(--font-family-sans);
+      /* Canvas background — per-theme: Cobalt-15 (light) / Grey-Modern-950 (dark)
+         / Grey-1050 (night) / Fern-15 (green-light) / Grey-Modern-950 (green-dark) */
+      background: var(--uems-background);
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+
+    /* Smooth theme + chrome transitions across the page.
+       NOTE: ds-sidebar-l1 / ds-sidebar-l2 are intentionally NOT listed here — a
+       `transition` on the host would override the components' own transitions
+       (sidebar-l1/l2.css drive the collapse/expand). Let them own it. */
+    .shell-area,
+    .content,
+    ds-right-pane,
+    ds-header-nav {
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard),
+                  border-color var(--duration-standard, 240ms) var(--ease-standard),
+                  color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+
+    /* App shell */
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+    /* Lift the header above the body content so its overflow (···) dropdown and
+       icon menus paint on top of the panes below (Ask Zia, content, drawers).
+       Full-viewport overlay drawers (profile / apps) sit above it — see their files. */
+    #ec-header { position: relative; z-index: 40; }
+
+    /* ── Boot splash / loader ────────────────────────────────────────────── */
+    .shell-loader {
+      position: fixed; inset: 0; z-index: 99999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 0;
+      background: var(--uems-bg-primary, #fff);
+      transition: opacity 400ms var(--ease-standard, ease), visibility 400ms var(--ease-standard, ease);
+    }
+    .shell-loader.is-done { opacity: 0; visibility: hidden; pointer-events: none; }
+    /* Logo + name lockup — lifts 20px (step 3) just before the loader bar appears. */
+    .shell-loader__lockup { display: flex; flex-direction: column; align-items: center;
+      transition: transform 0.5s var(--ease-standard, ease); }
+    .shell-loader__lockup.is-up { transform: translateY(-20px); }
+    .shell-loader__logo { width: 120px; height: 120px; overflow: visible; }
+    /* (logo animation is self-contained in the inline SVG; draw completes ~1.6s) */
+    /* Sequence: logo draws → name fades in (~1.8s) → bar fades in + sweeps (~2.4s). */
+    .shell-loader__name {
+      margin-top: 6px; font-size: var(--font-size-20, 20px); font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary, #15181e); letter-spacing: -0.01em;
+      opacity: 0; transition: opacity 0.45s var(--ease-standard, ease);
+    }
+    .shell-loader__name.is-in { opacity: 1; }
+    /* Indeterminate loading bar */
+    .shell-loader__bar {
+      position: relative; width: 160px; height: 3px; border-radius: 99px;
+      margin-top: 24px;
+      background: var(--uems-border-tertiary, #e4e7ec); overflow: hidden;
+      opacity: 0; transition: opacity 0.45s var(--ease-standard, ease);
+    }
+    .shell-loader__bar.is-in { opacity: 1; }
+    .shell-loader__bar-fill {
+      position: absolute; top: 0; left: -40%; height: 100%; width: 40%;
+      border-radius: 99px; background: var(--uems-text-primary, #15181e);
+      animation: eclBar 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    }
+    @keyframes eclBar { 0% { left: -40%; } 100% { left: 100%; } }
+    @keyframes eclFade { from { opacity: 0; } to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      .shell-loader__logo .ecl-spin { animation: none; }
+      .shell-loader__lockup { transition: none; transform: none; }
+      .shell-loader__name { animation: none; opacity: 1; }
+      .shell-loader__bar { animation: none; opacity: 1; }
+      .shell-loader__bar-fill { animation: none; left: 0; width: 100%; }
+    }
+
+    /* ── Product skeleton (shown ~3s after splash, before the real shell) ──── */
+    .shell-skeleton {
+      position: fixed; inset: 0; z-index: 99998;   /* just under the splash */
+      display: flex; flex-direction: column; height: 100vh;
+      background: var(--uems-background, #eaf0fc);
+      opacity: 1; transition: opacity 450ms var(--ease-standard, ease);
+    }
+    .shell-skeleton[hidden] { display: none; }
+    .shell-skeleton.is-done { opacity: 0; pointer-events: none; }
+    /* base shimmer block */
+    .sk {
+      display: inline-block; border-radius: var(--radius-sm, 6px);
+      background: linear-gradient(90deg, #e6ebf2 25%, #f3f6fb 37%, #e6ebf2 63%);
+      background-size: 400% 100%; animation: skShimmer 1.4s ease infinite; height: 12px;
+    }
+    @keyframes skShimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+    @media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
+    .sk--logo { width: 150px; height: 22px; border-radius: 6px; }
+    .sk--dot { width: 24px; height: 24px; border-radius: var(--radius-md); }
+    .sk--av  { width: 28px; height: 28px; border-radius: 50%; }
+    .sk--ic  { width: 30px; height: 30px; border-radius: 8px; }
+    .sk--card { height: 150px; border-radius: 14px; }
+    /* header */
+    .sk-header {
+      display: flex; align-items: center; gap: 24px; height: 56px;
+      padding: 0 16px; flex-shrink: 0;
+    }
+    .sk-tabs { flex: 1; display: flex; align-items: center; justify-content: center; gap: 22px; }
+    .sk-cluster { display: flex; align-items: center; gap: 10px; }
+    /* body */
+    .sk-body { display: flex; flex: 1; min-height: 0; padding: 0 0 12px 12px; gap: 0; }
+    .sk-frame {
+      flex: 1; display: flex; min-width: 0;
+      border: 1px solid var(--uems-border-accent-subtle, #d9e2f5); border-radius: 16px;
+      background: var(--uems-bg-primary, #fff); overflow: hidden;
+    }
+    .sk-rail { flex: 0 0 72px; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 16px 0; }
+    .sk-content { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 28px 32px; }
+    .sk-cards { margin-top: 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .sk-right { flex: 0 0 44px; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 16px 0; }
+
+    /* ─────────────────────────────────────────────────────────────
+       UI Transitions — super-smooth across every interaction
+       ───────────────────────────────────────────────────────────── */
+
+    /* L1 / L2 sidebar hide & show. No `transition` here on purpose — the
+       components (sidebar-l1/l2.css) own their collapse/expand animation, and a
+       host-level transition in the shell would override it. */
+    ds-sidebar-l1,
+    ds-sidebar-l2 {
+      max-width: 400px;
+      opacity: 1;
+      overflow: hidden;
+    }
+    ds-sidebar-l1.is-hidden,
+    ds-sidebar-l2.is-hidden {
+      max-width: 0 !important;
+      opacity: 0 !important;
+      transform: translateX(-12px);
+      margin-inline-end: 0 !important;
+      pointer-events: none;
+    }
+
+    /* Right pane — subtle fade-in */
+    ds-right-pane {
+      transition:
+        opacity 220ms cubic-bezier(0.16, 1, 0.3, 1),
+        transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    ds-right-pane.is-hidden {
+      opacity: 0;
+      transform: translateX(12px);
+      pointer-events: none;
+    }
+
+
+    /* Tab active highlight — silky bottom-border slide */
+    .ds-header-nav__tab {
+      position: relative;
+    }
+
+    /* L1 items lift on hover for a tactile feel */
+    .ds-sidebar-l1__item {
+      transition:
+        background-color 160ms cubic-bezier(0.4, 0, 0.2, 1),
+        transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ds-sidebar-l1__item:hover:not([aria-disabled="true"]) {
+      transform: translateY(-1px);
+    }
+
+    /* L2 items — color-only hover (no horizontal shift) */
+    .ds-sidebar-l2__item {
+      transition:
+        background-color 180ms cubic-bezier(0.4, 0, 0.2, 1),
+        color 180ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Right-pane buttons — gentle scale on press */
+    .ds-right-pane__btn {
+      transition:
+        background-color 100ms cubic-bezier(0.4, 0, 0.2, 1),
+        transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ds-right-pane__btn:active { transform: scale(0.92); }
+    /* Active highlight — a clear box like the L1 rail's active chip
+       (accent-secondary-action fill + radius-6 + accent icon). */
+    ds-right-pane .ds-right-pane__btn[aria-pressed="true"] {
+      background: var(--uems-bg-accent-secondary-action) !important;
+      color: var(--uems-text-accent-link) !important;
+      border-radius: 6px;
+    }
+
+    /* ── Update notification popover (anchored to the right-pane Update icon) ── */
+    .upd-pop {
+      position: fixed; z-index: 1600; width: 456px; display: none;
+    }
+    .upd-pop--narrow { width: 300px; }
+    .upd-pop--appr { width: 240px; }
+    .upd-pop.open {
+      display: block;
+      animation: updIn 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes updIn {
+      from { opacity: 0; transform: translateY(6px) scale(0.98); }
+      to   { opacity: 1; transform: none; }
+    }
+    .upd-card {
+      position: relative; display: flex; gap: 12px; padding: 16px;
+      background: var(--uems-bg-primary);
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: 12px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 6px 18px rgba(15, 23, 42, 0.08);
+    }
+    .upd-card__icon {
+      flex: 0 0 40px; width: 40px; height: 40px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* Recommended icon box matches the "Recommended" badge exactly (warning/orange tokens) */
+    .upd-card--rec    .upd-card__icon { background: var(--uems-bg-warning-primary); color: var(--uems-text-warning); }
+    .upd-card--norm   .upd-card__icon { background: var(--uems-bg-info-secondary); color: var(--uems-icon-info); }
+    .upd-card--review .upd-card__icon { background: var(--uems-bg-accent-secondary); color: var(--uems-icon-accent); }
+    .upd-card__close { position: absolute; top: 8px; inset-inline-end: 8px; }
+    .upd-card__body { flex: 1; min-width: 0; padding-inline-end: 16px; }
+    .upd-card__badge { margin-bottom: 8px; }
+    .upd-card__title {
+      font-size: var(--font-size-15); font-weight: var(--font-weight-semibold); line-height: 20px;
+      color: var(--uems-text-primary); margin: 2px 0 4px;
+    }
+    .upd-card__desc {
+      font-size: var(--font-size-14); line-height: 20px; color: var(--uems-text-secondary);
+    }
+    .upd-card__actions { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: nowrap; }
+    .upd-card__actions ds-text-link { white-space: nowrap; }
+    .upd-card__foot { margin-top: 16px; }
+
+    /* Roadmap card — header (icon + title + divider) then a list of external links */
+    .upd-card--roadmap { flex-direction: column; gap: 0; padding: 0; }
+    .rm-head {
+      position: relative; display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px; border-bottom: 1px solid var(--uems-border-tertiary);
+    }
+    .rm-head__icon {
+      flex: 0 0 32px; width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--uems-bg-accent-secondary); color: var(--uems-icon-accent);
+    }
+    .rm-head__title { font-size: var(--font-size-16); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+    .rm-head__close { position: absolute; top: 9px; inset-inline-end: 9px; }
+    .rm-list { padding: 2px 16px 8px; }
+    .rm-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 8px 0; text-decoration: none;
+    }
+    .rm-row .ds-text-link { font-weight: var(--font-weight-semibold); font-size: var(--font-size-14); }
+    .rm-row__ext { color: #6B94E7; flex: 0 0 auto; }
+
+    /* Appearance (theme) menu — opened by the right-pane theme toggle */
+    /* Mirrors the Profile drawer's Appearance & Theme: mode buttons (Light / Dark /
+       System with mini scene swatches) + accent colour swatches (blue / green). */
+    .upd-card--appearance { flex-direction: column; gap: 8px; padding: 12px; }
+    .appr-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .appr-title { font-size: var(--font-size-13); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+    /* Compact SEGMENTED control — modes in one small pill (simpler + smaller). */
+    .appr-seg { display: flex; gap: 2px; background: var(--uems-bg-secondary); border-radius: 8px; padding: 3px; }
+    .appr-seg__btn { flex: 1; min-width: 0; padding: 6px 4px; border: 0; border-radius: 6px; background: transparent; cursor: pointer; font: inherit; font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); transition: background-color 140ms var(--ease-standard), color 140ms var(--ease-standard); }
+    .appr-seg__btn:hover:not(.is-active) { color: var(--uems-text-primary); }
+    .appr-seg__btn.is-active { background: var(--uems-bg-primary); color: var(--uems-text-accent-link); box-shadow: 0 1px 2px rgba(15, 19, 31, .10); }
+    .appr-colors-row { display: flex; align-items: center; gap: 10px; }
+    .appr-colors-row__label { font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); }
+    .appr-colors { display: flex; align-items: center; gap: 8px; }
+    .appr-color { width: 20px; height: 20px; border-radius: 6px; cursor: pointer; border: 0; padding: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
+    .appr-color.is-active { box-shadow: 0 0 0 1px var(--uems-bg-primary), 0 0 0 2px var(--uems-text-accent-link); }
+    .appr-color ds-icon { opacity: 0; } .appr-color.is-active ds-icon { opacity: 1; }
+
+    /* ── Help panel — right-docked drawer opened by the right-pane Help icon ── */
+    /* ds-drawer (Help / Accessibility / Product Updates) — confined to the
+       content region (.shell-area) instead of the full viewport. */
+    .shell-area ds-drawer.ec-drawer { position: absolute !important; inset: 0 !important; z-index: 30; }
+    /* Help drawer → extracted to views/help.html (CSS + markup + JS there;
+       injectDrawer('help')). The shared .ec-drawer base above stays here. */
+
+    /* Product Updates drawer → extracted to views/updates.html (CSS + markup + JS there). */
+
+    /* Accessibility drawer → extracted to views/accessibility.html (CSS + markup
+       + JS there; injectDrawer('a11y')). The global kbd-nav focus rules below stay. */
+    /* Keyboard Navigation = on → prominent focus ring across the app */
+    html.a11y-kbd-nav :focus-visible {
+      outline: 2px solid var(--uems-text-accent-link) !important;
+      outline-offset: 2px; border-radius: 2px;
+    }
+    /* …but fields that already render their OWN focus border (search field, text
+       input, the Zia textarea) would otherwise show TWO rings — suppress the
+       global outline on those inner inputs; the component border IS the focus cue. */
+    html.a11y-kbd-nav .ds-search-field__input:focus-visible,
+    html.a11y-kbd-nav .ds-text-input__field:focus-visible,
+    html.a11y-kbd-nav .zia-input__field:focus-visible { outline: none !important; }
+
+    /* Customer dropdown + search pill — soft focus halo */
+    .ds-header-nav__customer,
+    .ds-header-nav__search-pill {
+      transition:
+        background-color 130ms cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 130ms cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 130ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ds-header-nav__customer:hover,
+    .ds-header-nav__search-pill:hover {
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+
+    /* Reduce motion for users who prefer it */
+    @media (prefers-reduced-motion: reduce) {
+      ds-sidebar-l1, ds-sidebar-l2, ds-right-pane,
+      .ds-sidebar-l1__item, .ds-sidebar-l2__item,
+      .ds-right-pane__btn,
+      .ds-header-nav__tab, .ds-header-nav__customer, .ds-header-nav__search-pill {
+        transition: none !important;
+        transform: none !important;
+      }
+    }
+
+    /* When L1 collapses, pull L2 back so the right padding doesn't show as a gap */
+    ds-sidebar-l1[collapsed] + ds-sidebar-l2 { margin-inline-start: -8px; }
+
+    .body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      /* logical so it mirrors in RTL (start side gets the gap, right-pane side stays flush) */
+      padding-block: 0 var(--spacing-12);
+      padding-inline: var(--spacing-12) 0;
+      gap: 0;
+    }
+
+    /* One outer border wrapping L1 + L2 + content */
+    .shell-area {
+      flex: 1;
+      display: flex;
+      min-width: 0;
+      min-height: 0;
+      position: relative;   /* positioning context for the in-content help/a11y drawers */
+      border: 1px solid var(--uems-border-accent-subtle);
+      border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle);
+      /* clip (not hidden): clips the drawer but is NOT a scroll container, so the
+         drawer's focus-on-open can't scroll the nav/content sideways. */
+      overflow: clip;
+    }
+    /* Hide the individual borders on L1 and content — wrapper owns the perimeter */
+    .shell-area ds-sidebar-l1 { border: 0 !important; }
+    /* Collapsed (icon-only) rail width — sized so the icons sit centred (no extra
+       right padding). Scoped to [collapsed] so the expanded rail keeps its 72px. */
+    .shell-area ds-sidebar-l1[collapsed] { width: 52px; }
+    .shell-area ds-sidebar-l2 { border: 0 !important; }
+    /* Right-side border on the inner L2 card (visible element) */
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+    /* Lift the content above the L2 collapse handle (z-index:3) so the handle's
+       protruding part tucks BEHIND the content page instead of floating on it. */
+    .shell-area ds-content { z-index: 5; }
+    /* RTL — the framed content, L2 panel & its divider use PHYSICAL left radius/border in the
+       DS; mirror them to the right so the nav curve sits on the correct (inner) side. */
+    [dir="rtl"] .ds-content--framed { border-radius: 0 16px 16px 0 !important; box-shadow: 8px 0 24px rgba(15, 23, 42, 0.08) !important; }
+    [dir="rtl"] .shell-area ds-sidebar-l2,
+    [dir="rtl"] .shell-area .ds-sidebar-l2 { border-radius: 0 16px 16px 0 !important; }
+    [dir="rtl"] .shell-area .ds-sidebar-l2 { border-right: 0 !important; border-left: 1px solid var(--uems-border-tertiary) !important; }
+    /* RTL bidi safety — leaf text that mixes Latin/numbers (emails, IDs, brand
+       names) renders in its natural direction so it isn't visually scrambled. */
+    [dir="rtl"] .pf-id__email,
+    [dir="rtl"] .pf-id__meta,
+    [dir="rtl"] .apps-card__title,
+    [dir="rtl"] .apps-rec__title { unicode-bidi: plaintext; }
+    /* The L1 component's INNER div has its own border + radius — flatten + remove top padding */
+    .shell-area .ds-sidebar-l1 {
+      border: 0 !important;
+      border-radius: 0 !important;
+      padding-top: 4px !important;
+    }
+
+    /* ── LEFT-NAVIGATION MODE ───────────────────────────────────────────────
+       The module rail itself is the <ds-module-rail> component (all rail styles
+       — items, icons-only, active chip, overflow more+flyout, tooltips — live in
+       Demo/src/components/module-rail/module-rail.css). Shell owns only the
+       body-level layout when html.nav-left is set (from the Top/Left toggle).
+       The rail is transparent + flush to the body edge, so drop the body's
+       start/bottom canvas padding and restore the gap on the (rounded)
+       shell-area + right-pane only. The top bar's tab band is hidden (tabs now
+       live in the rail); the header keeps Search as an icon in the cluster. ─── */
+    html.nav-left .body { padding-inline-start: 0; padding-block-end: 0; }
+    html.nav-left .shell-area { margin-block-end: var(--spacing-12); }
+    html.nav-left ds-right-pane { margin-block-end: var(--spacing-12); }
+    /* Tabs relocated to the left rail → hide the header's tab band so the centre
+       is empty (brand left, utility cluster + Search icon right). */
+    html.nav-left #ec-header .ds-header-nav__tabs { display: none; }
+
+    /* Content area styling now lives in the ds-content component
+       (Demo/src/components/content/content.css). The component auto-toggles
+       its .ds-content--framed class when the adjacent ds-sidebar-l2 gains
+       `is-hidden`, so we don't need a sibling selector here. */
+
+    /* Empty-state wrapper — centers ds-empty-state inside the content area */
+    .content-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-32);
+    }
+
+    /* ── Vulnerabilities screen ───────────────────────────────────────────── */
+    /* overflow hidden (not auto): the page region never scrolls — the TABLE BODY
+       scrolls internally instead, keeping its footer fixed on screen. */
+    .vuln { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--spacing-16);
+      padding: var(--spacing-10) var(--spacing-16); overflow: hidden; }
+    /* The 1px baseline lives on the ROW (not the tab component) so it runs the
+       full content width — same start/end as the table below (under Watch Demo too). */
+    .vuln__top { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-16);
+      border-bottom: 1px solid var(--uems-border-tertiary); }
+    #vuln-tabs { flex: 1; min-width: 0; }
+    /* Kill the component's own short baseline — the row draws the full-width one. */
+    #vuln-tabs.ds-tab-bar-horizontal--underline, #vuln-tabs .ds-tab-bar-horizontal--underline { border-bottom: 0 !important; }
+
+    /* Summary cards row */
+    /* flex-shrink 0: only the TABLE shrinks inside .vuln (overflow hidden) — the
+       summary/tabs/desc rows must never get squeezed to zero. */
+    .vuln__summary { display: flex; gap: var(--spacing-8); align-items: stretch; flex-wrap: wrap; flex-shrink: 0; }
+    .vuln__top, .vuln__desc, .vuln__chips { flex-shrink: 0; }
+    /* Single summary card — Total + severity boxes │ Risk Indicators + risk boxes. */
+    .vuln__card { display: flex; align-items: stretch; flex: 1 1 0; min-width: 0; overflow: hidden; }
+    /* Boxes: equal widths. */
+    .vuln__card .vuln__sev { flex: 1 1 0; }
+    /* Vertical separator between the severity group and the risk group —
+       the ONLY divider around the Risk Indicators label (label has no border).
+       Inset 10px top/bottom (matches the boxes' vertical margins), not full height. */
+    .vuln__sum-div { flex: 0 0 1px; align-self: stretch; background: var(--uems-border-tertiary); margin: 10px 0 10px 10px; }
+    /* Total cell — stacked "TOTAL / N"; with filters on it morphs to
+       "SHOWING / X of N / Clear" (see apply() in the script). */
+    .vuln__total { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 1px; padding: var(--spacing-4) var(--spacing-16); border-inline-end: 1px solid var(--uems-border-tertiary); min-width: 96px; }
+    /* Number ABOVE the label (matches the severity/risk boxes). */
+    .vuln__total-lbl { order: 2; font-size: var(--font-size-11); font-weight: var(--font-weight-semibold); letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--uems-text-secondary); }
+    .vuln__total-num { order: 1; font-size: 18px; font-weight: var(--font-weight-bold); line-height: 1.1; color: var(--uems-text-primary); white-space: nowrap; }
+    .vuln__total-clear { order: 3; }
+    .vuln__total-of { font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); }
+    .vuln__total-clear { border: 0; background: none; padding: 0; font: inherit; font-size: var(--font-size-12);
+      font-weight: var(--font-weight-semibold); color: var(--uems-text-accent-link); cursor: pointer; }
+    .vuln__total-clear:hover { text-decoration: underline; }
+    .vuln__total-clear[hidden] { display: none; }
+    /* Compact cells: number ABOVE, label BELOW inside the tint box. */
+    /* flex-basis auto: each box sizes to its label first (no mid-word chopping),
+       then leftover space is shared. Ellipsis only kicks in when truly cramped. */
+    /* Colourful tinted boxes (always) — 10px card edges + 10px between boxes
+       (each box carries the start margin; the last one adds the end margin). */
+    .vuln__sev { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px; margin: 10px 0 10px 10px; border-radius: var(--radius-md); padding: var(--spacing-6) var(--spacing-6);
+      border: 1px solid transparent; }
+    .vuln__sev:last-child { margin-inline-end: 10px; }
+    .vuln__sev-num { font-size: 16px; font-weight: var(--font-weight-bold); line-height: 1.1; }
+    .vuln__sev-lbl { font-size: var(--font-size-12); line-height: 1.15; color: var(--uems-text-secondary); text-align: center; max-width: 100%; }
+    .vuln__sev--crit  { background: var(--uems-bg-error-primary); }   .vuln__sev--crit  .vuln__sev-num { color: var(--uems-text-error); }
+    .vuln__sev--imp   { background: var(--uems-bg-warning-primary); } .vuln__sev--imp   .vuln__sev-num { color: var(--uems-text-warning); }
+    .vuln__sev--mod   { background: var(--uems-bg-alert-primary); }   .vuln__sev--mod   .vuln__sev-num { color: var(--uems-text-alert); }
+    .vuln__sev--low   { background: var(--uems-bg-info-primary); }    .vuln__sev--low   .vuln__sev-num { color: var(--uems-text-info); }
+    .vuln__sev--info2 { background: var(--uems-bg-accent-primary); }  .vuln__sev--info2 .vuln__sev-num { color: var(--uems-text-accent-link); }
+    /* Purple (Malware) — no purple token in the DS; theme-aware light tint via color-mix. */
+    .vuln__sev--pur   { background: color-mix(in srgb, #8B5CF6 13%, var(--uems-bg-primary)); }
+    .vuln__sev--pur   .vuln__sev-num { color: #7C3AED; }
+    /* Risk boxes carry the table's indicator icon — icon circle + number on the
+       TOP row, label below (centred). */
+    .vuln__sev-top { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .vuln__sev-ic { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; border-radius: var(--radius-full);
+      background: color-mix(in srgb, var(--uems-bg-primary) 70%, transparent); }
+    .vuln__sev--crit  .vuln__sev-ic { color: var(--uems-text-error); }
+    .vuln__sev--imp   .vuln__sev-ic { color: var(--uems-text-warning); }
+    .vuln__sev--mod   .vuln__sev-ic { color: var(--uems-text-alert); }
+    .vuln__sev--low   .vuln__sev-ic { color: var(--uems-text-info); }
+    .vuln__sev--info2 .vuln__sev-ic { color: var(--uems-text-accent-link); }
+    .vuln__sev--pur   .vuln__sev-ic { color: #7C3AED; }
+    /* Risk indicators label cell — sits right after the group separator;
+       no trailing border (the boxes follow directly). */
+    .vuln__risk-lbl { flex: 0 0 auto; padding: 0 var(--spacing-16); font-size: var(--font-size-13); font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary); align-self: stretch; display: flex; align-items: center; }
+
+    .vuln__risk-lbl { gap: 6px; }
+    .vuln__risk-tip { display: inline-flex; align-items: center; color: var(--uems-icon-secondary); cursor: help; }
+
+    /* Faceted-filter interaction on the summary boxes */
+    .vuln__sev[data-sev], .vuln__sev[data-risk] { cursor: pointer; position: relative;
+      transition: box-shadow 140ms var(--ease-standard), transform 140ms var(--ease-standard); }
+    .vuln__sev[data-sev]:hover, .vuln__sev[data-risk]:hover { box-shadow: 0 1px 4px rgba(13, 17, 29, 0.10); }
+    /* Selected: accent ring around the box + accent circle with a white ✓
+       overlapping the top-right corner. Theme-aware accent (no fake solid tokens). */
+    .vuln__sev.is-selected { border-color: var(--uems-text-accent-link); box-shadow: 0 0 0 1px var(--uems-text-accent-link); }
+    .vuln__sev.is-selected::after { content: "✓"; position: absolute; top: -5px; inset-inline-end: -2px;
+      width: 15px; height: 15px; border-radius: var(--radius-full);
+      background: var(--uems-text-accent-link); color: var(--uems-text-white, #fff);
+      font-size: 9px; font-weight: var(--font-weight-bold); line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 0 2px var(--uems-bg-primary); }
+
+    .vuln__desc { margin: 0; font-size: var(--font-size-14); color: var(--uems-text-secondary); }
+    .vuln__chips { display: flex; flex-wrap: wrap; gap: var(--spacing-6); }
+    .vuln__chips[hidden] { display: none; }
+
+    /* ── Responsive summary ────────────────────────────────────────────────
+       ≤1180px: cards stack vertically (severity on top, risk below), boxes wrap.
+       ≤760px:  page region scrolls again (small screens need the room), label
+                cells become full-width headers, boxes go 2-up. */
+    /* Boxes never balloon — capped width; leftover card space stays empty. */
+    .vuln__sev { max-width: 220px; }
+    @media (max-width: 1180px) {
+      .vuln__summary { flex-direction: column; }
+      /* flex-basis 0 is horizontal sizing — in the stacked (column) layout it
+         collapses card HEIGHT to 0, so switch to natural height. */
+      .vuln__card { flex: 0 0 auto; flex-wrap: wrap; }
+      /* The vertical separator becomes a full-width horizontal rule — the card
+         breaks into a severity row on top and a risk row below. */
+      .vuln__sum-div { flex: 0 0 100%; height: 1px; margin: 0; }
+      /* Low ends row 1 here (not :last-child — Malware is) — give it the same
+         10px end margin so it doesn't touch the card's right edge. */
+      .vuln__sev:has(+ .vuln__sum-div) { margin-inline-end: 10px; }
+      .vuln__sev { min-width: 0; }
+    }
+    @media (max-width: 760px) {
+      .vuln { overflow-y: auto; }
+      #vuln-table { flex: 0 0 auto; }
+      .vuln__total, .vuln__risk-lbl { width: 100%; border-inline-end: 0; align-self: auto;
+        border-bottom: 1px solid var(--uems-border-tertiary); justify-content: center; }
+      .vuln__total { flex-direction: row; gap: 6px; padding: var(--spacing-6) var(--spacing-8); }
+      .vuln__risk-lbl { padding: var(--spacing-6) var(--spacing-8); }
+      /* Full-width headers wrap (card already wraps from ≤1180px);
+         each boxes row below stays a single line. */
+      .vuln__sev { min-width: 0; flex: 1 1 0; }
+      .vuln__risk .vuln__sev { flex-direction: column; }
+      .vuln__sev-top { margin-bottom: 2px; }
+    }
+    .vuln__chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 6px 2px 10px; border-radius: var(--radius-full);
+      background: var(--uems-bg-accent-primary); font-size: var(--font-size-13); color: var(--uems-text-accent-link); font-weight: var(--font-weight-medium); }
+    .vuln__chip button { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; padding: 0;
+      border: 0; border-radius: var(--radius-full); background: transparent; color: inherit; cursor: pointer; }
+    .vuln__chip button:hover { background: color-mix(in srgb, var(--uems-text-accent-link) 15%, transparent); }
+    .vuln__chips-clear { align-self: center; border: 0; background: none; padding: 2px 8px; margin-inline-start: 2px;
+      font: inherit; font-size: var(--font-size-13); font-weight: var(--font-weight-medium);
+      color: var(--uems-text-accent-link); cursor: pointer; border-radius: var(--radius-sm); white-space: nowrap; }
+    .vuln__chips-clear:hover { text-decoration: underline; }
+
+    /* Auto-height + pinned footer: basis auto hugs the rows when few (footer sits
+       right under the last row), shrink kicks in when tall — the body scrolls
+       inside .ds-data-table__scroll and the footer stays fixed on screen. */
+    #vuln-table { flex: 0 1 auto; min-height: 0; }
+    /* Table cell helpers (rendered via column render()) */
+    .vuln-link { color: var(--uems-text-accent-link); text-decoration: none; cursor: pointer; }
+    .vuln-link:hover { text-decoration: underline; }
+    /* Title column: capped width + single-line ellipsis (full text on hover title). */
+    .vuln-link--trunc { display: block; max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vuln-count { display: inline-flex; vertical-align: middle; align-items: center; justify-content: center; min-width: 24px; height: 22px; padding: 0 6px;
+      border-radius: var(--radius-full); background: var(--uems-bg-info-primary); color: var(--uems-text-info); font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); }
+    .vuln-muted { color: var(--uems-text-tertiary); }
+    /* Risk-indicator icon chips in rows — 22px so every row's content height
+       matches the pills/badges (uneven chip heights read as jumpy row padding). */
+    .vt-ri { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px;
+      border-radius: var(--radius-sm); margin-inline-end: 4px; vertical-align: middle; }
+    /* Same palette as the summary boxes: Exploits red, Actively Exploited orange,
+       Zero-Day yellow, Threat Actors violet, Malware blue. */
+    .vt-ri--exp { background: var(--uems-bg-error-primary);   color: var(--uems-text-error); }
+    .vt-ri--ae  { background: var(--uems-bg-warning-primary); color: var(--uems-text-warning); }
+    .vt-ri--zd  { background: var(--uems-bg-alert-primary);   color: var(--uems-text-alert); }
+    .vt-ri--ta  { background: color-mix(in srgb, #8B5CF6 13%, var(--uems-bg-primary)); color: #7C3AED; }
+    .vt-ri--mal { background: var(--uems-bg-accent-primary);  color: var(--uems-text-accent-link); }
+    /* "+N" extra-CVE pill */
+    .vt-plus { display: inline-flex; vertical-align: middle; align-items: center; justify-content: center; min-width: 26px; height: 20px; padding: 0 6px;
+      border-radius: var(--radius-full); background: var(--uems-bg-accent-primary); color: var(--uems-text-accent-link);
+      font-size: var(--font-size-12); font-weight: var(--font-weight-semibold); }
+    /* Advisory pills */
+    .vt-adv { display: inline-flex; vertical-align: middle; align-items: center; height: 22px; padding: 0 8px; margin: 1px 4px 1px 0;
+      border-radius: var(--radius-full); background: var(--uems-bg-secondary); color: var(--uems-text-primary);
+      font-size: var(--font-size-12); font-weight: var(--font-weight-medium); white-space: nowrap; }
+    /* Risk-score pill (colour by band) */
+    .vt-score { display: inline-flex; vertical-align: middle; align-items: center; justify-content: center; min-width: 44px; height: 22px; padding: 0 8px;
+      border-radius: var(--radius-full); font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); }
+    .vt-score--crit { background: var(--uems-bg-error-primary);   color: var(--uems-text-error); }
+    .vt-score--imp  { background: var(--uems-bg-warning-primary); color: var(--uems-text-warning); }
+    .vt-score--mod  { background: var(--uems-bg-alert-primary);   color: var(--uems-text-alert); }
+    .vt-score--low  { background: var(--uems-bg-accent-primary);  color: var(--uems-text-accent-link); }
+    /* EPSS pill (neutral) */
+    .vt-epss { display: inline-flex; vertical-align: middle; align-items: center; justify-content: center; height: 22px; padding: 0 8px;
+      border-radius: var(--radius-full); background: var(--uems-bg-secondary); color: var(--uems-text-primary);
+      font-size: var(--font-size-13); white-space: nowrap; }
+
+    /* ── Getting started — full-screen Patch Management flow ── */
+    .gs-overlay { position: fixed; inset: 0; z-index: var(--z-modal, 1000); display: flex; align-items: center; justify-content: center; padding: 28px; background: rgba(10, 11, 15, 0.5); }
+    .gs-overlay[hidden] { display: none; }
+    .gs-modal { width: min(1180px, 100%); height: min(760px, 100%); display: flex; flex-direction: column; background: var(--uems-bg-primary-alt); border-radius: var(--radius-lg, 12px); overflow: hidden; box-shadow: 0 20px 60px rgba(13, 17, 29, 0.28); }
+    .gs-head { display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-bottom: 1px solid var(--uems-border-tertiary); background: linear-gradient(135deg, var(--uems-bg-accent-primary) 0%, var(--uems-bg-primary) 55%, var(--uems-bg-warning-primary) 100%); }
+    .gs-head__title { flex: 1; font-size: var(--font-size-20); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+    /* Getting Started — "simple steps" card flow (3 step cards + footer references) */
+    .gs-body { flex: 1; min-height: 0; overflow: auto; padding: 48px 56px; display: flex; align-items: center; justify-content: center;
+      background-color: var(--uems-bg-primary-alt);
+      background-image: radial-gradient(var(--uems-border-tertiary) 1px, transparent 1px); background-size: 22px 22px; }
+    .gs-cards { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 56px 120px; align-items: start; width: 100%; max-width: 1080px; margin: 0 auto; }
+    .gs-card--1 { grid-column: 1; grid-row: 1; }
+    .gs-card--2 { grid-column: 2; grid-row: 1 / span 2; }
+    .gs-card--3 { grid-column: 1; grid-row: 2; }
+    .gs-card__head { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 12px 12px 0 0;
+      background: linear-gradient(90deg, var(--uems-bg-accent-primary, #eaf0fc) 0%, var(--uems-bg-secondary, #f0f2f5) 45%, transparent 100%); }
+    .gs-card__n { flex: 0 0 30px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--uems-border-accent-subtle, var(--uems-border-tertiary)); background: var(--uems-bg-primary); display: flex; align-items: center; justify-content: center; font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); font-size: var(--font-size-15); }
+    .gs-card__title { font-size: var(--font-size-16); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+    .gs-card__body { padding: 24px; display: flex; flex-direction: column; gap: 22px; }
+    .gs-grp { display: flex; gap: 12px; align-items: flex-start; }
+    .gs-grp__ic { color: var(--uems-text-accent-link); margin-top: 4px; flex: 0 0 auto; }
+    .gs-grp__label { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); margin-bottom: 8px; }
+    .gs-grp__links { display: flex; flex-wrap: wrap; gap: 8px 28px; }
+    .gs-grp__links ds-text-link { font-size: var(--font-size-14); }
+    /* decorative connector arrows spanning the column gap */
+    .gs-arrow { position: absolute; color: var(--uems-icon-subtle, #9d9ea5); pointer-events: none; z-index: 1; }
+    .gs-arrow--1 { top: 64px; left: 50%; transform: translateX(-52%); }                 /* card 1 → card 2 (Install Software) */
+    .gs-arrow--2 { bottom: 96px; left: 50%; transform: translateX(-48%) scaleX(-1); }   /* card 2 → card 3 (User Logon Reports) */
+    /* footer references */
+    .gs-foot { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--uems-border-tertiary); background: var(--uems-bg-accent-primary-subtle, var(--uems-bg-secondary)); font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); }
+    .gs-foot__sep { color: var(--uems-border-secondary); }
+    [dir="rtl"] .gs-card__head { border-radius: 12px 12px 0 0; background: linear-gradient(270deg, var(--uems-bg-accent-primary, #eaf0fc) 0%, var(--uems-bg-secondary, #f0f2f5) 45%, transparent 100%); }
+    /* RTL mirrors the column order (card 1 → right); keep the arrows centred in
+       the gap (same translate) and only flip their direction (scaleX). */
+    [dir="rtl"] #gs-pop .gs-arrow--1 { transform: translateX(-52%) scaleX(-1); }
+    [dir="rtl"] #gs-pop .gs-arrow--2 { transform: translateX(-48%) scaleX(1); }
+
+    /* Zia AI logo button in the header cluster */
+    .zia-btn .zia-ic { width: 27px; height: 27px; display: block; }
+    /* Header takeover (Ask Zia / Settings): the launching icon reads active, the module tab no longer active */
+    .zia-btn.ds-header-nav__icon-btn--active,
+    #ec-header [data-action="settings"].ds-header-nav__icon-btn--active { background: var(--uems-bg-accent-primary); }
+    .hdr-overlay #ec-header .ds-header-nav__tab-indicator { opacity: 0 !important; }
+    .hdr-overlay #ec-header .ds-header-nav__tab--active { color: var(--uems-text-secondary) !important; font-weight: var(--font-weight-regular) !important; }
+
+    /* ── Ask Zia page → extracted to views/zia.html (CSS + markup + JS there;
+       fetched & injected by injectDrawer('zia')). The header Zia button (.zia-btn,
+       above) stays here. ── */
+
+    /* ── Settings page → extracted to views/settings.html (CSS + markup + JS
+       live there; fetched & injected by injectDrawer('settings')). ── */
+
+    /* Right-pane rail tooltips (rail is icon-only) — appears to the LEFT of the icon */
+    .rp-tip {
+      position: fixed; z-index: 2000; transform: translate(-100%, -50%);
+      background: var(--uems-bg-secondary-solid, #313746); color: var(--uems-text-white, #fff);
+      font-family: var(--font-family-sans); font-size: var(--font-size-12, 12px); font-weight: var(--font-weight-semibold);
+      padding: 4px 8px; border-radius: 8px; white-space: nowrap; pointer-events: none;
+      box-shadow: 0 4px 14px rgba(13, 17, 29, 0.22);
+    }
+    .rp-tip[hidden] { display: none; }
+    .rp-tip::after { content: ''; position: absolute; left: 100%; top: 50%; transform: translateY(-50%); border: 5px solid transparent; border-left-color: var(--uems-bg-secondary-solid, #313746); }
+
+    /* Header icon tooltips (top nav is icon-only) — appears BELOW the icon */
+    .hdr-tip {
+      position: fixed; z-index: 2000; transform: translate(-50%, 0);
+      background: var(--uems-bg-secondary-solid, #313746); color: var(--uems-text-white, #fff);
+      font-family: var(--font-family-sans); font-size: var(--font-size-12, 12px); font-weight: var(--font-weight-semibold);
+      padding: 4px 8px; border-radius: 8px; white-space: nowrap; pointer-events: none;
+      box-shadow: 0 4px 14px rgba(13, 17, 29, 0.22);
+    }
+    .hdr-tip[hidden] { display: none; }
+    .hdr-tip::after { content: ''; position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); border: 5px solid transparent; border-bottom-color: var(--uems-bg-secondary-solid, #313746); }
+
+    /* Drawer close (×) buttons — the drawer auto-focuses the × on open, so the
+       DS focus-visible ring (2px offset accent box) lingers and reads as an ugly
+       detached blue box on hover. Drop the offset ring; show a clean contained
+       grey hover instead (keyboard focus still gets a subtle contained ring). */
+    .help-close .ds-icon-button:focus-visible,
+    .gs-close .ds-icon-button:focus-visible,
+    .apps-close .ds-icon-button:focus-visible,
+    .pf-close .ds-icon-button:focus-visible { outline: none !important; outline-offset: 0 !important; box-shadow: inset 0 0 0 1px var(--uems-border-secondary); }
+    .help-close .ds-icon-button:hover,
+    .gs-close .ds-icon-button:hover,
+    .apps-close .ds-icon-button:hover,
+    .pf-close .ds-icon-button:hover { background: var(--uems-bg-primary-hover); }
+
+    /* ── Apps launcher → extracted to views/apps.html (CSS + markup + JS there) ── */
+  </style>
+</head>
+<body>
+
+<!-- Boot splash — animated Endpoint Central logo + loading bar. Shown until the
+     shell's core components are defined, then fades out. -->
+<div class="shell-loader" id="shell-loader">
+  <div class="shell-loader__lockup">
+  <svg class="shell-loader__logo" viewBox="-19.6 -19.6 319.2 319.2" width="137" height="137" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Loading" role="img" style="overflow:visible">
+    <title>Endpoint Central loader</title>
+    <path d="M64.0765 188.359L112.243 140.094L20 140.058" stroke="#007AC1" stroke-width="18.00" stroke-linejoin="round" stroke-dasharray="160.4 160.4" stroke-dashoffset="160.4"><animate attributeName="stroke-dashoffset" values="160.4;0;0" keyTimes="0;0.6154;1" dur="2.60s" calcMode="spline" keySplines="0.16 0.84 0.44 1;0 0 1 1" repeatCount="1" fill="freeze"/></path>
+    <path d="M188.359 215.923L140.094 167.756L140.058 260" stroke="#009D54" stroke-width="18.00" stroke-linejoin="round" stroke-dasharray="160.4 160.4" stroke-dashoffset="160.4"><animate attributeName="stroke-dashoffset" values="160.4;0;0" keyTimes="0;0.6154;1" dur="2.60s" calcMode="spline" keySplines="0.16 0.84 0.44 1;0 0 1 1" repeatCount="1" fill="freeze"/></path>
+    <path d="M215.924 91.6411L167.757 139.906L260 139.942" stroke="#CE1432" stroke-width="18.00" stroke-linejoin="round" stroke-dasharray="160.4 160.4" stroke-dashoffset="160.4"><animate attributeName="stroke-dashoffset" values="160.4;0;0" keyTimes="0;0.6154;1" dur="2.60s" calcMode="spline" keySplines="0.16 0.84 0.44 1;0 0 1 1" repeatCount="1" fill="freeze"/></path>
+    <path d="M91.6411 64.0765L139.906 112.243L139.942 20" stroke="#FAA61A" stroke-width="18.00" stroke-linejoin="round" stroke-dasharray="160.4 160.4" stroke-dashoffset="160.4"><animate attributeName="stroke-dashoffset" values="160.4;0;0" keyTimes="0;0.6154;1" dur="2.60s" calcMode="spline" keySplines="0.16 0.84 0.44 1;0 0 1 1" repeatCount="1" fill="freeze"/></path>
+  </svg>
+  <div class="shell-loader__name">Endpoint Central</div>
+  </div>
+  <div class="shell-loader__bar"><span class="shell-loader__bar-fill"></span></div>
+</div>
+<script>
+  /* Loader sequence (≈8s total): 1) logo draws once → 2) name fades in → 3) the
+     logo+name lockup lifts 20px → 4) loading bar fades in + the light sweeps. */
+  (function () {
+    var nm = document.querySelector('.shell-loader__name');
+    var lk = document.querySelector('.shell-loader__lockup');
+    var br = document.querySelector('.shell-loader__bar');
+    setTimeout(function () { if (nm) nm.classList.add('is-in'); }, 2500);   /* 2: name in */
+    setTimeout(function () { if (lk) lk.classList.add('is-up'); }, 3500);   /* 3: lift 20px */
+    setTimeout(function () { if (br) br.classList.add('is-in'); }, 4200);   /* 4: loader in */
+  })();
+</script>
+
+<!-- Product skeleton — shown for ~3s after the splash fades, before the real
+     shell is revealed. Shimmer placeholders mirror the shell chrome. -->
+<div class="shell-skeleton" id="shell-skeleton" hidden aria-hidden="true">
+  <div class="sk-header">
+    <span class="sk sk--logo"></span>
+    <div class="sk-tabs">
+      <span class="sk" style="width:54px"></span><span class="sk" style="width:90px"></span>
+      <span class="sk" style="width:120px"></span><span class="sk" style="width:80px"></span>
+      <span class="sk" style="width:70px"></span><span class="sk" style="width:96px"></span>
+    </div>
+    <div class="sk-cluster">
+      <span class="sk sk--dot"></span><span class="sk sk--dot"></span>
+      <span class="sk sk--dot"></span><span class="sk sk--dot"></span><span class="sk sk--av"></span>
+    </div>
+  </div>
+  <div class="sk-body">
+    <div class="sk-frame">
+      <div class="sk-rail">
+        <span class="sk sk--ic"></span><span class="sk sk--ic"></span><span class="sk sk--ic"></span>
+        <span class="sk sk--ic"></span><span class="sk sk--ic"></span><span class="sk sk--ic"></span>
+      </div>
+      <div class="sk-content"></div>
+    </div>
+    <div class="sk-right">
+      <span class="sk sk--dot"></span><span class="sk sk--dot"></span><span class="sk sk--dot"></span>
+      <span class="sk sk--dot"></span><span class="sk sk--dot"></span>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- TOP — Header navigation -->
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+  <div class="body">
+
+    <!-- LEFT-NAV mode only — the <ds-module-rail> component (top tabs relocated
+         to the side). Sits at BODY level, OUTSIDE the rounded shell-area frame.
+         Hidden in top-nav mode; fed items + wired to selectTab by the script. -->
+    <ds-module-rail id="shell-modrail" aria-label="Modules" hidden></ds-module-rail>
+
+    <!-- ONE border wraps L1 + L2 + content -->
+    <div class="shell-area">
+
+      <!-- LEFT — Sidebar L1 (module rail). Starts hidden so the initial
+           Home state shows a clean view without a flash of patch menu. -->
+      <ds-sidebar-l1 id="shell-l1" class="is-hidden" hide-toggle style="height: 100%;"></ds-sidebar-l1>
+
+      <!-- LEFT — Sidebar L2 (sub-nav). Same: starts hidden until JS decides
+           which menu to apply for the active tab. `collapse-toggle` enables the
+           component's own hide/show control on its inner edge. -->
+      <ds-sidebar-l2 id="shell-l2" class="is-hidden" collapse-toggle style="height: 100%;"></ds-sidebar-l2>
+
+      <!-- CENTER — Threats & Patches → Vulnerabilities (Prism ds-* components). -->
+      <ds-content role="main">
+        <div class="vuln">
+          <div class="vuln__top">
+            <ds-tab-bar-horizontal id="vuln-tabs" type="underline"></ds-tab-bar-horizontal>
+          </div>
+
+          <div class="vuln__summary">
+            <!-- Single summary card: severity boxes │ risk indicators (both are
+                 multi-select faceted filters — clicking a box filters the table
+                 AND recalculates the other group's counts). -->
+            <ds-container class="vuln__card" variant="outline" radius="lg" padding="none" row align="stretch" gap="none">
+              <div class="vuln__total">
+                <div class="vuln__total-lbl" id="vuln-total-lbl">Total</div>
+                <div class="vuln__total-num" id="vuln-total-num">109</div>
+                <button type="button" class="vuln__total-clear" id="vuln-total-clear" hidden>Clear</button>
+              </div>
+              <div class="vuln__sev vuln__sev--crit" data-sev="Critical"  role="button" tabindex="0" aria-pressed="false"><div class="vuln__sev-num">20</div><div class="vuln__sev-lbl">Critical</div></div>
+              <div class="vuln__sev vuln__sev--imp"  data-sev="Important" role="button" tabindex="0" aria-pressed="false"><div class="vuln__sev-num">65</div><div class="vuln__sev-lbl">Important</div></div>
+              <div class="vuln__sev vuln__sev--mod"  data-sev="Moderate"  role="button" tabindex="0" aria-pressed="false"><div class="vuln__sev-num">19</div><div class="vuln__sev-lbl">Moderate</div></div>
+              <div class="vuln__sev vuln__sev--low"  data-sev="Low"       role="button" tabindex="0" aria-pressed="false"><div class="vuln__sev-num">5</div><div class="vuln__sev-lbl">Low</div></div>
+
+              <div class="vuln__sum-div" role="separator" aria-orientation="vertical"></div>
+
+              <div class="vuln__risk-lbl">Risk Indicators
+                <ds-tooltip class="vuln__risk-tip" text="A vulnerability can belong to multiple risk indicators. Counts are not mutually exclusive." position="down-center"><ds-icon name="info-circle" size="15"></ds-icon></ds-tooltip>
+              </div>
+              <div class="vuln__sev vuln__sev--crit"  data-risk="Exploits"          role="button" tabindex="0" aria-pressed="false"><span class="vuln__sev-top"><span class="vuln__sev-ic"><ds-icon name="bug" size="15"></ds-icon></span><span class="vuln__sev-num">47</span></span><span class="vuln__sev-lbl">Exploits</span></div>
+              <div class="vuln__sev vuln__sev--imp"   data-risk="Actively Exploited" role="button" tabindex="0" aria-pressed="false"><span class="vuln__sev-top"><span class="vuln__sev-ic"><ds-icon name="zap" size="15"></ds-icon></span><span class="vuln__sev-num">28</span></span><span class="vuln__sev-lbl">Actively Exploited</span></div>
+              <div class="vuln__sev vuln__sev--mod"   data-risk="Zero-Day"          role="button" tabindex="0" aria-pressed="false"><span class="vuln__sev-top"><span class="vuln__sev-ic"><ds-icon name="shield" size="15"></ds-icon></span><span class="vuln__sev-num">18</span></span><span class="vuln__sev-lbl">Zero-Day</span></div>
+              <div class="vuln__sev vuln__sev--pur"   data-risk="Threat Actors"     role="button" tabindex="0" aria-pressed="false"><span class="vuln__sev-top"><span class="vuln__sev-ic"><ds-icon name="users" size="15"></ds-icon></span><span class="vuln__sev-num">14</span></span><span class="vuln__sev-lbl">Threat Actors</span></div>
+              <div class="vuln__sev vuln__sev--info2" data-risk="Malware"           role="button" tabindex="0" aria-pressed="false"><span class="vuln__sev-top"><span class="vuln__sev-ic"><ds-icon name="skull" size="15"></ds-icon></span><span class="vuln__sev-num">14</span></span><span class="vuln__sev-lbl">Malware</span></div>
+            </ds-container>
+          </div>
+
+          <p class="vuln__desc">This table enumerates the vulnerabilities detected in Windows, Linux and Mac operating systems as well as third-party applications. <ds-text-link href="#" variant="primary">Looking for additional reports?</ds-text-link></p>
+
+          <!-- Active filter tags — own row under the description (hidden when empty). -->
+          <div class="vuln__chips" id="vuln-chips" aria-label="Active filters" hidden></div>
+
+          <ds-data-table id="vuln-table" show-toolbar show-footer sticky-header selection-mode="multi" row-height="comfortable"
+            rows-per-page="500" rows-per-page-options="50,100,500" total-rows="109"></ds-data-table>
+        </div>
+      </ds-content>
+
+      <!-- Ask Zia — markup in views/zia.html, injected into .shell-area on first open. -->
+
+      <!-- Settings — markup lives in views/settings.html, injected into .shell-area
+           on first open by injectDrawer('settings'). -->
+
+      <!-- Help drawer → markup in views/help.html, injected into .shell-area on first open. -->
+      <!-- Accessibility drawer → markup in views/accessibility.html, injected on first open. -->
+      <!-- Product Updates drawer → markup in views/updates.html, injected on first open. -->
+
+    </div><!-- /.shell-area -->
+
+    <!-- RIGHT — Utility rail (outside the unified shell) -->
+    <ds-right-pane id="shell-rp" show-accessibility
+      show-mobile-app="false" show-road-map="false" show-upload-logs="false" show-call="false"
+      style="height: 100%;"></ds-right-pane>
+
+  </div>
+</div>
+
+<!-- Update notification popover — opened by the right-pane "Update" icon -->
+<div class="upd-pop" id="upd-pop" role="dialog" aria-label="Software update"></div>
+
+<!-- Getting started — full-screen flow opened by the right-pane "rocket" icon -->
+<div class="gs-overlay" id="gs-pop" hidden role="dialog" aria-modal="true" aria-label="Steps involved in Patch Management">
+  <div class="gs-modal">
+    <div class="gs-head">
+      <span class="gs-head__title">Getting Started in simple steps</span>
+      <ds-icon-button class="gs-close" data-gs-close icon="close" label="Close" no-tooltip type="tertiary-grey" size="small"></ds-icon-button>
+    </div>
+    <div class="gs-body">
+      <div class="gs-cards">
+        <svg class="gs-arrow gs-arrow--1" width="100" height="47" viewBox="0 0 113 53" fill="none" aria-hidden="true"><path d="M110.361 46.8809C62.4642 53.0334 34.8598 41.48 19.2217 28.2842C11.4117 21.6938 6.61 14.713 3.75977 9.37402C2.33469 6.70458 1.39697 4.44445 0.814453 2.84766C0.523236 2.04935 0.320737 1.41616 0.19043 0.980469C0.125315 0.762757 0.0779935 0.593858 0.046875 0.478516C0.031428 0.421238 0.0195253 0.377199 0.0117188 0.34668C0.00780487 0.331375 0.00501251 0.318893 0.00292969 0.310547C0.00191846 0.306479 0.00155419 0.303151 0.000976562 0.300781C0.000679016 0.299576 0.000144958 0.298455 0 0.297852C0.00154617 0.296583 0.0331578 0.288145 0.609375 0.148438C1.17822 0.0105159 1.21621 0.000674268 1.21875 0L1.21973 0.000976563C1.22001 0.0021138 1.21999 0.00492081 1.2207 0.0078125C1.22215 0.0136088 1.22437 0.0227565 1.22754 0.0351563C1.23404 0.0605742 1.24466 0.0999631 1.25879 0.152344C1.28704 0.257075 1.33084 0.414664 1.39258 0.621094C1.51623 1.0345 1.71087 1.64411 1.99316 2.41797C2.55785 3.96586 3.47282 6.17131 4.86719 8.7832C7.65587 14.0068 12.3631 20.8546 20.0312 27.3252C35.3499 40.2514 62.5815 51.7526 110.201 45.6357L110.361 46.8809Z" fill="#9D9EA5"/><path d="M111.841 46.0241L104.989 52.9536L103.733 41.0009L111.841 46.0241Z" fill="#A4A8B1"/><path d="M104.992 52.9048L103.736 40.9521L111.844 45.9748L104.992 52.9048ZM104.746 42.5623L105.639 51.0594L110.512 46.1335L104.746 42.5623Z" fill="#9D9EA5"/></svg>
+        <svg class="gs-arrow gs-arrow--2" width="100" height="47" viewBox="0 0 113 53" fill="none" aria-hidden="true"><path d="M110.361 46.8809C62.4642 53.0334 34.8598 41.48 19.2217 28.2842C11.4117 21.6938 6.61 14.713 3.75977 9.37402C2.33469 6.70458 1.39697 4.44445 0.814453 2.84766C0.523236 2.04935 0.320737 1.41616 0.19043 0.980469C0.125315 0.762757 0.0779935 0.593858 0.046875 0.478516C0.031428 0.421238 0.0195253 0.377199 0.0117188 0.34668C0.00780487 0.331375 0.00501251 0.318893 0.00292969 0.310547C0.00191846 0.306479 0.00155419 0.303151 0.000976562 0.300781C0.000679016 0.299576 0.000144958 0.298455 0 0.297852C0.00154617 0.296583 0.0331578 0.288145 0.609375 0.148438C1.17822 0.0105159 1.21621 0.000674268 1.21875 0L1.21973 0.000976563C1.22001 0.0021138 1.21999 0.00492081 1.2207 0.0078125C1.22215 0.0136088 1.22437 0.0227565 1.22754 0.0351563C1.23404 0.0605742 1.24466 0.0999631 1.25879 0.152344C1.28704 0.257075 1.33084 0.414664 1.39258 0.621094C1.51623 1.0345 1.71087 1.64411 1.99316 2.41797C2.55785 3.96586 3.47282 6.17131 4.86719 8.7832C7.65587 14.0068 12.3631 20.8546 20.0312 27.3252C35.3499 40.2514 62.5815 51.7526 110.201 45.6357L110.361 46.8809Z" fill="#9D9EA5"/><path d="M111.841 46.0241L104.989 52.9536L103.733 41.0009L111.841 46.0241Z" fill="#A4A8B1"/><path d="M104.992 52.9048L103.736 40.9521L111.844 45.9748L104.992 52.9048ZM104.746 42.5623L105.639 51.0594L110.512 46.1335L104.746 42.5623Z" fill="#9D9EA5"/></svg>
+
+        <ds-container class="gs-card gs-card--1" variant="outline" radius="lg" padding="none">
+          <div class="gs-card__head"><span class="gs-card__n">1</span><span class="gs-card__title">Install Agent</span></div>
+          <div class="gs-card__body">
+            <div class="gs-grp"><ds-icon class="gs-grp__ic" name="spark" size="14"></ds-icon><div class="gs-grp__links"><ds-text-link href="#" variant="primary" size="medium">In Workgroup Computers</ds-text-link></div></div>
+            <div class="gs-grp"><ds-icon class="gs-grp__ic" name="spark" size="14"></ds-icon><div class="gs-grp__links"><ds-text-link href="#" variant="primary" size="medium">In Active Directory Computers</ds-text-link></div></div>
+            <div class="gs-grp"><ds-icon class="gs-grp__ic" name="spark" size="14"></ds-icon><div class="gs-grp__links"><ds-text-link href="#" variant="primary" size="medium">In Remote Office Computers</ds-text-link></div></div>
+          </div>
+        </ds-container>
+
+        <ds-container class="gs-card gs-card--2" variant="outline" radius="lg" padding="none">
+          <div class="gs-card__head"><span class="gs-card__n">2</span><span class="gs-card__title">Manage Desktops</span></div>
+          <div class="gs-card__body">
+            <div class="gs-grp"><ds-icon class="gs-grp__ic" name="spark" size="14"></ds-icon><div><div class="gs-grp__label">Install Software</div><div class="gs-grp__links"><ds-text-link href="#" variant="primary" size="medium">Windows</ds-text-link><ds-text-link href="#" variant="primary" size="medium">Mac</ds-text-link><ds-text-link href="#" variant="primary" size="medium">Linux</ds-text-link></div></div></div>
+            <div class="gs-grp"><ds-icon class="gs-grp__ic" name="spark" size="14"></ds-icon><div><div class="gs-grp__label">Install Patches</div><div class="gs-grp__links"><ds-text-link href="#" variant="primary" size="medium">Windows</ds-text-link><ds-text-link href="#" variant="primary" size="medium">Mac</ds-text-link><ds-text-link href="#" variant="primary" size="medium">Linux</ds-text-link></div></div></div>
+            <div class="gs-grp"><ds-icon class="gs-grp__ic" name="spark" size="14"></ds-icon><div><div class="gs-grp__label">Configuration</div><div class="gs-grp__links"><ds-text-link href="#" variant="primary" size="medium">Firewall</ds-text-link><ds-text-link href="#" variant="primary" size="medium">Services</ds-text-link><ds-text-link href="#" variant="primary" size="medium">Security Policies</ds-text-link></div></div></div>
+            <div class="gs-grp"><ds-icon class="gs-grp__ic" name="spark" size="14"></ds-icon><div><div class="gs-grp__label">Scan</div><div class="gs-grp__links"><ds-text-link href="#" variant="primary" size="medium">Asset</ds-text-link><ds-text-link href="#" variant="primary" size="medium">Vulnerability</ds-text-link></div></div></div>
+            <div class="gs-grp"><ds-icon class="gs-grp__ic" name="spark" size="14"></ds-icon><div><div class="gs-grp__label">Tools</div><div class="gs-grp__links"><ds-text-link href="#" variant="primary" size="medium">Remote Control</ds-text-link><ds-text-link href="#" variant="primary" size="medium">Wakeup Shutdown</ds-text-link><ds-text-link href="#" variant="primary" size="medium">Defrag</ds-text-link></div></div></div>
+          </div>
+        </ds-container>
+
+        <ds-container class="gs-card gs-card--3" variant="outline" radius="lg" padding="none">
+          <div class="gs-card__head"><span class="gs-card__n">3</span><span class="gs-card__title">Reports</span></div>
+          <div class="gs-card__body">
+            <div class="gs-grp"><ds-icon class="gs-grp__ic" name="spark" size="14"></ds-icon><div><div class="gs-grp__label">Active Directory Reports</div><div class="gs-grp__links"><ds-text-link href="#" variant="primary" size="medium">Computers</ds-text-link><ds-text-link href="#" variant="primary" size="medium">Users</ds-text-link><ds-text-link href="#" variant="primary" size="medium">Groups Organisational Unit ( OU ) Information.</ds-text-link></div></div></div>
+            <div class="gs-grp"><ds-icon class="gs-grp__ic" name="spark" size="14"></ds-icon><div><div class="gs-grp__label">User Logon Reports</div><div class="gs-grp__links"><ds-text-link href="#" variant="primary" size="medium">Currently Logged on Users</ds-text-link><ds-text-link href="#" variant="primary" size="medium">Logon History</ds-text-link></div></div></div>
+          </div>
+        </ds-container>
+      </div>
+    </div>
+    <div class="gs-foot">Useful References : <ds-text-link href="#" variant="primary" size="medium">Watch video</ds-text-link><span class="gs-foot__sep">|</span><ds-text-link href="#" variant="primary" size="medium">Setup Guide</ds-text-link></div>
+  </div>
+</div>
+
+<!-- Apps launcher (9-dot/bento) → markup in views/apps.html, injected into <body>
+     on first open by injectDrawer('apps','body'). -->
+
+
+<script type="module">
+  import '../../design-system-library/src/components/index.js';
+  import { applyL2For, wireL1ToL2 } from '../../design-system-library/src/data/ec-menus.js';
+
+  const hEl  = document.getElementById('ec-header');
+  const l1El = document.getElementById('shell-l1');
+  const l2El = document.getElementById('shell-l2');
+  const rpEl = document.getElementById('shell-rp');
+  const contentEl = document.querySelector('ds-content');
+  const emptyEl   = document.querySelector('ds-empty-state');
+
+  /* ── Bilingual chrome data: English (LTR) + Arabic (RTL) ───────────────── */
+  const TABS = {
+    en: [
+      { id:'home', label:'Home', active:true }, { id:'configs', label:'Configurations' },
+      { id:'tp', label:'Threats & Patches' }, { id:'sd', label:'Software Deployment' },
+      { id:'inv', label:'Inventory' }, { id:'osd', label:'OS Deployment' },
+      { id:'mdm', label:'MDM' }, { id:'tools', label:'Tools' }, { id:'agent', label:'Agent' },
+      { id:'browsers', label:'Browsers' }, { id:'app-ctrl', label:'Application Control' },
+      { id:'malware', label:'Malware Protection' }, { id:'dlp', label:'Endpoint DLP', newTag:true },
+      { id:'bitlocker', label:'BitLocker Management' }, { id:'dev-ctrl', label:'Device Control' },
+      { id:'reports', label:'Reports' }, { id:'support', label:'Support' }, { id:'dex', label:'DEX' },
+    ],
+    ar: [
+      { id:'home', label:'الرئيسية', active:true }, { id:'configs', label:'التكوينات' },
+      { id:'tp', label:'التهديدات والتصحيحات' }, { id:'sd', label:'نشر البرامج' },
+      { id:'inv', label:'المخزون' }, { id:'osd', label:'نشر نظام التشغيل' },
+      { id:'mdm', label:'إدارة الأجهزة المحمولة' }, { id:'tools', label:'الأدوات' }, { id:'agent', label:'الوكيل' },
+      { id:'browsers', label:'المتصفحات' }, { id:'app-ctrl', label:'التحكم بالتطبيقات' },
+      { id:'malware', label:'الحماية من البرامج الضارة' }, { id:'dlp', label:'منع تسرّب البيانات', newTag:true },
+      { id:'bitlocker', label:'إدارة BitLocker' }, { id:'dev-ctrl', label:'التحكم بالأجهزة' },
+      { id:'reports', label:'التقارير' }, { id:'support', label:'الدعم' }, { id:'dex', label:'DEX' },
+    ],
+  };
+  const EMPTY = {
+    en: { t:'Nothing here yet', d:'This content area is ready to be filled. Drop your layout body inside ds-content and start composing with Prism components.', p:'Get started', s:'Learn more' },
+    ar: { t:'لا يوجد شيء هنا بعد', d:'هذه المنطقة جاهزة للتعبئة. ضع محتوى التخطيط داخل ds-content وابدأ التأليف باستخدام مكوّنات Prism.', p:'ابدأ', s:'اعرف المزيد' },
+  };
+
+  /* ── Direction / language: flips the shell LTR ⇄ RTL and translates the
+     header tabs + empty-state. The L1 rail and L2 sub-nav are NOT set here —
+     they are driven by the navigation wiring below (ec-menus). ──────────── */
+  let _lang = 'en';
+  let _tab  = 'tp';
+  function applyDir(lang) {
+    _lang = lang;
+    const rtl = lang === 'ar';
+    document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr');
+    document.documentElement.setAttribute('lang', lang);
+    [hEl, l1El, l2El, rpEl, contentEl].forEach((el) => {
+      if (!el) return;
+      if (rtl) el.setAttribute('rtl', ''); else el.removeAttribute('rtl');
+    });
+    hEl.tabs = TABS[lang];
+    if (emptyEl) {
+      const e = EMPTY[lang];
+      emptyEl.setAttribute('title', e.t);
+      emptyEl.setAttribute('description', e.d);
+      emptyEl.setAttribute('primary-label', e.p);
+      emptyEl.setAttribute('secondary-label', e.s);
+    }
+    translateStatic(lang);
+    if (typeof renderModRail === 'function' && document.documentElement.classList.contains('nav-left')) renderModRail();
+    /* Notify extracted drawer partials (e.g. Settings) so they re-render in the
+       active language; they self-subscribe to this event. */
+    document.dispatchEvent(new CustomEvent('shell:langchange', { detail: { lang } }));
+  }
+
+  /* ── Arabic translation of drawer content. The shell content is English; when
+     the user switches to Arabic we (a) translate static drawer strings in place,
+     (b) rebuild JS-built drawers in Arabic. DS components (ds-button/ds-badge/
+     ds-text-link) capture their label once at init, so we translate their
+     RENDERED inner label span rather than the host's slot text. Brand/product
+     names (Endpoint Central, AD360, iOS…) and numbers stay as-is. ──────────── */
+  const I18N_AR = {
+    /* Apps drawer */
+    'apps.edition': 'الإصدار الاحترافي',
+    'apps.sec1': 'استفد إلى أقصى حد من Endpoint Central',
+    'apps.sec2': 'حلول إدارة تقنية المعلومات والأمان ذات الصلة',
+    'apps.bundle': 'حزمة',
+    'apps.addon': 'إضافة',
+    'apps.free30': 'وصول مجاني لمدة 30 يومًا',
+    'apps.learnMore': 'اعرف المزيد',
+    'apps.enable': 'تفعيل',
+    'apps.esDesc': 'احمِ الأجهزة الطرفية من فقدان البيانات والبرامج/التنزيلات الضارة وتهديدات اليوم صفر والمزيد.',
+    'apps.dexDesc': 'الكشف الاستباقي عن المشكلات ومعالجتها للقضاء على تذاكر الدعم المتكررة.',
+    'apps.sdpDesc': 'منصة إدارة خدمات تقنية المعلومات لتبسيط التذاكر وتتبع الأصول وقاعدة بيانات إدارة التهيئة.',
+    'apps.ad360Desc': 'منصة إدارة دورة حياة الهوية الشاملة مع الأمان والامتثال لتقنية المعلومات.',
+    'apps.log360Desc': 'منصة SIEM لتحليل السجلات المركزي والكشف عن التهديدات في الوقت الفعلي والامتثال.',
+    'apps.s247Desc': 'منصة مراقبة سحابية للتطبيقات والخوادم والشبكات والمواقع الإلكترونية.',
+    'apps.pam360Desc': 'برنامج أمان الوصول المتميز مع الحوكمة ومراقبة الجلسات والتحليلات.',
+    /* Profile drawer */
+    'pf.role': 'مسؤول',
+    'pf.sessions': 'الجلسات',
+    'pf.userid': 'معرّف المستخدم',
+    'pf.superadmin': 'المسؤول الأعلى :',
+    'pf.personalize': 'تخصيص',
+    'pf.myAccount': 'حسابي',
+    'pf.signout': 'تسجيل الخروج',
+    'pf.trial': 'النسخة التجريبية',
+    'pf.daysLeft': 'متبقّي 7 أيام',
+    'pf.trialDesc': 'قم بالترقية الآن للاحتفاظ ببياناتك وميزاتك.',
+    'pf.getQuote': 'احصل على عرض سعر',
+    'pf.requestDemo': 'اطلب عرضًا توضيحيًا',
+    'pf.knowMore': 'هل تريد معرفة المزيد؟',
+    'pf.bookNow': 'احجز الآن',
+    'pf.talk': 'تحدّث معنا',
+    'pf.needHelp': 'تحتاج مساعدة؟',
+    'pf.reference': 'المراجع',
+    'pf.contact': 'اتصل بنا',
+    'pf.appearance': 'المظهر',
+    'pf.advanced': 'متقدّم',
+    'pf.light': 'فاتح',
+    'pf.dark': 'داكن',
+    'pf.system': 'النظام',
+    'pf.downloadApp': 'حمّل تطبيق الجوال',
+    'pf.appDesc': 'امسح رمز الاستجابة السريعة أو استخدم الروابط أدناه للتثبيت وتسجيل الدخول.',
+    'pf.loginDetails': 'تفاصيل تسجيل الدخول',
+    'pf.scan': 'امسح للتحميل',
+    'pf.copyright': '© 2026 Zoho Corp. جميع الحقوق محفوظة.',
+    /* Settings drawer */
+    'set.title': 'الإعدادات',
+    'set.search': 'بحث في الإعدادات',
+    'set.noMatch': 'لا توجد إعدادات مطابقة',
+    /* Ask Zia drawer */
+    'zia.brand': 'اسأل Zia',
+    'zia.new': 'محادثة جديدة',
+    'zia.search': 'بحث في المحادثات',
+    'zia.projects': 'المشاريع',
+    'zia.recent': 'الأخيرة',
+    'zia.july': 'يوليو',
+    'zia.june': 'يونيو',
+    'zia.hero': 'كيف يمكننا مساعدتك؟',
+    'zia.sub': 'اختر موجّهًا أدناه أو اكتب موجّهك الخاص لبدء الدردشة مع Zia',
+    'zia.placeholder': 'اسأل Zia للمساعدة',
+  };
+  function _i18nTarget(el) {
+    const tag = el.tagName;
+    if (tag === 'DS-BUTTON') return el.querySelector('.ds-button__label') || el;
+    if (tag === 'DS-TEXT-LINK') return el.querySelector('a span, span') || el;
+    if (tag === 'DS-BADGE') return el.querySelector('.ds-badge__label') || el;
+    return el;
+  }
+  function translateStatic(lang) {
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      const key = el.getAttribute('data-i18n');
+      const t = _i18nTarget(el);
+      if (t._i18nEN === undefined) t._i18nEN = t.textContent;
+      t.textContent = (lang === 'ar' && I18N_AR[key] != null) ? I18N_AR[key] : t._i18nEN;
+    });
+    /* Placeholder attributes (e.g. ds-search-field) — translate via data-i18n-ph */
+    document.querySelectorAll('[data-i18n-ph]').forEach((el) => {
+      const key = el.getAttribute('data-i18n-ph');
+      if (el._i18nPhEN === undefined) el._i18nPhEN = el.getAttribute('placeholder') || '';
+      el.setAttribute('placeholder', (lang === 'ar' && I18N_AR[key] != null) ? I18N_AR[key] : el._i18nPhEN);
+    });
+  }
+
+  /* ── Navigation — THIS is what makes clicking the nav change the data:
+       • header tab click → swap the L1 module rail + L2 sub-nav for that tab
+       • L1 item click    → swap the L2 sub-nav (items carrying an l2Groups map)
+       • Home tab         → hides both rails, shows the empty-state
+     All menu data comes from ec-menus.js (the per-tab EC module map). ───── */
+  function selectTab(tabId) {
+    _tab = tabId;
+    if (typeof hideZia === 'function') hideZia();   /* leaving to a module closes Ask Zia */
+    if (typeof hideSettings === 'function') hideSettings();
+    if (typeof hideSearch === 'function') hideSearch();
+    /* "Support" is a full content page (views/support.html); every other module
+       uses the normal L1/L2 nav. Toggle between the two. */
+    if (tabId === 'support') {
+      if (typeof showSupport === 'function') showSupport();
+    } else {
+      if (typeof hideSupport === 'function') hideSupport();
+      /* Reset the L2 hide/show BEFORE swapping in the new menu — otherwise the
+         new tab's sub-nav first renders in the leftover collapsed (0-width)
+         state and then snaps open, which reads as a glitch. */
+      if (l2El.hasAttribute('collapsed')) l2El.removeAttribute('collapsed');
+      applyL2For(l1El, l2El, tabId);
+      l1El.bottomItems = [];   /* Shell: hide the L1 footer ("Update Now") */
+    }
+    syncModRailActive();
+    /* Sync the header's active tab when nav is driven programmatically (deep
+       link, language flip, or the left-rail) — a normal header click already
+       left it here, so this is a harmless no-op there. */
+    if (hEl && typeof hEl.setActiveTab === 'function') hEl.setActiveTab(tabId);
+    /* Re-frame the content for the (now expanded) L2 — without this the content
+       keeps the collapsed framing from the previous tab. */
+    if (typeof syncContentFrame === 'function') syncContentFrame();
+  }
+  wireL1ToL2(l1El, l2El);
+  hEl.addEventListener('ds-header-nav-tab-select', (e) => {
+    if (e.detail && e.detail.id) selectTab(e.detail.id);
+  });
+  /* The L2 hide/show toggle lives in the <ds-sidebar-l2> component; Shell only
+     reframes the content when it collapses/expands. */
+  l2El.addEventListener('ds-sidebar-l2-collapse', () => { if (typeof syncContentFrame === 'function') syncContentFrame(); });
+
+  /* ── LEFT-NAVIGATION MODE ────────────────────────────────────────────────
+     A user preference (Top vs Left, Profile → Preferences) relocates the top
+     module tabs to the <ds-module-rail> component on the start edge. The module
+     data (TABS, bilingual) + selectTab→L1/L2 wiring are reused: Shell feeds the
+     rail its items and listens for ds-module-rail-select; the rail owns its own
+     icons-only / active-chip / overflow-more / tooltip behaviour. ─────────── */
+  const modRailEl = document.getElementById('shell-modrail');
+  const TAB_ICON = {
+    home: 'home', configs: 'settings-custom', tp: 'patch', sd: 'software',
+    inv: 'layers', osd: 'disk', mdm: 'mobile-devices', tools: 'service',
+    agent: 'computer', browsers: 'globe', 'app-ctrl': 'layout-grid',
+    malware: 'shield', dlp: 'file-shield', bitlocker: 'encryption-lock',
+    'dev-ctrl': 'device-control', reports: 'bar-vertical-chart',
+    support: 'help-circle', dex: 'speedometer',
+  };
+  /* Icons-only mode (Preferences "Display Icons Only in Sidebar") — persisted. */
+  let _railIcons = false;
+  try { _railIcons = localStorage.getItem('uems-rail-icons') === '1'; } catch (_) {}
+  function _applyRailIconsAttr() {
+    if (!modRailEl) return;
+    if (_railIcons) modRailEl.setAttribute('icons-only', ''); else modRailEl.removeAttribute('icons-only');
+  }
+  function renderModRail() {
+    if (!modRailEl) return;
+    _applyRailIconsAttr();
+    modRailEl.items = (TABS[_lang] || TABS.en).map((t) => ({
+      id: t.id, label: t.label, icon: TAB_ICON[t.id] || 'product', active: t.id === _tab,
+    }));
+  }
+  function syncModRailActive() { if (modRailEl && modRailEl.setActive) modRailEl.setActive(_tab); }
+  modRailEl?.addEventListener('ds-module-rail-select', (e) => {
+    if (e.detail && e.detail.id) selectTab(e.detail.id);
+  });
+  function applyRailIcons(on) {
+    _railIcons = !!on;
+    try { localStorage.setItem('uems-rail-icons', _railIcons ? '1' : '0'); } catch (_) {}
+    _applyRailIconsAttr();
+  }
+
+  /* navMode: 'top' (header tabs) | 'left' (side module rail). Persisted so the
+     choice survives reloads; applied on boot below. */
+  let _navMode = 'top';
+  try { _navMode = localStorage.getItem('uems-nav-mode') === 'left' ? 'left' : 'top'; } catch (_) {}
+  function applyNavMode(mode) {
+    _navMode = mode === 'left' ? 'left' : 'top';
+    const left = _navMode === 'left';
+    document.documentElement.classList.toggle('nav-left', left);
+    if (modRailEl) modRailEl.hidden = !left;
+    /* Left mode: tabs move to the side rail, so the header's tab band is hidden
+       via CSS (html.nav-left). The header keeps its top-nav layout so Search
+       stays a plain ICON in the right cluster (its old position) — no big
+       centred search field. */
+    hEl.removeAttribute('center');
+    if (left) renderModRail();
+    try { localStorage.setItem('uems-nav-mode', _navMode); } catch (_) {}
+  }
+
+  /* Zia AI logo — added to the header utility cluster (before the notification bell).
+     The header rebuilds its cluster on re-render, so re-inject via an observer. */
+  let _activeIcon = null;   /* single source of truth for the active header icon */
+  function injectZia() {
+    const cluster = hEl.querySelector('.ds-header-nav__cluster');
+    if (!cluster || cluster.querySelector('[data-action="zia"]')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ds-header-nav__icon-btn zia-btn';
+    btn.setAttribute('data-action', 'zia');
+    btn.setAttribute('aria-label', 'Zia AI');
+    btn.innerHTML = '<img class="zia-ic" src="../../design-system-library/src/icons/logos/Zia-logo.svg" alt="Zia AI" />';
+    btn.addEventListener('click', () => { if (typeof showAskZia !== 'function') return; (window.ShellDrawers.askzia && window.ShellDrawers.askzia.isOpen && window.ShellDrawers.askzia.isOpen()) ? hideAskZia() : showAskZia(); });
+    const notif = cluster.querySelector('[data-action="notifications"]');
+    cluster.insertBefore(btn, notif || null);
+    /* The header re-render rebuilds the cluster (fresh buttons, no active class) —
+       re-apply the current selection so it never desyncs or shows two as active. */
+    if (typeof setActiveIcon === 'function') setActiveIcon(_activeIcon);
+  }
+  new MutationObserver(() => injectZia()).observe(hEl, { childList: true, subtree: true });
+  injectZia();
+
+  /* Ask Zia AI page — opened by the header Zia icon, fills the shell-area */
+  const shellAreaEl = document.querySelector('.shell-area');
+
+  /* ── Drawer partials ─────────────────────────────────────────────────────
+     Some drawers live in their own files under views/ and are fetched +
+     injected into the shell on first open. They talk to the shell only through
+     window.ShellCtx and register their API on window.ShellDrawers[name].
+     (Requires a server — fetch() won't work over file://.) ───────────────── */
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellCtx = {
+    get shellArea() { return shellAreaEl; },
+    get lang() { return _lang; },
+    setActiveIcon(a) { setActiveIcon(a); },
+    /* Full language flip (used by the Accessibility drawer's RTL toggle) — sets
+       direction + re-applies nav + refreshes the update popover; applyDir also
+       dispatches shell:langchange so every extracted drawer re-renders. */
+    setLang(lang) { applyDir(lang); selectTab(_tab); if (typeof popEl !== 'undefined' && popEl && popEl.classList.contains('open')) renderCard(); },
+    /* exposed for the Profile control-panel drawer (theme/font/language/size live there) */
+    applyTheme(v) { applyTheme(v); },
+    applyDir(lang) { applyDir(lang); },
+    /* Top ⇄ Left navigation, driven by the Profile → Preferences toggle. */
+    setNavMode(mode) { applyNavMode(mode); },
+    get navMode() { return _navMode; },
+    /* Module-rail "Display Icons Only" toggle (Preferences). */
+    setRailIcons(on) { applyRailIcons(on); },
+    get railIcons() { return _railIcons; },
+    get appr() { return _appr; },
+    get content() { return contentEl; },
+  };
+  const _injectedDrawers = {};
+  /* mount: 'shell-area' for header-takeover overlays (Settings/Zia), 'body' for
+     ds-drawer slide-overs (Apps/Help/Profile…). */
+  async function injectDrawer(name, mount) {
+    if (_injectedDrawers[name]) return _injectedDrawers[name];
+    _injectedDrawers[name] = (async () => {
+      try {
+        const res = await fetch('views/' + name + '.html');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const tpl = document.createElement('template');
+        tpl.innerHTML = await res.text();
+        /* Dual-mode files wrap the injectable part in <template id="drawer-fragment">
+           so the standalone chrome (head imports + auto-open harness) is ignored
+           here. Fall back to the whole doc for bare-fragment files. */
+        const fragTpl = tpl.content.querySelector('#drawer-fragment');
+        const content = fragTpl ? fragTpl.content : tpl.content;
+        content.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+        const scripts = [...content.querySelectorAll('script')];
+        scripts.forEach((s) => s.remove());
+        (mount === 'body' ? document.body : shellAreaEl).appendChild(content);
+        for (const o of scripts) {                     /* re-create scripts so they run */
+          const s = document.createElement('script');
+          if (o.type) s.type = o.type;
+          s.textContent = o.textContent;
+          document.body.appendChild(s);
+        }
+        translateStatic(_lang);   /* translate any data-i18n the partial brought in */
+      } catch (e) { console.warn('[shell] drawer load failed:', name, e); }
+    })();
+    return _injectedDrawers[name];
+  }
+  /* Ask Zia data + buildZia now live in views/zia.html. */
+  /* Only ONE header icon active at a time (Zia OR Settings) — fixes the "two selected" look. */
+  function setActiveIcon(action) {
+    _activeIcon = action || null;
+    document.documentElement.classList.toggle('hdr-overlay', !!action);   /* dims the module tab indicator */
+    /* Single source of truth: clear active + aria-pressed on EVERY icon button
+       (the header component also sets aria-pressed on destination clicks, which
+       would otherwise linger as a second underline) and mark only the active one. */
+    hEl.querySelectorAll('.ds-header-nav__icon-btn').forEach((b) => {
+      const on = !!action && b.getAttribute('data-action') === action;
+      b.classList.toggle('ds-header-nav__icon-btn--active', on);
+      if (on) b.setAttribute('aria-pressed', 'true'); else b.removeAttribute('aria-pressed');
+    });
+  }
+  /* Full-content takeover views (settings/zia/support/search) are mutually
+     exclusive — only one fills the shell-area at a time. Clear them all before
+     opening one so two pages never show together. */
+  function hideAllViews() {
+    const sa = document.querySelector('.shell-area');
+    if (sa) sa.classList.remove('set-open', 'zia-open', 'support-open', 'search-open');
+    setActiveIcon(null);   /* clear any lingering header-icon selection */
+  }
+  /* Ask Zia now lives in views/zia.html — lazy-load on first open, then delegate. */
+  async function showZia() { hideAllViews(); if (!window.ShellDrawers.zia) await injectDrawer('zia'); window.ShellDrawers.zia?.show(); }
+  function hideZia() { window.ShellDrawers.zia?.hide(); }
+
+  /* Ask Zia ("Zia Config") — opened by the header Zia icon. It's NOT an overlay:
+     it's its OWN pane at the .body level, inserted right before the right rail, so
+     the module content stays visible beside it (with a 16px gap). On first open we
+     inject it (to <body>) then relocate #askzia-pop into .body before the rail. */
+  async function showAskZia() {
+    if (!window.ShellDrawers.askzia) {
+      await injectDrawer('ask-zia', 'body');
+      const p = document.getElementById('askzia-pop'); const bodyEl = document.querySelector('.body');
+      if (p && bodyEl && rpEl) bodyEl.insertBefore(p, rpEl);
+    }
+    window.ShellDrawers.askzia?.show();
+  }
+  function hideAskZia() { window.ShellDrawers.askzia?.hide(); }
+
+  /* Settings now lives in views/settings.html — lazy-load on first open, then
+     delegate to its registered API (window.ShellDrawers.settings). */
+  async function showSettings() { hideAllViews(); if (!window.ShellDrawers.settings) await injectDrawer('settings'); window.ShellDrawers.settings?.show(); }
+  function hideSettings() { window.ShellDrawers.settings?.hide(); }
+
+  /* Support PAGE (views/support.html) — a full content page (not a slide-over).
+     Lazy-loaded on first open, then it takes over the shell-area (hides L1/L2). */
+  async function showSupport() { hideAllViews(); if (!window.ShellDrawers.support) await injectDrawer('support'); window.ShellDrawers.support?.show(); }
+  function hideSupport() { window.ShellDrawers.support?.hide(); }
+  document.getElementById('zia-pop')?.querySelector('[data-zia-close]')?.addEventListener('click', hideZia);
+
+  /* ── Update notification popover ─────────────────────────────────────────
+     The right-pane "Update" icon opens a notification card. Two cases:
+       • recommended — a recommended hotfix/build (Download Now + release notes)
+       • normal      — a routine update (Download Now + Later)
+     Both built purely from Prism components (ds-badge, ds-button, ds-text-link,
+     ds-icon-button). Default = recommended (the rail Update icon is highlighted). */
+  const UPDATE = {
+    en: {
+      recommended: {
+        badge: 'Recommended', title: 'Hotfix available — build 11.5.2605.22',
+        desc: 'A hotfix for Endpoint Central 11 is ready. Upgrading to the latest build is recommended.',
+        primary: 'Download Now', link: 'View release notes',
+      },
+      normal: {
+        title: 'Update available',
+        desc: 'A new version of Endpoint Central is ready to install.',
+        primary: 'Download Now', later: 'Later',
+      },
+    },
+    ar: {
+      recommended: {
+        badge: 'موصى به', title: 'إصلاح عاجل متاح — الإصدار 11.5.2605.22',
+        desc: 'يتوفر إصلاح عاجل لـ Endpoint Central 11. يُوصى بالترقية إلى أحدث إصدار.',
+        primary: 'تنزيل الآن', link: 'عرض ملاحظات الإصدار',
+      },
+      normal: {
+        title: 'تحديث متاح',
+        desc: 'إصدار جديد من Endpoint Central جاهز للتثبيت.',
+        primary: 'تنزيل الآن', later: 'لاحقًا',
+      },
+    },
+  };
+  /* Review & Earn — referral card opened by the right-pane "Review" icon. */
+  const REVIEW = {
+    en: {
+      title: 'Review & Earn',
+      desc: 'Love Endpoint Central? Have your friends try it out — they can manage up to <strong>75 devices free.</strong>',
+      primary: 'Review Now', secondary: 'Need Assistance?', dismiss: "Don't show again",
+    },
+    ar: {
+      title: 'راجِع واربح',
+      desc: 'تحب Endpoint Central؟ دع أصدقاءك يجربونه — يمكنهم إدارة ما يصل إلى <strong>75 جهازًا مجانًا.</strong>',
+      primary: 'راجع الآن', secondary: 'تحتاج مساعدة؟', dismiss: 'عدم الإظهار مرة أخرى',
+    },
+  };
+
+  const popEl = document.getElementById('upd-pop');
+  let _updVariant = 'recommended';
+  let _card = 'update';            /* which card is currently shown */
+  let _anchorId = 'update';        /* which right-pane icon the popover anchors to */
+
+  function renderUpdate() {
+    _card = 'update'; _anchorId = 'update';
+    const d = UPDATE[_lang][_updVariant];
+    const isRec = _updVariant === 'recommended';
+    const secondary = isRec
+      ? `<ds-text-link href="#" variant="primary" size="medium" underline="hover">${d.link}</ds-text-link>`
+      : `<ds-button variant="secondary" size="small">${d.later}</ds-button>`;
+    popEl.className = 'upd-pop open';
+    popEl.innerHTML = `
+      <div class="upd-card ${isRec ? 'upd-card--rec' : 'upd-card--norm'}" ${_lang === 'ar' ? 'dir="rtl"' : ''}>
+        <div class="upd-card__icon"><ds-icon name="refresh" size="20"></ds-icon></div>
+        <ds-icon-button class="upd-card__close" data-upd-close icon="close" label="Dismiss"
+                        type="tertiary-grey" size="small" ${_lang === 'ar' ? 'rtl' : ''}></ds-icon-button>
+        <div class="upd-card__body">
+          ${isRec ? `<div class="upd-card__badge"><ds-badge variant="subtle" state="important" size="medium" shape="rounded" icon="info-circle" ${_lang === 'ar' ? 'rtl' : ''}>${d.badge}</ds-badge></div>` : ''}
+          <div class="upd-card__title">${d.title}</div>
+          <div class="upd-card__desc">${d.desc}</div>
+          <div class="upd-card__actions">
+            <ds-button variant="primary" size="small" prefix-icon="download" ${_lang === 'ar' ? 'rtl' : ''}>${d.primary}</ds-button>
+            ${secondary}
+          </div>
+        </div>
+      </div>`;
+    popEl.querySelector('[data-upd-close]').addEventListener('click', hideUpdate);
+    positionUpdate();
+  }
+
+  function renderReview() {
+    _card = 'review'; _anchorId = 'review';
+    const d = REVIEW[_lang];
+    popEl.className = 'upd-pop open';
+    popEl.innerHTML = `
+      <div class="upd-card upd-card--review" ${_lang === 'ar' ? 'dir="rtl"' : ''}>
+        <div class="upd-card__icon"><ds-icon name="review" size="20"></ds-icon></div>
+        <ds-icon-button class="upd-card__close" data-upd-close icon="close" label="Dismiss"
+                        type="tertiary-grey" size="small" ${_lang === 'ar' ? 'rtl' : ''}></ds-icon-button>
+        <div class="upd-card__body">
+          <div class="upd-card__title">${d.title}</div>
+          <div class="upd-card__desc">${d.desc}</div>
+          <div class="upd-card__actions">
+            <ds-button variant="primary" size="small" ${_lang === 'ar' ? 'rtl' : ''}>${d.primary}</ds-button>
+            <ds-button variant="secondary" size="small" ${_lang === 'ar' ? 'rtl' : ''}>${d.secondary}</ds-button>
+          </div>
+          <div class="upd-card__foot">
+            <ds-text-link href="#" variant="subtle" size="medium" underline="always">${d.dismiss}</ds-text-link>
+          </div>
+        </div>
+      </div>`;
+    popEl.querySelector('[data-upd-close]').addEventListener('click', hideUpdate);
+    positionUpdate();
+  }
+
+  /* Roadmap — external-link list opened by the right-pane Road map icon. */
+  const ROADMAP = {
+    en: {
+      title: 'Roadmap',
+      links: ['Public product roadmap', "What's new — changelog", 'Planned & in-progress', 'Submit a feature request'],
+    },
+    ar: {
+      title: 'خارطة الطريق',
+      links: ['خارطة طريق المنتج العامة', 'ما الجديد — سجل التغييرات', 'مخطط له وقيد التنفيذ', 'إرسال طلب ميزة'],
+    },
+  };
+  function renderRoadmap() {
+    _card = 'roadmap'; _anchorId = 'roadmap';
+    const d = ROADMAP[_lang];
+    const rtl = _lang === 'ar';
+    popEl.className = 'upd-pop upd-pop--narrow open';
+    popEl.innerHTML = `
+      <div class="upd-card upd-card--roadmap" ${rtl ? 'dir="rtl"' : ''}>
+        <div class="rm-head">
+          <span class="rm-head__icon"><ds-icon name="route" size="20"></ds-icon></span>
+          <span class="rm-head__title">${d.title}</span>
+          <ds-icon-button class="rm-head__close" data-upd-close icon="close" label="Close"
+                          type="tertiary-grey" size="small" ${rtl ? 'rtl' : ''}></ds-icon-button>
+        </div>
+        <div class="rm-list">${d.links.map((l) =>
+          `<div class="rm-row"><ds-text-link href="#" variant="primary" size="medium" underline="hover" ${rtl ? 'rtl' : ''}>${l}</ds-text-link><ds-icon class="rm-row__ext" name="share-square" size="18"></ds-icon></div>`).join('')}</div>
+      </div>`;
+    popEl.querySelector('[data-upd-close]').addEventListener('click', hideUpdate);
+    positionUpdate();
+  }
+
+  /* Appearance — theme picker opened by the right-pane theme toggle. */
+  const APPEARANCE = [
+    { v: 'system',      label: 'Use system settings', icon: 'half', dot: '#2C66DD' },
+    { v: 'light',       label: 'Light mode',          icon: 'sun',  dot: '#2C66DD' },
+    { v: 'dark',        label: 'Night mode',          icon: 'moon', dot: '#2C66DD' },
+    { v: 'green-light', label: 'Green — Light',       icon: 'sun',  dot: '#1E8E3E' },
+    { v: 'green-dark',  label: 'Green — Dark',        icon: 'moon', dot: '#1E8E3E' },
+  ];
+  const HALF_CIRCLE = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.6a7.4 7.4 0 0 0 0 14.8z" fill="currentColor"/></svg>';
+  let _appr = document.documentElement.getAttribute('data-theme') || 'light';
+
+  /* Core theme setter — shared by the Appearance menu and the Profile drawer */
+  function applyTheme(v) {
+    _appr = v;
+    let theme = v;
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (v === 'system') theme = prefersDark ? 'dark' : 'light';
+    else if (v === 'green-system') theme = prefersDark ? 'green-dark' : 'green-light';
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem('uems-theme', theme); } catch (_) {}
+    document.querySelectorAll('ds-right-pane').forEach((rp) => rp.setAttribute('theme', theme));
+  }
+  function setTheme(v) { applyTheme(v); renderAppearance(); }   /* Appearance menu: also re-render the menu */
+
+  /* Combine a mode (light/dark/system) + accent colour (blue/green) → theme value. */
+  function combineTheme(mode, color) {
+    if (color === 'green') return mode === 'system' ? 'green-system' : (mode === 'dark' ? 'green-dark' : 'green-light');
+    return mode;   /* blue: light / dark / system */
+  }
+  function renderAppearance() {
+    _card = 'appearance'; _anchorId = '__theme__';
+    const rtl = _lang === 'ar';
+    popEl.className = 'upd-pop upd-pop--appr open';
+    const curColor = _appr.indexOf('green') === 0 ? 'green' : 'blue';
+    const curMode  = (_appr === 'system' || _appr === 'green-system') ? 'system' : (_appr === 'dark' || _appr === 'green-dark') ? 'dark' : 'light';
+    const MODES  = [['light', 'Light'], ['dark', 'Dark'], ['system', 'System']];
+    const COLORS = [['blue', '#2C66DD'], ['green', '#1E8E3E']];
+    const modeBtns = MODES.map(([m, lbl]) =>
+      `<button type="button" class="appr-seg__btn${curMode === m ? ' is-active' : ''}" data-mode="${m}">${lbl}</button>`).join('');
+    const colorBtns = COLORS.map(([c, hex]) =>
+      `<button type="button" class="appr-color${curColor === c ? ' is-active' : ''}" data-color="${c}" style="background:${hex};color:${hex}" aria-label="${c}"><ds-icon name="check" size="14"></ds-icon></button>`).join('');
+    popEl.innerHTML = `<div class="upd-card upd-card--appearance" ${rtl ? 'dir="rtl"' : ''}>
+      <div class="appr-head"><span class="appr-title">Theme</span><span class="appr-colors">${colorBtns}</span></div>
+      <div class="appr-seg">${modeBtns}</div>
+    </div>`;
+    /* stopPropagation: selecting re-renders the popover (innerHTML), which detaches
+       the clicked node — without this the bubbled click hits the outside-click
+       handler (target no longer inside popEl) and closes it. Stay open; only an
+       OUTSIDE click closes. */
+    popEl.querySelectorAll('[data-mode]').forEach((b) =>
+      b.addEventListener('click', (e) => { e.stopPropagation(); setTheme(combineTheme(b.dataset.mode, curColor)); }));
+    popEl.querySelectorAll('[data-color]').forEach((b) =>
+      b.addEventListener('click', (e) => { e.stopPropagation(); setTheme(combineTheme(curMode, b.dataset.color)); }));
+    positionUpdate();
+  }
+
+  function renderCard() {
+    if (_card === 'review') renderReview();
+    else if (_card === 'roadmap') renderRoadmap();
+    else if (_card === 'appearance') renderAppearance();
+    else renderUpdate();
+  }
+
+  function positionUpdate() {
+    const btn = rpEl.querySelector(`button[data-id="${_anchorId}"]`);
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    const w = popEl.offsetWidth || 456, gap = 12;
+    const rtl = _lang === 'ar';
+    /* LTR: rail is far-right → card sits to its left. RTL: rail far-left → card to its right. */
+    let left = rtl ? (r.right + gap) : (r.left - w - gap);
+    left = Math.max(12, Math.min(left, window.innerWidth - w - 12));
+    let top = r.top;
+    const h = popEl.offsetHeight || 180;
+    top = Math.max(12, Math.min(top, window.innerHeight - h - 12));
+    popEl.style.left = left + 'px';
+    popEl.style.top  = top + 'px';
+  }
+
+  function showUpdate(variant) { _updVariant = variant || 'recommended'; renderUpdate(); }
+  function hideUpdate() { popEl.classList.remove('open'); }
+  function toggleCard(kind) {
+    const open = popEl.classList.contains('open');
+    if (open && _card === kind) { hideUpdate(); return; }
+    hideHelp(); hideA11y(); if (typeof hideUpdates === 'function') hideUpdates();
+    if (kind === 'review') renderReview();
+    else if (kind === 'roadmap') renderRoadmap();
+    else if (kind === 'appearance') renderAppearance();
+    else showUpdate(_updVariant);
+  }
+
+  /* The right-pane theme toggle (sun/moon) opens the Appearance menu instead of
+     flipping light/dark directly. Intercept in the capture phase so the
+     component's own toggle handler never runs. */
+  rpEl.addEventListener('click', (e) => {
+    if (e.target.closest('button[data-id="__theme__"]')) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      toggleCard('appearance');
+    }
+  }, true);
+
+  /* Dismiss on outside click / Escape; keep aligned on resize + language flip */
+  document.addEventListener('click', (e) => {
+    if (!popEl.classList.contains('open')) return;
+    if (popEl.contains(e.target)) return;
+    if (e.target.closest('button[data-id="update"], button[data-id="review"], button[data-id="roadmap"], button[data-id="__theme__"]')) return;
+    hideUpdate();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideUpdate(); });
+  window.addEventListener('resize', () => { if (popEl.classList.contains('open')) positionUpdate(); });
+
+
+  /* Help now lives in views/help.html — Shell coordinates mutual exclusion with
+     the other right-pane drawers, lazy-loads on first open, then delegates. */
+  async function showHelp() {
+    hideUpdate(); hideA11y(); if (typeof hideUpdates === 'function') hideUpdates();
+    if (!window.ShellDrawers.help) await injectDrawer('help');
+    window.ShellDrawers.help?.show();
+  }
+  function hideHelp() { window.ShellDrawers.help?.hide(); }
+  function toggleHelp() { const p = document.getElementById('help-pop'); (p && p.hasAttribute('open')) ? hideHelp() : showHelp(); }
+
+  document.addEventListener('click', (e) => {
+    const p = document.getElementById('help-pop');
+    if (!p || !p.hasAttribute('open')) return;
+    if (p.contains(e.target)) return;
+    if (e.target.closest('button[data-id="help"]')) return;
+    hideHelp();
+  });
+
+
+  /* Accessibility now lives in views/accessibility.html — Shell coordinates
+     mutual exclusion, lazy-loads on first open, then delegates. */
+  async function showA11y() {
+    hideHelp(); hideUpdate(); if (typeof hideUpdates === 'function') hideUpdates();
+    if (!window.ShellDrawers.a11y) await injectDrawer('accessibility');
+    window.ShellDrawers.a11y?.show();
+  }
+  function hideA11y() { window.ShellDrawers.a11y?.hide(); }
+  function toggleA11y() { const p = document.getElementById('a11y-pop'); (p && p.hasAttribute('open')) ? hideA11y() : showA11y(); }
+
+  document.addEventListener('click', (e) => {
+    const p = document.getElementById('a11y-pop');
+    if (!p || !p.hasAttribute('open')) return;
+    if (p.contains(e.target)) return;
+    if (e.target.closest('button[data-id="accessibility"]')) return;
+    hideA11y();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideA11y(); });
+
+  /* Product Updates now lives in views/updates.html — Shell coordinates mutual
+     exclusion, lazy-loads on first open, then delegates. */
+  async function showUpdates() {
+    hideHelp(); hideA11y(); if (typeof hideUpdate === 'function') hideUpdate();
+    if (!window.ShellDrawers.updates) await injectDrawer('updates');
+    window.ShellDrawers.updates?.show();
+  }
+  function hideUpdates() { window.ShellDrawers.updates?.hide(); }
+  function toggleUpdates() { const p = document.getElementById('updates-pop'); (p && p.hasAttribute('open')) ? hideUpdates() : showUpdates(); }
+  document.addEventListener('click', (e) => {
+    const p = document.getElementById('updates-pop');
+    if (!p || !p.hasAttribute('open')) return;
+    if (p.contains(e.target)) return;
+    if (e.target.closest('button[data-id="announcement"]')) return;
+    hideUpdates();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideUpdates(); });
+
+  /* ── Profile / Account drawer → extracted to views/profile.html. Shell
+     coordinates mutual exclusion, lazy-loads into <body>, then delegates. ──── */
+  async function showProfile() {
+    hideHelp(); hideA11y(); hideUpdate(); if (typeof hideUpdates === 'function') hideUpdates();
+    if (!window.ShellDrawers.profile) await injectDrawer('profile', 'body');
+    window.ShellDrawers.profile?.show();
+  }
+  function hideProfile() { window.ShellDrawers.profile?.hide(); }
+  hEl.addEventListener('ds-header-nav-action', (e) => {
+    if (!e.detail) return;
+    if (e.detail.action === 'avatar') showProfile();
+    else if (e.detail.action === 'bento') showApps();
+    else if (e.detail.action === 'search') showSearch();
+    else if (e.detail.action === 'settings') { document.querySelector('.shell-area')?.classList.contains('set-open') ? hideSettings() : showSettings(); }
+  });
+  /* Apps launcher now lives in views/apps.html — lazy-load into <body> on first open. */
+  async function showApps() { if (!window.ShellDrawers.apps) await injectDrawer('apps', 'body'); window.ShellDrawers.apps?.show(); }
+  function hideApps() { window.ShellDrawers.apps?.hide(); }
+
+  /* Search PAGE (views/search.html) — full content takeover. Opened by the
+     header search icon (top-nav) or clicking the centred search (left-nav). */
+  async function showSearch() { hideAllViews(); if (!window.ShellDrawers.search) await injectDrawer('search'); window.ShellDrawers.search?.show(); setActiveIcon('search'); }
+  function hideSearch() { window.ShellDrawers.search?.hide(); }
+  /* Left-nav centres a search FIELD — clicking it opens the search page. */
+  hEl.addEventListener('click', (e) => { if (e.target.closest('.ds-header-nav__search')) showSearch(); });
+
+  /* ── (Profile sub-views moved to views/profile.html) ── */
+
+  /* Right-rail active highlight — marks the icon whose panel is currently open so
+     the user can see what they clicked (the component styles aria-pressed). The
+     panels are mutually exclusive, so one active at a time; re-clicking clears. */
+  let _activeRp = null;
+  function setRpActive(id) {
+    _activeRp = id || null;
+    rpEl.querySelectorAll('.ds-right-pane__btn').forEach((b) => {
+      const on = !!_activeRp && b.dataset.id === _activeRp;
+      if (on) b.setAttribute('aria-pressed', 'true'); else b.removeAttribute('aria-pressed');
+    });
+  }
+  /* RTL test action — click the Accessibility icon in the right rail to flip
+     the whole shell between English/LTR and Arabic/RTL. */
+  rpEl.addEventListener('ds-right-pane-select', (e) => {
+    if (!e.detail) return;
+    const id = e.detail.id;
+    /* Panel toggles → reflect open/closed as the active highlight. */
+    const TOGGLES = ['accessibility', 'announcement', 'update', 'review', 'roadmap', 'help'];
+    if (id === 'accessibility') {
+      toggleA11y();   /* opens the Accessibility Controls panel (RTL toggle lives inside) */
+    } else if (id === 'announcement') {
+      toggleUpdates();
+    } else if (id === 'update') {
+      toggleCard('update');
+    } else if (id === 'review') {
+      toggleCard('review');
+    } else if (id === 'roadmap') {
+      toggleCard('roadmap');
+    } else if (id === 'help') {
+      toggleHelp();
+    } else if (id === 'get-started') {
+      showGettingStarted();
+    } else if (id === 'product') {
+      /* Product slot shows the ServiceDesk Plus logo — jump to SDP */
+      window.open('https://www.manageengine.com/products/service-desk/', '_blank', 'noopener');
+    }
+    /* Highlight the clicked rail icon immediately (re-click clears). Done here,
+       not after the async panel load, so the box shows on the very first click. */
+    if (TOGGLES.includes(id)) setRpActive(_activeRp === id ? null : id);
+  });
+  /* When any drawer closes (its own X / Esc / scrim), drop the rail highlight so
+     it never lingers out of sync. */
+  document.addEventListener('ds-drawer-close', () => setRpActive(null));
+
+  /* Getting started — full-screen Patch Management flow. Data-driven so it
+     renders English (LTR) or Arabic (RTL); re-renders on language change. */
+  const gsPop = document.getElementById('gs-pop');
+  const GS_ARROW = '<path d="M110.361 46.8809C62.4642 53.0334 34.8598 41.48 19.2217 28.2842C11.4117 21.6938 6.61 14.713 3.75977 9.37402C2.33469 6.70458 1.39697 4.44445 0.814453 2.84766C0.523236 2.04935 0.320737 1.41616 0.19043 0.980469C0.125315 0.762757 0.0779935 0.593858 0.046875 0.478516C0.031428 0.421238 0.0195253 0.377199 0.0117188 0.34668C0.00780487 0.331375 0.00501251 0.318893 0.00292969 0.310547C0.00191846 0.306479 0.00155419 0.303151 0.000976562 0.300781C0.000679016 0.299576 0.000144958 0.298455 0 0.297852C0.00154617 0.296583 0.0331578 0.288145 0.609375 0.148438C1.17822 0.0105159 1.21621 0.000674268 1.21875 0L1.21973 0.000976563C1.22001 0.0021138 1.21999 0.00492081 1.2207 0.0078125C1.22215 0.0136088 1.22437 0.0227565 1.22754 0.0351563C1.23404 0.0605742 1.24466 0.0999631 1.25879 0.152344C1.28704 0.257075 1.33084 0.414664 1.39258 0.621094C1.51623 1.0345 1.71087 1.64411 1.99316 2.41797C2.55785 3.96586 3.47282 6.17131 4.86719 8.7832C7.65587 14.0068 12.3631 20.8546 20.0312 27.3252C35.3499 40.2514 62.5815 51.7526 110.201 45.6357L110.361 46.8809Z" fill="#9D9EA5"/><path d="M111.841 46.0241L104.989 52.9536L103.733 41.0009L111.841 46.0241Z" fill="#A4A8B1"/><path d="M104.992 52.9048L103.736 40.9521L111.844 45.9748L104.992 52.9048ZM104.746 42.5623L105.639 51.0594L110.512 46.1335L104.746 42.5623Z" fill="#9D9EA5"/>';
+  const gsArrowSvg = (n) => `<svg class="gs-arrow gs-arrow--${n}" width="100" height="47" viewBox="0 0 113 53" fill="none" aria-hidden="true">${GS_ARROW}</svg>`;
+  const GS_DATA = {
+    en: {
+      title: 'Getting Started in simple steps',
+      foot: 'Useful References :', watch: 'Watch video', guide: 'Setup Guide',
+      cards: [
+        { n: '1', title: 'Install Agent', groups: [
+          { links: ['In Workgroup Computers'] },
+          { links: ['In Active Directory Computers'] },
+          { links: ['In Remote Office Computers'] },
+        ] },
+        { n: '2', title: 'Manage Desktops', groups: [
+          { label: 'Install Software', links: ['Windows', 'Mac', 'Linux'] },
+          { label: 'Install Patches', links: ['Windows', 'Mac', 'Linux'] },
+          { label: 'Configuration', links: ['Firewall', 'Services', 'Security Policies'] },
+          { label: 'Scan', links: ['Asset', 'Vulnerability'] },
+          { label: 'Tools', links: ['Remote Control', 'Wakeup Shutdown', 'Defrag'] },
+        ] },
+        { n: '3', title: 'Reports', groups: [
+          { label: 'Active Directory Reports', links: ['Computers', 'Users', 'Groups Organisational Unit ( OU ) Information.'] },
+          { label: 'User Logon Reports', links: ['Currently Logged on Users', 'Logon History'] },
+        ] },
+      ],
+    },
+    ar: {
+      title: 'البدء في خطوات بسيطة',
+      foot: 'مراجع مفيدة :', watch: 'مشاهدة الفيديو', guide: 'دليل الإعداد',
+      cards: [
+        { n: '١', title: 'تثبيت الوكيل', groups: [
+          { links: ['في أجهزة مجموعة العمل'] },
+          { links: ['في أجهزة Active Directory'] },
+          { links: ['في أجهزة المكتب البعيد'] },
+        ] },
+        { n: '٢', title: 'إدارة الأجهزة', groups: [
+          { label: 'تثبيت البرامج', links: ['Windows', 'Mac', 'Linux'] },
+          { label: 'تثبيت التصحيحات', links: ['Windows', 'Mac', 'Linux'] },
+          { label: 'التكوين', links: ['جدار الحماية', 'الخدمات', 'سياسات الأمان'] },
+          { label: 'الفحص', links: ['الأصول', 'الثغرات الأمنية'] },
+          { label: 'الأدوات', links: ['التحكم عن بُعد', 'التشغيل والإيقاف عن بُعد', 'إلغاء التجزئة'] },
+        ] },
+        { n: '٣', title: 'التقارير', groups: [
+          { label: 'تقارير Active Directory', links: ['أجهزة الكمبيوتر', 'المستخدمون', 'معلومات المجموعات والوحدة التنظيمية (OU).'] },
+          { label: 'تقارير تسجيل دخول المستخدم', links: ['المستخدمون المسجّلون حاليًا', 'سجل تسجيل الدخول'] },
+        ] },
+      ],
+    },
+  };
+  function gsCardHtml(card, i) {
+    const body = card.groups.map((g) => {
+      const links = g.links.map((l) => `<ds-text-link href="#" variant="primary" size="medium">${l}</ds-text-link>`).join('');
+      const inner = g.label
+        ? `<div><div class="gs-grp__label">${g.label}</div><div class="gs-grp__links">${links}</div></div>`
+        : `<div class="gs-grp__links">${links}</div>`;
+      return `<div class="gs-grp"><ds-icon class="gs-grp__ic" name="spark" size="14"></ds-icon>${inner}</div>`;
+    }).join('');
+    return `<ds-container class="gs-card gs-card--${i + 1}" variant="outline" radius="lg" padding="none">`
+      + `<div class="gs-card__head"><span class="gs-card__n">${card.n}</span><span class="gs-card__title">${card.title}</span></div>`
+      + `<div class="gs-card__body">${body}</div></ds-container>`;
+  }
+  function renderGettingStarted() {
+    if (!gsPop) return;
+    const ar = _lang === 'ar';
+    const d = GS_DATA[ar ? 'ar' : 'en'];
+    gsPop.setAttribute('dir', ar ? 'rtl' : 'ltr');
+    const titleEl = gsPop.querySelector('.gs-head__title'); if (titleEl) titleEl.textContent = d.title;
+    const cardsEl = gsPop.querySelector('.gs-cards');
+    if (cardsEl) cardsEl.innerHTML = gsArrowSvg(1) + gsArrowSvg(2) + d.cards.map(gsCardHtml).join('');
+    const footEl = gsPop.querySelector('.gs-foot');
+    if (footEl) footEl.innerHTML = `${d.foot} <ds-text-link href="#" variant="primary" size="medium">${d.watch}</ds-text-link>`
+      + `<span class="gs-foot__sep">|</span><ds-text-link href="#" variant="primary" size="medium">${d.guide}</ds-text-link>`;
+  }
+  function showGettingStarted() { renderGettingStarted(); if (gsPop) gsPop.hidden = false; }
+  function hideGettingStarted() { if (gsPop) gsPop.hidden = true; }
+  if (gsPop) {
+    gsPop.querySelector('[data-gs-close]')?.addEventListener('click', hideGettingStarted);
+    gsPop.addEventListener('click', (e) => { if (e.target === gsPop) hideGettingStarted(); });   /* click scrim to dismiss */
+    document.addEventListener('shell:langchange', () => { if (!gsPop.hidden) renderGettingStarted(); });
+  }
+
+  /* Right-pane rail tooltips — the rail shows icons only, so reveal each item's
+     label (its aria-label) on hover. Delegated so it survives rail re-renders. */
+  const rpTip = document.createElement('div');
+  rpTip.className = 'rp-tip'; rpTip.hidden = true; document.body.appendChild(rpTip);
+  const RP_TIP_TEXT = { 'Product': 'Jump to SDP' };
+  const showRpTip = (btn) => {
+    let label = btn.getAttribute('aria-label'); if (!label) { rpTip.hidden = true; return; }
+    label = RP_TIP_TEXT[label] || label;
+    rpTip.textContent = label;
+    const r = btn.getBoundingClientRect();
+    rpTip.style.top = (r.top + r.height / 2) + 'px';
+    rpTip.style.left = (r.left - 9) + 'px';
+    rpTip.hidden = false;
+  };
+  rpEl.addEventListener('mouseover', (e) => { const btn = e.target.closest('.ds-right-pane__btn'); if (btn) showRpTip(btn); });
+  rpEl.addEventListener('mouseout', (e) => { const to = e.relatedTarget; if (!to || !to.closest || !to.closest('.ds-right-pane__btn')) rpTip.hidden = true; });
+  rpEl.addEventListener('click', () => { rpTip.hidden = true; });
+
+  /* Header icon tooltips — the top nav icons are icon-only, so reveal a full
+     label on hover (below the icon). Mapped by data-action so the 3-dot overflow
+     reads "More Menu"; everything else falls back to the button's aria-label. */
+  const HDR_TIP_TEXT = {
+    overflow: 'More Menu', search: 'Search', settings: 'Settings', bookmark: 'Bookmarks',
+    notifications: 'Notifications', avatar: 'User menu', bento: 'Apps', zia: 'Ask Zia',
+    'customer-selector': 'Switch customer',
+  };
+  const hdrTip = document.createElement('div');
+  hdrTip.className = 'hdr-tip'; hdrTip.hidden = true; document.body.appendChild(hdrTip);
+  const HDR_TIP_SEL = '.ds-header-nav__icon-btn, .ds-header-nav__overflow, [data-action="avatar"], [data-action="customer-selector"]';
+  const showHdrTip = (btn) => {
+    const action = btn.getAttribute('data-action');
+    const label = HDR_TIP_TEXT[action] || btn.getAttribute('aria-label');
+    if (!label) { hdrTip.hidden = true; return; }
+    hdrTip.textContent = label;
+    const r = btn.getBoundingClientRect();
+    hdrTip.style.left = (r.left + r.width / 2) + 'px';
+    hdrTip.style.top = (r.bottom + 8) + 'px';
+    hdrTip.hidden = false;
+  };
+  hEl.addEventListener('mouseover', (e) => { const btn = e.target.closest(HDR_TIP_SEL); if (btn) showHdrTip(btn); });
+  hEl.addEventListener('mouseout', (e) => { const to = e.relatedTarget; if (!to || !to.closest || !to.closest(HDR_TIP_SEL)) hdrTip.hidden = true; });
+  hEl.addEventListener('click', () => { hdrTip.hidden = true; });
+
+  applyDir(/\bar\b/.test((location.hash || '').toLowerCase()) ? 'ar' : 'en');
+  /* Apply the saved Top/Left navigation choice (hash `leftnav`/`topnav` forces a
+     mode for preview). Must run after the header exists so center=search holds. */
+  const _navH = (location.hash || '').toLowerCase();
+  applyNavMode(/leftnav|nav-left/.test(_navH) ? 'left' : (/topnav/.test(_navH) ? 'top' : _navMode));
+  if (/railicons/.test(_navH)) applyRailIcons(true);
+  selectTab('tp');   /* Patch page opens on Threats & Patches → Vulnerabilities */
+  /* Open the Threats sub-nav with Vulnerabilities active (the default L1 item is
+     Dashboard, which has no L2 — so activate Threats and show its group). */
+  customElements.whenDefined('ds-sidebar-l1').then(() => {
+    if (Array.isArray(l1El.items)) l1El.items = l1El.items.map((it) => ({ ...it, active: it.id === 'threats' }));
+    l2El.groups = [{ id: 'threats', label: 'Threats', expanded: true, items: [
+      { id: 'vuln',       label: 'Vulnerabilities', active: true },
+      { id: 'cves',       label: 'Detected CVEs' },
+      { id: 'zero-day',   label: 'Zero-day Vulnerabilities' },
+      { id: 'sys-miscfg', label: 'System Misconfigurations' },
+      { id: 'high-risk',  label: 'High Risk Software' },
+      { id: 'web-miscfg', label: 'Web Server Misconfiguration' },
+      { id: 'port-audit', label: 'Port Audit' },
+      { id: 'exceptions', label: 'Manage Exceptions' },
+    ] }];
+    l2El.classList.remove('is-hidden');
+    l2El.setAttribute('show-search', 'false');
+    if (typeof syncContentFrame === 'function') syncContentFrame();
+  });
+  /* Preview hook: #leftnav-<tabId> opens that module so L1/L2 are visible. */
+  const _modM = _navH.match(/(?:leftnav|topnav)-([a-z-]+)/);
+  const _validTab = _modM && (TABS.en || []).some((t) => t.id === _modM[1]);
+  if (_validTab && _modM[1] !== 'home') customElements.whenDefined('ds-sidebar-l1').then(() => requestAnimationFrame(() => selectTab(_modM[1])));
+  /* ds-content auto-frames via a MutationObserver on L2's is-hidden, which only
+     reacts to CHANGES — so the FIRST load stays flat. Sync the framed corner once. */
+  function syncContentFrame() { if (contentEl && l2El) contentEl.classList.toggle('ds-content--framed', l2El.classList.contains('is-hidden') || l2El.hasAttribute('collapsed')); }
+  customElements.whenDefined('ds-content').then(() => requestAnimationFrame(syncContentFrame));
+  /* Hash hooks for previewing the popover: #update or #update-normal
+     (wait for the right-pane to render so the card can anchor to its icon) */
+  const _h = (location.hash || '').toLowerCase();
+  if (_h.includes('search')) {
+    customElements.whenDefined('ds-content').then(() => requestAnimationFrame(() => showSearch()));
+  } else if (_h.includes('settings') || _h.includes('zia')) {
+    customElements.whenDefined('ds-content').then(() => requestAnimationFrame(() => {
+      if (_h.includes('settings')) showSettings(); else showZia();
+    }));
+  } else if (_h.includes('apps') || _h.includes('bento')) {
+    customElements.whenDefined('ds-drawer').then(() => requestAnimationFrame(() => showApps()));
+  } else if (_h.includes('getstarted') || _h.includes('get-started')) {
+    customElements.whenDefined('ds-icon-button').then(() => requestAnimationFrame(() => showGettingStarted()));
+  } else
+  if (['update', 'review', 'roadmap', 'help', 'a11y', 'appearance', 'theme', 'updates', 'announce', 'profile'].some((k) => _h.includes(k))) {
+    customElements.whenDefined('ds-right-pane').then(() => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (_h.includes('profile')) showProfile();
+        else if (_h.includes('updates') || _h.includes('announce')) showUpdates();
+        else if (_h.includes('a11y')) showA11y();
+        else if (_h.includes('appearance') || _h.includes('theme')) renderAppearance();
+        else if (_h.includes('help')) showHelp();
+        else if (_h.includes('roadmap')) renderRoadmap();
+        else if (_h.includes('review')) renderReview();
+        else showUpdate(_h.includes('update-normal') ? 'normal' : 'recommended');
+      }));
+    });
+  }
+</script>
+
+<!-- Boot sequence controller:
+     splash (8s) → smooth fade → product skeleton (3s) → real shell. -->
+<script>
+  (function () {
+    var start = Date.now();
+    var MIN_MS = 8000;     /* splash min display — full loader sequence */
+    var SKELETON_MS = 2000; /* skeleton hold */
+    var FADE = 450;
+    var done = false;
+    function remove(el) { if (el && el.parentNode) el.parentNode.removeChild(el); }
+    function run() {
+      if (done) return; done = true;
+      var splash = document.getElementById('shell-loader');
+      var sk = document.getElementById('shell-skeleton');
+      var wait = Math.max(0, MIN_MS - (Date.now() - start));
+      setTimeout(function () {
+        /* reveal the skeleton UNDER the splash, then fade the splash out → smooth
+           crossfade from loader to skeleton */
+        if (sk) sk.hidden = false;
+        if (splash) { splash.classList.add('is-done'); setTimeout(function () { remove(splash); }, FADE); }
+        /* hold the skeleton, then fade it out → reveal the real shell */
+        setTimeout(function () {
+          if (sk) { sk.classList.add('is-done'); setTimeout(function () { remove(sk); }, FADE); }
+        }, SKELETON_MS);
+      }, wait);
+    }
+    if (window.customElements && customElements.whenDefined) {
+      Promise.all([
+        customElements.whenDefined('ds-header-nav'),
+        customElements.whenDefined('ds-content'),
+        customElements.whenDefined('ds-sidebar-l1')
+      ]).then(function () { requestAnimationFrame(run); });
+      setTimeout(run, 6000);   /* safety net (respects MIN_MS) */
+    } else {
+      window.addEventListener('load', run);
+    }
+  })();
+</script>
+
+<!-- Vulnerabilities content: view tabs + faceted-filter data-table. -->
+<script>
+(function () {
+  function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+  /* Summary / Detailed view tabs */
+  customElements.whenDefined('ds-tab-bar-horizontal').then(() => {
+    const tabs = document.getElementById('vuln-tabs');
+    if (tabs) { tabs.items = [{ id: 'summary', label: 'Summary View' }, { id: 'detailed', label: 'Detailed View' }]; tabs.setAttribute('active-id', 'summary'); }
+  });
+
+  /* ── Synthetic dataset (deterministic). Each CVE carries ONE severity and any
+     number of risk indicators — so risk counts overlap (not mutually exclusive). ── */
+  const SEVS  = ['Critical', 'Important', 'Moderate', 'Low'];
+  const RISKS = ['Exploits', 'Actively Exploited', 'Zero-Day', 'Threat Actors', 'Malware'];
+  const PRODUCTS = ['Apache Tomcat 9.0.98', 'OpenSSL 3.0.7', 'Microsoft Exchange Server', 'Google Chrome 120', '.NET Framework 4.8', 'PostgreSQL 15.2', 'Adobe Acrobat Reader', 'Mozilla Firefox 121', 'Node.js 18.19', 'nginx 1.24', 'MySQL 8.0.35', 'Windows 11 23H2', 'Zoom Client 5.16', '7-Zip 23.01', 'VLC Media Player 3.0', 'Docker Engine 24', 'Kubernetes 1.29', 'Jenkins 2.4', 'Log4j 2.17', 'WordPress 6.4'];
+  const DATES = ['Dec 23, 2024', 'Nov 18, 2024', 'Dec 17, 2024', 'Jul 14, 2020', 'Aug 17, 2020', 'Oct 10, 2023', 'Nov 01, 2022', 'Mar 02, 2021', 'Dec 20, 2023', 'Feb 14, 2024', 'Sep 30, 2023', 'Jan 09, 2024'];
+  const DISC = ['1 year(s) ago', '2 year(s) ago', '7 month(s) ago', '9 month(s) ago', '5 month(s) ago', '3 month(s) ago', '2 month(s) ago'];
+  function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const rnd = mulberry(20260101);
+  const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
+  function sevPick() { const r = rnd(); return r < 0.18 ? 'Critical' : r < 0.52 ? 'Important' : r < 0.83 ? 'Moderate' : 'Low'; }
+  function cvssFor(s) { const base = { Critical: 9.0, Important: 7.0, Moderate: 4.0, Low: 0.5 }[s]; const span = { Critical: 0.9, Important: 1.9, Moderate: 2.9, Low: 3.4 }[s]; return (base + rnd() * span).toFixed(1); }
+  const DATA = [];
+  for (let i = 0; i < 109; i++) {
+    const sev = sevPick();
+    const risks = RISKS.filter(() => rnd() < 0.28);
+    const yr = 2020 + Math.floor(rnd() * 5);
+    const cve = 'CVE-' + yr + '-' + (10000 + Math.floor(rnd() * 60000));
+    const cvss = cvssFor(sev);
+    /* Risk score tracks CVSS but drifts a little; EPSS skews low with a hot tail. */
+    const riskScore = Math.min(10, Math.max(0.1, parseFloat(cvss) + (rnd() * 3 - 1.5))).toFixed(2);
+    const epss = (rnd() < 0.55 ? rnd() * 12 : rnd() * 95).toFixed(3) + ' %';
+    const advisories = ['CERT-IN', 'CERT-SANTE', 'CISA-US'].filter(() => rnd() < 0.35).slice(0, 2);
+    DATA.push({
+      id: 'v' + i,
+      vuln: 'Vulnerabilities ' + cve + ' are fixed in ' + pick(PRODUCTS),
+      severity: sev, risks: risks,
+      cve: cve,
+      cveExtra: rnd() < 0.3 ? 1 : 0,
+      advisories: advisories,
+      riskScore: riskScore,
+      epss: epss,
+      patchAvail: rnd() < 0.45 ? 'Deployable Patch' : 'Manual Fix Required',
+      affected: 1 + Math.floor(rnd() * 9),
+      patch: rnd() < 0.4 ? String(109000 + Math.floor(rnd() * 4000)) : '--',
+      cvss: cvss,
+      pub: pick(DATES),
+      exploit: (risks.indexOf('Exploits') >= 0 || risks.indexOf('Actively Exploited') >= 0) ? 'Available' : 'Not available',
+      disc: pick(DISC),
+    });
+  }
+  const TOTAL = DATA.length;
+
+  function exploitBadge(status) { const av = status === 'Available'; return '<ds-badge variant="subtle" state="' + (av ? 'critical' : 'success') + '" size="medium" shape="pill" icon="' + (av ? 'close' : 'check') + '">' + status + '</ds-badge>'; }
+
+  /* ── Faceted filter state ── */
+  const selSev = new Set(), selRisk = new Set();
+  const sevMatch  = (r) => selSev.size === 0  || selSev.has(r.severity);
+  /* All indicators selected == no risk filter — otherwise rows with NO indicator
+     ("--") would drop out and select-all wouldn't show the full 109. */
+  const riskMatch = (r) => selRisk.size === 0 || selRisk.size === RISKS.length || r.risks.some((x) => selRisk.has(x));
+  function setCount(sel, n) { const el = document.querySelector('.vuln ' + sel + ' .vuln__sev-num'); if (el) el.textContent = String(n); }
+
+  let _table = null;
+  function apply() {
+    /* The fully-filtered set = intersection of both facet groups. EVERY card
+       count (both groups, including the one being filtered) reflects this set —
+       so selecting "Threat Actors" also recalculates how many of those overlap
+       with Exploits / Actively Exploited, etc. Risk counts overlap (a CVE can
+       carry several indicators), which is why they don't sum to the total. */
+    const rows = DATA.filter((r) => sevMatch(r) && riskMatch(r));
+    if (_table) { _table.rows = rows; _table.setAttribute('total-rows', String(rows.length)); }
+    /* Total cell morphs with filter state:
+       idle     → "TOTAL / N"
+       filtered → "SHOWING / X of N / Clear" */
+    const active = selSev.size > 0 || selRisk.size > 0;
+    const totLbl = document.getElementById('vuln-total-lbl');
+    const totEl = document.getElementById('vuln-total-num');
+    const totClear = document.getElementById('vuln-total-clear');
+    if (totLbl) totLbl.textContent = active ? 'Showing' : 'Total';
+    if (totEl) totEl.innerHTML = active ? rows.length + ' <span class="vuln__total-of">of ' + TOTAL + '</span>' : String(TOTAL);
+    if (totClear) totClear.hidden = !active;
+    /* Faceted counts (Amazon/Jira style): each group's counts IGNORE its own
+       selection and reflect only the OTHER group's filter — so picking Critical
+       never zeroes Important/Moderate/Low (you can still multi-select within the
+       group), while the Risk Indicator counts recalculate — and vice-versa. */
+    SEVS.forEach((s) => setCount('[data-sev="' + s + '"]', DATA.filter((r) => riskMatch(r) && r.severity === s).length));
+    RISKS.forEach((k) => setCount('[data-risk="' + k + '"]', DATA.filter((r) => sevMatch(r) && r.risks.indexOf(k) >= 0).length));
+    renderChips();
+  }
+  /* Active-filter tags (right of the description; removable). */
+  function renderChips() {
+    const box = document.getElementById('vuln-chips'); if (!box) return;
+    const chips = [];
+    selSev.forEach((v) => chips.push({ t: 'sev', v: v }));
+    selRisk.forEach((v) => chips.push({ t: 'risk', v: v }));
+    box.innerHTML = chips.map((c) => '<span class="vuln__chip">' + esc(c.v) + '<button type="button" data-chip-' + c.t + '="' + esc(c.v) + '" aria-label="Remove ' + esc(c.v) + '"><ds-icon name="close" size="12"></ds-icon></button></span>').join('')
+      + (chips.length ? '<button type="button" class="vuln__chips-clear" data-chips-clear>Clear all</button>' : '');
+    box.hidden = chips.length === 0;
+  }
+  function syncSelected() {
+    document.querySelectorAll('.vuln [data-sev]').forEach((el) => { const on = selSev.has(el.getAttribute('data-sev')); el.setAttribute('aria-pressed', on ? 'true' : 'false'); el.classList.toggle('is-selected', on); });
+    document.querySelectorAll('.vuln [data-risk]').forEach((el) => { const on = selRisk.has(el.getAttribute('data-risk')); el.setAttribute('aria-pressed', on ? 'true' : 'false'); el.classList.toggle('is-selected', on); });
+  }
+  function toggle(set, v) { if (set.has(v)) set.delete(v); else set.add(v); syncSelected(); apply(); }
+
+  function wire() {
+    document.querySelectorAll('.vuln [data-sev]').forEach((el) => {
+      const v = el.getAttribute('data-sev');
+      el.addEventListener('click', () => toggle(selSev, v));
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(selSev, v); } });
+    });
+    document.querySelectorAll('.vuln [data-risk]').forEach((el) => {
+      const v = el.getAttribute('data-risk');
+      el.addEventListener('click', () => toggle(selRisk, v));
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(selRisk, v); } });
+    });
+    const totClear = document.getElementById('vuln-total-clear');
+    if (totClear) totClear.addEventListener('click', () => { selSev.clear(); selRisk.clear(); syncSelected(); apply(); });
+    const chips = document.getElementById('vuln-chips');
+    if (chips) chips.addEventListener('click', (e) => {
+      if (e.target.closest('[data-chips-clear]')) { selSev.clear(); selRisk.clear(); syncSelected(); apply(); return; }
+      const b = e.target.closest('[data-chip-sev],[data-chip-risk]'); if (!b) return;
+      const sv = b.getAttribute('data-chip-sev');
+      if (sv != null) selSev.delete(sv); else selRisk.delete(b.getAttribute('data-chip-risk'));
+      syncSelected(); apply();
+    });
+  }
+
+  /* Risk-indicator icon chips (bug / zap / shield / users / skull, tinted). */
+  const RI_ICON = { 'Exploits': ['bug', 'exp'], 'Actively Exploited': ['zap', 'ae'], 'Zero-Day': ['shield', 'zd'], 'Threat Actors': ['users', 'ta'], 'Malware': ['skull', 'mal'] };
+  function riChips(r) {
+    if (!r.risks.length) return '<span class="vuln-muted">--</span>';
+    return r.risks.map((k) => { const m = RI_ICON[k]; return '<span class="vt-ri vt-ri--' + m[1] + '" title="' + esc(k) + '"><ds-icon name="' + m[0] + '" size="14"></ds-icon></span>'; }).join('');
+  }
+  function scorePill(v) {
+    const n = parseFloat(v);
+    const cls = n >= 8 ? 'crit' : n >= 6.5 ? 'imp' : n >= 4.5 ? 'mod' : 'low';
+    return '<span class="vt-score vt-score--' + cls + '">' + v + '</span>';
+  }
+  function patchBadge(v) {
+    const ok = v === 'Deployable Patch';
+    return '<ds-badge variant="subtle" state="' + (ok ? 'success' : 'moderate') + '" size="medium" shape="pill" icon="' + (ok ? 'check' : 'info-circle') + '">' + v + '</ds-badge>';
+  }
+  const COLUMNS = [
+    { id: 'vuln', header: 'Vulnerabilities', accessor: 'vuln', rowHeader: true, render: (r) => '<a class="vuln-link vuln-link--trunc" title="' + esc(r.vuln) + '">' + esc(r.vuln) + '</a>' },
+    { id: 'ri', header: 'Risk Indicators', accessor: 'risks', render: riChips },
+    { id: 'cve', header: 'CVE ID', accessor: 'cve', render: (r) => esc(r.cve) + (r.cveExtra ? ' <span class="vt-plus">+' + r.cveExtra + '</span>' : '') },
+    { id: 'adv', header: 'Advisories', accessor: 'advisories', render: (r) => r.advisories.length ? r.advisories.map((a) => '<span class="vt-adv">' + esc(a) + '</span>').join('') : '<span class="vuln-muted">--</span>' },
+    { id: 'affected', header: 'Affected Systems', accessor: 'affected', align: 'center', sortable: true, render: (r) => '<span class="vuln-count">' + r.affected + '</span>' },
+    { id: 'riskScore', header: 'Risk Score', accessor: 'riskScore', align: 'center', sortable: true, render: (r) => scorePill(r.riskScore) },
+    { id: 'epss', header: 'EPSS Score', accessor: 'epss', align: 'center', render: (r) => '<span class="vt-epss">' + esc(r.epss) + '</span>' },
+    { id: 'pub', header: 'Published Date', accessor: 'pub' },
+    { id: 'exploit', header: 'Exploit Status', accessor: 'exploit', render: (r) => exploitBadge(r.exploit) },
+    { id: 'patchAvail', header: 'Patch Availability', accessor: 'patchAvail', render: (r) => patchBadge(r.patchAvail) },
+  ];
+
+  /* Cards are static markup — wire + paint counts immediately; the table fills in
+     once ds-data-table upgrades. */
+  wire();
+  apply();
+  customElements.whenDefined('ds-data-table').then(() => {
+    _table = document.getElementById('vuln-table');
+    if (!_table) return;
+    _table.columns = COLUMNS;
+    apply();
+    requestAnimationFrame(() => { const sf = _table.querySelector('.ds-data-table__search'); if (sf) sf.setAttribute('placeholder', 'Search by CVE ID: CVE-XXXX-XXXX'); });
+  });
+})();
+</script>
+
+</body>
+</html>

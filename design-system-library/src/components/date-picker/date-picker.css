@@ -1,0 +1,187 @@
+/* =============================================================================
+   ds-date-picker / .ds-date-picker
+   Trigger input(s) + popover. Layout:
+
+     ┌── presets ──┬── pane (single or dual <ds-calendar>) ──┐
+     │  (optional) │                                          │
+     └─────────────┴──────────────────────────────────────────┘
+     ┌── footer (optional) ────────────────────────────────────┐
+     │ Clear              Cancel  Apply                        │
+     └─────────────────────────────────────────────────────────┘
+   ============================================================================= */
+
+/* Host is a query container; the flex layout lives on __frame so the left↔
+   stacked switch can respond to the field's OWN width (container query below).
+   The popover is a host child (portals to <body> on open), NOT in the frame. */
+.ds-date-picker {
+  display: block;
+  container-type: inline-size;
+  font-family: var(--font-family-sans);
+  position: relative;
+}
+.ds-date-picker__frame { display: flex; flex-direction: column; /* label-position="top" */ }
+.ds-date-picker__field-col { display: flex; flex-direction: column; gap: var(--spacing-4); min-width: 0; }
+/* Label-none: hide the label column entirely (accessible name is forwarded to
+   the inner field as aria-label). */
+.ds-date-picker--none .ds-date-picker__frame { flex-direction: column; }
+.ds-date-picker--none .ds-date-picker__frame > .ds-date-picker__label-col { display: none; }
+/* Stacked layouts (top + container-collapsed left): the label column sits above
+   the field with an 8px gap. The label's own margin-bottom is zeroed here so the
+   frame gap is the single, consistent spacer (no doubling). */
+.ds-date-picker--top .ds-date-picker__frame { gap: var(--spacing-8); }
+.ds-date-picker--top .ds-date-picker__frame > .ds-date-picker__label-col .ds-date-picker__label { margin-bottom: 0; }
+/* Label-left (default): label column beside the field. */
+.ds-date-picker--left .ds-date-picker__frame { flex-direction: row; align-items: flex-start; gap: var(--spacing-8); }
+.ds-date-picker--left .ds-date-picker__frame > .ds-date-picker__label-col { width: 280px; flex-shrink: 0; padding-top: 8px; }
+.ds-date-picker--left .ds-date-picker__frame > .ds-date-picker__field-col { flex: 1; }
+/* When the field's own container is narrow, the side label stacks on top with
+   the same 8px gap as label-position="top". */
+@container (max-width: 520px) {
+  .ds-date-picker--left .ds-date-picker__frame { flex-direction: column; align-items: stretch; gap: var(--spacing-8); }
+  .ds-date-picker--left .ds-date-picker__frame > .ds-date-picker__label-col { width: auto; flex-shrink: 1; padding-top: 0; }
+  .ds-date-picker--left .ds-date-picker__frame > .ds-date-picker__label-col .ds-date-picker__label { margin-bottom: 0; }
+}
+
+/* ---- Label --------------------------------------------------------- */
+.ds-date-picker__label {
+  display: block;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+  /* Match the other field components' label colour (Text-Tertiary, per Figma). */
+  color: var(--uems-text-tertiary);
+  margin-bottom: var(--spacing-6);
+}
+.ds-date-picker__required {
+  color: var(--uems-text-error);
+  margin-inline-start: 2px;
+}
+
+/* ---- Trigger inputs ------------------------------------------------- */
+.ds-date-picker__inputs {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+/* Input field — delegated to <ds-text-input size="medium">.
+   We only need to control the outer width here; all visual styling (border,
+   focus ring, prefix icon, error/success colours, disabled, placeholder)
+   comes from text-input.css so the date-picker stays in lock-step with
+   any future text-input updates. */
+.ds-date-picker__input {
+  width: 240px;
+  display: inline-block;
+}
+.ds-date-picker__input--range {
+  /* Range form needs more width for "DD/MM/YYYY → DD/MM/YYYY". */
+  width: 320px;
+}
+/* Full-width: field stretches to fill the container, overriding the fixed width. */
+ds-date-picker[full-width] .ds-date-picker__input,
+ds-date-picker[full-width] .ds-date-picker__input--range { width: 100%; }
+
+/* ---- Helper text --------------------------------------------------- */
+/* The helper row is the shared <ds-field-helper> sub-component (icon + text,
+   state colour; see field-helper.css). We only set its spacing here. */
+.ds-date-picker__helper { margin-top: var(--spacing-6); }
+
+/* ---- Popover ------------------------------------------------------- */
+.ds-date-picker__popover {
+  position: absolute;
+  top: calc(100% + var(--spacing-8));
+  inset-inline-start: 0;   /* anchors to the leading edge — flips for RTL */
+  display: flex;
+  flex-direction: column;
+  /* `width: max-content` sizes the popover to the body row's natural width
+     (presets + pane). Footer occupies the popover column width below. */
+  width: max-content;
+  background: var(--uems-bg-primary-alt, var(--uems-bg-base));
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-md);
+  /* Spec: Shadow-Medium (#0D111D1F, 0 2px 8px). */
+  box-shadow: 0 2px 8px rgba(13, 17, 29, 0.12);
+  z-index: var(--z-dropdown, 50);
+}
+.ds-date-picker__popover[hidden] { display: none !important; }
+/* Body row: presets + pane sit side-by-side; both shrink-0 to keep their
+   natural widths. */
+.ds-date-picker__body {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+.ds-date-picker__presets,
+.ds-date-picker__pane { flex-shrink: 0; }
+
+/* ---- Presets column ------------------------------------------------ */
+.ds-date-picker__presets {
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 160px;
+  flex-shrink: 0;
+  padding: var(--spacing-12);
+  border-inline-end: 1px solid var(--uems-border-tertiary);
+}
+.ds-date-picker__presets[hidden] { display: none !important; }
+.ds-date-picker__preset {
+  display: block;
+  width: 100%;
+  text-align: start;
+  padding: var(--spacing-8) var(--spacing-12);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: var(--font-size-13);
+  color: var(--uems-text-primary);
+  cursor: pointer;
+}
+.ds-date-picker__preset:hover { background: var(--uems-bg-secondary-hover); }
+.ds-date-picker__preset:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+.ds-date-picker__preset[aria-pressed="true"] {
+  background: var(--uems-bg-accent-primary-subtle, var(--uems-bg-accent-primary));
+  color: var(--uems-text-accent-link);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ---- Right pane ---------------------------------------------------- */
+.ds-date-picker__pane {
+  display: flex;
+  flex-direction: column;
+  /* `align-items: flex-start` keeps the calendar at its natural 252px (single)
+     or 520px (range) width — without this, flex column's default `stretch`
+     align would stretch the calendar to whatever width the popover's footer
+     or sibling rows force, producing 70-80px-wide date cells. */
+  align-items: flex-start;
+  padding: var(--spacing-12);
+  gap: var(--spacing-12);
+  min-width: 0;
+}
+.ds-date-picker__pane ds-calendar {
+  /* Calendar already has its own border/shadow; flatten it inside the popover */
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+  color: var(--uems-text-primary);
+}
+
+/* ---- Footer (Clear / Cancel / Apply) ------------------------------- */
+.ds-date-picker__footer {
+  grid-column: 1 / 3;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  height: 52px;                                 /* spec: footer 52px */
+  padding: 0 var(--spacing-16);
+  border-top: 1px solid var(--uems-border-tertiary);
+}
+.ds-date-picker__footer[hidden] { display: none !important; }
+.ds-date-picker__footer-spacer { flex: 1 1 auto; }
+
+/* ---- RTL ----------------------------------------------------------- */

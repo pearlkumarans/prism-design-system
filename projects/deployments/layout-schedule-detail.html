@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<!-- Deployments · Schedule Policy · Detail — read-only view. -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Schedule Policy · Detail — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+<template id="drawer-fragment">
+<style>
+#sp-detail-pop .lay__section { padding: 20px 0 4px; }
+#sp-detail-pop .spd-summary { padding: 20px 0 40px; max-width: 900px; }
+#sp-detail-pop .spd-months { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; max-width: 720px; padding-top: 12px; }
+#sp-detail-pop .spd-month-btn {
+  padding: 8px 12px; border-radius: 6px; text-align: center;
+  font-size: 13px; font-weight: 500;
+  background: var(--uems-bg-primary); color: var(--uems-text-secondary);
+  border: 1px solid var(--uems-border-tertiary);
+}
+#sp-detail-pop .spd-month-btn.on {
+  background: var(--uems-bg-button-primary);
+  color: var(--uems-icon-white);
+  border-color: var(--uems-bg-button-primary);
+}
+</style>
+
+<div id="sp-detail-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <ds-page-header id="spd-ph" icon="calendar" structure="default"
+      title="Schedule policy"
+      description="Read-only summary of the saved schedule policy."
+      show-description show-breadcrumbs>
+      <ds-button slot="actions" id="spd-edit"   variant="secondary" size="small" prefix-icon="edit">Modify</ds-button>
+      <ds-button slot="actions" id="spd-delete" variant="outline"   size="small" prefix-icon="delete">Delete</ds-button>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large"
+          title="Schedule details"
+          description="Read-only summary of the saved policy."></ds-section-header>
+        <div class="spd-summary">
+          <ds-description-list id="spd-list" columns="2"></ds-description-list>
+          <div id="spd-months-wrap" style="padding-top: 16px;">
+            <div style="font-size: 13px; font-weight: 600; color: var(--uems-text-primary);">Months for deployment</div>
+            <div class="spd-months" id="spd-months"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('sp-detail-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const ph = $('spd-ph');
+  ph.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    const label = (a.textContent || '').trim();
+    if (label === 'Policies'        && window.openContentView) { e.preventDefault(); window.openContentView('deployments-policy-list'); }
+    else if (label === 'Schedule Policy' && window.openContentView) { e.preventDefault(); window.openContentView('deployments-schedule'); }
+  });
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const STATUS_STATE = { 'Active': 'success', 'Draft': 'default', 'Paused': 'moderate', 'Expired': 'default' };
+
+  function render() {
+    const id = window.__scheduleDetailId;
+    const record = (window.__scheduleStore || []).find((r) => r.id === id) || (window.__scheduleStore || [])[0];
+    if (!record) return;
+    ph.setAttribute('title', record.name);
+    ph.breadcrumbs = [
+      { label: 'Policies',        href: '#' },
+      { label: 'Schedule Policy', href: '#' },
+      { label: record.name },
+    ];
+    $('spd-list').items = [
+      { term: 'Window ID',      description: record.windowId },
+      { term: 'Name',           description: record.name },
+      { term: 'Status',         type: 'badge', variant: 'subtle', state: STATUS_STATE[record.status] || 'default', description: record.status },
+      { term: 'Schedule',       description: record.schedule },
+      { term: 'Duration',       description: record.duration },
+      { term: 'Time period',    description: (record.timeFrom || '—') + ' to ' + (record.timeTo || '—') },
+      { term: 'Created by',     description: record.createdBy || '—' },
+      { term: 'Last modified',  description: record.lastModified || '—' },
+      { term: 'Attached deployments', description: String(record.deployments || 0) },
+    ];
+    const on = new Set(record.months || []);
+    $('spd-months').innerHTML = MONTHS.map((m) =>
+      `<div class="spd-month-btn ${on.has(m) ? 'on' : ''}">${esc(m)}</div>`).join('');
+    $('spd-months-wrap').hidden = !record.months || record.months.length === 0;
+
+    /* Wire header + footer actions with the current record ID. */
+    const goEdit = () => {
+      window.__scheduleDetailId = record.id;
+      if (window.openContentView) window.openContentView('deployments-schedule-form');
+    };
+    const doDelete = () => {
+      if (!confirm('Delete "' + record.name + '"?')) return;
+      window.__scheduleStore = (window.__scheduleStore || []).filter((r) => r.id !== record.id);
+      if (window.openContentView) window.openContentView('deployments-schedule');
+    };
+    $('spd-edit').onclick   = goEdit;
+    $('spd-delete').onclick = doDelete;
+  }
+
+  function show() { root.hidden = false; render(); }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-schedule-detail'] = { show, hide };
+})();
+</script>
+</template>
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-schedule-detail'].show()));
+})();
+</script>
+</body>
+</html>

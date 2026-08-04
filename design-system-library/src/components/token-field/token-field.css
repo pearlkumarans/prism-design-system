@@ -1,0 +1,210 @@
+/* =============================================================================
+   ds-token-field / .ds-token-field
+   Input-first multi-select with removable Tag tokens inside the field.
+   Per UEMS Design System 3.0 — Token Field spec (Figma 21854:797291).
+   Filled = single row + "+N" total badge · Active = wrap up to --tf-max-rows.
+   ============================================================================= */
+
+:host { display: block; font-family: var(--font-family-sans); width: 100%; }
+/* Light-DOM host: :host doesn't apply, so set display + the query container on
+   the element directly (drives the responsive label collapse below). */
+ds-token-field { display: block; width: 100%; container-type: inline-size; }
+
+.ds-token-field {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: var(--spacing-8);   /* label ↔ field gap (stacked) — aligned across fields */
+  font-family: var(--font-family-sans);
+  --tf-max-rows: 3;
+}
+.ds-token-field__field-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-4); }
+.ds-token-field__field-wrap { position: relative; }
+
+/* ---- Label-left layout: label in a 280px column beside the field ---- */
+.ds-token-field--left { flex-direction: row; align-items: flex-start; gap: var(--spacing-16); }
+.ds-token-field--left > .ds-token-field__label-col { width: 280px; flex-shrink: 0; padding-top: 8px; }
+.ds-token-field--left > .ds-token-field__field-col { flex: 1; min-width: 0; }
+/* Below 640px the side label stacks on top (same as label-position="top"). */
+@container (max-width: 520px) {
+  .ds-token-field--left { flex-direction: column; align-items: stretch; gap: var(--spacing-8); }
+  .ds-token-field--left > .ds-token-field__label-col { width: auto; flex-shrink: 1; padding-top: 0; }
+}
+
+/* While selecting (open), the field expands as an OVERLAY: the wrap keeps the
+   resting single-line height in flow so the helper row + page below never shift,
+   and the field floats (absolute + elevated) growing downward over the content.
+   A single row looks unchanged; extra rows simply overlay. */
+.ds-token-field--open .ds-token-field__field-wrap { min-height: 40px; }
+.ds-token-field--large.ds-token-field--open .ds-token-field__field-wrap { min-height: 44px; }
+.ds-token-field--open .ds-token-field__field {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 40;
+  box-shadow: var(--shadow-md, 0 8px 24px rgba(16, 24, 40, 0.12));
+}
+
+/* ---- Label row ----------------------------------------------------- */
+.ds-token-field__label-row { display: inline-flex; align-items: center; gap: 2px; }
+.ds-token-field__label {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-tertiary);
+  line-height: 20px;
+}
+.ds-token-field__required { color: var(--uems-text-error); margin-inline-start: 2px; }
+/* Label help icon — help-circle button after the label (Figma: Show Label Help Icon). */
+.ds-token-field__label-help {
+  background: transparent; border: 0; padding: 0; line-height: 0; cursor: pointer;
+  display: inline-flex; color: var(--uems-text-tertiary); margin-inline-start: 4px;
+}
+.ds-token-field__label-help:hover { color: var(--uems-text-secondary); }
+.ds-token-field__label-help:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; border-radius: 2px; }
+.ds-token-field__label-help-tip { display: inline-flex; align-items: center; line-height: 0; }
+
+/* ---- Field surface ------------------------------------------------- */
+.ds-token-field__field {
+  display: flex;
+  align-items: center;            /* single row: prefix / tokens / placeholder / chevron centered */
+  gap: var(--spacing-8);
+  width: 100%;
+  background: var(--uems-bg-primary-alt);
+  border: 1px solid var(--uems-border-primary);
+  border-radius: var(--radius-md);
+  color: var(--uems-text-primary);
+  padding: var(--spacing-4) var(--spacing-12);
+  min-height: 40px;
+  cursor: text;
+  transition: border-color var(--duration-fast, 150ms) var(--ease-standard, ease);
+}
+.ds-token-field--large .ds-token-field__field { min-height: 44px; }
+
+/* Prefix + chevron stay centred on the first row even when tokens wrap. */
+.ds-token-field__prefix,
+.ds-token-field__chevron {
+  flex: 0 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  color: var(--uems-text-secondary);
+  min-height: 28px;            /* align with one token row */
+}
+
+/* ---- Token area ---------------------------------------------------- */
+.ds-token-field__tokens {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  /* Resting (filled): single row, hide overflow — JS appends a "+N" badge. */
+  flex-wrap: nowrap;
+  overflow: hidden;
+  min-height: 28px;
+}
+/* Field stays `align-items: center` in every state (incl. active) — flipping to
+   flex-start on focus made the placeholder + chevron jump (jerk). Prefix/chevron
+   centre against the wrapped token block, matching Input Select. */
+/* Active (open) AND Read Only: wrap up to N rows, then scroll — show every token
+   rather than collapsing to a single row. (Read-only isn't focused, so it needs
+   the wrap rules applied by state, not the --open class.) */
+.ds-token-field--open .ds-token-field__tokens,
+.ds-token-field[data-state="read-only"] .ds-token-field__tokens {
+  flex-wrap: wrap;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(28px * var(--tf-max-rows) + var(--spacing-4) * (var(--tf-max-rows) - 1));
+}
+.ds-token-field__tokens ds-tag { flex: 0 0 auto; }
+
+/* The caret grows to fill the rest of the row so the whole field is clickable. */
+.ds-token-field__input {
+  flex: 1 1 60px;
+  min-width: 60px;
+  align-self: center;
+  border: 0;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: var(--font-size-14);
+  line-height: 20px;
+  color: var(--uems-text-primary);
+  height: 28px;
+}
+.ds-token-field--large .ds-token-field__input { font-size: var(--font-size-16); }
+.ds-token-field__input::placeholder { color: var(--uems-text-placeholder, var(--uems-text-tertiary)); }
+
+/* "+N" total badge (filled single-row overflow) — pinned to the right edge of
+   the token area (tokens left, total right). */
+.ds-token-field__badge {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-secondary);
+  background: var(--uems-bg-secondary);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  align-self: center;
+}
+.ds-token-field__badge[hidden] { display: none; }
+
+/* ---- Clear ---------------------------------------------------------- */
+.ds-token-field__clear {
+  background: transparent; border: 0; padding: 0; cursor: pointer;
+  color: var(--uems-text-secondary);
+  display: inline-flex; align-items: center; line-height: 0; flex: 0 0 auto;
+  min-height: 28px;
+}
+.ds-token-field__clear:hover { color: var(--uems-text-primary); }
+.ds-token-field__clear:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px; border-radius: var(--radius-xs);
+}
+
+/* ---- States --------------------------------------------------------- */
+.ds-token-field[data-state="hover"]  .ds-token-field__field,
+.ds-token-field__field:hover { border-color: var(--uems-border-accent); }
+
+.ds-token-field--open .ds-token-field__field,
+.ds-token-field[data-state="focus"]  .ds-token-field__field,
+.ds-token-field[data-state="active"] .ds-token-field__field {
+  border: 2px solid var(--uems-border-accent-focus);
+  /* Compensate the extra 1px border on every side so the field doesn't shift
+     (placeholder + chevron stay put) when it gains focus. */
+  padding-left: calc(var(--spacing-12) - 1px);
+  padding-right: calc(var(--spacing-12) - 1px);
+  padding-top: calc(var(--spacing-4) - 1px);
+  padding-bottom: calc(var(--spacing-4) - 1px);
+}
+.ds-token-field[data-state="error"] .ds-token-field__field { border-color: var(--uems-border-error); }
+.ds-token-field[data-state="error"].ds-token-field--open .ds-token-field__field { border-color: var(--uems-border-error); }
+
+.ds-token-field[data-state="read-only"] .ds-token-field__field {
+  background: var(--uems-bg-secondary-alt);
+  border-color: var(--uems-border-tertiary);
+  cursor: default;
+}
+.ds-token-field[data-state="disabled"] { opacity: 0.5; }
+.ds-token-field[data-state="disabled"] .ds-token-field__field {
+  background: var(--uems-bg-disabled);
+  cursor: not-allowed;
+}
+
+/* ---- Dropdown surface ---------------------------------------------- */
+.ds-token-field__dropdown { position: absolute; top: calc(100% + var(--spacing-8)); left: 0; right: 0; z-index: 50; }
+.ds-token-field__dropdown ds-dropdown-menu { display: block; width: 100%; }
+/* Match the dropdown to the field width (override ds-dropdown-menu's own
+   min/max-width so it neither shrinks below nor caps under the field). */
+.ds-token-field__dropdown .ds-dropdown-menu { width: 100%; min-width: 0; max-width: none; }
+
+/* ---- Helper row ----------------------------------------------------- */
+.ds-token-field__helper { min-height: 16px; }
+
+/* ---- RTL ------------------------------------------------------------ */
+.ds-token-field[dir="rtl"] .ds-token-field__label-row { flex-direction: row-reverse; }
+.ds-token-field[dir="rtl"] .ds-token-field__input { text-align: right; }

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ds-date-picker — examples</title>
+  <script type="module">import '../../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 24px; background: var(--uems-background); color: var(--uems-text-primary); }
+    section { margin-bottom: 32px; }
+    h2 { font-size: var(--font-size-14); color: var(--uems-text-tertiary); font-weight: 600; margin: 0 0 8px; }
+    .out { margin-top: 8px; font-family: var(--font-family-mono); font-size: 12px; color: var(--uems-text-secondary); }
+  </style>
+</head>
+<body>
+  <section>
+    <h2>Single (basic)</h2>
+    <ds-date-picker id="dp-single" label="Due date" required></ds-date-picker>
+    <div class="out" id="dp-single-out"></div>
+  </section>
+
+  <section>
+    <h2>Range with presets + footer</h2>
+    <ds-date-picker id="dp-range" type="range" label="Report period" required show-presets show-footer></ds-date-picker>
+    <div class="out" id="dp-range-out"></div>
+  </section>
+
+  <section>
+    <h2>Error state</h2>
+    <ds-date-picker label="Due date" validation-state="error" helper-text="Due date must be in the future." required></ds-date-picker>
+  </section>
+
+  <section>
+    <h2>Disabled</h2>
+    <ds-date-picker label="Locked" disabled value="2026-04-15"></ds-date-picker>
+  </section>
+
+  <script>
+    document.getElementById('dp-single').addEventListener('ds-date-picker-change', (e) => {
+      document.getElementById('dp-single-out').textContent = JSON.stringify(e.detail);
+    });
+    document.getElementById('dp-range').addEventListener('ds-date-picker-change', (e) => {
+      document.getElementById('dp-range-out').textContent = JSON.stringify(e.detail);
+    });
+  </script>
+</body>
+</html>

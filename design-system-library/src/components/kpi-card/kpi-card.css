@@ -1,0 +1,615 @@
+/* =============================================================================
+   ds-kpi-card / .ds-kpi-card
+   Spec source: docs/MD/kpi-cards.md  (Figma 19414:1029, 47-variant set)
+
+   Outer Variants: default | wide | multi | single | two
+   States:         default | success | warning | alert  (Default/Wide only)
+   Types are auto-derived from which content attributes are set.
+
+   Container sizes (per MD §2): radius 16, padding 20 for Default/Wide/Multi,
+   padding 32 for Single/Two. Group variants (Multi/Single/Two) also carry a
+   subtle 0 4px 6px shadow.
+   ============================================================================= */
+
+ds-kpi-card {
+  display: block;
+  font-family: var(--font-family-sans);
+}
+
+.ds-kpi-card {
+  position: relative;
+  background: var(--uems-bg-primary);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: 16px;                           /* radius-16 */
+  padding: 20px;                                 /* spacing-20 */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4, 4px);
+  min-width: 0;
+  color: var(--uems-text-secondary);
+  box-sizing: border-box;
+}
+.ds-kpi-card--single,
+.ds-kpi-card--two {
+  padding: 32px;                                 /* spacing-32 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+}
+.ds-kpi-card--multi {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+}
+
+/* ── Clickable ────────────────────────────────────────────────────── */
+.ds-kpi-card--clickable {
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+.ds-kpi-card--clickable:hover {
+  background: var(--uems-bg-primary-hover);
+  border-color: var(--uems-border-secondary);
+}
+.ds-kpi-card--clickable:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+
+/* ── Default variant layout ─────────────────────────────────────────
+   Type=Default / Date / Gauge / Description / Desc+Date / Desc+Gauge:
+     row → left body (value + label + optional sublabel/desc/date)
+         + right end (icon-badge OR half-arc gauge). */
+.ds-kpi-card__default {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-12, 12px);
+  width: 100%;
+}
+.ds-kpi-card__default-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.ds-kpi-card__default-end {
+  flex-shrink: 0;
+}
+
+/* Type=Date+Gauge: a denser stack with delta-badge inline; gauge column. */
+.ds-kpi-card__default--date-gauge {
+  align-items: stretch;
+}
+
+/* gauge-position="bottom": the gauge stacks BELOW the value/label/desc column
+   (vertical alignment) instead of trailing beside it (the default "end",
+   right-aligned position). */
+.ds-kpi-card__default--gauge-bottom {
+  flex-direction: column;
+  align-items: stretch;
+}
+.ds-kpi-card__default-end--bottom {
+  /* Stretch to the card's full width (inherits from the parent's
+     `align-items: stretch`) instead of hugging the gauge's fixed 80×52 size. */
+  margin-top: 4px;
+}
+/* <ds-chart> is width:100% by default (its own base CSS) — this just gives
+   the wrapper a definite full width for it to fill. */
+.ds-kpi-card__default-end--bottom .ds-kpi-card__gauge {
+  width: 100%;
+}
+
+/* ── Wide variant layout ────────────────────────────────────────────
+   - Default / Description / Desc+Gauge : metric-left + label/desc + accessory-right
+   - Desc+Link : icon-badge | label/desc/link | metric */
+.ds-kpi-card__wide {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+.ds-kpi-card__wide-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ds-kpi-card__wide-end {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+}
+.ds-kpi-card__wide--desc-link .ds-kpi-card__wide-body {
+  gap: 2px;
+}
+
+/* gauge-position="bottom" on Wide: same vertical-stack idea as Default —
+   gauge below the value/label/desc column instead of trailing to the right. */
+.ds-kpi-card__wide--gauge-bottom {
+  flex-direction: column;
+  align-items: stretch;
+}
+.ds-kpi-card__wide-end--bottom {
+  /* Stretch to the card's full width (inherits from the parent's
+     `align-items: stretch`) instead of hugging the gauge's fixed 80×52 size. */
+  margin-inline-start: 0;
+  margin-top: 4px;
+}
+/* <ds-chart> is width:100% by default (its own base CSS) — this just gives
+   the wrapper a definite full width for it to fill. */
+.ds-kpi-card__wide-end--bottom .ds-kpi-card__gauge {
+  width: 100%;
+}
+
+/* ── Value (metric) ─────────────────────────────────────────────────
+   Inline 26 px headline (Zoho Puvi SemiBold) for basic Default variants. */
+.ds-kpi-card__value {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+  color: var(--uems-text-accent-tertiary);       /* constant — does NOT recolour per state (spec) */
+  letter-spacing: -0.01em;
+}
+.ds-kpi-card__value--display-sm {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+}
+
+/* ── Label ──────────────────────────────────────────────────────────
+   body/Default/SemiBold (Zoho Puvi 600 14/20) — Text-Secondary. */
+.ds-kpi-card__label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--uems-text-secondary);
+  /* Single line — truncate with an ellipsis. When clipped, JS wraps the label in
+     a ds-tooltip (.ds-kpi-card__label-tip) that shows the full text on hover. */
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Full-width block wrapper so the label's ellipsis still resolves inside the
+   tooltip trigger (added only while the label is truncated). */
+.ds-kpi-card__label-tip { display: block; min-width: 0; max-width: 100%; }
+
+/* ── Sublabel ("Last 7 days" / "Across all severity levels") ────── */
+.ds-kpi-card__sublabel,
+.ds-kpi-card__description {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  color: var(--uems-text-quaternary);
+}
+
+/* ── Date row (same color/size as description per spec) ──────────── */
+.ds-kpi-card__date {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--uems-text-quaternary);
+}
+
+/* ── Value+delta row (Date+Gauge variant) ───────────────────────── */
+.ds-kpi-card__value-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Icon badge (36×36 rounded-8 tinted square + 20px icon) ─────── */
+.ds-kpi-card__icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ds-kpi-card__icon-badge--default { background: var(--uems-bg-info-primary); color: var(--uems-text-info); }
+.ds-kpi-card__icon-badge--success { background: var(--uems-bg-success-primary); color: var(--uems-text-success); }
+/* Note: this state's original hex matched the *alert* (yellow) tokens, not
+   *warning* (orange) — kept the pre-existing look, just detokenized it. */
+.ds-kpi-card__icon-badge--warning { background: var(--uems-bg-alert-primary); color: var(--uems-text-alert); }
+/* Same pre-existing mismatch here: matches *error* (red) tokens, not *alert*. */
+.ds-kpi-card__icon-badge--alert   { background: var(--uems-bg-error-primary); color: var(--uems-text-error); }
+
+/* ── Gauge/chart slot — always the shared <ds-chart type="gauge"|"line">,
+   never bespoke SVG. Fixed compact width for the default "end" (trailing)
+   position; the gauge-position="bottom" modifiers below override to 100%. */
+.ds-kpi-card__gauge {
+  display: block;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+/* ── Delta-badge (trend chip) — now a <ds-badge>; state/colors come from the
+   component itself (token-driven). Only flex-alignment lives here. */
+.ds-kpi-card__delta { flex-shrink: 0; vertical-align: middle; }
+
+/* ── Inline link (Wide Desc+Link) ───────────────────────────────── */
+.ds-kpi-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--uems-text-accent-link);
+  text-decoration: none;
+  width: fit-content;
+}
+.ds-kpi-card__link:hover { text-decoration: underline; }
+
+/* =============================================================================
+   Group variants — Multi / Single / Two
+   Header (value + label + description + trend pill) + severity-chip grid.
+   ============================================================================= */
+.ds-kpi-card__group-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.ds-kpi-card__group-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.ds-kpi-card__group-value {
+  font-size: 24px;                               /* display/Small/Bold */
+  font-weight: 700;
+  line-height: 32px;
+  color: var(--uems-text-secondary);
+}
+.ds-kpi-card__group-value--large {
+  font-size: 32px;                               /* display/Large/Bold */
+  font-weight: 700;
+  line-height: 44px;
+}
+.ds-kpi-card__group-label {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--uems-text-secondary);
+}
+.ds-kpi-card__group-description {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  color: var(--uems-text-quaternary);
+}
+
+/* Trend pill — chevron-down dropdown */
+.ds-kpi-card__trend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 0.5px solid var(--uems-border-secondary);
+  background: var(--uems-bg-secondary);
+  color: var(--uems-text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  opacity: 0.8;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 120ms ease, border-color 120ms ease, opacity 120ms ease;
+}
+.ds-kpi-card__trend-pill:hover {
+  opacity: 1;
+  background: var(--uems-bg-primary-alt);
+  border-color: var(--uems-border-primary);
+}
+
+/* Severity chip grid */
+.ds-kpi-card__chip-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.ds-kpi-card--single .ds-kpi-card__chip-grid { gap: 24px; }
+.ds-kpi-card--two    .ds-kpi-card__chip-grid { gap: 24px; }
+
+/* Severity chip */
+.ds-kpi-card__chip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+}
+.ds-kpi-card--single .ds-kpi-card__chip,
+.ds-kpi-card--two    .ds-kpi-card__chip {
+  padding: 20px;
+  gap: 8px;
+}
+
+.ds-kpi-card__chip-value {
+  font-size: 24px;                               /* display/Small/Bold */
+  font-weight: 700;
+  line-height: 32px;
+}
+.ds-kpi-card__chip-label {
+  font-size: 14px;                               /* body/Default/Medium */
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--uems-text-tertiary);
+}
+.ds-kpi-card__chip-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12px;                               /* body/Small/Medium */
+  font-weight: 500;
+  color: var(--uems-text-accent-link);
+  text-decoration: none;
+  width: fit-content;
+}
+.ds-kpi-card__chip-link:hover { text-decoration: underline; }
+
+/* Severity color palette */
+.ds-kpi-card__chip--critical { background: var(--uems-bg-error-primary); border-color: var(--uems-border-error-subtle); }
+.ds-kpi-card__chip--critical .ds-kpi-card__chip-value { color: var(--uems-text-error); }
+
+.ds-kpi-card__chip--warning  { background: var(--uems-bg-alert-primary); border-color: var(--uems-border-alert-subtle); }
+.ds-kpi-card__chip--warning  .ds-kpi-card__chip-value { color: var(--uems-text-alert); }
+
+.ds-kpi-card__chip--info     { background: var(--uems-bg-info-primary); border-color: var(--uems-border-accent-subtle); }
+.ds-kpi-card__chip--info     .ds-kpi-card__chip-value { color: var(--uems-text-info); }
+
+.ds-kpi-card__chip--neutral  { background: var(--uems-bg-secondary); border-color: var(--uems-border-secondary); }
+.ds-kpi-card__chip--neutral  .ds-kpi-card__chip-value { color: var(--uems-text-secondary); }
+
+.ds-kpi-card__chip--success  { background: var(--uems-bg-success-primary); border-color: var(--uems-border-success-subtle); }
+.ds-kpi-card__chip--success  .ds-kpi-card__chip-value { color: var(--uems-text-success); }
+
+/* ── Skeleton (loading) ─────────────────────────────────────────── */
+.ds-kpi-card--loading .ds-kpi-card__value {
+  display: inline-block;
+  min-width: 64px;
+  height: 28px;
+  border-radius: var(--radius-sm, 6px);
+  background: linear-gradient(90deg, var(--uems-bg-secondary) 25%, var(--uems-bg-tertiary) 50%, var(--uems-bg-secondary) 75%);
+  background-size: 200% 100%;
+  animation: ds-kpi-shimmer 1.4s linear infinite;
+  color: transparent;
+}
+@keyframes ds-kpi-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-kpi-card--loading .ds-kpi-card__value { animation: none; }
+}
+
+/* RTL — no flex-direction override needed here. `.ds-kpi-card__default`,
+   `__wide` and `__group-header` are all plain `flex-direction: row`; the host's
+   `dir="rtl"` (inherited `direction: rtl`) already mirrors a `row` flex
+   container on its own (first DOM child moves to the visual right). Adding
+   `row-reverse` on top double-reverses it back to LTR visual order — that was
+   the bug (icon/gauge stayed on the right instead of moving to the left). */
+
+/* =============================================================================
+   ds-kpi-group — legacy layout wrapper (kept for Online/Offline strips, etc.)
+   ============================================================================= */
+ds-kpi-group {
+  display: block;
+  font-family: var(--font-family-sans);
+}
+.ds-kpi-group {
+  background: var(--uems-bg-primary-alt);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: 16px;
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+}
+.ds-kpi-group--two   { display: grid; grid-template-columns: 1fr 1fr; }
+.ds-kpi-group--multi { display: flex; flex-wrap: nowrap; overflow-x: auto; }
+.ds-kpi-group--two   > *,
+.ds-kpi-group--multi > * { border: 0 !important; border-radius: 0; background: transparent; }
+.ds-kpi-group--multi > * { flex: 1 1 0; min-width: 120px; }
+.ds-kpi-group--two   > * + *,
+.ds-kpi-group--multi > * + * { border-left: 1px solid var(--uems-border-tertiary) !important; }
+.ds-kpi-group[dir="rtl"].ds-kpi-group--two   > * + *,
+.ds-kpi-group[dir="rtl"].ds-kpi-group--multi > * + * { border-left: 0 !important; border-right: 1px solid var(--uems-border-tertiary) !important; }
+
+/* ── Date-range selector (date / desc+date types) ───────────────────── */
+.ds-kpi-card__selector {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4, 4px);
+  height: 28px;
+  padding: 0 var(--spacing-8, 8px);
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--uems-border-tertiary);
+  background: var(--uems-bg-primary-alt);
+  color: var(--uems-text-tertiary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.ds-kpi-card__selector:hover { border-color: var(--uems-border-secondary); }
+.ds-kpi-card__selector:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; }
+
+/* =============================================================================
+   ds-kpi-breakdown — stat header + 4-cell severity grid.
+   layout: compact (Multi) | stacked (Two) | wide (Single).
+   ============================================================================= */
+ds-kpi-breakdown { display: block; font-family: var(--font-family-sans); }
+
+.ds-kpi-breakdown {
+  position: relative;
+  box-sizing: border-box;
+  background: var(--uems-bg-primary-alt);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: 16px;
+  padding: var(--spacing-20, 20px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-20, 20px);
+  min-width: 0;
+}
+.ds-kpi-breakdown--stacked { padding: var(--spacing-32, 32px); }
+
+/* Header stat */
+.ds-kpi-breakdown__header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--spacing-8, 8px); }
+.ds-kpi-breakdown__stat { display: flex; flex-direction: column; gap: var(--spacing-2, 2px); min-width: 0; }
+.ds-kpi-breakdown__value-row { display: flex; align-items: center; gap: var(--spacing-8, 8px); }
+.ds-kpi-breakdown__value { font-size: 24px; font-weight: 700; line-height: 32px; color: var(--uems-text-accent-tertiary); }
+.ds-kpi-breakdown--stacked .ds-kpi-breakdown__value,
+.ds-kpi-breakdown--wide    .ds-kpi-breakdown__value { font-size: 32px; line-height: 44px; }
+.ds-kpi-breakdown__title { font-size: 14px; font-weight: 600; line-height: 20px; color: var(--uems-text-secondary); }
+.ds-kpi-breakdown__subtitle { font-size: 12px; font-weight: 400; line-height: 16px; color: var(--uems-text-quaternary); }
+
+/* Title row — title text + optional filter icon button (opt-in via
+   `show-filter`), e.g. to open a severity-filter menu for the breakdown. */
+.ds-kpi-breakdown__title-row { display: flex; align-items: center; gap: var(--spacing-6, 6px); }
+.ds-kpi-breakdown__filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--uems-text-tertiary);
+  cursor: pointer;
+}
+.ds-kpi-breakdown__filter-btn:hover { background: var(--uems-bg-secondary-alt); color: var(--uems-text-secondary); }
+.ds-kpi-breakdown__filter-btn:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 1px; }
+/* No RTL flex-direction override — `.ds-kpi-breakdown__title-row` is plain
+   `flex-direction: row`; the host's inherited `direction: rtl` already
+   mirrors it on its own (same reasoning as the wide/default layouts above). */
+
+/* Severity grid */
+.ds-kpi-breakdown__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(76px, 1fr));
+  gap: var(--spacing-8, 8px);
+  /* Cells keep a min width and scroll horizontally rather than squishing
+     when the card is narrower than the 4 severity cells. */
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.ds-kpi-breakdown--stacked .ds-kpi-breakdown__grid,
+.ds-kpi-breakdown--wide    .ds-kpi-breakdown__grid { gap: var(--spacing-24, 24px); }
+
+/* wide (Single): header left + grid right on one row */
+.ds-kpi-breakdown--wide {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-32, 32px);
+}
+.ds-kpi-breakdown--wide .ds-kpi-breakdown__grid { flex: 1 1 auto; }
+
+/* Cell */
+.ds-kpi-breakdown__cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2, 2px);
+  align-items: flex-start;
+  /* Let the cell shrink below its content's natural width (grid/flex items
+     default to min-width:auto) — required for the label's ellipsis to ever
+     kick in instead of blowing out the fixed 4-col grid track. */
+  min-width: 0;
+  padding: var(--spacing-12, 12px);
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: filter 120ms ease;
+}
+.ds-kpi-breakdown__cell:hover { filter: brightness(0.97); }
+.ds-kpi-breakdown__cell:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; }
+.ds-kpi-breakdown--stacked .ds-kpi-breakdown__cell,
+.ds-kpi-breakdown--wide    .ds-kpi-breakdown__cell { padding: var(--spacing-16, 16px) var(--spacing-20, 20px); }
+.ds-kpi-breakdown--wide .ds-kpi-breakdown__cell { flex-direction: column; align-items: flex-start; gap: var(--spacing-0); }
+
+.ds-kpi-breakdown__count { font-size: 24px; font-weight: 700; line-height: 32px; }
+.ds-kpi-breakdown__label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4, 4px);
+  /* Full cell width so the text span below has a definite box to ellipsis
+     against, instead of the label hugging its own (unbounded) content. */
+  width: 100%;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--uems-text-quaternary);
+}
+/* Text truncates; the redirect icon next to it never shrinks or wraps.
+   flex-grow: 0 (not 1) — the text should hug its own content and sit right
+   next to the icon, not stretch to fill the row and push the icon to the
+   cell's far edge. It still shrinks (flex-shrink: 1) to ellipsis once the
+   cell is too narrow for both. */
+.ds-kpi-breakdown__label-text {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Small "redirect" arrow next to every severity label — a visual hint that
+   the cell drills into a filtered view (matches the wide-layout "View" link
+   glyph, but shown unconditionally, all layouts). */
+.ds-kpi-breakdown__redirect-icon { flex-shrink: 0; color: var(--uems-text-tertiary); }
+
+/* Severity palette (per spec) */
+.ds-kpi-breakdown__cell--critical { background: var(--uems-bg-error-primary); }
+.ds-kpi-breakdown__cell--critical .ds-kpi-breakdown__count { color: var(--uems-text-error); }
+.ds-kpi-breakdown__cell--high { background: var(--uems-bg-alert-primary); }
+.ds-kpi-breakdown__cell--high .ds-kpi-breakdown__count { color: var(--uems-text-alert); }
+.ds-kpi-breakdown__cell--medium { background: var(--uems-bg-accent-primary); }
+.ds-kpi-breakdown__cell--medium .ds-kpi-breakdown__count { color: var(--uems-text-accent-tertiary); }
+.ds-kpi-breakdown__cell--low { background: var(--uems-bg-secondary-alt); }
+.ds-kpi-breakdown__cell--low .ds-kpi-breakdown__count { color: var(--uems-text-secondary); }
+
+/* Loading */
+.ds-kpi-breakdown--loading .ds-kpi-breakdown__value {
+  display: inline-block; min-width: 64px; height: 28px; color: transparent;
+  border-radius: var(--radius-sm, 6px);
+  background: linear-gradient(90deg, var(--uems-bg-disabled) 25%, var(--uems-border-tertiary) 50%, var(--uems-bg-disabled) 75%);
+  background-size: 200% 100%;
+  animation: ds-kpi-shimmer 1.4s linear infinite;
+}
+
+/* RTL — `.ds-kpi-breakdown--wide` is plain `flex-direction: row`; the host's
+   `dir="rtl"` already mirrors it on its own (header moves to the visual right,
+   grid to the left — same reasoning as ds-kpi-card above). The old
+   `row-reverse` here double-reversed it back to LTR order, which was the bug
+   (header stayed left, grid stayed right, matching the screenshot report). */
+.ds-kpi-breakdown[dir="rtl"] .ds-kpi-breakdown__cell,
+.ds-kpi-breakdown[dir="rtl"] .ds-kpi-breakdown__label { text-align: right; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-kpi-breakdown--loading .ds-kpi-breakdown__value { animation: none; }
+}

@@ -1,0 +1,102 @@
+/* =============================================================================
+   ds-icon-button / .ds-icon-button
+   2 shapes × 6 types × 4 sizes × 5 states. Token-driven.
+   Renders an internal <button> child with a single <ds-icon> centered.
+   ============================================================================= */
+
+:host { display: inline-block; vertical-align: middle; line-height: 0; }
+
+/* Auto-tooltip wrapper (inserted around the button when `label` is set) — hug
+   the button so it never adds a baseline gap or changes the button's box. */
+ds-icon-button > .ds-icon-button__tip { display: inline-flex; vertical-align: middle; line-height: 0; }
+
+.ds-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  /* Figma: 4px padding + fixed icon = dimension. Fixed width/height + flex
+     centering reproduces that exactly; declared padding stays 0 so the 1px
+     (transparent) border never squeezes the icon. */
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--uems-radius-xs, 4px); /* square: 4px on ALL sizes */
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color    var(--duration-fast) var(--ease-standard),
+    color           var(--duration-fast) var(--ease-standard);
+}
+
+/* ---- Shapes --------------------------------------------------------- */
+.ds-icon-button--square { border-radius: var(--uems-radius-xs, 4px); }
+.ds-icon-button--circle { border-radius: var(--uems-radius-pill, 9999px); }
+
+/* ---- Sizes — 4 + icon + 4 = dimension (icons 20/16/12/8 FIXED) ------ */
+.ds-icon-button--xl     { width: 28px; height: 28px; }
+.ds-icon-button--large  { width: 24px; height: 24px; }
+.ds-icon-button--small  { width: 20px; height: 20px; }
+.ds-icon-button--xsmall { width: 16px; height: 16px; }
+
+/* =============================================================================
+   Types × States — design tokens used directly (Light values resolve via
+   tokens.css; Dark / Night / Green inherit automatically). Maps 1:1 to
+   MD §Design tokens — complete Type × State map.
+   ============================================================================= */
+
+/* Primary — solid blue, white icon. */
+.ds-icon-button--primary                      { background: var(--uems-bg-button-primary);         color: var(--uems-icon-white); }
+.ds-icon-button--primary:hover:not(:disabled) { background: var(--uems-bg-button-primary-hover); }
+.ds-icon-button--primary:active:not(:disabled){ background: var(--uems-bg-button-primary-pressed); }
+
+/* Secondary — soft accent tint, accent icon. */
+.ds-icon-button--secondary                       { background: var(--uems-bg-accent-primary-alt);   color: var(--uems-icon-accent); }
+.ds-icon-button--secondary:hover:not(:disabled)  { background: var(--uems-bg-accent-primary-hover); }
+.ds-icon-button--secondary:active:not(:disabled) { background: var(--uems-bg-accent-secondary); }
+
+/* Tertiary — no resting fill; tint appears on hover/active; accent icon. */
+.ds-icon-button--tertiary                       { background: transparent;                    color: var(--uems-icon-accent); }
+.ds-icon-button--tertiary:hover:not(:disabled)  { background: var(--uems-bg-accent-primary-hover); }
+.ds-icon-button--tertiary:active:not(:disabled) { background: var(--uems-bg-accent-secondary); }
+
+/* Outline — neutral bordered; icon + border shift to accent on hover/active. */
+.ds-icon-button--outline                       { background: var(--uems-bg-primary-alt);          color: var(--uems-icon-secondary); border-color: var(--uems-border-secondary); }
+.ds-icon-button--outline:hover:not(:disabled)  { background: var(--uems-bg-accent-primary-hover); color: var(--uems-icon-accent);    border-color: var(--uems-border-accent-subtle); }
+.ds-icon-button--outline:active:not(:disabled) { background: var(--uems-bg-accent-secondary);     color: var(--uems-icon-accent);    border-color: var(--uems-border-accent-secondary); }
+
+/* Danger — solid red, white icon. */
+.ds-icon-button--danger                       { background: var(--uems-bg-error-solid);        color: var(--uems-icon-white); }
+.ds-icon-button--danger:hover:not(:disabled)  { background: var(--uems-bg-error-solid-hover); }
+.ds-icon-button--danger:active:not(:disabled) { background: var(--uems-bg-error-solid-pressed); }
+
+/* Tertiary Grey — quiet neutral; icon turns accent-blue when pressed.
+   All non-Active, non-Disabled states use Icon-Secondary (the old
+   Icon-Tertiary focus drift was fixed in Figma 2026-06-11). */
+.ds-icon-button--tertiary-grey                       { background: transparent;             color: var(--uems-icon-secondary); }
+.ds-icon-button--tertiary-grey:hover:not(:disabled)  { background: var(--uems-bg-primary-hover); color: var(--uems-icon-secondary); }
+.ds-icon-button--tertiary-grey:active:not(:disabled) { background: var(--uems-bg-secondary);     color: var(--uems-icon-accent-button); }
+
+/* ---- Focus — 2px accent ring, 2px gap from the button edge;
+        colors stay Default. (Design review: 2px offset on every
+        focusable component for a consistent ring.) ---------------------- */
+.ds-icon-button:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+
+/* ---- Disabled — BG-Disabled fill + Icon-Disabled glyph -------------- */
+.ds-icon-button:disabled,
+.ds-icon-button[aria-disabled="true"] {
+  background: var(--uems-bg-disabled);
+  color: var(--uems-icon-disabled);
+  border-color: transparent;
+  cursor: not-allowed;
+}
+/* Tertiary + Tertiary Grey stay transparent when disabled (no fill). */
+.ds-icon-button--tertiary:disabled,
+.ds-icon-button--tertiary[aria-disabled="true"],
+.ds-icon-button--tertiary-grey:disabled,
+.ds-icon-button--tertiary-grey[aria-disabled="true"] {
+  background: transparent;
+}

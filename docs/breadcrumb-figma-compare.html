@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<title>breadcrumb ↔ figma compare</title>
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/breadcrumb/breadcrumb.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/breadcrumb/breadcrumb.js"></script>
+<style>body{background:#fff;padding:20px;display:flex;flex-direction:column;gap:18px;align-items:flex-start;} pre{font-size:11px;}</style>
+</head>
+<body>
+  <ds-breadcrumb id="s">
+    <a href="#">Level 1</a><a href="#">Level 2</a><span>Current</span>
+  </ds-breadcrumb>
+  <ds-breadcrumb id="m" size="medium">
+    <a href="#">Level 1</a><a href="#">Level 2</a><span>Current</span>
+  </ds-breadcrumb>
+  <ds-breadcrumb id="ovf" overflow max-visible="3">
+    <a href="#">Level 1</a><a href="#">Level 2</a><a href="#">Level 3</a><a href="#">Level 4</a><span>Current</span>
+  </ds-breadcrumb>
+  <ds-breadcrumb id="dis" disabled>
+    <a href="#">Level 1</a><a href="#">Level 2</a><span>Current</span>
+  </ds-breadcrumb>
+  <ds-breadcrumb id="rtl" rtl>
+    <a href="#">المستوى ١</a><a href="#">المستوى ٢</a><span>الحالي</span>
+  </ds-breadcrumb>
+  <pre id="report">measuring…</pre>
+<script type="module">
+const hex = (rgb) => { const m = rgb.match(/\d+/g); return m ? '#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join('').toUpperCase() : rgb; };
+await customElements.whenDefined('ds-breadcrumb');
+await new Promise(r => setTimeout(r, 600));
+const lines = []; let pass=0, fail=0;
+const check = (id, what, got, want) => { const ok = String(got)===String(want); ok?pass++:fail++; lines.push(`${ok?'PASS':'FAIL'} ${id} ${what}: got=${got} want=${want}`); };
+const g = id => document.getElementById(id);
+// sizes: row heights via link box
+{ const link = g('s').querySelector('a'); const cs = getComputedStyle(link);
+  check('s','row-height',Math.round(link.getBoundingClientRect().height),20);
+  check('s','font',cs.fontSize+'/'+cs.lineHeight,'12px/16px');
+  check('s','pad',cs.paddingTop+'/'+cs.paddingLeft,'2px/4px');
+  check('s','radius',cs.borderRadius,'4px');
+  check('s','link-color(quaternary)',hex(cs.color),'#55607A'); }
+{ const link = g('m').querySelector('a'); const cs = getComputedStyle(link);
+  check('m','row-height',Math.round(link.getBoundingClientRect().height),28);
+  check('m','font',cs.fontSize+'/'+cs.lineHeight,'13px/20px');
+  check('m','pad',cs.paddingTop+'/'+cs.paddingLeft,'4px/4px'); }
+// gap
+check('s','list-gap',getComputedStyle(g('s').querySelector('.ds-breadcrumb__list')).gap,'4px');
+// current item
+{ const cur = g('s').querySelector('.ds-breadcrumb__item--current'); const cs = getComputedStyle(cur);
+  check('s','current-color(secondary)',hex(cs.color),'#2A303D');
+  check('s','current-weight',cs.fontWeight,'500');
+  check('s','aria-current',cur.querySelector('[aria-current="page"]')!==null,true); }
+// separators
+{ const sep = g('s').querySelector('.ds-breadcrumb__separator');
+  check('s','sep-color(icon-tertiary)',hex(getComputedStyle(sep).color),'#55607A');
+  check('s','sep-size',sep.querySelector('svg').getAttribute('width'),'12');
+  check('s','sep-aria-hidden',sep.getAttribute('aria-hidden'),'true'); }
+check('m','sep-size',g('m').querySelector('.ds-breadcrumb__separator svg').getAttribute('width'),'14');
+// hover rule css-level (BG-Secondary standardized + accent link)
+const css = await (await fetch('../design-system-library/src/components/breadcrumb/breadcrumb.css')).text();
+check('css','hover-standardized',css.includes('color: var(--uems-text-accent-link);') && css.includes('background: var(--uems-bg-secondary);'),true);
+check('css','no-opacity-disable',!css.includes('opacity: 0.5'),true);
+// overflow: … button + dropdown of hidden items
+{ const btn = g('ovf').querySelector('.ds-breadcrumb__overflow-btn');
+  check('ovf','more-btn',!!btn,true);
+  check('ovf','more-icon',btn.querySelector('svg use')?.getAttribute('href')?.includes('more-horizontal'),true);
+  check('ovf','aria-haspopup',btn.getAttribute('aria-haspopup'),'menu');
+  check('ovf','visible-items',g('ovf').querySelectorAll('.ds-breadcrumb__item:not(.ds-breadcrumb__item--collapsed)').length,4);
+  btn.click(); await new Promise(r=>setTimeout(r,100));
+  check('ovf','dd-opens',g('ovf').querySelector('.ds-breadcrumb__overflow-dd[open]')!==null,true);
+  check('ovf','aria-expanded',btn.getAttribute('aria-expanded'),'true'); }
+// disabled — token swap
+{ const link = g('dis').querySelector('a');
+  check('dis','aria-disabled',g('dis').getAttribute('aria-disabled'),'true');
+  check('dis','link-disabled-color',hex(getComputedStyle(link.closest('.ds-breadcrumb__item')).color),'#8893AD');
+  check('dis','opacity-1',getComputedStyle(g('dis')).opacity,'1'); }
+// rtl
+check('rtl','dir',g('rtl').getAttribute('dir'),'rtl');
+check('rtl','sep-mirrored(chevron-left)',g('rtl').querySelector('.ds-breadcrumb__separator svg use')?.getAttribute('href')?.includes('chevron-left')===true,true);
+// a11y
+check('s','nav-role',g('s').getAttribute('role'),'navigation');
+check('s','aria-label',g('s').getAttribute('aria-label'),'Breadcrumb');
+check('s','ol',g('s').querySelector('ol')!==null,true);
+lines.unshift(`RESULT: ${pass} pass / ${fail} fail`);
+document.getElementById('report').textContent = lines.join('\n');
+</script>
+</body>
+</html>

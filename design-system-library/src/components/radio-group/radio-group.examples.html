@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Radio Group — examples</title>
+  <link rel="stylesheet" href="../../styles/index.css" />
+  <script type="module" src="../../index.js"></script>
+  <style>body{padding:24px;display:flex;flex-direction:column;gap:24px;font-family:var(--font-family-sans)}</style>
+</head>
+<body>
+  <h1>Radio Group</h1>
+
+  <ds-radio-group id="g1" label="Notification frequency" helper="We'll send alerts based on this preference."></ds-radio-group>
+  <ds-radio-group id="g2" label="Assign to" state="error" helper="Please select an assignee before submitting."></ds-radio-group>
+  <ds-radio-group id="g3" label="Select your preferred data export format" label-position="top" size="m"></ds-radio-group>
+
+  <h2 style="margin:0 0 -8px">Card variant — <code>variant="card"</code> (per-option <code>info</code> help icon)</h2>
+  <ds-radio-group id="g4" variant="card" label="Detection classification" helper="How should this detection be recorded?"></ds-radio-group>
+  <ds-radio-group id="g5" variant="card" size="l" label="Severity"></ds-radio-group>
+
+  <script type="module">
+    import '../../index.js';
+    document.getElementById('g1').options = [
+      { value: 'realtime', label: 'Real-time' },
+      { value: 'daily',    label: 'Daily digest', selected: true },
+      { value: 'weekly',   label: 'Weekly summary' },
+    ];
+    document.getElementById('g4').options = [
+      { value: 'tp', label: 'True Positive',  selected: true, info: 'Correctly flagged as a real threat.' },
+      { value: 'fp', label: 'False Positive', info: 'Flagged but actually benign — safe to dismiss.' },
+    ];
+    document.getElementById('g5').options = [
+      { value: 'low',  label: 'Low',      info: 'Minimal impact; routine handling.' },
+      { value: 'high', label: 'High',     selected: true, info: 'Significant impact; prioritise triage.' },
+      { value: 'crit', label: 'Critical', disabled: true, info: 'Requires admin escalation.' },
+    ];
+    document.getElementById('g2').options = [
+      { value: 'me',   label: 'Me' },
+      { value: 'team', label: 'My team' },
+      { value: 'all',  label: 'Everyone' },
+    ];
+    document.getElementById('g3').options = [
+      { value: 'csv',  label: 'CSV — Comma-separated values', selected: true },
+      { value: 'json', label: 'JSON — JavaScript Object Notation' },
+      { value: 'xml',  label: 'XML — Extensible Markup Language' },
+    ];
+  </script>
+</body>
+</html>

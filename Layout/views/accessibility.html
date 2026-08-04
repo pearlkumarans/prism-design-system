@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<!--
+  Accessibility Controls — DUAL-MODE drawer (ds-drawer, .ec-drawer in .shell-area).
+  Owns global a11y state (text size / error colour / kbd-nav focus) applied app-wide
+  via applyA11yGlobal(). The RTL toggle flips the whole shell through ShellCtx.setLang.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Accessibility — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="../design-system-library/src/components/drawer/drawer.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-base); }
+    .sa-host { position: relative; display: flex; flex: 1; min-height: 0; height: 100vh; overflow: clip; }
+    .shell-area ds-drawer.ec-drawer { position: absolute !important; inset: 0 !important; z-index: 30; }
+    /* global kbd-nav focus rings (Shell already has these; needed for standalone) */
+    html.a11y-kbd-nav :focus-visible { outline: 2px solid var(--uems-text-accent-link) !important; outline-offset: 2px; border-radius: 2px; }
+    html.a11y-kbd-nav .ds-search-field__input:focus-visible,
+    html.a11y-kbd-nav .ds-text-input__field:focus-visible,
+    html.a11y-kbd-nav .zia-input__field:focus-visible { outline: none !important; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  .a11y-sec { padding: 16px 0; border-bottom: 1px solid color-mix(in srgb, var(--uems-border-tertiary) 55%, transparent); }
+  .a11y-sec:last-child { border-bottom: 0; }
+  /* Gap between the drawer header and the first section = 24px (matches Updates). */
+  #a11y-pop .ds-drawer__body { padding-top: var(--spacing-24); }
+  #a11y-body > .a11y-sec:first-child { padding-top: 0; }
+  .a11y-sec__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .a11y-sec__title { font-size: var(--font-size-15); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+  .a11y-sec__desc { font-size: var(--font-size-13); line-height: 19px; color: var(--uems-text-secondary); margin: 4px 0 0; }
+  .a11y-sec__desc + * { margin-top: 12px; }
+  .a11y-kbd-row { display: flex; align-items: center; gap: 8px; }
+  .a11y-kbd { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--uems-bg-accent-primary); color: var(--uems-text-accent-tertiary); border-radius: 8px; font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); }
+  .a11y-kbd-plus { color: var(--uems-text-tertiary); font-size: var(--font-size-13); }
+  .a11y-sizes { display: flex; gap: 8px; }
+  .a11y-size { width: 40px; height: 40px; border: 1px solid var(--uems-border-secondary); border-radius: 8px; background: var(--uems-bg-primary); color: var(--uems-text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: var(--font-weight-semibold); transition: border-color 140ms, box-shadow 140ms; }
+  .a11y-size:hover { border-color: var(--uems-border-accent); }
+  .a11y-size.is-active { border-color: var(--uems-text-accent-link); box-shadow: 0 0 0 1px var(--uems-text-accent-link); color: var(--uems-text-accent-link); }
+  .a11y-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+  .a11y-line__label { font-size: var(--font-size-14); color: var(--uems-text-primary); }
+  .a11y-colors { display: flex; gap: 8px; }
+  .a11y-sw { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: none; padding: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .a11y-sw.is-active { box-shadow: 0 0 0 2px var(--uems-bg-primary), 0 0 0 4px currentColor; }
+  .a11y-sw ds-icon { opacity: 0; }
+  .a11y-sw.is-active ds-icon { opacity: 1; }
+  .a11y-prev { margin-top: 12px; background: var(--uems-bg-warning-secondary); border-radius: 8px; padding: 12px; }
+  .a11y-prev__title { font-size: var(--font-size-13); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); margin-bottom: 8px; }
+  .a11y-prev__field { display: flex; align-items: center; gap: 8px; }
+  .a11y-prev__lbl { font-size: var(--font-size-13); color: var(--uems-text-primary); white-space: nowrap; }
+  .a11y-prev__lbl .req { color: var(--uems-text-error, #D5304A); }
+  .a11y-prev ds-text-input { flex: 1; }
+  .a11y-prev__lbl .mand-text { color: var(--uems-text-secondary); font-size: var(--font-size-12); font-weight: var(--font-weight-semibold); }
+  .a11y-prev--noicon .ds-field-helper ds-icon,
+  .a11y-prev--noicon .ds-field-helper__icon { display: none !important; }
+</style>
+
+<ds-drawer id="a11y-pop" class="ec-drawer" title="Accessibility Controls" side="right" size="m" modal="false" show-footer="false">
+  <div id="a11y-body"></div>
+</ds-drawer>
+
+<script>
+(function () {
+  const MSGS = {
+    en: {
+      'a11y.title': 'Accessibility Controls',
+      'a11y.rtlLabel': 'Right-to-left layout',
+      'a11y.rtlHint': 'Switch the interface to Arabic / RTL.',
+      'a11y.srTitle': 'Screen Reader',
+      'a11y.srDesc': 'Reads content out loud (only in live mode) and is compatible with screen reader extensions on your browser or computer. Invoke by pressing the following keyboard shortcut.',
+      'a11y.tsTitle': 'Text Size',
+      'a11y.tsDesc': 'Choose your preferred text size for comfortable readability and visual clarity.',
+      'a11y.zoomTitle': 'Zoom',
+      'a11y.zoomDesc': 'Zooms content only in the live mode from 25% to 150% and is compatible with your browser’s zoom functionality.',
+      'a11y.kbTitle': 'Keyboard Navigation',
+      'a11y.kbDesc': 'Use keyboard shortcuts to navigate with ease and efficiency.',
+      'a11y.errTitle': 'Error Message Display Format',
+      'a11y.errDesc': 'Customize the color of error messages or add an error icon for improved visibility and faster resolution.',
+      'a11y.errColor': 'Error message color',
+      'a11y.errIcon': 'Show error icon with message',
+      'a11y.preview': 'Preview',
+      'a11y.singleLine': 'Single Line',
+      'a11y.mandatory': 'This field is mandatory.',
+      'a11y.mandTitle': 'Mandatory Fields Display Format',
+      'a11y.mandDesc': 'Choose your preferred format to visually indicate mandatory form fields.',
+      'a11y.optAsterisk': 'Asterisk',
+      'a11y.optText': 'Mandatory Text',
+      'a11y.mandWord': '(Mandatory)',
+    },
+    ar: {
+      'a11y.title': 'إعدادات إمكانية الوصول',
+      'a11y.rtlLabel': 'تخطيط من اليمين إلى اليسار',
+      'a11y.rtlHint': 'تبديل الواجهة إلى العربية / RTL.',
+      'a11y.srTitle': 'قارئ الشاشة',
+      'a11y.srDesc': 'يقرأ المحتوى بصوت عالٍ (في الوضع المباشر فقط) ومتوافق مع إضافات قارئ الشاشة في متصفحك أو جهازك. قم بتفعيله بالضغط على اختصار لوحة المفاتيح التالي.',
+      'a11y.tsTitle': 'حجم النص',
+      'a11y.tsDesc': 'اختر حجم النص المفضّل لديك لقراءة مريحة ووضوح بصري.',
+      'a11y.zoomTitle': 'التكبير',
+      'a11y.zoomDesc': 'يكبّر المحتوى في الوضع المباشر فقط من 25% إلى 150% ومتوافق مع وظيفة التكبير في متصفحك.',
+      'a11y.kbTitle': 'التنقل بلوحة المفاتيح',
+      'a11y.kbDesc': 'استخدم اختصارات لوحة المفاتيح للتنقل بسهولة وكفاءة.',
+      'a11y.errTitle': 'تنسيق عرض رسائل الخطأ',
+      'a11y.errDesc': 'خصّص لون رسائل الخطأ أو أضف أيقونة خطأ لتحسين الوضوح وتسريع الحل.',
+      'a11y.errColor': 'لون رسالة الخطأ',
+      'a11y.errIcon': 'إظهار أيقونة الخطأ مع الرسالة',
+      'a11y.preview': 'معاينة',
+      'a11y.singleLine': 'سطر واحد',
+      'a11y.mandatory': 'هذا الحقل إلزامي.',
+      'a11y.mandTitle': 'تنسيق عرض الحقول الإلزامية',
+      'a11y.mandDesc': 'اختر التنسيق المفضّل لديك للإشارة بصريًا إلى الحقول الإلزامية.',
+      'a11y.optAsterisk': 'علامة النجمة',
+      'a11y.optText': 'نص إلزامي',
+      'a11y.mandWord': '(إلزامي)',
+    },
+  };
+  // Register into the shell's central catalog when running inside the shell (idempotent).
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  // Resolver: shell-active string inside the shell, MSGS.en fallback in standalone.
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+  const A11Y_COLORS = ['#D5304A', '#7A1E1E', '#B07D0A', '#E5510A', '#8B5E3C', '#6B7A2E', '#2C3A4F'];
+  const A11Y_SIZES = [12, 14, 16, 19, 23];
+  const A11Y_CONTENT_SCALE = [0.85, 0.92, 1, 1.1, 1.25];
+  const A11Y_SCALE_TARGETS = ['ds-content', 'ds-right-pane', '.upd-pop', 'ds-drawer'];
+  const _a11y = { size: 2, kbd: true, errColor: A11Y_COLORS[0], errIcon: true, mand: 'asterisk' };
+  const lang = () => (window.ShellCtx && window.ShellCtx.lang) || 'en';
+  const panel = () => document.getElementById('a11y-pop');
+  const body = () => document.getElementById('a11y-body');
+
+  function applyA11yGlobal() {
+    const z = String(A11Y_CONTENT_SCALE[_a11y.size]);
+    A11Y_SCALE_TARGETS.forEach((sel) => document.querySelectorAll(sel).forEach((el) => { el.style.zoom = z; }));
+    document.documentElement.classList.toggle('a11y-kbd-nav', _a11y.kbd);
+    document.documentElement.style.setProperty('--uems-text-error', _a11y.errColor);
+    document.documentElement.style.setProperty('--uems-border-error', _a11y.errColor);
+  }
+  const reqIndicator = () => _a11y.mand === 'asterisk' ? '<span class="req">*</span>' : `<span class="mand-text">${t('a11y.mandWord')}</span>`;
+
+  function renderA11y() {
+    const d = {
+      title: t('a11y.title'), rtlLabel: t('a11y.rtlLabel'), rtlHint: t('a11y.rtlHint'),
+      srTitle: t('a11y.srTitle'), srDesc: t('a11y.srDesc'),
+      tsTitle: t('a11y.tsTitle'), tsDesc: t('a11y.tsDesc'),
+      zoomTitle: t('a11y.zoomTitle'), zoomDesc: t('a11y.zoomDesc'),
+      kbTitle: t('a11y.kbTitle'), kbDesc: t('a11y.kbDesc'),
+      errTitle: t('a11y.errTitle'), errDesc: t('a11y.errDesc'), errColor: t('a11y.errColor'), errIcon: t('a11y.errIcon'),
+      preview: t('a11y.preview'), singleLine: t('a11y.singleLine'), mandatory: t('a11y.mandatory'),
+      mandTitle: t('a11y.mandTitle'), mandDesc: t('a11y.mandDesc'), optAsterisk: t('a11y.optAsterisk'), optText: t('a11y.optText'), mandWord: t('a11y.mandWord'),
+    };
+    const rtl = lang() === 'ar'; const p = panel(); const ab = body();
+    if (!p || !ab) return;
+    p.setAttribute('title', d.title);
+    if (rtl) p.setAttribute('rtl', ''); else p.removeAttribute('rtl');
+    ab.innerHTML = `
+      <div class="a11y-sec"><div class="a11y-sec__title">${d.srTitle}</div><p class="a11y-sec__desc">${d.srDesc}</p>
+        <div class="a11y-kbd-row"><span class="a11y-kbd"><ds-icon name="command" size="14"></ds-icon> Cmd</span><span class="a11y-kbd-plus">+</span><span class="a11y-kbd">F5</span></div></div>
+      <div class="a11y-sec"><div class="a11y-sec__title">${d.tsTitle}</div><p class="a11y-sec__desc">${d.tsDesc}</p>
+        <div class="a11y-sizes">${A11Y_SIZES.map((px, i) => `<button type="button" class="a11y-size${i === _a11y.size ? ' is-active' : ''}" data-size data-i="${i}" style="font-size:${px}px">Aa</button>`).join('')}</div></div>
+      <div class="a11y-sec"><div class="a11y-sec__title">${d.zoomTitle}</div><p class="a11y-sec__desc">${d.zoomDesc}</p>
+        <div class="a11y-kbd-row"><span class="a11y-kbd"><ds-icon name="command" size="14"></ds-icon> Cmd</span><span class="a11y-kbd-plus">+</span><span class="a11y-kbd">+ / -</span></div></div>
+      <div class="a11y-sec"><div class="a11y-sec__head"><div class="a11y-sec__title">${d.kbTitle}</div><ds-toggle id="a11y-kbd" size="medium" ${_a11y.kbd ? 'checked' : ''}></ds-toggle></div><p class="a11y-sec__desc">${d.kbDesc}</p></div>
+      <div class="a11y-sec"><div class="a11y-sec__title">${d.errTitle}</div><p class="a11y-sec__desc">${d.errDesc}</p>
+        <div class="a11y-line"><span class="a11y-line__label">${d.errColor}</span><div class="a11y-colors">${A11Y_COLORS.map((c) => `<button type="button" class="a11y-sw${c === _a11y.errColor ? ' is-active' : ''}" data-sw data-c="${c}" style="background:${c};color:${c}"><ds-icon name="check" size="12"></ds-icon></button>`).join('')}</div></div>
+        <div class="a11y-line"><span class="a11y-line__label">${d.errIcon}</span><ds-toggle id="a11y-erricon" size="medium" ${_a11y.errIcon ? 'checked' : ''}></ds-toggle></div>
+        <div class="a11y-prev${_a11y.errIcon ? '' : ' a11y-prev--noicon'}" id="a11y-errprev"><div class="a11y-prev__title">${d.preview}</div><div class="a11y-prev__field"><span class="a11y-prev__lbl">${d.singleLine} ${reqIndicator()}</span><ds-text-input state="error" helper="${d.mandatory}" label-position="top" show-label="false"></ds-text-input></div></div></div>
+      <div class="a11y-sec"><div class="a11y-sec__title">${d.mandTitle}</div><p class="a11y-sec__desc">${d.mandDesc}</p>
+        <ds-radio-group id="a11y-mand" name="a11y-mand" size="m" label-position="top" show-helper-row="false"></ds-radio-group>
+        <div class="a11y-prev"><div class="a11y-prev__title">${d.preview}</div><div class="a11y-prev__field"><span class="a11y-prev__lbl">${d.singleLine} ${reqIndicator()}</span><ds-text-input label-position="top" show-label="false" show-helper-row="false"></ds-text-input></div></div></div>
+      <div class="a11y-sec"><div class="a11y-sec__head"><div class="a11y-sec__title">${d.rtlLabel}</div><ds-toggle id="a11y-rtl" size="medium" ${rtl ? 'checked' : ''} ${rtl ? 'rtl' : ''}></ds-toggle></div><p class="a11y-sec__desc">${d.rtlHint}</p></div>`;
+
+    const mand = ab.querySelector('#a11y-mand');
+    if (mand) {
+      mand.options = [{ value: 'asterisk', label: d.optAsterisk, selected: _a11y.mand === 'asterisk' }, { value: 'text', label: d.optText, selected: _a11y.mand === 'text' }];
+      mand.addEventListener('ds-radio-group-change', (e) => { _a11y.mand = (e.detail && e.detail.value) || 'asterisk'; ab.querySelectorAll('.a11y-prev__lbl').forEach((el) => { el.innerHTML = d.singleLine + ' ' + reqIndicator(); }); });
+    }
+    ab.querySelectorAll('[data-size]').forEach((b) => b.addEventListener('click', () => { _a11y.size = Number(b.dataset.i); ab.querySelectorAll('[data-size]').forEach((x) => x.classList.remove('is-active')); b.classList.add('is-active'); applyA11yGlobal(); }));
+    ab.querySelectorAll('[data-sw]').forEach((b) => b.addEventListener('click', () => { _a11y.errColor = b.dataset.c; ab.querySelectorAll('[data-sw]').forEach((x) => x.classList.remove('is-active')); b.classList.add('is-active'); applyA11yGlobal(); }));
+    ab.querySelector('#a11y-kbd').addEventListener('ds-toggle-change', (e) => { _a11y.kbd = e.detail.checked; applyA11yGlobal(); });
+    ab.querySelector('#a11y-erricon').addEventListener('ds-toggle-change', (e) => { _a11y.errIcon = e.detail.checked; ab.querySelector('#a11y-errprev').classList.toggle('a11y-prev--noicon', !_a11y.errIcon); });
+    ab.querySelector('#a11y-rtl').addEventListener('ds-toggle-change', (e) => {
+      if (window.ShellCtx && window.ShellCtx.setLang) window.ShellCtx.setLang(e.detail.checked ? 'ar' : 'en');
+      else { /* standalone */ renderA11y(); }
+    });
+    applyA11yGlobal();
+  }
+  function show() { renderA11y(); const p = panel(); if (p) p.open(); }
+  function hide() { const p = panel(); if (p) p.close(); }
+  document.addEventListener('shell:langchange', () => { const p = panel(); if (p && p.hasAttribute('open')) renderA11y(); });
+
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers.a11y = { show, hide, render: renderA11y };
+})();
+</script>
+</template>
+
+<script>
+/* ── STANDALONE HARNESS — runs ONLY when opened directly. ── */
+(function () {
+  const KEY = 'a11y';
+  const host = document.createElement('div'); host.className = 'shell-area sa-host'; document.body.appendChild(host);
+  let lang = 'en';
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellCtx = window.ShellCtx || { get shellArea() { return host; }, get lang() { return lang; }, setActiveIcon() {} };
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); s.textContent = o.textContent; document.body.appendChild(s); });
+  customElements.whenDefined('ds-drawer').then(() => requestAnimationFrame(() => window.ShellDrawers[KEY] && window.ShellDrawers[KEY].show()));
+})();
+</script>
+</body>
+</html>

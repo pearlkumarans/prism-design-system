@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ds-content — examples</title>
+  <script type="module">import '../../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 24px; background: var(--uems-background); color: var(--uems-text-primary); }
+    section { margin-bottom: 32px; }
+    h2 { font-size: var(--font-size-14); color: var(--uems-text-tertiary); margin: 0 0 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    /* ds-content is a flex:1 scroll area meant to sit inside an app-shell `.body`
+       next to sidebars. Each demo wraps it in a fixed-height shell so the flex
+       sizing + framed corner/shadow are visible. */
+    .shell { display: flex; height: 280px; border: 1px solid var(--uems-border-tertiary); border-radius: 12px; overflow: hidden; background: var(--uems-bg-base); }
+    .stub-l1 { flex: 0 0 64px; background: var(--uems-bg-secondary); border-right: 1px solid var(--uems-border-tertiary); }
+    .stub-l2 { flex: 0 0 220px; background: var(--uems-bg-primary); border-right: 1px solid var(--uems-border-tertiary); }
+    .stub-l2.is-hidden { display: none; }
+    .demo-body { padding: 20px; }
+    .demo-body h3 { margin: 0 0 8px; font-size: var(--font-size-16); }
+    .demo-body p { margin: 0 0 12px; color: var(--uems-text-secondary); line-height: 1.5; }
+    .filler { height: 600px; background: linear-gradient(var(--uems-bg-secondary), transparent); border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <section>
+    <h2>Default (with L1 + L2 sidebars)</h2>
+    <div class="shell">
+      <div class="stub-l1"></div>
+      <div class="stub-l2"></div>
+      <ds-content>
+        <div class="demo-body">
+          <h3>Page title</h3>
+          <p>The content area takes the remaining flex space next to the sidebars and scrolls vertically when its children overflow.</p>
+          <div class="filler"></div>
+        </div>
+      </ds-content>
+    </div>
+  </section>
+
+  <section>
+    <h2>Framed (explicit — rounded corner + left shadow)</h2>
+    <div class="shell">
+      <div class="stub-l1"></div>
+      <ds-content framed>
+        <div class="demo-body">
+          <h3>L1-only layout</h3>
+          <p>Use <code>framed</code> when L2 is hidden so the content still reads as a framed surface (rounded top-left/bottom-left corners + soft left drop shadow).</p>
+          <div class="filler"></div>
+        </div>
+      </ds-content>
+    </div>
+  </section>
+
+  <section>
+    <h2>Auto-frame (previous sibling has <code>is-hidden</code>)</h2>
+    <div class="shell">
+      <div class="stub-l1"></div>
+      <div class="stub-l2 is-hidden"></div>
+      <ds-content>
+        <div class="demo-body">
+          <h3>Auto-framed</h3>
+          <p>When the previous sibling (the L2 sidebar) carries <code>is-hidden</code>, the content auto-toggles its framed state — no explicit attribute needed.</p>
+          <div class="filler"></div>
+        </div>
+      </ds-content>
+    </div>
+  </section>
+</body>
+</html>

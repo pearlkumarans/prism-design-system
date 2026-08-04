@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<!--
+  L06 — SECTIONED FORM (single column) · DUAL-MODE file (lives in Layout/views/).
+  - Open directly in a browser -> the standalone harness (bottom) mounts + shows it.
+  - Fetched by Shell.html       -> injectDrawer('layout-sectioned-form','content')
+    extracts ONLY <template id="drawer-fragment"> and mounts it INSIDE <ds-content>.
+  Fields use each component's OWN label (label-position="left") — no hand-rolled
+  label column — so labels, required(*), help icons and counters come from the
+  design-system components (ds-text-input / ds-text-area / ds-radio-group /
+  ds-checkbox-group / ds-input-select / ds-date-picker) + --uems-* tokens.
+  Spec: handoff/layout-l06-sectioned-form.md · Figma node 17310:45989.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Sectioned Form (L06) — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="layout-base.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    /* Full viewport height (not min-height) so the flex column is height-bound:
+       .lay__scroll scrolls internally and ds-form-footer stays pinned at bottom. */
+    .sa-host { display: flex; flex-direction: column; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* == L06 Sectioned Form — Prism components + uems tokens ================== */
+/* Root + .lay + .lay__scroll scaffold live in Layout/layout-base.css (shared via
+   the .lay-root class on the root element). View-unique rules stay below, scoped. */
+.lay__section { padding: 20px 0 4px; }
+
+/* Field stack — each field is a component that owns its own left label
+   (label-position="left" → 280px label col + 8px gap). Cap the field so the
+   control lands ~572px like the Figma (280 + 8 + 532 = 820). */
+.lay__fields { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; }
+.lay__field { max-width: 820px; }
+/* Reserve a consistent helper-row slot (field body's 4px gap + the 16px helper row)
+   under every field, so a field with a counter/helper (e.g. a "0/100" counter) and
+   one without sit on the same vertical rhythm. Fields already rendering a helper
+   don't double it. */
+.lay__field { padding-bottom: 20px; }
+.lay__field:has(ds-field-helper) { padding-bottom: 0; }
+/* Rows with no component label (a lone button / composite) align under the
+   control column by offsetting the label-col width + gap. */
+.lay__control-only { padding-inline-start: 288px; }
+.lay__row-inline { display: flex; align-items: flex-start; gap: 12px; }
+/* Policy + "Create Policy" link: the select hugs its label+control so the link
+   sits right after it (not pushed to the field's far edge). Top-align the row so
+   the select keeps the SAME height as every other field (input box + reserved
+   helper row); the link is nudged down to center on the 40px input box. */
+.lay__row-policy { align-items: flex-start; flex-wrap: wrap; }
+/* Size the select to label(280) + gap(8) + control(320) = 608px so the link sits
+   right after it. A DEFINITE width is required because ds-input-select is a
+   `container-type` query container — a content-hugged (width:auto) element
+   collapses under size containment. max-width:100% lets it shrink (and the label
+   stack) on narrow screens; the link then wraps below via flex-wrap. */
+.lay__row-policy #sf-policy { flex: 0 1 608px; width: 608px; max-width: 100%; }
+.lay__row-policy #sf-policy .ds-input-select__field-col { flex: 1 1 auto; }
+/* Center the "Create Policy" link on the 40px input box: (40 − 25)/2 ≈ 8px. */
+.lay__row-policy #sf-create-policy { margin-top: 8px; }
+/* Composite row (Define Target) — manual label-col mirrors the component one. */
+.lay__label-col {
+  width: 280px; flex-shrink: 0; padding-top: 8px;
+  font-size: var(--font-size-13); font-weight: 600; color: var(--uems-text-primary);
+}
+.lay__target { display: flex; gap: 8px; max-width: 1000px; }
+.lay__target .lay__row-inline { flex: 1; align-items: center; }
+
+/* Group components lay their options out in a row (Figma shows them inline). */
+#sf-optype .ds-radio-group__items,
+#sf-deploy-opt .ds-checkbox-group__items { display: flex; flex-direction: row; gap: 32px; flex-wrap: wrap; }
+/* checkbox-group shows a group help "?" by default (opt-out is presence-only,
+   so it can't be disabled by attribute); this form has no group-level help. */
+#sf-deploy-opt .ds-checkbox-group__info { display: none; }
+/* ds-date-picker now has a built-in label-position="left" (280px label column),
+   so it aligns with the other fields on its own — no manual grid needed. Just
+   cap the control at the form's medium (320px) width like the text/select fields. */
+#sf-forcedate .ds-date-picker__input { width: 320px; max-width: 100%; }
+
+/* Additional settings — accordion cards with a toggle in the header. */
+.addl-stack { display: flex; flex-direction: column; gap: 12px; }
+.addl-title { display: inline-flex; align-items: center; gap: 12px; font-weight: 600; color: var(--uems-text-primary); }
+.addl-body { padding-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+
+@media (max-width: 640px) {
+  .lay__control-only { padding-inline-start: 0; }
+  .lay__label-col { width: auto; padding-top: 0; }
+  .lay__target { flex-direction: column; }
+}
+</style>
+
+<div id="sform-pop" class="lay-root" hidden>
+  <div class="lay">
+    <ds-page-header id="sf-ph" icon="edit" structure="default"
+      title="Install/Uninstall Windows Patch (Computer)"
+      description="A brief description of this page and its purpose."
+      show-description show-breadcrumbs
+      collapse-on-scroll scroll-target=".lay__scroll"></ds-page-header>
+
+    <div class="lay__scroll">
+
+      <!-- §1 Basic Information -->
+      <section class="lay__section">
+        <ds-section-header style-variant="with-border" size="large" title="Basic Information" description="Optional description text for this section"></ds-section-header>
+        <div class="lay__fields">
+          <ds-text-input class="lay__field" id="sf-name" size="medium" label="Name" label-position="left" required maxlength="100" show-counter counter="0/100"></ds-text-input>
+          <ds-text-area class="lay__field" id="sf-desc" size="medium" label="Description" label-position="left" placeholder="Placeholder"></ds-text-area>
+        </div>
+      </section>
+
+      <!-- §2 Configure Patches -->
+      <section class="lay__section">
+        <ds-section-header style-variant="with-border" size="large" title="Configure Patches" description="Optional description text for this section"></ds-section-header>
+        <div class="lay__fields">
+          <ds-radio-group class="lay__field" id="sf-optype" label="Operation Type" label-position="left"></ds-radio-group>
+          <div class="lay__control-only">
+            <ds-button id="sf-select-patches" variant="secondary">Select Patches</ds-button>
+          </div>
+        </div>
+      </section>
+
+      <!-- §3 Deployment Settings -->
+      <section class="lay__section">
+        <ds-section-header style-variant="with-border" size="large" title="Deployment Settings" description="Optional description text for this section"></ds-section-header>
+        <div class="lay__fields">
+          <ds-checkbox-group class="lay__field" id="sf-deploy-opt" label="Deployment Option" label-position="left" value="deploy">
+            <ds-checkbox value="deploy" label="Deploy"></ds-checkbox>
+            <ds-checkbox value="ssp" label="Publish to Self Service Portal (SSP)"></ds-checkbox>
+          </ds-checkbox-group>
+          <div class="lay__field lay__row-inline lay__row-policy">
+            <ds-input-select size="medium" id="sf-policy" label="Apply Deployment Policy" label-position="left" placeholder="Select policy"></ds-input-select>
+            <ds-text-link id="sf-create-policy" size="medium" href="#" leading-icon="add" style="white-space:nowrap;">Create Policy</ds-text-link>
+          </div>
+          <ds-date-picker class="lay__field" id="sf-forcedate" label="Force deploy to unpatched systems after" label-position="left" placeholder="Select date"></ds-date-picker>
+        </div>
+      </section>
+
+      <!-- §4 Define Target -->
+      <section class="lay__section">
+        <ds-section-header style-variant="with-border" size="large" title="Define Target" description="Optional description text for this section"></ds-section-header>
+        <div id="sf-targets" class="lay__fields"></div>
+      </section>
+
+      <!-- §5 Additional Settings (Optional) -->
+      <section class="lay__section">
+        <ds-section-header style-variant="with-border" size="large" title="Additional Settings" description="Optional group — enable only what you need"></ds-section-header>
+        <div class="addl-stack">
+          <ds-accordion id="sf-retry" type="toggle" expanded>
+            <span slot="title" class="addl-title">Retry on Failed Targets</span>
+            <div slot="body" class="addl-body">
+              <ds-input-select size="medium" class="lay__field" id="sf-retry-startup" label="Retry on Startup" label-position="left" required value="1"></ds-input-select>
+              <ds-input-select size="medium" class="lay__field" id="sf-retry-refresh" label="Retry on Refresh Cycle" label-position="left" required value="1"></ds-input-select>
+            </div>
+          </ds-accordion>
+
+          <ds-accordion id="sf-notify" type="toggle">
+            <span slot="title" class="addl-title">Notification Settings</span>
+            <div slot="body" class="addl-body">
+              <ds-input-select size="medium" class="lay__field" id="sf-notify-when" label="Notify on completion" label-position="left" placeholder="Select recipients"></ds-input-select>
+            </div>
+          </ds-accordion>
+
+          <ds-accordion id="sf-scheduler">
+            <span slot="title" class="addl-title">Scheduler Settings</span>
+            <div slot="body" class="addl-body">
+              <ds-input-select size="medium" class="lay__field" id="sf-schedule" label="Schedule" label-position="left" placeholder="Select schedule"></ds-input-select>
+            </div>
+          </ds-accordion>
+        </div>
+      </section>
+
+    </div>
+
+    <ds-form-footer id="sf-footer">
+      <span slot="left" id="sf-saved">Last saved 2 min ago</span>
+      <ds-button slot="action" data-act="cancel" variant="outline">Cancel</ds-button>
+      <ds-button slot="action" id="sf-saveas" variant="secondary" suffix-icon="chevron-down" aria-haspopup="menu">Save as</ds-button>
+      <ds-button slot="action" data-act="deploy" variant="primary">Deploy</ds-button>
+    </ds-form-footer>
+    <!-- Save-as menu: bring-your-own-trigger panel, opened upward from the button. -->
+    <ds-dropdown-menu id="sf-saveas-menu" type="single"></ds-dropdown-menu>
+  </div>
+</div>
+
+<script>
+/* == L06 view logic — data, interactions, autofocus, toasts ============== */
+(function () {
+  const root = document.getElementById('sform-pop');
+  if (!root || root.__sfInit) return; root.__sfInit = true;
+  const $ = (id) => root.querySelector('#' + id);
+
+  /* Breadcrumb (page-header property, not a child element). */
+  const ph = $('sf-ph');
+  if (ph) ph.breadcrumbs = [
+    { label: 'All Configurations', href: '#' },
+    { label: 'Windows', href: '#' },
+    { label: 'Install/Uninstall Windows Patch' },
+  ];
+
+  /* Option data (components take `.options`). */
+  const optype = $('sf-optype');
+  if (optype) optype.options = [
+    { value: 'install', label: 'Install Patches', selected: true },
+    { value: 'uninstall', label: 'Uninstall Patches' },
+  ];
+  /* Deployment Option checkboxes are declared as child <ds-checkbox> in markup
+     (ds-checkbox-group captures children — it does not take .options). */
+  const num = [1,2,3,4,5].map((n) => ({ value: String(n), label: String(n) }));
+  const policyOpts = [
+    { value: 'weekly', label: 'Weekly maintenance window' },
+    { value: 'immediate', label: 'Immediate' },
+    { value: 'afterhours', label: 'After business hours' },
+  ];
+  [['sf-retry-startup', num], ['sf-retry-refresh', num]].forEach(([id, opts]) => { const el = $(id); if (el) el.options = opts; });
+  const policy = $('sf-policy'); if (policy) policy.options = policyOpts;
+  const notify = $('sf-notify-when'); if (notify) notify.options = [{value:'email',label:'Email admins'},{value:'none',label:'No notification'}];
+  const sched = $('sf-schedule'); if (sched) sched.options = [{value:'now',label:'Deploy now'},{value:'window',label:'Next maintenance window'}];
+
+  /* Define Target — repeatable rows with add/remove. */
+  const targetsHost = $('sf-targets');
+  let targetSeq = 0;
+  function targetRow() {
+    const i = ++targetSeq;
+    const row = document.createElement('div');
+    row.className = 'lay__target';
+    row.innerHTML =
+      '<div class="lay__label-col">Target ' + i + '</div>' +
+      '<div class="lay__row-inline">' +
+        '<ds-input-select size="medium" class="sf-tgt-type" value="remote-office" style="min-width:180px"></ds-input-select>' +
+        '<ds-input-select size="medium" class="sf-tgt-office" placeholder="Select remote office" style="flex:1 1 320px; min-width:0;"></ds-input-select>' +
+        '<ds-icon-button class="sf-tgt-add" icon="add" label="Add target" type="tertiary-grey" size="small"></ds-icon-button>' +
+        '<ds-icon-button class="sf-tgt-remove" icon="minus" label="Remove target" type="tertiary-grey" size="small"></ds-icon-button>' +
+      '</div>';
+    targetsHost.appendChild(row);
+    requestAnimationFrame(() => {
+      const type = row.querySelector('.sf-tgt-type');
+      if (type) type.options = [
+        { value: 'remote-office', label: 'Remote Office', selected: true },
+        { value: 'domain', label: 'Domain' },
+        { value: 'custom-group', label: 'Custom Group' },
+      ];
+      const office = row.querySelector('.sf-tgt-office');
+      if (office) office.options = [{ value: 'ny', label: 'New York' }, { value: 'ldn', label: 'London' }, { value: 'blr', label: 'Bengaluru' }];
+    });
+    row.querySelector('.sf-tgt-add').addEventListener('click', () => targetRow());
+    row.querySelector('.sf-tgt-remove').addEventListener('click', () => {
+      if (targetsHost.children.length > 1) { row.remove(); relabel(); }
+    });
+    return row;
+  }
+  function relabel() {
+    [...targetsHost.children].forEach((r, idx) => {
+      const l = r.querySelector('.lay__label-col'); if (l) l.textContent = 'Target ' + (idx + 1);
+    });
+  }
+  if (targetsHost) targetRow();
+
+  /* Footer actions → toast feedback (no real submit in the demo). */
+  function toast(msg, variant) {
+    if (window.toast) { window.toast(msg, { variant: variant || 'success' }); return; }
+    const t = document.createElement('ds-toast');
+    t.setAttribute('variant', variant || 'success'); t.textContent = msg;
+    document.body.appendChild(t); setTimeout(() => t.remove(), 3200);
+  }
+  root.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => {
+    const a = b.getAttribute('data-act');
+    if (a === 'deploy') { toast('Patch configuration deployed.', 'success'); if (window.openContentView) window.openContentView('tabbed-form'); }
+    else if (a === 'cancel') toast('Changes discarded.', 'info');
+  }));
+  /* Save as — a secondary button with a chevron that opens a menu upward
+     (footer sits at the viewport bottom, so the menu must open above). */
+  const saveas = $('sf-saveas');
+  const saveasMenu = $('sf-saveas-menu');
+  if (saveas && saveasMenu) {
+    saveasMenu.items = [
+      { value: 'template', label: 'Save as template' },
+      { value: 'draft', label: 'Save as draft' },
+    ];
+    saveas.addEventListener('click', (e) => {
+      e.stopPropagation();   /* don't let this click reach the outside-close handler */
+      const r = saveas.getBoundingClientRect();
+      Object.assign(saveasMenu.style, {
+        position: 'fixed', left: r.left + 'px', right: 'auto',
+        bottom: (window.innerHeight - r.top + 6) + 'px',   /* open upward */
+        zIndex: '2000', minWidth: Math.max(200, Math.round(r.width)) + 'px',
+      });
+      saveasMenu.toggle();
+    });
+    saveasMenu.addEventListener('ds-dropdown-change', (e) => {
+      const d = e.detail || {};
+      toast('Saved (' + (d.value || d.id || '') + ').', 'success');
+      saveasMenu.close();
+    });
+    /* Close the menu on any click outside it (and outside the trigger). */
+    document.addEventListener('click', (e) => {
+      if (!saveasMenu.hasAttribute('open')) return;
+      if (saveasMenu.contains(e.target) || saveas.contains(e.target)) return;
+      saveasMenu.close();
+    });
+  }
+
+  /* show/hide + first-field focus. */
+  function show() {
+    root.hidden = false;
+    requestAnimationFrame(() => {
+      const el = $('sf-name');
+      const input = el && ((el.shadowRoot && el.shadowRoot.querySelector('input, textarea')) || (el.querySelector && el.querySelector('input, textarea'))) || el;
+      input && input.focus && input.focus();
+    });
+  }
+  function hide() { root.hidden = true; }
+
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['sectioned-form'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS — runs ONLY when opened directly. ================ */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers['sectioned-form'] && window.ShellDrawers['sectioned-form'].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

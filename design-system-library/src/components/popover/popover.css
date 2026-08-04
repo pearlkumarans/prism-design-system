@@ -1,0 +1,133 @@
+/* =============================================================================
+   ds-popover / .ds-popover
+   Non-modal overlay anchored to a trigger. Optional arrow/beak. Surface =
+   Header (title + close, bottom divider) + Body + Footer (top divider), all
+   token-driven. Width HUGS content with a 240px min-width and NO max (consumer
+   sets width via --ds-popover-width or inline width for wrapping).
+   ============================================================================= */
+
+ds-popover { display: none; }
+ds-popover[open] { display: block; }
+
+/* ---- Surface ------------------------------------------------------- */
+.ds-popover__surface {
+  position: fixed;                       /* JS anchors it to the trigger */
+  top: 0;
+  left: 0;
+  z-index: var(--z-popover, 1500);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: 240px;                      /* min-width floor; NO max-width */
+  width: var(--ds-popover-width, max-content);
+  background: var(--uems-bg-primary-alt);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-md);       /* 8px (Figma radius-8) */
+  box-shadow: var(--shadow-md);          /* Figma elevation */
+  font-family: var(--font-family-sans);
+  animation: ds-popover-in 130ms var(--ease-standard, ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-popover__surface { animation: none; }
+}
+
+@keyframes ds-popover-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Arrow / beak (optional) -------------------------------------- */
+.ds-popover__arrow {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--uems-bg-primary-alt);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.ds-popover__arrow[hidden] { display: none; }
+/* Border on the two outward-facing edges so the beak's outline matches the
+   surface border; the inner half overlaps the surface fill seamlessly. */
+.ds-popover__arrow[data-dir="up"]    { border-top: 1px solid var(--uems-border-tertiary); border-left: 1px solid var(--uems-border-tertiary); }
+.ds-popover__arrow[data-dir="down"]  { border-bottom: 1px solid var(--uems-border-tertiary); border-right: 1px solid var(--uems-border-tertiary); }
+.ds-popover__arrow[data-dir="left"]  { border-bottom: 1px solid var(--uems-border-tertiary); border-left: 1px solid var(--uems-border-tertiary); }
+.ds-popover__arrow[data-dir="right"] { border-top: 1px solid var(--uems-border-tertiary); border-right: 1px solid var(--uems-border-tertiary); }
+
+/* ---- Header (title + close, bottom divider) ----------------------- */
+.ds-popover__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  /* logical padding auto-mirrors under dir="rtl" (more room on the title side) */
+  padding-block: var(--spacing-12);
+  padding-inline-start: var(--spacing-16);
+  padding-inline-end: var(--spacing-12);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+}
+.ds-popover__header[hidden] { display: none; }
+.ds-popover__header[data-no-divider] { border-bottom: 0; }
+
+.ds-popover__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug, 1.35);
+  color: var(--uems-text-primary);
+  text-align: start;                     /* auto-mirrors under RTL */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds-popover__close {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--uems-icon-subtle, var(--uems-icon-secondary));
+  cursor: pointer;
+  transition: background-color var(--duration-fast, 120ms) var(--ease-standard, ease);
+}
+.ds-popover__close:hover { background: var(--uems-bg-secondary-hover); color: var(--uems-text-primary); }
+.ds-popover__close:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+.ds-popover__close[hidden] { display: none; }
+
+/* ---- Body (content slot) ------------------------------------------ */
+.ds-popover__body {
+  padding: var(--spacing-16);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal, 1.5);
+  color: var(--uems-text-secondary);
+  text-align: start;
+}
+.ds-popover__body :first-child { margin-top: 0; }
+.ds-popover__body :last-child  { margin-bottom: 0; }
+
+/* ---- Footer (actions, top divider) -------------------------------- */
+.ds-popover__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-8);
+  padding-block: var(--spacing-12);
+  padding-inline: var(--spacing-16);
+  border-top: 1px solid var(--uems-border-primary);
+}
+.ds-popover__footer[hidden] { display: none; }
+.ds-popover__footer[data-align="centered"] { justify-content: center; }
+
+/* ---- RTL ----------------------------------------------------------- */
+[dir="rtl"] .ds-popover__header { flex-direction: row-reverse; }
+[dir="rtl"] .ds-popover__footer:not([data-align="centered"]) { justify-content: flex-start; }

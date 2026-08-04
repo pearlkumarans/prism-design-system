@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<!--
+  Deployments · Schedule Policy (L2 · Advanced Policies) — KPI strip +
+  table + empty-state fallback. When the store is empty, the header +
+  KPIs + table hide and only the illustration-first empty state shows.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Schedule Policy — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+<template id="drawer-fragment">
+<style>
+#dep-schedule-pop .lay__scroll { display: flex; flex-direction: column; }
+#dep-schedule-pop .sp-kpis { display: flex; gap: 12px; flex-wrap: wrap; padding: 16px 0 12px; }
+#dep-schedule-pop .sp-kpis ds-kpi-card { flex: 1 1 200px; min-width: 180px; }
+#dep-schedule-pop .sp-table-wrap { padding: 8px 0 24px; display: flex; flex-direction: column; gap: 12px; }
+#dep-schedule-pop .sp-cell-actions { display: inline-flex; justify-content: flex-end; width: 100%; gap: 2px; }
+#dep-schedule-pop .sp-cell-actions button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border: 0; background: transparent;
+  border-radius: var(--radius-sm); cursor: pointer; color: var(--uems-icon-secondary);
+}
+#dep-schedule-pop .sp-cell-actions button:hover { background: var(--uems-bg-secondary-hover); }
+#dep-schedule-pop .sp-cell-actions button[data-act="delete"]:hover { color: var(--uems-icon-error); }
+
+/* Empty state — shown when store is empty. */
+#dep-schedule-pop .sp-empty { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: var(--spacing-32); }
+#dep-schedule-pop .sp-empty[hidden] { display: none; }
+#dep-schedule-pop .sp-empty-inner { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-16); text-align: center; max-width: 480px; }
+#dep-schedule-pop .sp-empty ds-illustration { width: 220px; height: auto; display: block; margin-top: var(--spacing-24); }
+#dep-schedule-pop .sp-empty h2 { margin: 4px 0 0; font-size: var(--uems-font-size-18, 18px); font-weight: var(--font-weight-semibold, 600); color: var(--uems-text-primary); }
+#dep-schedule-pop .sp-empty p  { margin: 0; font-size: var(--uems-font-size-13, 13px); line-height: 1.5; color: var(--uems-text-secondary); }
+
+/* Hide the header + KPI + table nodes when the store is empty. */
+#dep-schedule-pop #sp-ph[hidden]        { display: none; }
+#dep-schedule-pop #sp-kpis[hidden]      { display: none; }
+#dep-schedule-pop #sp-table-wrap[hidden]{ display: none; }
+</style>
+
+<div id="dep-schedule-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <ds-page-header id="sp-ph" icon="calendar" structure="default"
+      title="Schedule Policy"
+      description="Reusable deployment windows — Weeks &amp; Days, Patch Tuesday, or Calendar dates.">
+      <ds-button slot="actions" id="sp-add-btn" variant="primary" size="small" prefix-icon="add">Add Policy</ds-button>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+
+      <!-- KPI strip -->
+      <div id="sp-kpis" class="sp-kpis">
+        <ds-kpi-card id="sp-kpi-total"    label="Total Windows" value="0" state="default" icon="clock"></ds-kpi-card>
+        <ds-kpi-card id="sp-kpi-active"   label="Active"        value="0" state="success" icon="circle-tick"></ds-kpi-card>
+        <ds-kpi-card id="sp-kpi-schedule" label="Scheduled"     value="0" state="info"    icon="calendar"></ds-kpi-card>
+        <ds-kpi-card id="sp-kpi-deploy"   label="Deployments"   value="0" state="alert"   icon="settings-deploy"></ds-kpi-card>
+      </div>
+
+      <!-- Table -->
+      <section id="sp-table-wrap" class="sp-table-wrap">
+        <ds-data-table id="sp-table"
+          selection-mode="multi"
+          row-height="comfortable"
+          show-footer
+          sticky-header
+          fit-viewport
+          rows-per-page="10"
+          rows-per-page-options="10,25,50"
+          page="1"></ds-data-table>
+        <ds-dropdown-menu id="sp-row-menu" type="action"></ds-dropdown-menu>
+      </section>
+
+      <!-- Empty state — first-run or all-deleted. -->
+      <div id="sp-empty" class="sp-empty" hidden>
+        <div class="sp-empty-inner">
+          <ds-illustration name="calendar" size="lg"></ds-illustration>
+          <h2>No schedule policies yet</h2>
+          <p>Reusable deployment windows — Weeks &amp; Days, Patch Tuesday, or Calendar dates. Create once, apply to every deployment that needs the same maintenance timing.</p>
+          <ds-button id="sp-empty-cta" variant="primary" size="medium" prefix-icon="add">Add Schedule Policy</ds-button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('dep-schedule-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  /* ---- Actions ---------------------------------------------------------- */
+  const goCreate = () => { if (window.openContentView) window.openContentView('deployments-schedule-form'); };
+  $('sp-add-btn').addEventListener('click', goCreate);
+  $('sp-empty-cta').addEventListener('click', goCreate);
+
+  /* ---- Row action delete → remove from store + refresh ----------------- */
+  const removeRow = (id) => {
+    window.__scheduleStore = (window.__scheduleStore || []).filter((r) => r.id !== id);
+    refresh();
+  };
+
+  /* ---- Table columns --------------------------------------------------- */
+  const STATUS_STATE = { 'Active': 'success', 'Paused': 'moderate', 'Draft': 'default', 'Expired': 'default' };
+  const statusBadge = (s) =>
+    `<ds-badge variant="subtle" state="${STATUS_STATE[s] || 'default'}" shape="rounded" size="medium">${esc(s)}</ds-badge>`;
+
+  const table = $('sp-table');
+  table.columns = [
+    { id: 'windowId', header: 'Window ID',   accessor: 'windowId' },
+    { id: 'name',     header: 'Name',        render: (r) => `<ds-text-link class="sp-name" data-row-id="${esc(r.id)}" variant="primary" size="medium" underline="hover" href="#">${esc(r.name)}</ds-text-link>` },
+    { id: 'schedule', header: 'Schedule',    accessor: 'schedule' },
+    { id: 'duration', header: 'Duration',    accessor: 'duration' },
+    { id: 'createdBy',header: 'Created By',  accessor: 'createdBy' },
+    { id: 'status',   header: 'Status',      align: 'start', render: (r) => statusBadge(r.status) },
+    { id: 'actions',  header: 'Actions',     align: 'end', render: (r) =>
+      `<span class="sp-cell-actions">
+         <button type="button" data-act="more" data-id="${esc(r.id)}" aria-label="Row actions"><ds-icon name="more-vertical" size="16"></ds-icon></button>
+       </span>` },
+  ];
+
+  const rowMenu = $('sp-row-menu');
+  rowMenu.items = [
+    { label: 'Edit',   value: 'edit',   icon: 'edit'   },
+    { label: 'Delete', value: 'delete', icon: 'delete' },
+  ];
+  let menuTargetId = null;
+  table.addEventListener('click', (e) => {
+    const moreBtn = e.target.closest && e.target.closest('button[data-act="more"]');
+    if (moreBtn) {
+      menuTargetId = moreBtn.dataset.id;
+      rowMenu.openFrom(moreBtn, { side: 'below', align: 'end', offset: 4 });
+      return;
+    }
+    const nameLink = e.target.closest && e.target.closest('.sp-name');
+    if (nameLink) {
+      e.preventDefault();
+      window.__scheduleDetailId = nameLink.dataset.rowId;
+      if (window.openContentView) window.openContentView('deployments-schedule-detail');
+    }
+  });
+  rowMenu.addEventListener('ds-dropdown-select', (e) => {
+    const id = menuTargetId; menuTargetId = null;
+    rowMenu.close();
+    if (e.detail.value === 'edit') {
+      window.__scheduleDetailId = id;
+      if (window.openContentView) window.openContentView('deployments-schedule-form');
+    } else if (e.detail.value === 'delete') {
+      if (confirm('Delete this schedule policy?')) removeRow(id);
+    }
+  });
+
+  /* ---- Refresh — toggles empty state vs populated table ---------------- */
+  function refresh() {
+    const rows = (window.__scheduleStore || []).slice();
+    const has  = rows.length > 0;
+    $('sp-ph').hidden        = !has;
+    $('sp-kpis').hidden      = !has;
+    $('sp-table-wrap').hidden= !has;
+    $('sp-empty').hidden     = has;
+    if (!has) return;
+    table.rows = rows;
+    /* KPI values. */
+    const active   = rows.filter((r) => r.status === 'Active').length;
+    const scheduled= rows.reduce((n, r) => n + (r.months ? r.months.length : 0), 0);
+    const deploys  = rows.reduce((n, r) => n + (r.deployments || 0), 0);
+    $('sp-kpi-total').setAttribute('value',    String(rows.length));
+    $('sp-kpi-active').setAttribute('value',   String(active));
+    $('sp-kpi-schedule').setAttribute('value', String(scheduled));
+    $('sp-kpi-deploy').setAttribute('value',   String(deploys));
+  }
+
+  function show() { root.hidden = false; refresh(); }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-schedule'] = { show, hide };
+})();
+</script>
+</template>
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-schedule'].show()));
+})();
+</script>
+</body>
+</html>

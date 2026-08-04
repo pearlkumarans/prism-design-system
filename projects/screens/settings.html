@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — Endpoint Central · Prism</title>
+
+  <link rel="stylesheet" href="../../design-system-library/src/styles/index.css" />
+  <script type="module">import '../../design-system-library/src/components/index.js';</script>
+
+  <script>
+    /* Theme persistence — sync with ds-right-pane toggle */
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+      document.addEventListener('ds-right-pane-theme', function (e) {
+        document.documentElement.setAttribute('data-theme', e.detail.theme);
+        try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+      });
+      window.addEventListener('DOMContentLoaded', function () {
+        customElements.whenDefined('ds-right-pane').then(function () {
+          document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+            rp.setAttribute('theme', t);
+          });
+        });
+      });
+    })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body {
+      margin: 0;
+      font-family: var(--font-family-sans);
+      background: var(--cobalt-15);
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    /* Smooth theme + chrome transitions across the page */
+    .shell-area,
+    .content,
+    ds-sidebar-l1,
+    ds-sidebar-l2,
+    ds-right-pane,
+    ds-header-nav {
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard),
+                  border-color var(--duration-standard, 240ms) var(--ease-standard),
+                  color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+
+    /* App shell */
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ─────────────────────────────────────────────────────────────
+       UI Transitions — super-smooth across every interaction
+       ───────────────────────────────────────────────────────────── */
+
+    /* L1 / L2 sidebar hide & show — slide out + fade instead of display:none. */
+    ds-sidebar-l1,
+    ds-sidebar-l2 {
+      max-width: 400px;
+      opacity: 1;
+      overflow: hidden;
+      will-change: max-width, opacity, transform;
+      transition:
+        max-width   360ms cubic-bezier(0.16, 1, 0.3, 1),
+        opacity     240ms cubic-bezier(0.16, 1, 0.3, 1) 40ms,
+        transform   360ms cubic-bezier(0.16, 1, 0.3, 1),
+        margin      360ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    ds-sidebar-l1.is-hidden,
+    ds-sidebar-l2.is-hidden {
+      max-width: 0 !important;
+      opacity: 0 !important;
+      transform: translateX(-12px);
+      margin-inline-end: 0 !important;
+      pointer-events: none;
+    }
+
+    /* Right pane — subtle fade-in */
+    ds-right-pane {
+      transition:
+        opacity 220ms cubic-bezier(0.16, 1, 0.3, 1),
+        transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    ds-right-pane.is-hidden {
+      opacity: 0;
+      transform: translateX(12px);
+      pointer-events: none;
+    }
+
+
+    /* Tab active highlight — silky bottom-border slide */
+    .ds-header-nav__tab {
+      position: relative;
+    }
+
+    /* L1 items lift on hover for a tactile feel */
+    .ds-sidebar-l1__item {
+      transition:
+        background-color 160ms cubic-bezier(0.4, 0, 0.2, 1),
+        transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ds-sidebar-l1__item:hover:not([aria-disabled="true"]) {
+      transform: translateY(-1px);
+    }
+
+    /* L2 items — color-only hover (no horizontal shift) */
+    .ds-sidebar-l2__item {
+      transition:
+        background-color 180ms cubic-bezier(0.4, 0, 0.2, 1),
+        color 180ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Right-pane buttons — gentle scale on press */
+    .ds-right-pane__btn {
+      transition:
+        background-color 100ms cubic-bezier(0.4, 0, 0.2, 1),
+        transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ds-right-pane__btn:active { transform: scale(0.92); }
+
+    /* Customer dropdown + search pill — soft focus halo */
+    .ds-header-nav__customer,
+    .ds-header-nav__search-pill {
+      transition:
+        background-color 130ms cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 130ms cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 130ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ds-header-nav__customer:hover,
+    .ds-header-nav__search-pill:hover {
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+
+    /* Reduce motion for users who prefer it */
+    @media (prefers-reduced-motion: reduce) {
+      ds-sidebar-l1, ds-sidebar-l2, ds-right-pane,
+      .ds-sidebar-l1__item, .ds-sidebar-l2__item,
+      .ds-right-pane__btn,
+      .ds-header-nav__tab, .ds-header-nav__customer, .ds-header-nav__search-pill {
+        transition: none !important;
+        transform: none !important;
+      }
+    }
+
+    /* When L1 collapses, pull L2 back so the right padding doesn't show as a gap */
+    ds-sidebar-l1[collapsed] + ds-sidebar-l2 { margin-left: -8px; }
+
+    .body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      padding: 0 0 var(--spacing-12) var(--spacing-12);
+      gap: 0;
+    }
+
+    /* One outer border wrapping L1 + L2 + content */
+    .shell-area {
+      flex: 1;
+      display: flex;
+      min-width: 0;
+      min-height: 0;
+      border: 1px solid var(--uems-border-accent-subtle);
+      border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle);
+      overflow: hidden;
+    }
+    /* Hide the individual borders on L1 and content — wrapper owns the perimeter */
+    .shell-area ds-sidebar-l1 { border: 0 !important; }
+    .shell-area ds-sidebar-l2 { border: 0 !important; }
+    /* Right-side border on the inner L2 card (visible element) */
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+    /* The L1 component's INNER div has its own border + radius — flatten + remove top padding */
+    .shell-area .ds-sidebar-l1 {
+      border: 0 !important;
+      border-radius: 0 !important;
+      padding-top: 4px !important;
+    }
+
+    /* Content area styling now lives in the ds-content component
+       (Demo/src/components/content/content.css). The component auto-toggles
+       its .ds-content--framed class when the adjacent ds-sidebar-l2 gains
+       `is-hidden`, so we don't need a sibling selector here. */
+
+    /* Empty-state wrapper — centers ds-empty-state inside the content area */
+    .content-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-32);
+    }
+
+    /* ---- Settings page content ---- */
+    .set-content { flex: 1; min-height: 0; overflow-y: auto; padding: 0 0 var(--spacing-40); }
+    /* Heading section — full-width bar: title left, search right, soft
+       lavender→white→pink gradient (matches the reference), with a hairline base. */
+    .set-head {
+      display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-24);
+      padding: var(--spacing-16) var(--spacing-32);
+      margin-bottom: var(--spacing-32);
+      background: linear-gradient(100deg, rgba(0, 106, 255, 0.07) 0%, var(--uems-bg-base) 50%, rgba(228, 37, 39, 0.06) 100%);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+    }
+    .set-head h1 { margin: 0; font-size: var(--font-size-20); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+    .set-head .set-search { width: clamp(280px, 42%, 520px); }
+    .set-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: var(--spacing-40, 40px) var(--spacing-32); padding-inline: var(--spacing-32); }
+    @media (max-width: 1280px) { .set-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    @media (max-width: 760px)  { .set-grid { grid-template-columns: 1fr; } }
+    .set-card { display: flex; flex-direction: column; gap: var(--spacing-16); min-width: 0; }
+    .set-card__head { display: flex; align-items: center; gap: var(--spacing-8); align-self: stretch; padding: var(--spacing-8) var(--spacing-12); border-radius: var(--radius-md); background: linear-gradient(90deg, var(--uems-bg-accent-primary, #eaf0fc) 0%, var(--uems-bg-secondary, #f0f2f5) 35%, transparent 100%); color: var(--uems-text-secondary); }
+    .set-card__head h2 { margin: 0; font-size: var(--font-size-15, 15px); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+    .set-card__links { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-8); line-height: 1.6; }
+    /* Trailing dividers via ::after on each row link — at a line wrap the bar
+       stays at the line END (matches the design). The LAST visible link gets
+       .is-last which drops its divider — re-flagged by the filter + on load,
+       so dividers stay correct between the remaining links after a search. */
+    .set-card__links > ds-text-link::after {
+      content: "|"; color: var(--uems-border-secondary); margin-inline-start: var(--spacing-8); user-select: none;
+    }
+    .set-card__links > ds-text-link.is-last::after { content: none; }
+    .set-card__more { flex-basis: 100%; margin-top: var(--spacing-4); }
+    /* Each link carries a baked-in padding + radius so the hover box can appear
+       without shifting neighbours; the negative margin keeps the row tight. */
+    .set-card__links a.ds-text-link {
+      padding: 3px 8px;
+      margin: -3px 0;
+      border-radius: var(--radius-sm);
+      transition: background-color 120ms var(--ease-standard, ease), color 120ms var(--ease-standard, ease);
+    }
+    /* Hover — a light accent BOX behind the link + accent text (no underline). */
+    .set-card__links a.ds-text-link:hover {
+      background: var(--uems-bg-accent-primary);
+      color: var(--uems-text-accent-link) !important;
+      text-decoration: none;
+    }
+    /* No-results message when a search matches nothing. */
+    .set-grid__empty { grid-column: 1 / -1; padding: var(--spacing-32); text-align: center; color: var(--uems-text-tertiary); font-size: var(--font-size-14); }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- TOP — Header navigation -->
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+  <div class="body">
+
+    <!-- ONE border wraps L1 + L2 + content -->
+    <div class="shell-area">
+
+      <!-- LEFT — Sidebar L1 (module rail). Starts hidden so the initial
+           Home state shows a clean view without a flash of patch menu. -->
+      <ds-sidebar-l1 id="shell-l1" class="is-hidden" style="height: 100%;"></ds-sidebar-l1>
+
+      <!-- LEFT — Sidebar L2 (sub-nav). Same: starts hidden until JS decides
+           which menu to apply for the active tab. -->
+      <ds-sidebar-l2 id="shell-l2" class="is-hidden" style="height: 100%;"></ds-sidebar-l2>
+
+      <!-- CENTER — Empty content area with ds-empty-state placeholder. -->
+      <ds-content role="main">
+        <div class="set-content">
+          <div class="set-head">
+            <h1>Settings</h1>
+            <ds-search-field class="set-search" size="medium" placeholder="Search Settings"></ds-search-field>
+          </div>
+          <div class="set-grid">
+          <section class="set-card">
+            <div class="set-card__head"><ds-icon name="settings" size="20"></ds-icon><h2>Global Settings</h2></div>
+            <nav class="set-card__links">
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Custom Group</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Get Quote</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Rebranding</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Self Service Portal Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Credential Manager</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Custom Field</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Add Custom Data for Computers</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">DEX Manager</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Private Access</ds-text-link>
+            </nav>
+          </section>
+
+          <section class="set-card">
+            <div class="set-card__head"><ds-icon name="user" size="20"></ds-icon><h2>User Administration</h2></div>
+            <nav class="set-card__links">
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Users</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Role</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Mobile App</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">SAML Authentication</ds-text-link>
+            </nav>
+          </section>
+
+          <section class="set-card">
+            <div class="set-card__head"><ds-icon name="device-manager" size="20"></ds-icon><h2>Agent</h2></div>
+            <nav class="set-card__links">
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Agent Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">SoM Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Azure Autopilot</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Apple Enrollment (ABM)</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">APNS Certificate</ds-text-link>
+            </nav>
+          </section>
+
+          <section class="set-card">
+            <div class="set-card__head"><ds-icon name="server-01" size="20"></ds-icon><h2>Server Settings</h2></div>
+            <nav class="set-card__links">
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">NAT Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Proxy Server</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Mail Server</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">SMS Server</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Central Server Maintenance</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Central Server Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Failover Server</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Central Server Migration</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Network Settings</ds-text-link>
+            </nav>
+          </section>
+
+          <section class="set-card">
+            <div class="set-card__head"><ds-icon name="puzzle" size="20"></ds-icon><h2>Integrations</h2></div>
+            <nav class="set-card__links">
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">ServiceDesk Plus Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Help Desk Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">API Key Management</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">API Explorer</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">ServiceNow Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Jira Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Zendesk</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">FreshService</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">FreshDesk</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Advanced Analytics</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Threat scanner settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Log360 - EventLog Analyzer</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Splunk Integration</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">PAM360 Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Syslog</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Power BI</ds-text-link>
+              <div class="set-card__more"><ds-text-link variant="primary" size="medium" underline="hover" href="#">Need More Integrations?</ds-text-link></div>
+            </nav>
+          </section>
+
+          <section class="set-card">
+            <div class="set-card__head"><ds-icon name="shield" size="20"></ds-icon><h2>Security &amp; Privacy</h2></div>
+            <nav class="set-card__links">
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Manage SSL Certificate</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Security Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Privacy Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Export Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">DPO Dashboard</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Product Compliance</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">FIPS Compliance</ds-text-link>
+            </nav>
+          </section>
+
+          <section class="set-card">
+            <div class="set-card__head"><ds-icon name="data-01" size="20"></ds-icon><h2>Database Settings</h2></div>
+            <nav class="set-card__links">
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Database Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Remote DB Access</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Database Migration</ds-text-link>
+            </nav>
+          </section>
+
+          <section class="set-card">
+            <div class="set-card__head"><ds-icon name="patch" size="20"></ds-icon><h2>Patch Settings</h2></div>
+            <nav class="set-card__links">
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Red Hat Linux Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">SUSE Linux Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Patch Database Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Office Click-to-Run Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Patch Download</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">BIOS Credential Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">N-1 Patch Settings</ds-text-link>
+            </nav>
+          </section>
+
+          <section class="set-card">
+            <div class="set-card__head"><ds-icon name="settings-deploy" size="20"></ds-icon><h2>OS Deployment</h2></div>
+            <nav class="set-card__links">
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Enable OS Deployment</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">OS Deployment settings</ds-text-link>
+            </nav>
+          </section>
+
+          <section class="set-card">
+            <div class="set-card__head"><ds-icon name="device-control" size="20"></ds-icon><h2>Tools Settings</h2></div>
+            <nav class="set-card__links">
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Port Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">System Manager Settings</ds-text-link>
+            </nav>
+          </section>
+
+          <section class="set-card">
+            <div class="set-card__head"><ds-icon name="scan-progress" size="20"></ds-icon><h2>Inventory Settings</h2></div>
+            <nav class="set-card__links">
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Scan Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Device Privacy</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Geo tracking</ds-text-link>
+            </nav>
+          </section>
+
+          <section class="set-card">
+            <div class="set-card__head"><ds-icon name="settings-custom" size="20"></ds-icon><h2>Configuration Settings</h2></div>
+            <nav class="set-card__links">
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Deployment Policies</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">Configuration Settings</ds-text-link>
+              <ds-text-link variant="subtle" size="medium" underline="hover" href="#">USB Audit Settings</ds-text-link>
+            </nav>
+          </section>
+          </div>
+        </div>
+      </ds-content>
+
+    </div><!-- /.shell-area -->
+
+    <!-- RIGHT — Utility rail (outside the unified shell) -->
+    <ds-right-pane id="shell-rp" show-accessibility style="height: 100%;"></ds-right-pane>
+
+  </div>
+</div>
+
+<script type="module">
+  import '../../design-system-library/src/components/index.js';
+  import { applyL2For, wireL1ToL2 } from '../../design-system-library/src/data/ec-menus.js';
+
+  /* ─────────────────────────────────────────────────────────────
+     Header tabs — standard EC chrome
+     ───────────────────────────────────────────────────────────── */
+  document.getElementById('ec-header').tabs = [
+    { id: 'home',    label: 'Home', active: true },
+    { id: 'configs', label: 'Configurations' },
+    { id: 'tp',      label: 'Threats & Patches' },
+    { id: 'sd',      label: 'Software Deployment' },
+    { id: 'inv',     label: 'Inventory' },
+    { id: 'osd',     label: 'OS Deployment' },
+    { id: 'mdm',     label: 'MDM' },
+    { id: 'tools',   label: 'Tools' },
+    { id: 'agent',   label: 'Agent' },
+    { id: 'browsers', label: 'Browsers' },
+    { id: 'app-ctrl', label: 'Application Control' },
+    { id: 'malware',  label: 'Malware Protection' },
+    { id: 'dlp',      label: 'Endpoint DLP', newTag: true },
+    { id: 'bitlocker', label: 'BitLocker Management' },
+    { id: 'dev-ctrl',  label: 'Device Control' },
+    { id: 'reports',   label: 'Reports' },
+    { id: 'support',   label: 'Support' },
+    { id: 'dex',       label: 'DEX' },
+  ];
+
+  /* ─────────────────────────────────────────────────────────────
+     Sidebar L1 — module rail (Patch Manager Plus mirror)
+     ───────────────────────────────────────────────────────────── */
+  document.getElementById('shell-l1').items = [
+    { id: 'dash',    label: 'Dashboard',  icon: 'add-widget' },
+    { id: 'threats', label: 'Threats',    icon: 'bug' },
+    { id: 'patches', label: 'Patches',    icon: 'file-shield', active: true },
+    { id: 'sys',     label: 'Systems',    icon: 'computer' },
+    { id: 'deploy',  label: 'Deployment', icon: 'settings-deploy' },
+    { id: 'comp',    label: 'Compliance', icon: 'checklist-01' },
+    { id: 'rep',     label: 'Reports',    icon: 'file-report' },
+    { id: 'set',     label: 'Settings',   icon: 'settings' },
+  ];
+  document.getElementById('shell-l1').bottomItems = [
+    { id: 'update', label: 'Update Now', icon: 'refresh-time' },
+  ];
+
+  /* ─────────────────────────────────────────────────────────────
+     Sidebar L2 — Patches sub-nav (matches active L1 module)
+     ───────────────────────────────────────────────────────────── */
+  document.getElementById('shell-l2').groups = [
+    { id: 'patches', label: 'Patches', expanded: true, items: [
+      { id: 'missing',    label: 'Missing Patches',    active: true },
+      { id: 'installed',  label: 'Installed Patches',  count: 81 },
+      { id: 'applicable', label: 'Applicable Patches', count: 397 },
+      { id: 'priority',   label: 'Top-Priority Patches' },
+      { id: 'supported',  label: 'Supported Patches',  count: '554 K' },
+      { id: 'latest',     label: 'Latest Patches',     count: '78 K' },
+      { id: 'detailed',   label: 'Detailed View' },
+      { id: 'downloaded', label: 'Downloaded Patches' },
+      { id: 'decline',    label: 'Decline Patch' },
+    ] },
+    { id: 'attention', label: 'Attention Required', expanded: true, items: [
+      { id: 'upload', label: 'Upload Pending', count: 1 },
+    ] },
+  ];
+
+  /* Per-tab L2 sub-nav data + shell sync helper live in Demo/src/data/ec-menus.js
+     so any page can reuse them. Home hides L1+L2; other tabs swap L2 groups
+     and may hide L1 (hideL1 flag in the menu config). */
+  const l1El = document.getElementById('shell-l1');
+  const l2El = document.getElementById('shell-l2');
+
+  document.getElementById('ec-header').addEventListener('ds-header-nav-tab-select', (e) => {
+    applyL2For(l1El, l2El, e.detail?.id);
+  });
+  /* Settings icon in the right cluster opens the Admin sub-nav.
+     Clears any active state on the top tabs since Settings is a chrome
+     destination, not part of the tab set. */
+  document.getElementById('ec-header').addEventListener('ds-header-nav-action', (e) => {
+    if (e.detail?.action === 'settings') {
+      applyL2For(l1El, l2El, 'admin');
+      document.querySelectorAll('.ds-header-nav__tab').forEach((el) => {
+        el.classList.remove('ds-header-nav__tab--active');
+        el.removeAttribute('aria-current');
+      });
+    }
+  });
+  /* L1 ↔ L2 mapping — when user selects an L1 item that has its own
+     `l2Groups` (multi-panel modules), L2 swaps to that panel. */
+  wireL1ToL2(l1El, l2El);
+  /* Settings landing — full-width grid, L1/L2 hidden (chrome = header + right pane) */
+  applyL2For(l1El, l2El, 'home');
+
+  /* ── Settings search — live filter the cards + links ─────────────────── */
+  (function () {
+    const searchEl = document.querySelector('.set-search');
+    const grid = document.querySelector('.set-grid');
+    if (!searchEl || !grid) return;
+    const cards = [...grid.querySelectorAll('.set-card')];
+    let emptyMsg = null;
+
+    function filter(raw) {
+      const q = (raw || '').trim().toLowerCase();
+      let anyCard = false;
+      cards.forEach((card) => {
+        const title = card.querySelector('.set-card__head h2').textContent.toLowerCase();
+        const links = [...card.querySelectorAll('ds-text-link')];
+        const titleMatch = !!q && title.includes(q);
+        let visible = false;
+        links.forEach((l) => {
+          const m = !q || titleMatch || l.textContent.toLowerCase().includes(q);
+          l.style.display = m ? '' : 'none';
+          if (m) visible = true;
+        });
+        /* Re-flag the LAST VISIBLE row link so its trailing divider is dropped —
+           keeps dividers correct between the remaining links after filtering. */
+        let lastShown = null;
+        card.querySelectorAll('.set-card__links > ds-text-link').forEach((l) => {
+          l.classList.remove('is-last');
+          if (l.style.display !== 'none') lastShown = l;
+        });
+        if (lastShown) lastShown.classList.add('is-last');
+        const show = !q || visible;
+        card.style.display = show ? '' : 'none';
+        if (show) anyCard = true;
+      });
+      if (q && !anyCard) {
+        if (!emptyMsg) { emptyMsg = document.createElement('div'); emptyMsg.className = 'set-grid__empty'; grid.appendChild(emptyMsg); }
+        emptyMsg.textContent = 'No settings match “' + raw.trim() + '”';
+        emptyMsg.style.display = '';
+      } else if (emptyMsg) {
+        emptyMsg.style.display = 'none';
+      }
+    }
+
+    searchEl.addEventListener('ds-search-field-input', (e) => filter(e.detail && e.detail.value));
+    searchEl.addEventListener('ds-search-field-clear', () => filter(''));
+    filter('');  /* initial pass — flags the first link in every card */
+  })();
+</script>
+
+</body>
+</html>

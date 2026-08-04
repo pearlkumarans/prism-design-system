@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Empty State — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/empty-state/empty-state.css">
+<link rel="stylesheet" href="../design-system-library/src/components/illustration/illustration.css">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<!-- Description inline link uses the DS Text Link component -->
+<link rel="stylesheet" href="../design-system-library/src/components/text-link/text-link.css">
+<link rel="stylesheet" href="../design-system-library/src/components/badge/badge.css">
+<link rel="stylesheet" href="../design-system-library/src/components/list/list.css">
+<script>
+  window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+  window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/illustration/illustration.js"></script>
+<script type="module" src="../design-system-library/src/components/button/button.js"></script>
+<script type="module" src="../design-system-library/src/components/empty-state/empty-state.js"></script>
+<script type="module" src="../design-system-library/src/components/text-link/text-link.js"></script>
+<script type="module" src="../design-system-library/src/components/badge/badge.js"></script>
+<script type="module" src="../design-system-library/src/components/list/list.js"></script>
+<script type="module">
+  // Override ds-illustration to load source SVGs directly from
+  // design-system-library/src/illustrations/source/<name>.svg (more reliable than the sprite
+  // when served from a subpath).
+  customElements.whenDefined('ds-illustration').then(() => {
+    const Ctor = customElements.get('ds-illustration');
+    if (!Ctor) return;
+    Ctor.prototype.render = function () {
+      const name = this.getAttribute('name') || '';
+      this.setAttribute('aria-hidden', 'true');
+      this.innerHTML = name
+        ? `<img src="../design-system-library/src/illustrations/source/${name}.svg" alt="" style="width:100%;height:auto;display:block">`
+        : '';
+    };
+    // Re-render any already-connected illustrations.
+    document.querySelectorAll('ds-illustration').forEach((el) => {
+      if (typeof el.render === 'function') el.render();
+    });
+  });
+</script>
+<style>
+  .demo-es-section { margin-bottom: 28px; }
+  .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+  .demo-es-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
+  .demo-es-frame { padding: 28px 20px; background: var(--prism-surface, rgba(255,255,255,.02)); border: 1px solid var(--prism-border, rgba(255,255,255,.08)); border-radius: 14px; display: flex; align-items: center; justify-content: center; min-height: 320px; }
+</style>
+</head>
+<body class="page-empty-state">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link active">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Empty State</h1>
+        <p class="page-desc">An empty state is what the user sees the first time they open a page that has nothing in it yet &mdash; no tickets, no devices enrolled, no reports created. Use it to explain what the feature is for in one short sentence, and give the user the one button that unblocks them (&ldquo;Enrol a device,&rdquo; &ldquo;Create your first report&rdquo;). An empty page is a chance to onboard, not a dead end.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram">
+            <div style="display:flex;align-items:center;justify-content:center;">
+              <!-- Empty state preview with inline markers -->
+              <div class="es-container" style="padding:24px 20px;margin:0;">
+                <div style="position:relative;">
+                  <div style="position:absolute;top:50%;right:calc(100% + 6px);transform:translateY(-50%);display:flex;align-items:center;gap:6px;z-index:5;"><span class="anat-marker-inline">1</span><div style="width:28px;height:2px;background:#2563eb;"></div></div>
+                  <div class="es-illustration" style="width:140px;height:140px;margin-bottom:16px;">
+                    <img src="assets/Illustration/network-device-group.svg" alt="">
+                  </div>
+                </div>
+                <div style="position:relative;">
+                  <div style="position:absolute;top:50%;right:calc(100% + 6px);transform:translateY(-50%);display:flex;align-items:center;gap:6px;z-index:5;"><span class="anat-marker-inline">2</span><div style="width:28px;height:2px;background:#2563eb;"></div></div>
+                  <div class="es-title">Explore a diverse array of configurations</div>
+                </div>
+                <div style="position:relative;">
+                  <div style="position:absolute;top:50%;right:calc(100% + 6px);transform:translateY(-50%);display:flex;align-items:center;gap:6px;z-index:5;"><span class="anat-marker-inline">3</span><div style="width:28px;height:2px;background:#2563eb;"></div></div>
+                  <div class="es-description">Configurations helps you manage applications, system settings, and security policies across your network. <ds-text-link href="#" variant="primary" size="medium">Learn more</ds-text-link></div>
+                </div>
+                <div style="position:relative;">
+                  <div style="position:absolute;top:50%;right:calc(100% + 6px);transform:translateY(-50%);display:flex;align-items:center;gap:6px;z-index:5;"><span class="anat-marker-inline">4</span><div style="width:28px;height:2px;background:#2563eb;"></div></div>
+                  <div class="es-actions" style="margin-bottom:0;position:relative;">
+                    <button class="es-btn primary">Create configuration</button>
+                    <button class="es-btn secondary">Learn more</button>
+                    <div style="position:absolute;top:50%;left:calc(100% + 6px);transform:translateY(-50%);display:flex;flex-direction:row-reverse;align-items:center;gap:6px;z-index:5;"><span class="anat-marker-inline">5</span><div style="width:28px;height:2px;background:#2563eb;"></div></div>
+                  </div>
+                </div>
+                <div class="es-supported" style="position:relative;">
+                  <div style="position:absolute;top:50%;right:calc(100% + 6px);transform:translateY(-50%);display:flex;align-items:center;gap:6px;z-index:5;"><span class="anat-marker-inline">6</span><div style="width:28px;height:2px;background:#2563eb;"></div></div>
+                  <span class="es-supported-label">Supported</span>
+                  <div class="es-supported-icons" style="font-size:14px;color:var(--prism-text-muted);">
+                    Windows &#8226; macOS &#8226; Linux
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="anat-legend" style="grid-template-columns:repeat(3,1fr);">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Illustration</strong><span>Centred decorative spot illustration (~200 &times; 160 px) that communicates the feature theme. Swappable via the instance-swap slot.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Title</strong><span>Primary headline &#8212; one sentence, action-oriented. Semibold 16 px, Text-Primary.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Description</strong><span>Supporting paragraph, 1&#8211;2 sentences. 14 px, Text-Secondary. May contain an inline "Learn more" link.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Primary Action</strong><span>Solid brand button &#8212; the single most useful next step. Toggleable via Show Primary Action.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Secondary Action</strong><span>Subtle/ghost button for alternatives (Learn more, View docs). Toggleable via Show Secondary Action.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Supported Row</strong><span>"Supported" label + up to 3 OS / platform icons. Show only when compatibility materially affects the action.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Every <code>size</code> &times; slot combination from <code>empty-state.css</code> (illustration / title / description / primary / secondary / supported), plus RTL &mdash; rendered with the live <code>&lt;ds-empty-state&gt;</code> web component.</p>
+
+            <style>
+              .page-empty-state .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+              .page-empty-state .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; }
+              .page-empty-state .demo-container .demo-canvas {
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+                min-height: 0 !important;
+                flex-direction: column !important;
+                padding: 32px !important;
+                gap: 32px !important;
+              }
+              .page-empty-state .demo-es-section { display: flex; flex-direction: column; gap: 14px; }
+              .page-empty-state .demo-es-section > .demo-group-label {
+                font-size: 11px !important; font-weight: 700 !important; letter-spacing: 0.08em !important;
+                color: var(--prism-text-muted) !important; text-transform: uppercase !important;
+                margin: 0 !important; text-align: left !important; width: auto !important;
+              }
+              .page-empty-state .demo-es-frame {
+                padding: 24px;
+                border: 1px solid var(--prism-border);
+                border-radius: 12px;
+                background: rgba(255,255,255,0.02);
+                display: flex; align-items: center; justify-content: center;
+              }
+              [data-theme="light"] .page-empty-state .demo-es-frame {
+                background: rgba(255,255,255,0.55);
+                border-color: rgba(37,99,235,0.1);
+              }
+              .page-empty-state .demo-es-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+              }
+              @media (max-width: 880px) {
+                .page-empty-state .demo-es-grid { grid-template-columns: 1fr; }
+              }
+              .page-empty-state .demo-es-sizes-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
+              }
+              @media (max-width: 1100px) {
+                .page-empty-state .demo-es-sizes-grid { grid-template-columns: 1fr; }
+              }
+            </style>
+
+            <div class="demo-container">
+              <!-- Mac-window toolbar -->
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Empty State &middot; slot combinations &times; sizes + RTL</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Types -->
+                <div class="demo-es-section">
+                  <div class="demo-group-label">Types &mdash; centered &middot; steps &middot; option-cards &middot; promo (the four <code>type</code> layouts)</div>
+                  <div class="demo-es-frame">
+                    <ds-empty-state id="d-centered"
+                      illustration="common-search"
+                      title="Explore a diverse array of configurations"
+                      description='Configurations helps you manage applications, system settings, and security policies. <ds-text-link href="#" variant="primary" size="medium">Learn more</ds-text-link>'
+                      primary-label="Create configuration" secondary-label="Learn more"
+                      supported="windows,macos,linux" useful-link="#" watch-video="#"></ds-empty-state>
+                  </div>
+                  <div class="demo-es-frame">
+                    <ds-empty-state id="d-steps" type="steps"
+                      title="Samsung Knox Mobile Enrollment"
+                      description='Automate the deployment of corporate Samsung devices. <ds-text-link href="#" variant="primary" size="medium">Learn more</ds-text-link>'
+                      primary-label="Start enrollment" supported="windows,macos,linux"
+                      useful-link="#" watch-video="#"></ds-empty-state>
+                  </div>
+                  <div class="demo-es-frame">
+                    <ds-empty-state id="d-options" type="option-cards"
+                      title="Kickstart Your OSD Image Creation"
+                      description='Configure your source system and choose how you would like to deploy. <ds-text-link href="#" variant="primary" size="medium">Learn more</ds-text-link>'
+                      banner-text="Configure a Remote Office to start creating an image." banner-action-label="Configure"></ds-empty-state>
+                  </div>
+                  <div class="demo-es-frame">
+                    <ds-empty-state id="d-promo" type="promo" media="common-search"
+                      title="Advanced Analytics for Endpoint Central"
+                      description='In-depth analysis of your endpoints and server infrastructure. <ds-text-link href="#" variant="primary" size="medium">Learn more</ds-text-link>'
+                      primary-label="Download" supported="windows,macos,linux"
+                      useful-link="#" watch-video="#" benefits-label="Feature Benefits"></ds-empty-state>
+                  </div>
+                </div>
+                <script>
+                  customElements.whenDefined('ds-empty-state').then(function(){
+                    var s = document.getElementById('d-steps');
+                    if (s) s.steps = [
+                      { badge: 'Step 1', label: 'Set up a Samsung Knox account', icon: 'help-circle' },
+                      { badge: 'Step 2', label: 'Enroll devices using Knox Mobile Enrollment', icon: 'info-circle' },
+                      { badge: 'Step 3', label: 'Bulk prepare / assign', icon: 'circle-tick' },
+                    ];
+                    var o = document.getElementById('d-options');
+                    if (o) o.options = [
+                      { icon: 'common-search', title: 'Install Image Creator Manually', description: 'Download the Image Creator component.', actionLabel: 'Configure now', actionIcon: 'download' },
+                      { icon: 'file-search', title: 'Create Image in 3 Simple Steps', description: 'Create an image directly from the source computer.', actionLabel: 'Image creation', actionIcon: 'download' },
+                    ];
+                    var p = document.getElementById('d-promo');
+                    if (p) p.benefits = [
+                      'Seamless integration for real-time threat detection and response',
+                      'Empower data for rapid incident investigation',
+                      'Identify blind-spots in your infrastructure',
+                      'Foster proactive defence strategies with data-driven insights',
+                      'Automate compliance reporting with scheduled exports',
+                    ];
+                  });
+                </script>
+
+                <!-- Default — full layout -->
+                <div class="demo-es-section">
+                  <div class="demo-group-label">Full layout &mdash; illustration &middot; title &middot; description &middot; primary + secondary &middot; supported row</div>
+                  <div class="demo-es-frame">
+                    <ds-empty-state
+                      illustration="common-search"
+                      title="Explore a diverse array of configurations"
+                      description="Configurations helps you manage applications, system settings, and security policies across your network."
+                      primary-label="Create configuration"
+                      secondary-label="Learn more"
+                      supported="windows,macos,linux">
+                    </ds-empty-state>
+                  </div>
+                </div>
+
+                <!-- Slot variants -->
+                <div class="demo-es-section">
+                  <div class="demo-group-label">Slot variants &mdash; trim everything down to the essentials</div>
+                  <div class="demo-es-grid">
+                    <div class="demo-es-frame">
+                      <ds-empty-state
+                        illustration="file-search"
+                        title="No results found"
+                        description="Try adjusting your filters or search terms."
+                        primary-label="Clear filters"
+                        show-secondary="false"
+                        show-supported="false">
+                      </ds-empty-state>
+                    </div>
+                    <div class="demo-es-frame">
+                      <ds-empty-state
+                        illustration="common-search"
+                        title="No matches"
+                        primary-label="Clear filters"
+                        show-supported="false">
+                        <span slot="description">
+                          Try a different term, or <ds-text-link href="#" variant="primary" size="medium">read the docs</ds-text-link> to refine your search.
+                        </span>
+                      </ds-empty-state>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Compact + supported full row -->
+                <div class="demo-es-section">
+                  <div class="demo-group-label">Compact &amp; full supported row</div>
+                  <div class="demo-es-grid">
+                    <div class="demo-es-frame">
+                      <ds-empty-state
+                        size="sm"
+                        show-illustration="false"
+                        title="Invite your first teammate"
+                        description="Share work, assign tickets, and collaborate in real time."
+                        primary-label="Invite teammate"
+                        show-secondary="false"
+                        show-supported="false">
+                      </ds-empty-state>
+                    </div>
+                    <div class="demo-es-frame">
+                      <ds-empty-state
+                        illustration="common-search"
+                        title="Cross-platform agent ready"
+                        description="Deploy the agent across Windows, macOS, Linux, Android, iOS, and ChromeOS."
+                        primary-label="Download agent"
+                        secondary-label="Deployment guide"
+                        supported="windows,macos,linux,android,ios,chromeos">
+                      </ds-empty-state>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sizes side-by-side -->
+                <div class="demo-es-section">
+                  <div class="demo-group-label">Sizes &mdash; sm (drawers/cards) &middot; md (panels, default) &middot; lg (full-page hero)</div>
+                  <div class="demo-es-sizes-grid">
+                    <div class="demo-es-frame">
+                      <ds-empty-state size="sm" illustration="file-search" title="Small" description="Best for drawers and cards." primary-label="Action" show-secondary="false" show-supported="false"></ds-empty-state>
+                    </div>
+                    <div class="demo-es-frame">
+                      <ds-empty-state size="md" illustration="file-search" title="Medium (default)" description="Standard panel placement." primary-label="Action" show-secondary="false" show-supported="false"></ds-empty-state>
+                    </div>
+                    <div class="demo-es-frame">
+                      <ds-empty-state size="lg" illustration="file-search" title="Large" description="Full-page or hero placement." primary-label="Action" show-secondary="false" show-supported="false"></ds-empty-state>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- RTL -->
+                <div class="demo-es-section">
+                  <div class="demo-group-label">RTL &mdash; Arabic layout (mirrors action button order and supported row)</div>
+                  <div class="demo-es-frame">
+                    <ds-empty-state
+                      rtl
+                      illustration="common-search"
+                      title="&#1575;&#1587;&#1578;&#1603;&#1588;&#1601; &#1605;&#1580;&#1605;&#1608;&#1593;&#1577; &#1605;&#1578;&#1606;&#1608;&#1593;&#1577; &#1605;&#1606; &#1575;&#1604;&#1573;&#1593;&#1583;&#1575;&#1583;&#1575;&#1578;"
+                      description="&#1587;&#1575;&#1593;&#1583; &#1601;&#1610; &#1573;&#1583;&#1575;&#1585;&#1577; &#1575;&#1604;&#1578;&#1591;&#1576;&#1610;&#1602;&#1575;&#1578; &#1608;&#1575;&#1604;&#1573;&#1593;&#1583;&#1575;&#1583;&#1575;&#1578; &#1608;&#1587;&#1610;&#1575;&#1587;&#1575;&#1578; &#1575;&#1604;&#1571;&#1605;&#1575;&#1606; &#1593;&#1576;&#1585; &#1588;&#1576;&#1603;&#1578;&#1603;."
+                      primary-label="&#1573;&#1606;&#1588;&#1575;&#1569; &#1573;&#1593;&#1583;&#1575;&#1583;"
+                      secondary-label="&#1605;&#1593;&#1585;&#1601;&#1577; &#1575;&#1604;&#1605;&#1586;&#1610;&#1583;"
+                      supported="windows,macos,linux">
+                    </ds-empty-state>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Write a specific, feature-named title ("Start your first patch job").</li>
+                <li>Pair the empty state with at least one clear next action.</li>
+                <li>Use an illustration that matches the feature theme.</li>
+                <li>Keep description to &le; 2 lines at the default size.</li>
+                <li>Use the primary-button style for the <strong>one</strong> expected next action.</li>
+                <li>Centre-align the block in its container.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Write generic titles ("No data", "Nothing here") &#8212; wastes the opportunity.</li>
+                <li>Show an empty state with no clear next step.</li>
+                <li>Use a generic mascot for unrelated features.</li>
+                <li>Write a paragraph of marketing copy in the description.</li>
+                <li>Stack multiple solid primary buttons &#8212; users cannot tell which to click.</li>
+                <li>Left-align the block in a wide container &#8212; it reads as an error.</li>
+              </ul></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Layout variants, design tokens, and spacing that define the Empty State&rsquo;s appearance.</p>
+
+          <div class="doc-section">
+            <h2 id="layout-variants" class="doc-section-title">Layout Variants</h2>
+            <p class="doc-section-subtitle">Three layout patterns cover the most common empty-state contexts &#8212; default panel, compact drawer, and full-page with Supported row.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:24px;">
+              <!-- Default -->
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:14px;">
+                <div style="display:flex;justify-content:center;align-items:center;padding:20px;background:var(--prism-black);border-radius:10px;margin-bottom:16px;min-height:240px;">
+                  <div class="es-container" style="padding:16px;max-width:260px;">
+                    <div class="es-illustration" style="width:100px;height:100px;margin-bottom:12px;"><img src="assets/Illustration/network-device-group.svg" alt=""></div>
+                    <div class="es-title" style="font-size:14px;">No devices found</div>
+                    <div class="es-description" style="font-size:12px;margin-bottom:12px;">Enrol your first device.</div>
+                    <div class="es-actions"><button class="es-btn primary" style="padding:6px 14px;font-size:12px;">Enrol device</button></div>
+                  </div>
+                </div>
+                <div style="font-size:14.5px;font-weight:600;color:var(--prism-text);">Default</div>
+                <div style="font-size:13px;color:var(--prism-text-muted);margin-top:4px;">Illustration + title + description + primary action. Best for panels and lists.</div>
+              </div>
+              <!-- Compact -->
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:14px;">
+                <div style="display:flex;justify-content:center;align-items:center;padding:20px;background:var(--prism-black);border-radius:10px;margin-bottom:16px;min-height:240px;">
+                  <div class="es-container compact" style="padding:12px;max-width:240px;">
+                    <div class="es-illustration" style="width:72px;height:72px;margin-bottom:8px;"><img src="assets/Illustration/access-denied.svg" alt=""></div>
+                    <div class="es-title" style="font-size:13px;">No access</div>
+                    <div class="es-description" style="font-size:11px;margin-bottom:10px;">Contact admin.</div>
+                    <div class="es-actions"><button class="es-btn primary" style="padding:5px 12px;font-size:11px;">Request</button></div>
+                  </div>
+                </div>
+                <div style="font-size:14.5px;font-weight:600;color:var(--prism-text);">Compact</div>
+                <div style="font-size:13px;color:var(--prism-text-muted);margin-top:4px;">Smaller illustration + condensed type. Best for drawers, cards, and small panels.</div>
+              </div>
+              <!-- With Supported Row -->
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:14px;">
+                <div style="display:flex;justify-content:center;align-items:center;padding:20px;background:var(--prism-black);border-radius:10px;margin-bottom:16px;min-height:240px;">
+                  <div class="es-container" style="padding:16px;max-width:280px;">
+                    <div class="es-illustration" style="width:90px;height:90px;margin-bottom:10px;"><img src="assets/Illustration/two-factor-auth.svg" alt=""></div>
+                    <div class="es-title" style="font-size:13px;">Set up 2FA</div>
+                    <div class="es-description" style="font-size:11px;margin-bottom:10px;">Protect your account.</div>
+                    <div class="es-actions"><button class="es-btn primary" style="padding:5px 12px;font-size:11px;">Enable</button></div>
+                    <div class="es-supported" style="margin-top:14px;padding-top:10px;">
+                      <span class="es-supported-label" style="font-size:10px;">Supported</span>
+                      <span style="font-size:10px;color:var(--prism-text-muted);">Windows &#8226; macOS &#8226; Linux</span>
+                    </div>
+                  </div>
+                </div>
+                <div style="font-size:14.5px;font-weight:600;color:var(--prism-text);">With Supported Row</div>
+                <div style="font-size:13px;color:var(--prism-text-muted);margin-top:4px;">Adds platform/OS icons below the action cluster. Use for agent-installs and OS-targeted policies.</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="color-tokens" class="doc-section-title">Color Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+            <table class="size-table">
+              <thead><tr><th>Role</th><th>Token</th><th>Applied to</th></tr></thead>
+              <tbody>
+                <tr><td>Surface</td><td><code>Background/BG-Primary-alt</code></td><td>Page or panel background behind the empty state</td></tr>
+                <tr><td>Title</td><td><code>Text/Text-Primary</code></td><td>Primary headline</td></tr>
+                <tr><td>Description</td><td><code>Text/Text-Secondary</code></td><td>Supporting paragraph</td></tr>
+                <tr><td>Inline link</td><td><code>Text/Text-Link</code></td><td>"Learn more" link inside description</td></tr>
+                <tr><td>Supported label</td><td><code>Text/Text-Tertiary</code></td><td>"Supported" label in the OS row</td></tr>
+                <tr><td>Platform glyphs</td><td><code>Border/Icon/Icon-Tertiary</code></td><td>OS / platform icons</td></tr>
+                <tr><td>Primary button</td><td><code>Background/BG-Brand-Solid</code> + <code>Text/Text-Inverse</code></td><td>Inherits Button primary tokens</td></tr>
+                <tr><td>Secondary button</td><td>Inherits Button subtle variant</td><td>Outline / ghost style</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="spacing-tokens" class="doc-section-title">Spacing Tokens</h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>spacing/8</code></td><td>8 px</td><td>Title &harr; description gap; between supported label and icons</td></tr>
+                <tr><td><code>spacing/12</code></td><td>12 px</td><td>Primary &harr; secondary button gap; between OS icons</td></tr>
+                <tr><td><code>spacing/16</code></td><td>16 px</td><td>Description &harr; action row gap; action &harr; supported row gap</td></tr>
+                <tr><td><code>spacing/24</code></td><td>24 px</td><td>Illustration &harr; title gap</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="sizing-reference" class="doc-section-title">Sizing Reference</h2>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Illustration size (md)</td><td>~200 &times; 160 px</td></tr>
+                <tr><td>Illustration size (sm)</td><td>~120 &times; 96 px</td></tr>
+                <tr><td>Illustration size (lg)</td><td>~280 &times; 220 px</td></tr>
+                <tr><td>Max text width</td><td><strong>480 px</strong> (keeps description to ~2 lines at md)</td></tr>
+                <tr><td>OS icon size</td><td>16 &times; 16 px</td></tr>
+                <tr><td>Container horizontal padding</td><td>24 px (inherits panel padding)</td></tr>
+                <tr><td>Horizontal alignment</td><td>Centred</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="typography" class="doc-section-title">Typography</h2>
+            <p class="doc-section-subtitle">All Empty State text uses <strong>Zoho Puvi</strong>. Title is Semibold, description and buttons are Regular / Medium.</p>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Size</th><th>Weight</th><th>Line Height</th></tr></thead>
+              <tbody>
+                <tr><td>Title</td><td>16 px</td><td><code>600 (Semibold)</code></td><td>24 px</td></tr>
+                <tr><td>Description</td><td>14 px</td><td><code>400 (Regular)</code></td><td>20 px</td></tr>
+                <tr><td>Inline link</td><td>14 px</td><td><code>500 (Medium)</code></td><td>20 px</td></tr>
+                <tr><td>Primary / Secondary button label</td><td>14 px</td><td><code>500 (Medium)</code></td><td>20 px</td></tr>
+                <tr><td>Supported label</td><td>13 px</td><td><code>400 (Regular)</code></td><td>20 px</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="border-radius" class="doc-section-title">Border Radius</h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>border-radius/radius-6</code></td><td>6 px</td><td>Button corners (inherited from Button)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">Empty State is designed for zero-content surfaces &#8212; first-time lists, empty search results, gated views, and disabled features.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><ds-icon name="check" size="20" style="color:#2563eb;"></ds-icon>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">A list, table, or grid has no items yet for a first-time user ("no configurations yet").</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">A search / filter result is empty ("no matches for &lsquo;xyz&rsquo;").</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">A feature is available but not yet activated ("enable single sign-on to continue").</li>
+                  <li style="border:none;background:transparent;">A permission-gated view has nothing to show for the current role.</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><ds-icon name="close" size="20" style="color:#e42527;"></ds-icon>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;"><strong>Loading</strong> &#8212; use a skeleton or spinner, not an empty state.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;"><strong>Error</strong> &#8212; use Inline Alert Message or a dedicated error state.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;"><strong>Success confirmation</strong> after an action &#8212; use a Toast.</li>
+                  <li style="border:none;background:transparent;"><strong>First-run tutorials</strong> &#8212; use an onboarding flow, not an empty state.</li>
+                </ul>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding:16px 20px;background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.15);border-radius:12px;">
+              <p style="font-size:14px;color:var(--prism-text);line-height:1.6;margin:0;">Always pair an empty state with <strong>at least one path forward</strong> &#8212; create something, adjust filters, request access, or read more.</p>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="illustration-selection" class="doc-section-title">Illustration Selection</h2>
+            <p class="doc-section-subtitle">Pick an illustration whose subject matches the feature domain. Generic mascots dilute meaning &#8212; use domain-specific spot illustrations.</p>
+            <table class="size-table">
+              <thead><tr><th>Scenario</th><th>Recommended Illustration</th><th>Asset</th></tr></thead>
+              <tbody>
+                <tr><td>No devices / no endpoints</td><td>Network device group</td><td><code>network-device-group.svg</code></td></tr>
+                <tr><td>Permission denied / restricted view</td><td>Access denied</td><td><code>access-denied.svg</code></td></tr>
+                <tr><td>Nothing scheduled</td><td>Schedule / task</td><td><code>schedule-task.svg</code></td></tr>
+                <tr><td>Authentication / 2FA</td><td>Two-factor auth</td><td><code>two-factor-auth.svg</code></td></tr>
+                <tr><td>No uploads / empty drop zone</td><td>Upload cloud</td><td><code>upload-cloud.svg</code></td></tr>
+                <tr><td>No search results</td><td>Common search / file search</td><td><code>common-search.svg</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="message-tone" class="doc-section-title">Message Tone</h2>
+            <p class="doc-section-subtitle">Write clear, specific copy that invites action. Avoid passive phrasing and marketing fluff.</p>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Guidance</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Title</strong></td><td>One sentence, &le; 50 characters. Action-oriented ("Start your first automation") or descriptive ("No configurations yet"). Avoid "There are no&hellip;".</td></tr>
+                <tr><td><strong>Description</strong></td><td>1&#8211;2 sentences that explain <em>what the feature does</em> and <em>why the user should act</em>. End with a "Learn more" link when documentation exists.</td></tr>
+                <tr><td><strong>Primary action</strong></td><td>The single most useful next step. Prefer a verb phrase &#8212; "Create configuration", "Invite teammate" &#8212; not "OK".</td></tr>
+                <tr><td><strong>Secondary action</strong></td><td>Optional lower-commitment alternative &#8212; "Learn more", "View docs", "Import". Omit when there&rsquo;s nothing useful to offer.</td></tr>
+                <tr><td><strong>Supported row</strong></td><td>Include only when platform compatibility materially affects the action (agent install, OS-targeted policy). Omit for generic empty states.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do&rsquo;s and Don&rsquo;ts</h2>
+            <p class="doc-section-subtitle">Guidelines for crafting effective empty states that drive user action.</p>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li><strong>Write a specific title:</strong> "Start your first patch job" &#8212; feature-named, action-oriented.</li>
+                <li><strong>Pair with an action:</strong> Every empty state must expose at least one clear next step.</li>
+                <li><strong>Match illustration to feature:</strong> Use the domain-relevant spot illustration.</li>
+                <li><strong>Keep description short:</strong> 1&#8211;2 lines max at default size.</li>
+                <li><strong>Use one primary button:</strong> The one thing users should do next.</li>
+                <li><strong>Centre the block:</strong> Keeps the page feeling intentional, not broken.</li>
+                <li><strong>Hide Supported row when irrelevant:</strong> Only show OS icons for OS-specific actions.</li>
+                <li><strong>Localise the Supported row:</strong> Translate OS names in Arabic/Hebrew/CJK layouts.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li><strong>Generic titles:</strong> "No data", "Nothing here" &#8212; these waste the opportunity.</li>
+                <li><strong>No action:</strong> Empty states without a next step leave users stuck.</li>
+                <li><strong>Generic mascots:</strong> A cute character unrelated to the feature is noise.</li>
+                <li><strong>Marketing paragraph:</strong> Avoid long, brochure-style descriptions.</li>
+                <li><strong>Multiple primary buttons:</strong> Users cannot tell which is "the" action.</li>
+                <li><strong>Left-align in wide container:</strong> Reads as an error, not an empty state.</li>
+                <li><strong>Forced platform icons:</strong> Don&rsquo;t show Windows/macOS/Linux on OS-agnostic features.</li>
+                <li><strong>Unlocalised OS names:</strong> Don&rsquo;t leave OS labels un-translated in RTL/CJK.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Components that complement or are often used alongside Empty State.</p>
+            <div class="related-grid">
+              <a href="Inline-message.html" class="related-chip"><ds-icon name="info-circle" size="16"></ds-icon> Inline Alert Message</a>
+              <a href="Snackbar.html" class="related-chip"><ds-icon name="message-chat-square" size="16"></ds-icon> Toast</a>
+              <a href="Data-table.html" class="related-chip"><ds-icon name="list-bullet" size="16"></ds-icon> Data Table</a>
+              <a href="Button.html" class="related-chip"><ds-icon name="add" size="16"></ds-icon> Button</a>
+              <a href="Illustrations.html" class="related-chip"><ds-icon name="bento-menu" size="16"></ds-icon> Illustrations</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <p class="doc-section-subtitle">Design tokens and resources for implementing the Empty State component.</p>
+            <ul class="doc-list">
+              <li><strong>Figma Node:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">10208:202426</code> &#8212; Component Set: Empty State</li>
+              <li><strong>Figma Source:</strong> <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=10208-202426" target="_blank" style="color:var(--prism-violet);font-weight:600;">UEMS Design System 3.0 &#8212; Empty State</a></li>
+              <li><strong>Typography:</strong> Zoho Puvi Semibold (600) for title, Regular (400) for description, Medium (500) for buttons and links</li>
+              <li><strong>Max text width:</strong> 480 px &#8212; keeps description to ~2 lines at default size</li>
+              <li><strong>Illustrations:</strong> Sourced from <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">assets/Illustration/</code> &#8212; 50 SVG spot illustrations</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Configure the Empty State component and view generated HTML.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Type</label><select class="cp-select" id="pg-type"><option value="centered" selected>centered</option><option value="steps">steps</option><option value="option-cards">option-cards</option><option value="promo">promo</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Illustration</label><select class="cp-select" id="pg-illus">
+                <option value="common-search" selected>common-search</option>
+                <option value="file-search">file-search</option>
+              </select></div>
+              <div class="cp-control-group"><label class="cp-label">Size</label><select class="cp-select" id="pg-size"><option value="md" selected>md</option><option value="sm">sm</option><option value="lg">lg</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show illustration</label><select class="cp-select" id="pg-show-illus"><option value="true" selected>true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show primary</label><select class="cp-select" id="pg-primary"><option value="true" selected>true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show secondary</label><select class="cp-select" id="pg-secondary"><option value="true" selected>true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Supported</label><select class="cp-select" id="pg-supported"><option value="">none</option><option value="windows,macos,linux" selected>windows,macos,linux</option><option value="windows,macos,linux,android,ios,chromeos">all six</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="pg-rtl"><option value="false">false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Title</label><input class="cp-select" id="pg-title" type="text" value="Explore a diverse array of configurations" style="font-family:inherit"></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Description</label><input class="cp-select" id="pg-desc" type="text" value="Configurations helps you manage applications, system settings, and security policies across your network." style="font-family:inherit"></div>
+              <div class="cp-control-group"><label class="cp-label">Primary label</label><input class="cp-select" id="pg-pl" type="text" value="Create configuration" style="font-family:inherit"></div>
+              <div class="cp-control-group"><label class="cp-label">Secondary label</label><input class="cp-select" id="pg-sl" type="text" value="Learn more" style="font-family:inherit"></div>
+            </div>
+            <div class="cp-preview" id="pg-preview-area" style="padding:24px;display:flex;justify-content:center"><div id="pg-host" style="width:100%"></div></div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-copy-btn"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+            </div>
+            <div class="cp-code-area" id="pg-code-output"></div>
+          </div>
+          <script>
+          (function(){
+            var els = {
+              type:      document.getElementById('pg-type'),
+              illus:     document.getElementById('pg-illus'),
+              size:      document.getElementById('pg-size'),
+              showIllus: document.getElementById('pg-show-illus'),
+              primary:   document.getElementById('pg-primary'),
+              secondary: document.getElementById('pg-secondary'),
+              supported: document.getElementById('pg-supported'),
+              rtl:       document.getElementById('pg-rtl'),
+              title:     document.getElementById('pg-title'),
+              desc:      document.getElementById('pg-desc'),
+              pl:        document.getElementById('pg-pl'),
+              sl:        document.getElementById('pg-sl')
+            };
+            var ES_COPY_LTR = {
+              title: 'Explore a diverse array of configurations',
+              desc: 'Configurations helps you manage applications, system settings, and security policies across your network.',
+              pl: 'Create configuration',
+              sl: 'Learn more'
+            };
+            var ES_COPY_RTL = {
+              title: 'استكشف مجموعة متنوعة من الإعدادات',
+              desc: 'تساعدك الإعدادات في إدارة التطبيقات وإعدادات النظام وسياسات الأمان عبر شبكتك.',
+              pl: 'إنشاء إعداد',
+              sl: 'معرفة المزيد'
+            };
+            var host = document.getElementById('pg-host');
+            var codeOut = document.getElementById('pg-code-output');
+            var copyBtn = document.getElementById('pg-copy-btn');
+            var pgRawCode = '';
+            function swapDefaults(rtl){
+              var src = rtl ? ES_COPY_RTL : ES_COPY_LTR;
+              ['title','desc','pl','sl'].forEach(function(key){
+                var el = els[key];
+                if (el.value === '' || el.value === ES_COPY_LTR[key] || el.value === ES_COPY_RTL[key]) {
+                  el.value = src[key];
+                }
+              });
+            }
+            var DEMO_STEPS = [
+              { badge: 'Step 1', label: 'Set up a Samsung Knox account', icon: 'help-circle' },
+              { badge: 'Step 2', label: 'Enroll devices using Knox Mobile Enrollment', icon: 'info-circle' },
+              { badge: 'Step 3', label: 'Bulk prepare / assign', icon: 'circle-tick' },
+            ];
+            var DEMO_OPTIONS = [
+              { icon: 'common-search', title: 'Install Image Creator Manually', description: 'Download the Image Creator component.', actionLabel: 'Configure now', actionIcon: 'download' },
+              { icon: 'file-search', title: 'Create Image in 3 Simple Steps', description: 'Create an image directly from the source computer.', actionLabel: 'Image creation', actionIcon: 'download' },
+            ];
+            var DEMO_BENEFITS = [
+              'Seamless integration for real-time threat detection and response',
+              'Empower data for rapid incident investigation',
+              'Identify blind-spots in your infrastructure',
+              'Foster proactive defence strategies with data-driven insights',
+              'Automate compliance reporting with scheduled exports',
+            ];
+            function build(){
+              var type = els.type.value;
+              var illus = els.illus.value;
+              var size = els.size.value;
+              var showIllus = els.showIllus.value === 'true';
+              var showP = els.primary.value === 'true';
+              var showS = els.secondary.value === 'true';
+              var supported = els.supported.value;
+              var rtl = els.rtl.value === 'true';
+              swapDefaults(rtl);
+              var title = els.title.value || '';
+              var desc = els.desc.value || '';
+              var pl = els.pl.value || '';
+              var sl = els.sl.value || '';
+
+              host.innerHTML = '';
+              var es = document.createElement('ds-empty-state');
+              var attrs = [];
+              if (type !== 'centered') { es.setAttribute('type', type); attrs.push('type="' + type + '"'); }
+              if (title) { es.setAttribute('title', title); attrs.push('title="' + title.replace(/"/g, '&quot;') + '"'); }
+              if (desc) { es.setAttribute('description', desc); attrs.push('description="' + desc.replace(/"/g, '&quot;') + '"'); }
+
+              if (type === 'centered') {
+                if (illus) { es.setAttribute('illustration', illus); attrs.push('illustration="' + illus + '"'); }
+                if (size !== 'md') { es.setAttribute('size', size); attrs.push('size="' + size + '"'); }
+                if (!showIllus) { es.setAttribute('show-illustration', 'false'); attrs.push('show-illustration="false"'); }
+                if (pl) { es.setAttribute('primary-label', pl); attrs.push('primary-label="' + pl.replace(/"/g, '&quot;') + '"'); }
+                if (sl) { es.setAttribute('secondary-label', sl); attrs.push('secondary-label="' + sl.replace(/"/g, '&quot;') + '"'); }
+                if (!showP) { es.setAttribute('show-primary', 'false'); attrs.push('show-primary="false"'); }
+                if (!showS) { es.setAttribute('show-secondary', 'false'); attrs.push('show-secondary="false"'); }
+                if (supported) { es.setAttribute('supported', supported); attrs.push('supported="' + supported + '"'); }
+                else { es.setAttribute('show-supported', 'false'); attrs.push('show-supported="false"'); }
+              } else if (type === 'steps') {
+                if (pl) { es.setAttribute('primary-label', pl); attrs.push('primary-label="' + pl.replace(/"/g, '&quot;') + '"'); }
+                if (supported) { es.setAttribute('supported', supported); attrs.push('supported="' + supported + '"'); }
+                es.setAttribute('useful-link', '#'); es.setAttribute('watch-video', '#'); attrs.push('useful-link="#"', 'watch-video="#"');
+              } else if (type === 'option-cards') {
+                es.setAttribute('banner-text', 'Configure a Remote Office to start creating an image.'); attrs.push('banner-text="Configure a Remote Office to start creating an image."');
+                es.setAttribute('banner-action-label', 'Configure'); attrs.push('banner-action-label="Configure"');
+              } else if (type === 'promo') {
+                es.setAttribute('media', illus || 'common-search'); attrs.push('media="' + (illus || 'common-search') + '"');
+                if (pl) { es.setAttribute('primary-label', pl); attrs.push('primary-label="' + pl.replace(/"/g, '&quot;') + '"'); }
+                if (supported) { es.setAttribute('supported', supported); attrs.push('supported="' + supported + '"'); }
+                es.setAttribute('useful-link', '#'); es.setAttribute('watch-video', '#'); attrs.push('useful-link="#"', 'watch-video="#"');
+              }
+              if (rtl) { es.setAttribute('rtl', ''); attrs.push('rtl'); }
+              host.appendChild(es);
+
+              // Collections (set after append; documented as JS props)
+              var jsNote = '';
+              if (type === 'steps') { es.steps = DEMO_STEPS; jsNote = '\n\n&lt;script&gt;\n  el.steps = [{ badge, label, icon }, …];\n&lt;/script&gt;'; }
+              else if (type === 'option-cards') { es.options = DEMO_OPTIONS; jsNote = '\n\n&lt;script&gt;\n  el.options = [{ icon, title, description, actionLabel }, …];\n&lt;/script&gt;'; }
+              else if (type === 'promo') { es.benefits = DEMO_BENEFITS; jsNote = '\n\n&lt;script&gt;\n  el.benefits = ["Seamless integration …", …];\n&lt;/script&gt;'; }
+
+              pgRawCode = '<ds-empty-state' + (attrs.length ? '\n  ' + attrs.join('\n  ') : '') + '>\n</ds-empty-state>';
+              var colored = '&lt;<span style="color:#60a5fa">ds-empty-state</span>'
+                + (attrs.length ? '\n  ' : '')
+                + attrs.map(function(p){
+                    var eq = p.indexOf('=');
+                    if (eq === -1) return '<span style="color:#38bdf8">' + p + '</span>';
+                    return '<span style="color:#38bdf8">' + p.slice(0, eq) + '</span>=<span style="color:#34d399">' + p.slice(eq + 1) + '</span>';
+                  }).join('\n  ')
+                + '&gt;\n&lt;/<span style="color:#60a5fa">ds-empty-state</span>&gt;'
+                + (jsNote ? '<span style="color:#94a3b8">' + jsNote + '</span>' : '');
+              codeOut.innerHTML = '<pre style="margin:0;white-space:pre-wrap;font-family:\'JetBrains Mono\',monospace;font-size:13.5px;line-height:1.6">' + colored + '</pre>';
+            }
+            Object.keys(els).forEach(function(k){ els[k].addEventListener(els[k].tagName === 'INPUT' ? 'input' : 'change', build); });
+            copyBtn.addEventListener('click', function(){
+              var t = pgRawCode;
+              var done = function(){ var o = copyBtn.innerHTML; copyBtn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!'; setTimeout(function(){ copyBtn.innerHTML = o; }, 2000); };
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(t).then(done).catch(function(){ var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); });
+              } else {
+                var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+              }
+            });
+            if (window.customElements && customElements.whenDefined) {
+              customElements.whenDefined('ds-empty-state').then(build);
+            }
+            build();
+          })();
+          </script>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="component-api" class="doc-section-title">Component API &amp; Properties</h2>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>type</code></td><td><code>'centered' | 'steps' | 'option-cards' | 'promo'</code></td><td><code>'centered'</code></td><td>Chooses the layout (matches the Figma <em>Type</em> variant).</td></tr>
+                <tr><td><code>illustration</code></td><td>sprite name</td><td>&mdash;</td><td>Centered media. Renders <code>&lt;ds-illustration name="&hellip;"&gt;</code>.</td></tr>
+                <tr><td><code>media</code></td><td>sprite name</td><td>&mdash;</td><td>Promo logo/media.</td></tr>
+                <tr><td><code>show-illustration</code></td><td><code>"false"</code> to hide</td><td>shown</td><td>Hides the illustration block.</td></tr>
+                <tr><td><code>title</code></td><td>string</td><td>&mdash;</td><td>Heading text.</td></tr>
+                <tr><td><code>description</code></td><td>string</td><td>&mdash;</td><td>Body text. Use the <code>description</code> slot for inline links.</td></tr>
+                <tr><td><code>primary-label</code></td><td>string</td><td>&mdash;</td><td>Primary button label.</td></tr>
+                <tr><td><code>secondary-label</code></td><td>string</td><td>&mdash;</td><td>Secondary button label.</td></tr>
+                <tr><td><code>show-primary</code> / <code>show-secondary</code></td><td><code>"false"</code> to hide</td><td>shown</td><td>Hides each action explicitly.</td></tr>
+                <tr><td><code>supported</code></td><td>comma-separated OS ids</td><td>&mdash;</td><td>e.g. <code>windows,macos,linux,android,ios,chromeos</code>.</td></tr>
+                <tr><td><code>supported-label</code></td><td>string</td><td><code>"Supported"</code></td><td>Caption preceding the OS icon cluster.</td></tr>
+                <tr><td><code>show-supported</code></td><td><code>"false"</code> to hide</td><td>shown when <code>supported</code> is set</td><td>Hides the Supported row.</td></tr>
+                <tr><td><code>banner-text</code> / <code>banner-action-label</code></td><td>string</td><td>&mdash;</td><td><strong>option-cards</strong>: info banner text + action label.</td></tr>
+                <tr><td><code>useful-link</code> / <code>watch-video</code></td><td>href</td><td>&mdash;</td><td>Footer links; set (even <code>"#"</code>) to render. Labels via <code>useful-link-label</code> / <code>watch-video-label</code>.</td></tr>
+                <tr><td><code>benefits-label</code></td><td>string</td><td><code>"Feature Benefits"</code></td><td><strong>promo</strong>: benefits list heading.</td></tr>
+                <tr><td><code>show-media</code> / <code>show-banner</code> / <code>show-feature-benefits</code> / <code>show-footer</code></td><td><code>"false"</code> to hide</td><td>shown</td><td>Toggle the optional regions per type.</td></tr>
+                <tr><td><code>size</code></td><td><code>'sm' | 'md' | 'lg'</code></td><td><code>'md'</code></td><td>Illustration and overall scale (centered).</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td>unset</td><td>Right-to-left layout.</td></tr>
+                <tr><td><code>steps</code> (JS prop)</td><td><code>[{ badge, label, icon }]</code></td><td>&mdash;</td><td><strong>steps</strong>: the step cards.</td></tr>
+                <tr><td><code>options</code> (JS prop)</td><td><code>[{ icon, title, description, actionLabel, actionIcon }]</code></td><td>&mdash;</td><td><strong>option-cards</strong>: the choice cards.</td></tr>
+                <tr><td><code>benefits</code> (JS prop)</td><td><code>string[]</code></td><td>&mdash;</td><td><strong>promo</strong>: the feature list.</td></tr>
+              </tbody>
+            </table>
+            <p class="doc-section-subtitle" style="margin-top:16px"><strong>Slot:</strong> <code>description</code> &mdash; pass a span/paragraph with inline links instead of a plain <code>description</code> attribute. <strong>Events:</strong> <code>ds-empty-state-primary</code>, <code>ds-empty-state-secondary</code>, <code>ds-empty-state-banner</code>, and <code>ds-empty-state-option</code> (<code>detail: { index }</code>).</p>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="html-example" class="doc-section-title">HTML Example</h2>
+            <div class="cp-code-area" style="border-radius:12px;margin-top:16px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">section</span> <span style="color:#D19A66;">class</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"es-container"</span> <span style="color:#D19A66;">role</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"region"</span> <span style="color:#D19A66;">aria-labelledby</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"es-title"</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">div</span> <span style="color:#D19A66;">class</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"es-illustration"</span> <span style="color:#D19A66;">aria-hidden</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"true"</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">img</span> <span style="color:#D19A66;">src</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"/illustrations/network-device-group.svg"</span> <span style="color:#D19A66;">alt</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">""</span> <span style="color:#ABB2BF;">/&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">div</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">h2</span> <span style="color:#D19A66;">id</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"es-title"</span> <span style="color:#D19A66;">class</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"es-title"</span><span style="color:#ABB2BF;">&gt;</span>No devices enrolled<span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">h2</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">p</span> <span style="color:#D19A66;">class</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"es-description"</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;Enrol your first device to start managing configurations.<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">a</span> <span style="color:#D19A66;">href</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"/docs"</span><span style="color:#ABB2BF;">&gt;</span>Learn more<span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">a</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">p</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">div</span> <span style="color:#D19A66;">class</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"es-actions"</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">button</span> <span style="color:#D19A66;">type</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"button"</span> <span style="color:#D19A66;">class</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"es-btn primary"</span><span style="color:#ABB2BF;">&gt;</span>Enrol device<span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">button</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">button</span> <span style="color:#D19A66;">type</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"button"</span> <span style="color:#D19A66;">class</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"es-btn secondary"</span><span style="color:#ABB2BF;">&gt;</span>View docs<span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">button</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">div</span><span style="color:#ABB2BF;">&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">section</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="react-example" class="doc-section-title">React Example &#8212; Default</h2>
+            <div class="cp-code-area" style="border-radius:12px;margin-top:16px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">EmptyState</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">title</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Explore a diverse array of configurations"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">description</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;&gt;</span>Configurations helps you manage applications and security policies.<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">a</span> <span style="color:#D19A66;">href</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"/docs/configurations"</span><span style="color:#ABB2BF;">&gt;</span>Learn more<span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">a</span><span style="color:#ABB2BF;">&gt;&lt;/&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">primaryAction</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span> <span style="color:#E5C07B;">label</span>: <span style="color:#98C379;">'Create configuration'</span>, <span style="color:#E5C07B;">onClick</span>: <span style="color:#E5C07B;">openCreate</span> <span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">secondaryAction</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span> <span style="color:#E5C07B;">label</span>: <span style="color:#98C379;">'Learn more'</span>, <span style="color:#E5C07B;">href</span>: <span style="color:#98C379;">'/docs'</span> <span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">supportedPlatforms</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">supportedOs</span><span style="color:#C678DD;">}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="react-example-minimal" class="doc-section-title">React Example &#8212; Minimal zero-results</h2>
+            <div class="cp-code-area" style="border-radius:12px;margin-top:16px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">div</span> <span style="color:#D19A66;">role</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"region"</span> <span style="color:#D19A66;">aria-live</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"polite"</span> <span style="color:#D19A66;">aria-label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Search results"</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#C678DD;">{</span><span style="color:#E5C07B;">results.length</span> === <span style="color:#D19A66;">0</span> <span style="color:#56B6C2;">&amp;&amp;</span> <span style="color:#C678DD;">(</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">EmptyState</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">title</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#98C379;">`No results for "</span><span style="color:#C678DD;">${</span><span style="color:#E5C07B;">query</span><span style="color:#C678DD;">}</span><span style="color:#98C379;">"`</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">description</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Try different keywords or clear active filters."</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">primaryAction</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span> <span style="color:#E5C07B;">label</span>: <span style="color:#98C379;">'Clear filters'</span>, <span style="color:#E5C07B;">onClick</span>: <span style="color:#E5C07B;">clearFilters</span> <span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">showSecondaryAction</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#D19A66;">false</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">showSupported</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#D19A66;">false</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">/&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#C678DD;">)}</span><br>
+                <span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">div</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for ensuring Empty State is accessible across assistive technologies and input methods.</p>
+
+          <div class="doc-section">
+            <h3 id="heading-hierarchy" class="doc-h3">Heading Hierarchy</h3>
+            <ul class="doc-list">
+              <li><strong>Render the title as a real heading:</strong> Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;h2&gt;</code> or <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;h3&gt;</code> depending on page hierarchy so screen readers announce the landing.</li>
+              <li><strong>Never skip levels:</strong> If the surrounding page uses an <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;h1&gt;</code>, the empty state title should be an <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;h2&gt;</code>.</li>
+              <li><strong>Visual weight is not a heading:</strong> Don&rsquo;t use a styled <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;div&gt;</code> &#8212; screen readers won&rsquo;t find it in the outline.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="aria-patterns" class="doc-h3">ARIA Patterns</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Requirement</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Landmark</strong></td><td>Wrap the empty state in <code>role="region"</code> with <code>aria-labelledby</code> pointing to the title <code>id</code>. When it replaces the main content of a page, a <code>&lt;section&gt;</code> with <code>aria-labelledby</code> is sufficient.</td></tr>
+                <tr><td><strong>Illustration</strong></td><td>Decorative illustrations use <code>aria-hidden="true"</code> and <code>alt=""</code>. Informative illustrations use <code>role="img"</code> with a descriptive <code>aria-label</code>.</td></tr>
+                <tr><td><strong>Inline link</strong></td><td>The inline "Learn more" is a real <code>&lt;a&gt;</code> with a visible underline or colour and a non-colour hover affordance.</td></tr>
+                <tr><td><strong>Button semantics</strong></td><td>Actions are <code>&lt;button&gt;</code> for in-app commands and <code>&lt;a&gt;</code> for navigation. Primary and secondary must have distinct visible styles &#8212; not rely on position alone.</td></tr>
+                <tr><td><strong>Supported icons</strong></td><td>Each OS icon has <code>aria-label</code> ("Windows", "macOS", "Linux"). If the row is purely decorative, set <code>aria-hidden="true"</code> on the icon cluster and keep only the label visible.</td></tr>
+                <tr><td><strong>Live announcement</strong></td><td>If the empty state appears dynamically (after a filter yields zero results), announce via an <code>aria-live="polite"</code> region so SR users hear "No matches found".</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="focus-management" class="doc-h3">Focus Management</h3>
+            <ul class="doc-list">
+              <li><strong>Tab order:</strong> title &rarr; inline description links &rarr; primary button &rarr; secondary button &rarr; supported-row icons (if interactive).</li>
+              <li><strong>Visible focus ring:</strong> All focusable elements expose a 2 px focus ring that meets WCAG 2.4.7.</li>
+              <li><strong>Do not autofocus:</strong> The empty state should not steal focus when it renders. Let the user keyboard-tab into it naturally.</li>
+              <li><strong>Dynamic appearance:</strong> When the empty state replaces content after a user action (e.g. applying a filter), keep focus on the triggering control &#8212; don&rsquo;t jump focus to the empty state.</li>
+              <li><strong>RTL:</strong> Tab order follows DOM order; visual mirroring is handled by <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code>. The action cluster mirrors (primary visually on the right).</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="screen-reader-guidance" class="doc-h3">Screen Reader Guidance</h3>
+            <ul class="doc-list">
+              <li><strong>Announce the landing:</strong> Because the title is a real heading within a region landmark, screen readers announce "region, [title], heading level 2" &#8212; clearly conveying "the list is empty, here&rsquo;s what to do".</li>
+              <li><strong>Describe the illustration only if informative:</strong> Most empty-state illustrations are decorative. Hide them with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-hidden="true"</code> to avoid redundant narration of "image" before the real content.</li>
+              <li><strong>Keep button labels verbs:</strong> "Create configuration", "Invite teammate" &#8212; these are self-describing for SR users who encounter buttons out of visual context.</li>
+              <li><strong>Localised Supported row:</strong> Translate OS names in Arabic/Hebrew/CJK layouts; never leave them un-translated.</li>
+              <li><strong>Error vs empty distinction:</strong> If the surface is actually an error (network failure), use Inline Alert Message &#8212; not Empty State. SR users rely on the correct landmark/role.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="color-contrast" class="doc-h3">Color Contrast<span class="h3-badge" style="background:rgba(34,197,94,0.15);color:#16a34a;">WCAG AA Pass</span></h3>
+            <p class="doc-section-subtitle">Title (Text-Primary) and description (Text-Secondary) both meet WCAG AA 4.5:1. Link colour against background meets 4.5:1 plus a non-colour affordance.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:24px;">
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#fff;padding:28px 24px;text-align:center;color:#15181E;border-radius:12px 12px 0 0;"><div style="font-size:20px;font-weight:600;">Explore configurations</div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">TITLE ON SURFACE</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#15181E on #FFFFFF</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 17.4:1</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AAA Pass</div></div></div>
+              </div>
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#fff;padding:28px 24px;text-align:center;color:#64748B;border-radius:12px 12px 0 0;"><div style="font-size:14px;font-weight:400;">Supporting description text, typically two lines max</div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">DESCRIPTION ON SURFACE</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#64748B on #FFFFFF</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 4.5:1</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AA Pass</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/empty-state.md" download="empty-state.md" class="action-link"><ds-icon name="download" size="15"></ds-icon> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=10208-202426" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component&rsquo;s documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/components/toc.js"></script>
+<script src="js/main.js"></script>
+
+
+</body>
+</html>

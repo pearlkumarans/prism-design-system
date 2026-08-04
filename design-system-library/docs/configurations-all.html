@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  {
+    "imports": {
+      "@uems/design-system": "../src/index.js"
+    }
+  }
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configurations — All Configurations</title>
+
+  <script type="module">import '@uems/design-system';</script>
+  <script>
+  (function () {
+    var t = localStorage.getItem('uems-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', t);
+    document.addEventListener('ds-right-pane-theme', function (e) {
+      document.documentElement.setAttribute('data-theme', e.detail.theme);
+      try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+    });
+    window.addEventListener('DOMContentLoaded', function () {
+      customElements.whenDefined('ds-right-pane').then(function () {
+        document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+          rp.setAttribute('theme', t);
+        });
+      });
+    });
+  })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../src/icons/illustrations.svg';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body { background: var(--cobalt-15); }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+
+    .body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      padding: 0 0 var(--spacing-12) var(--spacing-12);
+      gap: 0;
+    }
+
+    .content {
+      flex: 1;
+      background: var(--uems-bg-base);
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: 16px 0 0 16px; box-shadow: -8px 0 24px rgba(15, 23, 42, 0.08);
+      margin-inline-start: -1px;
+      overflow-y: auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Page title row -------------------------------------------------- */
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--spacing-20) var(--spacing-32) var(--spacing-12);
+    }
+    .title-row h1 {
+      margin: 0;
+      font-size: var(--font-size-18);
+      font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+    }
+    .deprecated {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--font-size-14);
+      color: var(--uems-text-tertiary);
+    }
+    .deprecated a {
+      color: var(--uems-text-accent-link);
+      text-decoration: none;
+      font-weight: var(--font-weight-medium);
+    }
+    .deprecated a:hover { text-decoration: underline; }
+    .deprecated__dot {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #E53935;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: var(--font-weight-bold);
+    }
+
+    /* ---- Show / radio band ---------------------------------------------- */
+    .show-band {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-16);
+      padding: 0 var(--spacing-32) var(--spacing-12);
+      font-size: var(--font-size-14);
+      color: var(--uems-text-secondary);
+    }
+    .show-band__label { font-weight: var(--font-weight-medium); color: var(--uems-text-primary); }
+
+    .table-region {
+      padding: 0 var(--spacing-24) var(--spacing-24);
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Single-line truncation in every data-table body cell. */
+    ds-data-table .ds-data-table__table tbody td,
+    ds-data-table .ds-data-table__table tbody th[scope="row"] {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 240px;
+    }
+    ds-data-table .ds-data-table__table tbody td > a,
+    ds-data-table .ds-data-table__table tbody th[scope="row"] > a {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: bottom;
+    }
+    /* Truncation-tooltip cells must NOT clip the absolutely-positioned tip popup;
+       truncation moves to the inner .cell-truncate span instead. */
+    ds-data-table .ds-data-table__table tbody td:has(ds-tooltip),
+    ds-data-table .ds-data-table__table tbody th[scope="row"]:has(ds-tooltip) { overflow: visible; }
+    ds-data-table ds-tooltip { display: inline-block; max-width: 100%; vertical-align: bottom; }
+    ds-data-table ds-tooltip .cell-truncate {
+      display: inline-block; max-width: 220px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom;
+    }
+
+    /* ---- Cell helpers --------------------------------------------------- */
+    .cat-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--uems-text-tertiary);
+    }
+    .type-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--uems-text-primary);
+    }
+    .type-cell__icon {
+      width: 22px; height: 22px;
+      border-radius: 4px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--uems-bg-accent-primary-subtle);
+      color: var(--uems-text-accent-primary);
+    }
+    .status-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #E53935;
+      font-weight: var(--font-weight-medium);
+    }
+    .status-cell ds-icon { color: #E53935; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+
+    <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+    <div class="body">
+      <ds-sidebar-l2 id="shell-l2" title="Add Configurations" show-back style="height: 100%;"></ds-sidebar-l2>
+
+      <ds-content class="content" role="main">
+
+        <!-- Title row -->
+        <div class="title-row">
+          <h1>All Configurations</h1>
+          <div class="deprecated">
+            <span class="deprecated__dot">!</span>
+            <span>-</span>
+            <a href="#">Deprecated Configurations</a>
+          </div>
+        </div>
+
+        <!-- Show: Created by … -->
+        <div class="show-band">
+          <span class="show-band__label">Show Configurations :</span>
+          <ds-radio-group id="show-radio" name="show" size="s"></ds-radio-group>
+        </div>
+
+        <!-- Data table -->
+        <div class="table-region">
+          <ds-data-table id="config-table"
+            selection-mode="multi"
+            total-rows="230"
+            rows-per-page="400"
+            empty-text="No configurations">
+            <div slot="toolbarLeft" style="display: flex; gap: var(--spacing-8); align-items: center; flex-wrap: wrap;">
+              <ds-button variant="primary" size="small" prefix-icon="add">Create Configuration</ds-button>
+              <ds-button variant="secondary" size="small" prefix-icon="delete">Move to Trash</ds-button>
+              <span style="font-size: var(--font-size-14); color: var(--uems-text-secondary); margin-left: var(--spacing-8);">Filter By :</span>
+              <ds-button variant="secondary" size="small" suffix-icon="chevron-down">Category</ds-button>
+              <ds-button variant="secondary" size="small" suffix-icon="chevron-down">Configurations</ds-button>
+              <ds-button variant="secondary" size="small" suffix-icon="chevron-down">Platform</ds-button>
+              <ds-button variant="secondary" size="small" suffix-icon="chevron-down">All Status</ds-button>
+            </div>
+          </ds-data-table>
+        </div>
+
+      </ds-content>
+
+      <ds-right-pane id="shell-rp" style="height: 100%;"></ds-right-pane>
+    </div>
+  </div>
+
+  <script type="module">
+    import '@uems/design-system';
+
+    /* ---- Header tabs --------------------------------------------------- */
+    document.getElementById('ec-header').tabs = [
+      { id: 'home',     label: 'Home' },
+      { id: 'configs',  label: 'Configurations', active: true, href: 'configurations-all.html' },
+      { id: 'tp',       label: 'Threats & Patches', href: 'patches-missing.html' },
+      { id: 'sd',       label: 'Software Deployment' },
+      { id: 'inv',      label: 'Inventory' },
+      { id: 'osd',      label: 'OS Deployment' },
+      { id: 'mdm',      label: 'MDM', href: 'mdm-groups.html' },
+      { id: 'bl',       label: 'BitLocker', href: 'bitlocker-dashboard.html' },
+      { id: 'tools',    label: 'Tools' },
+      { id: 'agent',    label: 'Agent' },
+    ];
+
+    /* ---- Show Configurations radio group -------------------------------- */
+    customElements.whenDefined('ds-radio-group').then(() => {
+      document.getElementById('show-radio').options = [
+        { value: 'all', label: 'Created by All', selected: true },
+        { value: 'me',  label: 'Created by Me' },
+      ];
+    });
+
+    /* ---- L2 sidebar ---------------------------------------------------- */
+    document.getElementById('shell-l2').groups = [
+      { id: 'add', label: 'Add Configurations', expanded: true, items: [
+        { id: 'cfg',   label: 'Configuration', sub: true },
+        { id: 'tmpl',  label: 'Templates' },
+        { id: 'coll',  label: 'Collection',    sub: true },
+      ] },
+      { id: 'views', label: 'Views', expanded: true, items: [
+        { id: 'all',   label: 'All Configurations', active: true },
+        { id: 'trash', label: 'Trash' },
+      ] },
+      { id: 'rep', label: 'Reports', expanded: true, items: [
+        { id: 'usb',   label: 'USB Reports' },
+        { id: 'cfgr',  label: 'Configuration Reports', sub: true },
+      ] },
+      { id: 'set', label: 'Settings', expanded: true, items: [
+        { id: 'cfgs',  label: 'Configuration Settings' },
+        { id: 'sr',    label: 'Script Repository' },
+      ] },
+    ];
+
+    /* ---- Configurations table ------------------------------------------ */
+    customElements.whenDefined('ds-data-table').then(() => {
+      const dt = document.getElementById('config-table');
+
+      const linkCell = (text) =>
+        `<a href="#" style="color:var(--uems-text-accent-link);text-decoration:none;font-weight:var(--font-weight-medium);">${text}</a>`;
+
+      /* Long config names truncate with an ellipsis and reveal the full text
+         in a ds-tooltip on hover/focus. */
+      const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const tip = (full, inner) =>
+        `<ds-tooltip text="${esc(full)}" show-icon="false" position="up-center"><span class="cell-truncate">${inner}</span></ds-tooltip>`;
+
+      // user / computer icon for category
+      const catIcon = (cat) => {
+        const ic = cat === 'computer' ? 'computer' : 'user';
+        return `<span class="cat-cell" aria-label="${cat}"><ds-icon name="${ic}" size="16"></ds-icon></span>`;
+      };
+
+      // small per-type tile icon
+      const typeIcon = (type) => {
+        const map = {
+          'Alerts':                 'exclamation-triangle',
+          'MS Outlook':             'mail',
+          'Path':                   'folder',
+          'Shortcut':               'link',
+          'MS Office':              'file',
+          'Permission Management':  'key',
+          'Shared Network Printer': 'printer',
+          'Custom Script':          'code-square',
+          'Environment Variable':   'data-01',
+          'Folder Redirection':     'folder-redirection',
+          'Firewall':               'firewall',
+          'Legal Notice':           'file-read',
+          'Group Management':       'users',
+          'Security Policies':      'file-shield',
+          'Common Folder Redirection': 'folder-redirection',
+          'Services':               'settings',
+        };
+        return `<span class="type-cell">
+          <span class="type-cell__icon"><ds-icon name="${map[type] || 'file'}" size="14"></ds-icon></span>
+          ${type}
+        </span>`;
+      };
+
+      const statusCell = () => `<span class="status-cell">
+        <ds-icon name="cancel-circle" size="14"></ds-icon>
+        Suspended
+      </span>`;
+
+      dt.columns = [
+        { id: 'name', header: 'Configuration Name', accessor: 'name', sortable: true, rowHeader: true,
+          render: (r) => tip(r.name, linkCell(r.name)) },
+        { id: 'cat',  header: 'Category', accessor: 'cat', align: 'center',
+          render: (r) => catIcon(r.cat) },
+        { id: 'type', header: 'Type', accessor: 'type', sortable: true,
+          render: (r) => typeIcon(r.type) },
+        { id: 'status', header: 'Status', accessor: 'status', sortable: true,
+          render: () => statusCell() },
+        { id: 'createdBy', header: 'Created By', accessor: 'createdBy', sortable: true },
+        { id: 'lastMod',   header: 'Last Modified Time', accessor: 'lastMod', sortable: true },
+        { id: 'action',    header: 'Action', accessor: 'action', align: 'center',
+          render: () => `<ds-icon-button shape="square" type="tertiary-grey" size="small" icon="more-horizontal" label="Actions"></ds-icon-button>` },
+        { id: 'lastBy',    header: 'Last Modified By', accessor: 'lastBy', sortable: true },
+        { id: 'platform',  header: 'Platform', accessor: 'platform', sortable: true },
+      ];
+
+      dt.rows = [
+        { id: 'c1',  name: 'Alerts',                  cat: 'user',     type: 'Alerts',                 createdBy: 'admin', lastMod: 'Feb 1, 2022 05:10 PM',  lastBy: 'admin', platform: 'Windows' },
+        { id: 'c2',  name: 'MS Outlook',              cat: 'user',     type: 'MS Outlook',             createdBy: 'admin', lastMod: 'Jul 11, 2021 09:56 AM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c3',  name: 'Path',                    cat: 'user',     type: 'Path',                   createdBy: 'admin', lastMod: 'Jul 11, 2021 09:55 AM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c4',  name: 'ShortCut',                cat: 'user',     type: 'Shortcut',               createdBy: 'admin', lastMod: 'Mar 24, 2022 06:35 PM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c5',  name: 'MS Office',               cat: 'user',     type: 'MS Office',              createdBy: 'admin', lastMod: 'Jul 11, 2021 09:55 AM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c6',  name: 'Permission Management',   cat: 'user',     type: 'Permission Management',  createdBy: 'admin', lastMod: 'Jul 11, 2021 09:54 AM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c7',  name: 'Shared Network Printer',  cat: 'user',     type: 'Shared Network Printer', createdBy: 'admin', lastMod: 'Jul 11, 2021 10:03 AM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c8',  name: 'Custom Script',           cat: 'user',     type: 'Custom Script',          createdBy: 'admin', lastMod: 'Mar 24, 2022 06:45 PM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c9',  name: 'Environment Variable',    cat: 'user',     type: 'Environment Variable',   createdBy: 'admin', lastMod: 'Apr 10, 2022 05:03 PM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c10', name: 'Folder Redirection',      cat: 'user',     type: 'Folder Redirection',     createdBy: 'admin', lastMod: 'Aug 23, 2021 01:53 AM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c11', name: 'Firewall',                cat: 'computer', type: 'Firewall',               createdBy: 'admin', lastMod: 'Apr 11, 2022 10:37 PM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c12', name: 'Legal Notice',            cat: 'computer', type: 'Legal Notice',           createdBy: 'admin', lastMod: 'Jul 11, 2021 10:09 AM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c13', name: 'Group Management',        cat: 'computer', type: 'Group Management',       createdBy: 'admin', lastMod: 'Jul 11, 2021 10:04 AM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c14', name: 'Security Policies',       cat: 'computer', type: 'Security Policies',      createdBy: 'admin', lastMod: 'Jul 11, 2021 10:05 AM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c15', name: 'Common Folder Redirection', cat: 'computer', type: 'Common Folder Redirection', createdBy: 'admin', lastMod: 'Jul 11, 2021 10:05 AM', lastBy: 'admin', platform: 'Windows' },
+        { id: 'c16', name: 'services',                cat: 'computer', type: 'Services',               createdBy: 'admin', lastMod: 'Jul 11, 2021 09:54 AM', lastBy: 'admin', platform: 'Windows' },
+      ];
+
+      dt.bulkActions = [
+        { id: 'create', label: 'Create Configuration', icon: 'add' },
+        { id: 'trash',  label: 'Move to Trash',        icon: 'delete', destructive: true },
+      ];
+    });
+  </script>
+</body>
+</html>

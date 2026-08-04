@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<!--
+  Deployments — List view (V1) · DUAL-MODE file (projects/deployments/).
+  Archetype: L03 List view (variant B, left filter sidebar).
+  Source spec: UEMS Unified Deployment Framework study §6.5.
+  Columns: Name · AG · Resources · Targets · Delivery · Schedule · Status · Last run · Actions.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Deployments · Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    .sa-host { display: flex; flex-direction: column; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* == Deployments · List view — Prism components + uems tokens ==============
+   All selectors scoped to #deployments-list-pop so nothing leaks to
+   sibling views (AGENTS.md hard rule on cross-page CSS bleed). */
+
+#deployments-list-pop .lay__scroll { display: flex; flex-direction: column; }
+#deployments-list-pop .dep-kpis { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 16px; }
+#deployments-list-pop .dep-kpis ds-kpi-card { flex: 1 1 200px; min-width: 180px; }
+#deployments-list-pop #dep-kpis[hidden] { display: none; }
+#deployments-list-pop #dep-grid[hidden] { display: none; }
+#deployments-list-pop #dep-ph[hidden]   { display: none; }
+
+/* Empty state — same illustration-first pattern as Policies / Schedule. */
+#deployments-list-pop .dep-empty { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: var(--spacing-32); }
+#deployments-list-pop .dep-empty[hidden] { display: none; }
+#deployments-list-pop .dep-empty-inner { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-16); text-align: center; max-width: 480px; }
+#deployments-list-pop .dep-empty ds-illustration { width: 220px; height: auto; display: block; margin-top: var(--spacing-24); }
+#deployments-list-pop .dep-empty h2 { margin: 4px 0 0; font-size: var(--uems-font-size-18, 18px); font-weight: var(--font-weight-semibold, 600); color: var(--uems-text-primary); }
+#deployments-list-pop .dep-empty p  { margin: 0; font-size: var(--uems-font-size-13, 13px); line-height: 1.5; color: var(--uems-text-secondary); }
+
+/* Content + optional filter sidebar (variant B). */
+#deployments-list-pop .dep-grid {
+  display: grid;
+  grid-template-columns: 0px minmax(0, 1fr);
+  column-gap: 0;
+  row-gap: 20px;
+  padding-top: 20px;
+  align-items: start;
+  transition: grid-template-columns 260ms var(--ease-standard, ease), column-gap 260ms var(--ease-standard, ease);
+}
+#deployments-list-pop .dep-grid.is-filtering { grid-template-columns: 240px minmax(0, 1fr); column-gap: 20px; }
+@media (prefers-reduced-motion: reduce) { #deployments-list-pop .dep-grid { transition: none; } }
+#deployments-list-pop .dep-filter-col {
+  min-width: 0; overflow: hidden; position: relative;
+  visibility: hidden;
+  transition: visibility 0s linear 260ms;
+}
+#deployments-list-pop .dep-grid.is-filtering .dep-filter-col { visibility: visible; transition-delay: 0s; }
+#deployments-list-pop #dep-filter-panel { width: 240px; min-height: 0; }
+#deployments-list-pop #dep-filter-panel .ds-filter-panel { height: auto; }
+#deployments-list-pop .dep-content { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+
+/* Cell renderers — single line only per generate-layout rule. */
+#deployments-list-pop .cell-name { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+#deployments-list-pop .cell-name .cell-sub { color: var(--uems-text-secondary); font-size: var(--font-size-12); }
+#deployments-list-pop .cell-sep { color: var(--uems-border-secondary); margin: 0 6px; }
+#deployments-list-pop .cell-truncate { display: inline-block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+#deployments-list-pop .cell-icons { display: inline-flex; align-items: center; gap: 6px; color: var(--uems-icon-secondary); }
+#deployments-list-pop .cell-icons ds-icon { color: var(--uems-icon-tertiary); }
+#deployments-list-pop .cell-actions { display: inline-flex; justify-content: flex-end; width: 100%; gap: 2px; }
+#deployments-list-pop .cell-actions button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border: 0; background: transparent;
+  border-radius: var(--radius-sm); cursor: pointer; color: var(--uems-icon-secondary);
+}
+#deployments-list-pop .cell-actions button:hover { background: var(--uems-bg-secondary-hover); }
+
+@media (max-width: 900px) {
+  #deployments-list-pop .dep-grid,
+  #deployments-list-pop .dep-grid.is-filtering { grid-template-columns: 1fr; column-gap: 0; }
+  #deployments-list-pop .dep-filter-col { overflow: visible; }
+  #deployments-list-pop .dep-grid:not(.is-filtering) .dep-filter-col { display: none; }
+  #deployments-list-pop #dep-filter-panel { position: static; inset: auto; width: 100%; }
+}
+</style>
+
+<div id="deployments-list-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <ds-page-header id="dep-ph" icon="settings-deploy" structure="default"
+      title="Deployments"
+      description="One place for every rollout — policy, workflow, target, schedule, and delivery.">
+      <ds-button id="dep-add-btn" slot="actions" variant="primary" size="small" prefix-icon="add" suffix-icon="chevron-down">Add Deployment</ds-button>
+    </ds-page-header>
+    <ds-dropdown-menu id="dep-add-menu" type="action"></ds-dropdown-menu>
+
+    <div class="lay__scroll">
+
+      <!-- Empty state — shown when all deployments are deleted. -->
+      <div id="dep-empty" class="dep-empty" hidden>
+        <div class="dep-empty-inner">
+          <ds-illustration name="settings-deploy" size="lg"></ds-illustration>
+          <h2>No deployments yet</h2>
+          <p>A deployment sends a policy or workflow to your devices — with one target, one schedule, and one status view.</p>
+          <ds-button id="dep-empty-cta" variant="primary" size="medium" prefix-icon="add">Add Deployment</ds-button>
+        </div>
+      </div>
+
+      <!-- KPI summary row — every deployment status the admin cares about. -->
+      <div id="dep-kpis" class="dep-kpis">
+        <ds-kpi-card label="Total"             value="128" state="default"  icon="settings-deploy"></ds-kpi-card>
+        <ds-kpi-card label="Active"            value="72"  state="success"  icon="circle-tick"></ds-kpi-card>
+        <ds-kpi-card label="Pending approval"  value="9"   state="warning"  icon="clock"></ds-kpi-card>
+        <ds-kpi-card label="Suspended"         value="6"   state="moderate" icon="pause"></ds-kpi-card>
+        <ds-kpi-card label="Failed / expired"  value="4"   state="alert"    icon="exclamation-circle"></ds-kpi-card>
+      </div>
+
+      <div class="dep-grid" id="dep-grid">
+        <div class="dep-filter-col">
+          <ds-filter-panel id="dep-filter-panel" title="Filters" aria-label="Filters" fit-viewport></ds-filter-panel>
+        </div>
+
+        <section class="dep-content">
+          <ds-data-table id="dep-table"
+            selection-mode="multi"
+            row-height="comfortable"
+            show-footer
+            sticky-header
+            fit-viewport
+            rows-per-page="10"
+            rows-per-page-options="10,25,50"
+            page="1"></ds-data-table>
+          <ds-dropdown-menu id="dep-row-menu" type="action"></ds-dropdown-menu>
+        </section>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* == Deployments list view logic ======================================== */
+(function () {
+  const root = document.getElementById('deployments-list-pop');
+  if (!root || root.__depInit) return; root.__depInit = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const tip = (full, inner) =>
+    `<ds-tooltip text="${esc(full)}" show-icon="false" position="up-center"><span class="cell-truncate">${inner}</span></ds-tooltip>`;
+
+  /* Deployments landing page — first-level nav, no breadcrumbs. */
+  const ph = $('dep-ph');
+
+  /* ---- Status pill vocabulary (one language everywhere — §7 handoff) ---- */
+  const STATUS_STATE = {
+    'Active':           'success',
+    'Draft':            'default',
+    'Pending approval': 'warning',
+    'Suspended':        'moderate',
+    'Rejected':         'critical',
+    'Expired':          'default',
+  };
+  const statusBadge = (r) =>
+    `<ds-badge variant="subtle" state="${STATUS_STATE[r.status] || 'default'}" shape="rounded" size="medium">${esc(r.status)}</ds-badge>`;
+
+  /* ---- Delivery icons — Push (agent) / SSP (user portal) --------------- */
+  const deliveryCell = (r) => {
+    const parts = [];
+    if (r.push) parts.push('<ds-tooltip text="Push to devices" show-icon="false" position="up-center"><ds-icon name="settings-deploy" size="16"></ds-icon></ds-tooltip>');
+    if (r.ssp)  parts.push('<ds-tooltip text="Publish to Self-Service Portal" show-icon="false" position="up-center"><ds-icon name="user" size="16"></ds-icon></ds-tooltip>');
+    if (!parts.length) return '<span class="cell-sub">—</span>';
+    return '<span class="cell-icons">' + parts.join('') + '</span>';
+  };
+
+  /* ---- Name column: primary link + resource-type subtitle inline --------- */
+  const nameCell = (r) =>
+    `<span class="cell-name">${tip(r.name, `<ds-text-link class="dep-name" data-row-id="${esc(r.id)}" variant="primary" size="medium" underline="hover" href="#">${esc(r.name)}</ds-text-link>`)}<span class="cell-sep">·</span><span class="cell-sub">${esc(r.resourceType)}</span></span>`;
+
+  /* ---- AG chip — solid pill so the AG stamp reads at a glance ----------- */
+  const agCell = (r) => `<ds-badge variant="subtle" state="info" shape="rounded" size="medium">${esc(r.ag)}</ds-badge>`;
+
+  /* ---- Row actions — a single kebab that opens Edit + Delete. --------- */
+  const actionsCell = (r) =>
+    `<span class="cell-actions">
+       <button type="button" data-act="more" data-id="${esc(r.id)}" aria-label="Row actions"><ds-icon name="more-vertical" size="16"></ds-icon></button>
+     </span>`;
+
+  const table = $('dep-table');
+  table.columns = [
+    { id: 'name',      header: 'Deployment',   render: nameCell },
+    { id: 'ag',        header: 'AG',           render: agCell },
+    { id: 'resources', header: 'Resources',    accessor: 'resources' },
+    { id: 'targets',   header: 'Targets',      align: 'end', accessor: 'targets' },
+    { id: 'delivery',  header: 'Delivery',     align: 'start', render: deliveryCell },
+    { id: 'schedule',  header: 'Schedule',     accessor: 'schedule' },
+    { id: 'status',    header: 'Status',       align: 'start', render: statusBadge },
+    { id: 'lastRun',   header: 'Last run',     accessor: 'lastRun' },
+    { id: 'actions',   header: 'Actions',      align: 'end', render: actionsCell },
+  ];
+
+  const rowMenu = $('dep-row-menu');
+  rowMenu.items = [
+    { label: 'Edit',   value: 'edit',   icon: 'edit'   },
+    { label: 'Delete', value: 'delete', icon: 'delete' },
+  ];
+  let menuTargetId = null;
+  table.addEventListener('click', (e) => {
+    const moreBtn = e.target.closest && e.target.closest('button[data-act="more"]');
+    if (!moreBtn) return;
+    menuTargetId = moreBtn.dataset.id;
+    rowMenu.openFrom(moreBtn, { side: 'below', align: 'end', offset: 4 });
+  });
+  rowMenu.addEventListener('ds-dropdown-select', (e) => {
+    const id = Number(menuTargetId); menuTargetId = null;
+    rowMenu.close();
+    if (e.detail.value === 'edit') {
+      window.__deploymentDetailId = id;
+      if (window.openContentView) window.openContentView('deployments-create');
+    } else if (e.detail.value === 'delete') {
+      if (confirm('Delete this deployment?')) {
+        const idx = ROWS.findIndex((r) => r.id === id);
+        if (idx >= 0) ROWS.splice(idx, 1);
+        table.rows = ROWS;
+        toggleEmpty();
+      }
+    }
+  });
+
+  /* ---- Sample deployments — cover every status + schedule + delivery --- */
+  const ROWS = [
+    { id: 1,  name: 'Chrome 126 — Q3 upgrade',           resourceType: 'Software policy',  ag: 'India',   resources: 1, targets: 1240, push: true,  ssp: false, schedule: 'Every startup',    status: 'Active',           lastRun: '2 min ago' },
+    { id: 2,  name: 'Zoom onboarding SSP',                resourceType: 'Software policy',  ag: 'Tenkasi', resources: 1, targets: 320,  push: false, ssp: true,  schedule: 'Available 21–25 Jul', status: 'Active',           lastRun: '18 min ago' },
+    { id: 3,  name: 'Windows server patch — August',      resourceType: 'Workflow (3)',     ag: 'Zoho',    resources: 3, targets: 512,  push: true,  ssp: false, schedule: 'Patch Tuesday',     status: 'Pending approval', lastRun: '—' },
+    { id: 4,  name: 'BitLocker baseline — India',          resourceType: 'Workflow (2)',     ag: 'India',   resources: 2, targets: 890,  push: true,  ssp: false, schedule: 'Next agent contact',status: 'Active',           lastRun: '1 hr ago' },
+    { id: 5,  name: 'Firewall rules — Chennai lab',        resourceType: 'Policy',           ag: 'Chennai', resources: 1, targets: 82,   push: true,  ssp: false, schedule: 'Now',               status: 'Draft',            lastRun: '—' },
+    { id: 6,  name: 'License renewal — Adobe',             resourceType: 'Software policy',  ag: 'India',   resources: 1, targets: 210,  push: true,  ssp: false, schedule: 'Starts 1 Apr 00:01',status: 'Active',           lastRun: '—' },
+    { id: 7,  name: 'Sales toolkit — Sales-CG join',       resourceType: 'Workflow (2)',     ag: 'Tenkasi', resources: 2, targets: 46,   push: true,  ssp: true,  schedule: 'Trigger · joins CG',status: 'Active',           lastRun: '3 hrs ago' },
+    { id: 8,  name: 'Migration cut-over — Sep 30',          resourceType: 'Policy',           ag: 'Zoho',    resources: 1, targets: 128,  push: true,  ssp: false, schedule: 'Stops after Sep 30',status: 'Expired',          lastRun: 'Sep 30, 2026' },
+    { id: 9,  name: 'DLP — Endpoint policy v3',            resourceType: 'Policy',           ag: 'India',   resources: 1, targets: 1540, push: true,  ssp: false, schedule: 'Daily · 22:00',     status: 'Suspended',        lastRun: 'Yesterday' },
+    { id: 10, name: 'Kernel hotfix — RHEL fleet',          resourceType: 'Policy',           ag: 'USA',     resources: 1, targets: 178,  push: true,  ssp: false, schedule: 'Weekly · Sun 02:00',status: 'Active',           lastRun: 'Sun 02:14' },
+    { id: 11, name: 'Antivirus definitions',                resourceType: 'Policy',           ag: 'Zoho',    resources: 1, targets: 3120, push: true,  ssp: false, schedule: 'Every refresh',     status: 'Active',           lastRun: '4 min ago' },
+    { id: 12, name: 'Slack 4.35 — pilot ring',              resourceType: 'Software policy',  ag: 'Delhi',   resources: 1, targets: 60,   push: false, ssp: true,  schedule: 'Now',               status: 'Rejected',         lastRun: '—' },
+    { id: 13, name: 'ISO 27001 baseline — controls',       resourceType: 'Workflow (5)',     ag: 'Zoho',    resources: 5, targets: 2100, push: true,  ssp: false, schedule: 'Monthly · day 1',   status: 'Pending approval', lastRun: '—' },
+    { id: 14, name: 'USB port block — HR floor',           resourceType: 'Policy',           ag: 'Mumbai',  resources: 1, targets: 88,   push: true,  ssp: false, schedule: 'Every startup',     status: 'Active',           lastRun: '22 min ago' },
+    { id: 15, name: 'Office 365 update ring — canary',     resourceType: 'Software policy',  ag: 'India',   resources: 1, targets: 30,   push: false, ssp: true,  schedule: 'Available always',  status: 'Draft',            lastRun: '—' },
+  ];
+
+  /* ---- Filter panel — categorical facets + live counts ----------------- */
+  const count = (key, val) => ROWS.filter((r) => r[key] === val).length;
+  const panel = $('dep-filter-panel');
+  panel.groups = [
+    { id: 'status', label: 'Status', type: 'checkbox',
+      options: ['Active','Draft','Pending approval','Suspended','Rejected','Expired']
+        .map((v) => ({ label: v, value: v, count: count('status', v) })) },
+    { id: 'ag', label: 'Administrative group', type: 'checkbox',
+      options: [...new Set(ROWS.map((r) => r.ag))]
+        .map((v) => ({ label: v, value: v, count: count('ag', v) })) },
+    { id: 'schedule', label: 'Schedule type', type: 'checkbox',
+      options: [
+        { label: 'Now',                 value: 'now' },
+        { label: 'Next agent contact',  value: 'next' },
+        { label: 'Schedule',            value: 'sched' },
+        { label: 'Trigger',             value: 'trigger' },
+        { label: 'At every',            value: 'every' },
+      ] },
+    { id: 'delivery', label: 'Delivery', type: 'checkbox',
+      options: [
+        { label: 'Push to devices',        value: 'push' },
+        { label: 'Publish to SSP',         value: 'ssp' },
+      ] },
+  ];
+
+  /* ---- Filter sidebar toggle from the data-table's built-in Filter icon */
+  const grid = $('dep-grid');
+  table.addEventListener('ds-data-table-filter', () => grid.classList.toggle('is-filtering'));
+
+  /* ---- Row actions — plain toasts stand in for the real menu wiring --- */
+  const toast = (status, title, description) => {
+    try {
+      if (globalThis.dsToast && globalThis.dsToast[status]) {
+        globalThis.dsToast[status]({ title, description, style: 'subtle' });
+      }
+    } catch (_) {}
+  };
+  const rowActionCopy = {
+    edit:  ['info',    'Modify deployment',      'Opens the deployment editor.'],
+    copy:  ['success', 'Duplicated deployment',  'A draft copy is ready to configure.'],
+    menu:  ['info',    'More actions',           'Suspend, Delete, Share, Approvals…'],
+  };
+  table.addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('button[data-act]');
+    if (btn) {
+      const [status, title, description] = rowActionCopy[btn.dataset.act] || ['info','Action',''];
+      toast(status, title, description);
+      return;
+    }
+    /* Row name link → route to Deployment Details. */
+    const link = e.target.closest && e.target.closest('.dep-name');
+    if (link) {
+      e.preventDefault();
+      const id = link.dataset.rowId;
+      const rowData = ROWS.find((r) => String(r.id) === String(id));
+      window.__deploymentDetailId = id;
+      window.__deploymentDetail = rowData || null;
+      if (window.openContentView) window.openContentView('deployments-detail');
+    }
+  });
+  /* Add Deployment header button → opens a menu with Device / User choices,
+     each routes to the create form with a context flag on window. */
+  const addBtn = root.querySelector('#dep-add-btn');
+  const addMenu = root.querySelector('#dep-add-menu');
+  addMenu.items = [
+    { label: 'Device Deployment', value: 'device', icon: 'computer' },
+    { label: 'User Deployment',   value: 'user',   icon: 'user' },
+  ];
+  addBtn.addEventListener('click', () => {
+    addMenu.openFrom(addBtn, { side: 'below', align: 'end', offset: 4 });
+  });
+  addMenu.addEventListener('ds-dropdown-select', (e) => {
+    addMenu.close();
+    window.__deploymentKind = e.detail.value;
+    if (window.openContentView) window.openContentView('deployments-create');
+  });
+  root.querySelector('#dep-empty-cta').addEventListener('click', () => {
+    /* Empty-state CTA defaults to Device Deployment. */
+    window.__deploymentKind = 'device';
+    if (window.openContentView) window.openContentView('deployments-create');
+  });
+
+  /* Toggle empty state vs populated view. */
+  function toggleEmpty() {
+    const empty = ROWS.length === 0;
+    root.querySelector('#dep-empty').hidden = !empty;
+    root.querySelector('#dep-kpis').hidden  = empty;
+    root.querySelector('#dep-grid').hidden  = empty;
+    root.querySelector('#dep-ph').hidden    = empty;
+  }
+  toggleEmpty();
+
+  /* ---- Apply filter panel value → table -------------------------------- */
+  function scheduleKey(s) {
+    const t = s.toLowerCase();
+    if (t.startsWith('now'))                            return 'now';
+    if (t.startsWith('next agent'))                     return 'next';
+    if (t.startsWith('trigger'))                        return 'trigger';
+    if (t.startsWith('every ') || t.startsWith('every ')|| /every\b/.test(t)) return 'every';
+    return 'sched';
+  }
+  function apply() {
+    const v = panel.value || {};
+    const st = v.status || [], ag = v.ag || [], sc = v.schedule || [], dl = v.delivery || [];
+    const rows = ROWS.filter((r) =>
+      (st.length === 0 || st.includes(r.status)) &&
+      (ag.length === 0 || ag.includes(r.ag)) &&
+      (sc.length === 0 || sc.includes(scheduleKey(r.schedule))) &&
+      (dl.length === 0 || (dl.includes('push') && r.push) || (dl.includes('ssp') && r.ssp))
+    );
+    table.setAttribute('page', '1');
+    table.rows = rows;
+  }
+  panel.addEventListener('ds-filter-panel-change', apply);
+  apply();
+
+  /* ---- show/hide ------------------------------------------------------- */
+  function show() { root.hidden = false; }
+  function hide() { root.hidden = true; }
+
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-list'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS — runs ONLY when opened directly. ================ */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers['deployments-list'] && window.ShellDrawers['deployments-list'].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

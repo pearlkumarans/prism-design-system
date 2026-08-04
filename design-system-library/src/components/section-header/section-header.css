@@ -1,0 +1,119 @@
+/* =============================================================================
+   ds-section-header / .ds-section-header
+   A compact heading that labels a section/sub-region inside a page.
+   Spec: design-system/handoff/SectionHeader.md (Figma 17392:399995)
+   ============================================================================= */
+
+:host { display: block; font-family: var(--font-family-sans); }
+/* Light-DOM element: :host doesn't apply, so set the tag to block explicitly. */
+ds-section-header { display: block; width: 100%; font-family: var(--font-family-sans); }
+
+/* Root is a column so the "With Border" style can place the description on a
+   full-width SECOND ROW below the content row. Width fills the container; the
+   360px in Figma is only the artboard frame. */
+.ds-section-header {
+  display: flex;
+  flex-direction: column;
+  /* gap between the content row and the With-Border 2nd-row description.
+     Per spec this is monotonic: 2 / 4 / 6 (S / M / L). */
+  gap: var(--_sh-row-gap, 4px);
+  width: 100%;
+  padding-block: var(--_sh-py, 12px);
+  padding-inline: 0;            /* aligns to the container edges */
+}
+
+/* ---- Content row: text group · (trailing rule) · action ------------------ */
+.ds-section-header__content {
+  display: flex;
+  align-items: center;          /* action/rule center against the title row */
+  gap: var(--_sh-action-gap, var(--spacing-8));
+  width: 100%;
+}
+
+/* Text group fills the row (Default / With Description) so the action sits at
+   the trailing edge. In With Border it hugs the title (the rule fills instead). */
+.ds-section-header__group {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  /* title ↔ inline description gap (With Description): 2 / 4 / 2 (S / M / L). */
+  gap: var(--_sh-stack-gap, 4px);
+}
+
+.ds-section-header__title {
+  margin: 0;
+  font-size: var(--_sh-title, var(--font-size-14));
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--_sh-title-lh, 20px);
+  color: var(--uems-text-primary);
+}
+
+.ds-section-header__description {
+  margin: 0;
+  font-size: var(--_sh-desc, var(--font-size-12));
+  font-weight: var(--_sh-desc-weight, var(--font-weight-regular));
+  line-height: var(--_sh-desc-lh, 16px);
+  color: var(--uems-text-secondary);
+}
+
+.ds-section-header__action { flex: 0 0 auto; align-self: center; }
+
+/* ---- With Border: title hugs · trailing rule fills · description 2nd row -- */
+.ds-section-header--with-border .ds-section-header__group { flex: 0 0 auto; }
+
+/* The "border" is a 1px rule (Border-Tertiary) that fills the width between the
+   title and the action — NOT a full outline. Decorative (aria-hidden in markup). */
+.ds-section-header__rule {
+  flex: 1 1 auto;
+  min-width: 8px;               /* never shrinks to a sliver */
+  height: 1px;
+  background: var(--uems-border-tertiary);
+}
+
+/* The 2nd-row description spans the full width under the title/rule/action.
+   It is a sibling of __content, so block direction (dir=rtl) handles alignment. */
+.ds-section-header--with-border .ds-section-header__description { width: 100%; }
+
+/* ---- Full-width dividers (the `divider` axis) — Border-Tertiary --------- */
+.ds-section-header--divider-bottom { border-bottom: 1px solid var(--uems-border-tertiary); }
+.ds-section-header--divider-both {
+  border-top: 1px solid var(--uems-border-tertiary);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+}
+
+/* ---- Sizes (per spec table) ---------------------------------------------
+   small  → py 8  · title 12/16 Semi · desc 10/14 Medium · stack 2 · row 2 · action-gap 8
+   medium → py 12 · title 14/20 Semi · desc 12/16 Reg    · stack 4 · row 4 · action-gap 8
+   large  → py 16 · title 16/24 Semi · desc 14/20 Reg    · stack 2 · row 6 · action-gap 12 */
+.ds-section-header--small {
+  --_sh-py: var(--spacing-8);
+  --_sh-title: var(--font-size-12); --_sh-title-lh: 16px;
+  --_sh-desc: 10px; --_sh-desc-lh: 14px; --_sh-desc-weight: var(--font-weight-medium);
+  --_sh-stack-gap: var(--spacing-2);
+  --_sh-row-gap: var(--spacing-2);
+  --_sh-action-gap: var(--spacing-8);
+}
+.ds-section-header--medium {
+  --_sh-py: var(--spacing-12);
+  --_sh-title: var(--font-size-14); --_sh-title-lh: 20px;
+  --_sh-desc: var(--font-size-12); --_sh-desc-lh: 16px;
+  --_sh-stack-gap: var(--spacing-4);
+  --_sh-row-gap: var(--spacing-4);
+  --_sh-action-gap: var(--spacing-8);
+}
+.ds-section-header--large {
+  --_sh-py: var(--spacing-16);
+  --_sh-title: var(--font-size-16); --_sh-title-lh: 24px;
+  --_sh-desc: var(--font-size-14); --_sh-desc-lh: 20px;
+  --_sh-stack-gap: var(--spacing-2);
+  --_sh-row-gap: 6px;
+  --_sh-action-gap: var(--spacing-12);
+}
+
+/* ---- Responsive: let the action wrap below rather than crush the title --- */
+@media (max-width: 480px) {
+  .ds-section-header:not(.ds-section-header--with-border) .ds-section-header__content {
+    flex-wrap: wrap;
+  }
+}

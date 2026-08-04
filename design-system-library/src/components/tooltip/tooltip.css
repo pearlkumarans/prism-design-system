@@ -1,0 +1,194 @@
+/* =============================================================================
+   ds-tooltip / .ds-tooltip
+   Non-interactive informational popover on hover/focus, with optional leading
+   icon + directional arrow. 3 themes × 9 positions × RTL.
+   Spec: docs/MD/tooltip.md · Figma node 18063:833552 (54 variants).
+
+   Body HUGS content (min-width 72px); the 240px cap lives on the TEXT node,
+   so body ≤ 288px with icon / ≤ 264px without. Padding 8/12, radius 6, gap 4,
+   icon 20×20, text 13/20. Arrow = 12×6 triangle (6×12 on the side edges), fill
+   matches the body; corner positions inset the triangle 12px from the corner
+   via a logical inset so it mirrors under dir="rtl".
+   ============================================================================= */
+
+/* Light-DOM component — style via the element selector (`:host` never applies).
+   The tip is absolutely positioned against the host, so position:relative is
+   load-bearing. */
+ds-tooltip { display: inline-block; position: relative; font-family: var(--font-family-sans); }
+
+.ds-tooltip__tip {
+  position: absolute;
+  z-index: 9999;
+  /* Body hugs content; the cap is on the text node below. */
+  width: max-content;
+  min-width: 72px;
+  box-sizing: border-box;
+  padding: var(--uems-spacing-8, 8px) var(--uems-spacing-12, 12px);
+  border-radius: var(--uems-radius-default, 6px);
+  font-size: var(--uems-font-size-13, 13px);
+  line-height: var(--uems-line-height-13, 20px);
+  font-weight: var(--font-weight-regular, 400);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--uems-spacing-4, 4px);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 150ms ease, transform 150ms ease;
+  /* Default body color — overridden per theme below. */
+  --_tt-bg: var(--uems-bg-secondary-solid);
+}
+.ds-tooltip__tip[data-visible="true"] { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-tooltip__tip { transition: opacity 150ms ease; transform: none !important; }
+}
+
+.ds-tooltip__icon { line-height: 0; flex-shrink: 0; color: var(--_tt-icon); }
+/* The 280px cap lives HERE (not the body); clamps on small viewports.
+   white-space:normal makes the tip wrap to 2–3+ lines even inside a nowrap
+   context (e.g. a data-table cell with white-space:nowrap, which the tip would
+   otherwise inherit). overflow-wrap:anywhere breaks long unbreakable strings
+   like file paths / URLs that have no spaces. */
+.ds-tooltip__text {
+  max-width: min(280px, calc(100vw - 32px));
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* ---- Themes — one exact token signature per theme, no border ---------
+   Arrow always inherits --_tt-bg (set per theme), so it matches the body. */
+.ds-tooltip__tip--dark {
+  --_tt-bg: var(--uems-bg-secondary-solid);   /* #313746 */
+  --_tt-icon: var(--uems-icon-white);
+  background: var(--_tt-bg);
+  color: var(--uems-text-white);
+}
+.ds-tooltip__tip--light {
+  --_tt-bg: var(--uems-bg-base-white);        /* #FFFFFF */
+  --_tt-icon: var(--uems-icon-black);
+  background: var(--_tt-bg);
+  color: var(--uems-text-primary);
+  /* Figma Shadow-Medium: #0D111D @ 12% (navy, NOT pure black), offset 0 2, blur 8. */
+  box-shadow: 0 2px 8px rgba(13, 17, 29, 0.12);
+}
+.ds-tooltip__tip--red {
+  --_tt-bg: var(--uems-bg-error-primary);     /* #FDEBEB */
+  --_tt-icon: var(--uems-icon-error);
+  background: var(--_tt-bg);
+  color: var(--uems-text-error);
+}
+
+/* ---- Arrow — 12×6 triangle via the border trick (border 6 → 12 wide × 6
+   tall). Side edges become 6×12. Fill = body bg. ----------------------- */
+/* Base skeleton kept at (0,1,1) specificity so the directional rules below
+   (also (0,1,1), declared later) reliably win — a `:not(.class)` base would
+   inflate to (0,2,1) and silently swallow every arrow's colour/zeroed side. */
+.ds-tooltip__tip::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+}
+.ds-tooltip__tip--without-arrow::after { content: none; }
+/* Arrow on the BOTTOM edge (tooltip sits ABOVE the trigger) — `up *` */
+.ds-tooltip__tip--up-center::after,
+.ds-tooltip__tip--up-left::after,
+.ds-tooltip__tip--up-right::after,
+.ds-tooltip__tip--up-anchored::after {
+  top: 100%;
+  border-top-color: var(--_tt-bg);
+  border-bottom: 0;
+}
+.ds-tooltip__tip--up-center::after { left: 50%; transform: translateX(-50%); }
+/* Logical insets — mirror automatically under dir="rtl". Triangle (12 wide)
+   sits 12px from the corner → spans 12..24, centre at 18px. */
+.ds-tooltip__tip--up-left::after   { inset-inline-start: 12px; }
+.ds-tooltip__tip--up-right::after  { inset-inline-end: 12px; }
+
+/* Arrow on the TOP edge (tooltip sits BELOW the trigger) — `down *` */
+.ds-tooltip__tip--down-center::after,
+.ds-tooltip__tip--down-left::after,
+.ds-tooltip__tip--down-right::after,
+.ds-tooltip__tip--down-anchored::after {
+  bottom: 100%;
+  border-bottom-color: var(--_tt-bg);
+  border-top: 0;
+}
+.ds-tooltip__tip--down-center::after { left: 50%; transform: translateX(-50%); }
+.ds-tooltip__tip--down-left::after   { inset-inline-start: 12px; }
+.ds-tooltip__tip--down-right::after  { inset-inline-end: 12px; }
+
+/* Anchored arrow — JS sets --ds-tt-arrow-x (physical px from the tip's left edge)
+   to the trigger's centre so the arrow keeps pointing at it after the bubble is
+   clamped to the viewport. Physical `left` (not logical) because the JS value is
+   a viewport-space measurement; correct in both LTR and RTL. */
+.ds-tooltip__tip--up-anchored::after,
+.ds-tooltip__tip--down-anchored::after {
+  /* Physical left only — do NOT add `inset-inline: auto` here: in LTR it maps to
+     the same property as `left` and, declared later, would clobber this value. */
+  left: var(--ds-tt-arrow-x, 50%);
+  right: auto;
+  transform: translateX(-50%);
+}
+
+/* Arrow on the RIGHT edge (tooltip to the LEFT of the trigger) — `left` */
+.ds-tooltip__tip--left::after {
+  inset-inline-start: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-inline-start-color: var(--_tt-bg);
+  border-inline-end: 0;
+}
+/* Arrow on the LEFT edge (tooltip to the RIGHT of the trigger) — `right` */
+.ds-tooltip__tip--right::after {
+  inset-inline-end: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-inline-end-color: var(--_tt-bg);
+  border-inline-start: 0;
+}
+
+/* ---- Positions — offsets use the arrow protrusion (6) + gap (4).
+   Corner anchors use logical insets so they mirror in RTL. ------------- */
+.ds-tooltip__tip--up-center,
+.ds-tooltip__tip--up-left,
+.ds-tooltip__tip--up-right {
+  bottom: calc(100% + 8px);
+}
+.ds-tooltip__tip--up-center { left: 50%; transform: translateX(-50%) translateY(-2px); }
+.ds-tooltip__tip--up-center[data-visible="true"] { transform: translateX(-50%) translateY(0); }
+.ds-tooltip__tip--up-left   { inset-inline-start: 0; }
+.ds-tooltip__tip--up-right  { inset-inline-end: 0; }
+
+.ds-tooltip__tip--down-center,
+.ds-tooltip__tip--down-left,
+.ds-tooltip__tip--down-right {
+  top: calc(100% + 8px);
+}
+.ds-tooltip__tip--down-center { left: 50%; transform: translateX(-50%) translateY(2px); }
+.ds-tooltip__tip--down-center[data-visible="true"] { transform: translateX(-50%) translateY(0); }
+.ds-tooltip__tip--down-left   { inset-inline-start: 0; }
+.ds-tooltip__tip--down-right  { inset-inline-end: 0; }
+
+.ds-tooltip__tip--left  { inset-inline-end: calc(100% + 8px); top: 50%; transform: translateY(-50%) translateX(-2px); }
+.ds-tooltip__tip--left[data-visible="true"]  { transform: translateY(-50%) translateX(0); }
+.ds-tooltip__tip--right { inset-inline-start: calc(100% + 8px); top: 50%; transform: translateY(-50%) translateX(2px); }
+.ds-tooltip__tip--right[data-visible="true"] { transform: translateY(-50%) translateX(0); }
+
+/* ---- Floating mode (JS-positioned, portaled to <body>) -----------------
+   The tip is appended to <body> and positioned with position:fixed by JS, so
+   no ancestor's overflow / transform / contain can clip it. These rules clear
+   the variant anchor offsets above (two-class specificity wins regardless of
+   source order) and keep only the show/hide micro-animation. JS sets top/left
+   inline; the arrow direction still comes from the position class. */
+.ds-tooltip__tip.ds-tooltip__tip--floating {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  transform: translateY(-2px);
+}
+.ds-tooltip__tip.ds-tooltip__tip--floating[data-visible="true"] { transform: translateY(0); }

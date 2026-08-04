@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<!--
+  Deployments · Deployment Detail — 4 tabs (Summary · Workflows ·
+  DS Replication · Execution Status). Reads window.__deploymentDetail
+  (populated by the list row click) for the record it shows. Status-aware
+  header actions per the spec.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Deployment detail — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+<template id="drawer-fragment">
+<style>
+#dep-detail-pop .dd-tabs { padding: 12px 0 4px; border-bottom: 1px solid var(--uems-border-tertiary); }
+#dep-detail-pop .dd-tab-body { padding: 20px 0; }
+#dep-detail-pop .dd-tab-body[hidden] { display: none; }
+
+/* Banner strip (Pending Approval / Replication failed). */
+#dep-detail-pop .dd-banner {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; margin-bottom: 16px;
+  border-radius: 8px;
+  background: var(--uems-bg-warning-primary);
+  border: 1px solid var(--uems-border-warning);
+  color: var(--uems-text-primary); font-size: 13px;
+}
+#dep-detail-pop .dd-banner ds-icon { color: var(--uems-icon-warning); flex: none; }
+#dep-detail-pop .dd-banner strong { font-weight: 600; }
+#dep-detail-pop .dd-banner-actions { margin-inline-start: auto; }
+
+/* Summary — donut + details cards side by side. */
+#dep-detail-pop .dd-grid { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; }
+@media (max-width: 900px) { #dep-detail-pop .dd-grid { grid-template-columns: 1fr; } }
+#dep-detail-pop .dd-donut-card,
+#dep-detail-pop .dd-info-card {
+  padding: 20px;
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: 12px;
+  background: var(--uems-bg-primary);
+}
+#dep-detail-pop .dd-donut-card h4,
+#dep-detail-pop .dd-info-card h4 { margin: 0 0 16px; font-size: 14px; font-weight: 600; color: var(--uems-text-primary); }
+#dep-detail-pop .dd-donut-wrap { position: relative; width: 200px; height: 200px; margin: 0 auto; }
+#dep-detail-pop .dd-donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#dep-detail-pop .dd-donut-total { font-size: 28px; font-weight: 700; color: var(--uems-text-primary); }
+#dep-detail-pop .dd-donut-label { font-size: 12px; color: var(--uems-text-secondary); }
+#dep-detail-pop .dd-legend { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 12px; color: var(--uems-text-secondary); }
+#dep-detail-pop .dd-legend .lg { display: inline-flex; align-items: center; gap: 6px; }
+#dep-detail-pop .dd-legend .sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+#dep-detail-pop .dd-legend .v { color: var(--uems-text-primary); font-weight: 500; }
+
+/* KPI strip in Execution Status. */
+#dep-detail-pop .dd-kpis { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+#dep-detail-pop .dd-kpis ds-kpi-card { flex: 1 1 160px; min-width: 140px; }
+#dep-detail-pop .dd-exec-actions { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+#dep-detail-pop .dd-exec-actions .flex-spacer { flex: 1 1 auto; }
+</style>
+
+<div id="dep-detail-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <ds-page-header id="dd-ph" icon="settings-deploy" structure="full"
+      show-description show-breadcrumbs show-summary show-tabs
+      collapse-on-scroll scroll-target=".lay__scroll">
+      <ds-button slot="actions" id="dd-action-1" variant="secondary" size="small">Modify</ds-button>
+      <ds-button slot="actions" id="dd-action-2" variant="primary"   size="small">Suspend</ds-button>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+      <div id="dd-banner-slot"></div>
+
+      <!-- Summary tab -->
+      <div id="dd-tab-summary" class="dd-tab-body">
+        <div class="dd-grid">
+          <div class="dd-donut-card">
+            <h4>Device split by status</h4>
+            <div class="dd-donut-wrap">
+              <svg viewBox="0 0 42 42" width="100%" height="100%" style="transform: rotate(-90deg);"><g id="dd-donut-svg"></g></svg>
+              <div class="dd-donut-center">
+                <div class="dd-donut-total" id="dd-donut-total">0</div>
+                <div class="dd-donut-label">Total devices</div>
+              </div>
+            </div>
+            <div class="dd-legend" id="dd-legend"></div>
+          </div>
+          <div class="dd-info-card">
+            <h4>Details</h4>
+            <ds-description-list id="dd-info" columns="2"></ds-description-list>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workflows tab -->
+      <div id="dd-tab-workflows" class="dd-tab-body" hidden>
+        <ds-data-table id="dd-wf-table" selection-mode="none" row-height="comfortable" show-footer="false" sticky-header></ds-data-table>
+        <p style="margin: 12px 0 0; font-size: 12px; color: var(--uems-text-secondary);">
+          Device count per stage shrinks as upstream failures stop the flow on those devices.
+        </p>
+      </div>
+
+      <!-- DS Replication tab -->
+      <div id="dd-tab-repl" class="dd-tab-body" hidden>
+        <ds-data-table id="dd-repl-table" selection-mode="none" row-height="comfortable" show-footer="false" sticky-header></ds-data-table>
+      </div>
+
+      <!-- Execution Status tab -->
+      <div id="dd-tab-exec" class="dd-tab-body" hidden>
+        <div class="dd-kpis" id="dd-exec-kpis"></div>
+        <div class="dd-exec-actions">
+          <span class="flex-spacer"></span>
+          <ds-button variant="outline" size="small" prefix-icon="download">Export All Stages × All Machines (PDF)</ds-button>
+        </div>
+        <ds-data-table id="dd-exec-table" selection-mode="multi" row-height="comfortable" show-footer sticky-header fit-viewport rows-per-page="10"></ds-data-table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('dep-detail-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const STATUS_STATE = {
+    'Yet to Start': 'default', 'In Progress': 'info', 'Success': 'success',
+    'Failure': 'critical', 'Suspended': 'moderate', 'Pending Approval': 'warning',
+    'Downloading': 'info', 'Ready to Execute': 'info', 'Yet to Apply': 'warning',
+    'Retry In Progress': 'info', 'Expired': 'default',
+    'Failed': 'critical', 'Executed': 'success',
+    /* legacy list statuses */
+    'Active': 'success', 'Draft': 'default', 'Rejected': 'critical',
+  };
+  const statusBadge = (s) =>
+    `<ds-badge variant="subtle" state="${STATUS_STATE[s] || 'default'}" shape="rounded" size="medium">${esc(s)}</ds-badge>`;
+
+  const DONUT_COLORS = {
+    success:    'var(--uems-bg-success-solid, #16a34a)',
+    inProgress: 'var(--uems-bg-info-solid, #2563eb)',
+    yetToStart: 'var(--uems-bg-secondary-solid, #94a3b8)',
+    failure:    'var(--uems-bg-error-solid, #dc2626)',
+    suspended:  'var(--uems-bg-warning-solid, #f59e0b)',
+  };
+  const LEGEND = [
+    { key: 'success',    label: 'Success' },
+    { key: 'inProgress', label: 'In Progress' },
+    { key: 'yetToStart', label: 'Yet to Start' },
+    { key: 'failure',    label: 'Failure' },
+    { key: 'suspended',  label: 'Suspended' },
+  ];
+
+  /* ---- Donut renderer — pure SVG arcs summing to 100. */
+  function renderDonut(stats) {
+    const total = stats.total || 1;
+    let offset = 0;
+    const parts = LEGEND.map(({ key }) => {
+      const val = stats[key] || 0;
+      if (val === 0) return '';
+      const pct = (val / total) * 100;
+      const dash = pct.toFixed(3);
+      const gap = (100 - pct).toFixed(3);
+      const el = `<circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="${DONUT_COLORS[key]}" stroke-width="6" stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${(-offset).toFixed(3)}"/>`;
+      offset += pct;
+      return el;
+    }).join('');
+    $('dd-donut-svg').innerHTML = parts;
+    $('dd-donut-total').textContent = String(stats.total || 0);
+    $('dd-legend').innerHTML = LEGEND.map(({ key, label }) =>
+      `<span class="lg"><span class="sw" style="background:${DONUT_COLORS[key]}"></span>${esc(label)} <span class="v">${stats[key] || 0}</span></span>`).join('');
+  }
+
+  /* ---- Header + tabs ---------------------------------------------------- */
+  const ph = $('dd-ph');
+  ph.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    const label = (a.textContent || '').trim();
+    if (label === 'Deployments' && window.openContentView) { e.preventDefault(); window.openContentView('deployments-list'); }
+  });
+
+  /* Status → header action mapping. */
+  const HEADER_ACTIONS = {
+    'In Progress':       [{ label: 'Modify', variant: 'secondary' }, { label: 'Suspend',              variant: 'primary' }],
+    'Active':            [{ label: 'Modify', variant: 'secondary' }, { label: 'Suspend',              variant: 'primary' }],
+    'Suspended':         [{ label: 'Modify', variant: 'secondary' }, { label: 'Resume',               variant: 'primary' }],
+    'Pending Approval':  [{ label: 'View request',  variant: 'primary' }],
+    'Failure':           [{ label: 'Modify', variant: 'secondary' }, { label: 'Retry failed devices', variant: 'primary' }],
+    'Success':           [{ label: 'Modify', variant: 'secondary' }, { label: 'Rerun with latest',    variant: 'primary' }],
+  };
+  function applyHeaderActions(status) {
+    const list = HEADER_ACTIONS[status] || HEADER_ACTIONS['In Progress'];
+    const a1 = $('dd-action-1'), a2 = $('dd-action-2');
+    if (list.length === 1) {
+      a1.hidden = true;
+      a2.hidden = false;
+      a2.textContent = list[0].label; a2.setAttribute('variant', list[0].variant);
+    } else {
+      a1.hidden = false; a2.hidden = false;
+      a1.textContent = list[0].label; a1.setAttribute('variant', list[0].variant);
+      a2.textContent = list[1].label; a2.setAttribute('variant', list[1].variant);
+    }
+  }
+
+  /* ---- Tabs ------------------------------------------------------------- */
+  ph.tabs = [
+    { id: 'summary',   label: 'Summary', active: true },
+    { id: 'workflows', label: 'Workflows' },
+    { id: 'repl',      label: 'DS Replication' },
+    { id: 'exec',      label: 'Execution Status' },
+  ];
+  ph.addEventListener('ds-page-header-tab', (e) => {
+    const on = (e.detail && e.detail.tab && e.detail.tab.id) || 'summary';
+    ['summary','workflows','repl','exec'].forEach((t) => {
+      const el = $('dd-tab-' + t); if (el) el.hidden = t !== on;
+    });
+  });
+
+  /* ---- Data population ------------------------------------------------- */
+  function fillWorkflows(dep) {
+    const t = $('dd-wf-table');
+    t.columns = [
+      { id: 'name', header: 'Policy Name', accessor: 'name' },
+      { id: 'mode', header: 'Deployment Mode', accessor: 'mode' },
+      { id: 'count', header: 'Device Count', align: 'end', render: (r) => `<a href="#" class="wf-count" data-stage="${r.stage}">${r.count}</a>` },
+      { id: 'by',   header: 'Last Modified By', accessor: 'by' },
+      { id: 'when', header: 'Last Modified Time', accessor: 'when' },
+    ];
+    const base = (dep && dep.stats && dep.stats.total) || 562;
+    t.rows = [
+      { id: 1, stage: 1, name: '1. Announcement (pre)',               mode: 'Push', count: base,               by: 'you', when: 'Jul 18, 11:20 AM' },
+      { id: 2, stage: 2, name: '2. Okta Verify — Install',            mode: 'Push', count: Math.round(base*0.96),by: 'you', when: 'Jul 18, 11:20 AM' },
+      { id: 3, stage: 3, name: '3. CrowdStrike Falcon — Install',     mode: 'Push', count: Math.round(base*0.91),by: 'you', when: 'Jul 18, 11:20 AM' },
+      { id: 4, stage: 4, name: '4. Zscaler VPN Profile',              mode: 'Push', count: Math.round(base*0.88),by: 'you', when: 'Jul 18, 11:20 AM' },
+      { id: 5, stage: 5, name: '5. Domain Join — corp.acme.com',      mode: 'Push', count: Math.round(base*0.74),by: 'you', when: 'Jul 18, 11:20 AM' },
+    ];
+  }
+
+  function fillReplication() {
+    const t = $('dd-repl-table');
+    t.columns = [
+      { id: 'ro',      header: 'Remote Office',     accessor: 'ro' },
+      { id: 'devices', header: 'Managed Computers', align: 'end', accessor: 'devices' },
+      { id: 'last',    header: 'Last Replication',  accessor: 'last' },
+      { id: 'contact', header: 'Last Contact',      accessor: 'contact' },
+      { id: 'status',  header: 'Replication Status',render: (r) => statusBadge(r.status) },
+      { id: 'next',    header: 'Next Replication',  accessor: 'next' },
+      { id: 'remarks', header: 'Remarks',           accessor: 'remarks' },
+    ];
+    t.rows = [
+      { id: 1, ro: 'Chennai DC',    devices: 240, last: 'Jul 21, 8:00 AM', contact: '3 min ago',  status: 'Success',    next: 'Jul 21, 4:00 PM', remarks: '—' },
+      { id: 2, ro: 'Bengaluru DC',  devices: 168, last: 'Jul 21, 8:00 AM', contact: '2 min ago',  status: 'In Progress',next: 'Jul 21, 4:00 PM', remarks: '2.1 GB of 3.4 GB transferred' },
+      { id: 3, ro: 'Delhi DC',      devices: 82,  last: 'Jul 21, 7:58 AM', contact: '5 min ago',  status: 'Failure',    next: 'Jul 21, 4:00 PM', remarks: 'Disk full on DS-DEL-01' },
+      { id: 4, ro: 'Hyderabad DC',  devices: 72,  last: 'Jul 21, 8:01 AM', contact: '4 min ago',  status: 'Yet to Start',next: 'Jul 21, 4:00 PM', remarks: 'Awaiting turn' },
+    ];
+  }
+
+  function fillExecution(dep) {
+    const stats = (dep && dep.stats) || { total: 562, success: 348, inProgress: 92, yetToStart: 78, failure: 28 };
+    $('dd-exec-kpis').innerHTML = `
+      <ds-kpi-card label="Total"        value="${stats.total || 0}"        state="default" icon="computer"></ds-kpi-card>
+      <ds-kpi-card label="Success"      value="${stats.success || 0}"      state="success" icon="circle-tick"></ds-kpi-card>
+      <ds-kpi-card label="In Progress"  value="${stats.inProgress || 0}"   state="info"    icon="refresh-time"></ds-kpi-card>
+      <ds-kpi-card label="Yet to Start" value="${stats.yetToStart || 0}"   state="default" icon="clock"></ds-kpi-card>
+      <ds-kpi-card label="Failed"       value="${stats.failure || 0}"      state="alert"   icon="exclamation-circle"></ds-kpi-card>
+    `;
+    const t = $('dd-exec-table');
+    t.columns = [
+      { id: 'name',    header: 'Computer Name', render: (r) => `<a href="#" class="dev-link" data-dev="${esc(r.name)}">${esc(r.name)}</a>` },
+      { id: 'domain',  header: 'Domain',        accessor: 'domain' },
+      { id: 'ro',      header: 'Remote Office', accessor: 'ro' },
+      { id: 'status',  header: 'Status',        render: (r) => statusBadge(r.status) },
+      { id: 'remarks', header: 'Remarks',       accessor: 'remarks' },
+    ];
+    t.rows = [
+      { id: 1, name: 'VIR-LT-0245',  domain: 'corp.acme.com',   ro: 'Chennai DC',    status: 'Failure',            remarks: 'Stage 3 failed — View Details' },
+      { id: 2, name: 'VIR-LT-0246',  domain: 'corp.acme.com',   ro: 'Chennai DC',    status: 'Success',            remarks: 'All 5 stages completed' },
+      { id: 3, name: 'VIR-LT-0247',  domain: 'corp.acme.com',   ro: 'Bengaluru DC',  status: 'In Progress',        remarks: 'Stage 4 of 5 — Domain Join running' },
+      { id: 4, name: 'VIR-LT-0248',  domain: 'corp.acme.com',   ro: 'Bengaluru DC',  status: 'Downloading',        remarks: '1.8 GB of 3.4 GB' },
+      { id: 5, name: 'VIR-LT-0249',  domain: 'corp.acme.com',   ro: 'Bengaluru DC',  status: 'Ready to Execute',   remarks: 'Waiting for start window Jul 21 00:01' },
+      { id: 6, name: 'VIR-LT-0250',  domain: 'corp.acme.com',   ro: 'Delhi DC',      status: 'Yet to Start',       remarks: 'Waiting for DS replication' },
+      { id: 7, name: 'VIR-LT-0251',  domain: 'corp.acme.com',   ro: 'Chennai DC',    status: 'Retry In Progress',  remarks: 'Retrying from stage 3 — attempt 2 of 2' },
+      { id: 8, name: 'VIR-LT-0252',  domain: 'corp.acme.com',   ro: 'Hyderabad DC',  status: 'Yet to Apply',       remarks: 'Waiting for upstream failure' },
+    ];
+    t.addEventListener('click', (e) => {
+      const a = e.target.closest && e.target.closest('.dev-link');
+      if (!a) return;
+      e.preventDefault();
+      window.__deploymentDeviceName = a.dataset.dev;
+      if (window.openContentView) window.openContentView('deployments-device-execution');
+    });
+  }
+
+  function render() {
+    const dep = window.__deploymentDetail || {
+      id: 'demo', name: 'Onboarding — July batch', status: 'In Progress',
+      resource: { type: 'Workflow', name: 'New-hire onboarding — Virtusa', version: 'v6' },
+      target: '562 devices', schedule: 'Now', delivery: 'Push',
+      ag: 'India', createdBy: 'you',
+      stats: { total: 562, success: 348, inProgress: 92, yetToStart: 78, failure: 28, suspended: 16 },
+    };
+    const resType = (dep.resource && dep.resource.type) || dep.resourceType || 'Policy';
+    const resName = (dep.resource && dep.resource.name) || dep.name || '';
+    const resVer  = (dep.resource && dep.resource.version) || '';
+    ph.setAttribute('title', dep.name);
+    ph.setAttribute('description', resType + ' · ' + resName + (resVer ? ' (' + resVer + ')' : '') + ' · ' + (dep.ag || 'AG') + ' · ' + (dep.target || dep.targets + ' devices' || ''));
+    ph.breadcrumbs = [
+      { label: 'Deployments', href: '#' },
+      { label: dep.name },
+    ];
+    ph.summary = [
+      { label: 'Status',      value: dep.status || 'In Progress', status: STATUS_STATE[dep.status] || 'info' },
+      { label: 'AG',          value: dep.ag || '—' },
+      { label: 'Schedule',    value: dep.schedule || '—' },
+      { label: 'Delivery',    value: dep.delivery || (dep.push ? 'Push' : (dep.ssp ? 'SSP' : '—')) },
+    ];
+    applyHeaderActions(dep.status || 'In Progress');
+
+    /* Banners */
+    let banner = '';
+    if (dep.status === 'Pending Approval') {
+      banner = `<div class="dd-banner"><ds-icon name="clock" size="18"></ds-icon>
+        <div><strong>Waiting for approval — nothing runs yet.</strong> Requested ${esc(dep.lastRun || '')} · Approver: Ramesh.</div>
+        <div class="dd-banner-actions"><ds-button variant="secondary" size="small">View request</ds-button></div></div>`;
+    }
+    $('dd-banner-slot').innerHTML = banner;
+
+    renderDonut(dep.stats || { total: 0 });
+
+    /* Info card key/value list */
+    $('dd-info').items = [
+      { term: 'Name',              description: dep.name },
+      { term: 'Description',       description: dep.description || '—' },
+      { term: 'Resource',          description: resType + ' · ' + resName + (resVer ? ' (' + resVer + ')' : '') },
+      { term: 'Schedule',          description: dep.schedule || '—' },
+      { term: 'Delivery',          description: dep.delivery || '—' },
+      { term: 'AG',                description: dep.ag || '—' },
+      { term: 'Created by',        description: dep.createdBy || '—' },
+      { term: 'Last run',          description: dep.lastRun || '—' },
+    ];
+    fillWorkflows(dep);
+    fillReplication();
+    fillExecution(dep);
+  }
+
+  function show() { root.hidden = false; render(); }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-detail'] = { show, hide };
+})();
+</script>
+</template>
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-detail'].show()));
+})();
+</script>
+</body>
+</html>

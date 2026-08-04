@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Criteria Filter — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg'; window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';</script>
+<!-- ds-criteria-filter self-imports its sub-components + injects their CSS -->
+<script type="module" src="../design-system-library/src/components/criteria-filter/criteria-filter.js"></script>
+<style>
+/* Doc-page bits, scoped to this page's marker class. The component-page chrome
+   (nav / sidebar / main-panel / tabs / toc) is reused from the shared scope. */
+.page-criteria-filter .doc-demo { display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; margin:8px 0 16px; }
+.page-criteria-filter .doc-demo ds-criteria-filter { flex:1 1 520px; min-width:0; max-width:640px; }
+.page-criteria-filter .doc-demo__out { flex:1; min-width:240px; }
+.page-criteria-filter .doc-demo__out h4 { margin:0 0 8px; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--prism-text-muted); }
+.page-criteria-filter .doc-code { background:var(--prism-surface-hover); border:1px solid var(--prism-border); border-radius:10px; padding:14px 16px; font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:12.5px; line-height:1.6; overflow-x:auto; color:var(--prism-text); white-space:pre; margin:8px 0; }
+.page-criteria-filter .doc-table-wrap { overflow-x:auto; border:1px solid var(--prism-border); border-radius:10px; margin:8px 0 4px; }
+.page-criteria-filter table.doc-table { width:100%; border-collapse:collapse; font-size:13.5px; min-width:520px; }
+.page-criteria-filter table.doc-table th, .page-criteria-filter table.doc-table td { text-align:left; padding:10px 14px; vertical-align:top; }
+.page-criteria-filter table.doc-table thead th { background:var(--prism-surface-hover); font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--prism-text-muted); font-weight:700; }
+.page-criteria-filter table.doc-table tbody tr { border-top:1px solid var(--prism-border); }
+.page-criteria-filter table.doc-table td { color:var(--prism-text-muted); line-height:1.5; }
+.page-criteria-filter table.doc-table td:first-child { color:var(--prism-text); font-weight:600; white-space:nowrap; }
+.page-criteria-filter .doc-inline-code { font-family:ui-monospace,monospace; font-size:.9em; background:var(--prism-surface-hover); padding:1px 6px; border-radius:6px; }
+.page-criteria-filter .modes-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; margin:8px 0; }
+.page-criteria-filter .mode-card { border:1px solid var(--prism-border); border-radius:12px; padding:16px; }
+.page-criteria-filter .mode-card h4 { margin:0 0 6px; font-size:14px; color:var(--prism-text); }
+.page-criteria-filter .mode-card p { margin:0; font-size:13px; color:var(--prism-text-muted); line-height:1.5; }
+.page-criteria-filter .preview-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; align-items:start; margin:8px 0; }
+.page-criteria-filter .preview-tile { border:1px solid var(--prism-border); border-radius:12px; padding:14px; min-width:0; }
+.page-criteria-filter .preview-tile__label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--prism-text-muted); margin-bottom:10px; }
+.page-criteria-filter .preview-tile ds-criteria-filter { width:100%; }
+.page-criteria-filter .preview-btns { display:flex; gap:8px; flex-wrap:wrap; }
+.page-criteria-filter .preview-btn { padding:8px 14px; border:1px solid var(--prism-border); border-radius:8px; background:var(--prism-surface-hover); cursor:pointer; font:inherit; font-size:13px; font-weight:500; color:var(--prism-text); }
+.page-criteria-filter .preview-btn:hover { border-color:rgba(37,99,235,0.35); }
+/* Live-demo (Code) playground — mirrors the shared .cp-* pattern, scoped to this page. */
+.page-criteria-filter .code-playground { border:1px solid var(--prism-border); border-radius:12px; overflow:hidden; background:var(--prism-surface); margin-bottom:40px; }
+[data-theme="light"] .page-criteria-filter .code-playground { background:#fff; border:1px solid rgba(37,99,235,0.1); box-shadow:0 8px 30px rgba(37,99,235,0.08); }
+.page-criteria-filter .cp-toolbar { display:flex; flex-wrap:wrap; gap:20px; padding:16px 24px; border-bottom:1px solid var(--prism-border); background:var(--prism-surface-hover); }
+[data-theme="light"] .page-criteria-filter .cp-toolbar { background:rgba(248,250,255,0.6); border-bottom:1px solid rgba(37,99,235,0.1); }
+.page-criteria-filter .cp-control-group { display:flex; flex-direction:column; gap:8px; flex:1; min-width:120px; }
+.page-criteria-filter .cp-label { font-size:13px; font-weight:600; color:var(--prism-text-muted); }
+.page-criteria-filter .cp-select { background:var(--prism-surface); border:1px solid var(--prism-border); color:var(--prism-text); padding:8px 12px; border-radius:8px; outline:none; font-family:inherit; font-size:14px; cursor:pointer; transition:all 0.2s; }
+[data-theme="light"] .page-criteria-filter .cp-select { background:#fff; border-color:rgba(37,99,235,0.15); color:#1e293b; }
+.page-criteria-filter .cp-select:focus { border-color:var(--prism-violet); box-shadow:0 0 0 3px rgba(37,99,235,0.15); }
+.page-criteria-filter .cp-preview { padding:32px; min-height:200px; display:flex; align-items:flex-start; justify-content:center; background:#0a0a0c; background-image:radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px); background-size:20px 20px; transition:background 0.3s ease; }
+[data-theme="light"] .page-criteria-filter .cp-preview { background:#fff; background-image:radial-gradient(circle, rgba(37,99,235,0.08) 1px, transparent 1px); }
+.page-criteria-filter .cp-code-header { display:flex; align-items:center; justify-content:space-between; padding:12px 24px; background:var(--prism-surface); border-top:1px solid var(--prism-border); border-bottom:1px solid var(--prism-border); }
+[data-theme="light"] .page-criteria-filter .cp-code-header { background:rgba(248,250,255,0.8); border-color:rgba(37,99,235,0.1); }
+.page-criteria-filter .cp-action-btn { display:flex; align-items:center; gap:8px; background:transparent; border:none; font-family:inherit; font-size:13.5px; font-weight:500; color:var(--prism-text-muted); cursor:pointer; padding:6px 12px; border-radius:6px; transition:all 0.2s; }
+.page-criteria-filter .cp-action-btn:hover { background:var(--prism-surface-hover); color:var(--prism-text); }
+.page-criteria-filter .cp-code-area { background:#0a0a0c; padding:24px; overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:14px; line-height:1.6; color:#e2e8f0; }
+</style>
+</head>
+<!-- Reuses the shared component-page chrome scope (`page-inline-message`); `page-criteria-filter`
+     is this page's own marker for the doc styles above. -->
+<body class="page-inline-message page-criteria-filter">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link active">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Criteria Filter</h1>
+        <p class="page-desc">An advanced / criteria filter (expression builder). It assembles a list of <span class="doc-inline-code">field → operator → value</span> conditions joined by AND/OR, optionally nested into groups with NOT, and emits a structured, JSON-serializable query tree. Sibling of the Filter panel (which is faceted); this is the expression tier. The host owns the query — the builder only reports state.</p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <p class="doc-section-subtitle"><strong>Header</strong> — title, a left-aligned <strong>Saved filters</strong> picker (load), and <strong>Clear all</strong> (a text link that resets to one fresh row); overlay modes add a close ✕. <strong>Body</strong> — condition rows (field ▾ · operator ▾ · value · duplicate · delete); in the default <span class="doc-inline-code">combinator</span> structure they sit under a <strong>Match all / any</strong> combinator, with nested <strong>groups</strong> (each with a <strong>Not</strong> toggle) and <strong>Add condition</strong> / <strong>Add group</strong>. Invalid rows show a dashed error outline + helper. Optional <strong>query preview</strong> (summary + removable chips). <strong>Footer</strong> (apply-mode) — <strong>Cancel</strong> · <strong>Save &amp; apply</strong> · <strong>Apply</strong>; where saving prompts for a name just above the footer (in live/inline mode the save button sits in the header instead). This live demo runs inline with <span class="doc-inline-code">show-preview</span>, <span class="doc-inline-code">allow-field-source</span>, and saved filters on.</p>
+          <div class="doc-demo">
+            <ds-criteria-filter id="doc-cf" title="Filter criteria" show-preview allow-field-source></ds-criteria-filter>
+            <div class="doc-demo__out">
+              <h4>Emitted query — <span id="doc-valid">valid</span></h4>
+              <pre class="doc-code" id="doc-out">{}</pre>
+            </div>
+          </div>
+          <div class="doc-divider"></div>
+
+          <h2 id="modes" class="doc-section-title">Presentation modes</h2>
+          <div class="modes-grid">
+            <div class="mode-card"><h4>Inline</h4><p>In-flow block — the default. Ideal inside a form (e.g. a dynamic group's membership) or above a data surface.</p></div>
+            <div class="mode-card"><h4>Popover</h4><p>Anchored flyout from a “Filter” button. Light-dismiss (outside click / Esc). Pairs with a data table's filter icon.</p></div>
+            <div class="mode-card"><h4>Drawer</h4><p>Off-canvas end-docked sheet with a scrim for large queries. Esc / backdrop close.</p></div>
+            <div class="mode-card"><h4>Structure</h4><p><span class="doc-inline-code">combinator</span> (default) uses a "Match all / any of the following" combinator; <span class="doc-inline-code">advanced</span> is a lead word + per-row And/Or + a criteria pattern. <span class="doc-inline-code">grouping</span> toggles nested groups on/off for either — default on for combinator, off for advanced.</p></div>
+          </div>
+          <div class="doc-divider"></div>
+
+          <h2 id="operators" class="doc-section-title">Operators by field type</h2>
+          <div class="doc-table-wrap">
+            <table class="doc-table">
+              <thead><tr><th>Field type</th><th>Operators</th><th>Value editor</th></tr></thead>
+              <tbody>
+                <tr><td>text</td><td>contains, does not contain, starts/ends with, matches regex, equals, does not equal, is empty, is not empty</td><td>ds-text-input</td></tr>
+                <tr><td>number</td><td>equals, ≠, &lt;, ≤, &gt;, ≥, between, not between, is empty, is not empty</td><td>ds-text-input (×2 for between)</td></tr>
+                <tr><td>date / datetime</td><td>is, is not, before, after, between, is empty, is not empty</td><td>ds-date-picker (show-presets)</td></tr>
+                <tr><td>boolean</td><td>is true, is false</td><td>— (operator carries it)</td></tr>
+                <tr><td>select</td><td>is, is not, equals, does not equal, is empty, is not empty</td><td>ds-input-select</td></tr>
+                <tr><td>multiselect</td><td>has any of, has all of, has none of, is empty</td><td>ds-token-field</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="doc-section-subtitle">Each operator has an <strong>arity</strong>: 0 = unary (no editor) · 1 = single value · 2 = range. Pass a custom <span class="doc-inline-code">operators</span> array to replace the catalog.</p>
+          <div class="doc-divider"></div>
+
+          <div class="doc-divider"></div>
+          <h2 id="advanced" class="doc-section-title">Advanced conditions variant</h2>
+          <p class="doc-section-subtitle"><span class="doc-inline-code">structure="advanced"</span> renders a flat list: the first row is led by a word (<span class="doc-inline-code">lead-word</span>, e.g. When / Where), every later row starts with a small <strong>And / Or</strong> joiner select, and a <strong>criteria pattern</strong> line (e.g. <span class="doc-inline-code">1 AND 2 OR 3</span>) sits at the bottom. Each row carries a <span class="doc-inline-code">joiner</span> in the emitted query. Add <span class="doc-inline-code">grouping="on"</span> to allow nested groups (advanced-style, per-row joiners) — a nested group joins its sibling with an And / Or on its first row; when any group exists the criteria pattern turns off.</p>
+          <div class="doc-demo">
+            <ds-criteria-filter id="doc-adv" title="Advanced conditions" structure="advanced" lead-word="When"></ds-criteria-filter>
+            <div class="doc-demo__out">
+              <h4>Criteria pattern</h4>
+              <pre class="doc-code" id="doc-adv-pattern">—</pre>
+            </div>
+          </div>
+          <div class="doc-divider"></div>
+
+          <h2 id="preview" class="doc-section-title">Preview — all use cases</h2>
+          <p class="doc-section-subtitle">The overlay presentations (they open on click and don't affect page layout), apply mode with the staged footer, and the loading / empty states.</p>
+          <div class="preview-grid">
+            <div class="preview-tile">
+              <div class="preview-tile__label">Overlay modes</div>
+              <div class="preview-btns">
+                <button type="button" id="pv-popover-btn" class="preview-btn">Filter ▾</button>
+                <button type="button" id="pv-drawer-btn" class="preview-btn">Advanced filter (drawer)</button>
+              </div>
+            </div>
+            <div class="preview-tile">
+              <div class="preview-tile__label">Loading (async fields)</div>
+              <ds-criteria-filter id="pv-loading" title="Filter criteria" loading></ds-criteria-filter>
+            </div>
+            <div class="preview-tile">
+              <div class="preview-tile__label">Empty (no fields)</div>
+              <ds-criteria-filter id="pv-empty" title="Filter criteria" empty-text="No fields configured for this view."></ds-criteria-filter>
+            </div>
+          </div>
+          <!-- Overlay builders — fixed/off-canvas; hidden until their trigger opens them -->
+          <ds-criteria-filter id="pv-popover" mode="popover" apply-mode="apply" title="Filter"></ds-criteria-filter>
+          <ds-criteria-filter id="pv-drawer" mode="drawer" apply-mode="apply" title="Advanced filter"></ds-criteria-filter>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;">
+          <h2 id="when" class="doc-section-title">When to use</h2>
+          <ul class="doc-list">
+            <li>Reach for it when a filter is an <strong>expression</strong> — arbitrary <span class="doc-inline-code">field · operator · value</span> conditions the user composes (dynamic groups, saved searches, report criteria, alert rules).</li>
+            <li>For picking values from a fixed set of facets, use the <strong>Filter panel</strong> instead; for a quick single-select slice, use the <strong>Tab filter</strong>.</li>
+            <li>Use <strong>combinator</strong> (default) for a "Match all / any" filter; keep <span class="doc-inline-code">grouping</span> on when users need AND/OR nesting, or set <span class="doc-inline-code">grouping="off"</span> for a simple single-level list.</li>
+            <li>Use <strong>live</strong> mode for client-side surfaces (instant), <strong>apply</strong> mode for server queries (batch on Apply).</li>
+            <li>Let the host own persistence: read the emitted <span class="doc-inline-code">query</span> tree and map it to your query / API. Setting <span class="doc-inline-code">presets</span> (even <span class="doc-inline-code">[]</span>) turns on the saved-filter UI — a left-aligned <strong>Saved filters</strong> picker (load) and, in apply-mode, a <strong>Save &amp; apply</strong> footer button that validates first, then prompts for a name and fires <span class="doc-inline-code">preset-save</span> <span class="doc-inline-code">{ label, query }</span>. Persist it and feed the updated list back.</li>
+          </ul>
+          <div class="doc-divider"></div>
+
+          <h2 id="pairing" class="doc-section-title">Pairing with a data table</h2>
+          <p class="doc-section-subtitle">Open a <span class="doc-inline-code">mode="popover"</span> builder from the table's toolbar filter icon; its <span class="doc-inline-code">change</span> / <span class="doc-inline-code">apply</span> event feeds <span class="doc-inline-code">table.rows</span>. Reference page: <span class="doc-inline-code">projects/custom-groups/layout-create-group.html</span> (dynamic Custom Group membership).</p>
+          <pre class="doc-code">cf.addEventListener('ds-criteria-filter-change', e =&gt; {
+  if (e.detail.valid) table.rows = runQuery(e.detail.query);   // host owns the query
+});</pre>
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Toggle any prop and watch the builder react in real time. The code below updates as you go &mdash; copy it straight into your project.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Structure</label><select class="cp-select" id="pg-structure"><option value="combinator" selected>combinator</option><option value="advanced">advanced</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Grouping</label><select class="cp-select" id="pg-grouping"><option value="" selected>default</option><option value="on">on</option><option value="off">off</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Apply mode</label><select class="cp-select" id="pg-apply"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show preview</label><select class="cp-select" id="pg-preview"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Field compare</label><select class="cp-select" id="pg-fieldsrc"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Allow NOT</label><select class="cp-select" id="pg-not"><option value="true" selected>true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Saved presets</label><select class="cp-select" id="pg-presets"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="pg-rtl"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Loading</label><select class="cp-select" id="pg-loading"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Lead word (advanced)</label><input class="cp-select" id="pg-lead" type="text" value="When" style="font-family:inherit"></div>
+              <div class="cp-control-group" style="flex-basis:100%"><label class="cp-label">Title</label><input class="cp-select" id="pg-title" type="text" value="Filter criteria" style="font-family:inherit"></div>
+            </div>
+            <div class="cp-preview"><div id="pg-host" style="width:100%;max-width:640px"></div></div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML + setup</div>
+              <button class="cp-action-btn" id="pg-copy"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+            </div>
+            <div class="cp-code-area" id="pg-code"></div>
+          </div>
+          <script>
+          (function () {
+            const $ = (id) => document.getElementById(id);
+            const els = { structure: $('pg-structure'), grouping: $('pg-grouping'), apply: $('pg-apply'), preview: $('pg-preview'),
+              fieldsrc: $('pg-fieldsrc'), not: $('pg-not'), presets: $('pg-presets'), rtl: $('pg-rtl'),
+              loading: $('pg-loading'), lead: $('pg-lead'), title: $('pg-title') };
+            const host = $('pg-host'), codeOut = $('pg-code'), copyBtn = $('pg-copy');
+            const FIELDS = [
+              { name: 'hostname',  label: 'Host name',        type: 'text' },
+              { name: 'os',        label: 'Operating system', type: 'select',
+                options: [ { label: 'Windows', value: 'win' }, { label: 'macOS', value: 'mac' }, { label: 'Linux', value: 'linux' } ] },
+              { name: 'riskScore', label: 'Risk score',       type: 'number' },
+              { name: 'lastSeen',  label: 'Last seen',        type: 'date' },
+            ];
+            const QUERY = { combinator: 'and', rules: [
+              { field: 'os', operator: 'is', value: 'win' },
+              { field: 'riskScore', operator: 'gte', value: 70 } ] };
+            const PRESETS = [{ id: 'p0', label: 'High-risk Windows', query: { combinator: 'and', rules: [
+              { field: 'os', operator: 'is', value: 'win' }, { field: 'riskScore', operator: 'gte', value: 80 } ] } }];
+            /* Live saved-filters list for the demo: the host owns storage, so we
+               keep it here and grow it when the footer "Save & apply" fires
+               ds-criteria-filter-preset-save. Persists across control rebuilds. */
+            let livePresets = PRESETS.map((p) => ({ ...p }));
+            let presetSeq = 0;
+            /* The setup snippet tracks the toolbar: apply mode wires -apply + the
+               -cancel event (footer "Cancel" reverts unsaved edits); presets wire
+               -preset-save; otherwise -change. */
+            function jsSetup(apply, presets) {
+              let s =
+                "<script type=\"module\">\n" +
+                "  const cf = document.querySelector('ds-criteria-filter');\n" +
+                "  cf.fields = [\n" +
+                "    { name:'hostname', label:'Host name', type:'text' },\n" +
+                "    { name:'os', label:'Operating system', type:'select',\n" +
+                "      options:[ {label:'Windows',value:'win'}, {label:'macOS',value:'mac'}, {label:'Linux',value:'linux'} ] },\n" +
+                "    { name:'riskScore', label:'Risk score', type:'number' },\n" +
+                "    { name:'lastSeen', label:'Last seen', type:'date' },\n" +
+                "  ];\n" +
+                "  cf.query = { combinator:'and', rules:[\n" +
+                "    { field:'os', operator:'is', value:'win' },\n" +
+                "    { field:'riskScore', operator:'gte', value:70 },\n" +
+                "  ] };\n";
+              if (apply) {
+                s +=
+                  "  // apply mode: run on Apply, and handle the footer Cancel\n" +
+                  "  cf.addEventListener('ds-criteria-filter-apply', e => { if (e.detail.valid) runQuery(e.detail.query); });\n" +
+                  "  cf.addEventListener('ds-criteria-filter-cancel', () => { /* unsaved edits reverted to the last applied query */ });\n";
+              } else {
+                s += "  cf.addEventListener('ds-criteria-filter-change', e => { if (e.detail.valid) runQuery(e.detail.query); });\n";
+              }
+              if (presets) {
+                s +=
+                  "  // saved filters are host-owned — persist on save, feed the list back\n" +
+                  "  cf.addEventListener('ds-criteria-filter-preset-save', e => { cf.presets = persist(e.detail); });\n";
+              }
+              return s + "<\/script>";
+            }
+            const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            let raw = '';
+
+            function build() {
+              const structure = els.structure.value, grouping = els.grouping.value, apply = els.apply.value === 'true', preview = els.preview.value === 'true',
+                fieldsrc = els.fieldsrc.value === 'true', not = els.not.value === 'true', presets = els.presets.value === 'true',
+                rtl = els.rtl.value === 'true', loading = els.loading.value === 'true',
+                lead = els.lead.value || 'When', title = els.title.value || 'Filter criteria';
+
+              host.innerHTML = '';
+              const cf = document.createElement('ds-criteria-filter');
+              cf.setAttribute('title', title);
+              if (structure !== 'combinator') cf.setAttribute('structure', structure);
+              if (grouping) cf.setAttribute('grouping', grouping);
+              if (structure === 'advanced' && lead !== 'When') cf.setAttribute('lead-word', lead);
+              if (apply) cf.setAttribute('apply-mode', 'apply');
+              if (preview) cf.setAttribute('show-preview', '');
+              if (fieldsrc) cf.setAttribute('allow-field-source', '');
+              if (!not) cf.setAttribute('show-not', 'false');
+              if (rtl) cf.setAttribute('rtl', '');
+              if (loading) cf.setAttribute('loading', '');
+              cf.fields = FIELDS;
+              cf.query = QUERY;
+              if (presets) {
+                cf.presets = livePresets.map((p) => ({ ...p }));
+                /* Footer "Save & apply" → persist the named filter, feed the list
+                   back so it appears in the "Saved filters" picker. */
+                cf.addEventListener('ds-criteria-filter-preset-save', (e) => {
+                  livePresets.unshift({ id: 'saved-' + (++presetSeq), label: e.detail.label, query: e.detail.query });
+                  cf.presets = livePresets.map((p) => ({ ...p }));
+                });
+              }
+              host.appendChild(cf);
+
+              const attrs = ['title="' + esc(title) + '"'];
+              if (structure !== 'combinator') attrs.push('structure="' + structure + '"');
+              if (grouping) attrs.push('grouping="' + grouping + '"');
+              if (structure === 'advanced' && lead !== 'When') attrs.push('lead-word="' + esc(lead) + '"');
+              if (apply) attrs.push('apply-mode="apply"');
+              if (preview) attrs.push('show-preview');
+              if (fieldsrc) attrs.push('allow-field-source');
+              if (!not) attrs.push('show-not="false"');
+              if (rtl) attrs.push('rtl');
+              if (loading) attrs.push('loading');
+              const setup = jsSetup(apply, presets);
+              const openTag = '<ds-criteria-filter' + (attrs.length ? '\n  ' + attrs.join('\n  ') : '') + '>\n</ds-criteria-filter>';
+              raw = openTag + '\n\n' + setup;
+
+              const coloredTag = '&lt;<span style="color:#60a5fa">ds-criteria-filter</span>'
+                + (attrs.length ? '\n  ' : '')
+                + attrs.map((p) => { const eq = p.indexOf('='); return eq === -1
+                    ? '<span style="color:#38bdf8">' + p + '</span>'
+                    : '<span style="color:#38bdf8">' + p.slice(0, eq) + '</span>=<span style="color:#34d399">' + esc(p.slice(eq + 1)).replace(/&quot;/g, '"') + '</span>'; }).join('\n  ')
+                + '&gt;\n&lt;/<span style="color:#60a5fa">ds-criteria-filter</span>&gt;';
+              codeOut.innerHTML = '<pre style="margin:0;white-space:pre-wrap;font-family:\'JetBrains Mono\',monospace;font-size:13.5px;line-height:1.6">'
+                + coloredTag + '\n\n<span style="color:#94a3b8">' + esc(setup) + '</span></pre>';
+            }
+            Object.keys(els).forEach((k) => els[k].addEventListener(els[k].tagName === 'INPUT' ? 'input' : 'change', build));
+            copyBtn.addEventListener('click', () => {
+              const done = () => { const o = copyBtn.innerHTML; copyBtn.innerHTML = '&#10003; Copied!'; setTimeout(() => { copyBtn.innerHTML = o; }, 2000); };
+              if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(raw).then(done).catch(done);
+              else { const ta = document.createElement('textarea'); ta.value = raw; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (_) {} document.body.removeChild(ta); done(); }
+            });
+            if (window.customElements && customElements.whenDefined) customElements.whenDefined('ds-criteria-filter').then(build);
+            build();
+          })();
+          </script>
+          <hr class="doc-divider" />
+
+          <h2 id="usage-code" class="doc-section-title">Usage</h2>
+          <pre class="doc-code">&lt;ds-criteria-filter id="cf" title="Filter criteria"&gt;&lt;/ds-criteria-filter&gt;
+&lt;script type="module"&gt;
+  cf.fields = [
+    { name:'hostname', label:'Host name', type:'text' },
+    { name:'os', label:'Operating system', type:'select',
+      options:[ {label:'Windows',value:'win'}, {label:'macOS',value:'mac'} ] },
+    { name:'riskScore', label:'Risk score', type:'number' },
+    { name:'lastSeen', label:'Last seen', type:'date' },
+  ];
+  cf.query = { combinator:'and', rules:[ { field:'os', operator:'is', value:'win' } ] };
+  cf.addEventListener('ds-criteria-filter-change', e =&gt; {
+    if (e.detail.valid) table.rows = runQuery(e.detail.query);
+  });
+&lt;/script&gt;</pre>
+
+          <h2 id="attributes" class="doc-section-title">Attributes</h2>
+          <div class="doc-table-wrap"><table class="doc-table">
+            <thead><tr><th>Attribute</th><th>Values</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>mode</td><td>inline · popover · drawer</td><td>Presentation. Default inline (overlays: open()/close()/toggle()).</td></tr>
+              <tr><td>structure</td><td>combinator · advanced</td><td>combinator (default) is a "Match all / any of the following" filter; advanced adds a lead word + per-row And/Or joiner + a criteria pattern. Legacy: grouped/unset → combinator; flat → combinator with grouping off.</td></tr>
+              <tr><td>grouping</td><td>on · off</td><td>Allow nested groups ("Add group"). Default on for combinator, off for advanced (opt in with grouping="on"). When a group exists, the advanced criteria pattern turns off.</td></tr>
+              <tr><td>lead-word</td><td>string</td><td>Advanced variant only — word before the first condition (When / Where). Default When.</td></tr>
+              <tr><td>apply-mode</td><td>live · apply</td><td>live emits on every edit; apply shows a footer.</td></tr>
+              <tr><td>combinator-default</td><td>and · or</td><td>Combinator of a new/empty group.</td></tr>
+              <tr><td>show-not</td><td>boolean (on)</td><td>Allow negating a group (NOT).</td></tr>
+              <tr><td>max-depth / max-group</td><td>number</td><td>Cap nesting depth (root = 0) / total rules.</td></tr>
+              <tr><td>show-preview</td><td>boolean</td><td>Read-only query summary + removable chips.</td></tr>
+              <tr><td>allow-field-source</td><td>boolean</td><td>Compare a field to another field of the same type.</td></tr>
+              <tr><td>open / anchor / loading</td><td>boolean / selector / boolean</td><td>Overlay visibility · popover anchor · skeleton rows.</td></tr>
+              <tr><td>title / add-rule-label / add-group-label / empty-text</td><td>string</td><td>Header + button + empty labels.</td></tr>
+            </tbody>
+          </table></div>
+
+          <h2 id="props-events" class="doc-section-title">Properties, events &amp; methods</h2>
+          <div class="doc-table-wrap"><table class="doc-table">
+            <thead><tr><th>Member</th><th>Kind</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>fields</td><td>property</td><td>FieldDef[] schema (see below).</td></tr>
+              <tr><td>operators</td><td>property</td><td>Optional OperatorDef[] to override the catalog.</td></tr>
+              <tr><td>query</td><td>property</td><td>Controlled expression (a RuleGroup tree).</td></tr>
+              <tr><td>presets</td><td>property</td><td>{ id, label, query }[] · host-owned saved filters (null = off).</td></tr>
+              <tr><td>addRule() · addGroup() · removeRule() · clear() · cancel() · apply() · validate()</td><td>methods</td><td>Programmatic editing. <strong>clear()</strong> resets to one fresh empty row; <strong>cancel()</strong> reverts unsaved edits to the last applied query (closes in overlay modes).</td></tr>
+              <tr><td>getQuery() · setQuery() · open() · close() · toggle() · loadPreset() · savePreset()</td><td>methods</td><td>Read/write · overlay · presets.</td></tr>
+              <tr><td>ds-criteria-filter-change</td><td>event</td><td>{ query, valid } — live: any edit.</td></tr>
+              <tr><td>ds-criteria-filter-apply / -clear / -cancel / -invalid</td><td>event</td><td>Apply · clear-all (→ one fresh row) · footer Cancel (edits reverted) · { errors } on invalid.</td></tr>
+              <tr><td>ds-criteria-filter-open / -close</td><td>event</td><td>Overlay opened / closed.</td></tr>
+              <tr><td>ds-criteria-filter-preset-save / -preset-select</td><td>event</td><td>{ label, query } save · { id, query } load.</td></tr>
+            </tbody>
+          </table></div>
+
+          <h2 id="schema" class="doc-section-title">Data model</h2>
+          <pre class="doc-code">type FieldDef = {
+  name: string; label: string;
+  type: 'text'|'number'|'date'|'datetime'|'boolean'|'select'|'multiselect';
+  options?: { label, value, disabled? }[];   // select / multiselect
+  operators?: string[];                       // restrict + order the operator list
+  defaultOperator?: string; defaultValue?: unknown; placeholder?: string;
+};
+
+type RuleGroup = { id?; combinator: 'and'|'or'; not?: boolean; rules: (Rule|RuleGroup)[] };
+type Rule = {
+  id?; field: string; operator: string; value?: unknown;
+  valueSource?: 'value' | 'field';   // 'field' → value holds another field's name
+};</pre>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;">
+          <h2 id="a11y" class="doc-section-title">Accessibility</h2>
+          <ul class="doc-list">
+            <li>Each rule's field / operator / value carry <span class="doc-inline-code">aria-label</span>s referencing the condition number; the combinator is a labeled <span class="doc-inline-code">ds-tab-filter</span> (radiogroup semantics); a nested group is a labeled <span class="doc-inline-code">role="group"</span> reading its combinator and NOT state.</li>
+            <li>Add / duplicate / remove are real <span class="doc-inline-code">&lt;button&gt;</span>s with explicit labels; focus moves to the new row on add and to a neighbor on remove.</li>
+            <li>Validation errors render through <span class="doc-inline-code">ds-field-helper</span> (<span class="doc-inline-code">role="alert"</span>) so they're announced; the invalid row also gets an error border (not colour alone — the helper states the problem).</li>
+            <li>Overlay modes set <span class="doc-inline-code">role="dialog"</span> / <span class="doc-inline-code">aria-modal</span>, move focus in on open and return it to the trigger on close, and dismiss on Esc (+ backdrop / outside click).</li>
+            <li>Design tokens only; works across all five themes and RTL. All DOM queries are scoped to the component root.</li>
+          </ul>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="../handoff/criteria-filter.md" class="action-link"><ds-icon name="download" size="15"></ds-icon> Handoff spec</a>
+            <a href="../design-system-library/src/components/criteria-filter/criteria-filter.examples.html" class="action-link"><ds-icon name="external-link" size="15"></ds-icon> Live examples</a>
+            <a href="../Layout/Shell.html?view=custom-groups-create-group" class="action-link"><ds-icon name="external-link" size="15"></ds-icon> In a page (Custom group)</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+    </main>
+  </div>
+
+  <script type="module">
+    await customElements.whenDefined('ds-criteria-filter');
+
+    /* Device-oriented field schema. `threshold` gives `riskScore` a same-type
+       target so field-to-field compare is demonstrable. */
+    const FIELDS = [
+      { name: 'hostname',  label: 'Host name',        type: 'text' },
+      { name: 'os',        label: 'Operating system', type: 'select', options: [
+        { label: 'Windows', value: 'win' }, { label: 'macOS', value: 'mac' }, { label: 'Linux', value: 'linux' } ] },
+      { name: 'department', label: 'Department', type: 'select', options: [
+        { label: 'Finance', value: 'finance' }, { label: 'Engineering', value: 'eng' }, { label: 'Sales', value: 'sales' }, { label: 'IT', value: 'it' } ] },
+      { name: 'tags',      label: 'Tags', type: 'multiselect', options: [
+        { label: 'Production', value: 'prod' }, { label: 'Finance', value: 'fin' }, { label: 'Kiosk', value: 'kiosk' } ] },
+      { name: 'riskScore', label: 'Risk score', type: 'number' },
+      { name: 'threshold', label: 'Alert threshold', type: 'number' },
+      { name: 'lastSeen',  label: 'Last seen',  type: 'date' },
+      { name: 'managed',   label: 'Managed',    type: 'boolean' },
+    ];
+
+    /* Main demo — grouped, preview, field-compare, saved presets. */
+    const cf = document.getElementById('doc-cf');
+    cf.fields = FIELDS;
+    cf.query = { combinator: 'and', rules: [
+      { field: 'os', operator: 'is', value: 'win' },
+      { field: 'riskScore', operator: 'gte', value: 70 },
+      { combinator: 'or', not: false, rules: [
+        { field: 'tags', operator: 'hasAnyOf', value: ['prod'] },
+        { field: 'hostname', operator: 'startsWith', value: 'FIN-' } ] },
+    ] };
+    const out = document.getElementById('doc-out'), validEl = document.getElementById('doc-valid');
+    const dump = () => { out.textContent = JSON.stringify(cf.getQuery(), null, 2); };
+    dump();
+    cf.addEventListener('ds-criteria-filter-change', (e) => { dump(); validEl.textContent = e.detail.valid ? 'valid' : 'invalid'; });
+    cf.addEventListener('ds-criteria-filter-preset-select', dump);
+    let seq = 0;
+    cf.presets = [{ id: 'p0', label: 'High-risk Windows', query: { combinator: 'and', rules: [
+      { field: 'os', operator: 'is', value: 'win' }, { field: 'riskScore', operator: 'gte', value: 80 } ] } }];
+    cf.addEventListener('ds-criteria-filter-preset-save', (e) => {
+      cf.presets = [...cf.presets, { id: 'p' + (++seq), label: e.detail.label, query: e.detail.query }];
+    });
+
+    /* Preview tiles */
+    document.getElementById('pv-empty').fields = [];
+    const pop = document.getElementById('pv-popover'); pop.fields = FIELDS;
+    pop.query = { combinator: 'and', rules: [ { field: 'os', operator: 'is', value: 'win' } ] };
+    const drw = document.getElementById('pv-drawer'); drw.fields = FIELDS;
+    drw.query = { combinator: 'and', rules: [ { field: 'department', operator: 'is', value: 'finance' } ] };
+    document.getElementById('pv-popover-btn').addEventListener('click', (e) => pop.toggle(e.currentTarget));
+    document.getElementById('pv-drawer-btn').addEventListener('click', (e) => drw.open(e.currentTarget));
+    pop.addEventListener('ds-criteria-filter-apply', () => pop.close());
+    drw.addEventListener('ds-criteria-filter-apply', () => drw.close());
+
+    /* Loading tile resolves to a real builder */
+    const load = document.getElementById('pv-loading');
+    load.fields = FIELDS;
+    load.query = { combinator: 'and', rules: [ { field: 'riskScore', operator: 'gte', value: 70 } ] };
+    setTimeout(() => load.removeAttribute('loading'), 1600);
+
+    /* Code tab — the "Live demo (Code)" playground is self-contained in its own
+       classic <script> beside its markup (see #pg-* controls). */
+
+    /* Advanced conditions variant */
+    const adv = document.getElementById('doc-adv'), advOut = document.getElementById('doc-adv-pattern');
+    adv.fields = FIELDS;
+    adv.query = { combinator: 'and', rules: [
+      { field: 'os', operator: 'is', value: 'win' },
+      { field: 'riskScore', operator: 'gte', value: 70, joiner: 'and' },
+      { field: 'hostname', operator: 'startsWith', value: 'FIN-', joiner: 'or' } ] };
+    const dumpAdv = () => { advOut.textContent = adv.getPattern(); };
+    dumpAdv();
+    adv.addEventListener('ds-criteria-filter-change', dumpAdv);
+  </script>
+
+  <script src="js/components/toc.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

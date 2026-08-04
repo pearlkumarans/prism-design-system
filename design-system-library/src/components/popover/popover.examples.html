@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ds-popover — examples</title>
+  <script type="module">import '../../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 24px; background: var(--uems-background); color: var(--uems-text-primary); }
+    section { margin-bottom: 56px; }
+    h2 { font-size: var(--font-size-14); color: var(--uems-text-tertiary); margin: 0 0 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .note { font-size: var(--font-size-12); color: var(--uems-text-tertiary); margin: 0 0 12px; }
+    p { margin: 0 0 8px; }
+  </style>
+</head>
+<body>
+  <section>
+    <h2>Click to toggle (anchored)</h2>
+    <p class="note">Each popover anchors to its trigger via <code>anchor</code>. Click a button to open/close.</p>
+    <div class="row">
+      <ds-button id="pop-trigger-1" variant="secondary" suffix-icon="chevron-down">Bottom-start</ds-button>
+      <ds-popover anchor="pop-trigger-1" placement="bottom-start" title="Quick actions">
+        <p>This popover is anchored below its trigger and aligned to the start edge.</p>
+      </ds-popover>
+
+      <ds-button id="pop-trigger-2" variant="secondary" suffix-icon="chevron-down">Top</ds-button>
+      <ds-popover anchor="pop-trigger-2" placement="top" title="Above the trigger">
+        <p>Placement <code>top</code> renders the surface above the anchor.</p>
+      </ds-popover>
+
+      <ds-button id="pop-trigger-3" variant="secondary" suffix-icon="chevron-right">Right-start</ds-button>
+      <ds-popover anchor="pop-trigger-3" placement="right-start" title="To the side">
+        <p>Placement <code>right-start</code> renders to the right, top-aligned.</p>
+      </ds-popover>
+    </div>
+  </section>
+
+  <section>
+    <h2>Open by default — with header + close</h2>
+    <p class="note">Header auto-shows when <code>title</code> is set; the ✕ close button appears with it.</p>
+    <div class="row">
+      <ds-button id="pop-open-1" variant="outline">Anchor</ds-button>
+      <ds-popover anchor="pop-open-1" placement="bottom-start" title="Notifications" open>
+        <p>You have 3 unread alerts. This popover opened on load.</p>
+      </ds-popover>
+    </div>
+  </section>
+
+  <section>
+    <h2>No header (body only)</h2>
+    <p class="note">Omit <code>title</code> / <code>has-header</code> for a plain body surface.</p>
+    <div class="row">
+      <ds-button id="pop-nohead" variant="outline">Anchor</ds-button>
+      <ds-popover anchor="pop-nohead" placement="bottom-start">
+        <p>A header-less popover — just body content, no title and no close button.</p>
+      </ds-popover>
+    </div>
+  </section>
+
+  <section>
+    <h2>Header without close button</h2>
+    <p class="note"><code>hide-close</code> keeps the title but removes the ✕.</p>
+    <div class="row">
+      <ds-button id="pop-noclose" variant="outline">Anchor</ds-button>
+      <ds-popover anchor="pop-noclose" placement="bottom-start" title="Read only" hide-close>
+        <p>This popover shows a header title but no close affordance.</p>
+      </ds-popover>
+    </div>
+  </section>
+
+  <section>
+    <h2>With footer actions</h2>
+    <p class="note">Children with <code>slot="footer"</code> move to the footer region.</p>
+    <div class="row">
+      <ds-button id="pop-footer" variant="primary">Delete item…</ds-button>
+      <ds-popover anchor="pop-footer" placement="bottom-start" title="Delete item?">
+        <p>This action cannot be undone.</p>
+        <div slot="footer">
+          <ds-button variant="outline" size="small">Cancel</ds-button>
+          <ds-button variant="destructive" size="small">Delete</ds-button>
+        </div>
+      </ds-popover>
+    </div>
+  </section>
+
+  <section>
+    <h2>Forced footer (no content)</h2>
+    <p class="note"><code>has-footer</code> reserves the footer region even when empty.</p>
+    <div class="row">
+      <ds-button id="pop-hasfooter" variant="outline">Anchor</ds-button>
+      <ds-popover anchor="pop-hasfooter" placement="bottom-start" title="With reserved footer" has-footer>
+        <p>The footer row is present below this body.</p>
+      </ds-popover>
+    </div>
+  </section>
+
+  <section>
+    <h2>Fixed width (wrapping body)</h2>
+    <p class="note">Set <code>--ds-popover-width</code> so long body text wraps.</p>
+    <div class="row">
+      <ds-button id="pop-wide" variant="outline">Anchor</ds-button>
+      <ds-popover anchor="pop-wide" placement="bottom-start" title="About this metric"
+                  style="--ds-popover-width: 320px;">
+        <p>Endpoints are counted once per agent check-in within the last 24 hours. Devices that have not reported are excluded from this total and surfaced separately under stale agents.</p>
+      </ds-popover>
+    </div>
+  </section>
+
+  <section>
+    <h2>RTL</h2>
+    <p class="note"><code>rtl</code> mirrors header, body alignment, and footer.</p>
+    <div class="row">
+      <ds-button id="pop-rtl" rtl variant="secondary">القائمة</ds-button>
+      <ds-popover anchor="pop-rtl" rtl placement="bottom-start" title="عنوان">
+        <p>هذه نافذة منبثقة بمحاذاة من اليمين إلى اليسار.</p>
+        <div slot="footer">
+          <ds-button rtl variant="outline" size="small">إلغاء</ds-button>
+          <ds-button rtl variant="primary" size="small">حفظ</ds-button>
+        </div>
+      </ds-popover>
+    </div>
+  </section>
+</body>
+</html>

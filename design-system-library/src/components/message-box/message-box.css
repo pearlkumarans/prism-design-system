@@ -1,0 +1,106 @@
+/* =============================================================================
+   ds-message-box / .ds-message-box — in-app notification panel
+   Composes ds-tab-bar-horizontal + ds-scrollbar + ds-inline-alert rows.
+   Spec: design-system/handoff/MessageBox.md (Figma 18844:338665)
+   ============================================================================= */
+
+ds-message-box { display: block; width: 100%; font-family: var(--font-family-sans); }
+
+.ds-message-box {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;                                       /* fills its container */
+  border: 1px solid var(--uems-border-tertiary); /* Figma: bottom rule only — no radius, no side/top borders */
+  border-radius: var(--spacing-8);
+  background: var(--uems-bg-base);
+}
+
+/* ---- Header: chevron+title (toggle) · tab switcher ---------------------- */
+.ds-message-box__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-16);
+  padding: var(--spacing-8) var(--spacing-16);
+}
+
+.ds-message-box__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  flex: 0 0 auto;
+  margin: 0; padding: 0; border: 0; background: none;
+  font: inherit; color: inherit; cursor: pointer;
+}
+.ds-message-box__toggle:focus-visible {
+  outline: 2px solid var(--uems-border-accent, #006aff);
+  outline-offset: 2px; border-radius: 4px;
+}
+.ds-message-box__chevron {
+  display: inline-flex; color: var(--uems-text-secondary);
+  transition: transform 200ms ease;
+}
+.ds-message-box.is-expanded .ds-message-box__chevron { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .ds-message-box__chevron { transition: none; } }
+
+.ds-message-box__title {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  line-height: 20px;
+  color: var(--uems-text-primary);
+}
+.ds-message-box__count { flex: 0 0 auto; }
+.ds-message-box__tabs { flex: 0 0 auto; }
+
+/* Tab sizing to match the Figma message-box header tabs:
+   12px Medium label, 4/8 padding, gap 4, ~24px tall (the default tab bar is larger). */
+.ds-message-box__tabs .ds-tab-bar-horizontal__item {
+  padding: var(--spacing-4) var(--spacing-8) !important;
+  gap: var(--spacing-4);
+  font-weight: var(--font-weight-medium);
+  height: auto;
+}
+/* Count badge text at 10px. */
+.ds-message-box__tabs .ds-tab-bar-horizontal__item-badge,
+.ds-message-box__tabs .ds-tab-bar-horizontal__item-badge * {
+  font-size: 10px;
+}
+/* 4px gap between the two tabs. */
+.ds-message-box__tabs .ds-tab-bar-horizontal__scroller { gap: var(--spacing-4); }
+
+/* Collapsed = no active tab: the tab bar always marks one item active, so
+   neutralise the active styling (accent text + medium weight) to match rest. */
+/* Collapsed = no active tab: the active class is stripped from the items in JS
+   (so they're plain default tabs with working hover); also hide the sliding Fill
+   pill, which the tab bar still positions under the first tab. */
+.ds-message-box:not(.is-expanded) .ds-tab-bar-horizontal__indicator { display: none !important; }
+
+/* ---- Body: scrollable message list ------------------------------------- */
+/* Expand/collapse animates the grid row track 1fr <-> 0fr; the inner wrapper
+   clips its overflow so the content slides open/shut smoothly. */
+.ds-message-box__body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 240ms ease;
+}
+.ds-message-box:not(.is-expanded) .ds-message-box__body { grid-template-rows: 0fr; }
+.ds-message-box__body-inner { min-height: 0; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .ds-message-box__body { transition: none; } }
+.ds-message-box__scroll { display: block; }
+/* Body caps at 3 message rows (set per-instance in JS); ≤3 rows = no cap, no scroll. */
+.ds-message-box__scroll .ds-scrollbar__viewport {
+  max-height: var(--ds-mb-max-height, none);
+  overflow-anchor: none;   /* don't let async row renders shift the scroll position */
+}
+
+.ds-message-box__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);                              /* between rows */
+  padding: var(--spacing-4) var(--spacing-16) var(--spacing-12);
+}
+
+/* ---- RTL ---------------------------------------------------------------- */
+/* `dir="rtl"` on the root already mirrors the header row (toggle → right,
+   tabs → left) — do NOT add flex-direction:row-reverse or it double-reverses. */
+.ds-message-box[dir="rtl"] .ds-message-box__title { text-align: right; }

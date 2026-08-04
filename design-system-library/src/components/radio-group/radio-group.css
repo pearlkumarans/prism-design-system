@@ -1,0 +1,196 @@
+/* =============================================================================
+   ds-radio-group / .ds-radio-group
+   Group label + helper row + child <ds-radio> items (single-select).
+   Layouts: left (default, web) and top (constrained / mobile / long labels).
+   Structure mirrors ds-checkbox-group (__header + __body[__items + __helper]).
+   ============================================================================= */
+
+:host { display: block; font-family: var(--font-family-sans); }
+
+/* Host is a query container; the flex layout lives on __frame so the left↔
+   stacked switch can respond to the field's OWN width (container query below). */
+.ds-radio-group {
+  display: block;
+  container-type: inline-size;
+  font-family: var(--font-family-sans);
+  color: var(--uems-text-primary);
+}
+.ds-radio-group__frame {
+  display: flex;
+  gap: var(--spacing-12);
+}
+
+/* ---- Left layout (default) — 280px header column + body ------------- */
+.ds-radio-group--left .ds-radio-group__frame {
+  flex-direction: row;
+  align-items: flex-start;
+}
+.ds-radio-group--left .ds-radio-group__header {
+  width: 280px;
+  flex-shrink: 0;
+}
+
+/* Responsive: when the field's own container is narrow, collapse the left-label
+   layout to stacked, matching label-position="top" (header above the options). */
+@container (max-width: 520px) {
+  .ds-radio-group--left .ds-radio-group__frame { flex-direction: column; gap: var(--spacing-12); }
+  .ds-radio-group--left .ds-radio-group__header { width: auto; flex-shrink: 1; }
+}
+
+/* ---- Top layout ----------------------------------------------------- */
+.ds-radio-group--top .ds-radio-group__frame {
+  flex-direction: column;
+  gap: var(--spacing-12);   /* spec: Top root Header→body gap = 12 */
+}
+.ds-radio-group--top .ds-radio-group__header {
+  width: auto;
+}
+
+/* ---- None layout — header hidden (label kept as aria-labelledby) ---- */
+.ds-radio-group--none .ds-radio-group__frame {
+  flex-direction: column;
+}
+/* Explicitly hide the header: the [hidden] attribute alone loses to the
+   `.ds-radio-group__header { display: inline-flex }` rule below. */
+.ds-radio-group--none .ds-radio-group__header { display: none; }
+
+/* ---- Header: group label + optional info icon ---------------------- */
+.ds-radio-group__header {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  min-height: 20px;
+}
+.ds-radio-group__label {
+  color: var(--uems-text-tertiary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+}
+.ds-radio-group__info {
+  display: inline-flex;
+  align-items: center;
+  color: var(--uems-icon-tertiary, var(--uems-text-tertiary));
+  cursor: help;
+}
+/* [hidden] alone loses to the display rule above (same fix as the header), so the
+   info icon only appears when show-info is set. */
+.ds-radio-group__info[hidden] { display: none; }
+
+/* ---- Body: items + helper row -------------------------------------- */
+.ds-radio-group__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ds-radio-group__items {
+  display: flex;
+  flex-wrap: wrap;
+}
+/* Left = horizontal row of options (16px gap); Top/None = vertical stack (12px). */
+.ds-radio-group--left .ds-radio-group__items {
+  flex-direction: row;
+  gap: var(--spacing-16);
+  align-items: center;
+}
+.ds-radio-group--top .ds-radio-group__items,
+.ds-radio-group--none .ds-radio-group__items {
+  flex-direction: column;
+  gap: var(--spacing-12);
+  align-items: flex-start;
+}
+/* Explicit orientation overrides the label-position-derived flow above (source
+   order wins on equal specificity). Lets options be horizontal while the label
+   stays on top, or vertical while the label sits left. */
+.ds-radio-group--horizontal .ds-radio-group__items {
+  flex-direction: row;
+  gap: var(--spacing-16);
+  align-items: center;
+}
+.ds-radio-group--vertical .ds-radio-group__items {
+  flex-direction: column;
+  gap: var(--spacing-12);
+  align-items: flex-start;
+}
+
+/* A single option = the <ds-radio> control + optional info tooltip. */
+.ds-radio-group__option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+.ds-radio-group__option-info { display: inline-flex; line-height: 0; cursor: help; }
+.ds-radio-group__option-info ds-icon { color: var(--uems-text-accent-link); }
+
+/* ---- Described option — radio (+ optional info) on top, a wrapping description
+   below, indented (via --ds-rg-desc-indent, set per size in JS) to sit under the
+   label. Any described option forces the item list to stack vertically. --------- */
+.ds-radio-group--has-desc .ds-radio-group__items {
+  flex-direction: column;
+  gap: var(--spacing-16);
+  align-items: flex-start;
+}
+.ds-radio-group__option--described {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-4);
+}
+.ds-radio-group__option-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+.ds-radio-group__option-desc {
+  padding-inline-start: var(--ds-rg-desc-indent, 28px);
+  color: var(--uems-text-secondary);
+  font-size: var(--font-size-13);
+  line-height: var(--line-height-body, 1.5);
+}
+.ds-radio-group__option-desc strong {
+  color: var(--uems-text-primary);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+/* ---- Helper row ---------------------------------------------------- */
+/* The whole row (leading icon + text, state colour, layout) is the shared
+   <ds-field-helper> sub-component — see field-helper.css. The wrapper just lets
+   it span the body width. */
+.ds-radio-group__helper { display: block; }
+.ds-radio-group__help { width: 100%; }
+
+/* ---- State: disabled — token-driven (no blanket opacity). Children are
+   native <input disabled>, so clicks are already blocked. ------------- */
+.ds-radio-group--disabled { cursor: not-allowed; }
+.ds-radio-group--disabled .ds-radio-group__label { color: var(--uems-text-disabled); }
+
+/* ---- Card variant — each option is a selectable card ----------------
+   Unselected = neutral grey card; Selected = accent tint + accent border. */
+.ds-radio-group--card .ds-radio-group__option {
+  padding: var(--spacing-12) var(--spacing-16);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md, 10px);
+  background: var(--uems-bg-secondary);              /* #F0F2F5 */
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard);
+}
+.ds-radio-group--card .ds-radio-group__option:hover:not(:has(ds-radio[disabled])) {
+  border-color: var(--uems-border-accent-subtle);    /* #C0D1F5 */
+}
+.ds-radio-group--card .ds-radio-group__option:has(ds-radio[checked]) {
+  background: var(--uems-bg-accent-primary-subtle);  /* #F0F4FD */
+  border-color: var(--uems-border-accent);           /* #006AFF */
+}
+.ds-radio-group--card .ds-radio-group__option:has(ds-radio[disabled]) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.ds-radio-group--card.ds-radio-group--error .ds-radio-group__option:has(ds-radio[checked]) {
+  background: var(--uems-bg-error-primary, var(--uems-bg-secondary));
+  border-color: var(--uems-border-error);
+}
+
+/* ---- RTL — dir="rtl" on the host flips the flex inline axis on its own;
+   DO NOT add flex-direction: row-reverse (that double-flips back to LTR). ---- */

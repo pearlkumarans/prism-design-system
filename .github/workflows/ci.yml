@@ -1,0 +1,47 @@
+name: Design System CI
+
+# Runs the component test suite on pushes and PRs that touch the library.
+# Repo root is `prism-design-system/`, so paths are relative to it.
+on:
+  push:
+    paths:
+      - 'design-system-library/**'
+  pull_request:
+    paths:
+      - 'design-system-library/**'
+  workflow_dispatch: {}
+
+# Supersede in-flight runs for the same ref to save CI minutes.
+concurrency:
+  group: ds-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Component tests (headless Chromium)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: design-system-library
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: design-system-library/package-lock.json
+
+      # `npm ci` is reproducible from the lockfile. The fallback covers npm's
+      # known optional-dependency bug (a missing platform-specific rollup binary),
+      # which a clean reinstall resolves.
+      - name: Install dependencies
+        run: npm ci || (rm -rf node_modules package-lock.json && npm install)
+
+      # @web/test-runner launches a headless Chrome; GitHub's ubuntu-latest ships
+      # Google Chrome, which the runner auto-detects. The CI env var makes the
+      # config add --no-sandbox / --disable-dev-shm-usage (see web-test-runner.config.js).
+      - name: Run component tests
+        run: npm test

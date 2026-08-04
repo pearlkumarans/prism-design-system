@@ -1,0 +1,378 @@
+/* =============================================================================
+   ds-header-nav / .ds-header-nav
+   Top app bar. Three zones: brand · centre (tabs OR search) · utility cluster.
+   ============================================================================= */
+
+.ds-header-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-48);
+  height: 48px;
+  /* logical so it mirrors in RTL (start = brand side gets the larger pad) */
+  padding-block: 0;
+  padding-inline: var(--spacing-16) var(--spacing-4);   /* end = 4px breathing space before the corner for the apps/9-dot */
+  background: transparent;
+  font-family: var(--font-family-sans);
+  color: var(--uems-text-primary);
+  font-size: var(--font-size-14);
+  box-sizing: border-box;
+  width: 100%;
+  /* Query container so the bar responds to its OWN width (reusable in any shell
+     / embed, not tied to the viewport). Drives the compact hamburger below. */
+  container-type: inline-size;
+}
+
+/* ---- Compact / mobile — current-page label + kebab replace the tab band --
+   Layout (per mobile spec): [logo] │ [current page] [⋮]  ……  [utility cluster].
+   Both pieces are hidden until the compact container-query kicks in below. */
+.ds-header-nav__current {
+  display: none;                       /* shown only in compact mode */
+  align-items: center;
+  flex: 0 1 auto;                      /* hold content width; ellipsis only past max */
+  max-width: 46vw;
+  padding-inline-start: var(--spacing-12);
+  border-inline-start: 1px solid var(--uems-border-tertiary);   /* │ divider after the logo */
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ds-header-nav__menu-kebab {
+  display: none;                       /* shown only in compact mode */
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md, 8px);
+  background: transparent;
+  color: var(--uems-text-secondary);
+  cursor: pointer;
+}
+.ds-header-nav__menu-kebab:hover { background: var(--uems-bg-accent-primary-hover); color: var(--uems-text-primary); }
+.ds-header-nav__menu-kebab:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; }
+
+/* Below ~640px of header width: hide the inline tab band + product name, reveal
+   the current-page label + kebab, and push the cluster to the far edge. The nav
+   items open as a bottom sheet (host shell), triggered by the kebab. */
+@container (max-width: 640px) {
+  .ds-header-nav--tabs .ds-header-nav__tabs { display: none; }
+  .ds-header-nav--tabs .ds-header-nav__product { display: none; }   /* logo only */
+  .ds-header-nav--tabs .ds-header-nav__current { display: inline-flex; }
+  .ds-header-nav--tabs .ds-header-nav__menu-kebab { display: inline-flex; }
+  .ds-header-nav--tabs .ds-header-nav__cluster { margin-inline-start: auto; gap: var(--spacing-4); }
+  /* Declutter the cluster to the essentials (search · settings · notifications ·
+     avatar), matching the mobile spec — the wide Ask Zia pill, bento and
+     bookmark fold away so the current-page label has room. */
+  .ds-header-nav--tabs .ds-header-nav__zia-wrap,
+  .ds-header-nav--tabs .ds-header-nav__cluster [data-action="bento"],
+  .ds-header-nav--tabs .ds-header-nav__cluster [data-action="bookmark"] { display: none; }
+}
+/* The header IS the query container, so its OWN `gap` can't be set from the
+   @container rule above (those style descendants only). The bar always spans the
+   viewport, so a viewport media query at the same breakpoint tightens the gap so
+   the brand · current · kebab sit as a snug left group (per the mobile design). */
+@media (max-width: 640px) {
+  .ds-header-nav--tabs { gap: var(--spacing-8); }
+}
+
+/* ---- Brand ---------------------------------------------------------- */
+.ds-header-nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-16);          /* Figma: logo = Text/large/SemiBold 16 */
+  color: var(--uems-text-primary);
+  white-space: nowrap;                     /* logo text stays on one line */
+  flex-shrink: 0;
+}
+.ds-header-nav__logo {
+  width: 24px; height: 24px;
+  display: inline-block;
+  flex-shrink: 0;
+  /* Logos are full-colour ManageEngine product marks, served as
+     /logos/<key>.svg. No background; the SVG carries its own colours. */
+}
+
+/* ---- Ask ZIA — leads the utility cluster --------------------------- */
+/* First item of the cluster, with a separator on its inline-end dividing it
+   from the utility icons. The separator is a logical border, so it flips to
+   the correct side in RTL. Padding before it + margin after it (the cluster
+   gap adds to the margin) keep the divider evenly spaced on both sides. */
+.ds-header-nav__zia-wrap {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding-inline-end: var(--spacing-16);
+  margin-inline-end: var(--spacing-8);
+  border-inline-end: 1px solid var(--uems-border-tertiary);
+}
+/* Ask ZIA pill — icon + label. Standalone (not an icon-btn) so it can be a
+   labelled pill; the shell drives its active state via [data-action="zia"]. */
+.ds-header-nav__zia {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+  padding-inline: var(--spacing-8);
+  background: var(--uems-bg-primary-alt);
+  border-radius: var(--radius-full);
+  color: var(--uems-text-secondary);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+.ds-header-nav__zia:hover { background: var(--uems-bg-accent-primary-hover); }
+.ds-header-nav__zia.ds-header-nav__icon-btn--active { background: var(--uems-bg-accent-primary); }
+.ds-header-nav__zia-ic { width: 20px; height: 20px; display: block; flex: none; }
+.ds-header-nav__zia-label {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ---- Centre — tabs ------------------------------------------------- */
+.ds-header-nav__tabs {
+  /* flex: 1 1 0 + min-width: 0 lets the tabs row shrink so it never pushes
+     the right-cluster off-canvas. The inner __tabs-list does the clipping;
+     the __overflow button is a sibling so it stays visible. */
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  height: 100%;
+}
+
+/* Combined products (tab nav): the tab band takes 72% of the bar and is
+   centred — brand & cluster balance the remaining 28% (14% each), and the
+   tabs themselves centre within the band. */
+.ds-header-nav--tabs .ds-header-nav__brand,
+.ds-header-nav--tabs .ds-header-nav__cluster { /* flex: 1 1 0; */ }
+/* Brand & cluster both floor at their content width so neither collapses and
+   spills into the centred band (cluster icons are flex-shrink:0). */
+.ds-header-nav--tabs .ds-header-nav__brand,
+.ds-header-nav--tabs .ds-header-nav__cluster { min-width: max-content; }
+/* tabs are flex:0 1 72% (no grow), so any leftover width would otherwise pool
+   AFTER the cluster and shove it off the right corner. margin-inline-start:auto
+   soaks up that slack so the cluster (and the 9-dot) sits flush in the corner. */
+.ds-header-nav--tabs .ds-header-nav__cluster { justify-content: flex-end; margin-inline-start: auto; }
+.ds-header-nav--tabs .ds-header-nav__tabs {
+  flex: 0 1 72%;                 /* may yield below 72% before crowding the brand */
+  /* justify-content: center; */ /* left-aligned tabs */
+}
+.ds-header-nav__tabs-list {
+  /* Width hugs the visible tab set; the JS reflow hides any tab that
+     wouldn't fit, so the ··· button can sit tight to the last visible tab. */
+  flex: 0 1 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;                         /* centres each tab box in the row */
+  height: 100%;
+}
+
+/* Each tab IS the box. Height is padding-driven: line-height + padding-block,
+   centred in the header row. Active/hover fill it with the same rounded chip. */
+.ds-header-nav__tab {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-6) var(--spacing-12); /* padding-block sets the box height */
+  border-radius: var(--radius-6);
+  color: var(--uems-text-secondary);           /* Figma: default nav label = Text-Secondary */
+  text-decoration: none;
+  font-size: var(--font-size-13);              /* Figma: nav label = small-13 */
+  line-height: var(--line-height-normal);      /* deterministic box height */
+  font-weight: var(--font-weight-medium);      /* nav items = Medium */
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+/* Hover only on NON-active tabs — the active tab already shows the box. */
+.ds-header-nav__tab:hover:not(.ds-header-nav__tab--active) {
+  background: var(--uems-bg-primary-alt);
+}
+/* Active — accent label (Medium) inside the box. */
+.ds-header-nav__tab--active {
+  color: var(--uems-text-accent-link);
+  font-weight: var(--font-weight-medium);      /* Figma: active = small-13/Medium */
+  background: var(--uems-bg-primary-alt);
+}
+.ds-header-nav__tab:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: -2px;
+}
+.ds-header-nav__overflow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  background: transparent;
+  border: 0;
+  color: var(--uems-text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  margin-inline-start: var(--spacing-4);
+}
+.ds-header-nav__overflow:hover { background: var(--uems-bg-accent-primary-hover); }
+
+/* Wrapper anchors the dropdown directly below the ··· button. */
+.ds-header-nav__overflow-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.ds-header-nav__overflow-menu {
+  position: absolute;
+  top: calc(100% + var(--spacing-4));
+  inset-inline-end: 0;
+  z-index: var(--z-dropdown, 50);
+}
+.ds-header-nav__overflow:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+
+/* ---- Centre — search (the shared <ds-search-field> component) ------
+   The field owns its own bg / border / radius / states; the header only sets
+   its width and centres it. */
+.ds-header-nav__search { width: 180px; max-width: 100%; }
+/* Borderless in the header — resting border removed (the focus ring still
+   shows on focus, which has higher specificity). */
+.ds-header-nav__search .ds-search-field { border-color: transparent; }
+
+/* Centred search (point / left-only products): balance the brand & cluster so
+   the search field lands on the true centre of the bar. */
+.ds-header-nav--centered-search .ds-header-nav__brand,
+.ds-header-nav--centered-search .ds-header-nav__cluster { flex: 1 1 0; }
+.ds-header-nav--centered-search .ds-header-nav__brand,
+.ds-header-nav--centered-search .ds-header-nav__cluster { min-width: max-content; }
+.ds-header-nav--centered-search .ds-header-nav__cluster { justify-content: flex-end; }
+/* Centred search is the primary affordance here, so give it a generous, fluid
+   width (clamps so it never crowds the brand/cluster on narrow viewports). */
+.ds-header-nav--centered-search .ds-header-nav__search { flex: 0 1 auto; min-width: 0; width: clamp(320px, 38vw, 560px); }
+
+/* ---- Right utility cluster ----------------------------------------- */
+.ds-header-nav__cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  flex-shrink: 0;
+}
+.ds-header-nav__customer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  height: 32px;
+  padding: 0 var(--spacing-8);
+  background: transparent;                     /* Figma: customer selector has no fill/border */
+  border: 0;
+  border-radius: var(--radius-sm);             /* 4 */
+  font: inherit;
+  font-size: var(--font-size-13);
+  color: var(--uems-text-primary);
+  cursor: pointer;
+  /* Fixed max width so long tenant names truncate instead of pushing the
+     tabs row into overflow. */
+  max-width: 180px;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+.ds-header-nav__customer-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: start;
+}
+.ds-header-nav__customer:hover {
+  background: var(--uems-bg-accent-primary-hover);
+}
+.ds-header-nav__customer:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+.ds-header-nav__customer-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.ds-header-nav__customer-menu {
+  position: absolute;
+  top: calc(100% + var(--spacing-4));
+  inset-inline-end: 0;
+  z-index: var(--z-dropdown, 50);
+  min-width: 240px;
+}
+.ds-header-nav__icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--uems-icon-secondary);           /* Figma: utility icons = Icon-Secondary #2a303d */
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+.ds-header-nav__icon-btn:hover { background: var(--uems-bg-accent-primary-hover); }
+.ds-header-nav__icon-btn--active,
+.ds-header-nav__icon-btn[aria-pressed="true"] {
+  color: var(--uems-text-accent-link);
+  background: transparent;
+}
+/* Bottom underline — same accent line as the tab active state.
+   Pseudo-element so we can pin it to the header's baseline regardless
+   of the icon button's own height. */
+.ds-header-nav__icon-btn::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: -4px;
+  height: 2px;
+  background: transparent;
+  border-radius: 1px;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+  pointer-events: none;
+}
+.ds-header-nav__icon-btn--active::after,
+.ds-header-nav__icon-btn[aria-pressed="true"]::after {
+  background: var(--uems-bg-button-primary, var(--uems-text-accent-link)); /* Figma: BG-Button-Primary */
+}
+.ds-header-nav__icon-btn:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+.ds-header-nav__avatar {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+}
+.ds-header-nav__avatar:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+/* No avatar hover scrim in the header — it's a menu trigger, not an editable
+   avatar. Dropping pointer-events on the avatar stops its :hover overlay from
+   firing; the wrapping button still receives the click. */
+.ds-header-nav__avatar ds-avatar { pointer-events: none; }
+
+/* ---- RTL ------------------------------------------------------------ */

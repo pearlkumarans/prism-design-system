@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!--
+  Apps launcher (9-dot/bento) — DUAL-MODE file.
+  • Open directly → standalone harness mounts + opens the ds-drawer.
+  • Fetched by Shell → injectDrawer('apps','body') extracts only <template id="drawer-fragment">.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Apps launcher — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="../design-system-library/src/components/drawer/drawer.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-base); }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  /* Full-viewport overlay — sit above the header (which is z-index:40 in Shell). */
+  #apps-pop { z-index: 50; }
+  /* Float the panel like a card — 8px gaps on top / end / bottom + full radius
+     (matches the profile drawer). */
+  #apps-pop .ds-drawer__panel { top: var(--spacing-8); bottom: var(--spacing-8); inset-inline-end: var(--spacing-8);
+    border-radius: var(--radius-lg, 16px); box-shadow: 0 12px 40px rgba(13, 17, 29, 0.18); }
+  #apps-pop .ds-drawer__body { padding: 0; }
+  .apps-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: linear-gradient(135deg, var(--uems-bg-accent-primary) 0%, var(--uems-bg-primary) 55%, var(--uems-bg-warning-primary) 100%); border-bottom: 1px solid var(--uems-border-tertiary); }
+  .apps-head .apps-close { margin-inline-start: auto; }
+  .apps-cta .ds-button { border-color: var(--uems-text-accent-link) !important; color: var(--uems-text-accent-link) !important; }
+  .apps-head__title { font-size: var(--font-size-18); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+  .apps-body { padding: 20px 24px 24px; }
+  .apps-sectitle { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); margin: 4px 0 12px; }
+  /* surface (tint/border/radius/padding/row-layout) comes from <ds-container tone=… row>; this only spaces them */
+  .apps-rec { margin-bottom: 12px; }
+  .apps-rec:last-of-type { margin-bottom: 20px; }
+  .apps-logo { flex: 0 0 52px; width: 52px; height: 52px; border-radius: 12px; background: var(--uems-bg-primary); padding: 8px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(13, 17, 29, 0.10); }
+  .apps-rec__body { flex: 1; min-width: 0; }
+  .apps-rec__title { display: flex; align-items: center; gap: 8px; font-size: var(--font-size-16); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); margin-bottom: 4px; }
+  .apps-rec__desc { font-size: var(--font-size-14); line-height: 20px; color: var(--uems-text-secondary); }
+  .apps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  /* surface (bg/border/radius/padding/hover) now comes from <ds-container>; this only
+     adds the side-by-side layout inside the card */
+  .apps-card { display: flex; gap: 12px; }
+  .apps-card .apps-logo { flex: 0 0 44px; width: 44px; height: 44px; padding: 8px; box-shadow: none; border: 1px solid var(--uems-border-tertiary); }
+  .apps-card__title { font-size: var(--font-size-15); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); margin-bottom: 4px; }
+  .apps-card__desc { font-size: var(--font-size-13); line-height: 18px; color: var(--uems-text-secondary); }
+  [dir="rtl"] .apps-card__title, [dir="rtl"] .apps-rec__title { unicode-bidi: plaintext; }
+</style>
+
+<ds-drawer id="apps-pop" class="apps-drawer" side="right" size="l" show-header="false" show-footer="false">
+  <div class="apps-head">
+    <span class="apps-head__title">Endpoint Central</span>
+    <ds-badge variant="subtle" state="acknowledge" shape="rounded" size="medium" data-i18n="apps.edition">Professional Edition</ds-badge>
+    <ds-icon-button class="apps-close" data-apps-close icon="close" label="Close" no-tooltip type="tertiary-grey" size="small"></ds-icon-button>
+  </div>
+  <div class="apps-body">
+      <div class="apps-sectitle" data-i18n="apps.sec1">Get the most out of Endpoint Central</div>
+      <ds-container class="apps-rec" radius="lg" row gap="md" style="--ds-container-bg: color-mix(in srgb, var(--uems-bg-warning-primary) 50%, var(--uems-bg-primary)); --ds-container-border-width: 0;">
+        <img class="apps-logo" src="../design-system-library/src/icons/logos/endpoint-central.svg" alt="" />
+        <div class="apps-rec__body"><div class="apps-rec__title">Endpoint Security <ds-badge variant="subtle" state="important" shape="rounded" size="medium" data-i18n="apps.bundle">Bundle</ds-badge><ds-badge variant="subtle" state="critical" shape="rounded" size="medium" data-i18n="apps.free30">30-day free access</ds-badge></div><div class="apps-rec__desc" data-i18n="apps.esDesc">Protect endpoints from data loss, malicious software/downloads, zero-day threats and more.</div></div>
+        <ds-button class="apps-cta" variant="outline" size="small" suffix-icon="chevron-right" data-i18n="apps.learnMore">Learn More</ds-button>
+      </ds-container>
+      <ds-container class="apps-rec" radius="lg" row gap="md" style="--ds-container-bg: color-mix(in srgb, var(--uems-bg-accent-primary) 50%, var(--uems-bg-primary)); --ds-container-border-width: 0;">
+        <img class="apps-logo" src="../design-system-library/src/icons/logos/dex-manager-plus.svg" alt="" />
+        <div class="apps-rec__body"><div class="apps-rec__title">DEX <ds-badge variant="subtle" state="moderate" shape="rounded" size="medium" data-i18n="apps.addon">Add-on</ds-badge><ds-badge variant="subtle" state="critical" shape="rounded" size="medium" data-i18n="apps.free30">30-day free access</ds-badge></div><div class="apps-rec__desc" data-i18n="apps.dexDesc">Proactive issue detection and remediation to eliminate recurring support tickets.</div></div>
+        <ds-button class="apps-cta" variant="outline" size="small" suffix-icon="chevron-right" data-i18n="apps.enable">Enable</ds-button>
+      </ds-container>
+      <div class="apps-sectitle" data-i18n="apps.sec2">Related IT management and security solutions</div>
+      <div class="apps-grid">
+        <ds-container class="apps-card" variant="outline" radius="lg" interactive><img class="apps-logo" src="../design-system-library/src/icons/logos/sdp.svg" alt="" /><div><div class="apps-card__title">ServiceDesk Plus</div><div class="apps-card__desc" data-i18n="apps.sdpDesc">IT service management platform to streamline tickets, track assets, and CMDB.</div></div></ds-container>
+        <ds-container class="apps-card" variant="outline" radius="lg" interactive><img class="apps-logo" src="../design-system-library/src/icons/logos/ad360.svg" alt="" /><div><div class="apps-card__title">AD360</div><div class="apps-card__desc" data-i18n="apps.ad360Desc">End-to-end identity life cycle management platform with security and IT compliance.</div></div></ds-container>
+        <ds-container class="apps-card" variant="outline" radius="lg" interactive><img class="apps-logo" src="../design-system-library/src/icons/logos/log360.svg" alt="" /><div><div class="apps-card__title">Log360</div><div class="apps-card__desc" data-i18n="apps.log360Desc">SIEM platform for centralized log analysis, real-time threat detection, and compliance.</div></div></ds-container>
+        <ds-container class="apps-card" variant="outline" radius="lg" interactive><img class="apps-logo" src="../design-system-library/src/icons/logos/site24x7.svg" alt="" /><div><div class="apps-card__title">Site24x7</div><div class="apps-card__desc" data-i18n="apps.s247Desc">Cloud-based monitoring platform for applications, servers, networks, and websites.</div></div></ds-container>
+        <ds-container class="apps-card" variant="outline" radius="lg" interactive><img class="apps-logo" src="../design-system-library/src/icons/logos/pam360.svg" alt="" /><div><div class="apps-card__title">PAM360</div><div class="apps-card__desc" data-i18n="apps.pam360Desc">Privileged access security software with governance, session monitoring, and analytics.</div></div></ds-container>
+      </div>
+    </div>
+</ds-drawer>
+
+<script>
+(function () {
+  const pop = document.getElementById('apps-pop');
+  function show() { pop && pop.open(); }
+  function hide() { pop && pop.close(); }
+  pop && pop.querySelector('[data-apps-close]')?.addEventListener('click', hide);
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers.apps = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+/* ── STANDALONE HARNESS — runs ONLY when opened directly. ── */
+(function () {
+  const KEY = 'apps';
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellCtx = window.ShellCtx || { get shellArea() { return document.body; }, get lang() { return 'en'; }, setActiveIcon() {} };
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  document.body.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers[KEY] && window.ShellDrawers[KEY].show();
+  customElements.whenDefined('ds-drawer').then(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

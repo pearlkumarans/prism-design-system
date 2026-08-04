@@ -1,0 +1,150 @@
+/* =============================================================================
+   ds-radio / .ds-radio
+   Standalone single radio button — sibling of ds-checkbox. 2 sizes ×
+   selected/unselected × default/disabled × error × RTL. Wraps a real
+   <input type="radio"> for native semantics; same-name radios group natively.
+   ============================================================================= */
+
+.ds-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-14);     /* S/M label = 14/20 */
+  line-height: 20px;
+  color: var(--uems-text-primary);
+}
+/* ---- Sizes (control: S 16 · M 20 · L 24 · Mobile 20) ---- */
+.ds-radio--l,
+.ds-radio--mobile {
+  font-size: var(--font-size-16);     /* L/Mobile label = 16/24 */
+  line-height: 24px;
+}
+.ds-radio--mobile {
+  gap: var(--spacing-12);             /* Mobile gap = 12 */
+  min-height: 44px;                   /* Mobile touch target */
+}
+
+/* Visually-hidden but FOCUSABLE native input — keeps form semantics + keyboard.
+   Uses the 1px-clip technique rather than width/height:0. Zero-size focusable
+   controls get dropped from the sequential (Tab) focus order in Safari and some
+   Firefox setups — so the radio would be unreachable by keyboard. The clip
+   pattern stays reliably in the tab order everywhere, while remaining invisible.
+   No `pointer-events:none`, so the control is directly operable; the focus ring
+   renders on the sibling .ds-radio__circle via :focus-visible below. */
+.ds-radio__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The visual ring */
+.ds-radio__circle {
+  position: relative;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background: var(--uems-bg-primary-alt, var(--uems-bg-base));
+  border: 1px solid var(--uems-border-primary, var(--uems-border-secondary));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+.ds-radio--s .ds-radio__circle { width: 16px; height: 16px; }
+.ds-radio--m .ds-radio__circle,
+.ds-radio--mobile .ds-radio__circle { width: 20px; height: 20px; }
+.ds-radio--l .ds-radio__circle { width: 24px; height: 24px; }
+
+/* Center dot — always present so it scales IN on select and OUT on deselect. */
+.ds-radio__circle::after {
+  content: "";
+  width: 50%;
+  height: 50%;
+  border-radius: var(--radius-full);
+  background: var(--uems-text-white);
+  transform: scale(0);
+  transition: transform 0.25s var(--ease-standard);
+}
+.ds-radio__input:checked ~ .ds-radio__circle::after { transform: scale(1); }
+@media (prefers-reduced-motion: reduce) {
+  .ds-radio__circle::after { transition: none; }
+}
+
+/* Hover — unselected only: ring tints to accent. */
+.ds-radio:hover .ds-radio__input:not(:disabled):not(:checked) ~ .ds-radio__circle {
+  border-color: var(--uems-border-accent);
+}
+
+/* Selected — fill the disc */
+.ds-radio__input:checked ~ .ds-radio__circle {
+  background: var(--uems-bg-button-primary, var(--hyperlink));
+  border-color: var(--uems-bg-button-primary, var(--hyperlink));
+}
+/* Hover on a selected radio → darker primary disc */
+.ds-radio:hover .ds-radio__input:checked:not(:disabled) ~ .ds-radio__circle {
+  background: var(--uems-bg-button-primary-hover);
+  border-color: var(--uems-bg-button-primary-hover);
+}
+
+/* Focus ring on the circle when the (hidden) input is focused via keyboard */
+.ds-radio__input:focus-visible ~ .ds-radio__circle {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+
+/* Error */
+.ds-radio--error .ds-radio__circle,
+.ds-radio[data-error="true"] .ds-radio__circle {
+  border-color: var(--uems-border-error);
+}
+.ds-radio--error .ds-radio__input:checked ~ .ds-radio__circle,
+.ds-radio[data-error="true"] .ds-radio__input:checked ~ .ds-radio__circle {
+  background: var(--uems-bg-error-solid);
+  border-color: var(--uems-bg-error-solid);
+}
+.ds-radio--error .ds-radio__label,
+.ds-radio[data-error="true"] .ds-radio__label { color: var(--uems-text-error); }
+
+/* Disabled */
+.ds-radio--disabled,
+.ds-radio[aria-disabled="true"] {
+  cursor: not-allowed;
+  color: var(--uems-text-disabled);
+}
+.ds-radio__input:disabled ~ .ds-radio__circle {
+  background: var(--uems-bg-disabled-subtle, var(--uems-bg-disabled));
+  border-color: var(--uems-border-disabled);
+}
+/* Disabled + selected → muted blue disc (keeps the chosen value visible) */
+.ds-radio__input:disabled:checked ~ .ds-radio__circle {
+  background: var(--uems-bg-accent-disabled);
+  border-color: var(--uems-border-accent-disabled);
+}
+
+/* Label */
+.ds-radio__label { color: inherit; }
+
+/* Optional trailing help icon — sized by the JS per radio size. */
+.ds-radio__help {
+  flex-shrink: 0;
+  line-height: 0;
+  color: var(--uems-icon-tertiary, var(--uems-text-tertiary));
+}
+
+/* RTL — [dir="rtl"] on the wrapper reverses the flex inline axis per spec;
+   do NOT also set flex-direction: row-reverse. */

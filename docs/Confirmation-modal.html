@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirmation Modal — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/confirmation-modal/confirmation-modal.css">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<link rel="stylesheet" href="../design-system-library/src/components/icon-button/icon-button.css">
+<!-- Rich-content example: message banner (inline-alert) + list inside the modal body -->
+<link rel="stylesheet" href="../design-system-library/src/components/inline-alert/inline-alert.css">
+<link rel="stylesheet" href="../design-system-library/src/components/list/list.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/button/button.js"></script>
+<script type="module" src="../design-system-library/src/components/icon-button/icon-button.js"></script>
+<script type="module" src="../design-system-library/src/components/confirmation-modal/confirmation-modal.js"></script>
+<script type="module" src="../design-system-library/src/components/inline-alert/inline-alert.js"></script>
+<script type="module" src="../design-system-library/src/components/list/list.js"></script>
+<style>
+  /* The component uses position:fixed to overlay the viewport when open.
+     Inside Preview cards we want the dialog to render inline (no overlay).
+     Scope an override that drops fixed positioning and hides the overlay
+     so multiple variants can sit side-by-side as a static showcase. */
+  .page-snackbar .demo-cm-frame ds-confirmation-modal {
+    position: static !important;
+    inset: auto !important;
+    z-index: auto !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center;
+  }
+  .page-snackbar .demo-cm-frame .ds-confirmation-modal__overlay {
+    display: none !important;
+  }
+  .page-snackbar .demo-cm-frame .ds-confirmation-modal__dialog {
+    animation: none !important;
+    margin: 0 auto;
+  }
+
+  /* Preview scaffolding (Mac-window pattern) */
+  .page-snackbar .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-snackbar .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .page-snackbar .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    padding: 32px !important;
+    gap: 36px !important;
+  }
+  .page-snackbar .demo-cm-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-snackbar .demo-cm-section > .demo-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+    margin: 0; text-align: left; width: auto;
+  }
+  .page-snackbar .demo-cm-section > .demo-cm-desc {
+    font-size: 12px; color: var(--prism-text-muted); line-height: 1.5;
+  }
+  .page-snackbar .demo-cm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 980px) {
+    .page-snackbar .demo-cm-grid { grid-template-columns: 1fr; }
+  }
+  .page-snackbar .demo-cm-card {
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 18px;
+    border: 1px solid var(--prism-border);
+    border-radius: 16px;
+    background:
+      radial-gradient(circle at top, rgba(10,11,15,0.55), rgba(10,11,15,0.85)),
+      #0a0b0f;
+  }
+  [data-theme="light"] .page-snackbar .demo-cm-card {
+    background:
+      radial-gradient(circle at top, rgba(13,18,31,0.45), rgba(13,18,31,0.75));
+    border-color: rgba(37,99,235,0.1);
+  }
+  .page-snackbar .demo-cm-card .card-cap {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.65); text-transform: uppercase;
+    text-align: center;
+  }
+  .page-snackbar .demo-cm-frame {
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px 0;
+  }
+
+  /* Anatomy diagram tweaks */
+  .page-snackbar .anat-marker-inline {
+    background: #2563eb; color: #fff; font-size: 11px; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  /* Trigger demos (interactive) */
+  .page-snackbar .demo-trigger-row {
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+</style>
+</head>
+<body class="page-snackbar">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link active">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Confirmation Modal</h1>
+        <p class="page-desc">A confirmation modal stops the user to make sure about something they can&rsquo;t easily undo &mdash; deleting a project, sending an invoice, signing out across all devices. Keep it short: an icon for tone, a one-line question, one or two sentences of consequence, and two clear buttons (the destructive one named, never just &ldquo;OK&rdquo;). For form validation or non-blocking feedback, use an Inline message or Toast.</p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══════════════ OVERVIEW ═══════════════ -->
+        <div class="tab-content" id="tab-overview">
+
+          <!-- ───── Anatomy ───── -->
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram" style="overflow:visible;">
+            <div style="display:flex;justify-content:center;margin:24px 0;padding:48px 32px;">
+              <div style="position:relative;width:480px;max-width:100%;border-radius:12px;background:var(--uems-bg-base, #fff);box-shadow:0 16px 32px rgba(13,18,31,0.18);padding:20px 24px 16px;text-align:center;color:var(--uems-text-primary, #1F242E);">
+                <!-- 1 Close icon -->
+                <div style="position:absolute;top:8px;right:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#8893AD;">
+                  <ds-icon name="close" size="16"></ds-icon>
+                  <div style="position:absolute;left:calc(100% + 6px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">1</span></div>
+                </div>
+
+                <!-- 2 Leading icon -->
+                <div style="display:flex;justify-content:center;padding:8px 0 12px;position:relative;">
+                  <div style="width:48px;height:48px;border-radius:50%;background:rgba(230,81,0,0.12);display:flex;align-items:center;justify-content:center;color:#E65100;">
+                    <ds-icon name="info-circle" size="24"></ds-icon>
+                  </div>
+                  <div style="position:absolute;left:-12px;top:50%;transform:translate(-100%,-50%);display:flex;align-items:center;gap:6px;"><span class="anat-marker-inline">2</span><div style="width:24px;height:2px;background:#2563eb;"></div></div>
+                </div>
+
+                <!-- 3 Title -->
+                <div style="position:relative;font-size:18px;font-weight:600;line-height:24px;margin-bottom:4px;">
+                  Delete this asset?
+                  <div style="position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">3</span></div>
+                </div>
+
+                <!-- 4 Description -->
+                <div style="position:relative;font-size:14px;line-height:20px;color:var(--uems-text-tertiary,#5C6066);margin-bottom:16px;">
+                  This change can't be undone.
+                  <div style="position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">4</span></div>
+                </div>
+
+                <hr style="border:none;border-top:1px solid #E1E4EB;margin:0 0 16px;" />
+
+                <!-- 5 Body -->
+                <div style="position:relative;font-size:14px;line-height:20px;color:var(--uems-text-tertiary,#5C6066);padding:0 16px;margin-bottom:20px;">
+                  The asset and its 14 associated logs will be permanently removed.
+                  <div style="position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">5</span></div>
+                </div>
+
+                <hr style="border:none;border-top:1px solid #E1E4EB;margin:0 0 16px;" />
+
+                <!-- 6 Footer button group -->
+                <div style="position:relative;display:flex;justify-content:center;gap:8px;">
+                  <button style="padding:8px 16px;border-radius:8px;border:1px solid #E1E4EB;background:#fff;color:#1F242E;font:inherit;font-size:14px;cursor:default;">Cancel</button>
+                  <button style="padding:8px 16px;border-radius:8px;border:0;background:#DE350B;color:#fff;font:inherit;font-size:14px;font-weight:500;cursor:default;">Delete asset</button>
+                  <div style="position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">6</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Close icon</strong><span>Top-right dismiss. 28&times;28 hit target with a 16&times;16 &times; glyph. Tertiary grey, hover background <code>--uems-bg-secondary-hover</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Leading icon</strong><span>48&times;48 circular pill with tinted background. Icon glyph and tint are driven by the modal <code>variant</code> &mdash; info / warning / destructive.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Title</strong><span>One short sentence naming the action. Zoho Puvi Semibold 18 / 24. Ends with "?" when asking for confirmation.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Description</strong><span>Optional supporting line below the title. Zoho Puvi Regular 14 / 20, <code>--uems-text-tertiary</code>. Omit if the title is self-explanatory.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Body</strong><span>Default slot. One or two sentences with the concrete consequence ("14 records will be removed"). Avoid bullet lists or long explanations.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Footer button group</strong><span>Centered. Cancel on the left, primary on the right. Primary button variant matches the modal variant (primary / warning / destructive).</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- ───── Preview ───── -->
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">All three semantic variants from <code>confirmation-modal.css</code>, plus slot combinations and trigger patterns &mdash; rendered with the live <code>&lt;ds-confirmation-modal&gt;</code> web component. The dialog body is shown inline (no overlay) so every variant sits side-by-side; an interactive trigger row at the bottom shows the real overlay behavior.</p>
+
+            <div class="demo-container">
+              <!-- Mac-window toolbar -->
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Confirmation Modal &middot; 3 variants + slot combinations + live triggers</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Variants -->
+                <div class="demo-cm-section">
+                  <div class="demo-group-label">Variants &mdash; information / warning (default) / destructive</div>
+                  <div class="demo-cm-desc">Icon tint, header glyph, and the primary button colour all swap based on the <code>variant</code> attribute. Defaults: <code>info-circle</code> / <code>exclamation-circle</code> / <code>exclamation-triangle</code>.</div>
+                  <div class="demo-cm-grid">
+
+                    <div class="demo-cm-card">
+                      <span class="card-cap">Information</span>
+                      <div class="demo-cm-frame">
+                        <ds-confirmation-modal preview-mode variant="information"
+                          title="Save changes before leaving?"
+                          description="Your edits will be preserved across sessions."
+                          primary-label="Save and continue"
+                          secondary-label="Cancel">
+                          You can return to this draft any time from the Drafts tab.
+                        </ds-confirmation-modal>
+                      </div>
+                    </div>
+
+                    <div class="demo-cm-card">
+                      <span class="card-cap">Warning (default)</span>
+                      <div class="demo-cm-frame">
+                        <ds-confirmation-modal preview-mode variant="warning"
+                          title="Sign out of all devices?"
+                          description="Active sessions will end immediately."
+                          primary-label="Sign out everywhere"
+                          secondary-label="Cancel">
+                          You will need to sign in again on every device.
+                        </ds-confirmation-modal>
+                      </div>
+                    </div>
+
+                    <div class="demo-cm-card">
+                      <span class="card-cap">Destructive</span>
+                      <div class="demo-cm-frame">
+                        <ds-confirmation-modal preview-mode variant="destructive"
+                          title="Delete this asset?"
+                          description="This change can't be undone."
+                          primary-label="Delete asset"
+                          secondary-label="Cancel">
+                          The asset and its 14 associated logs will be permanently removed.
+                        </ds-confirmation-modal>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Slot combinations -->
+                <div class="demo-cm-section">
+                  <div class="demo-group-label">Slot combinations &mdash; minimal / title only / with custom body content</div>
+                  <div class="demo-cm-desc">Description, body, dividers, and the close icon are all opt-out. The smallest valid modal is just title + primary + secondary.</div>
+                  <div class="demo-cm-grid">
+
+                    <div class="demo-cm-card">
+                      <span class="card-cap">Title only &mdash; minimal</span>
+                      <div class="demo-cm-frame">
+                        <ds-confirmation-modal preview-mode variant="information"
+                          title="Continue with this action?"
+                          primary-label="Continue"
+                          secondary-label="Cancel"
+                          show-divider-header="false"
+                          show-divider-footer="false">
+                        </ds-confirmation-modal>
+                      </div>
+                    </div>
+
+                    <div class="demo-cm-card">
+                      <span class="card-cap">No close icon</span>
+                      <div class="demo-cm-frame">
+                        <ds-confirmation-modal preview-mode variant="warning"
+                          title="Discard unsaved changes?"
+                          description="Your work will not be saved."
+                          primary-label="Discard changes"
+                          secondary-label="Keep editing"
+                          hide-close>
+                          You have unsaved changes in 2 fields.
+                        </ds-confirmation-modal>
+                      </div>
+                    </div>
+
+                    <div class="demo-cm-card">
+                      <span class="card-cap">Custom body &mdash; rich content</span>
+                      <div class="demo-cm-frame">
+                        <ds-confirmation-modal preview-mode variant="destructive"
+                          title="Remove 3 users from this workspace?"
+                          primary-label="Remove users"
+                          secondary-label="Cancel">
+                          <ds-inline-alert type="warning" style-variant="subtle"
+                            title="The following users will lose access immediately:">
+                            <ds-list list-style="disc" size="small">
+                              <ds-list-item>user@company.com</ds-list-item>
+                              <ds-list-item>priya.r@zohocorp.com</ds-list-item>
+                              <ds-list-item>kiran.v@zohocorp.com</ds-list-item>
+                            </ds-list>
+                          </ds-inline-alert>
+                        </ds-confirmation-modal>
+                      </div>
+                    </div>
+
+                    <div class="demo-cm-card">
+                      <span class="card-cap">Tertiary action &mdash; "Learn more" link</span>
+                      <div class="demo-cm-frame">
+                        <ds-confirmation-modal preview-mode variant="information"
+                          title="Enable two-factor authentication?"
+                          description="Adds a second verification step at sign-in."
+                          primary-label="Enable 2FA"
+                          secondary-label="Cancel"
+                          tertiary-label="Learn more">
+                          You'll need an authenticator app on your phone.
+                        </ds-confirmation-modal>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Custom icon -->
+                <div class="demo-cm-section">
+                  <div class="demo-group-label">Custom icon &mdash; override the default per variant</div>
+                  <div class="demo-cm-desc">Set <code>icon="&lt;sprite-name&gt;"</code> to override. Tint still follows the variant.</div>
+                  <div class="demo-cm-grid">
+
+                    <div class="demo-cm-card">
+                      <span class="card-cap">Destructive &middot; trash icon</span>
+                      <div class="demo-cm-frame">
+                        <ds-confirmation-modal preview-mode variant="destructive"
+                          icon="delete"
+                          title="Move to trash?"
+                          description="You can restore it within 30 days."
+                          primary-label="Move to trash"
+                          secondary-label="Cancel">
+                          1 file will be moved to the trash.
+                        </ds-confirmation-modal>
+                      </div>
+                    </div>
+
+                    <div class="demo-cm-card">
+                      <span class="card-cap">Information &middot; lock icon</span>
+                      <div class="demo-cm-frame">
+                        <ds-confirmation-modal preview-mode variant="information"
+                          icon="lock"
+                          title="Lock this document?"
+                          description="Only admins can edit until unlocked."
+                          primary-label="Lock document"
+                          secondary-label="Cancel">
+                          Collaborators will retain read-only access.
+                        </ds-confirmation-modal>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Loading -->
+                <div class="demo-cm-section">
+                  <div class="demo-group-label">Loading &mdash; async confirm in flight</div>
+                  <div class="demo-cm-desc">Set <code>loading</code> while an async action runs (a Delete API call, a save). The primary button shows a spinner, Cancel/close/Esc/overlay all lock so the user can&rsquo;t abandon or double-fire. Keep the modal open in your <code>ds-confirmation-primary</code> handler with <code>e.preventDefault()</code>, then drop <code>loading</code> when the promise settles.</div>
+                  <div class="demo-cm-grid">
+                    <div class="demo-cm-card">
+                      <span class="card-cap">Destructive &middot; deleting</span>
+                      <div class="demo-cm-frame">
+                        <ds-confirmation-modal preview-mode variant="destructive"
+                          loading
+                          icon="delete"
+                          title="Delete 3 endpoints?"
+                          description="This removes them from management."
+                          primary-label="Deleting&hellip;"
+                          secondary-label="Cancel">
+                          The agents will be uninstalled on next check-in.
+                        </ds-confirmation-modal>
+                      </div>
+                    </div>
+                    <div class="demo-cm-card">
+                      <span class="card-cap">Information &middot; saving</span>
+                      <div class="demo-cm-frame">
+                        <ds-confirmation-modal preview-mode variant="information"
+                          loading
+                          title="Apply configuration?"
+                          description="Pushes the profile to all selected devices."
+                          primary-label="Applying&hellip;"
+                          secondary-label="Cancel">
+                          This may take a moment for large fleets.
+                        </ds-confirmation-modal>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- RTL -->
+                <div class="demo-cm-section">
+                  <div class="demo-group-label">RTL &mdash; mirrored layout (close icon flips to the left, button order reverses)</div>
+                  <div class="demo-cm-grid">
+                    <div class="demo-cm-card">
+                      <span class="card-cap">Destructive &middot; Arabic</span>
+                      <div class="demo-cm-frame">
+                        <ds-confirmation-modal preview-mode dir="rtl"
+                          variant="destructive"
+                          title="&#1581;&#1584;&#1601; &#1607;&#1584;&#1575; &#1575;&#1604;&#1593;&#1606;&#1589;&#1585;&#1567;"
+                          description="&#1604;&#1575; &#1610;&#1605;&#1603;&#1606; &#1575;&#1604;&#1578;&#1585;&#1575;&#1580;&#1593; &#1593;&#1606; &#1607;&#1584;&#1575; &#1575;&#1604;&#1573;&#1580;&#1585;&#1575;&#1569;."
+                          primary-label="&#1581;&#1584;&#1601; &#1575;&#1604;&#1593;&#1606;&#1589;&#1585;"
+                          secondary-label="&#1573;&#1604;&#1594;&#1575;&#1569;">
+                          &#1587;&#1610;&#1578;&#1605; &#1581;&#1584;&#1601; &#1575;&#1604;&#1593;&#1606;&#1589;&#1585; &#1608;14 &#1587;&#1580;&#1604;&#1575;&#1611; &#1605;&#1585;&#1578;&#1576;&#1591;&#1575;&#1611; &#1576;&#1607;.
+                        </ds-confirmation-modal>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- ───── Content Guidelines ───── -->
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Lead the title with a verb naming the action: "Delete folder?", "Sign out everywhere?".</li>
+                <li>Use Destructive only for actions that cannot be undone, ever.</li>
+                <li>Match the primary button to the title's verb: title "Delete folder?" &rarr; button "Delete folder".</li>
+                <li>Keep the body to one or two short sentences.</li>
+                <li>Place Cancel on the left and the primary on the right.</li>
+                <li>Quantify the consequence ("14 records", "3 active sessions") &mdash; vague stakes feel less consequential.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Use generic titles like "Are you sure?" &mdash; they give the user nothing to read.</li>
+                <li>Use "OK" / "Yes" / "No" as button labels &mdash; they erase the meaning of the choice.</li>
+                <li>Pack the body with bulleted lists, FAQ-style explanations, or marketing language.</li>
+                <li>Reverse the button order or put the destructive action in the secondary slot.</li>
+                <li>Use Confirmation for forms or multi-step flows &mdash; reach for Modal / Standard instead.</li>
+                <li>Allow Destructive modals to dismiss on backdrop click (this is the default).</li>
+              </ul></div>
+            </div>
+          </div>
+
+
+        </div> <!-- end tab-overview -->
+
+        <!-- ═══════════════ STYLE ═══════════════ -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Container shape, layout tokens, and per-variant accent colours that define the Confirmation Modal's visual language.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Container</h3>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Width</td><td><code>480px</code> (fixed)</td></tr>
+                <tr><td>Padding</td><td><code>20px 24px 16px</code></td></tr>
+                <tr><td>Corner radius</td><td><code>--radius-lg</code> &middot; 12&thinsp;px</td></tr>
+                <tr><td>Drop shadow</td><td><code>0 16px 32px rgba(13, 18, 31, 0.18)</code></td></tr>
+                <tr><td>Overlay scrim</td><td><code>rgba(10, 11, 15, 0.7)</code></td></tr>
+                <tr><td>Title font</td><td>Zoho Puvi Semibold 18 / 24</td></tr>
+                <tr><td>Description / Body</td><td>Zoho Puvi Regular 14 / 20, <code>--uems-text-tertiary</code></td></tr>
+                <tr><td>Leading icon block</td><td>48 &times; 48 pill, variant-tinted</td></tr>
+                <tr><td>Close icon</td><td>28 &times; 28 hit target, 16&thinsp;px glyph</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Variant accent tokens</h3>
+            <table class="size-table">
+              <thead><tr><th>Variant</th><th>Leading icon bg</th><th>Leading icon fg</th><th>Primary button</th><th>Default icon</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><code>information</code></td>
+                  <td><code>--bg-info-subtlest</code> (blue tint)</td>
+                  <td><code>--text-info</code> (blue)</td>
+                  <td><code>&lt;ds-button variant="primary"&gt;</code></td>
+                  <td><code>info-circle</code></td>
+                </tr>
+                <tr>
+                  <td><code>warning</code> <em>(default)</em></td>
+                  <td><code>--bg-warning-subtlest</code> (amber tint)</td>
+                  <td><code>--uems-text-warning</code> (amber)</td>
+                  <td><code>&lt;ds-button variant="warning"&gt;</code></td>
+                  <td><code>exclamation-circle</code></td>
+                </tr>
+                <tr>
+                  <td><code>destructive</code></td>
+                  <td><code>--bg-error-subtlest</code> (red tint)</td>
+                  <td><code>--uems-text-error</code> (red)</td>
+                  <td><code>&lt;ds-button variant="destructive"&gt;</code></td>
+                  <td><code>exclamation-triangle</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Motion</h3>
+            <table class="size-table">
+              <thead><tr><th>Transition</th><th>Duration</th><th>Easing</th></tr></thead>
+              <tbody>
+                <tr><td>Overlay fade-in</td><td>200&thinsp;ms</td><td><code>--ease-standard</code></td></tr>
+                <tr><td>Dialog pop (scale 0.96 &rarr; 1 + fade)</td><td>200&thinsp;ms</td><td><code>--ease-standard</code></td></tr>
+                <tr><td>Dialog close</td><td>150&thinsp;ms</td><td><code>--ease-standard</code></td></tr>
+                <tr><td><code>prefers-reduced-motion</code></td><td>Animations replaced with instant show/hide</td><td>&mdash;</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ USAGE ═══════════════ -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <h2 id="usage" class="doc-section-title">Usage</h2>
+          <p class="doc-section-subtitle">When to reach for a Confirmation Modal versus alternative feedback patterns.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">When to use</h3>
+            <ul class="doc-list">
+              <li>The user is about to perform a discrete action that they should pause to confirm.</li>
+              <li>The action has a binary outcome (do / don't) and the context is short.</li>
+              <li>The decision fits in a 480&thinsp;px dialog without scrolling.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">When not to use</h3>
+            <ul class="doc-list">
+              <li>The action needs a form, multiple inputs, or a multi-step flow &mdash; use <strong>Modal / Standard</strong> or a side panel.</li>
+              <li>The user just needs acknowledgement, not a decision &mdash; use <strong>Toast</strong> or <strong>Inline alert</strong>.</li>
+              <li>The confirmation happens inline with a list row &mdash; use <strong>Inline Confirm</strong> instead.</li>
+              <li>You want to onboard or educate &mdash; use a coachmark or spotlight pattern.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Semantic mapping</h3>
+            <table class="size-table">
+              <thead><tr><th>Action archetype</th><th>Variant</th><th>Example primary label</th></tr></thead>
+              <tbody>
+                <tr><td>Save / continue / proceed</td><td>Information</td><td>"Save and continue"</td></tr>
+                <tr><td>Reset, sign out, override</td><td>Warning</td><td>"Sign out everywhere"</td></tr>
+                <tr><td>Delete, remove, revoke, purge</td><td>Destructive</td><td>"Delete asset"</td></tr>
+                <tr><td>Discard unsaved changes</td><td>Warning</td><td>"Discard changes"</td></tr>
+                <tr><td>Cancel an in-flight job</td><td>Warning</td><td>"Cancel job" (secondary: "Keep running")</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ CODE ═══════════════ -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+
+          <!-- ───── Live demo (single section — playground + open-overlay button) ───── -->
+          <h2 id="live-demo-code" class="doc-section-title">Live demo</h2>
+          <p class="doc-section-subtitle">Configure the Confirmation Modal below and copy the generated HTML. Click <strong>Open as full overlay</strong> to see the real fixed-viewport behavior with focus trap and <kbd>Esc</kbd>-to-dismiss.</p>
+
+          <!-- The 3 live overlay modals — kept outside the playground so position:fixed paints cleanly -->
+          <ds-confirmation-modal id="cm-live-info"
+            variant="information"
+            title="Save changes before leaving?"
+            description="Your edits will be preserved across sessions."
+            primary-label="Save and continue"
+            secondary-label="Cancel">
+            You can return to this draft any time from the Drafts tab.
+          </ds-confirmation-modal>
+          <ds-confirmation-modal id="cm-live-warn"
+            variant="warning"
+            title="Sign out of all devices?"
+            description="Active sessions will end immediately."
+            primary-label="Sign out everywhere"
+            secondary-label="Cancel">
+            You will need to sign in again on every device.
+          </ds-confirmation-modal>
+          <ds-confirmation-modal id="cm-live-dest"
+            variant="destructive"
+            title="Delete this asset?"
+            description="This change can't be undone."
+            primary-label="Delete asset"
+            secondary-label="Cancel">
+            The asset and its 14 associated logs will be permanently removed.
+          </ds-confirmation-modal>
+
+          <style>
+            /* Inline-preview override scoped to the playground so the modal
+               renders as a card inside cp-preview instead of a fixed overlay. */
+            .page-snackbar #pg-cm-element {
+              position: static !important;
+              inset: auto !important;
+              z-index: auto !important;
+              padding: 0 !important;
+              display: flex !important;
+              justify-content: center;
+            }
+            .page-snackbar #pg-cm-element .ds-confirmation-modal__overlay { display: none !important; }
+            .page-snackbar #pg-cm-element .ds-confirmation-modal__dialog { animation: none !important; margin: 0 auto; }
+          </style>
+
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group">
+                <label class="cp-label">Variant</label>
+                <select class="cp-select" id="pg-cm-variant">
+                  <option value="information">Information</option>
+                  <option value="warning" selected>Warning</option>
+                  <option value="destructive">Destructive</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Show description</label>
+                <select class="cp-select" id="pg-cm-desc">
+                  <option value="true" selected>Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Show close icon</label>
+                <select class="cp-select" id="pg-cm-close">
+                  <option value="true" selected>Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Tertiary action</label>
+                <select class="cp-select" id="pg-cm-tertiary">
+                  <option value="false" selected>None</option>
+                  <option value="true">Show "Learn more"</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">RTL</label>
+                <select class="cp-select" id="pg-cm-rtl">
+                  <option value="false" selected>LTR</option>
+                  <option value="true">RTL (Arabic)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="cp-preview" id="pg-cm-preview-area" style="padding:32px 24px;flex-direction:column;gap:20px;">
+              <ds-confirmation-modal id="pg-cm-element"
+                preview-mode
+                variant="warning"
+                title="Sign out of all devices?"
+                description="Active sessions will end immediately."
+                primary-label="Sign out everywhere"
+                secondary-label="Cancel">
+                You will need to sign in again on every device.
+              </ds-confirmation-modal>
+              <ds-button id="pg-cm-open-overlay" variant="primary" size="medium" prefix-icon="external-link">Open as full overlay</ds-button>
+            </div>
+
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-cm-copy-btn">
+                <ds-icon name="copy" size="15"></ds-icon>
+                Copy code
+              </button>
+            </div>
+            <div style="background:#0a0a0c;">
+              <div class="cp-code-area" id="pg-cm-code-output"></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="api" class="doc-section-title">Component API</h2>
+          <p class="doc-section-subtitle">HTML attributes, slots, and events for <code>&lt;ds-confirmation-modal&gt;</code>. Source: <code>design-system-library/src/components/confirmation-modal/confirmation-modal.js</code>.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Attributes</h3>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Values</th><th>Default</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>variant</code></td><td><code>information</code> &middot; <code>warning</code> &middot; <code>destructive</code></td><td><code>warning</code></td><td>Drives icon glyph, icon tint, and primary button colour.</td></tr>
+                <tr><td><code>title</code></td><td>string</td><td>&mdash;</td><td>Required. Sentence case, often ends with "?". &le; 50 chars.</td></tr>
+                <tr><td><code>description</code></td><td>string</td><td>&mdash;</td><td>Optional supporting line below title.</td></tr>
+                <tr><td><code>primary-label</code></td><td>string</td><td>&mdash;</td><td>Required. Mirrors the title's verb.</td></tr>
+                <tr><td><code>secondary-label</code></td><td>string</td><td><code>Cancel</code></td><td>Safe / dismiss action label.</td></tr>
+                <tr><td><code>tertiary-label</code></td><td>string</td><td>&mdash;</td><td>Optional auxiliary action; does not auto-close.</td></tr>
+                <tr><td><code>icon</code></td><td>sprite name</td><td>per variant</td><td>Override the default glyph (e.g. <code>delete</code>, <code>lock</code>).</td></tr>
+                <tr><td><code>hide-close</code></td><td>boolean</td><td>unset</td><td>Hides the top-right close icon.</td></tr>
+                <tr><td><code>dismiss-on-overlay-click</code></td><td><code>true</code> &middot; <code>false</code></td><td><code>true</code> (info / warning) &middot; <code>false</code> (destructive)</td><td>Click on the scrim closes the modal.</td></tr>
+                <tr><td><code>show-divider-header</code></td><td><code>true</code> &middot; <code>false</code></td><td><code>true</code></td><td>Divider between header and body.</td></tr>
+                <tr><td><code>show-divider-footer</code></td><td><code>true</code> &middot; <code>false</code></td><td><code>true</code></td><td>Divider between body and footer.</td></tr>
+                <tr><td><code>loading</code></td><td>boolean</td><td>unset</td><td>Spinner on the primary button while an async confirm runs. Locks Cancel, close, Esc, and overlay dismissal so the action can&rsquo;t be abandoned or double-fired.</td></tr>
+                <tr><td><code>open</code></td><td>boolean</td><td>unset</td><td>Open / close state.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Slots</h3>
+            <table class="size-table">
+              <thead><tr><th>Slot</th><th>Purpose</th></tr></thead>
+              <tbody>
+                <tr><td><strong>default / <code>body</code></strong></td><td>Primary content area below the title row. Plain text or any HTML.</td></tr>
+                <tr><td><code>body2</code></td><td>Optional secondary content area below <code>body</code>. Use sparingly &mdash; one short line or inline link.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Events</h3>
+            <table class="size-table">
+              <thead><tr><th>Event</th><th>Detail</th><th>Fires when</th></tr></thead>
+              <tbody>
+                <tr><td><code>ds-confirmation-open</code></td><td>&mdash;</td><td>Modal opened.</td></tr>
+                <tr><td><code>ds-confirmation-primary</code></td><td>&mdash;</td><td>Primary button activated. Auto-closes unless <code>preventDefault()</code>.</td></tr>
+                <tr><td><code>ds-confirmation-secondary</code></td><td>&mdash;</td><td>Secondary (Cancel) activated. Auto-closes unless <code>preventDefault()</code>.</td></tr>
+                <tr><td><code>ds-confirmation-tertiary</code></td><td>&mdash;</td><td>Tertiary auxiliary activated. Does <strong>not</strong> auto-close.</td></tr>
+                <tr><td><code>ds-confirmation-close</code></td><td><code>{ reason }</code></td><td>Dismissed via Esc / backdrop / close icon.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Async confirm pattern</h3>
+            <p class="doc-section-subtitle">To keep the modal open while a handler runs:</p>
+            <pre style="background:#0a0a0c;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;padding:20px;border-radius:12px;overflow:auto;">modal.addEventListener('ds-confirmation-primary', async (e) =&gt; {
+  e.preventDefault();           // prevent auto-close
+  await api.delete(asset.id);
+  modal.close();                // close after the work is done
+});</pre>
+          </div>
+        </div>
+
+        <!-- ═══════════════ ACCESSIBILITY ═══════════════ -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for ensuring the Confirmation Modal is accessible across assistive technologies and input methods.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Roles &amp; ARIA</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Implementation</th></tr></thead>
+              <tbody>
+                <tr><td>Role</td><td><code>role="alertdialog"</code> with <code>aria-modal="true"</code> on the dialog.</td></tr>
+                <tr><td>Title</td><td><code>aria-labelledby</code> pointing to the title element.</td></tr>
+                <tr><td>Body</td><td><code>aria-describedby</code> pointing to the body region.</td></tr>
+                <tr><td>Leading icon</td><td><code>aria-hidden="true"</code> &mdash; severity is conveyed by the title text and primary-button colour, not the icon alone.</td></tr>
+                <tr><td>Close button</td><td><code>aria-label="Close"</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Keyboard</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td><kbd>Esc</kbd></td><td>Dismiss (equivalent to Cancel). Suppress only when an inline confirmation chain explicitly disables it.</td></tr>
+                <tr><td><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></td><td>Cycles focus inside the dialog only &mdash; focus is trapped while the modal is open.</td></tr>
+                <tr><td><kbd>Enter</kbd></td><td>Activates the focused button. Does <strong>not</strong> auto-trigger the primary button.</td></tr>
+                <tr><td>Click on overlay</td><td>Same as Cancel for Information / Warning. <strong>Disabled by default</strong> for Destructive to prevent accidental data loss.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Focus management</h3>
+            <ul class="doc-list">
+              <li>On open, focus moves to the <strong>secondary (safe)</strong> button &mdash; never the destructive primary.</li>
+              <li>Focus is trapped inside the dialog while open.</li>
+              <li>On close, focus returns to the originating trigger element (or <code>returnFocusTo</code> if set).</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Other concerns</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Requirement</th></tr></thead>
+              <tbody>
+                <tr><td>Color contrast</td><td>Title, body, and primary-button label all meet WCAG 2.1 AA (4.5:1) on the white surface.</td></tr>
+                <tr><td>Touch target</td><td>Close icon 28&times;28 visually, &ge; 44&times;44 effective hit area on touch.</td></tr>
+                <tr><td>Motion</td><td><code>prefers-reduced-motion: reduce</code> replaces scale + fade with instant show / hide.</td></tr>
+                <tr><td>RTL</td><td>Icon and text stay centered; button order mirrors so the primary stays on the visual leading edge in RTL.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0" target="_blank" rel="noopener" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+      <div id="feedback" class="feedback-banner" style="display:none;">
+        <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+        <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+      </div>
+
+    </main>
+  </div>
+
+  <a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+    <span class="float-cliq-label">Share feedback</span>
+    <span class="float-cliq-icon">
+      <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke-width="1.4">
+        <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+  </a>
+
+  <!-- Wire the code playground + "Open as full overlay" trigger -->
+  <script type="module">
+    customElements.whenDefined('ds-confirmation-modal').then(() => {
+      // ── Code playground (controls → live preview + generated HTML) ─
+      const variantEl  = document.getElementById('pg-cm-variant');
+      const descEl     = document.getElementById('pg-cm-desc');
+      const closeEl    = document.getElementById('pg-cm-close');
+      const tertiaryEl = document.getElementById('pg-cm-tertiary');
+      const rtlEl      = document.getElementById('pg-cm-rtl');
+      const previewEl  = document.getElementById('pg-cm-element');
+      const codeOut    = document.getElementById('pg-cm-code-output');
+      const copyBtn    = document.getElementById('pg-cm-copy-btn');
+      if (!variantEl) return;
+
+      const COPY_LTR = {
+        information: { title: 'Save changes before leaving?', description: 'Your edits will be preserved across sessions.', primary: 'Save and continue',   secondary: 'Cancel', tertiary: 'Learn more', body: 'You can return to this draft any time from the Drafts tab.' },
+        warning:     { title: 'Sign out of all devices?',     description: 'Active sessions will end immediately.',         primary: 'Sign out everywhere', secondary: 'Cancel', tertiary: 'Learn more', body: 'You will need to sign in again on every device.' },
+        destructive: { title: 'Delete this asset?',           description: "This change can't be undone.",                  primary: 'Delete asset',        secondary: 'Cancel', tertiary: 'Learn more', body: 'The asset and its 14 associated logs will be permanently removed.' },
+      };
+      const COPY_RTL = {
+        information: { title: 'حفظ التغييرات قبل المغادرة؟', description: 'سيتم الاحتفاظ بتعديلاتك عبر الجلسات.', primary: 'حفظ ومتابعة', secondary: 'إلغاء', tertiary: 'اعرف المزيد', body: 'يمكنك العودة إلى هذه المسودة في أي وقت من علامة التبويب المسودات.' },
+        warning:     { title: 'تسجيل الخروج من جميع الأجهزة؟', description: 'ستنتهي الجلسات النشطة فورًا.', primary: 'تسجيل الخروج من كل مكان', secondary: 'إلغاء', tertiary: 'اعرف المزيد', body: 'ستحتاج إلى تسجيل الدخول مرة أخرى على كل جهاز.' },
+        destructive: { title: 'حذف هذا العنصر؟', description: 'لا يمكن التراجع عن هذا الإجراء.', primary: 'حذف العنصر', secondary: 'إلغاء', tertiary: 'اعرف المزيد', body: 'سيتم حذف العنصر وسجلاته الـ 14 المرتبطة بصفة دائمة.' },
+      };
+      const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      let rawCode = '';
+
+      function update() {
+        const variant   = variantEl.value;
+        const showDesc  = descEl.value === 'true';
+        const showClose = closeEl.value === 'true';
+        const showTert  = tertiaryEl.value === 'true';
+        const rtl       = rtlEl.value === 'true';
+        const copy      = (rtl ? COPY_RTL : COPY_LTR)[variant];
+
+        previewEl.setAttribute('variant', variant);
+        previewEl.setAttribute('title', copy.title);
+        if (showDesc) previewEl.setAttribute('description', copy.description);
+        else previewEl.removeAttribute('description');
+        previewEl.setAttribute('primary-label', copy.primary);
+        previewEl.setAttribute('secondary-label', copy.secondary);
+        if (showTert) previewEl.setAttribute('tertiary-label', copy.tertiary);
+        else previewEl.removeAttribute('tertiary-label');
+        if (showClose) previewEl.removeAttribute('hide-close');
+        else previewEl.setAttribute('hide-close', '');
+        if (rtl) previewEl.setAttribute('dir', 'rtl');
+        else previewEl.removeAttribute('dir');
+        /* The component captures its initial body HTML once in connectedCallback
+           and rebuilds the dialog DOM around it. Don't touch the host's
+           textContent — that would obliterate the dialog. Instead, find the
+           component's body region (data-body) and update only its content. */
+        const bodyEl = previewEl.querySelector('[data-body]');
+        if (bodyEl) bodyEl.textContent = copy.body;
+
+        const attrs = [`variant="${variant}"`, `title="${copy.title}"`];
+        if (showDesc)  attrs.push(`description="${copy.description}"`);
+        attrs.push(`primary-label="${copy.primary}"`);
+        attrs.push(`secondary-label="${copy.secondary}"`);
+        if (showTert)  attrs.push(`tertiary-label="${copy.tertiary}"`);
+        if (!showClose) attrs.push(`hide-close`);
+        if (rtl)       attrs.push(`dir="rtl"`);
+        attrs.push(`open`);
+        rawCode = `<ds-confirmation-modal\n  ${attrs.join('\n  ')}>\n  ${copy.body}\n</ds-confirmation-modal>`;
+
+        codeOut.innerHTML = esc(rawCode)
+          .replace(/&lt;(\/?)(ds-confirmation-modal)/g, '&lt;$1<span style="color:#a78bfa;">$2</span>')
+          .replace(/([a-z-]+)=&quot;([^&]*)&quot;/g, '<span style="color:#38bdf8;">$1</span>=<span style="color:#34d399;">"$2"</span>')
+          .replace(/^(\s*)(open|hide-close)$/gm, '$1<span style="color:#38bdf8;">$2</span>')
+          .replace(/\n/g, '<br/>')
+          .replace(/  /g, '&nbsp;&nbsp;');
+      }
+
+      [variantEl, descEl, closeEl, tertiaryEl, rtlEl].forEach((el) => el.addEventListener('change', update));
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(rawCode);
+          const original = copyBtn.innerHTML;
+          copyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+          setTimeout(() => { copyBtn.innerHTML = original; }, 2000);
+        } catch {}
+      });
+
+      // "Open as full overlay" button opens the matching variant's live overlay modal
+      const overlayBtn = document.getElementById('pg-cm-open-overlay');
+      if (overlayBtn) {
+        overlayBtn.addEventListener('click', () => {
+          const variant = variantEl.value;
+          const target = { information: 'cm-live-info', warning: 'cm-live-warn', destructive: 'cm-live-dest' }[variant];
+          const modal = target && document.getElementById(target);
+          if (modal) modal.setAttribute('open', '');
+        });
+      }
+
+      update();
+    });
+  </script>
+
+  <script src="js/components/toc.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

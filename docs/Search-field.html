@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search Field — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<!-- Demo search-field: single source of truth -->
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/search-field/search-field.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/search-field/search-field.js"></script>
+<link rel="stylesheet" href="../design-system-library/src/components/tag/tag.css">
+<script type="module" src="../design-system-library/src/components/tag/tag.js"></script>
+<style>
+  /* Live-demo canvas — match the side-by-side / stacked patterns used on
+     Button.html (cloned page-search-field section already provides nav,
+     sidebar, tabs, etc.). */
+  .page-search-field .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .page-search-field .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    padding: 32px !important;
+    gap: 28px !important;
+  }
+  .page-search-field .demo-sf-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-search-field .demo-sf-section > .demo-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+    margin: 0; text-align: left; width: auto;
+  }
+  .page-search-field .demo-sf-stack { display: flex; flex-direction: column; gap: 12px; max-width: 520px; }
+  .page-search-field .demo-sf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 880px) {
+    .page-search-field .demo-sf-row { grid-template-columns: 1fr; }
+  }
+  .page-search-field .demo-sf-row-item { display: flex; flex-direction: column; gap: 8px; }
+  .page-search-field .demo-sf-row-item .mini-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+  }
+  .page-search-field .demo-realworld-card {
+    padding: 18px;
+    border: 1px solid var(--prism-border);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+    max-width: 640px;
+  }
+  [data-theme="light"] .page-search-field .demo-realworld-card {
+    background: rgba(255,255,255,0.55);
+    border-color: rgba(37,99,235,0.1);
+  }
+  .page-search-field .demo-realworld-card-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .page-search-field .code-block {
+    background: #F8FAFE;
+    border: 1px solid rgba(37, 99, 235, 0.10);
+    border-radius: 8px;
+    padding: 16px 18px; margin: 12px 0 24px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px; line-height: 1.55;
+    color: var(--prism-text);
+  }
+  .page-search-field .code-block code {
+    background: transparent !important; border: 0 !important; padding: 0 !important;
+    font: inherit; color: inherit; white-space: pre;
+  }
+</style>
+</head>
+<body class="page-search-field">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">      <a href="Foundation.html" >Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html" >Zia Experience</a><a href="llm-reference.html">LLM Reference</a><div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+
+      <div style="width: 16px;"></div>
+
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search...">
+        <span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 id="components" class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link active">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Search Field</h1>
+        <p class="page-desc">
+          A search field is where the user types something they want to find &mdash; a name in a directory, a row in a table, a doc in a workspace. The leading magnifying glass tells them what the field is for, the ⌘K hint tells them how to jump to it from anywhere, the X clears it in one click, and the spinner tells them results are on the way.
+        </p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══ OVERVIEW TAB ═══ -->
+        <div class="tab-content" id="tab-overview">
+
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+
+          <div class="anatomy-diagram">
+            <div style="display:flex;justify-content:center;padding:24px 0;">
+              <div style="position:relative;width:440px;">
+                <ds-search-field size="medium" placeholder="Search…" show-shortcut></ds-search-field>
+                <span class="anat-marker-inline" style="position:absolute;top:-24px;left:8px;">1</span>
+                <span class="anat-marker-inline" style="position:absolute;top:-24px;left:48px;">2</span>
+                <span class="anat-marker-inline" style="position:absolute;top:-24px;right:8px;">3</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="anat-legend" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Leading search icon</strong><span>Always present. 16 px (Small) / 20 px (Medium, Large). Color tracks state.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Placeholder / Value</strong><span>Placeholder shows when empty; primary text once filled. Native <code>&lt;input type="search"&gt;</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Trailing slot</strong><span>One of: ⌘K shortcut chip (idle) → Clear (×) button (filled / error) → spinner (loading).</span></div></div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Live Demo -->
+          <div style="margin-bottom: 64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom: 8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom: 28px;">Every size and state side by side, plus real placements (top-bar global search, table filter, settings page). Type into any field &mdash; this is exactly how it behaves in production.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Search Field · sizes × states + real-world</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Sizes -->
+                <div class="demo-sf-section">
+                  <div class="demo-group-label">Sizes &mdash; Small 32 · Medium 40 · Large 48</div>
+                  <div class="demo-sf-stack">
+                    <ds-search-field size="small"  placeholder="Search… (Small, 32 px)"></ds-search-field>
+                    <ds-search-field size="medium" placeholder="Search… (Medium, 40 px)"></ds-search-field>
+                    <ds-search-field size="large"  placeholder="Search… (Large, 48 px)"></ds-search-field>
+                  </div>
+                </div>
+
+                <!-- States -->
+                <div class="demo-sf-section">
+                  <div class="demo-group-label">States &mdash; the 7 visual states from MD &sect;States, in order</div>
+                  <div class="demo-sf-row">
+                    <div class="demo-sf-row-item">
+                      <span class="mini-label">Default &mdash; resting state</span>
+                      <ds-search-field size="medium" placeholder="Search anything"></ds-search-field>
+                    </div>
+                    <div class="demo-sf-row-item">
+                      <span class="mini-label">Hover &mdash; pointer over field (border deepens)</span>
+                      <ds-search-field size="medium" placeholder="Hover me"></ds-search-field>
+                    </div>
+                    <div class="demo-sf-row-item">
+                      <span class="mini-label">Focus &mdash; try Tab into the field</span>
+                      <ds-search-field size="medium" placeholder="Focus me with Tab"></ds-search-field>
+                    </div>
+                    <div class="demo-sf-row-item">
+                      <span class="mini-label">Filled &mdash; value present, Clear (&times;) shown</span>
+                      <ds-search-field size="medium" value="Endpoint Central"></ds-search-field>
+                    </div>
+                    <div class="demo-sf-row-item">
+                      <span class="mini-label">Loading &mdash; async query in flight</span>
+                      <ds-search-field size="medium" value="Endpoint" loading></ds-search-field>
+                    </div>
+                    <div class="demo-sf-row-item">
+                      <span class="mini-label">Disabled &mdash; non-interactive</span>
+                      <ds-search-field size="medium" placeholder="Search disabled" disabled></ds-search-field>
+                    </div>
+                    <div class="demo-sf-row-item">
+                      <span class="mini-label">Error &mdash; invalid query / no results</span>
+                      <ds-search-field size="medium" value="!@#$%" error></ds-search-field>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- With ⌘K shortcut -->
+                <div class="demo-sf-section">
+                  <div class="demo-group-label">With shortcut hint &mdash; show-shortcut wires the trailing ⌘K chip</div>
+                  <div class="demo-sf-stack">
+                    <ds-search-field size="small"  placeholder="Search…"           show-shortcut></ds-search-field>
+                    <ds-search-field size="medium" placeholder="Search globally"   show-shortcut></ds-search-field>
+                    <ds-search-field size="large"  placeholder="Search everywhere" show-shortcut shortcut-label="Ctrl K"></ds-search-field>
+                  </div>
+                </div>
+
+                <!-- RTL -->
+                <div class="demo-sf-section">
+                  <div class="demo-group-label">RTL &mdash; mirrored layout (icon flips to trailing edge, shortcut/clear to leading)</div>
+                  <div class="demo-sf-stack">
+                    <ds-search-field size="medium" placeholder="ابحث…"        show-shortcut rtl></ds-search-field>
+                    <ds-search-field size="medium" value="نتيجة البحث"        rtl></ds-search-field>
+                    <ds-search-field size="medium" value="جارٍ البحث" loading rtl></ds-search-field>
+                  </div>
+                </div>
+
+                <!-- Real-world: dashboard header -->
+                <div class="demo-sf-section">
+                  <div class="demo-group-label">Real-world &mdash; global app search in a header bar</div>
+                  <div class="demo-realworld-card">
+                    <div class="demo-realworld-card-label">Endpoint Central &middot; Global ⌘K search</div>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                      <div style="font-size:14px;font-weight:600;color:var(--prism-text);">Endpoint Central</div>
+                      <div style="flex:1;max-width:420px;">
+                        <ds-search-field size="medium" placeholder="Search across devices, patches, policies…" show-shortcut></ds-search-field>
+                      </div>
+                      <span style="font-size:13px;color:var(--prism-text-muted);">All Customers ▾</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Real-world: table filter -->
+                <div class="demo-sf-section">
+                  <div class="demo-group-label">Real-world &mdash; table/list filter (debounced, async)</div>
+                  <div class="demo-realworld-card">
+                    <div class="demo-realworld-card-label">Devices table &middot; filter on type</div>
+                    <ds-search-field id="rw-filter" size="small" placeholder="Filter by name, IP, or OS…"></ds-search-field>
+                    <div style="margin-top:12px;font-size:12px;color:var(--prism-text-muted);" id="rw-filter-out">Type to see filtered count.</div>
+                  </div>
+                </div>
+
+                <!-- Real-world: search + applied filter tags -->
+                <div class="demo-sf-section">
+                  <div class="demo-group-label">Real-world &mdash; search with applied filter chips</div>
+                  <div class="demo-realworld-card">
+                    <div class="demo-realworld-card-label">Patch view &middot; query + active filters</div>
+                    <ds-search-field size="small" placeholder="Search patches, CVEs, KBs…"></ds-search-field>
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;">
+                      <ds-tag variant="primary" size="medium">Severity: Critical</ds-tag>
+                      <ds-tag variant="primary" size="medium">OS: Windows 11</ds-tag>
+                      <ds-tag variant="primary" size="medium">Status: Missing</ds-tag>
+                      <ds-tag variant="neutral" size="medium" show-close="false">128 results</ds-tag>
+                    </div>
+                    <div style="margin-top:12px;font-size:12px;color:var(--prism-text-muted);line-height:1.5;">The search narrows within the chips&rsquo; scope; removing a chip widens the result set. The count tag is read-only (<code>show-close="false"</code>).</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Guidelines -->
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Keep the leading search icon visible at all times.</li>
+                <li>Show the Clear (×) once the field has a value.</li>
+                <li>Use the Loading state for async / debounced queries.</li>
+                <li>Reserve the Error state for failed or empty results — not for "no input yet".</li>
+                <li>Show <code>⌘K</code> only when a real keyboard shortcut is wired up.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Replace the search icon with an unrelated glyph.</li>
+                <li>Leave a filled field with no way to clear it.</li>
+                <li>Block the UI while searching — use the inline spinner instead.</li>
+                <li>Use Error styling for an empty / resting field.</li>
+                <li>Display a shortcut hint that doesn't actually focus the field.</li>
+              </ul></div>
+            </div>
+          </div>
+
+        </div><!-- /#tab-overview -->
+
+        <!-- ═══ STYLE TAB ═══ -->
+        <div class="tab-content" id="tab-style" style="display: none; padding-top: 32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">The exact tokens, sizes, and colours behind every state of the search field. Use this tab when you&rsquo;re aligning a Figma node to code or matching a custom skin to the system.</p>
+
+          <div class="doc-section">
+            <h2 id="sizes" class="doc-section-title">Sizes</h2>
+            <table class="size-table">
+              <thead><tr><th>Size</th><th>Height</th><th>Padding (T R B L)</th><th>Gap</th><th>Icon</th><th>Font</th></tr></thead>
+              <tbody>
+                <tr><td>Small</td><td>32 px</td><td>8 · 8 · 8 · 8</td><td>8 px</td><td>16 px</td><td>12 px</td></tr>
+                <tr><td>Medium</td><td>40 px</td><td>8 · 12 · 8 · 12</td><td>8 px</td><td>20 px</td><td>14 px</td></tr>
+                <tr><td>Large</td><td>48 px</td><td>12 · 12 · 12 · 12</td><td>8 px</td><td>20 px</td><td>14 px</td></tr>
+              </tbody>
+            </table>
+            <p class="doc-section-subtitle" style="margin-top:12px;">All sizes share a 6 px corner radius and a 1 px border (focus uses 2 px, padding compensates so height stays stable).</p>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="state-tokens" class="doc-section-title">State Tokens</h2>
+            <table class="size-table">
+              <thead><tr><th>State</th><th>Background</th><th>Border</th><th>Text</th><th>Trailing</th></tr></thead>
+              <tbody>
+                <tr><td>Default</td><td><code>BG-Primary</code> (#FFFFFF)</td><td><code>Border-Tertiary</code> (#E1E4EB), 1 px</td><td><code>Text-Placeholder</code></td><td>Shortcut (optional)</td></tr>
+                <tr><td>Hover</td><td><code>BG-Primary</code></td><td><code>Border-Primary</code> (#B4BBCC), 1 px</td><td><code>Text-Placeholder</code></td><td>Shortcut (optional)</td></tr>
+                <tr><td>Focus</td><td><code>BG-Primary</code></td><td><code>Border-Accent-Focus</code> (#006AFF), 2 px</td><td><code>Text-Placeholder</code></td><td>Shortcut (optional)</td></tr>
+                <tr><td>Filled</td><td><code>BG-Primary</code></td><td><code>Border-Primary</code> (#B4BBCC), 1 px</td><td><code>Text-Primary</code></td><td>Clear (×)</td></tr>
+                <tr><td>Loading</td><td><code>BG-Primary</code></td><td><code>Border-Accent</code> (#006AFF), 1 px</td><td><code>Text-Primary</code></td><td>Spinner</td></tr>
+                <tr><td>Disabled</td><td><code>BG-Secondary</code> (#F0F2F5)</td><td><code>Border-Primary</code> (#B4BBCC), 1 px</td><td><code>Text-Disabled</code></td><td>—</td></tr>
+                <tr><td>Error</td><td><code>BG-Primary</code></td><td><code>Border-Error</code> (#E42527), 1 px</td><td><code>Text-Primary</code></td><td>Clear (×)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="animation" class="doc-section-title">Animation</h2>
+            <ul class="doc-list">
+              <li><strong>Border / background</strong> — fade over 160 ms <code>cubic-bezier(0.4, 0, 0.2, 1)</code> on every state change.</li>
+              <li><strong>Clear button</strong> — hover bg fade 140 ms; press <code>scale(0.9)</code> with <code>cubic-bezier(0.16, 1, 0.3, 1)</code>.</li>
+              <li><strong>Spinner</strong> — 0.7 s linear infinite rotation (GPU-accelerated <code>transform</code>).</li>
+              <li><strong>Focus ring</strong> — width swap 1 → 2 px animated via <code>border-color</code>; padding auto-compensates so height stays 32 / 40 / 48 px.</li>
+              <li><strong>Reduced motion</strong> — <code>@media (prefers-reduced-motion: reduce)</code> disables every transition and the spinner animation.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ═══ USAGE TAB ═══ -->
+        <div class="tab-content" id="tab-usage" style="display: none; padding-top: 32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When to use</h2>
+            <ul class="doc-list">
+              <li>To filter, find, or query a list, table, dataset, or the whole product.</li>
+              <li>As a global search entry point (pair with the <code>⌘K</code> shortcut hint).</li>
+              <li>Inline within toolbars, headers, navigation, or data views.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="when-not-to-use" class="doc-section-title">When NOT to use</h2>
+            <ul class="doc-list">
+              <li>For free-form text that isn't a query — use a standard Text Input.</li>
+              <li>For selecting from a small known set — use a Select / Combobox.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="choosing-size" class="doc-section-title">Choosing the right size</h2>
+            <table class="size-table">
+              <thead><tr><th>Context</th><th>Size</th></tr></thead>
+              <tbody>
+                <tr><td>Dense toolbar, inline list filter, sidebar palette</td><td><code>small</code> (32 px)</td></tr>
+                <tr><td>Global header search, content-area search</td><td><code>medium</code> (40 px)</td></tr>
+                <tr><td>Hero search (landing, search-only screen)</td><td><code>large</code> (48 px)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related components</h2>
+            <ul class="doc-list">
+              <li><strong>Text Input</strong> — general-purpose single-line text entry.</li>
+              <li><strong>Select / Combobox</strong> — choosing from a known set of options.</li>
+              <li><strong>Filter / Tag</strong> — narrowing results after a search.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ═══ CODE TAB ═══ -->
+        <div class="tab-content" id="tab-code" style="display: none; padding-top: 32px;">
+
+          <!-- ═══ LIVE PLAYGROUND ═══════════════════════════════════════
+               Pick from the controls below — the preview updates in place
+               and the snippet on the right reflects the exact attributes
+               needed to reproduce the chosen variant.                       -->
+          <h2 id="live-demo-code" class="doc-section-title">Live playground</h2>
+          <p class="doc-section-subtitle">Toggle any prop on the left and watch the search field react in real time. The HTML below updates as you go &mdash; click <strong>Copy code</strong> to grab it.</p>
+
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group">
+                <label class="cp-label">Size</label>
+                <select class="cp-select" id="pg-size">
+                  <option value="small" selected>Small (32 px)</option>
+                  <option value="medium">Medium (40 px)</option>
+                  <option value="large">Large (48 px)</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">State</label>
+                <select class="cp-select" id="pg-state">
+                  <option value="default" selected>Default</option>
+                  <option value="filled">Filled</option>
+                  <option value="loading">Loading</option>
+                  <option value="disabled">Disabled</option>
+                  <option value="error">Error</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Shortcut hint (⌘K)</label>
+                <select class="cp-select" id="pg-shortcut">
+                  <option value="false" selected>Hidden</option>
+                  <option value="true">Shown</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Placeholder</label>
+                <select class="cp-select" id="pg-placeholder">
+                  <option value="Search…" selected>Search…</option>
+                  <option value="Search anything">Search anything</option>
+                  <option value="Filter by name, IP, or OS…">Filter by name, IP, or OS…</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Direction</label>
+                <select class="cp-select" id="pg-direction">
+                  <option value="ltr" selected>LTR</option>
+                  <option value="rtl">RTL (Arabic)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="cp-preview" id="pg-preview-area" style="padding: 24px 32px;">
+              <ds-search-field id="pg-sf-element" size="small" placeholder="Search…" style="max-width: 420px;"></ds-search-field>
+            </div>
+
+            <div class="cp-code-header">
+              <div style="font-size: 13.5px; font-weight: 600; color: var(--prism-text);">HTML</div>
+              <div class="cp-code-actions">
+                <button class="cp-action-btn" id="pg-copy-btn">
+                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                  Copy code
+                </button>
+              </div>
+            </div>
+            <div style="background: #0a0a0c;">
+              <div class="cp-code-area" id="pg-code-output"></div>
+            </div>
+          </div>
+
+          <script>
+            (function () {
+              const $ = (id) => document.getElementById(id);
+              const pg = {
+                size:        $('pg-size'),
+                state:       $('pg-state'),
+                shortcut:    $('pg-shortcut'),
+                placeholder: $('pg-placeholder'),
+                direction:   $('pg-direction'),
+              };
+              const previewArea = $('pg-preview-area');
+              const el          = $('pg-sf-element');
+              const codeOut     = $('pg-code-output');
+              const copyBtn     = $('pg-copy-btn');
+              let rawCode = '';
+
+              const escape = (s) => String(s)
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                .replace(/"/g,'&quot;');
+
+              const PLACEHOLDERS_RTL = {
+                'Search…': 'ابحث…',
+                'Search anything': 'ابحث عن أي شيء',
+                'Filter by name, IP, or OS…': 'تصفية حسب الاسم أو IP…',
+              };
+
+              function update() {
+                const size       = pg.size.value;
+                const state      = pg.state.value;
+                const shortcut   = pg.shortcut.value === 'true';
+                const direction  = pg.direction.value;
+                const isRTL      = direction === 'rtl';
+                const placeholder = isRTL ? (PLACEHOLDERS_RTL[pg.placeholder.value] || pg.placeholder.value) : pg.placeholder.value;
+                /* Value text for filled / loading / error states (anything
+                   that needs the input to be non-empty). */
+                const sample = isRTL ? 'نتيجة البحث' : 'Endpoint Central';
+                const errSample = isRTL ? 'بحث غير صالح' : 'Invalid query';
+
+                previewArea.style.direction = isRTL ? 'rtl' : 'ltr';
+
+                /* Reset prior attributes, then apply the chosen ones. */
+                ['loading','disabled','error','show-shortcut','rtl','value'].forEach(a => el.removeAttribute(a));
+
+                el.setAttribute('size', size);
+                el.setAttribute('placeholder', placeholder);
+                if (shortcut) el.setAttribute('show-shortcut', '');
+                if (isRTL)    el.setAttribute('rtl', '');
+
+                let valueAttrForCode = '';
+                if (state === 'filled')   { el.setAttribute('value', sample);     valueAttrForCode = ` value="${sample}"`; }
+                if (state === 'loading')  { el.setAttribute('value', sample); el.setAttribute('loading',  ''); valueAttrForCode = ` value="${sample}"`; }
+                if (state === 'disabled') { el.setAttribute('disabled', ''); }
+                if (state === 'error')    { el.setAttribute('value', errSample); el.setAttribute('error', ''); valueAttrForCode = ` value="${errSample}"`; }
+
+                /* Build the snippet — only include attributes that are set. */
+                const parts = [`size="${size}"`];
+                if (state === 'loading')  parts.push('loading');
+                if (state === 'disabled') parts.push('disabled');
+                if (state === 'error')    parts.push('error');
+                if (shortcut)             parts.push('show-shortcut');
+                if (isRTL)                parts.push('rtl');
+                parts.push(`placeholder="${placeholder}"`);
+                rawCode = `<ds-search-field ${parts.join(' ')}${valueAttrForCode}></ds-search-field>`;
+
+                codeOut.innerHTML = escape(rawCode)
+                  .replace(/([a-zA-Z-]+)=&quot;(.*?)&quot;/g, '<span class="token-attr">$1</span>=<span class="token-string">"$2"</span>')
+                  .replace(/&lt;(\/?)(ds-search-field)/g, '&lt;$1<span class="token-tag">$2</span>')
+                  .replace(/\s(loading|disabled|error|show-shortcut|rtl)(?=[\s&])/g, ' <span class="token-attr">$1</span>');
+              }
+
+              Object.values(pg).forEach(input => input.addEventListener('change', update));
+
+              copyBtn.addEventListener('click', async () => {
+                try {
+                  if (navigator.clipboard) await navigator.clipboard.writeText(rawCode);
+                  else {
+                    const ta = document.createElement('textarea');
+                    ta.value = rawCode; document.body.appendChild(ta); ta.select();
+                    document.execCommand('copy'); document.body.removeChild(ta);
+                  }
+                  const orig = copyBtn.innerHTML;
+                  copyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+                  setTimeout(() => { copyBtn.innerHTML = orig; }, 1800);
+                } catch (e) { console.error('Copy failed', e); }
+              });
+
+              update();
+              if (window.customElements && customElements.whenDefined) {
+                customElements.whenDefined('ds-search-field').then(update);
+              }
+            })();
+          </script>
+
+          <hr class="doc-divider" />
+          <div class="doc-section">
+            <h2 id="component-api-properties" class="doc-section-title">Component API &amp; Properties</h2>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>size</code></td><td><code>'small' | 'medium' | 'large'</code></td><td><code>'small'</code></td><td>Field height &mdash; Small in toolbars, Medium in standard forms, Large on touch and mobile.</td></tr>
+                <tr><td><code>placeholder</code></td><td>string</td><td>&mdash;</td><td>Shown when the field is empty. Use it for an example query, not as a substitute for a label.</td></tr>
+                <tr><td><code>value</code></td><td>string</td><td>&mdash;</td><td>Current value. Bind this to your state.</td></tr>
+                <tr><td><code>show-shortcut</code></td><td>boolean</td><td><code>false</code></td><td>Renders the trailing &#8984;K chip. Use it whenever the field is reachable from anywhere via a keyboard shortcut.</td></tr>
+                <tr><td><code>shortcut-label</code></td><td>string</td><td><code>&#8984;K</code></td><td>Override the chip text (e.g. <code>Ctrl K</code> on Windows / Linux).</td></tr>
+                <tr><td><code>loading</code></td><td>boolean</td><td><code>false</code></td><td>Border turns brand blue and a spinner replaces the trailing slot while results are fetched; sets <code>aria-busy="true"</code>.</td></tr>
+                <tr><td><code>disabled</code></td><td>boolean</td><td><code>false</code></td><td>Non-interactive and skipped by Tab. Use only when the field genuinely can&rsquo;t be searched yet.</td></tr>
+                <tr><td><code>error</code></td><td>boolean</td><td><code>false</code></td><td>Red border for invalid queries or no-result states; sets <code>aria-invalid="true"</code>.</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td><code>false</code></td><td>Mirrors the layout for Arabic, Hebrew, and Persian &mdash; search icon flips to the trailing edge, shortcut and Clear flip to the leading edge.</td></tr>
+              </tbody>
+            </table>
+            <p class="doc-section-subtitle" style="margin-top:16px">Built on a native <code>&lt;input type="search"&gt;</code>, so keyboard and screen readers work out of the box. Listen for <code>ds-search-field-input</code> on every keystroke (debounce before hitting your API), <code>ds-search-field-submit</code> when the user hits Enter, and <code>ds-search-field-clear</code> when they tap the &times; or press Esc.</p>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="code-examples" class="doc-section-title">Code Examples</h2>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:12px;margin-top:24px;">Sizes</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#60a5fa;">ds-search-field</span> <span style="color:#38bdf8;">size</span>=<span style="color:#34d399;">"small"</span>  <span style="color:#38bdf8;">placeholder</span>=<span style="color:#34d399;">"Search&hellip;"</span><span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#60a5fa;">ds-search-field</span><span style="color:#ABB2BF;">&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#60a5fa;">ds-search-field</span> <span style="color:#38bdf8;">size</span>=<span style="color:#34d399;">"medium"</span> <span style="color:#38bdf8;">placeholder</span>=<span style="color:#34d399;">"Search&hellip;"</span><span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#60a5fa;">ds-search-field</span><span style="color:#ABB2BF;">&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#60a5fa;">ds-search-field</span> <span style="color:#38bdf8;">size</span>=<span style="color:#34d399;">"large"</span>  <span style="color:#38bdf8;">placeholder</span>=<span style="color:#34d399;">"Search&hellip;"</span><span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#60a5fa;">ds-search-field</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:12px;">States</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#94a3b8;">&lt;!-- Filled (value present auto-shows Clear) --&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#60a5fa;">ds-search-field</span> <span style="color:#38bdf8;">value</span>=<span style="color:#34d399;">"Endpoint Central"</span><span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#60a5fa;">ds-search-field</span><span style="color:#ABB2BF;">&gt;</span><br>
+                <br>
+                <span style="color:#94a3b8;">&lt;!-- Loading --&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#60a5fa;">ds-search-field</span> <span style="color:#38bdf8;">value</span>=<span style="color:#34d399;">"Endpoint"</span> <span style="color:#38bdf8;">loading</span><span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#60a5fa;">ds-search-field</span><span style="color:#ABB2BF;">&gt;</span><br>
+                <br>
+                <span style="color:#94a3b8;">&lt;!-- Disabled --&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#60a5fa;">ds-search-field</span> <span style="color:#38bdf8;">placeholder</span>=<span style="color:#34d399;">"Search disabled"</span> <span style="color:#38bdf8;">disabled</span><span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#60a5fa;">ds-search-field</span><span style="color:#ABB2BF;">&gt;</span><br>
+                <br>
+                <span style="color:#94a3b8;">&lt;!-- Error --&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#60a5fa;">ds-search-field</span> <span style="color:#38bdf8;">value</span>=<span style="color:#34d399;">"!@#$"</span> <span style="color:#38bdf8;">error</span><span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#60a5fa;">ds-search-field</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:12px;">Global search with &#8984;K + Enter / Esc handling</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#60a5fa;">ds-search-field</span> <span style="color:#38bdf8;">id</span>=<span style="color:#34d399;">"global-search"</span> <span style="color:#38bdf8;">size</span>=<span style="color:#34d399;">"medium"</span> <span style="color:#38bdf8;">placeholder</span>=<span style="color:#34d399;">"Search anything"</span> <span style="color:#38bdf8;">show-shortcut</span><span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#60a5fa;">ds-search-field</span><span style="color:#ABB2BF;">&gt;</span><br>
+                <br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#60a5fa;">script</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#c678dd;">const</span> el = <span style="color:#e5c07b;">document</span>.getElementById(<span style="color:#34d399;">'global-search'</span>);<br>
+                <br>
+                &nbsp;&nbsp;<span style="color:#94a3b8;">// Enter triggers submit; the component fires ds-search-field-submit.</span><br>
+                &nbsp;&nbsp;el.addEventListener(<span style="color:#34d399;">'ds-search-field-submit'</span>, (e) =&gt; {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;fetch(<span style="color:#34d399;">'/api/search?q='</span> + encodeURIComponent(e.detail.value))<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.then(r =&gt; r.json()).then(renderResults);<br>
+                &nbsp;&nbsp;});<br>
+                <br>
+                &nbsp;&nbsp;<span style="color:#94a3b8;">// &#8984;K (or Ctrl+K) from anywhere focuses the field.</span><br>
+                &nbsp;&nbsp;<span style="color:#e5c07b;">document</span>.addEventListener(<span style="color:#34d399;">'keydown'</span>, (e) =&gt; {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#c678dd;">if</span> ((e.metaKey || e.ctrlKey) &amp;&amp; e.key === <span style="color:#34d399;">'k'</span>) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e.preventDefault();<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;el.focus();<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;});<br>
+                <span style="color:#ABB2BF;">&lt;/</span><span style="color:#60a5fa;">script</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:12px;">Debounced async filter with loading + error states</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#60a5fa;">ds-search-field</span> <span style="color:#38bdf8;">id</span>=<span style="color:#34d399;">"table-filter"</span> <span style="color:#38bdf8;">size</span>=<span style="color:#34d399;">"small"</span> <span style="color:#38bdf8;">placeholder</span>=<span style="color:#34d399;">"Filter by name&hellip;"</span><span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#60a5fa;">ds-search-field</span><span style="color:#ABB2BF;">&gt;</span><br>
+                <br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#60a5fa;">script</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#c678dd;">const</span> el = <span style="color:#e5c07b;">document</span>.getElementById(<span style="color:#34d399;">'table-filter'</span>);<br>
+                &nbsp;&nbsp;<span style="color:#c678dd;">let</span> t, ctrl;<br>
+                &nbsp;&nbsp;el.addEventListener(<span style="color:#34d399;">'ds-search-field-input'</span>, (e) =&gt; {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;clearTimeout(t); ctrl?.abort();<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#c678dd;">const</span> q = e.detail.value;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#c678dd;">if</span> (!q) { el.removeAttribute(<span style="color:#34d399;">'loading'</span>); el.removeAttribute(<span style="color:#34d399;">'error'</span>); <span style="color:#c678dd;">return</span>; }<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;t = setTimeout(<span style="color:#c678dd;">async</span> () =&gt; {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;el.setAttribute(<span style="color:#34d399;">'loading'</span>, <span style="color:#34d399;">''</span>); el.removeAttribute(<span style="color:#34d399;">'error'</span>);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ctrl = <span style="color:#c678dd;">new</span> AbortController();<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#c678dd;">try</span> {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#c678dd;">const</span> data = <span style="color:#c678dd;">await</span> fetch(<span style="color:#34d399;">'/api/filter?q='</span> + q, { signal: ctrl.signal }).then(r =&gt; r.json());<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;renderTable(data);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} <span style="color:#c678dd;">catch</span> (err) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#c678dd;">if</span> (err.name !== <span style="color:#34d399;">'AbortError'</span>) el.setAttribute(<span style="color:#34d399;">'error'</span>, <span style="color:#34d399;">''</span>);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} <span style="color:#c678dd;">finally</span> {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;el.removeAttribute(<span style="color:#34d399;">'loading'</span>);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;}, <span style="color:#fbbf24;">250</span>);<br>
+                &nbsp;&nbsp;});<br>
+                <span style="color:#ABB2BF;">&lt;/</span><span style="color:#60a5fa;">script</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="implementation-idea" class="doc-section-title">Implementation Idea: Ember</h2>
+            <div class="cp-code-area" style="border-radius:12px;margin-top:16px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#94a3b8;">&lt;!-- global-search.hbs --&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">UemsSearchField</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@size</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"medium"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@placeholder</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Search anything"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@showShortcut</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">true</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@value</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.query</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@onInput</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.debouncedSearch</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@onSubmit</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.runSearch</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@onClear</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.resetResults</span><span style="color:#C678DD;">}}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ ACCESSIBILITY TAB ═══ -->
+        <div class="tab-content" id="tab-accessibility" style="display: none; padding-top: 32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+
+          <div class="doc-section">
+            <h3 id="role" class="doc-h3">Role & semantics</h3>
+            <ul class="doc-list">
+              <li>The component renders a native <code>&lt;input type="search"&gt;</code> with no custom role override — screen readers expose it as a search field automatically.</li>
+              <li>Provide an accessible name via <code>aria-label="Search"</code> on the host or a visually-hidden <code>&lt;label&gt;</code>; or wrap in <code>&lt;form role="search"&gt;</code> for landmark navigation.</li>
+              <li>The Clear button has an explicit <code>aria-label="Clear search"</code>.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="keyboard" class="doc-h3">Keyboard interaction</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td><code>Tab</code> / <code>Shift+Tab</code></td><td>Focus / unfocus the field (natural tab order).</td></tr>
+                <tr><td><code>Esc</code></td><td>Clears the value (fires <code>ds-search-field-clear</code> with <code>source: 'keyboard'</code>) and keeps focus on the input.</td></tr>
+                <tr><td><code>Enter</code></td><td>Fires <code>ds-search-field-submit</code> with the current value.</td></tr>
+                <tr><td><code>⌘K</code> / <code>Ctrl K</code></td><td>Must be wired by the consumer to call <code>el.focus()</code> — the chip is purely informational.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="aria-states" class="doc-h3">ARIA state mirrors</h3>
+            <ul class="doc-list">
+              <li><code>loading</code> attribute → sets <code>aria-busy="true"</code> on the input.</li>
+              <li><code>error</code> attribute → sets <code>aria-invalid="true"</code>.</li>
+              <li><code>disabled</code> attribute → sets the native <code>disabled</code> property (no <code>aria-disabled</code> needed).</li>
+              <li>For async results, annotate the results container with <code>aria-live="polite"</code> so updates are announced.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="color-contrast" class="doc-h3">Color contrast<span class="h3-badge" style="background:rgba(34,197,94,0.15);color:#16a34a;">WCAG AA pass</span></h3>
+            <table class="size-table">
+              <thead><tr><th>Slot</th><th>Color</th><th>Surface</th><th>Contrast</th></tr></thead>
+              <tbody>
+                <tr><td>Placeholder text</td><td><code>#98A1B5</code></td><td>White</td><td>4.5 : 1 ✓ (large) / monitor for body text</td></tr>
+                <tr><td>Filled value text</td><td><code>#15181E</code></td><td>White</td><td>16.7 : 1 ✓</td></tr>
+                <tr><td>Focus ring</td><td><code>#006AFF</code></td><td>White</td><td>4.5 : 1 ✓</td></tr>
+                <tr><td>Error border</td><td><code>#E42527</code></td><td>White</td><td>4.2 : 1 ✓ (non-text)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="rtl" class="doc-h3">RTL</h3>
+            <p class="doc-section-subtitle">Set the <code>rtl</code> attribute (or rely on <code>document.dir = "rtl"</code>) — the search icon moves to the trailing (right) edge, text aligns right, and the shortcut/clear affordances flip to the leading (left) edge per MD §RTL.</p>
+          </div>
+        </div>
+
+        </div><!-- /main-content-inner -->
+
+        <aside class="toc-sidebar" style="padding: 20px;">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav">
+            <li><a href="#anatomy" class="toc-link">Anatomy</a></li>
+            <li><a href="#live-demo" class="toc-link">Preview</a></li>
+            <li><a href="#content-guidelines" class="toc-link">Content Guidelines</a></li>
+          </ul>
+
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/search-field.md" download="search-field.md" class="action-link">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Download MD
+            </a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=16827-123098" target="_blank" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+      </div><!-- /main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+      <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+      <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  <!-- Real-world filter demo wiring -->
+  <script>
+    (function () {
+      function ready(fn){ if(document.readyState!=='loading'){ fn(); } else { document.addEventListener('DOMContentLoaded', fn); } }
+      ready(function () {
+        customElements.whenDefined('ds-search-field').then(function () {
+          var inp = document.getElementById('rw-filter');
+          var out = document.getElementById('rw-filter-out');
+          if (!inp || !out) return;
+          var t;
+          inp.addEventListener('ds-search-field-input', function (e) {
+            clearTimeout(t);
+            var q = e.detail.value;
+            if (!q) { out.textContent = 'Type to see filtered count.'; return; }
+            inp.setAttribute('loading', '');
+            t = setTimeout(function () {
+              inp.removeAttribute('loading');
+              out.textContent = 'Showing ' + Math.max(1, 248 - q.length * 12) + ' of 248 devices matching "' + q + '"';
+            }, 350);
+          });
+          inp.addEventListener('ds-search-field-clear', function () {
+            out.textContent = 'Type to see filtered count.';
+          });
+        });
+      });
+    })();
+  </script>
+
+  <script>
+    // ── Scroll-spy + dynamic TOC ──
+    let _tocObserver = null;
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav');
+      if (!tocList) return;
+      tocList.innerHTML = '';
+      const activePanel = document.getElementById(targetId);
+      if (!activePanel) return;
+      const headings = activePanel.querySelectorAll('h2[id], h3[id]');
+      headings.forEach(h => {
+        if (h.style.display === 'none') return;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.className = 'toc-link';
+        let text = Array.from(h.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+        if (!text) text = h.innerText;
+        a.textContent = text;
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById(h.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+      initScrollSpy();
+    }
+    function initScrollSpy() {
+      if (_tocObserver) _tocObserver.disconnect();
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sectionIds = Array.from(tocLinks).map(link => link.getAttribute('href').slice(1));
+      const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+      if (sections.length === 0) return;
+      _tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            tocLinks.forEach(link => {
+              link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+            });
+          }
+        });
+      }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+      sections.forEach(section => _tocObserver.observe(section));
+    }
+
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabMap = { 'Overview': 'tab-overview', 'Usage': 'tab-usage', 'Style': 'tab-style', 'Code': 'tab-code', 'Accessibility': 'tab-accessibility' };
+        document.querySelectorAll('.tab-content').forEach(panel => panel.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) {
+          document.getElementById(target).style.display = 'block';
+          updateTOC(target);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+    updateTOC('tab-overview');
+
+    // Sidebar search filter + Cmd/Ctrl+K
+    (function(){
+      var searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      var items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function(){
+        var q = this.value.toLowerCase().trim();
+        items.forEach(function(li){
+          var link = li.querySelector('a');
+          if (!link) return;
+          var text = link.textContent.toLowerCase();
+          li.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+      });
+      document.addEventListener('keydown', function(e){
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      });
+    })();
+    (function(){
+      var active = document.querySelector('.sidebar-link.active');
+      if (active) {
+        var sidebar = active.closest('.sidebar');
+        if (sidebar) {
+          var top = active.offsetTop - sidebar.offsetTop - (sidebar.clientHeight / 3);
+          sidebar.scrollTop = Math.max(0, top);
+        }
+      }
+    })();
+  </script>
+
+<!-- Floating Feedback Button -->
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<!--
+  Profile / Account — DUAL-MODE drawer (ds-drawer slide-over; identity in the
+  drawer's slot="header"). This is the shell's control panel: the Personalize
+  sub-view changes theme / colour / font / language / size / nav, which mutate
+  GLOBAL shell state through window.ShellCtx (applyTheme / applyDir / appr / content).
+  Shell's showProfile() coordinates, lazy-loads, then calls ShellDrawers.profile.show().
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Profile — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="../design-system-library/src/components/drawer/drawer.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;700&family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600&display=swap" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-base); }
+    .sa-host { position: relative; display: flex; flex: 1; min-height: 0; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  /* Full-viewport overlay — sit above the header (which is z-index:40 in Shell). */
+  #profile-pop { z-index: 50; }
+  /* Float the panel like a card — gaps on top / end / bottom + full rounded
+     corners (instead of a full-height sheet flush to the edges). */
+  #profile-pop .ds-drawer__panel { top: var(--spacing-8); bottom: var(--spacing-8); inset-inline-end: var(--spacing-8);
+    border-radius: var(--radius-lg, 16px); box-shadow: 0 12px 40px rgba(13, 17, 29, 0.18);
+    /* Same diagonal gradient as the settings header, CONFINED to the top header
+       band (background-size 100% × 150px) so the full blue→white→red shows — then
+       white CONTENT below. The action bar straddles the seam like a card. */
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0) 150px, var(--uems-bg-primary-alt) 150px),
+      linear-gradient(135deg, var(--uems-bg-accent-primary) 0%, var(--uems-bg-primary) 55%, var(--uems-bg-warning-primary) 100%) !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100%, 100% 150px !important; }
+  #profile-pop .ds-drawer__body { padding: 0; display: flex; flex-direction: column; background: transparent; }
+  #profile-pop #pf-main:not([hidden]) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  #profile-pop .ds-drawer__header { align-items: flex-start; border-bottom: 0; background: transparent; padding-bottom: var(--spacing-4); }
+  .pf-id { flex: 1; min-width: 0; display: flex; gap: 12px; align-items: flex-start; }
+  .pf-close { flex: 0 0 auto; }   /* pf-id is flex:1 so this lands top-right, matching the help/apps drawers */
+  .pf-id__info { min-width: 0; }
+  .pf-id__name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--font-size-16); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+  .pf-id__email { font-size: var(--font-size-13); color: var(--uems-text-secondary); margin-top: 2px; }
+  .pf-id__meta { font-size: var(--font-size-13); color: var(--uems-text-secondary); margin-top: 4px; }
+  .pf-id__meta b { color: var(--uems-text-primary); font-weight: var(--font-weight-semibold); }
+  .pf-dot { margin: 0 8px; color: var(--uems-border-secondary); }
+  .pf-body { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .pf-muted { font-size: var(--font-size-13); line-height: 18px; color: var(--uems-text-secondary); }
+  .pf-rowtitle { font-size: var(--font-size-14); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); display: flex; align-items: center; gap: 8px; }
+  .pf-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .pf-card { padding: var(--spacing-12) !important; }
+  .pf-actions { display: flex; border: 1px solid var(--uems-border-tertiary); border-radius: 12px; overflow: hidden;
+    background: var(--uems-bg-primary); margin-top: -16px; }
+  .pf-actions .pf-act { flex: 1; display: flex; }
+  .pf-actions .pf-act .ds-button { width: 100%; border-radius: 0; border: 0; font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); --_btn-fg: var(--uems-text-primary); }
+  .pf-actions .pf-act + .pf-act { border-inline-start: 1px solid var(--uems-border-tertiary); }
+  .pf-actions .pf-act--danger .ds-button { --_btn-fg: var(--uems-text-error, #D5304A); --_btn-bg-hover: var(--uems-bg-error-secondary); }
+  .pf-trial { display: flex; align-items: center; gap: 12px; }
+  .pf-trial__ic { flex: 0 0 36px; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--uems-bg-primary); color: var(--uems-text-alert); }
+  .pf-trial__body { flex: 1; min-width: 0; }
+  .pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 4px; padding: var(--spacing-4) !important; }
+  .pf-link { display: flex; align-items: center; gap: 8px; padding: 8px 8px; border: 0; background: none; cursor: pointer; font-family: inherit; font-size: var(--font-size-14); color: var(--uems-text-primary); border-radius: 8px; text-align: start; }
+  .pf-link:hover { background: var(--uems-bg-secondary); }
+  .pf-link ds-icon:first-child { color: var(--uems-icon-secondary, var(--uems-text-secondary)); }
+  .pf-caret { margin-inline-start: auto; color: var(--uems-text-secondary); }
+  .pf-appear { display: flex; flex-direction: column; gap: 12px; }
+  .pf-themes { display: flex; gap: 8px; align-items: stretch; }
+  /* Theme colour swatches share the row with Light/Dark/System, pushed to the end
+     and stretched to the button height. */
+  .pf-themes__colors { margin-inline-start: auto; display: flex; gap: 8px; align-items: stretch; }
+  .pf-themes__colors .pf-color { width: 32px; height: 32px; align-self: center; border-radius: 8px; }
+  .pf-theme { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--uems-border-tertiary); border-radius: 8px; background: var(--uems-bg-primary); cursor: pointer; font-family: inherit; font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+  .pf-theme.is-active { border-color: var(--uems-text-accent-link); box-shadow: 0 0 0 1px var(--uems-text-accent-link); color: var(--uems-text-accent-link); }
+  .pf-sw { width: 24px; height: 24px; border-radius: 4px; border: 1px solid var(--uems-border-tertiary); flex: 0 0 auto; position: relative; overflow: hidden; }
+  .pf-sw::before { content: ''; position: absolute; border-radius: 50%; z-index: 1; }
+  .pf-sw::after  { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 62%; clip-path: polygon(0 100%, 20% 42%, 38% 72%, 60% 28%, 82% 66%, 100% 48%, 100% 100%); }
+  .pf-sw--light { background: linear-gradient(170deg, #b9d2f4 0%, #d7e4fa 55%, #eef4fd 100%); }
+  .pf-sw--light::before { top: 4px; left: 5px; width: 6px; height: 6px; background: radial-gradient(circle at 35% 35%, #ffe7a3, #ffce5c); box-shadow: 0 0 4px rgba(255, 206, 92, .85); }
+  .pf-sw--light::after  { background: linear-gradient(180deg, #8ea2c8, #6f83ac); }
+  .pf-sw--dark { background: linear-gradient(170deg, #161b2a 0%, #232c44 60%, #2f3b58 100%); }
+  .pf-sw--dark::before { top: 4px; right: 6px; width: 6px; height: 6px; background: #e7ecf7; box-shadow: inset -2px 0 0 0 #232c44; }
+  .pf-sw--dark::after  { background: linear-gradient(180deg, #2c3650, #1c2336); }
+  .pf-sw--sys { background: linear-gradient(125deg, #b9d2f4 0 48%, #161b2a 52% 100%); }
+  .pf-sw--sys::before { top: 4px; left: 5px; width: 6px; height: 6px; background: radial-gradient(circle, #ffe7a3, #ffce5c); box-shadow: 0 0 3px rgba(255, 206, 92, .7); }
+  .pf-sw--sys::after  { background: linear-gradient(125deg, #7385ad 0 48%, #283250 52% 100%); }
+  .pf-mobile { display: flex; gap: 12px; align-items: flex-start; margin-top: auto; }
+  .pf-mobile__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .pf-stores { display: flex; gap: 8px; margin-top: 2px; }
+  .pf-store-ic { vertical-align: middle; margin-inline-end: 8px; }
+  .pf-qr { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--uems-border-tertiary); border-radius: 8px; }
+  .pf-qr svg { width: 96px; height: 96px; }
+  .pf-qr__cap { font-size: var(--font-size-11, 11px); }
+  .pf-card.pf-appear, .pf-card.pf-mobile { padding: var(--spacing-12); }
+  /* Trial + Request-demo (both .pf-trial) + Appearance: 16px left/right inner
+     padding. The links grid uses 8px because its links carry their own 8px. */
+  #profile-pop .pf-card.pf-trial, #profile-pop .pf-appear { padding-inline: var(--spacing-16) !important; }
+  #profile-pop .pf-grid { padding-inline: var(--spacing-8) !important; }
+  /* Request-demo icon — accent (the trial clock stays alert-coloured). */
+  .pf-demo .pf-trial__ic { color: var(--uems-text-accent-link); }
+  .pf-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px; }
+  .pf-foot .pf-muted { font-size: var(--font-size-12, 12px); line-height: 1.4; }
+  .pf-social { display: flex; gap: 12px; }
+  .pf-social a { color: var(--uems-text-secondary); display: flex; }
+  .pf-social a:hover { color: var(--uems-text-primary); }
+  .pf-cta .ds-button { border-color: var(--uems-text-accent-link) !important; color: var(--uems-text-accent-link) !important; }
+  /* Sub-view gets a SOLID bg so the panel's header gradient band doesn't bleed
+     below the tabs — the gradient "navigation" lives only in .pf-subhdr, ending at
+     its bottom border line. (Main view keeps the transparent body / panel gradient.) */
+  #profile-pop #pf-sub { background: var(--uems-bg-primary-alt); }
+  .pf-subhdr { background: linear-gradient(135deg, var(--uems-bg-accent-primary) 0%, var(--uems-bg-primary) 55%, var(--uems-bg-warning-primary) 100%); border-bottom: 1px solid var(--uems-border-tertiary); }
+  .pf-subhead { position: relative; display: flex; align-items: center; gap: 4px; padding: 16px 16px 0; }
+  .pf-subhead:last-child { padding-bottom: 16px; }
+  .pf-subhead__title { font-size: var(--font-size-16); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+  #pf-sub ds-tab-bar-horizontal { display: block; margin: 12px 0 0; padding: 0 16px; background: transparent; }
+  #pf-sub ds-tab-bar-horizontal .ds-tab-bar-horizontal { border-bottom: 0; }
+  .pf-subbody { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .pf-field { display: flex; flex-direction: column; gap: 8px; }
+  .pf-field__label { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+  .pf-req { color: var(--uems-text-error, #D5304A); }
+  #pf-auth-body { display: flex; flex-direction: column; gap: 16px; }
+  #pf-auth-body ds-text-input .ds-text-input__affix-icon { cursor: pointer; }
+  .pf-divider { height: 1px; border-top: 1px dashed var(--uems-border-secondary); margin: 2px 0; }
+  .pf-foot-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 4px; }
+  .pf-navs { display: flex; gap: 12px; }
+  .pf-nav { flex: 1; border: 1px solid var(--uems-border-secondary); border-radius: 12px; padding: 12px; cursor: pointer; background: var(--uems-bg-primary); }
+  .pf-nav.is-active { border-color: var(--uems-text-accent-link); box-shadow: 0 0 0 1px var(--uems-text-accent-link); background: var(--uems-bg-accent-primary); }
+  .pf-nav__thumb { height: 56px; border-radius: 8px; border: 1px solid var(--uems-border-tertiary); margin-bottom: 8px; display: flex; overflow: hidden; background: var(--uems-bg-primary); }
+  .pf-nav__lbl { font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+  .pf-nav--top .pf-nav__thumb { flex-direction: column; }
+  .pf-nav--top .pf-nav__thumb::before { content: ''; height: 14px; background: var(--uems-bg-secondary-solid, #8a93a8); }
+  .pf-nav--left .pf-nav__thumb::before { content: ''; width: 16px; background: var(--uems-bg-secondary-solid, #8a93a8); }
+  .pf-sizes { display: flex; gap: 8px; }
+  .pf-size { width: 40px; height: 40px; border: 1px solid var(--uems-border-secondary); border-radius: 8px; background: var(--uems-bg-primary); color: var(--uems-text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: var(--font-weight-semibold); }
+  .pf-size.is-active { border-color: var(--uems-text-accent-link); color: var(--uems-text-accent-link); }
+  .pf-colors { display: flex; align-items: center; gap: 8px; }
+  .pf-color { width: 34px; height: 34px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .pf-color.is-active { box-shadow: 0 0 0 1.5px var(--uems-bg-primary), 0 0 0 2.5px var(--uems-text-accent-link); }
+  .pf-color ds-icon { opacity: 0; } .pf-color.is-active ds-icon { opacity: 1; }
+  .pf-color-sep { width: 1px; height: 24px; background: var(--uems-border-tertiary); }
+  .pf-rowlink { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
+  .pf-rowlink__sub { font-size: var(--font-size-13); color: var(--uems-text-secondary); margin-top: 2px; }
+  .pf-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .pf-codes { border: 1px dashed var(--uems-border-accent-subtle); border-radius: 12px; padding: 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .pf-code { font-size: var(--font-size-15); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); letter-spacing: 0.02em; }
+  .pf-codes__actions { display: flex; gap: 8px; margin-top: 4px; }
+  .pf-note { background: var(--uems-bg-alert-primary); border-radius: 8px; padding: 12px 16px; font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+  .pf-note ul { margin: 4px 0 0; padding-inline-start: 16px; }
+  .pf-tel-group + .pf-tel-group { border-top: 1px dashed var(--uems-border-secondary); padding-top: 16px; margin-top: 2px; }
+  .pf-tel-title { font-size: var(--font-size-15); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); margin-bottom: 8px; }
+  .pf-tel { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+  .pf-tel__flag { font-size: 20px; width: 26px; text-align: center; }
+  .pf-tel__num { font-size: var(--font-size-15); color: var(--uems-text-primary); }
+</style>
+
+<ds-drawer id="profile-pop" class="profile-drawer" side="right" size="m" show-footer="false" show-close="false">
+  <div slot="header" class="pf-id">
+    <ds-avatar size="large" name="Felix John"></ds-avatar>
+    <div class="pf-id__info">
+      <div class="pf-id__name">Felix John <ds-badge variant="subtle" state="acknowledge" size="medium" shape="rounded" data-i18n="pf.role">Administrator</ds-badge></div>
+      <div class="pf-id__email">felix.John@zylker.com</div>
+      <div class="pf-id__meta"><span data-i18n="pf.sessions">Sessions</span> <b>22</b><span class="pf-dot">·</span><span data-i18n="pf.userid">User ID</span> <b>754955171</b></div>
+      <div class="pf-id__meta"><span data-i18n="pf.superadmin">Super Admin :</span> Roy@zohomail.com</div>
+    </div>
+  </div>
+  <ds-icon-button slot="header" class="pf-close" data-pf-close icon="close" label="Close" no-tooltip type="tertiary-grey" size="small"></ds-icon-button>
+  <div id="pf-main">
+  <div class="pf-body">
+    <div class="pf-actions">
+      <ds-button class="pf-act" variant="tertiary" size="medium" prefix-icon="user-setting" data-pf-nav="personalize" data-i18n="pf.personalize">Personalize</ds-button>
+      <ds-button class="pf-act" variant="tertiary" size="medium" prefix-icon="user" data-i18n="pf.myAccount">My Account</ds-button>
+      <ds-button class="pf-act pf-act--danger" variant="tertiary" size="medium" prefix-icon="logout-01" data-i18n="pf.signout">SignOut</ds-button>
+    </div>
+    <ds-container class="pf-card pf-trial" tone="alert" radius="lg">
+      <span class="pf-trial__ic"><ds-icon name="clock" size="20"></ds-icon></span>
+      <div class="pf-trial__body">
+        <div class="pf-rowtitle"><span data-i18n="pf.trial">Trial version</span> <ds-badge variant="subtle" state="important" size="medium" shape="rounded" data-i18n="pf.daysLeft">7 days left</ds-badge></div>
+        <div class="pf-muted" data-i18n="pf.trialDesc">Upgrade now to keep your data and features.</div>
+      </div>
+      <ds-button class="pf-cta" variant="outline" size="small" data-i18n="pf.getQuote">Get Quote</ds-button>
+    </ds-container>
+    <ds-container class="pf-card pf-trial pf-demo" radius="lg" style="--ds-container-bg: var(--uems-bg-secondary-subtle); --ds-container-border-width: 0;">
+      <span class="pf-trial__ic"><ds-icon name="calendar" size="20"></ds-icon></span>
+      <div class="pf-trial__body">
+        <div class="pf-rowtitle" data-i18n="pf.requestDemo">Request a demo</div>
+        <div class="pf-muted" data-i18n="pf.knowMore">Want to know more?</div>
+      </div>
+      <ds-button class="pf-cta" variant="outline" size="small" data-i18n="pf.bookNow">Book Now</ds-button>
+    </ds-container>
+    <ds-container class="pf-card pf-grid" variant="outline" radius="lg">
+      <button type="button" class="pf-link" data-pf-nav="talk"><ds-icon name="calling" size="18"></ds-icon> <span data-i18n="pf.talk">Talk with us</span></button>
+      <button type="button" class="pf-link"><ds-icon name="help-circle" size="18"></ds-icon> <span data-i18n="pf.needHelp">Need help?</span></button>
+      <button type="button" class="pf-link"><ds-icon name="book-open" size="18"></ds-icon> <span data-i18n="pf.reference">Reference</span></button>
+      <button type="button" class="pf-link"><ds-icon name="mail" size="18"></ds-icon> <span data-i18n="pf.contact">Contact Us</span></button>
+    </ds-container>
+    <ds-container class="pf-card pf-appear" variant="outline" radius="lg">
+      <div class="pf-between">
+        <span class="pf-rowtitle" data-i18n="pf.appearance">Appearance &amp; Theme</span>
+        <ds-text-link href="#" variant="primary" size="small" data-pf-advanced data-i18n="pf.advanced">Advanced</ds-text-link>
+      </div>
+      <div class="pf-themes">
+        <button type="button" class="pf-theme is-active" data-pf-theme="light"><span class="pf-sw pf-sw--light"></span><span data-i18n="pf.light">Light</span></button>
+        <button type="button" class="pf-theme" data-pf-theme="dark"><span class="pf-sw pf-sw--dark"></span><span data-i18n="pf.dark">Dark</span></button>
+        <button type="button" class="pf-theme" data-pf-theme="system"><span class="pf-sw pf-sw--sys"></span><span data-i18n="pf.system">System</span></button>
+        <div class="pf-colors pf-themes__colors">
+          <button type="button" class="pf-color is-active" data-pfcolor data-theme-fam="blue" style="background:#2C66DD;color:#2C66DD" aria-label="Blue"><ds-icon name="check" size="14"></ds-icon></button>
+          <button type="button" class="pf-color" data-pfcolor data-theme-fam="green" style="background:#1E8E3E;color:#1E8E3E" aria-label="Green"><ds-icon name="check" size="14"></ds-icon></button>
+        </div>
+      </div>
+    </ds-container>
+    <ds-container class="pf-card pf-mobile" variant="outline" radius="lg">
+      <div class="pf-mobile__body">
+        <div class="pf-rowtitle" data-i18n="pf.downloadApp">Download the Mobile App</div>
+        <div class="pf-muted" data-i18n="pf.appDesc">Scan the QR code or use the links below to install and sign in.</div>
+        <ds-text-link href="#" variant="primary" size="small" data-i18n="pf.loginDetails">Login Details</ds-text-link>
+        <div class="pf-stores">
+          <ds-button variant="outline" size="small" prefix-icon="apple">iOS</ds-button>
+          <ds-button variant="outline" size="small"><svg class="pf-store-ic" viewBox="0 0 224.993 224.993" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M201.539,91.023L48.002,3.26C44.271,1.127,40.026,0,35.728,0c-4.354,0-8.646,1.155-12.412,3.34c-7.6,4.409-12.321,12.606-12.321,21.393V200.26c0,8.786,4.721,16.983,12.319,21.392c3.766,2.187,8.059,3.342,12.413,3.342c4.296,0,8.541-1.128,12.274-3.261l153.535-87.764c7.686-4.394,12.46-12.621,12.46-21.473S209.224,95.417,201.539,91.023z M135.006,70.271l-21.081,29.364L63.5,29.397L135.006,70.271z M34.76,209.908c-1.371-0.133-2.716-0.533-3.917-1.23c-2.99-1.735-4.848-4.961-4.848-8.418V24.732c0-3.457,1.858-6.683,4.849-8.418c1.197-0.695,2.531-1.109,3.902-1.25l69.946,97.432L34.76,209.908z M63.5,195.596l50.425-70.239l21.081,29.364L63.5,195.596z M194.094,120.945l-45.996,26.292l-24.941-34.741l24.941-34.741l45.996,26.292c3.024,1.729,4.903,4.966,4.903,8.449S197.119,119.217,194.094,120.945z"/></svg> Android</ds-button>
+        </div>
+      </div>
+      <div class="pf-qr">
+        <svg width="92" height="92" viewBox="0 0 25 25" shape-rendering="crispEdges" fill="var(--uems-text-primary)" aria-hidden="true">
+          <path fill-rule="evenodd" d="M0 0h7v7H0zM1 1h5v5H1zM18 0h7v7h-7zM19 1h5v5h-5zM0 18h7v7H0zM1 19h5v5H1z"/>
+          <rect x="2" y="2" width="3" height="3"/><rect x="20" y="2" width="3" height="3"/><rect x="2" y="20" width="3" height="3"/>
+          <path d="M8 0h1v1H8zM10 0h1v1h-1zM12 0h1v1h-1zM14 0h1v1h-1zM16 0h1v1h-1zM9 1h1v1H9zM11 1h2v1h-2zM15 1h1v1h-1zM8 2h1v1H8zM12 2h1v1h-1zM14 2h2v1h-2zM10 3h2v1h-2zM13 3h1v1h-1zM16 3h1v1h-1zM8 4h2v1H8zM11 4h1v1h-1zM15 4h2v1h-2zM9 5h1v1H9zM12 5h2v1h-2zM8 6h1v1H8zM10 6h1v1h-1zM13 6h1v1h-1zM15 6h2v1h-2zM0 8h1v1H0zM2 8h2v1H2zM5 8h1v1H5zM8 8h1v1H8zM10 8h2v1h-2zM13 8h1v1h-1zM15 8h1v1h-1zM17 8h2v1h-2zM20 8h1v1h-1zM22 8h2v1h-2zM1 9h1v1H1zM4 9h2v1H4zM9 9h1v1H9zM12 9h1v1h-1zM14 9h1v1h-1zM18 9h1v1h-1zM21 9h2v1h-2zM0 10h2v1H0zM3 10h1v1h-1zM6 10h2v1H6zM10 10h1v1h-1zM13 10h2v1h-2zM16 10h1v1h-1zM19 10h1v1h-1zM22 10h2v1h-2zM2 11h1v1H2zM5 11h2v1H5zM8 11h1v1H8zM11 11h2v1h-2zM15 11h2v1h-2zM18 11h1v1h-1zM20 11h1v1h-1zM23 11h1v1h-1zM0 12h1v1H0zM3 12h2v1H3zM7 12h2v1H7zM10 12h1v1h-1zM12 12h1v1h-1zM14 12h2v1h-2zM17 12h2v1h-2zM21 12h2v1h-2zM24 12h1v1h-1zM1 13h2v1H1zM5 13h1v1H5zM9 13h2v1H9zM13 13h1v1h-1zM16 13h1v1h-1zM19 13h2v1h-2zM22 13h1v1h-1zM0 14h1v1H0zM2 14h1v1H2zM4 14h2v1H4zM8 14h1v1H8zM11 14h1v1h-1zM14 14h1v1h-1zM16 14h2v1h-2zM20 14h1v1h-1zM23 14h2v1h-2zM3 15h1v1H3zM6 15h1v1H6zM9 15h2v1H9zM12 15h2v1h-2zM15 15h1v1h-1zM18 15h2v1h-2zM21 15h1v1h-1zM8 16h1v1H8zM10 16h2v1h-2zM13 16h2v1h-2zM16 16h1v1h-1zM18 16h1v1h-1zM20 16h2v1h-2zM23 16h1v1h-1zM9 17h1v1H9zM12 17h1v1h-1zM15 17h2v1h-2zM19 17h1v1h-1zM22 17h2v1h-2zM8 18h1v1H8zM10 18h1v1h-1zM12 18h2v1h-2zM15 18h1v1h-1zM17 18h2v1h-2zM21 18h1v1h-1zM23 18h2v1h-2zM9 19h2v1H9zM13 19h1v1h-1zM16 19h2v1h-2zM20 19h1v1h-1zM22 19h1v1h-1zM24 19h1v1h-1zM8 20h1v1H8zM11 20h2v1h-2zM14 20h1v1h-1zM16 20h1v1h-1zM18 20h2v1h-2zM21 20h2v1h-2zM10 21h1v1h-1zM13 21h2v1h-2zM17 21h1v1h-1zM20 21h1v1h-1zM23 21h1v1h-1zM8 22h2v1H8zM11 22h1v1h-1zM14 22h2v1h-2zM18 22h1v1h-1zM20 22h2v1h-2zM24 22h1v1h-1zM9 23h1v1H9zM12 23h2v1h-2zM15 23h1v1h-1zM17 23h2v1h-2zM21 23h2v1h-2zM8 24h1v1H8zM11 24h1v1h-1zM13 24h1v1h-1zM16 24h1v1h-1zM19 24h2v1h-2zM22 24h1v1h-1z"/>
+        </svg>
+        <span class="pf-muted pf-qr__cap" data-i18n="pf.scan">Scan to download</span>
+      </div>
+    </ds-container>
+    <div class="pf-foot">
+      <span class="pf-muted" data-i18n="pf.copyright">© 2026 Zoho Corp. All rights reserved.</span>
+      <div class="pf-social">
+        <a href="#" aria-label="X"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 1.2h3.7l-8 9.2 9.4 12.4h-7.4l-5.8-7.6-6.6 7.6H.5l8.6-9.8L0 1.2h7.6l5.2 6.9zM17.6 20.6h2L6.5 3.3H4.3z"/></svg></a>
+        <a href="#" aria-label="LinkedIn"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.76-2.05C20.4 8.65 21 11 21 14.1V21h-4v-6c0-1.4-.03-3.2-2-3.2s-2.3 1.5-2.3 3.1V21H9z"/></svg></a>
+        <a href="#" aria-label="YouTube"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23 7.5a3 3 0 00-2.1-2.1C19 4.9 12 4.9 12 4.9s-7 0-8.9.5A3 3 0 001 7.5C.5 9.4.5 12 .5 12s0 2.6.5 4.5a3 3 0 002.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 002.1-2.1c.5-1.9.5-4.5.5-4.5s0-2.6-.5-4.5zM9.8 15.3V8.7l5.7 3.3z"/></svg></a>
+      </div>
+    </div>
+  </div>
+  </div><!-- /#pf-main -->
+  <div id="pf-sub" hidden></div>
+</ds-drawer>
+
+<script>
+(function () {
+  const panel = () => document.getElementById('profile-pop');
+  const pfMain = () => document.getElementById('pf-main');
+  const pfSub  = () => document.getElementById('pf-sub');
+  const ctx = () => window.ShellCtx || {};
+  const lang = () => ctx().lang || 'en';
+  /* Arabic for the JS-built sub-view strings (main view translates via data-i18n) */
+  const T_AR = {
+    'General Settings': 'الإعدادات العامة', 'Authentication': 'المصادقة', 'Preferences': 'التفضيلات',
+    'Personalize': 'التخصيص', 'Talk with Us': 'تحدّث معنا', 'Telephone': 'الهاتف', 'Toll Free': 'الرقم المجاني', 'International': 'دولي',
+    'Session Expiration': 'انتهاء الجلسة', 'Choose Time Zone': 'اختر المنطقة الزمنية', 'Choose Time Format': 'اختر تنسيق الوقت', 'Display Language': 'لغة العرض',
+    'Save': 'حفظ', 'Close': 'إغلاق', 'English': 'الإنجليزية', 'Tamil': 'التاميلية', 'Hindi': 'الهندية', 'Arabic': 'العربية',
+    'Change Password': 'تغيير كلمة المرور', 'Backup Code': 'رمز النسخ الاحتياطي',
+    'Old Password': 'كلمة المرور القديمة', 'New Password': 'كلمة المرور الجديدة', 'Confirm New Password': 'تأكيد كلمة المرور الجديدة',
+    'Enter old password': 'أدخل كلمة المرور القديمة', 'Set a new password': 'عيّن كلمة مرور جديدة', 'Re-enter a new password': 'أعد إدخال كلمة المرور الجديدة',
+    'Backup codes ensure access to your EC account even if you forget your password.': 'تضمن رموز النسخ الاحتياطي الوصول إلى حساب EC الخاص بك حتى لو نسيت كلمة المرور.',
+    'Generate New': 'إنشاء جديد', 'Download': 'تنزيل', 'Copy': 'نسخ',
+    'Last generated: 2 days ago': 'آخر إنشاء: قبل يومين', 'Keep codes secure and accessible': 'احتفظ بالرموز آمنة وفي متناول اليد', 'One-time use per code': 'استخدام لمرة واحدة لكل رمز', 'Do not share with anyone': 'لا تشاركها مع أي شخص',
+    'Appearance': 'المظهر', 'Choose the mode in which you want to view your product.': 'اختر الوضع الذي تريد عرض منتجك به.', 'Light': 'فاتح', 'Dark': 'داكن', 'System': 'النظام',
+    'Navigation': 'التنقل', 'Select the navigation to be applied to your product.': 'اختر التنقل المراد تطبيقه على منتجك.', 'Top Navigation': 'التنقل العلوي', 'Left Navigation': 'التنقل الجانبي',
+    'Display Icons Only in Sidebar': 'عرض الأيقونات فقط في الشريط الجانبي',
+    'Font': 'الخط', 'Select the font to be applied to your product.': 'اختر الخط المراد تطبيقه على منتجك.',
+    'Table View Preferences': 'تفضيلات عرض الجدول', 'Customize the table view settings to suit your preferences': 'خصّص إعدادات عرض الجدول لتناسب تفضيلاتك',
+    'Theme': 'السمة', 'Select the theme to be applied to your product.': 'اختر السمة المراد تطبيقها على منتجك.', 'More': 'المزيد',
+  };
+  const tr = (s) => (lang() === 'ar' && T_AR[s]) ? T_AR[s] : s;
+  let _pfTab = 'general', _authSeg = 'pwd', _pfFont = 'Zoho Puvi';
+  const PF_TABS = [{ id: 'general', label: 'General Settings' }, { id: 'auth', label: 'Authentication' }, { id: 'prefs', label: 'Preferences' }];
+  const TALK = {
+    'Toll Free': [{ flag: '🇦🇺', num: '1800 631 268 (AU)' }, { flag: '🇬🇧', num: '0800 028 6590 (GB)' }, { flag: '🇺🇸', num: '+1 888 720 9500 (US)' }, { flag: '', num: '+1 888 791 1189' }],
+    'Telephone': [{ flag: '🇨🇳', num: '+86 400 660 8680 (CN)' }, { flag: '🇺🇸', num: '+1 844 245 1103 (US)' }, { flag: '🇨🇦', num: '+1 514 673 9946 (CA)' }, { flag: '🌐', num: '+1 925 924 9500 (INTL)' }],
+    'International': [{ flag: '🌐', num: '+1 408 916 9886 (INTL)' }],
+  };
+  const opts = (a) => a.map((v) => ({ value: v, label: v }));
+  const optsT = (a) => a.map((v) => ({ value: v, label: tr(v) }));   /* value stays EN, label translated */
+  const backHead = (t, extra = '') => `<div class="pf-subhdr"><div class="pf-subhead"><ds-icon-button data-pf-back icon="chevron-left" label="Back" no-tooltip type="tertiary-grey" size="small"></ds-icon-button><span class="pf-subhead__title">${t}</span></div>${extra}</div>`;
+
+  function renderPfTabBody() {
+    const box = pfSub().querySelector('#pf-tabbody'); if (!box) return;
+    const appr = ctx().appr || 'light';
+    if (_pfTab === 'general') {
+      box.innerHTML =
+        `<div class="pf-field"><span class="pf-field__label">${tr('Session Expiration')}</span><ds-input-select id="pf-sess" label-position="top" show-label="false" show-helper-row="false"></ds-input-select></div>` +
+        `<div class="pf-field"><span class="pf-field__label">${tr('Choose Time Zone')}</span><ds-input-select id="pf-tz" label-position="top" show-label="false" show-helper-row="false"></ds-input-select></div>` +
+        `<div class="pf-field"><span class="pf-field__label">${tr('Choose Time Format')}</span><ds-input-select id="pf-fmt" label-position="top" show-label="false" show-helper-row="false"></ds-input-select></div>` +
+        `<div class="pf-field"><span class="pf-field__label">${tr('Display Language')}</span><ds-input-select id="pf-lang" label-position="top" show-label="false" show-helper-row="false"></ds-input-select></div>` +
+        `<div class="pf-foot-actions"><ds-button variant="secondary" size="medium" data-pf-back>${tr('Close')}</ds-button><ds-button variant="primary" size="medium">${tr('Save')}</ds-button></div>`;
+      const set = (id, arr, val) => { const el = box.querySelector(id); el.options = opts(arr); el.value = val; };
+      set('#pf-sess', ['15 Minutes', '30 Minutes', '1 Hour', '4 Hours', '8 Hours'], '15 Minutes');
+      set('#pf-tz', ['(GMT+5:30) India Standard Time (Asia/Kolkata)', '(GMT+0:00) UTC', '(GMT-8:00) Pacific Time'], '(GMT+5:30) India Standard Time (Asia/Kolkata)');
+      set('#pf-fmt', ['Mar 23, 2026 10:30 AM', '23/03/2026 10:30', '2026-03-23 22:30'], 'Mar 23, 2026 10:30 AM');
+      { const el = box.querySelector('#pf-lang'); el.options = optsT(['English', 'Tamil', 'Hindi', 'Arabic']); el.value = lang() === 'ar' ? 'Arabic' : 'English'; }
+      box.querySelector('#pf-lang')?.addEventListener('ds-input-select-change', (e) => { ctx().applyDir && ctx().applyDir((e.detail && e.detail.value) === 'Arabic' ? 'ar' : 'en'); });
+    } else if (_pfTab === 'auth') {
+      box.innerHTML = `<ds-tab-filter id="pf-aseg" aria-label="Authentication mode"></ds-tab-filter><div id="pf-auth-body"></div>`;
+      const seg = box.querySelector('#pf-aseg');
+      seg.options = [{ value: 'pwd', label: tr('Change Password') }, { value: 'code', label: tr('Backup Code') }];
+      seg.value = _authSeg;
+      const ab = box.querySelector('#pf-auth-body');
+      const pwdField = (label, ph) => `<div class="pf-field"><span class="pf-field__label">${tr(label)} <span class="pf-req">*</span></span><ds-text-input type="password" placeholder="${tr(ph)}" suffix-icon="eye" label-position="top" show-label="false" show-helper-row="false" data-pwd></ds-text-input></div>`;
+      const renderAuthSeg = () => {
+        if (_authSeg === 'pwd') {
+          ab.innerHTML = pwdField('Old Password', 'Enter old password') + pwdField('New Password', 'Set a new password') + pwdField('Confirm New Password', 'Re-enter a new password') + `<div class="pf-foot-actions"><ds-button variant="secondary" size="medium" data-pf-back>${tr('Close')}</ds-button><ds-button variant="primary" size="medium">${tr('Save')}</ds-button></div>`;
+        } else {
+          ab.innerHTML = `<p class="pf-muted">${tr('Backup codes ensure access to your EC account even if you forget your password.')} <ds-text-link href="#" variant="primary" size="small">${tr('Generate New')}</ds-text-link></p>` +
+            `<div class="pf-codes">${['a1b2 c3d4 e5f6', 'g7h8 i9j0 k1l2', 'm3n4 o5p6 q7r8', 's9t0 u1v2 w3x4', 'y5z6 a7b8 c9d0'].map((c, i) => `<div class="pf-code">${i + 1}. ${c}</div>`).join('')}<div class="pf-codes__actions"><ds-button variant="secondary" size="small" prefix-icon="download">${tr('Download')}</ds-button><ds-button variant="secondary" size="small" prefix-icon="copy">${tr('Copy')}</ds-button></div></div>` +
+            `<div class="pf-note">${tr('Last generated: 2 days ago')}<ul><li>${tr('Keep codes secure and accessible')}</li><li>${tr('One-time use per code')}</li><li>${tr('Do not share with anyone')}</li></ul></div>`;
+        }
+        ab.querySelectorAll('[data-pf-back]').forEach((b) => b.addEventListener('click', closePfSub));
+      };
+      renderAuthSeg();
+      ab.addEventListener('click', (e) => {
+        const aff = e.target.closest('.ds-text-input__affix-icon'); if (!aff) return;
+        const inp = aff.closest('ds-text-input')?.querySelector('input'); if (!inp) return;
+        const reveal = inp.type === 'password'; inp.type = reveal ? 'text' : 'password';
+        aff.querySelector('ds-icon')?.setAttribute('name', reveal ? 'eye-off' : 'eye');
+      });
+      seg.addEventListener('ds-tab-filter-change', (e) => { if (e.detail && e.detail.value) { _authSeg = e.detail.value; renderAuthSeg(); } });
+    } else {
+      box.innerHTML =
+        `<div class="pf-field"><span class="pf-field__label">${tr('Appearance')}</span><div class="pf-muted">${tr('Choose the mode in which you want to view your product.')}</div>` +
+          `<div class="pf-themes" style="margin-top:10px"><button type="button" class="pf-theme" data-pf-theme="light"><span class="pf-sw pf-sw--light"></span>${tr('Light')}</button><button type="button" class="pf-theme" data-pf-theme="dark"><span class="pf-sw pf-sw--dark"></span>${tr('Dark')}</button><button type="button" class="pf-theme" data-pf-theme="system"><span class="pf-sw pf-sw--sys"></span>${tr('System')}</button></div></div>` +
+        `<div class="pf-divider"></div>` +
+        `<div class="pf-field"><span class="pf-field__label">${tr('Navigation')}</span><div class="pf-muted">${tr('Select the navigation to be applied to your product.')}</div>` +
+          `<div class="pf-navs" style="margin-top:10px"><div class="pf-nav pf-nav--top" data-nav="top"><div class="pf-nav__thumb"></div><div class="pf-nav__lbl">${tr('Top Navigation')}</div></div><div class="pf-nav pf-nav--left" data-nav="left"><div class="pf-nav__thumb"></div><div class="pf-nav__lbl">${tr('Left Navigation')}</div></div></div></div>` +
+        `<div class="pf-toggle-row"><span class="pf-field__label">${tr('Display Icons Only in Sidebar')}</span><ds-toggle id="pf-rail-icons" size="medium"${ctx().railIcons ? ' checked' : ''}></ds-toggle></div>` +
+        `<div class="pf-divider"></div>` +
+        `<div class="pf-field"><span class="pf-field__label">${tr('Font')}</span><div class="pf-muted">${tr('Select the font to be applied to your product.')}</div><ds-input-select id="pf-font" label-position="top" show-label="false" show-helper-row="false"></ds-input-select>` +
+          `<div class="pf-sizes" style="margin-top:8px">${[[11, 0.85], [13, 0.92], [15, 1], [18, 1.12], [22, 1.3]].map(([px, sc], i) => `<button type="button" class="pf-size${i === 2 ? ' is-active' : ''}" data-pfsize data-scale="${sc}" style="font-size:${px}px">Aa</button>`).join('')}</div></div>` +
+        `<div class="pf-divider"></div>` +
+        `<div class="pf-rowlink"><div><div class="pf-field__label">${tr('Table View Preferences')}</div><div class="pf-rowlink__sub">${tr('Customize the table view settings to suit your preferences')}</div></div><ds-icon name="chevron-right" size="18"></ds-icon></div>` +
+        `<div class="pf-divider"></div>` +
+        `<div class="pf-field"><span class="pf-field__label">${tr('Theme')}</span><div class="pf-muted">${tr('Select the theme to be applied to your product.')}</div>` +
+          `<div class="pf-colors" style="margin-top:10px">${[['#2C66DD', 'blue'], ['#1E8E3E', 'green'], ['#D5304A', ''], ['#6B4FD8', '']].map(([c, fam]) => `<button type="button" class="pf-color" data-pfcolor${fam ? ` data-theme-fam="${fam}"` : ''} style="background:${c};color:${c}"><ds-icon name="check" size="14"></ds-icon></button>`).join('')}<span class="pf-color-sep"></span><ds-text-link href="#" variant="primary" size="small">${tr('More')}</ds-text-link></div></div>`;
+      const font = box.querySelector('#pf-font'); font.options = opts(['Zoho Puvi', 'Lato', 'Roboto', 'Inter', 'Poppins']); font.value = _pfFont;
+      const FONT_STACK = { 'Lato': '"Lato", sans-serif', 'Roboto': '"Roboto", sans-serif', 'Inter': '"Inter", sans-serif', 'Poppins': '"Poppins", sans-serif' };
+      font.addEventListener('ds-input-select-change', (e) => {
+        const v = (e.detail && e.detail.value) || 'Zoho Puvi'; _pfFont = v;
+        if (FONT_STACK[v]) document.documentElement.style.setProperty('--font-family-sans', FONT_STACK[v]);
+        else document.documentElement.style.removeProperty('--font-family-sans');
+      });
+      const single = (sel, cls) => box.querySelectorAll(sel).forEach((b) => b.addEventListener('click', () => box.querySelectorAll(sel).forEach((x) => x.classList.toggle(cls, x === b))));
+      /* Top / Left navigation — reflect the active mode, then drive the shell. */
+      const curNav = ctx().navMode || 'top';
+      box.querySelectorAll('[data-nav]').forEach((b) => b.classList.toggle('is-active', b.dataset.nav === curNav));
+      box.querySelectorAll('[data-nav]').forEach((b) => b.addEventListener('click', () => {
+        box.querySelectorAll('[data-nav]').forEach((x) => x.classList.toggle('is-active', x === b));
+        ctx().setNavMode && ctx().setNavMode(b.dataset.nav);
+      }));
+      /* Display Icons Only in Sidebar → narrows the left module rail. */
+      box.querySelector('#pf-rail-icons')?.addEventListener('ds-toggle-change', (e) => {
+        ctx().setRailIcons && ctx().setRailIcons(!!(e.detail && e.detail.checked));
+      });
+      const curFam = String(appr).includes('green') ? 'green' : 'blue';
+      const curMode = appr === 'system' ? 'system' : (String(appr).includes('dark') ? 'dark' : 'light');
+      box.querySelectorAll('[data-pf-theme]').forEach((b) => b.classList.toggle('is-active', b.dataset.pfTheme === curMode));
+      box.querySelectorAll('.pf-color').forEach((b) => b.classList.toggle('is-active', b.dataset.themeFam === curFam));
+      box.querySelectorAll('[data-pf-theme]').forEach((b) => b.addEventListener('click', () => {
+        const m = b.dataset.pfTheme; const f = String(ctx().appr).includes('green') ? 'green' : 'blue';
+        ctx().applyTheme && ctx().applyTheme(m === 'system' ? 'system' : (f === 'green' ? 'green-' + m : m));
+        box.querySelectorAll('[data-pf-theme]').forEach((x) => x.classList.toggle('is-active', x === b));
+      }));
+      box.querySelectorAll('.pf-color').forEach((b) => b.addEventListener('click', () => {
+        const fam = b.dataset.themeFam;
+        if (fam) { const md = String(ctx().appr).includes('dark') ? 'dark' : 'light'; ctx().applyTheme && ctx().applyTheme(fam === 'green' ? 'green-' + md : md); }
+        box.querySelectorAll('.pf-color').forEach((x) => x.classList.toggle('is-active', x === b));
+      }));
+      box.querySelectorAll('[data-pfsize]').forEach((b) => b.addEventListener('click', () => {
+        box.querySelectorAll('[data-pfsize]').forEach((x) => x.classList.toggle('is-active', x === b));
+        const c = ctx().content; if (c) c.style.zoom = b.dataset.scale || 1;
+      }));
+    }
+    box.querySelectorAll('[data-pf-back]').forEach((b) => b.addEventListener('click', closePfSub));
+  }
+  function renderPfSub(name) {
+    const sub = pfSub();
+    if (name === 'talk') {
+      const grp = (t, items) => `<div class="pf-tel-group"><div class="pf-tel-title">${tr(t === 'International' ? 'Telephone' : t)}</div>${items.map((x) => `<div class="pf-tel"><span class="pf-tel__flag">${x.flag || ''}</span><span class="pf-tel__num">${x.num}</span></div>`).join('')}</div>`;
+      sub.innerHTML = backHead(tr('Talk with Us')) + `<div class="pf-subbody">${Object.keys(TALK).map((k) => grp(k, TALK[k])).join('')}</div>`;
+    } else {
+      sub.innerHTML = backHead(tr('Personalize'), `<ds-tab-bar-horizontal id="pf-tabs" type="underline"></ds-tab-bar-horizontal>`) + `<div class="pf-subbody" id="pf-tabbody"></div>`;
+      const tabs = sub.querySelector('#pf-tabs'); tabs.items = PF_TABS.map((t) => ({ id: t.id, label: tr(t.label) })); tabs.setAttribute('active-id', _pfTab);
+      tabs.addEventListener('ds-tab-change', (e) => { if (e.detail && e.detail.id) { _pfTab = e.detail.id; renderPfTabBody(); } });
+      renderPfTabBody();
+    }
+    sub.querySelector('[data-pf-back]').addEventListener('click', closePfSub);
+  }
+  let _pfSubName = null;
+  function openPfSub(name) {
+    /* show the sub-view BEFORE rendering so the tab bar measures a visible width
+       (otherwise the underline indicator lands at 0); then re-assign to reposition. */
+    _pfSubName = name;
+    pfMain().hidden = true; pfSub().hidden = false; renderPfSub(name); panel().setAttribute('show-header', 'false');
+    requestAnimationFrame(() => requestAnimationFrame(() => { const t = document.getElementById('pf-tabs'); if (t) { t.items = t.items; t.setAttribute('active-id', _pfTab); } }));
+  }
+  function closePfSub() { _pfSubName = null; const s = pfSub(); if (s) s.hidden = true; const m = pfMain(); if (m) m.hidden = false; const p = panel(); if (p) p.removeAttribute('show-header'); }
+  /* Re-render the open sub-view in the new language when the shell flips (e.g. the
+     in-panel Display Language select sets Arabic). */
+  document.addEventListener('shell:langchange', () => { if (_pfSubName && pfSub() && !pfSub().hidden) openPfSub(_pfSubName); });
+
+  /* Main-view nav buttons (Personalize / Talk) + appearance theme picker */
+  panel().querySelectorAll('[data-pf-nav]').forEach((b) => b.addEventListener('click', () => { _pfTab = 'general'; openPfSub(b.dataset.pfNav); }));
+  /* Appearance → "Advanced" jumps straight to Personalize ▸ Preferences */
+  panel().querySelector('[data-pf-advanced]')?.addEventListener('click', (e) => { e.preventDefault(); _pfTab = 'prefs'; openPfSub('personalize'); });
+  panel().querySelectorAll('#pf-main [data-pf-theme]').forEach((b) => b.addEventListener('click', () => {
+    ctx().applyTheme && ctx().applyTheme(b.dataset.pfTheme);
+    panel().querySelectorAll('#pf-main [data-pf-theme]').forEach((x) => x.classList.toggle('is-active', x === b));
+  }));
+  /* Appearance ▸ Theme colour swatches — apply the accent family (blue / green). */
+  panel().querySelectorAll('#pf-main [data-pfcolor]').forEach((b) => b.addEventListener('click', () => {
+    const fam = b.dataset.themeFam;
+    if (fam) { const md = String(ctx().appr).includes('dark') ? 'dark' : 'light'; ctx().applyTheme && ctx().applyTheme(fam === 'green' ? 'green-' + md : md); }
+    panel().querySelectorAll('#pf-main [data-pfcolor]').forEach((x) => x.classList.toggle('is-active', x === b));
+  }));
+
+  function show() { closePfSub(); const p = panel(); if (p) p.open(); }
+  function hide() { const p = panel(); if (p) p.close(); }
+  /* Custom header close (matches the help/apps drawers' small tertiary-grey X). */
+  panel().querySelector('[data-pf-close]')?.addEventListener('click', hide);
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers.profile = { show, hide, closeSub: closePfSub };
+})();
+</script>
+</template>
+
+<script>
+/* ── STANDALONE HARNESS — runs ONLY when opened directly. Stubs theme/dir so the
+   Personalize controls don't error without the real shell. ── */
+(function () {
+  const KEY = 'profile';
+  let lang = 'en', appr = 'light';
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellCtx = window.ShellCtx || {
+    get shellArea() { return document.body; }, get lang() { return lang; }, get appr() { return appr; }, get content() { return null; },
+    setActiveIcon() {}, applyTheme(v) { appr = v; document.documentElement.setAttribute('data-theme', v === 'system' ? 'light' : v.replace('green-', '')); },
+    applyDir(l) { lang = l; document.documentElement.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr'); },
+  };
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  document.body.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); s.textContent = o.textContent; document.body.appendChild(s); });
+  customElements.whenDefined('ds-drawer').then(() => requestAnimationFrame(() => window.ShellDrawers[KEY] && window.ShellDrawers[KEY].show()));
+})();
+</script>
+</body>
+</html>

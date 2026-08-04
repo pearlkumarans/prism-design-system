@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<!-- New Custom Group · DUAL-MODE file (projects/custom-groups/). Archetype: sectioned form (L06).
+     Open directly -> standalone harness (bottom) mounts it.
+     Fetched by Shell.html -> injectDrawer('../projects/custom-groups/layout-create-group','content').
+     Centerpiece: <ds-criteria-filter> defines dynamic membership; a live preview evaluates the
+     emitted query tree against a mock device set. -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    .sa-host { display: flex; flex-direction: column; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* Root + .lay + .lay__scroll scaffold come from Layout/layout-base.css (shared).
+   Every selector below is scoped to #create-group-pop so it can't leak to sibling views. */
+#create-group-pop .lay__section { padding: 20px 0 4px; }
+#create-group-pop .lay__fields { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; }
+#create-group-pop .lay__field { max-width: 820px; }
+/* Consistent helper-row rhythm (a field with a counter is taller than one without). */
+#create-group-pop .lay__field { padding-bottom: 20px; }
+#create-group-pop .lay__field:has(ds-field-helper) { padding-bottom: 0; }
+/* Membership radio lays its options in a row. */
+#create-group-pop #cg-membership .ds-radio-group__items { display: flex; flex-direction: row; gap: 32px; flex-wrap: wrap; }
+
+/* Criteria builder — full-width block (no label column); cap to the form's rhythm. */
+#create-group-pop .cg-criteria { padding-top: 12px; }
+#create-group-pop ds-criteria-filter { width: 100%; max-width: 960px; }
+
+/* Live preview: a count summary line + a matches table. */
+#create-group-pop .cg-preview { padding-top: 12px; max-width: 960px; display: flex; flex-direction: column; gap: 12px; }
+#create-group-pop .cg-preview__summary {
+  display: flex; align-items: center; gap: var(--spacing-8);
+  font-size: var(--font-size-13); color: var(--uems-text-secondary);
+}
+#create-group-pop .cg-preview__summary b { color: var(--uems-text-primary); font-weight: var(--font-weight-semibold); }
+#create-group-pop .cg-static-note { padding-top: 12px; max-width: 820px; }
+
+/* Toggle a whole section off when membership = static. */
+#create-group-pop [hidden] { display: none !important; }
+</style>
+
+<div id="create-group-pop" class="lay-root" hidden>
+  <div class="lay">
+    <ds-page-header id="cg-ph" icon="users" structure="default"
+      title="New custom group" description="Define a device group and, for a dynamic group, the membership criteria."
+      show-description show-breadcrumbs
+      collapse-on-scroll scroll-target=".lay__scroll"></ds-page-header>
+
+    <div class="lay__scroll">
+
+      <!-- §1 Basic information -->
+      <section class="lay__section">
+        <ds-section-header id="cg-sec-basic" style-variant="with-border" size="large" title="Basic information" description="Name the group and pick what it contains."></ds-section-header>
+        <div class="lay__fields">
+          <ds-text-input class="lay__field" id="cg-name" size="medium" label="Group name" label-position="left" required maxlength="100" show-counter counter="0/100" placeholder="e.g. Windows low disk space"></ds-text-input>
+          <ds-text-area class="lay__field" id="cg-desc" size="medium" label="Description" label-position="left" placeholder="Optional description"></ds-text-area>
+          <ds-input-select class="lay__field" id="cg-category" size="medium" label="Group category" label-position="left" value="computer"></ds-input-select>
+        </div>
+      </section>
+
+      <!-- §2 Membership -->
+      <section class="lay__section">
+        <ds-section-header id="cg-sec-member" style-variant="with-border" size="large" title="Membership" description="Static picks devices manually; dynamic keeps membership in sync with criteria."></ds-section-header>
+        <div class="lay__fields">
+          <ds-radio-group class="lay__field" id="cg-membership" label="Membership type" label-position="left"></ds-radio-group>
+        </div>
+
+        <!-- Dynamic → the criteria builder is the centerpiece -->
+        <div id="cg-criteria-wrap" class="cg-criteria">
+          <ds-criteria-filter id="cg-criteria" title="Devices match these criteria" apply-mode="live"></ds-criteria-filter>
+        </div>
+
+        <!-- Static → manual picker stub -->
+        <div id="cg-static" class="cg-static-note" hidden>
+          <ds-empty-state
+            illustration="computer-search"
+            title="Add devices manually"
+            description="Static groups don't use criteria — pick the devices to include."
+            primary-label="Add devices"
+            show-secondary="false"
+            size="sm"></ds-empty-state>
+        </div>
+      </section>
+
+      <!-- §3 Matching devices (live preview) -->
+      <section id="cg-preview-sec" class="lay__section">
+        <ds-section-header id="cg-sec-preview" style-variant="with-border" size="large" title="Matching devices" description="A live preview of devices that match the criteria above."></ds-section-header>
+        <div class="cg-preview">
+          <div class="cg-preview__summary">
+            <ds-badge id="cg-count" variant="subtle" state="active" size="medium">0 of 0</ds-badge>
+            <span id="cg-count-text">devices match these criteria</span>
+          </div>
+          <ds-data-table id="cg-table"></ds-data-table>
+        </div>
+      </section>
+
+    </div>
+
+    <ds-form-footer id="cg-footer">
+      <ds-button slot="action" data-act="cancel" variant="outline">Cancel</ds-button>
+      <ds-button slot="action" data-act="create" variant="primary">Create group</ds-button>
+    </ds-form-footer>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('create-group-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+
+  /* ---- Localization (chrome strings; data/filter values stay canonical English) ---- */
+  const MSGS = {
+    en: {
+      'cg.title': 'New custom group',
+      'cg.desc': 'Define a device group and, for a dynamic group, the membership criteria.',
+      'cg.crumb.groups': 'Custom groups',
+      'cg.crumb.new': 'New custom group',
+      'cg.sec.basic': 'Basic information', 'cg.sec.basic.d': 'Name the group and pick what it contains.',
+      'cg.sec.member': 'Membership', 'cg.sec.member.d': 'Static picks devices manually; dynamic keeps membership in sync with criteria.',
+      'cg.sec.preview': 'Matching devices', 'cg.sec.preview.d': 'A live preview of devices that match the criteria above.',
+      'cg.f.name': 'Group name', 'cg.f.desc': 'Description', 'cg.f.category': 'Group category', 'cg.f.membership': 'Membership type',
+      'cg.opt.computer': 'Computer group', 'cg.opt.user': 'User group',
+      'cg.opt.dynamic': 'Dynamic (by criteria)', 'cg.opt.static': 'Static (manual)',
+      'cg.criteria.title': 'Devices match these criteria',
+      'cg.count.text': 'devices match these criteria',
+      'cg.col.device': 'Device', 'cg.col.os': 'OS', 'cg.col.dept': 'Department', 'cg.col.contact': 'Last contact', 'cg.col.status': 'Agent status',
+      'cg.cancel': 'Cancel', 'cg.create': 'Create group',
+      'cg.toast.created': 'Custom group created.', 'cg.toast.cancelled': 'Changes discarded.', 'cg.toast.invalid': 'Fix the highlighted criteria before creating the group.',
+      'cg.st.managed': 'Managed', 'cg.st.pending': 'Pending', 'cg.st.unmanaged': 'Unmanaged',
+    },
+    ar: {  /* machine-assisted — flag for native review */
+      'cg.title': 'مجموعة مخصّصة جديدة',
+      'cg.desc': 'حدّد مجموعة أجهزة، ومعايير العضوية للمجموعة الديناميكية.',
+      'cg.crumb.groups': 'المجموعات المخصّصة',
+      'cg.crumb.new': 'مجموعة مخصّصة جديدة',
+      'cg.sec.basic': 'المعلومات الأساسية', 'cg.sec.basic.d': 'سمِّ المجموعة واختر محتواها.',
+      'cg.sec.member': 'العضوية', 'cg.sec.member.d': 'الثابتة تختار الأجهزة يدويًا؛ الديناميكية تبقي العضوية متوافقة مع المعايير.',
+      'cg.sec.preview': 'الأجهزة المطابقة', 'cg.sec.preview.d': 'معاينة مباشرة للأجهزة المطابقة للمعايير أعلاه.',
+      'cg.f.name': 'اسم المجموعة', 'cg.f.desc': 'الوصف', 'cg.f.category': 'فئة المجموعة', 'cg.f.membership': 'نوع العضوية',
+      'cg.opt.computer': 'مجموعة أجهزة', 'cg.opt.user': 'مجموعة مستخدمين',
+      'cg.opt.dynamic': 'ديناميكية (حسب المعايير)', 'cg.opt.static': 'ثابتة (يدوية)',
+      'cg.criteria.title': 'الأجهزة المطابقة لهذه المعايير',
+      'cg.count.text': 'جهازًا يطابق هذه المعايير',
+      'cg.col.device': 'الجهاز', 'cg.col.os': 'نظام التشغيل', 'cg.col.dept': 'القسم', 'cg.col.contact': 'آخر اتصال', 'cg.col.status': 'حالة الوكيل',
+      'cg.cancel': 'إلغاء', 'cg.create': 'إنشاء المجموعة',
+      'cg.toast.created': 'تم إنشاء المجموعة المخصّصة.', 'cg.toast.cancelled': 'تم تجاهل التغييرات.', 'cg.toast.invalid': 'صحّح المعايير المميّزة قبل إنشاء المجموعة.',
+      'cg.st.managed': 'مُدار', 'cg.st.pending': 'قيد الانتظار', 'cg.st.unmanaged': 'غير مُدار',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] ?? k);
+
+  const ph = $('cg-ph');
+
+  /* ---- Field data (values canonical English) ---- */
+  const category = $('cg-category');
+  const membership = $('cg-membership');
+
+  /* Criteria field schema — device attributes an admin filters on. */
+  const FIELDS = [
+    { name: 'name',        label: 'Device name',   type: 'text' },
+    { name: 'os',          label: 'OS platform',   type: 'select', options: [
+      { label: 'Windows', value: 'win' }, { label: 'macOS', value: 'mac' }, { label: 'Linux', value: 'linux' } ] },
+    { name: 'osVersion',   label: 'OS version',    type: 'text' },
+    { name: 'domain',      label: 'Domain',        type: 'select', options: [
+      { label: 'CORP', value: 'corp' }, { label: 'SALES', value: 'sales' }, { label: 'WORKGROUP', value: 'workgroup' } ] },
+    { name: 'department',  label: 'Department',    type: 'select', options: [
+      { label: 'Finance', value: 'finance' }, { label: 'Engineering', value: 'eng' }, { label: 'Sales', value: 'sales' }, { label: 'IT', value: 'it' } ] },
+    { name: 'ip',          label: 'IP address',    type: 'text' },
+    { name: 'lastContact', label: 'Last contact',  type: 'date' },
+    { name: 'agentStatus', label: 'Agent status',  type: 'select', options: [
+      { label: 'Managed', value: 'managed' }, { label: 'Pending', value: 'pending' }, { label: 'Unmanaged', value: 'unmanaged' } ] },
+    { name: 'software',    label: 'Installed software', type: 'multiselect', options: [
+      { label: 'Google Chrome', value: 'chrome' }, { label: '7-Zip', value: '7zip' }, { label: 'MS Office', value: 'office' }, { label: 'Slack', value: 'slack' } ] },
+    { name: 'freeDiskGb',  label: 'Free disk (GB)', type: 'number' },
+    { name: 'managed',     label: 'Managed',        type: 'boolean' },
+  ];
+  const FIELD_BY_NAME = Object.fromEntries(FIELDS.map((f) => [f.name, f]));
+
+  /* Mock device set the preview evaluates the emitted query against. */
+  const DEVICES = [
+    { name: 'FIN-BLR-042', os: 'win',   osVersion: '11 Pro',  domain: 'corp',      department: 'finance', ip: '10.1.4.42',  lastContact: '2026-07-16', agentStatus: 'managed',   software: ['chrome','office'],       freeDiskGb: 12,  managed: true },
+    { name: 'FIN-BLR-051', os: 'win',   osVersion: '10 Ent',  domain: 'corp',      department: 'finance', ip: '10.1.4.51',  lastContact: '2026-07-10', agentStatus: 'managed',   software: ['chrome'],                freeDiskGb: 8,   managed: true },
+    { name: 'ENG-MAC-118', os: 'mac',   osVersion: '14',      domain: 'corp',      department: 'eng',     ip: '10.2.1.18',  lastContact: '2026-07-17', agentStatus: 'managed',   software: ['chrome','slack','7zip'], freeDiskGb: 140, managed: true },
+    { name: 'ENG-UBU-207', os: 'linux', osVersion: '22.04',   domain: 'workgroup', department: 'eng',     ip: '10.2.2.7',   lastContact: '2026-06-29', agentStatus: 'pending',   software: ['chrome'],                freeDiskGb: 220, managed: false },
+    { name: 'SALES-W-310', os: 'win',   osVersion: '11 Pro',  domain: 'sales',     department: 'sales',   ip: '10.3.3.10',  lastContact: '2026-07-15', agentStatus: 'managed',   software: ['office','slack'],        freeDiskGb: 19,  managed: true },
+    { name: 'SALES-W-311', os: 'win',   osVersion: '11 Home', domain: 'sales',     department: 'sales',   ip: '10.3.3.11',  lastContact: '2026-05-30', agentStatus: 'unmanaged', software: [],                        freeDiskGb: 60,  managed: false },
+    { name: 'IT-WIN-006',  os: 'win',   osVersion: '11 Pro',  domain: 'corp',      department: 'it',      ip: '10.4.0.6',   lastContact: '2026-07-17', agentStatus: 'managed',   software: ['chrome','7zip','office'],freeDiskGb: 15,  managed: true },
+    { name: 'IT-MAC-021',  os: 'mac',   osVersion: '13',      domain: 'corp',      department: 'it',      ip: '10.4.0.21',  lastContact: '2026-07-01', agentStatus: 'managed',   software: ['chrome','slack'],        freeDiskGb: 95,  managed: true },
+    { name: 'FIN-W-077',   os: 'win',   osVersion: '10 Ent',  domain: 'corp',      department: 'finance', ip: '10.1.4.77',  lastContact: '2026-07-14', agentStatus: 'managed',   software: ['office'],                freeDiskGb: 5,   managed: true },
+    { name: 'ENG-WIN-260', os: 'win',   osVersion: '11 Pro',  domain: 'corp',      department: 'eng',     ip: '10.2.9.60',  lastContact: '2026-07-16', agentStatus: 'managed',   software: ['chrome','slack'],        freeDiskGb: 18,  managed: true },
+    { name: 'SALES-M-402', os: 'mac',   osVersion: '14',      domain: 'sales',     department: 'sales',   ip: '10.3.4.2',   lastContact: '2026-07-12', agentStatus: 'pending',   software: ['slack'],                 freeDiskGb: 210, managed: false },
+    { name: 'IT-UBU-033',  os: 'linux', osVersion: '24.04',   domain: 'workgroup', department: 'it',      ip: '10.4.1.33',  lastContact: '2026-07-05', agentStatus: 'managed',   software: ['chrome'],                freeDiskGb: 300, managed: true },
+  ];
+
+  /* ---- Query-tree evaluator (mirrors the operators the builder emits) ---- */
+  const low = (x) => (x == null ? '' : String(x)).toLowerCase();
+  function matchRule(r, d) {
+    const op = r.operator, v = r.value, fv = d[r.field];
+    const fld = FIELD_BY_NAME[r.field];
+    if (!fld || !op) return true;                       /* incomplete → non-constraining */
+    const emptyVal = v == null || v === '' || (Array.isArray(v) && v.filter((x) => x != null && x !== '').length === 0);
+    switch (op) {
+      case 'isEmpty':     return fv == null || fv === '' || (Array.isArray(fv) && !fv.length);
+      case 'isNotEmpty':  return !(fv == null || fv === '' || (Array.isArray(fv) && !fv.length));
+      case 'isTrue':      return fv === true;
+      case 'isFalse':     return fv === false;
+    }
+    if (emptyVal) return true;
+    switch (op) {
+      case 'contains':     return low(fv).includes(low(v));
+      case 'notContains':  return !low(fv).includes(low(v));
+      case 'startsWith':   return low(fv).startsWith(low(v));
+      case 'endsWith':     return low(fv).endsWith(low(v));
+      case 'matchesRegex': try { return new RegExp(v).test(String(fv)); } catch (_) { return true; }
+      case 'equals': case 'is':      return low(fv) === low(v);
+      case 'notEquals': case 'isNot': return low(fv) !== low(v);
+      case 'lt':  return Number(fv) <  Number(v);
+      case 'lte': return Number(fv) <= Number(v);
+      case 'gt':  return Number(fv) >  Number(v);
+      case 'gte': return Number(fv) >= Number(v);
+      case 'before': return String(fv) <  String(v);
+      case 'after':  return String(fv) >  String(v);
+      case 'between': case 'notBetween': {
+        let a, b;
+        if (fld.type === 'number') { a = Array.isArray(v) ? v[0] : undefined; b = Array.isArray(v) ? v[1] : undefined; }
+        else { const parts = String(v).split(/[\/,]/); a = parts[0]; b = parts[1]; }
+        if (a == null || a === '' || b == null || b === '') return true;
+        const inRange = fld.type === 'number'
+          ? (Number(fv) >= Number(a) && Number(fv) <= Number(b))
+          : (String(fv) >= String(a) && String(fv) <= String(b));
+        return op === 'between' ? inRange : !inRange;
+      }
+      case 'hasAnyOf':  return v.some((x) => (fv || []).includes(x));
+      case 'hasAllOf':  return v.every((x) => (fv || []).includes(x));
+      case 'hasNoneOf': return !v.some((x) => (fv || []).includes(x));
+      default: return true;
+    }
+  }
+  function matchGroup(g, d) {
+    if (!g || !g.rules || !g.rules.length) return true;
+    const res = g.rules.map((n) => (n.rules ? matchGroup(n, d) : matchRule(n, d)));
+    const out = g.combinator === 'or' ? res.some(Boolean) : res.every(Boolean);
+    return g.not ? !out : out;
+  }
+
+  /* ---- Preview ---- */
+  const table = $('cg-table');
+  const countBadge = $('cg-count');
+  const OS_LABEL = { win: 'Windows', mac: 'macOS', linux: 'Linux' };
+  function statusBadge(status) {
+    const b = document.createElement('ds-badge');
+    const map = { managed: ['success', 'cg.st.managed'], pending: ['moderate', 'cg.st.pending'], unmanaged: ['critical', 'cg.st.unmanaged'] };
+    const [state, key] = map[status] || ['default', status];
+    b.setAttribute('state', state); b.setAttribute('variant', 'subtle'); b.setAttribute('size', 'medium');
+    b.textContent = t(key);
+    return b;
+  }
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  function setColumns() {
+    /* ds-data-table `accessor` takes a string key → precompute display fields
+       (osLabel/deptLabel) on the row rather than a function accessor. */
+    table.columns = [
+      { id: 'name',        header: t('cg.col.device'),  accessor: 'name' },
+      { id: 'osLabel',     header: t('cg.col.os'),      accessor: 'osLabel' },
+      { id: 'deptLabel',   header: t('cg.col.dept'),    accessor: 'deptLabel' },
+      { id: 'lastContact', header: t('cg.col.contact'), accessor: 'lastContact' },
+      { id: 'agentStatus', header: t('cg.col.status'),  render: (r) => statusBadge(r.agentStatus) },
+    ];
+  }
+  let lastQuery = { combinator: 'and', rules: [] };
+  function refreshPreview(query) {
+    lastQuery = query || lastQuery;
+    const matches = DEVICES.filter((d) => matchGroup(lastQuery, d));
+    countBadge.textContent = matches.length + ' of ' + DEVICES.length;
+    table.rows = matches.slice(0, 8).map((d) => ({
+      ...d, osLabel: OS_LABEL[d.os] + ' · ' + d.osVersion, deptLabel: cap(d.department),
+    }));
+  }
+
+  /* ---- Membership toggle ---- */
+  const criteriaWrap = $('cg-criteria-wrap');
+  const staticWrap = $('cg-static');
+  const previewSec = $('cg-preview-sec');
+  const criteria = $('cg-criteria');
+  function applyMembership(kind) {
+    const dynamic = kind !== 'static';
+    criteriaWrap.hidden = !dynamic;
+    previewSec.hidden = !dynamic;
+    staticWrap.hidden = dynamic;
+  }
+
+  /* ---- Wire it all up ---- */
+  function applyStrings() {
+    ph.setAttribute('title', t('cg.title'));
+    ph.setAttribute('description', t('cg.desc'));
+    ph.breadcrumbs = [
+      { label: t('cg.crumb.groups'), href: 'projects/acme/layout-inventory-overview.html' },
+      { label: t('cg.crumb.new') },
+    ];
+    $('cg-sec-basic').setAttribute('title', t('cg.sec.basic')); $('cg-sec-basic').setAttribute('description', t('cg.sec.basic.d'));
+    $('cg-sec-member').setAttribute('title', t('cg.sec.member')); $('cg-sec-member').setAttribute('description', t('cg.sec.member.d'));
+    $('cg-sec-preview').setAttribute('title', t('cg.sec.preview')); $('cg-sec-preview').setAttribute('description', t('cg.sec.preview.d'));
+    $('cg-name').setAttribute('label', t('cg.f.name'));
+    $('cg-desc').setAttribute('label', t('cg.f.desc'));
+    category.setAttribute('label', t('cg.f.category'));
+    membership.setAttribute('label', t('cg.f.membership'));
+    criteria.setAttribute('title', t('cg.criteria.title'));
+    $('cg-count-text').textContent = t('cg.count.text');
+    category.options = [ { value: 'computer', label: t('cg.opt.computer') }, { value: 'user', label: t('cg.opt.user') } ];
+    membership.options = [
+      { value: 'dynamic', label: t('cg.opt.dynamic'), selected: true },
+      { value: 'static',  label: t('cg.opt.static') },
+    ];
+    root.querySelector('[data-act="cancel"]').textContent = t('cg.cancel');
+    root.querySelector('[data-act="create"]').textContent = t('cg.create');
+    setColumns();
+    refreshPreview();   /* uses lastQuery (seeded below) — avoids calling getQuery() before upgrade */
+  }
+
+  /* Seed the builder. `lastQuery` mirrors the tree so the preview never has to
+     read back through the element before it has upgraded (standalone timing). */
+  const SEED = { combinator: 'and', rules: [
+    { field: 'os', operator: 'is', value: 'win' },
+    { field: 'freeDiskGb', operator: 'lt', value: 20 },
+  ] };
+  criteria.fields = FIELDS;
+  criteria.query = SEED;
+  lastQuery = SEED;
+  criteria.addEventListener('ds-criteria-filter-change', (e) => refreshPreview(e.detail.query));
+
+  membership.addEventListener('ds-radio-group-change', (e) => applyMembership(e.detail?.value));
+
+  root.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => {
+    const a = b.getAttribute('data-act');
+    if (a === 'create') {
+      if (!criteria.validate()) { globalThis.dsToast?.warning({ title: t('cg.toast.invalid'), style: 'subtle' }); return; }
+      globalThis.dsToast?.success({ title: t('cg.toast.created'), style: 'subtle' });
+    } else if (a === 'cancel') {
+      globalThis.dsToast?.info({ title: t('cg.toast.cancelled'), style: 'subtle' });
+    }
+  }));
+
+  applyStrings();
+  applyMembership('dynamic');
+  if (window.ShellCtx && window.ShellCtx.onLangChange) window.ShellCtx.onLangChange(applyStrings);
+
+  function show() {
+    root.hidden = false;
+    requestAnimationFrame(() => {
+      const el = $('cg-name');
+      const input = el && ((el.shadowRoot && el.shadowRoot.querySelector('input')) || (el.querySelector && el.querySelector('input'))) || el;
+      input && input.focus && input.focus();
+    });
+  }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['custom-groups-create-group'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS — runs ONLY when opened directly. == */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers['custom-groups-create-group'] && window.ShellDrawers['custom-groups-create-group'].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

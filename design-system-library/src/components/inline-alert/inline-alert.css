@@ -1,0 +1,186 @@
+/* =============================================================================
+   ds-inline-alert / .ds-inline-alert
+   Banner alert. 5 types × 2 styles × RTL.
+   ============================================================================= */
+
+:host { display: block; }
+
+.ds-inline-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-12);
+  width: 100%;
+  padding: var(--spacing-12) var(--spacing-16);
+  border-radius: var(--radius-md);
+  background: var(--_a-bg);
+  color: var(--_a-fg);
+  font-family: var(--font-family-sans);
+  text-align: start;   /* banner content is always leading-aligned, even inside a centered container */
+
+  --_a-bg: var(--uems-bg-secondary);
+  --_a-fg: var(--uems-text-primary);
+  --_a-title: var(--uems-text-primary);
+  --_a-icon: var(--uems-text-secondary);
+}
+
+/* RTL — dir="rtl" alone reverses the flex inline axis. Only keep text-align. */
+.ds-inline-alert[dir="rtl"] { text-align: right; }
+
+/* ---- Accent bar (opt-in) — a leading colour stripe shown INSTEAD of the
+   status icon. Per the Figma live component the bar is an in-flow LEADING
+   flex item (NOT pinned to the banner edge): it sits inside the 16px padding,
+   the 12px flex gap separates it from the content, and align-self: stretch
+   makes it span the full content height. Rounded only on the leading edge. -- */
+.ds-inline-alert--accent .ds-inline-alert__icon { display: none; }
+.ds-inline-alert__accent {
+  flex-shrink: 0;
+  align-self: stretch;
+  width: 3px;
+  border-start-start-radius: 9999px;
+  border-end-start-radius: 9999px;
+  background: var(--_a-icon);
+}
+
+/* ---- Action position = inline — the action flows at the END of the description
+   text (right after the last word / last line), NOT on a new line below it and
+   NOT pinned to the banner's right edge. The description is inline so the action
+   follows it in the text flow. ------------------------------------------------ */
+.ds-inline-alert--action-inline .ds-inline-alert__desc-row { display: block; }
+.ds-inline-alert--action-inline .ds-inline-alert__description { display: inline; }
+.ds-inline-alert--action-inline .ds-inline-alert__action {
+  display: inline-flex; vertical-align: baseline;
+  margin-top: 0; margin-inline-start: var(--spacing-8); white-space: nowrap;
+  line-height: 16px;   /* match the description line so the link sits on its baseline */
+}
+/* Clamp the link's line to the description's 16px, and align its inner flex on
+   the BASELINE (the link is align-items:center by default, so its taller leading
+   arrow icon was centring the row and dragging the label ~4px below the
+   description's baseline). Baseline keeps the label sitting on the text line. */
+.ds-inline-alert--action-inline .ds-inline-alert__action .ds-text-link {
+  line-height: 16px;
+  align-items: baseline;
+}
+
+.ds-inline-alert__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  color: var(--_a-icon);
+  margin-top: 2px;
+}
+
+.ds-inline-alert__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.ds-inline-alert__title {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  line-height: 20px;
+  color: var(--_a-title);
+}
+
+.ds-inline-alert__description {
+  font-size: var(--font-size-14);
+  line-height: 16px;
+  color: var(--_a-fg);
+}
+
+/* Custom body content nested by the consumer (e.g. a <ds-list>). Inherits the
+   alert's foreground colour; the body's column gap handles spacing. */
+.ds-inline-alert__custom {
+  min-width: 0;
+  color: var(--_a-fg);
+}
+
+.ds-inline-alert__action {
+  margin-top: var(--spacing-4);
+}
+/* Action = <ds-text-link>. Override the link's own variant colour so it reads
+   on the alert surface: match the alert title tone (Intense → white below). */
+.ds-inline-alert__action .ds-text-link { color: var(--_a-title); }
+/* The action is a button-style affordance — focus lands on the host. */
+.ds-inline-alert__action ds-text-link:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* Dismiss/close = <ds-icon-button> (owns its hover / focus ring / sizing).
+   Keep it from shrinking and nudge it up so it aligns with the title row. */
+.ds-inline-alert__dismiss { flex-shrink: 0; margin: -4px -4px 0 0; }
+/* Close glyph resting colour = Icon-Subtle (overrides the icon-button default). */
+.ds-inline-alert__dismiss .ds-icon-button { color: var(--uems-icon-subtle); }
+
+/* ---- Subtle types --------------------------------------------------- */
+.ds-inline-alert--subtle.ds-inline-alert--info {
+  --_a-bg: var(--uems-bg-info-primary);
+  --_a-title: var(--uems-text-info);
+  --_a-icon: var(--uems-icon-info);
+}
+.ds-inline-alert--subtle.ds-inline-alert--success {
+  --_a-bg: var(--uems-bg-success-primary);
+  --_a-title: var(--uems-text-success);
+  --_a-icon: var(--uems-text-success);
+}
+.ds-inline-alert--subtle.ds-inline-alert--warning {
+  --_a-bg: var(--uems-bg-alert-primary);
+  --_a-title: var(--uems-text-alert);
+  --_a-icon: var(--uems-text-alert);
+}
+.ds-inline-alert--subtle.ds-inline-alert--error {
+  --_a-bg: var(--uems-bg-error-primary);
+  --_a-title: var(--uems-text-error);
+  --_a-icon: var(--uems-text-error);
+}
+.ds-inline-alert--subtle.ds-inline-alert--neutral {
+  --_a-bg: var(--uems-bg-secondary);
+  --_a-title: var(--uems-text-primary);
+  --_a-fg: var(--uems-text-secondary);
+  --_a-icon: var(--uems-text-secondary);
+}
+
+/* ---- Intense types -------------------------------------------------- */
+.ds-inline-alert--intense {
+  --_a-fg: var(--uems-text-white);
+  --_a-title: var(--uems-text-white);
+  --_a-icon: var(--uems-text-white);
+}
+.ds-inline-alert--intense.ds-inline-alert--info {
+  --_a-bg: var(--uems-bg-info-solid);
+}
+.ds-inline-alert--intense.ds-inline-alert--success {
+  --_a-bg: var(--uems-bg-success-solid);
+}
+/* Warning Intense = BG-Alert-Solid (amber, per Figma source) — NOT BG-Warning-
+   Solid (persimmon orange). Text-Black (not Text-Primary) keeps the amber
+   legible across all 4 themes (the bg doesn't theme-shift, so neither must fg). */
+.ds-inline-alert--intense.ds-inline-alert--warning {
+  --_a-bg: var(--uems-bg-alert-solid);
+  --_a-fg: var(--uems-text-black);
+  --_a-title: var(--uems-text-black);
+  --_a-icon: var(--uems-text-black);
+}
+.ds-inline-alert--intense.ds-inline-alert--error {
+  --_a-bg: var(--uems-bg-error-solid);
+}
+/* Neutral Intense = BG-Tertiary-Solid (per Figma source) — NOT BG-Secondary-
+   Solid (that reads too near-black). */
+.ds-inline-alert--intense.ds-inline-alert--neutral {
+  --_a-bg: var(--uems-bg-tertiary-solid);
+}
+
+/* Intense (solid-bg) variants → white action link. */
+.ds-inline-alert--intense .ds-inline-alert__action .ds-text-link {
+  color: var(--uems-text-white);
+}
+/* Warning Intense bg (amber) reads with Text-Black — its action link too. */
+.ds-inline-alert--intense.ds-inline-alert--warning .ds-inline-alert__action .ds-text-link {
+  color: var(--uems-text-black);
+}

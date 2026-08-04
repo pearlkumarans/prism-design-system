@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KPI Cards — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<!-- Demo KPI Card: single source of truth -->
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/kpi-card/kpi-card.css?v=11">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/kpi-card/kpi-card.js?v=16"></script>
+<script type="module" src="../design-system-library/src/components/kpi-card/kpi-breakdown.js?v=9"></script>
+<style>
+  /* The live elements own their own surface (radius 16, pad 20, border-tertiary,
+     bg-primary-alt). We only frame the demo CANVAS, mirroring Charts.html's
+     .page-charts demo scaffold but scoped to .page-kpi-card. */
+  .page-kpi-card .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-kpi-card .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .page-kpi-card .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    padding: 32px !important;
+    gap: 36px !important;
+  }
+  .page-kpi-card .demo-mod-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-kpi-card .demo-mod-section > .demo-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+    margin: 0; text-align: left; width: auto;
+  }
+  .page-kpi-card .demo-mod-section > .demo-mod-desc { font-size: 12px; color: var(--prism-text-muted); line-height: 1.5; }
+
+  /* Metric-card grids — fill the cell like a real dashboard row */
+  .page-kpi-card .demo-kpi-row-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .page-kpi-card .demo-kpi-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .page-kpi-card .demo-kpi-row-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .page-kpi-card .demo-kpi-stack { display: flex; flex-direction: column; gap: 12px; }
+  @media (max-width: 1100px) { .page-kpi-card .demo-kpi-row-4 { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 700px)  {
+    .page-kpi-card .demo-kpi-row-4,
+    .page-kpi-card .demo-kpi-row-3,
+    .page-kpi-card .demo-kpi-row-2 { grid-template-columns: 1fr; }
+  }
+
+  /* Per-example card wrapper with a tiny caption (mirrors Charts demo-mod-card) */
+  .page-kpi-card .demo-mod-card { display: flex; flex-direction: column; gap: 10px; }
+  .page-kpi-card .demo-mod-card .card-cap {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+  }
+  .page-kpi-card .demo-mod-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px; align-items: start;
+  }
+  @media (max-width: 760px) { .page-kpi-card .demo-mod-grid { grid-template-columns: 1fr; } }
+  /* Default-size cards render at their natural width in demos — never stretched
+     to fill a wide grid/row cell (which made them look broken). Wide cards
+     (size="wide") and ds-kpi-breakdown keep filling their cell. */
+  .page-kpi-card .demo-mod-grid ds-kpi-card:not([size="wide"]),
+  .page-kpi-card .demo-kpi-row-4 ds-kpi-card:not([size="wide"]) { max-width: 280px; }
+
+  .page-kpi-card .anat-marker-inline {
+    background: #2563eb; color: #fff; font-size: 11px; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  /* "Show code" toggle blocks under each Style showcase card (Charts convention) */
+  .page-kpi-card .code-toggle-btn {
+    display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+    background: transparent; border: 1px solid var(--prism-border);
+    font-family: inherit; font-size: 12.5px; font-weight: 600;
+    color: var(--prism-text-muted); cursor: pointer; padding: 5px 10px; border-radius: 8px; transition: all 0.2s;
+  }
+  .page-kpi-card .code-toggle-btn:hover { color: var(--prism-violet); border-color: rgba(37,99,235,0.25); }
+  .page-kpi-card .code-block { display: none; margin-top: 8px; background: #0a0a0c; border-radius: 10px; overflow: hidden; }
+  .page-kpi-card .code-block.open { display: block; }
+  .page-kpi-card .code-block.is-static { display: block; margin-top: 0; }
+  .page-kpi-card .code-block .code-block-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .page-kpi-card .code-block .code-block-head span { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+  .page-kpi-card .code-block .cb-copy {
+    display: inline-flex; align-items: center; gap: 5px; background: transparent; border: none;
+    font-family: inherit; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.6); cursor: pointer;
+  }
+  .page-kpi-card .code-block .cb-copy:hover { color: #fff; }
+  .page-kpi-card .code-block pre {
+    margin: 0; padding: 16px; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0;
+  }
+  .page-kpi-card .code-block .token-tag { color: #a78bfa; }
+  .page-kpi-card .code-block .token-attr { color: #38bdf8; }
+  .page-kpi-card .code-block .token-string { color: #34d399; }
+
+  /* State/severity palette swatches (Style) */
+  .page-kpi-card .palette-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  .page-kpi-card .palette-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--prism-text-muted); }
+  .page-kpi-card .palette-dot { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.06); }
+</style>
+</head>
+<body class="page-kpi-card">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">      <a href="Foundation.html" >Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html" >Zia Experience</a><a href="llm-reference.html">LLM Reference</a><div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+
+      <div style="width: 16px;"></div> <!-- Spacer -->
+
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search...">
+        <span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 id="components" class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link active">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">KPI Cards</h1>
+        <p class="page-desc">
+          A KPI card surfaces one headline number the user cares about right now. The system ships <strong>two live web components</strong>: <code>&lt;ds-kpi-card&gt;</code> is the <strong>metric family</strong> (<code>size="default"</code> / <code>"wide"</code>) for a single value with an optional subtitle, trend badge, leading icon, date selector, gauge, or link; <code>&lt;ds-kpi-breakdown&gt;</code> is the <strong>severity family</strong> (<code>layout="compact" / "stacked" / "wide"</code>) — a header stat plus a fixed 4-cell Critical / High / Medium / Low grid. Both are <strong>self-contained surfaces</strong> (they own radius&nbsp;16, padding&nbsp;20, border, background) and re-theme from <code>--uems-*</code> tokens. The host dashboard owns empty / error states.
+        </p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══════════════ OVERVIEW ═══════════════ -->
+        <div class="tab-content" id="tab-overview">
+
+          <!-- ───── Anatomy ───── -->
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <p class="doc-section-subtitle" style="margin-bottom:24px;">A live <code>&lt;ds-kpi-card&gt;</code> (default size, <code>desc+gauge</code> type) with its parts called out. The card owns its surface — radius 16, padding 20, <code>--uems-bg-primary-alt</code> on a <code>--uems-border-tertiary</code> border.</p>
+
+          <div class="anatomy-diagram" style="overflow:visible;">
+            <div style="display:flex;justify-content:center;margin:24px 0;padding:40px 72px;">
+              <div style="position:relative;width:320px;max-width:100%;">
+                <ds-kpi-card id="anat-card" value="1,248" title="Active sensors" subtitle="Up vs. last week"
+                             trend="up" trend-value="12" trend-sentiment="positive"
+                             gauge-value="86" gauge-label="SLA"></ds-kpi-card>
+                <span class="anat-marker-inline" style="position:absolute;top:18px;left:-30px;">1</span>
+                <span class="anat-marker-inline" style="position:absolute;top:46px;left:-30px;">2</span>
+                <span class="anat-marker-inline" style="position:absolute;bottom:14px;left:-30px;">3</span>
+                <span class="anat-marker-inline" style="position:absolute;top:14px;right:-30px;">4</span>
+                <span class="anat-marker-inline" style="position:absolute;bottom:18px;right:-30px;">5</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="anat-legend" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Value + trend badge</strong><span>The headline number (24px Bold, <code>--uems-text-accent-tertiary</code>) with an optional trend badge — arrow from <code>trend</code>, color from <code>trend-sentiment</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Title</strong><span>What is being measured. 14px Semibold, <code>--uems-text-secondary</code>. Renders as an <code>&lt;h3&gt;</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Subtitle</strong><span>Optional 12px context line, <code>--uems-text-quaternary</code>. Hidden with <code>show-subtitle="false"</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Icon badge</strong><span>36×36 tinted badge (radius 8), glyph 20. Slot <code>&lt;ds-icon slot="icon"&gt;</code> or <code>icon=""</code>. Tint follows <code>state</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Gauge (trailing)</strong><span>Top-semicircle ring driven by <code>gauge-value</code> (0–100). Mutually exclusive with the icon badge; fixed chart-blue (does not recolor per state).</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- ───── Two elements ───── -->
+          <div class="doc-section">
+            <h2 id="two-elements" class="doc-section-title">Two elements</h2>
+            <p class="doc-section-subtitle">The Figma set's 94 variants resolve into two structural families, shipped as two custom elements that share an internal stat header.</p>
+            <div class="demo-kpi-row-2" style="margin-top:8px;">
+              <div class="demo-mod-card">
+                <span class="card-cap">&lt;ds-kpi-card&gt; — metric</span>
+                <div class="demo-mod-desc"><code>size="default | wide"</code>. One headline value + the <code>type</code> matrix (icon, subtitle, trend, date selector, gauge, link).</div>
+                <ds-kpi-card value="2,310" title="Total endpoints" subtitle="Across all monitored locations" icon="computer"></ds-kpi-card>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">&lt;ds-kpi-breakdown&gt; — severity</span>
+                <div class="demo-mod-desc"><code>layout="compact | stacked | wide"</code>. A header stat + a fixed 4-cell Critical / High / Medium / Low grid; counts via the <code>.data</code> property.</div>
+                <ds-kpi-breakdown id="ov-breakdown" layout="compact" value="1,558" title="Total Vulnerabilities" subtitle="Across all severity levels"
+                                  trend="up" trend-value="12" trend-sentiment="negative"></ds-kpi-breakdown>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- ───── Type matrix ───── -->
+          <div class="doc-section">
+            <h2 id="type-matrix" class="doc-section-title">Type matrix (<code>ds-kpi-card</code>)</h2>
+            <p class="doc-section-subtitle">The <code>type</code> enum applies to the metric card only and is scoped by <code>size</code>. <code>ds-kpi-breakdown</code> has no <code>type</code>.</p>
+            <table class="size-table">
+              <thead><tr><th><code>type</code></th><th>Adds to value + title</th><th>Valid <code>size</code></th></tr></thead>
+              <tbody>
+                <tr><td><code>default</code></td><td>leading icon badge</td><td>default, wide</td></tr>
+                <tr><td><code>description</code></td><td>+ subtitle, + trend badge</td><td>default, wide</td></tr>
+                <tr><td><code>date</code></td><td>+ date-range selector (replaces icon)</td><td>default</td></tr>
+                <tr><td><code>gauge</code></td><td>+ gauge (trailing)</td><td>default</td></tr>
+                <tr><td><code>desc+date</code></td><td>subtitle + date selector</td><td>default</td></tr>
+                <tr><td><code>desc+gauge</code></td><td>subtitle + gauge</td><td>default, wide</td></tr>
+                <tr><td><code>date+gauge</code></td><td>date selector + gauge</td><td>default</td></tr>
+                <tr><td><code>desc+link</code></td><td>subtitle + text link (trailing value)</td><td><strong>wide only</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- ───── Preview ───── -->
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">A real dashboard row built from the live components — a metric summary strip over a severity breakdown.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">KPI Cards &middot; dashboard row</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Endpoint Central &middot; inventory summary</div>
+                  <div class="demo-kpi-row-4">
+                    <ds-kpi-card                value="2,310" title="Total endpoints" icon="computer"></ds-kpi-card>
+                    <ds-kpi-card state="success" value="2,201" title="Up-to-date"     icon="check"></ds-kpi-card>
+                    <ds-kpi-card state="warning" value="14"    title="Needs reboot"   icon="hourglass"></ds-kpi-card>
+                    <ds-kpi-card state="alert"   value="3"     title="Critical alerts" icon="exclamation-triangle"></ds-kpi-card>
+                  </div>
+                </div>
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Threats &amp; patches &middot; severity overview</div>
+                  <ds-kpi-breakdown id="ov-preview-breakdown" layout="wide" value="1,558" title="Total Vulnerabilities" subtitle="Across all severity levels in Devices"
+                                    trend="up" trend-value="12" trend-sentiment="negative" show-filter></ds-kpi-breakdown>
+                </div>
+
+                <!-- States — all four -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">States &middot; default / success / warning / alert</div>
+                  <div class="demo-kpi-row-4">
+                    <ds-kpi-card                value="30"    title="Devices"  icon="clock"></ds-kpi-card>
+                    <ds-kpi-card state="success" value="2,399" title="Resolved" icon="check"></ds-kpi-card>
+                    <ds-kpi-card state="warning" value="208"   title="Pending"  icon="hourglass"></ds-kpi-card>
+                    <ds-kpi-card state="alert"   value="486"   title="Alerts"   icon="exclamation-triangle"></ds-kpi-card>
+                  </div>
+                </div>
+
+                <!-- Default size — full type matrix -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Default size &middot; type matrix</div>
+                  <div class="demo-mod-grid">
+                    <div class="demo-mod-card">
+                      <span class="card-cap">default</span>
+                      <ds-kpi-card value="30" title="Devices" icon="clock"></ds-kpi-card>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">description</span>
+                      <ds-kpi-card value="30" title="Devices" subtitle="Compared to last week" trend="up" trend-value="12" trend-sentiment="positive" icon="clock"></ds-kpi-card>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">date</span>
+                      <ds-kpi-card value="30" title="Devices" period-label="Last 7 days"></ds-kpi-card>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">gauge</span>
+                      <ds-kpi-card value="30" title="Devices" gauge-value="86" gauge-label="SLA"></ds-kpi-card>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">desc+gauge</span>
+                      <ds-kpi-card value="30" title="Devices" subtitle="Compared to last week" gauge-value="86" gauge-label="SLA"></ds-kpi-card>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">date+gauge</span>
+                      <ds-kpi-card value="30" title="Devices" period-label="Last 7 days" gauge-value="86" gauge-label="SLA" trend="up" trend-value="4" trend-sentiment="positive"></ds-kpi-card>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">gauge-position="bottom" &middot; chart below the value</span>
+                      <ds-kpi-card value="30" title="Devices" subtitle="Compared to last week" gauge-value="86" gauge-label="SLA" gauge-position="bottom"></ds-kpi-card>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">chart-type="line" &middot; sparkline instead of gauge</span>
+                      <ds-kpi-card value="30" title="Devices" subtitle="Compared to last week" trend="up" trend-value="12" trend-sentiment="positive"
+                                   chart-type="line" sparkline-values="20,35,28,44,38,52,48" gauge-position="bottom"></ds-kpi-card>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Wide size — type matrix -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Wide size &middot; type matrix</div>
+                  <div class="demo-kpi-stack">
+                    <div class="demo-mod-card">
+                      <span class="card-cap">wide &middot; default</span>
+                      <ds-kpi-card size="wide" value="30" title="Active devices" icon="clock"></ds-kpi-card>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">wide &middot; desc+gauge</span>
+                      <ds-kpi-card size="wide" value="30" title="Active devices" subtitle="Connected in the last 24 hours" gauge-value="16" gauge-label="SLA"></ds-kpi-card>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">wide &middot; desc+link</span>
+                      <ds-kpi-card size="wide" value="30" title="Active devices" subtitle="Connected in the last 24 hours" icon="clock" link-label="Devices List" link-href="#"></ds-kpi-card>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Breakdown layouts -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Breakdown layouts &middot; compact / stacked / wide</div>
+                  <div class="demo-kpi-stack">
+                    <div class="demo-mod-card">
+                      <span class="card-cap">layout="compact" (Multi)</span>
+                      <div style="max-width:372px;">
+                        <ds-kpi-breakdown layout="compact" value="1,558" title="Total Vulnerabilities" subtitle="Across all severity levels" trend="up" trend-value="12" trend-sentiment="negative"></ds-kpi-breakdown>
+                      </div>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">layout="stacked" (Two)</span>
+                      <div style="max-width:576px;">
+                        <ds-kpi-breakdown layout="stacked" value="1,558" title="Total Vulnerabilities" subtitle="Across all severity levels" trend="up" trend-value="12" trend-sentiment="negative"></ds-kpi-breakdown>
+                      </div>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">layout="wide" (Single)</span>
+                      <ds-kpi-breakdown layout="wide" value="1,558" title="Total Vulnerabilities" subtitle="Across all severity levels in Devices" trend="up" trend-value="12" trend-sentiment="negative"></ds-kpi-breakdown>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Loading skeleton -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Loading skeleton</div>
+                  <div class="demo-kpi-row-4">
+                    <ds-kpi-card                value="30" title="Devices"  icon="clock"                loading></ds-kpi-card>
+                    <ds-kpi-card state="success" value="30" title="Resolved" icon="check"               loading></ds-kpi-card>
+                    <ds-kpi-card state="warning" value="30" title="Pending"  icon="hourglass"           loading></ds-kpi-card>
+                    <ds-kpi-card state="alert"   value="30" title="Alerts"   icon="exclamation-triangle" loading></ds-kpi-card>
+                  </div>
+                </div>
+
+                <!-- RTL -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">RTL &middot; mirrored layout</div>
+                  <div class="demo-kpi-stack">
+                    <ds-kpi-card dir="rtl" value="30" title="الأجهزة" subtitle="مقارنة بالأسبوع الماضي" trend="up" trend-value="12" trend-sentiment="positive" icon="clock"></ds-kpi-card>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">layout="wide" &middot; header right, grid left</span>
+                      <ds-kpi-breakdown id="rtl-preview-wide" data-playground dir="rtl" layout="wide" value="1,558" title="إجمالي الثغرات الأمنية" subtitle="عبر جميع مستويات الخطورة" trend="up" trend-value="12" trend-sentiment="negative"></ds-kpi-breakdown>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">layout="stacked" &middot; grid below the header (vertical)</span>
+                      <div style="max-width:576px;">
+                        <ds-kpi-breakdown id="rtl-preview-stacked" data-playground dir="rtl" layout="stacked" value="1,558" title="إجمالي الثغرات الأمنية" subtitle="عبر جميع مستويات الخطورة" trend="up" trend-value="12" trend-sentiment="negative"></ds-kpi-breakdown>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <script type="module">
+              customElements.whenDefined('ds-kpi-breakdown').then(() => {
+                /* Localized severity labels so the RTL example doesn't mix
+                   Arabic header text with English cell labels ("Low/Medium/…"). */
+                var arData = {
+                  critical: { value: 139, label: 'حرج' },
+                  high:     { value: 102, label: 'عالٍ' },
+                  medium:   { value: 422, label: 'متوسط' },
+                  low:      { value: 123, label: 'منخفض' },
+                };
+                ['rtl-preview-wide', 'rtl-preview-stacked'].forEach(function (id) {
+                  var el = document.getElementById(id);
+                  if (el) el.data = arData;
+                });
+              });
+            </script>
+          </div>
+
+          <!-- ───── Content Guidelines ───── -->
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Keep titles short — 1–3 words, sentence case; match them across cards in the same row.</li>
+                <li>Quantify the comparison in the subtitle ("Up 12% vs. last week"), not vague phrases.</li>
+                <li>Pick the element by intent — <code>ds-kpi-card</code> for one number, <code>ds-kpi-breakdown</code> for a severity split.</li>
+                <li>Reserve <code>state="alert"</code> for genuinely actionable bad news.</li>
+                <li>Let the card fill its dashboard grid cell; pick <code>size</code> for grid density.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Apply <code>alert</code> just because a number is low — context matters more than direction.</li>
+                <li>Pack multiple numbers into one metric card — use <code>ds-kpi-breakdown</code> instead.</li>
+                <li>Recolor the value per state — value &amp; title color stay constant; only badges recolor.</li>
+                <li>Render an empty / error placeholder inside the card — the host dashboard owns it.</li>
+                <li>Mix sizes/layouts in a single row — visual rhythm breaks.</li>
+              </ul></div>
+            </div>
+          </div>
+
+        </div><!-- end tab-overview -->
+
+        <!-- ═══════════════ STYLE ═══════════════ -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">States, types, and layouts that define the KPI card's visual language. Every preview is a live element — use <strong>Show code</strong> to reveal the markup.</p>
+
+          <!-- States -->
+          <div class="doc-section">
+            <h3 id="states" class="doc-h3">States</h3>
+            <p class="doc-section-subtitle"><code>state</code> &rarr; <code>default | success | warning | alert</code>. State recolors the <strong>icon badge + trend badge only</strong> — the value and title color stay constant.</p>
+            <div class="demo-kpi-row-4">
+              <ds-kpi-card                value="30"    title="Devices"  icon="clock"></ds-kpi-card>
+              <ds-kpi-card state="success" value="2,399" title="Resolved" icon="check"></ds-kpi-card>
+              <ds-kpi-card state="warning" value="208"   title="Pending"  icon="hourglass"></ds-kpi-card>
+              <ds-kpi-card state="alert"   value="486"   title="Alerts"   icon="exclamation-triangle"></ds-kpi-card>
+            </div>
+            <button class="code-toggle-btn" data-toggle>Show code</button>
+            <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">value</span>=<span class="token-string">"30"</span> <span class="token-attr">title</span>=<span class="token-string">"Devices"</span> <span class="token-attr">icon</span>=<span class="token-string">"clock"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span>
+<span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">state</span>=<span class="token-string">"success"</span> <span class="token-attr">value</span>=<span class="token-string">"2,399"</span> <span class="token-attr">title</span>=<span class="token-string">"Resolved"</span> <span class="token-attr">icon</span>=<span class="token-string">"check"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span>
+<span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">state</span>=<span class="token-string">"warning"</span> <span class="token-attr">value</span>=<span class="token-string">"208"</span> <span class="token-attr">title</span>=<span class="token-string">"Pending"</span> <span class="token-attr">icon</span>=<span class="token-string">"hourglass"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span>
+<span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">state</span>=<span class="token-string">"alert"</span> <span class="token-attr">value</span>=<span class="token-string">"486"</span> <span class="token-attr">title</span>=<span class="token-string">"Alerts"</span> <span class="token-attr">icon</span>=<span class="token-string">"exclamation-triangle"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span></pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Default-size types -->
+          <div class="doc-section">
+            <h3 id="default-types" class="doc-h3">Default size &middot; type variations</h3>
+            <p class="doc-section-subtitle">The <code>type</code> matrix at <code>size="default"</code> — set <code>type</code> implicitly by which attributes you provide (subtitle, <code>period-label</code>, <code>gauge-value</code>, <code>trend</code>).</p>
+            <div class="demo-mod-grid">
+              <div class="demo-mod-card">
+                <span class="card-cap">default</span>
+                <ds-kpi-card value="30" title="Devices" icon="clock"></ds-kpi-card>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">value</span>=<span class="token-string">"30"</span> <span class="token-attr">title</span>=<span class="token-string">"Devices"</span> <span class="token-attr">icon</span>=<span class="token-string">"clock"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">description</span>
+                <ds-kpi-card value="30" title="Devices" subtitle="Compared to last week" trend="up" trend-value="12" trend-sentiment="positive" icon="clock"></ds-kpi-card>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">value</span>=<span class="token-string">"30"</span> <span class="token-attr">title</span>=<span class="token-string">"Devices"</span>
+  <span class="token-attr">subtitle</span>=<span class="token-string">"Compared to last week"</span>
+  <span class="token-attr">trend</span>=<span class="token-string">"up"</span> <span class="token-attr">trend-value</span>=<span class="token-string">"12"</span> <span class="token-attr">trend-sentiment</span>=<span class="token-string">"positive"</span> <span class="token-attr">icon</span>=<span class="token-string">"clock"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">date — selector replaces icon</span>
+                <ds-kpi-card value="30" title="Devices" period-label="Last 7 days"></ds-kpi-card>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">value</span>=<span class="token-string">"30"</span> <span class="token-attr">title</span>=<span class="token-string">"Devices"</span> <span class="token-attr">period-label</span>=<span class="token-string">"Last 7 days"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">gauge — trailing donut</span>
+                <ds-kpi-card value="30" title="Devices" gauge-value="86" gauge-label="SLA"></ds-kpi-card>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">value</span>=<span class="token-string">"30"</span> <span class="token-attr">title</span>=<span class="token-string">"Devices"</span> <span class="token-attr">gauge-value</span>=<span class="token-string">"86"</span> <span class="token-attr">gauge-label</span>=<span class="token-string">"SLA"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">desc+gauge</span>
+                <ds-kpi-card value="30" title="Devices" subtitle="Compared to last week" gauge-value="86" gauge-label="SLA"></ds-kpi-card>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">value</span>=<span class="token-string">"30"</span> <span class="token-attr">title</span>=<span class="token-string">"Devices"</span>
+  <span class="token-attr">subtitle</span>=<span class="token-string">"Compared to last week"</span> <span class="token-attr">gauge-value</span>=<span class="token-string">"86"</span> <span class="token-attr">gauge-label</span>=<span class="token-string">"SLA"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">date+gauge — selector + gauge + trend</span>
+                <ds-kpi-card value="30" title="Devices" period-label="Last 7 days" gauge-value="86" gauge-label="SLA" trend="up" trend-value="4" trend-sentiment="positive"></ds-kpi-card>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">value</span>=<span class="token-string">"30"</span> <span class="token-attr">title</span>=<span class="token-string">"Devices"</span> <span class="token-attr">period-label</span>=<span class="token-string">"Last 7 days"</span>
+  <span class="token-attr">gauge-value</span>=<span class="token-string">"86"</span> <span class="token-attr">gauge-label</span>=<span class="token-string">"SLA"</span>
+  <span class="token-attr">trend</span>=<span class="token-string">"up"</span> <span class="token-attr">trend-value</span>=<span class="token-string">"4"</span> <span class="token-attr">trend-sentiment</span>=<span class="token-string">"positive"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">gauge-position="bottom" &middot; chart below the value (vertical)</span>
+                <ds-kpi-card value="30" title="Devices" subtitle="Compared to last week" gauge-value="86" gauge-label="SLA" gauge-position="bottom"></ds-kpi-card>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">value</span>=<span class="token-string">"30"</span> <span class="token-attr">title</span>=<span class="token-string">"Devices"</span>
+  <span class="token-attr">subtitle</span>=<span class="token-string">"Compared to last week"</span> <span class="token-attr">gauge-value</span>=<span class="token-string">"86"</span> <span class="token-attr">gauge-label</span>=<span class="token-string">"SLA"</span>
+  <span class="token-attr">gauge-position</span>=<span class="token-string">"bottom"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">chart-type="line" &middot; sparkline instead of the % gauge</span>
+                <ds-kpi-card value="30" title="Devices" subtitle="Compared to last week" trend="up" trend-value="12" trend-sentiment="positive"
+                             chart-type="line" sparkline-values="20,35,28,44,38,52,48" gauge-position="bottom"></ds-kpi-card>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">value</span>=<span class="token-string">"30"</span> <span class="token-attr">title</span>=<span class="token-string">"Devices"</span>
+  <span class="token-attr">subtitle</span>=<span class="token-string">"Compared to last week"</span> <span class="token-attr">trend</span>=<span class="token-string">"up"</span> <span class="token-attr">trend-value</span>=<span class="token-string">"12"</span> <span class="token-attr">trend-sentiment</span>=<span class="token-string">"positive"</span>
+  <span class="token-attr">chart-type</span>=<span class="token-string">"line"</span> <span class="token-attr">sparkline-values</span>=<span class="token-string">"20,35,28,44,38,52,48"</span>
+  <span class="token-attr">gauge-position</span>=<span class="token-string">"bottom"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Wide-size types -->
+          <div class="doc-section">
+            <h3 id="wide-types" class="doc-h3">Wide size &middot; type variations</h3>
+            <p class="doc-section-subtitle">Full-row format. Valid types: <code>default</code>, <code>description</code>, <code>desc+gauge</code>, and the wide-only <code>desc+link</code>.</p>
+            <div class="demo-kpi-stack">
+              <div class="demo-mod-card">
+                <span class="card-cap">wide &middot; default</span>
+                <ds-kpi-card size="wide" value="30" title="Active devices" icon="clock"></ds-kpi-card>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">size</span>=<span class="token-string">"wide"</span> <span class="token-attr">value</span>=<span class="token-string">"30"</span> <span class="token-attr">title</span>=<span class="token-string">"Active devices"</span> <span class="token-attr">icon</span>=<span class="token-string">"clock"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">wide &middot; desc+gauge</span>
+                <ds-kpi-card size="wide" value="30" title="Active devices" subtitle="Connected in the last 24 hours" gauge-value="16" gauge-label="SLA"></ds-kpi-card>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">size</span>=<span class="token-string">"wide"</span> <span class="token-attr">value</span>=<span class="token-string">"30"</span> <span class="token-attr">title</span>=<span class="token-string">"Active devices"</span>
+  <span class="token-attr">subtitle</span>=<span class="token-string">"Connected in the last 24 hours"</span> <span class="token-attr">gauge-value</span>=<span class="token-string">"16"</span> <span class="token-attr">gauge-label</span>=<span class="token-string">"SLA"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">wide &middot; desc+link (wide only)</span>
+                <ds-kpi-card size="wide" value="30" title="Active devices" subtitle="Connected in the last 24 hours" icon="clock" link-label="Devices List" link-href="#"></ds-kpi-card>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">size</span>=<span class="token-string">"wide"</span> <span class="token-attr">value</span>=<span class="token-string">"30"</span> <span class="token-attr">title</span>=<span class="token-string">"Active devices"</span>
+  <span class="token-attr">subtitle</span>=<span class="token-string">"Connected in the last 24 hours"</span> <span class="token-attr">icon</span>=<span class="token-string">"clock"</span>
+  <span class="token-attr">link-label</span>=<span class="token-string">"Devices List"</span> <span class="token-attr">link-href</span>=<span class="token-string">"#"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Breakdown layouts -->
+          <div class="doc-section">
+            <h3 id="breakdown-layouts" class="doc-h3">Breakdown layouts (<code>ds-kpi-breakdown</code>)</h3>
+            <p class="doc-section-subtitle">Same composition at three sizes. Cells are fixed: Critical (error) / High (alert) / Medium (accent) / Low (secondary). Counts set via <code>.data</code>.</p>
+            <div class="demo-kpi-stack">
+              <div class="demo-mod-card">
+                <span class="card-cap">layout="compact" (Multi)</span>
+                <div style="max-width:372px;">
+                  <ds-kpi-breakdown id="st-compact" layout="compact" value="1,558" title="Total Vulnerabilities" subtitle="Across all severity levels" trend="up" trend-value="12" trend-sentiment="negative"></ds-kpi-breakdown>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-breakdown</span> <span class="token-attr">layout</span>=<span class="token-string">"compact"</span> <span class="token-attr">value</span>=<span class="token-string">"1,558"</span>
+  <span class="token-attr">title</span>=<span class="token-string">"Total Vulnerabilities"</span> <span class="token-attr">subtitle</span>=<span class="token-string">"Across all severity levels"</span><span class="token-tag">&gt;&lt;/ds-kpi-breakdown&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">layout="stacked" (Two)</span>
+                <div style="max-width:576px;">
+                  <ds-kpi-breakdown id="st-stacked" layout="stacked" value="1,558" title="Total Vulnerabilities" subtitle="Across all severity levels" trend="up" trend-value="12" trend-sentiment="negative"></ds-kpi-breakdown>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-breakdown</span> <span class="token-attr">layout</span>=<span class="token-string">"stacked"</span> <span class="token-attr">value</span>=<span class="token-string">"1,558"</span>
+  <span class="token-attr">title</span>=<span class="token-string">"Total Vulnerabilities"</span> <span class="token-attr">subtitle</span>=<span class="token-string">"Across all severity levels"</span><span class="token-tag">&gt;&lt;/ds-kpi-breakdown&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">layout="wide" (Single) — header left, grid right</span>
+                <ds-kpi-breakdown id="st-wide" layout="wide" value="1,558" title="Total Vulnerabilities" subtitle="Across all severity levels in Devices" trend="up" trend-value="12" trend-sentiment="negative"></ds-kpi-breakdown>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-breakdown</span> <span class="token-attr">layout</span>=<span class="token-string">"wide"</span> <span class="token-attr">value</span>=<span class="token-string">"1,558"</span>
+  <span class="token-attr">title</span>=<span class="token-string">"Total Vulnerabilities"</span> <span class="token-attr">subtitle</span>=<span class="token-string">"Across all severity levels in Devices"</span><span class="token-tag">&gt;&lt;/ds-kpi-breakdown&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Loading -->
+          <div class="doc-section">
+            <h3 id="loading" class="doc-h3">Loading skeleton</h3>
+            <p class="doc-section-subtitle">Set <code>loading</code> to shimmer the value while data resolves; the layout is preserved. Empty / error belong to the host dashboard.</p>
+            <div class="demo-kpi-row-4">
+              <ds-kpi-card                value="30" title="Devices"  icon="clock"                loading></ds-kpi-card>
+              <ds-kpi-card state="success" value="30" title="Resolved" icon="check"                loading></ds-kpi-card>
+              <ds-kpi-card state="warning" value="30" title="Pending"  icon="hourglass"            loading></ds-kpi-card>
+              <ds-kpi-card state="alert"   value="30" title="Alerts"   icon="exclamation-triangle" loading></ds-kpi-card>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Design Tokens -->
+          <div class="doc-section">
+            <h3 id="tokens" class="doc-h3">Design tokens</h3>
+            <p class="doc-section-subtitle">Surface, typography, the <code>state</code> → token map, and the severity palette. Everything binds to <code>--uems-*</code> so the card re-themes across light / dark / night / green.</p>
+
+            <h4 class="doc-h4" style="margin-top:18px;">Surface &amp; structure</h4>
+            <table class="size-table">
+              <thead><tr><th>Role</th><th>Token</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Card background</td><td><code>--uems-bg-primary-alt</code></td><td>radius 16</td></tr>
+                <tr><td>Card border</td><td><code>--uems-border-tertiary</code></td><td>1px</td></tr>
+                <tr><td>Card padding</td><td><code>--spacing-20</code></td><td>20 (32 for wide breakdown)</td></tr>
+                <tr><td>Value text</td><td><code>--uems-text-accent-tertiary</code></td><td>constant (not per state)</td></tr>
+                <tr><td>Title</td><td><code>--uems-text-secondary</code></td><td>constant</td></tr>
+                <tr><td>Subtitle / severity label</td><td><code>--uems-text-quaternary</code></td><td>&mdash;</td></tr>
+                <tr><td>Date period label</td><td><code>--uems-text-tertiary</code></td><td>&mdash;</td></tr>
+                <tr><td>Link</td><td><code>--uems-text-accent-link</code></td><td>&mdash;</td></tr>
+              </tbody>
+            </table>
+
+            <h4 class="doc-h4" style="margin-top:22px;">Typography (Zoho Puvi)</h4>
+            <table class="size-table">
+              <thead><tr><th>Role</th><th>Size / Weight / LH</th></tr></thead>
+              <tbody>
+                <tr><td>Value, severity count</td><td>24 / Bold / 32</td></tr>
+                <tr><td>Title, severity label</td><td>14 / Semibold·Medium / 20</td></tr>
+                <tr><td>Subtitle, trend, period, link</td><td>12 / Regular·Medium / 16</td></tr>
+              </tbody>
+            </table>
+
+            <h4 class="doc-h4" style="margin-top:22px;">State → token map</h4>
+            <p class="doc-section-subtitle">State recolors the <strong>icon badge + trend badge</strong> only. Value &amp; title stay constant; the gauge arc is fixed chart-blue and does not recolor.</p>
+            <table class="size-table">
+              <thead><tr><th><code>state</code></th><th>Icon-badge bg</th><th>Trend-badge bg</th><th>Trend text</th></tr></thead>
+              <tbody>
+                <tr><td><code>default</code></td><td><code>--uems-bg-accent-primary</code></td><td><code>--uems-bg-success-primary</code></td><td><code>--uems-text-success</code></td></tr>
+                <tr><td><code>success</code></td><td><code>--uems-bg-success-primary</code></td><td><code>--uems-bg-success-primary</code></td><td><code>--uems-text-success</code></td></tr>
+                <tr><td><code>warning</code></td><td><code>--uems-bg-alert-primary</code></td><td><code>--uems-bg-error-primary</code></td><td><code>--uems-text-error</code></td></tr>
+                <tr><td><code>alert</code></td><td><code>--uems-bg-error-primary</code></td><td><code>--uems-bg-error-primary</code></td><td><code>--uems-text-error</code></td></tr>
+              </tbody>
+            </table>
+
+            <h4 class="doc-h4" style="margin-top:22px;">Severity palette (breakdown cells)</h4>
+            <table class="size-table">
+              <thead><tr><th>Cell</th><th>Box bg</th><th>Count color</th></tr></thead>
+              <tbody>
+                <tr><td>Critical</td><td><code>--uems-bg-error-primary</code></td><td><code>--uems-text-error</code></td></tr>
+                <tr><td>High</td><td><code>--uems-bg-alert-primary</code></td><td><code>--uems-text-alert</code></td></tr>
+                <tr><td>Medium</td><td><code>--uems-bg-accent-primary</code></td><td><code>--uems-text-accent-tertiary</code></td></tr>
+                <tr><td>Low</td><td><code>--uems-bg-secondary-alt</code></td><td><code>--uems-text-secondary</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div><!-- end tab-style -->
+
+        <!-- ═══════════════ USAGE ═══════════════ -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <h2 id="usage" class="doc-section-title">Usage</h2>
+          <p class="doc-section-subtitle">Which element to reach for, and how the KPI card shares the data lifecycle with its host dashboard.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Picking the element</h3>
+            <table class="size-table">
+              <thead><tr><th>You have…</th><th>Use</th></tr></thead>
+              <tbody>
+                <tr><td>One headline number (with optional trend, gauge, date, link)</td><td><code>ds-kpi-card</code></td></tr>
+                <tr><td>A column / bar chart's single value pulled up as a tile</td><td><code>ds-kpi-card</code></td></tr>
+                <tr><td>One total that splits across Critical / High / Medium / Low</td><td><code>ds-kpi-breakdown</code></td></tr>
+                <tr><td>A trend over time, or more than ~4 categories</td><td><code>ds-chart</code> (not a KPI card)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Picking the size / layout</h3>
+            <table class="size-table">
+              <thead><tr><th>Question</th><th>Choice</th></tr></thead>
+              <tbody>
+                <tr><td>Dense dashboard grid (4-up summary row)?</td><td><code>ds-kpi-card size="default"</code></td></tr>
+                <tr><td>Long title/subtitle, a trailing link, or a full-width row?</td><td><code>ds-kpi-card size="wide"</code></td></tr>
+                <tr><td>Compact severity tile in a grid?</td><td><code>ds-kpi-breakdown layout="compact"</code></td></tr>
+                <tr><td>Roomier severity card?</td><td><code>ds-kpi-breakdown layout="stacked"</code></td></tr>
+                <tr><td>Full-width severity banner (header left, cells right)?</td><td><code>ds-kpi-breakdown layout="wide"</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">State ownership</h3>
+            <p class="doc-section-subtitle">The <strong>host dashboard owns the data lifecycle.</strong> Empty and error states are rendered by the host using the system <strong>Empty state</strong> component — consistently across all widget content (chart, table, KPI). A KPI card owns only its <code>loading</code> skeleton; it never draws an empty or error placeholder itself.</p>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Do &amp; Don't</h3>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Pull a column / bar chart's single value into a <code>ds-kpi-card</code> for at-a-glance reading.</li>
+                <li>Use <code>ds-kpi-breakdown</code> when one total splits across severities.</li>
+                <li>Pick <code>size</code> / <code>layout</code> for grid density; let the card fill its cell.</li>
+                <li>Keep values legible — short titles, quantified subtitles.</li>
+                <li>Let the host render empty / error via the Empty state.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Cram many <code>type</code>s into one row — keep a row visually consistent.</li>
+                <li>Recolor the value per state — only the icon &amp; trend badges recolor.</li>
+                <li>Handle empty / error inside the card — the host owns it.</li>
+                <li>Use a gauge as decoration when there's no implied total.</li>
+                <li>Reach for <code>ds-kpi-breakdown</code> for non-severity splits — use a chart.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related components</h2>
+            <div class="related-grid">
+              <a href="Charts.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-6M22 20H2"/></svg> Charts</a>
+              <a href="Data-table.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg> Data table</a>
+              <a href="Empty-state.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8"/></svg> Empty state</a>
+            </div>
+          </div>
+        </div><!-- end tab-usage -->
+
+        <!-- ═══════════════ CODE ═══════════════ -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo</h2>
+          <p class="doc-section-subtitle">Configure a <code>ds-kpi-card</code> and copy the generated HTML. The type is derived from which attributes you set.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Size</label><select class="cp-select" id="kp-size"><option value="default">Default</option><option value="wide">Wide</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">State</label><select class="cp-select" id="kp-state"><option value="default">Default</option><option value="success">Success</option><option value="warning">Warning</option><option value="alert">Alert</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Value</label><input class="cp-select" id="kp-value" type="text" value="30" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Title</label><input class="cp-select" id="kp-title" type="text" value="Devices" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Subtitle</label><input class="cp-select" id="kp-subtitle" type="text" value="Connected in the last 24 hours" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Trend</label><select class="cp-select" id="kp-trend"><option value="">None</option><option value="up" selected>Up</option><option value="down">Down</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Trend value</label><input class="cp-select" id="kp-trendval" type="text" value="12" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Trend sentiment</label><select class="cp-select" id="kp-sentiment"><option value="">Auto</option><option value="positive">Positive</option><option value="negative">Negative</option><option value="neutral">Neutral</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Gauge value (0–100)</label><input class="cp-select" id="kp-gauge" type="text" value="" placeholder="e.g. 86" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Period label</label><input class="cp-select" id="kp-period" type="text" value="" placeholder="e.g. Last 7 days" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Icon</label><input class="cp-select" id="kp-icon" type="text" value="clock" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="kp-rtl"><option value="false" selected>No</option><option value="true">Yes</option></select></div>
+            </div>
+            <div class="cp-preview" id="kp-preview-area" style="padding:24px;display:flex;justify-content:center;">
+              <ds-kpi-card id="kp-el" value="30" title="Devices" subtitle="Connected in the last 24 hours" trend="up" trend-value="12" icon="clock" style="max-width:320px;width:100%;"></ds-kpi-card>
+            </div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="kp-copy-btn"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+            </div>
+            <div class="cp-code-area" id="kp-code-output"></div>
+          </div>
+          <script>
+          (function(){
+            var byId=function(id){return document.getElementById(id);};
+            var els={size:byId('kp-size'),state:byId('kp-state'),value:byId('kp-value'),title:byId('kp-title'),subtitle:byId('kp-subtitle'),trend:byId('kp-trend'),trendval:byId('kp-trendval'),sentiment:byId('kp-sentiment'),gauge:byId('kp-gauge'),period:byId('kp-period'),icon:byId('kp-icon'),rtl:byId('kp-rtl')};
+            var el=byId('kp-el'), codeOut=byId('kp-code-output'), copyBtn=byId('kp-copy-btn'), raw='';
+            function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+            function set(node,attr,val){ if(val!==null&&val!==undefined&&val!=='') node.setAttribute(attr,val); else node.removeAttribute(attr); }
+            function update(){
+              var size=els.size.value,state=els.state.value,value=els.value.value,title=els.title.value,subtitle=els.subtitle.value;
+              var trend=els.trend.value,trendval=els.trendval.value,sentiment=els.sentiment.value;
+              var gauge=els.gauge.value.trim(),period=els.period.value.trim(),icon=els.icon.value.trim();
+              var isRtl=els.rtl.value==='true';
+              set(el,'size', size==='wide'?'wide':null);
+              set(el,'state', state!=='default'?state:null);
+              set(el,'value', value); set(el,'title', title); set(el,'subtitle', subtitle);
+              set(el,'trend', trend||null);
+              set(el,'trend-value', trend?trendval:null);
+              set(el,'trend-sentiment', (trend&&sentiment)?sentiment:null);
+              set(el,'gauge-value', gauge||null);
+              set(el,'period-label', period||null);
+              set(el,'icon', (icon&&!gauge&&!period)?icon:null);
+              if(isRtl) el.setAttribute('dir','rtl'); else el.removeAttribute('dir');
+              el.style.maxWidth = (size==='wide') ? '560px' : '320px';
+              var a=[];
+              if(size==='wide') a.push('size="wide"');
+              if(state!=='default') a.push('state="'+state+'"');
+              a.push('value="'+esc(value)+'"'); a.push('title="'+esc(title)+'"');
+              if(subtitle) a.push('subtitle="'+esc(subtitle)+'"');
+              if(trend){ a.push('trend="'+trend+'"'); if(trendval) a.push('trend-value="'+esc(trendval)+'"'); if(sentiment) a.push('trend-sentiment="'+sentiment+'"'); }
+              if(gauge) a.push('gauge-value="'+esc(gauge)+'"');
+              if(period) a.push('period-label="'+esc(period)+'"');
+              if(icon&&!gauge&&!period) a.push('icon="'+esc(icon)+'"');
+              if(isRtl) a.push('dir="rtl"');
+              raw='<ds-kpi-card '+a.join(' ')+'></ds-kpi-card>';
+              codeOut.innerHTML=esc(raw)
+                .replace(/([a-zA-Z-]+)=&quot;([^&]*?)&quot;/g,'<span style="color:#38bdf8;">$1</span>=<span style="color:#34d399;">"$2"</span>')
+                .replace(/&lt;(\/?)(ds-kpi-card)([^&]*?)&gt;/g,'<span style="color:#94a3b8;">&lt;$1</span><span style="color:#a78bfa;">$2</span>$3<span style="color:#94a3b8;">&gt;</span>');
+            }
+            Object.values(els).forEach(function(e){ e.addEventListener(e.tagName==='INPUT'?'input':'change',update); });
+            copyBtn.addEventListener('click',async function(){ try{ if(navigator.clipboard) await navigator.clipboard.writeText(raw); var o=copyBtn.innerHTML; copyBtn.textContent='Copied!'; setTimeout(function(){copyBtn.innerHTML=o;},1200);}catch(e){} });
+            update();
+          })();
+          </script>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="live-demo-breakdown" class="doc-section-title">Live demo — breakdown</h2>
+          <p class="doc-section-subtitle">Configure a <code>ds-kpi-breakdown</code> (incl. the <code>stacked</code> layout). Severity counts are applied via the <code>.data</code> property — shown in the generated code.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Layout</label><select class="cp-select" id="bk-layout"><option value="compact">Compact (Multi)</option><option value="stacked">Stacked (Two)</option><option value="wide">Wide (Single)</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Value</label><input class="cp-select" id="bk-value" type="text" value="1,558" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Title</label><input class="cp-select" id="bk-title" type="text" value="Total Vulnerabilities" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Subtitle</label><input class="cp-select" id="bk-subtitle" type="text" value="Across all severity levels" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Trend</label><select class="cp-select" id="bk-trend"><option value="">None</option><option value="up" selected>Up</option><option value="down">Down</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Trend value</label><input class="cp-select" id="bk-trendval" type="text" value="12" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Trend sentiment</label><select class="cp-select" id="bk-sentiment"><option value="negative" selected>Negative</option><option value="">Auto</option><option value="positive">Positive</option><option value="neutral">Neutral</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Critical</label><input class="cp-select" id="bk-critical" type="text" value="139" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">High</label><input class="cp-select" id="bk-high" type="text" value="102" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Medium</label><input class="cp-select" id="bk-medium" type="text" value="422" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">Low</label><input class="cp-select" id="bk-low" type="text" value="123" style="width:100%;"></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="bk-rtl"><option value="false" selected>No</option><option value="true">Yes</option></select></div>
+            </div>
+            <div class="cp-preview" id="bk-preview-area" style="padding:24px;display:flex;justify-content:center;overflow-x:auto;">
+              <div id="bk-wrap" style="width:100%;max-width:372px;">
+                <ds-kpi-breakdown id="bk-el" layout="compact" value="1,558" title="Total Vulnerabilities" subtitle="Across all severity levels" trend="up" trend-value="12" trend-sentiment="negative" data-playground></ds-kpi-breakdown>
+              </div>
+            </div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML + JS</div>
+              <button class="cp-action-btn" id="bk-copy-btn"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+            </div>
+            <div class="cp-code-area" id="bk-code-output"></div>
+          </div>
+          <script>
+          (function(){
+            var byId=function(id){return document.getElementById(id);};
+            var els={layout:byId('bk-layout'),value:byId('bk-value'),title:byId('bk-title'),subtitle:byId('bk-subtitle'),trend:byId('bk-trend'),trendval:byId('bk-trendval'),sentiment:byId('bk-sentiment'),critical:byId('bk-critical'),high:byId('bk-high'),medium:byId('bk-medium'),low:byId('bk-low'),rtl:byId('bk-rtl')};
+            var el=byId('bk-el'), wrap=byId('bk-wrap'), codeOut=byId('bk-code-output'), copyBtn=byId('bk-copy-btn'), raw='';
+            function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+            function set(node,attr,val){ if(val!==null&&val!==undefined&&val!=='') node.setAttribute(attr,val); else node.removeAttribute(attr); }
+            function num(v){ var n=parseInt(String(v).replace(/[^0-9-]/g,''),10); return isFinite(n)?n:0; }
+            function update(){
+              var layout=els.layout.value,value=els.value.value,title=els.title.value,subtitle=els.subtitle.value;
+              var trend=els.trend.value,trendval=els.trendval.value,sentiment=els.sentiment.value;
+              var isRtl=els.rtl.value==='true';
+              set(el,'layout',layout); set(el,'value',value); set(el,'title',title); set(el,'subtitle',subtitle);
+              set(el,'trend',trend||null); set(el,'trend-value',trend?trendval:null); set(el,'trend-sentiment',(trend&&sentiment)?sentiment:null);
+              if(isRtl) el.setAttribute('dir','rtl'); else el.removeAttribute('dir');
+              var data={critical:num(els.critical.value),high:num(els.high.value),medium:num(els.medium.value),low:num(els.low.value)};
+              if('data' in el) el.data=data;
+              wrap.style.maxWidth = (layout==='wide') ? '100%' : (layout==='stacked' ? '560px' : '372px');
+              var a=['layout="'+layout+'"','value="'+esc(value)+'"','title="'+esc(title)+'"'];
+              if(subtitle) a.push('subtitle="'+esc(subtitle)+'"');
+              if(trend){ a.push('trend="'+trend+'"'); if(trendval) a.push('trend-value="'+esc(trendval)+'"'); if(sentiment) a.push('trend-sentiment="'+sentiment+'"'); }
+              if(isRtl) a.push('dir="rtl"');
+              var html='<ds-kpi-breakdown id="vuln" '+a.join(' ')+'></ds-kpi-breakdown>';
+              var dataStr='{ critical: '+data.critical+', high: '+data.high+', medium: '+data.medium+', low: '+data.low+' }';
+              var js='<scr'+'ipt type="module">\n  document.getElementById(\'vuln\').data = '+dataStr+';\n<\/scr'+'ipt>';
+              raw=html+'\n\n'+js;
+              codeOut.innerHTML=esc(raw)
+                .replace(/([a-zA-Z-]+)=&quot;([^&]*?)&quot;/g,'<span style="color:#38bdf8;">$1</span>=<span style="color:#34d399;">"$2"</span>')
+                .replace(/&lt;(\/?)(ds-kpi-breakdown|script)([^&]*?)&gt;/g,'<span style="color:#94a3b8;">&lt;$1</span><span style="color:#a78bfa;">$2</span>$3<span style="color:#94a3b8;">&gt;</span>');
+            }
+            Object.values(els).forEach(function(e){ e.addEventListener(e.tagName==='INPUT'?'input':'change',update); });
+            copyBtn.addEventListener('click',async function(){ try{ if(navigator.clipboard) await navigator.clipboard.writeText(raw); var o=copyBtn.innerHTML; copyBtn.textContent='Copied!'; setTimeout(function(){copyBtn.innerHTML=o;},1200);}catch(e){} });
+            if(window.customElements){ customElements.whenDefined('ds-kpi-breakdown').then(update); } else { update(); }
+          })();
+          </script>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="install" class="doc-section-title">Install &amp; usage</h2>
+          <p class="doc-section-subtitle">Register both elements, then drive them with attributes (and <code>.data</code> for the breakdown). Source: <code>design-system-library/src/components/kpi-card/</code>.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Register the components</h3>
+            <div class="code-block is-static"><div class="code-block-head"><span>JS</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-attr">&lt;script</span> <span class="token-attr">type</span>=<span class="token-string">"module"</span> <span class="token-attr">src</span>=<span class="token-string">"design-system-library/src/components/kpi-card/kpi-card.js"</span><span class="token-attr">&gt;&lt;/script&gt;</span>
+<span class="token-attr">&lt;script</span> <span class="token-attr">type</span>=<span class="token-string">"module"</span> <span class="token-attr">src</span>=<span class="token-string">"design-system-library/src/components/kpi-card/kpi-breakdown.js"</span><span class="token-attr">&gt;&lt;/script&gt;</span></pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Basic markup</h3>
+            <div class="demo-mod-section" style="margin-bottom:16px;gap:12px;">
+              <ds-kpi-card value="2,310" title="Total endpoints" icon="computer" style="max-width:280px;"></ds-kpi-card>
+              <ds-kpi-card size="wide" state="success" value="30" title="Active devices" subtitle="Connected in the last 24 hours" trend="up" trend-value="12" trend-sentiment="positive"><ds-icon slot="icon" name="clock"></ds-icon></ds-kpi-card>
+            </div>
+            <div class="code-block is-static"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">value</span>=<span class="token-string">"2,310"</span> <span class="token-attr">title</span>=<span class="token-string">"Total endpoints"</span> <span class="token-attr">icon</span>=<span class="token-string">"computer"</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span>
+
+<span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">size</span>=<span class="token-string">"wide"</span> <span class="token-attr">state</span>=<span class="token-string">"success"</span> <span class="token-attr">value</span>=<span class="token-string">"30"</span> <span class="token-attr">title</span>=<span class="token-string">"Active devices"</span>
+  <span class="token-attr">subtitle</span>=<span class="token-string">"Connected in the last 24 hours"</span>
+  <span class="token-attr">trend</span>=<span class="token-string">"up"</span> <span class="token-attr">trend-value</span>=<span class="token-string">"12"</span> <span class="token-attr">trend-sentiment</span>=<span class="token-string">"positive"</span><span class="token-tag">&gt;</span>
+  <span class="token-tag">&lt;ds-icon</span> <span class="token-attr">slot</span>=<span class="token-string">"icon"</span> <span class="token-attr">name</span>=<span class="token-string">"clock"</span><span class="token-tag">&gt;&lt;/ds-icon&gt;</span>
+<span class="token-tag">&lt;/ds-kpi-card&gt;</span></pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Breakdown &amp; the <code>.data</code> property</h3>
+            <p class="doc-section-subtitle">Set severity counts on the JS property after the element is defined. Values can be plain numbers, or <code>{ value, label, href }</code> objects (the <code>href</code> renders a "View" link in <code>layout="wide"</code>).</p>
+            <div class="demo-mod-section" style="margin-bottom:16px;max-width:372px;">
+              <ds-kpi-breakdown layout="compact" value="1,558" title="Total Vulnerabilities" subtitle="Across all severity levels"></ds-kpi-breakdown>
+            </div>
+            <div class="code-block is-static"><div class="code-block-head"><span>HTML + JS</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-breakdown</span> <span class="token-attr">id</span>=<span class="token-string">"vuln"</span> <span class="token-attr">layout</span>=<span class="token-string">"compact"</span> <span class="token-attr">value</span>=<span class="token-string">"1,558"</span>
+  <span class="token-attr">title</span>=<span class="token-string">"Total Vulnerabilities"</span> <span class="token-attr">subtitle</span>=<span class="token-string">"Across all severity levels"</span><span class="token-tag">&gt;&lt;/ds-kpi-breakdown&gt;</span>
+
+<span class="token-attr">&lt;script</span> <span class="token-attr">type</span>=<span class="token-string">"module"</span><span class="token-attr">&gt;</span>
+  customElements.whenDefined(<span class="token-string">'ds-kpi-breakdown'</span>).then(() => {
+    document.getElementById(<span class="token-string">'vuln'</span>).data = { critical: 139, high: 102, medium: 422, low: 123 };
+  });
+<span class="token-attr">&lt;/script&gt;</span></pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Clickable card with event handler</h3>
+            <div class="demo-mod-section" style="margin-bottom:16px;">
+              <ds-kpi-card id="codeClickable" state="success" value="98%" title="Compliance" subtitle="Click for breakdown" icon="check" clickable style="max-width:280px;"></ds-kpi-card>
+            </div>
+            <div class="code-block is-static"><div class="code-block-head"><span>HTML + JS</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-kpi-card</span> <span class="token-attr">id</span>=<span class="token-string">"comp"</span> <span class="token-attr">state</span>=<span class="token-string">"success"</span> <span class="token-attr">value</span>=<span class="token-string">"98%"</span>
+  <span class="token-attr">title</span>=<span class="token-string">"Compliance"</span> <span class="token-attr">subtitle</span>=<span class="token-string">"Click for breakdown"</span> <span class="token-attr">icon</span>=<span class="token-string">"check"</span> <span class="token-attr">clickable</span><span class="token-tag">&gt;&lt;/ds-kpi-card&gt;</span>
+
+<span class="token-attr">&lt;script&gt;</span>
+  document.getElementById(<span class="token-string">'comp'</span>).addEventListener(<span class="token-string">'ds-kpi-card-select'</span>, (e) => {
+    console.log(e.detail);  <span class="token-attr">// { source, label, value }</span>
+  });
+<span class="token-attr">&lt;/script&gt;</span></pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="api-card" class="doc-section-title"><code>ds-kpi-card</code> — attributes</h2>
+          <table class="size-table">
+            <thead><tr><th>Attribute</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>size</code></td><td><code>default | wide</code></td><td><code>default</code></td><td>Outer layout.</td></tr>
+              <tr><td><code>type</code></td><td>enum (matrix)</td><td><code>default</code></td><td>Derived from attributes; scoped by <code>size</code> (see Type matrix).</td></tr>
+              <tr><td><code>state</code></td><td><code>default | success | warning | alert</code></td><td><code>default</code></td><td>Recolors icon + trend badge only.</td></tr>
+              <tr><td><code>value</code></td><td>string</td><td>&mdash;</td><td>The headline metric.</td></tr>
+              <tr><td><code>title</code></td><td>string</td><td>&mdash;</td><td>Renders as <code>&lt;h3&gt;</code>.</td></tr>
+              <tr><td><code>subtitle</code></td><td>string</td><td>&mdash;</td><td>Context line under the title.</td></tr>
+              <tr><td><code>trend</code></td><td><code>up | down</code></td><td>&mdash;</td><td>Sets the trend arrow direction.</td></tr>
+              <tr><td><code>trend-value</code></td><td>number</td><td>&mdash;</td><td>Badge number (absolute value shown).</td></tr>
+              <tr><td><code>trend-sentiment</code></td><td><code>positive | negative | neutral</code></td><td>auto</td><td>Drives trend-badge color.</td></tr>
+              <tr><td><code>period-label</code></td><td>string</td><td>&mdash;</td><td>Date-range selector text (date types; replaces icon).</td></tr>
+              <tr><td><code>link-label</code> / <code>link-href</code></td><td>string</td><td>&mdash;</td><td>Trailing link. <strong>wide × desc+link only.</strong></td></tr>
+              <tr><td><code>gauge-value</code></td><td>number 0–100</td><td>&mdash;</td><td>Trailing gauge arc + centered %.</td></tr>
+              <tr><td><code>gauge-label</code></td><td>string</td><td>&mdash;</td><td>Sub-label under the gauge.</td></tr>
+              <tr><td><code>gauge-position</code></td><td><code>end</code> | <code>bottom</code></td><td><code>end</code></td><td><code>end</code> = trailing beside the value (default). <code>bottom</code> = chart stacks below the value/label/desc column (vertical). Default &amp; Wide sizes. Applies to either chart type.</td></tr>
+              <tr><td><code>chart-type</code></td><td><code>gauge</code> | <code>line</code></td><td><code>gauge</code></td><td>Which chart fills the gauge/chart slot. <code>line</code> needs <code>sparkline-values</code> to take effect; otherwise falls back to the gauge.</td></tr>
+              <tr><td><code>sparkline-values</code></td><td>comma-separated numbers</td><td>&mdash;</td><td>Line sparkline data points (needs 2+). Only used when <code>chart-type="line"</code>.</td></tr>
+              <tr><td><code>show-icon</code> / <code>show-trend</code> / <code>show-subtitle</code></td><td>boolean</td><td><code>true</code></td><td>Set <code>="false"</code> to hide.</td></tr>
+              <tr><td><code>loading</code></td><td>boolean</td><td><code>false</code></td><td>Shimmer skeleton; layout preserved.</td></tr>
+              <tr><td><code>clickable</code></td><td>boolean</td><td><code>false</code></td><td>Whole tile activates; fires <code>ds-kpi-card-select</code>.</td></tr>
+              <tr><td><code>dir="rtl"</code></td><td>—</td><td>ltr</td><td>Mirror layout (a flag, not a variant).</td></tr>
+            </tbody>
+          </table>
+          <p class="doc-section-subtitle" style="margin-top:8px;">The gauge/chart slot always renders the shared <code>&lt;ds-chart&gt;</code> component (<code>type="gauge"</code> or <code>"line"</code>) — never a bespoke SVG. Known limitation: <code>ds-chart</code> keeps its text at a fixed readable size regardless of container width, so at the compact <code>gauge-position="end"</code> width (80px) the gauge's "%" text can crowd the small arc. <code>gauge-position="bottom"</code> (full card width) gives the chart enough room and is the recommended choice for <code>chart-type="line"</code>.</p>
+
+          <h3 class="doc-h4" style="margin-top:18px;">Slots</h3>
+          <table class="size-table">
+            <thead><tr><th>Slot</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>icon</code></td><td>Leading icon, e.g. <code>&lt;ds-icon slot="icon" name="clock"&gt;</code> (or the <code>icon</code> attribute).</td></tr>
+              <tr><td><code>trend-icon</code></td><td>Optional override of the trend arrow (default derived from <code>trend</code>).</td></tr>
+              <tr><td><code>link-icon</code></td><td>Optional override of the link glyph.</td></tr>
+            </tbody>
+          </table>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="api-breakdown" class="doc-section-title"><code>ds-kpi-breakdown</code> — attributes</h2>
+          <table class="size-table">
+            <thead><tr><th>Attribute</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>layout</code></td><td><code>compact | stacked | wide</code></td><td><code>compact</code></td><td>Maps to Figma Multi / Two / Single.</td></tr>
+              <tr><td><code>state</code></td><td><code>default | success | warning | alert</code></td><td><code>default</code></td><td>Header trend-badge token swap.</td></tr>
+              <tr><td><code>value</code> / <code>title</code> / <code>subtitle</code></td><td>string</td><td>&mdash;</td><td>Header stat content.</td></tr>
+              <tr><td><code>trend</code> / <code>trend-value</code> / <code>trend-sentiment</code></td><td>see card</td><td>&mdash;</td><td>Header trend badge.</td></tr>
+              <tr><td><code>loading</code></td><td>boolean</td><td><code>false</code></td><td>Shimmer the header value.</td></tr>
+              <tr><td><code>show-filter</code></td><td>boolean</td><td><code>false</code></td><td>Adds a filter icon button next to the title; fires <code>ds-kpi-breakdown-filter</code> on click (e.g. open a severity-filter menu).</td></tr>
+              <tr><td><code>dir="rtl"</code></td><td>—</td><td>ltr</td><td>Mirror layout + cell order.</td></tr>
+            </tbody>
+          </table>
+          <p class="doc-section-subtitle" style="margin-top:8px;">Every severity cell also shows a small redirect (&#8599;) arrow next to its label (Critical/High/Medium/Low), hinting the cell drills into a filtered view — shown in all three layouts, always on.</p>
+
+          <h3 class="doc-h4" style="margin-top:18px;"><code>.data</code> shape (JS property)</h3>
+          <table class="size-table">
+            <thead><tr><th>Key</th><th>Type</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>critical</code></td><td>number <em>or</em> <code>{ value, label?, href? }</code></td><td>Cell 1 — error palette.</td></tr>
+              <tr><td><code>high</code></td><td>number <em>or</em> object</td><td>Cell 2 — alert palette.</td></tr>
+              <tr><td><code>medium</code></td><td>number <em>or</em> object</td><td>Cell 3 — accent palette.</td></tr>
+              <tr><td><code>low</code></td><td>number <em>or</em> object</td><td>Cell 4 — secondary palette.</td></tr>
+            </tbody>
+          </table>
+          <p class="doc-section-subtitle" style="margin-top:10px;">Cells are fixed (Critical / High / Medium / Low) and always shown — a missing key renders <code>0</code>. The <code>href</code> on an object renders a "View" link in <code>layout="wide"</code>.</p>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="events" class="doc-section-title">Events</h2>
+          <table class="size-table">
+            <thead><tr><th>Event</th><th>Element</th><th>Detail</th><th>Fires when</th></tr></thead>
+            <tbody>
+              <tr><td><code>ds-kpi-card-select</code></td><td><code>ds-kpi-card</code></td><td><code>{ source, label, value, href? }</code></td><td>Clickable card activated, or trailing link clicked.</td></tr>
+              <tr><td><code>ds-kpi-card-period</code></td><td><code>ds-kpi-card</code></td><td><code>{ source:'selector', value, anchor }</code></td><td>Date-range selector clicked.</td></tr>
+              <tr><td><code>ds-kpi-card-trend</code></td><td><code>ds-kpi-card</code></td><td><code>{ source:'pill', value, label, anchor }</code></td><td>Trend pill clicked.</td></tr>
+              <tr><td><code>ds-kpi-breakdown-select</code></td><td><code>ds-kpi-breakdown</code></td><td><code>{ severity, value, href? }</code></td><td>A severity cell is activated.</td></tr>
+              <tr><td><code>ds-kpi-breakdown-filter</code></td><td><code>ds-kpi-breakdown</code></td><td><code>{ anchor }</code></td><td>The header filter icon (<code>show-filter</code>) is clicked.</td></tr>
+            </tbody>
+          </table>
+        </div><!-- end tab-code -->
+
+        <!-- ═══════════════ ACCESSIBILITY ═══════════════ -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for accessible KPI cards across assistive tech and input methods.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Roles &amp; ARIA</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Implementation</th></tr></thead>
+              <tbody>
+                <tr><td>Card root</td><td><code>ds-kpi-breakdown</code> is a <code>role="group"</code> with an <code>aria-label</code> summarizing the stat ("Total Vulnerabilities, 1,558"). A clickable <code>ds-kpi-card</code> becomes <code>role="button"</code> with <code>tabindex="0"</code> and an auto <code>aria-label="{title}, {value}"</code>.</td></tr>
+                <tr><td>Value &amp; title</td><td>Real text in DOM order (title is an <code>&lt;h3&gt;</code>) — read by screen readers, not painted as background.</td></tr>
+                <tr><td>Trend</td><td>Conveyed by <strong>icon + text + color</strong>, never color alone; <code>trend-sentiment</code> sets the accessible meaning.</td></tr>
+                <tr><td>Gauge</td><td>Decorative (<code>aria-hidden="true"</code>); its meaning lives in the surrounding text.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Keyboard &amp; interactive parts</h3>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td>Clickable card</td><td><kbd>Tab</kbd> to focus; <kbd>Enter</kbd> / <kbd>Space</kbd> activate (fires <code>ds-kpi-card-select</code>). Don't nest other interactive elements inside.</td></tr>
+                <tr><td>Date selector</td><td>A real <code>&lt;button&gt;</code> (with <code>aria-haspopup="menu"</code> when wired) — keyboard operable, visible focus ring.</td></tr>
+                <tr><td>Link</td><td>A real <code>&lt;a&gt;</code> with <code>href</code> — standard focus ring and activation.</td></tr>
+                <tr><td>Severity cells</td><td>Real <code>&lt;button&gt;</code>s labeled by their count + severity; each fires <code>ds-kpi-breakdown-select</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Color contrast<span class="h3-badge" style="background:rgba(34,197,94,0.15);color:#16a34a;">WCAG AA pass</span></h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Requirement</th></tr></thead>
+              <tbody>
+                <tr><td>Text on surface</td><td>All text tokens on <code>--uems-bg-primary-alt</code> meet WCAG 2.1 AA; severity counts verified on their tinted boxes.</td></tr>
+                <tr><td>Color not the sole signal</td><td>Severity cells pair color with the text label; state pairs color with wording.</td></tr>
+                <tr><td>Reduced motion</td><td><code>prefers-reduced-motion: reduce</code> collapses the gauge sweep and loading shimmer to instant updates.</td></tr>
+                <tr><td>RTL</td><td><code>dir="rtl"</code> mirrors layout, focus order, the trend chevron, and the severity-cell order.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div><!-- end tab-accessibility -->
+
+        </div><!-- close main-content-inner -->
+
+        <aside class="toc-sidebar" style="padding: 20px;">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/kpi-cards.md" download="kpi-cards.md" class="action-link">
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Download MD
+            </a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=19414-1029" target="_blank" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+
+      </div> <!-- close main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+      <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+      <div style="display: flex; gap: 10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  <!-- Severity counts for every ds-kpi-breakdown on the page -->
+  <script type="module">
+    customElements.whenDefined('ds-kpi-breakdown').then(() => {
+      const counts = { critical: 139, high: 102, medium: 422, low: 123 };
+      const withLinks = {
+        critical: { value: 139, href: '#' },
+        high:     { value: 102, href: '#' },
+        medium:   { value: 422, href: '#' },
+        low:      { value: 123, href: '#' },
+      };
+      document.querySelectorAll('ds-kpi-breakdown:not([data-playground])').forEach((el) => {
+        el.data = (el.getAttribute('layout') === 'wide') ? withLinks : counts;
+      });
+    });
+  </script>
+
+  <!-- "Show code" toggles + copy buttons (Charts convention) -->
+  <script>
+    document.querySelectorAll('.code-toggle-btn[data-toggle]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const block = btn.nextElementSibling;
+        if (!block || !block.classList.contains('code-block')) return;
+        const open = block.classList.toggle('open');
+        btn.textContent = open ? 'Hide code' : 'Show code';
+      });
+    });
+    document.querySelectorAll('.code-block .cb-copy').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const pre = btn.closest('.code-block').querySelector('pre');
+        if (!pre) return;
+        try {
+          await navigator.clipboard.writeText(pre.textContent);
+          const original = btn.innerHTML;
+          btn.innerHTML = '<ds-icon name="check" size="13"></ds-icon> Copied';
+          setTimeout(() => { btn.innerHTML = original; }, 2000);
+        } catch {}
+      });
+    });
+  </script>
+
+  <script>
+    // ── Scroll-spy observer reference ──
+    let _tocObserver = null;
+
+    // ── Dynamic TOC ──
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav');
+      if (!tocList) return;
+      tocList.innerHTML = '';
+      const activePanel = document.getElementById(targetId);
+      if (!activePanel) return;
+
+      const headings = activePanel.querySelectorAll('h2[id], h3[id]');
+      headings.forEach(h => {
+        if (h.style.display === 'none') return;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.className = 'toc-link';
+        let text = Array.from(h.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+        if (!text) text = h.innerText;
+        a.textContent = text;
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById(h.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+
+      initScrollSpy();
+    }
+
+    function initScrollSpy() {
+      if (_tocObserver) _tocObserver.disconnect();
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sectionIds = Array.from(tocLinks).map(link => link.getAttribute('href').slice(1));
+      const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+      if (sections.length === 0) return;
+
+      _tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            tocLinks.forEach(link => {
+              link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+            });
+          }
+        });
+      }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+
+      sections.forEach(section => _tocObserver.observe(section));
+    }
+
+    // ── Tab switching ──
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabMap = { 'Overview': 'tab-overview', 'Usage': 'tab-usage', 'Style': 'tab-style', 'Code': 'tab-code', 'Accessibility': 'tab-accessibility' };
+        document.querySelectorAll('.tab-content').forEach(panel => panel.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) {
+          document.getElementById(target).style.display = 'block';
+          updateTOC(target);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    updateTOC('tab-overview');
+
+    // Sidebar search filter
+    (function(){
+      var searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      var items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function(){
+        var q = this.value.toLowerCase().trim();
+        items.forEach(function(li){
+          var link = li.querySelector('a');
+          if (!link) return;
+          var text = link.textContent.toLowerCase();
+          li.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+      });
+      document.addEventListener('keydown', function(e){
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      });
+    })();
+
+    // Scroll sidebar to active link on page load
+    (function(){
+      var active = document.querySelector('.sidebar-link.active');
+      if (active) {
+        var sidebar = active.closest('.sidebar');
+        if (sidebar) {
+          var top = active.offsetTop - sidebar.offsetTop - (sidebar.clientHeight / 3);
+          sidebar.scrollTop = Math.max(0, top);
+        }
+      }
+    })();
+  </script>
+
+<!-- Floating Feedback Button -->
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/main.js"></script>
+<script src="js/components/toc.js"></script>
+
+</body>
+</html>

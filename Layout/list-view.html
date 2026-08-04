@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Groups &amp; Devices — List View (L03) · Prism</title>
+
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+
+  <script>
+    /* Theme persistence — sync with ds-right-pane toggle */
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+      document.addEventListener('ds-right-pane-theme', function (e) {
+        document.documentElement.setAttribute('data-theme', e.detail.theme);
+        try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+      });
+      window.addEventListener('DOMContentLoaded', function () {
+        customElements.whenDefined('ds-right-pane').then(function () {
+          document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+            rp.setAttribute('theme', t);
+          });
+        });
+      });
+    })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body {
+      margin: 0;
+      font-family: var(--font-family-sans);
+      background: var(--cobalt-15);
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell-area, .content, ds-sidebar-l1, ds-sidebar-l2, ds-right-pane, ds-header-nav {
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard),
+                  border-color var(--duration-standard, 240ms) var(--ease-standard),
+                  color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+
+    ds-sidebar-l1, ds-sidebar-l2 {
+      max-width: 400px; opacity: 1; overflow: hidden;
+      will-change: max-width, opacity, transform;
+      transition: max-width 360ms cubic-bezier(0.16,1,0.3,1),
+                  opacity 240ms cubic-bezier(0.16,1,0.3,1) 40ms,
+                  transform 360ms cubic-bezier(0.16,1,0.3,1),
+                  margin 360ms cubic-bezier(0.16,1,0.3,1);
+    }
+    ds-sidebar-l1.is-hidden, ds-sidebar-l2.is-hidden {
+      max-width: 0 !important; opacity: 0 !important;
+      transform: translateX(-12px); margin-inline-end: 0 !important; pointer-events: none;
+    }
+    ds-right-pane { transition: opacity 220ms cubic-bezier(0.16,1,0.3,1), transform 300ms cubic-bezier(0.16,1,0.3,1); }
+    ds-right-pane.is-hidden { opacity: 0; transform: translateX(12px); pointer-events: none; }
+
+    /* L1 items — color-only hover (removed a translateY(-1px) lift that jerked
+       and detached the active item's icon from its sliding chip). */
+    .ds-sidebar-l1__item { transition: background-color 160ms cubic-bezier(0.4,0,0.2,1); }
+    .ds-sidebar-l2__item { transition: background-color 180ms cubic-bezier(0.4,0,0.2,1), color 180ms cubic-bezier(0.4,0,0.2,1); }
+
+    @media (prefers-reduced-motion: reduce) {
+      ds-sidebar-l1, ds-sidebar-l2, ds-right-pane, .ds-sidebar-l1__item, .ds-sidebar-l2__item {
+        transition: none !important; transform: none !important;
+      }
+    }
+    ds-sidebar-l1[collapsed] + ds-sidebar-l2 { margin-left: -8px; }
+
+    .body { display: flex; flex: 1; min-height: 0; padding: 0 0 var(--spacing-12) var(--spacing-12); gap: 0; }
+
+    .shell-area {
+      flex: 1; display: flex; min-width: 0; min-height: 0;
+      border: 1px solid var(--uems-border-accent-subtle); border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle); overflow: hidden;
+    }
+    .shell-area ds-sidebar-l1 { border: 0 !important; }
+    .shell-area ds-sidebar-l2 { border: 0 !important; }
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+    .shell-area .ds-sidebar-l1 { border: 0 !important; border-radius: 0 !important; padding-top: 4px !important; }
+
+    /* ── L03 page: page-header stacked over the data table ── */
+    .page { display: flex; flex-direction: column; min-width: 0; height: 100%; }
+    .page__table-wrap {
+      flex: 1; min-height: 0; display: flex; flex-direction: column;
+      padding: 0 var(--spacing-20) var(--spacing-16);
+    }
+    .page__table-wrap ds-data-table { flex: 0 1 auto; min-height: 0; display: flex; }
+
+    /* Cell renderers */
+    .cell-os { display: inline-flex; align-items: center; gap: var(--spacing-8); color: var(--uems-text-primary); }
+    .cell-os ds-icon { color: var(--uems-icon-tertiary); }
+    .cell-muted { color: var(--uems-text-secondary); }
+    /* Truncated cell + tooltip on overflow (L03 spec: long cell text → ellipsis + full value via tooltip) */
+    .cell-truncate { display: inline-block; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+    ds-data-table ds-tooltip { display: inline-block; max-width: 100%; vertical-align: bottom; }
+    .cell-actions { display: inline-flex; justify-content: flex-end; width: 100%; }
+    .cell-actions button {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border: 0; background: transparent; border-radius: var(--radius-sm);
+      color: var(--uems-icon-tertiary); cursor: pointer;
+    }
+    .cell-actions button:hover { background: var(--uems-bg-secondary-hover); }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- TOP — Header navigation -->
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+  <div class="body">
+    <div class="shell-area">
+
+      <ds-sidebar-l1 id="shell-l1" class="is-hidden" style="height: 100%;"></ds-sidebar-l1>
+      <ds-sidebar-l2 id="shell-l2" class="is-hidden" style="height: 100%;"></ds-sidebar-l2>
+
+      <!-- CENTER — Page Header + Data Table (L03 List View) -->
+      <ds-content role="main">
+        <div class="page">
+
+          <ds-page-header id="ph"
+            structure="default"
+            title="Groups &amp; Devices"
+            description="Manage and monitor all enrolled devices across your organization."
+            show-description>
+            <ds-button slot="actions" variant="secondary" size="small">Add Device</ds-button>
+          </ds-page-header>
+
+          <div class="page__table-wrap">
+            <ds-data-table id="dev-table"
+              selection-mode="multi"
+              row-height="default"
+              show-footer
+              sticky-header
+              rows-per-page="10"
+              page="1">
+            </ds-data-table>
+          </div>
+
+        </div>
+      </ds-content>
+
+    </div><!-- /.shell-area -->
+
+    <!-- RIGHT — Utility rail -->
+    <ds-right-pane id="shell-rp" show-accessibility style="height: 100%;"></ds-right-pane>
+
+  </div>
+</div>
+
+<!-- Filter dropdown (platform) — anchored to the toolbar Filter button on open -->
+<ds-dropdown-menu id="filter-menu" type="select" style="position:fixed; z-index:1200;"></ds-dropdown-menu>
+
+<script type="module">
+  import '../design-system-library/src/components/index.js';
+  import { applyL2For, wireL1ToL2 } from '../design-system-library/src/data/ec-menus.js';
+
+  /* ── Header tabs — MDM active ── */
+  document.getElementById('ec-header').tabs = [
+    { id: 'home',    label: 'Home' },
+    { id: 'configs', label: 'Configurations' },
+    { id: 'tp',      label: 'Threats & Patches' },
+    { id: 'sd',      label: 'Software Deployment' },
+    { id: 'inv',     label: 'Inventory' },
+    { id: 'osd',     label: 'OS Deployment' },
+    { id: 'mdm',     label: 'MDM', active: true },
+    { id: 'tools',   label: 'Tools' },
+    { id: 'agent',   label: 'Agent' },
+    { id: 'browsers', label: 'Browsers' },
+    { id: 'app-ctrl', label: 'Application Control' },
+    { id: 'malware',  label: 'Malware Protection' },
+    { id: 'dlp',      label: 'Endpoint DLP', newTag: true },
+    { id: 'bitlocker', label: 'BitLocker Management' },
+    { id: 'dev-ctrl',  label: 'Device Control' },
+    { id: 'reports',   label: 'Reports' },
+    { id: 'support',   label: 'Support' },
+    { id: 'dex',       label: 'DEX' },
+  ];
+
+  const l1El = document.getElementById('shell-l1');
+  const l2El = document.getElementById('shell-l2');
+
+  /* ── L1 module rail — Systems/Management active ── */
+  l1El.items = [
+    { id: 'dash',    label: 'Dashboard',  icon: 'add-widget' },
+    { id: 'threats', label: 'Threats',    icon: 'bug' },
+    { id: 'patches', label: 'Patches',    icon: 'file-shield' },
+    { id: 'sys',     label: 'Systems',    icon: 'computer', active: true },
+    { id: 'deploy',  label: 'Deployment', icon: 'settings-deploy' },
+    { id: 'comp',    label: 'Compliance', icon: 'checklist-01' },
+    { id: 'rep',     label: 'Reports',    icon: 'file-report' },
+    { id: 'set',     label: 'Settings',   icon: 'settings' },
+  ];
+  l1El.bottomItems = [ { id: 'update', label: 'Update Now', icon: 'refresh-time' } ];
+
+  /* ── L2 sub-nav — MDM Manage, "Groups & Devices" active ── */
+  l2El.groups = [
+    { id: 'manage', label: 'Manage', expanded: true, items: [
+      { id: 'gd',       label: 'Groups & Devices', active: true },
+      { id: 'profiles', label: 'Profiles' },
+      { id: 'apps',     label: 'App Repository' },
+      { id: 'asset',    label: 'Asset Management' },
+      { id: 'geo',      label: 'Geofencing' },
+    ] },
+    { id: 'tools', label: 'Tools', expanded: true, items: [
+      { id: 'remote',   label: 'Remote Control' },
+      { id: 'announce', label: 'Announcements' },
+    ] },
+  ];
+  l2El.classList.remove('is-hidden');
+  l1El.classList.remove('is-hidden');
+
+  /* In-page navigation — header tabs swap the L2 module panel (same as base-page) */
+  document.getElementById('ec-header').addEventListener('ds-header-nav-tab-select', (e) => {
+    applyL2For(l1El, l2El, e.detail?.id);
+  });
+  document.getElementById('ec-header').addEventListener('ds-header-nav-action', (e) => {
+    if (e.detail?.action === 'settings') {
+      applyL2For(l1El, l2El, 'admin');
+      document.querySelectorAll('.ds-header-nav__tab').forEach((el) => {
+        el.classList.remove('ds-header-nav__tab--active');
+        el.removeAttribute('aria-current');
+      });
+    }
+  });
+  wireL1ToL2(l1El, l2El);
+
+  /* ── Page Header breadcrumbs ── */
+  document.getElementById('ph').breadcrumbs = [
+    { label: 'MDM', href: '#' },
+    { label: 'Device Management', href: '#' },
+    { label: 'Groups & Devices' },
+  ];
+
+  /* ─────────────────────────────────────────────────────────────
+     Data table — columns + rows (devices)
+     ───────────────────────────────────────────────────────────── */
+  const OS_ICON = { Windows: 'microsoft', macOS: 'apple', Linux: 'terminal-square' };
+  const osCell = (r) =>
+    `<span class="cell-os"><ds-icon name="${OS_ICON[r.platform] || 'computer'}" size="16"></ds-icon>${r.os}</span>`;
+
+  /* Status → badge state (NVD-style colour bands reused): Managed=success,
+     Pending=moderate, Retired=default, Error=critical. */
+  const STATUS_STATE = { Managed: 'success', Pending: 'moderate', Retired: 'default', Error: 'critical' };
+  const statusBadge = (r) =>
+    `<ds-badge variant="subtle" state="${STATUS_STATE[r.status] || 'default'}" shape="rounded" size="medium">${r.status}</ds-badge>`;
+
+  /* Truncate long cell text with an ellipsis and show the full value in a
+     ds-tooltip on hover/focus (L03 "long cell text" edge case). */
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const tip = (full, inner) =>
+    `<ds-tooltip text="${esc(full)}" show-icon="false" position="up-center"><span class="cell-truncate">${inner}</span></ds-tooltip>`;
+
+  const tbl = document.getElementById('dev-table');
+  tbl.columns = [
+    { id: 'device',   header: 'Device Name',
+      render: (r) => tip(r.device, `<ds-text-link variant="primary" size="medium" underline="hover" href="computer-details.html">${r.device}</ds-text-link>`) },
+    { id: 'platform', header: 'Platform',    render: osCell },
+    { id: 'status',   header: 'Status',      align: 'start', render: statusBadge },
+    { id: 'owner',    header: 'Owner',
+      render: (r) => tip(`${r.owner} · ${r.email}`, `<span class="cell-muted">${r.owner} · ${r.email}</span>`) },
+    { id: 'lastSeen', header: 'Last Seen',   accessor: 'lastSeen' },
+    { id: 'actions',  header: '',            align: 'end',
+      render: () => `<span class="cell-actions"><button type="button" aria-label="Row actions"><ds-icon name="more-vertical" size="16"></ds-icon></button></span>` },
+  ];
+
+  /* Seed rows + pad to 48 devices so pagination has real pages. */
+  const _PLAT = [
+    { platform: 'Windows', os: 'Windows 11 Pro' },
+    { platform: 'Windows', os: 'Windows 10 Ent' },
+    { platform: 'macOS',   os: 'macOS 14 Sonoma' },
+    { platform: 'macOS',   os: 'macOS 13 Ventura' },
+    { platform: 'Linux',   os: 'Ubuntu 22.04 LTS' },
+    { platform: 'Linux',   os: 'Fedora 39' },
+  ];
+  const _STATUS = ['Managed', 'Managed', 'Pending', 'Managed', 'Retired', 'Error'];
+  const _OWNERS = ['Kumaran M R', 'Priya N', 'Karthik S', 'Divya R', 'Naveen K', 'Sandhya V', 'Rahul T', 'Meera J'];
+  const _EMAILS = ['user@company.com', 'priya.n@zohocorp.com', 'karthik.s@zohocorp.com', 'divya.r@zohocorp.com', 'naveen.k@zohocorp.com', 'sandhya.v@zohocorp.com', 'rahul.t@zohocorp.com', 'meera.j@zohocorp.com'];
+  const _DATES = ['2 min ago', '18 min ago', '1 hr ago', '3 hrs ago', 'Yesterday', 'Jun 12, 2026', 'Jun 9, 2026', 'Jun 3, 2026'];
+  const _pick = (arr, i) => arr[i % arr.length];
+
+  const rows = [];
+  for (let i = 1; i <= 48; i++) {
+    const p = _pick(_PLAT, i + 2);
+    rows.push({
+      id: i,
+      /* FQDN-style hostnames are long → truncate + tooltip */
+      device: `EC2AMAZ-${(1000 + i * 7).toString(36).toUpperCase()}.corp.zoho.internal`,
+      platform: p.platform,
+      os: p.os,
+      status: _pick(_STATUS, i),
+      owner: _pick(_OWNERS, i),
+      email: _pick(_EMAILS, i),
+      lastSeen: _pick(_DATES, i),
+    });
+  }
+  tbl.rows = rows;
+
+  /* ── Functional Filter — platform dropdown anchored to the toolbar button ── */
+  const filterMenu = document.getElementById('filter-menu');
+  filterMenu.items = [
+    { label: 'All platforms', value: 'all' },
+    { label: 'Windows', value: 'Windows' },
+    { label: 'macOS',   value: 'macOS' },
+    { label: 'Linux',   value: 'Linux' },
+  ];
+  const applyPlatform = (v) => {
+    const active = !!v && v !== 'all';
+    const filtered = active ? rows.filter((r) => r.platform === v) : rows;
+    tbl.setAttribute('page', '1');
+    tbl.rows = filtered;
+    /* Red dot when a real platform filter is applied (derived from the value). */
+    tbl.toggleAttribute('filter-applied', active);
+  };
+  tbl.addEventListener('ds-data-table-filter', () => {
+    const btn = tbl.querySelector('[data-act="filter"]');
+    if (btn) {
+      const r = btn.getBoundingClientRect();
+      filterMenu.style.top = `${r.bottom + 6}px`;
+      filterMenu.style.left = `${Math.max(8, r.right - 220)}px`;
+    }
+    filterMenu.toggle();
+  });
+  filterMenu.addEventListener('ds-dropdown-select', (e) => {
+    applyPlatform(e.detail?.value);
+    filterMenu.close();
+  });
+  document.addEventListener('click', (e) => {
+    if (filterMenu.hasAttribute('open') &&
+        !filterMenu.contains(e.target) &&
+        !e.target.closest('[data-act="filter"]')) filterMenu.close();
+  });
+  /* filter-open mirrors the dropdown's ACTUAL open state so the filter button holds
+     its active/hover look while the menu shows. Observing the menu's own `open`
+     attribute is the single source of truth — it catches every close path (select,
+     outside-click, Escape, off-screen auto-dismiss) with no per-call-site wiring. */
+  const syncFilterOpen = () => tbl.toggleAttribute('filter-open', filterMenu.hasAttribute('open'));
+  new MutationObserver(syncFilterOpen).observe(filterMenu, { attributes: true, attributeFilter: ['open'] });
+  syncFilterOpen();
+
+  /* Delete / Export / bulk-action toast are built into ds-data-table. */
+</script>
+
+</body>
+</html>

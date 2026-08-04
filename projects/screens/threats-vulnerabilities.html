@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vulnerabilities — Endpoint Central · Prism</title>
+
+  <link rel="stylesheet" href="../../design-system-library/src/styles/index.css" />
+  <script type="module">import '../../design-system-library/src/components/index.js';</script>
+
+  <script>
+    /* Theme persistence — sync with ds-right-pane toggle */
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+      document.addEventListener('ds-right-pane-theme', function (e) {
+        document.documentElement.setAttribute('data-theme', e.detail.theme);
+        try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+      });
+      window.addEventListener('DOMContentLoaded', function () {
+        customElements.whenDefined('ds-right-pane').then(function () {
+          document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+            rp.setAttribute('theme', t);
+          });
+        });
+      });
+    })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body {
+      margin: 0;
+      font-family: var(--font-family-sans);
+      background: var(--cobalt-15);
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    /* Smooth theme + chrome transitions across the page */
+    .shell-area,
+    .content,
+    ds-sidebar-l1,
+    ds-sidebar-l2,
+    ds-right-pane,
+    ds-header-nav {
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard),
+                  border-color var(--duration-standard, 240ms) var(--ease-standard),
+                  color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+
+    /* App shell */
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ─────────────────────────────────────────────────────────────
+       UI Transitions — super-smooth across every interaction
+       ───────────────────────────────────────────────────────────── */
+
+    /* L1 / L2 sidebar hide & show — slide out + fade instead of display:none. */
+    ds-sidebar-l1,
+    ds-sidebar-l2 {
+      max-width: 400px;
+      opacity: 1;
+      overflow: hidden;
+      will-change: max-width, opacity, transform;
+      transition:
+        max-width   360ms cubic-bezier(0.16, 1, 0.3, 1),
+        opacity     240ms cubic-bezier(0.16, 1, 0.3, 1) 40ms,
+        transform   360ms cubic-bezier(0.16, 1, 0.3, 1),
+        margin      360ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    ds-sidebar-l1.is-hidden,
+    ds-sidebar-l2.is-hidden {
+      max-width: 0 !important;
+      opacity: 0 !important;
+      transform: translateX(-12px);
+      margin-inline-end: 0 !important;
+      pointer-events: none;
+    }
+
+    /* Right pane — subtle fade-in */
+    ds-right-pane {
+      transition:
+        opacity 220ms cubic-bezier(0.16, 1, 0.3, 1),
+        transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    ds-right-pane.is-hidden {
+      opacity: 0;
+      transform: translateX(12px);
+      pointer-events: none;
+    }
+
+
+    /* Tab active highlight — silky bottom-border slide */
+    .ds-header-nav__tab {
+      position: relative;
+    }
+
+    /* L1 items lift on hover for a tactile feel */
+    .ds-sidebar-l1__item {
+      transition:
+        background-color 160ms cubic-bezier(0.4, 0, 0.2, 1),
+        transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ds-sidebar-l1__item:hover:not([aria-disabled="true"]) {
+      transform: translateY(-1px);
+    }
+
+    /* L2 items — color-only hover (no horizontal shift) */
+    .ds-sidebar-l2__item {
+      transition:
+        background-color 180ms cubic-bezier(0.4, 0, 0.2, 1),
+        color 180ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Right-pane buttons — gentle scale on press */
+    .ds-right-pane__btn {
+      transition:
+        background-color 100ms cubic-bezier(0.4, 0, 0.2, 1),
+        transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ds-right-pane__btn:active { transform: scale(0.92); }
+
+    /* Customer dropdown + search pill — soft focus halo */
+    .ds-header-nav__customer,
+    .ds-header-nav__search-pill {
+      transition:
+        background-color 130ms cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 130ms cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 130ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ds-header-nav__customer:hover,
+    .ds-header-nav__search-pill:hover {
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+
+    /* Reduce motion for users who prefer it */
+    @media (prefers-reduced-motion: reduce) {
+      ds-sidebar-l1, ds-sidebar-l2, ds-right-pane,
+      .ds-sidebar-l1__item, .ds-sidebar-l2__item,
+      .ds-right-pane__btn,
+      .ds-header-nav__tab, .ds-header-nav__customer, .ds-header-nav__search-pill {
+        transition: none !important;
+        transform: none !important;
+      }
+    }
+
+    /* When L1 collapses, pull L2 back so the right padding doesn't show as a gap */
+    ds-sidebar-l1[collapsed] + ds-sidebar-l2 { margin-left: -8px; }
+
+    .body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      padding: 0 0 var(--spacing-12) var(--spacing-12);
+      gap: 0;
+    }
+
+    /* One outer border wrapping L1 + L2 + content */
+    .shell-area {
+      flex: 1;
+      display: flex;
+      min-width: 0;
+      min-height: 0;
+      border: 1px solid var(--uems-border-accent-subtle);
+      border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle);
+      overflow: hidden;
+    }
+    /* Hide the individual borders on L1 and content — wrapper owns the perimeter */
+    .shell-area ds-sidebar-l1 { border: 0 !important; }
+    .shell-area ds-sidebar-l2 { border: 0 !important; }
+    /* Right-side border on the inner L2 card (visible element) */
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+    /* The L1 component's INNER div has its own border + radius — flatten + remove top padding */
+    .shell-area .ds-sidebar-l1 {
+      border: 0 !important;
+      border-radius: 0 !important;
+      padding-top: 4px !important;
+    }
+
+    /* Content area styling now lives in the ds-content component
+       (Demo/src/components/content/content.css). The component auto-toggles
+       its .ds-content--framed class when the adjacent ds-sidebar-l2 gains
+       `is-hidden`, so we don't need a sibling selector here. */
+
+    /* Page body */
+    .page {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      padding: var(--spacing-16) var(--spacing-20);
+      gap: var(--spacing-12);
+      overflow: hidden;
+    }
+
+    /* Top row — view-mode radio + right side controls */
+    .page__view-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-12);
+    }
+    .page__view-row__right {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-12);
+    }
+    .page__view-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-12);
+    }
+    .page__watch-demo {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--uems-text-accent-link);
+      font-size: var(--font-size-13);
+      font-weight: var(--font-weight-medium);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .page__watch-demo:hover { text-decoration: underline; }
+    .page__view-icons {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-4);
+      padding: 2px;
+      background: var(--uems-bg-secondary-subtle);
+      border-radius: var(--radius-sm);
+    }
+    .page__view-icons button {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      background: transparent;
+      border-radius: var(--radius-xs);
+      cursor: pointer;
+      color: var(--uems-text-secondary);
+      transition: background-color var(--duration-fast) var(--ease-standard),
+                  color var(--duration-fast) var(--ease-standard);
+    }
+    .page__view-icons button:hover { background: var(--uems-bg-accent-primary-hover); color: var(--uems-text-primary); }
+    .page__view-icons button[aria-pressed="true"] {
+      background: var(--uems-bg-base);
+      color: var(--uems-text-primary);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    }
+
+    /* Description row */
+    .page__desc {
+      font-size: var(--font-size-13);
+      color: var(--uems-text-secondary);
+      line-height: 1.5;
+    }
+    .page__desc a {
+      color: var(--uems-text-accent-link);
+      text-decoration: none;
+    }
+    .page__desc a:hover { text-decoration: underline; }
+
+    /* Severity dot in vulnerability column */
+    .vuln-row { display: inline-flex; align-items: center; gap: var(--spacing-8); min-width: 0; }
+    .vuln-row__sev {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      color: var(--uems-text-white);
+    }
+    .vuln-row__sev--critical { background: var(--uems-bg-error-solid, #DC2626); }
+    .vuln-row__sev--high     { background: var(--uems-bg-warning-solid, #F59E0B); }
+    .vuln-row__sev--medium   { background: var(--uems-bg-info-solid, #006AFF); }
+    .vuln-row__sev ds-icon { color: var(--uems-text-white); line-height: 0; }
+    /* No CVSS score → muted dash */
+    .cvss-none { color: var(--uems-text-tertiary); }
+    /* Name is a ds-text-link (colour/hover come from the component); the class
+       on the host keeps the 460px cap + ellipsis for long CVE titles. */
+    .vuln-row__name { max-width: 460px; display: inline-block; vertical-align: bottom; min-width: 0; overflow: hidden; }
+    .vuln-row__name .ds-text-link { max-width: 100%; }
+    .vuln-row__name .ds-text-link > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    /* Full CVE text on hover when the name truncates */
+    ds-data-table ds-tooltip { display:inline-block; max-width:100%; vertical-align:bottom; }
+
+    /* Cell with status icon + text */
+    .cell-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--font-size-13);
+    }
+    .cell-status--available { color: var(--uems-text-success, #16A34A); }
+    .cell-status--unavailable { color: var(--uems-text-error, #DC2626); }
+    .cell-status ds-icon { flex-shrink: 0; }
+
+    /* Table fills remaining height */
+    .page__table-wrap {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Hug content: with few/no rows the card sizes to its content (no big
+       empty gap before the footer); with many rows it shrinks and the table
+       body scrolls. flex-grow:0 = don't stretch, flex-shrink:1 = scroll when tall. */
+    .page__table-wrap ds-data-table {
+      flex: 0 1 auto;
+      min-height: 0;
+      display: flex;
+    }
+
+    /* Empty-state wrapper — centers ds-empty-state inside the content area */
+    .content-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-32);
+    }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- TOP — Header navigation -->
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+  <div class="body">
+
+    <!-- ONE border wraps L1 + L2 + content -->
+    <div class="shell-area">
+
+      <!-- LEFT — Sidebar L1 (module rail). Starts hidden so the initial
+           Home state shows a clean view without a flash of patch menu. -->
+      <ds-sidebar-l1 id="shell-l1" class="is-hidden" style="height: 100%;"></ds-sidebar-l1>
+
+      <!-- LEFT — Sidebar L2 (sub-nav). Same: starts hidden until JS decides
+           which menu to apply for the active tab. -->
+      <ds-sidebar-l2 id="shell-l2" class="is-hidden" style="height: 100%;"></ds-sidebar-l2>
+
+      <!-- CENTER — Threats · Vulnerabilities -->
+      <ds-content role="main">
+        <div class="page">
+
+          <!-- ─── View toggle + Watch demo + grid/list -->
+          <div class="page__view-row">
+            <div class="page__view-toggle">
+              <ds-tab-filter id="view-mode" value="summary" aria-label="View mode"></ds-tab-filter>
+            </div>
+            <div class="page__view-row__right">
+              <a class="page__watch-demo" href="#">
+                <ds-icon name="play-circle" size="16"></ds-icon>
+                Watch Demo
+              </a>
+              <div class="page__view-icons" role="group" aria-label="View type">
+                <button type="button" aria-pressed="true" aria-label="Card view">
+                  <ds-icon name="grid" size="16"></ds-icon>
+                </button>
+                <button type="button" aria-pressed="false" aria-label="List view">
+                  <ds-icon name="list-bullet" size="16"></ds-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ─── Data table -->
+          <div class="page__table-wrap">
+            <ds-data-table id="vuln-table"
+              selection-mode="multi"
+              row-height="default"
+              show-footer
+              sticky-header
+              rows-per-page="10"
+              page="1">
+            </ds-data-table>
+          </div>
+
+        </div>
+      </ds-content>
+
+      <!-- Filter dropdown (severity) — positioned on open, anchored to the toolbar Filter button -->
+      <ds-dropdown-menu id="filter-menu" type="select" style="position:fixed; z-index:1200;"></ds-dropdown-menu>
+
+    </div><!-- /.shell-area -->
+
+    <!-- RIGHT — Utility rail (outside the unified shell) -->
+    <ds-right-pane id="shell-rp" show-accessibility style="height: 100%;"></ds-right-pane>
+
+  </div>
+</div>
+
+<script type="module">
+  import '../../design-system-library/src/components/index.js';
+  import { applyL2For, wireL1ToL2 } from '../../design-system-library/src/data/ec-menus.js';
+
+  /* Header — same global tabs */
+  document.getElementById('ec-header').tabs = [
+    { id: 'home',    label: 'Home' },
+    { id: 'configs', label: 'Configurations' },
+    { id: 'tp',      label: 'Threats & Patches', active: true },
+    { id: 'sd',      label: 'Software Deployment' },
+    { id: 'inv',     label: 'Inventory' },
+    { id: 'osd',     label: 'OS Deployment' },
+    { id: 'mdm',     label: 'MDM' },
+    { id: 'tools',   label: 'Tools' },
+    { id: 'agent',   label: 'Agent' },
+    { id: 'browsers', label: 'Browsers' },
+    { id: 'app-ctrl', label: 'Application Control' },
+    { id: 'malware',  label: 'Malware Protection' },
+    { id: 'dlp',      label: 'Endpoint DLP', newTag: true },
+    { id: 'bitlocker', label: 'BitLocker Management' },
+    { id: 'dev-ctrl',  label: 'Device Control' },
+    { id: 'reports',   label: 'Reports' },
+    { id: 'support',   label: 'Support' },
+    { id: 'dex',       label: 'DEX' },
+  ];
+
+  /* Sidebar L1 — Threats active */
+  const l1El = document.getElementById('shell-l1');
+  const l2El = document.getElementById('shell-l2');
+
+  l1El.items = [
+    { id: 'dash',    label: 'Dashboard',  icon: 'add-widget' },
+    { id: 'threats', label: 'Threats',    icon: 'bug', active: true },
+    { id: 'patches', label: 'Patches',    icon: 'file-shield' },
+    { id: 'sys',     label: 'Systems',    icon: 'computer' },
+    { id: 'deploy',  label: 'Deployment', icon: 'settings-deploy' },
+    { id: 'comp',    label: 'Compliance', icon: 'checklist-01' },
+    { id: 'rep',     label: 'Reports',    icon: 'file-report' },
+    { id: 'set',     label: 'Settings',   icon: 'settings' },
+  ];
+  l1El.bottomItems = [
+    { id: 'update', label: 'Update Now', icon: 'refresh-time' },
+  ];
+
+  /* Sidebar L2 — Threats group */
+  l2El.groups = [
+    { id: 'threats', label: 'Threats', expanded: true, items: [
+      { id: 'vuln',      label: 'Vulnerabilities', active: true },
+      { id: 'cves',      label: 'Detected CVEs' },
+      { id: 'zero-day',  label: 'Zero-day Vulnerabilities' },
+      { id: 'sys-mis',   label: 'System Misconfigurations' },
+      { id: 'risk-sw',   label: 'High Risk Software' },
+      { id: 'web-mis',   label: 'Web Server Misconfiguration' },
+      { id: 'port',      label: 'Port Audit' },
+      { id: 'except',    label: 'Manage Exceptions' },
+    ] },
+  ];
+
+  /* Header tab change — let the shared menu helper swap L1/L2 */
+  document.getElementById('ec-header').addEventListener('ds-header-nav-tab-select', (e) => {
+    applyL2For(l1El, l2El, e.detail?.id);
+  });
+  wireL1ToL2(l1El, l2El);
+
+  /* Severity filter — tab menu with count badges (replaces the view radio).
+     Counts + filtering are wired off the table rows further below. */
+
+  /* Card/List view toggle */
+  document.querySelectorAll('.page__view-icons button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.page__view-icons button')
+        .forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+    });
+  });
+
+  /* ─────────────────────────────────────────────────────────────
+     Data table — columns + rows
+     ───────────────────────────────────────────────────────────── */
+  /* Semantic severity glyphs (like a status indicator): critical = exclamation,
+     high = warning triangle, medium = info. */
+  const SEV_ICON = { critical: 'exclamation', high: 'exclamation-triangle', medium: 'info' };
+  const sev = (s) => `<span class="vuln-row__sev vuln-row__sev--${s}"><ds-icon name="${SEV_ICON[s] || 'info'}" size="12"></ds-icon></span>`;
+  const statusCell = (val) => {
+    const ok = val === 'Available';
+    return `<span class="cell-status cell-status--${ok ? 'available' : 'unavailable'}">
+      <ds-icon name="${ok ? 'circle-tick' : 'cancel-circle'}" size="14"></ds-icon>
+      ${val}
+    </span>`;
+  };
+  const link = (href, text) => `<ds-text-link variant="primary" size="medium" underline="hover" href="${href || '#'}">${text}</ds-text-link>`;
+
+  /* CVSS score → severity colour (NVD bands):
+     9.0–10.0 Critical (red) · 7.0–8.9 High (orange) · 4.0–6.9 Medium (amber)
+     · 0.1–3.9 Low (green) · 0.0 / "--" None (plain). */
+  const scoreBadge = (val) => {
+    const n = parseFloat(val);
+    if (val == null || val === '--' || Number.isNaN(n)) return '<span class="cvss-none">--</span>';
+    const state = n >= 9 ? 'critical' : n >= 7 ? 'important' : n >= 4 ? 'moderate' : n > 0 ? 'success' : 'default';
+    return `<ds-badge variant="subtle" state="${state}" shape="rounded" size="medium">${val}</ds-badge>`;
+  };
+
+  /* Full vulnerability text in a ds-tooltip when the name truncates. */
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const tbl = document.getElementById('vuln-table');
+  tbl.columns = [
+    { id: 'name', header: 'Vulnerabilities',
+      render: (r) => `<ds-tooltip text="${esc(r.name)}" show-icon="false" position="up-center"><span class="vuln-row">${sev(r.severity)}<ds-text-link class="vuln-row__name" variant="primary" size="medium" underline="hover" href="#">${r.name}</ds-text-link></span></ds-tooltip>` },
+    { id: 'cvss3', header: 'CVSS 3.0 Score', align: 'start', render: (r) => scoreBadge(r.cvss3) },
+    { id: 'cvss2', header: 'CVSS 2.0 Score', align: 'start', render: (r) => scoreBadge(r.cvss2) },
+    { id: 'exploit',  header: 'Exploit Status',    render: (r) => statusCell(r.exploit) },
+    { id: 'patch',    header: 'Patch Availability', render: (r) => statusCell(r.patch) },
+    { id: 'date',     header: 'Published Date',    accessor: 'date' },
+    { id: 'systems',  header: 'Affected Systems',  sortable: true,
+      render: (r) => link('#', r.systems) },
+    { id: 'patchId',  header: 'Patch ID',
+      render: (r) => r.patchId ? link('#', r.patchId) : '--' },
+  ];
+
+  const rows = [
+    { id: 1,  severity: 'critical', name: 'Vulnerabilities CVE-2024-56337 are fixed in Apache Tomcat 9.0.98',                             cvss3: '9.8', cvss2: '--',   exploit: 'Not available', patch: 'Not available', date: 'Dec 23, 2024', systems: '2', patchId: '' },
+    { id: 2,  severity: 'critical', name: 'Vulnerabilities CVE-2024-52317, CVE-2024-52316 are Fixed in Apache Tomcat 9.0.96',             cvss3: '9.8', cvss2: '--',   exploit: 'Available',     patch: 'Not available', date: 'Nov 18, 2024', systems: '2', patchId: '' },
+    { id: 3,  severity: 'critical', name: 'Vulnerabilities CVE-2024-54677, CVE-2024-50379 are fixed in Apache Tomcat 9.0.98',             cvss3: '9.8', cvss2: '--',   exploit: 'Available',     patch: 'Not available', date: 'Dec 17, 2024', systems: '2', patchId: '' },
+    { id: 4,  severity: 'high',     name: '.NET Framework, SharePoint Server, and Visual Studio Remote Code Execution Vulnerabilities',   cvss3: '7.8', cvss2: '6.8',  exploit: 'Available',     patch: 'Available',     date: 'Jul 14, 2020', systems: '1', patchId: '109115' },
+    { id: 5,  severity: 'high',     name: 'ASP.NET and .NET Elevation of Privilege Vulnerability for .NET Framework 3.5 and 4.8 …',       cvss3: '7.8', cvss2: '10.0', exploit: 'Not available', patch: 'Available',     date: 'Aug 17, 2020', systems: '1', patchId: '109115' },
+    { id: 6,  severity: 'high',     name: 'Vulnerabilities CVE-2020-14350 Announcement are fixed in Postgresql 9.5.23',                   cvss3: '7.3', cvss2: '4.4',  exploit: 'Not available', patch: 'Not available', date: 'Aug 24, 2020', systems: '1', patchId: '' },
+    { id: 7,  severity: 'medium',   name: 'Vulnerabilities CVE-2020-13943 are fixed in 15 September 2020 Fixed in Apache Tom…',           cvss3: '4.3', cvss2: '4.0',  exploit: 'Not available', patch: 'Not available', date: 'Oct 12, 2020', systems: '1', patchId: '' },
+    { id: 8,  severity: 'medium',   name: '.NET Framework Information Disclosure Vulnerability for .NET Framework 3.5 and 4.8 …',         cvss3: '4.6', cvss2: '4.3',  exploit: 'Not available', patch: 'Available',     date: 'Oct 16, 2020', systems: '1', patchId: '109115' },
+    { id: 9,  severity: 'critical', name: 'October 2020 Adobe Flash Security Update for Adobe Flash Player for Windows 10 Ve…',           cvss3: '--',  cvss2: '--',   exploit: 'Not available', patch: 'Available',     date: 'Oct 13, 2020', systems: '1', patchId: '32544' },
+    { id: 10, severity: 'high',     name: 'Vulnerabilities CVE-2020-25696 Announcement, CVE-2020-25695 Announcement, C…',                 cvss3: '8.8', cvss2: '10.0', exploit: 'Not available', patch: 'Not available', date: 'Nov 16, 2020', systems: '1', patchId: '' },
+    { id: 11, severity: 'high',     name: 'Vulnerabilities CVE-2020-17527 are fixed in 17 November 2020 Fixed in Apache Tomc…',           cvss3: '7.5', cvss2: '5.0',  exploit: 'Available',     patch: 'Not available', date: 'Dec 3, 2020',  systems: '1', patchId: '' },
+    { id: 12, severity: 'high',     name: 'Vulnerabilities CVE-2020-17527, CVE-2021-24122 are fixed in 17 November 2020 Fix…',            cvss3: '7.5', cvss2: '5.0',  exploit: 'Available',     patch: 'Not available', date: 'Jan 14, 2021', systems: '1', patchId: '' },
+    { id: 13, severity: 'critical', name: 'Hyper-V Denial of Service Vulnerability for Windows 10 Version 2004 for x64-based S…',         cvss3: '9.8', cvss2: '9.0',  exploit: 'Available',     patch: 'Available',     date: 'Jan 12, 2021', systems: '1', patchId: '32544' },
+    { id: 14, severity: 'high',     name: '.NET Framework Denial of Service Vulnerability for .NET Framework 3.5 and 4.8 for Wi…',        cvss3: '7.5', cvss2: '5.0',  exploit: 'Not available', patch: 'Available',     date: 'Feb 25, 2021', systems: '1', patchId: '109115' },
+    { id: 15, severity: 'high',     name: 'Vulnerabilities CVE-2021-25329, CVE-2020-9484, CVE-2021-25122 are fixed in 2 Feb…',            cvss3: '7.5', cvss2: '7.5',  exploit: 'Available',     patch: 'Not available', date: 'Mar 1, 2021',  systems: '1', patchId: '' },
+    { id: 16, severity: 'critical', name: 'Storage Spaces Controller Elevation of Privilege Vulnerability for Windows 10 Version …',      cvss3: '9.8', cvss2: '10.0', exploit: 'Available',     patch: 'Available',     date: 'Mar 11, 2021', systems: '1', patchId: '32544' },
+    { id: 17, severity: 'high',     name: 'Windows Installer Spoofing Vulnerability for Windows 10 Version 2004 for x64-based …',         cvss3: '8.7', cvss2: '9.7',  exploit: 'Available',     patch: 'Available',     date: 'Apr 13, 2021', systems: '1', patchId: '32544' },
+  ];
+
+  /* Pad the list out to 120 rows so pagination has real pages to walk through. */
+  const _NAMES = [
+    'Remote Code Execution Vulnerability in Apache Tomcat',
+    'Elevation of Privilege Vulnerability in Windows Kernel',
+    'Information Disclosure Vulnerability in .NET Framework',
+    'Denial of Service Vulnerability in OpenSSL',
+    'Cross-Site Scripting Vulnerability in Jenkins',
+    'SQL Injection Vulnerability in PostgreSQL 13',
+    'Memory Corruption Vulnerability in Adobe Acrobat Reader',
+    'Privilege Escalation in the Linux Kernel',
+    'Authentication Bypass in Spring Security',
+    'Heap Buffer Overflow in libcurl',
+    'Path Traversal Vulnerability in Nginx',
+    'Use-After-Free Vulnerability in Google Chrome',
+  ];
+  const _DATES = ['May 9, 2021','Jun 22, 2021','Aug 3, 2021','Oct 18, 2021','Jan 11, 2022','Mar 27, 2022','Jul 5, 2022','Nov 14, 2022','Feb 21, 2023','Jun 6, 2023','Sep 19, 2023','Dec 12, 2023','Apr 2, 2024'];
+  const _SEV = ['critical', 'high', 'medium', 'high', 'medium', 'critical'];
+  const _pick = (arr, i) => arr[i % arr.length];
+  for (let i = 18; i <= 120; i++) {
+    const severity = _SEV[i % _SEV.length];
+    const cv3 = severity === 'critical' ? 9.0 + (i % 10) / 10
+              : severity === 'high'     ? 7.0 + (i % 19) / 10
+              :                           4.0 + (i % 29) / 10;
+    rows.push({
+      id: i,
+      severity,
+      name: `${_pick(_NAMES, i)} (CVE-20${18 + (i % 6)}-${10000 + i * 37})`,
+      cvss3: cv3.toFixed(1),
+      cvss2: i % 4 === 0 ? '--' : (3.0 + (i % 70) / 10).toFixed(1),
+      exploit: i % 2 ? 'Available' : 'Not available',
+      patch:   i % 3 ? 'Available' : 'Not available',
+      date: _pick(_DATES, i),
+      systems: String(1 + (i % 3)),
+      patchId: i % 2 ? String(100000 + i * 113) : '',
+    });
+  }
+
+  tbl.rows = rows;
+
+  /* ── Functional Filter — severity dropdown anchored to the toolbar button ── */
+  const filterMenu = document.getElementById('filter-menu');
+  /* index.js is imported at the top of this module, so ds-dropdown-menu is
+     already registered — set items synchronously. */
+  filterMenu.items = [
+    { label: 'All severities', value: 'all' },
+    { label: 'Critical', value: 'critical' },
+    { label: 'High', value: 'high' },
+    { label: 'Medium', value: 'medium' },
+  ];
+  const applySeverity = (v) => {
+    const filtered = (!v || v === 'all') ? rows : rows.filter((r) => r.severity === v);
+    tbl.setAttribute('page', '1');   // back to first page when the filter changes
+    tbl.rows = filtered;             // total + pagination are computed client-side
+  };
+  /* The data-table fires ds-data-table-filter when its Filter button is clicked. */
+  tbl.addEventListener('ds-data-table-filter', () => {
+    const btn = tbl.querySelector('[data-act="filter"]');
+    if (btn) {
+      const r = btn.getBoundingClientRect();
+      filterMenu.style.top = `${r.bottom + 6}px`;
+      filterMenu.style.left = `${Math.max(8, r.right - 220)}px`;
+    }
+    filterMenu.toggle();
+  });
+  filterMenu.addEventListener('ds-dropdown-select', (e) => {
+    applySeverity(e.detail?.value);
+    filterMenu.close();
+  });
+
+  /* Delete + Export (format dropdown) + confirmation toast are now BUILT INTO
+     ds-data-table — no page wiring needed. (Listen to ds-data-table-bulk-action
+     and call preventDefault() only if you want to override the defaults.) */
+
+  /* Close the severity filter menu on outside click */
+  document.addEventListener('click', (e) => {
+    if (filterMenu.hasAttribute('open') &&
+        !filterMenu.contains(e.target) &&
+        !e.target.closest('[data-act="filter"]')) filterMenu.close();
+  });
+
+  /* ── View-mode tab menu — Summary / Detailed ── */
+  const viewTabs = document.getElementById('view-mode');
+  customElements.whenDefined('ds-tab-filter').then(() => {
+    viewTabs.options = [
+      { value: 'summary',  label: 'Summary View' },
+      { value: 'detailed', label: 'Detailed View' },
+    ];
+  });
+
+
+  /* Base shell starts L1/L2 hidden — reveal them for this page */
+  l1El.classList.remove('is-hidden');
+  l2El.classList.remove('is-hidden');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,104 @@
+/* =============================================================================
+   ds-container / .ds-container
+   Generic, option-rich surface / container. Light-DOM — the host carries the
+   class; children render untouched. 100% token-driven (no hardcoded px/colours),
+   NO fixed size. Every knob is exposed both as an attribute AND as a public CSS
+   variable, so you can pick a preset OR fine-tune without writing custom card CSS:
+
+     <ds-container variant="outline" tone="warning" padding="lg" radius="xl"
+              elevation="md" interactive selected stack="md">…</ds-container>
+
+     /* fine-tune any single value without leaving the component */
+     <ds-container style="--ds-container-pad: 20px; --ds-container-bg: #fff"> … </ds-container>
+   ============================================================================= */
+
+ds-container { display: block; }
+
+.ds-container {
+  /* Public knobs — override any of these inline for one-off customisation. */
+  --ds-container-pad: var(--spacing-16);
+  --ds-container-radius: var(--radius-lg);
+  --ds-container-bg: var(--uems-bg-primary);
+  --ds-container-border: var(--uems-border-tertiary);
+  --ds-container-border-width: 1px;
+  --ds-container-shadow: none;
+  --ds-container-gap: var(--spacing-16);
+
+  box-sizing: border-box;
+  min-width: 0;
+  background: var(--ds-container-bg);
+  border: var(--ds-container-border-width) solid var(--ds-container-border);
+  border-radius: var(--ds-container-radius);
+  padding: var(--ds-container-pad);
+  box-shadow: var(--ds-container-shadow);
+  transition: border-color 140ms var(--ease-standard, ease),
+              box-shadow 140ms var(--ease-standard, ease),
+              transform 140ms var(--ease-standard, ease);
+}
+
+/* ── Padding ──────────────────────────────────────────────── */
+.ds-container[data-pad="none"] { --ds-container-pad: 0; }
+.ds-container[data-pad="xs"]   { --ds-container-pad: var(--spacing-4); }
+.ds-container[data-pad="sm"]   { --ds-container-pad: var(--spacing-8); }
+.ds-container[data-pad="md"]   { --ds-container-pad: var(--spacing-16); }
+.ds-container[data-pad="lg"]   { --ds-container-pad: var(--spacing-24); }
+.ds-container[data-pad="xl"]   { --ds-container-pad: var(--spacing-32); }
+
+/* ── Corner radius ────────────────────────────────────────── */
+.ds-container[data-radius="none"] { --ds-container-radius: 0; }
+.ds-container[data-radius="sm"]   { --ds-container-radius: var(--radius-sm); }
+.ds-container[data-radius="md"]   { --ds-container-radius: var(--radius-md); }
+.ds-container[data-radius="lg"]   { --ds-container-radius: var(--radius-lg); }
+.ds-container[data-radius="xl"]   { --ds-container-radius: var(--radius-xl); }
+.ds-container[data-radius="2xl"]  { --ds-container-radius: var(--radius-2xl); }
+.ds-container[data-radius="full"] { --ds-container-radius: var(--radius-full); }
+
+/* ── Variant (surface bg + border) ────────────────────────── */
+.ds-container[data-variant="outline"]  { --ds-container-bg: var(--uems-bg-primary); --ds-container-border: var(--uems-border-tertiary); }
+.ds-container[data-variant="filled"]   { --ds-container-bg: var(--uems-bg-secondary); --ds-container-border: transparent; }
+.ds-container[data-variant="subtle"]   { --ds-container-bg: var(--uems-bg-accent-primary-subtle, var(--uems-bg-secondary)); --ds-container-border: var(--uems-border-accent-subtle, var(--uems-border-tertiary)); }
+.ds-container[data-variant="ghost"]    { --ds-container-bg: transparent; --ds-container-border: transparent; }
+.ds-container[data-variant="elevated"] { --ds-container-bg: var(--uems-bg-primary); --ds-container-border: transparent; --ds-container-shadow: var(--shadow-md); }
+
+/* ── Tone (status tint — overrides the variant's bg + border) ─ */
+.ds-container[data-tone="accent"]  { --ds-container-bg: var(--uems-bg-accent-primary-subtle, var(--uems-bg-accent-primary)); --ds-container-border: var(--uems-border-accent-subtle); }
+.ds-container[data-tone="success"] { --ds-container-bg: var(--uems-bg-success-secondary); --ds-container-border: var(--uems-border-success-subtle); }
+.ds-container[data-tone="warning"] { --ds-container-bg: var(--uems-bg-warning-secondary); --ds-container-border: var(--uems-border-warning-subtle); }
+.ds-container[data-tone="error"]   { --ds-container-bg: var(--uems-bg-error-secondary); --ds-container-border: var(--uems-border-error-subtle); }
+.ds-container[data-tone="info"]    { --ds-container-bg: var(--uems-bg-info-secondary); --ds-container-border: var(--uems-border-info-subtle, var(--uems-border-tertiary)); }
+.ds-container[data-tone="alert"]   { --ds-container-bg: var(--uems-bg-alert-primary); --ds-container-border: transparent; }
+
+/* ── Elevation (token shadows) ────────────────────────────── */
+.ds-container[data-elev="none"] { --ds-container-shadow: none; }
+.ds-container[data-elev="xs"]   { --ds-container-shadow: var(--shadow-xs); }
+.ds-container[data-elev="sm"]   { --ds-container-shadow: var(--shadow-sm); }
+.ds-container[data-elev="md"]   { --ds-container-shadow: var(--shadow-md); }
+.ds-container[data-elev="lg"]   { --ds-container-shadow: var(--shadow-lg); }
+.ds-container[data-elev="xl"]   { --ds-container-shadow: var(--shadow-xl); }
+
+/* ── Interactive (clickable hover lift) ───────────────────── */
+.ds-container--interactive { cursor: pointer; }
+.ds-container--interactive:hover { --ds-container-border: var(--uems-border-secondary); --ds-container-shadow: var(--shadow-md); }
+.ds-container--interactive:active { transform: translateY(0.5px); }
+.ds-container--interactive:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; }
+
+/* ── Selected / active (accent ring) ──────────────────────── */
+.ds-container--selected { --ds-container-border: var(--uems-text-accent-link); box-shadow: 0 0 0 1px var(--uems-text-accent-link); }
+
+/* ── Layout helpers (token gap) ───────────────────────────── */
+.ds-container[data-stack] { display: flex; flex-direction: column; gap: var(--ds-container-gap); }
+.ds-container[data-row]   { display: flex; flex-direction: row; align-items: center; gap: var(--ds-container-gap); }
+.ds-container[data-gap="none"] { --ds-container-gap: 0; }
+.ds-container[data-gap="xs"]   { --ds-container-gap: var(--spacing-4); }
+.ds-container[data-gap="sm"]   { --ds-container-gap: var(--spacing-8); }
+.ds-container[data-gap="md"]   { --ds-container-gap: var(--spacing-16); }
+.ds-container[data-gap="lg"]   { --ds-container-gap: var(--spacing-24); }
+.ds-container[data-align="start"]   { align-items: flex-start; }
+.ds-container[data-align="center"]  { align-items: center; }
+.ds-container[data-align="stretch"] { align-items: stretch; }
+
+/* ── Full-bleed media slot (image edge-to-edge inside a padded card) ─ */
+.ds-container > .ds-container__media { margin: calc(-1 * var(--ds-container-pad)); margin-bottom: var(--ds-container-pad); border-top-left-radius: var(--ds-container-radius); border-top-right-radius: var(--ds-container-radius); overflow: hidden; }
+.ds-container > .ds-container__media > img { display: block; width: 100%; height: auto; }
+
+@media (prefers-reduced-motion: reduce) { .ds-container { transition: none; } }

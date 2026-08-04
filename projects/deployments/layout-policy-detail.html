@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!--
+  Deployments · Policy detail — read-only view of a saved policy.
+  Reads `window.__policyDetailId` from the shared store the save handler
+  populated, and shows Name · Type · Platform · Scope · Status · Created
+  by · Last modified. Breadcrumb: Deployments > Policies > All Policies >
+  <Policy name>. Cancel / Modify actions in the footer.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Policy detail — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+<template id="drawer-fragment">
+<style>
+#pol-detail-pop .lay__section { padding: 20px 0 4px; }
+#pol-detail-pop .pd-summary { padding: 20px 0 40px; max-width: 820px; }
+#pol-detail-pop .pd-summary ds-description-list { display: block; }
+</style>
+
+<div id="pol-detail-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <ds-page-header id="pd-ph" icon="shield" structure="default"
+      title="Policy details"
+      description="Review the saved policy configuration."
+      show-description show-breadcrumbs>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large"
+          title="Policy details"
+          description="Read-only summary of the saved policy."></ds-section-header>
+        <div class="pd-summary">
+          <ds-description-list id="pd-list" columns="2"></ds-description-list>
+        </div>
+      </div>
+    </div>
+
+    <ds-form-footer id="pd-footer" show-left="false">
+      <ds-button data-act="cancel" variant="outline">Back to policies</ds-button>
+      <ds-button data-act="modify" variant="secondary">Modify</ds-button>
+      <ds-button data-act="deploy" variant="primary">Deploy</ds-button>
+    </ds-form-footer>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('pol-detail-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+
+  const ph = $('pd-ph');
+  ph.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    const label = (a.textContent || '').trim();
+    if (label === 'Policies' && window.openContentView) { e.preventDefault(); window.openContentView('deployments-policy-list'); }
+    else if (label === 'All Policies' && window.openContentView) { e.preventDefault(); window.openContentView('deployments-policy-list'); }
+  });
+
+  const STATUS_STATE = { 'Draft': 'default', 'Ready to Execute': 'success', 'Executed': 'success', 'In Progress': 'info', 'In Progress (Failed)': 'critical' };
+
+  function render() {
+    const id = window.__policyDetailId;
+    const policy = (window.__policiesStore || []).find((p) => p.id === id);
+    if (!policy) {
+      ph.setAttribute('title', 'Policy not found');
+      ph.breadcrumbs = [
+        { label: 'Deployments', href: '#' },
+        { label: 'All Policies', href: '#' },
+      ];
+      $('pd-list').items = [];
+      return;
+    }
+    ph.setAttribute('title', policy.name);
+    ph.setAttribute('description', 'Read-only view. Modify to change the policy configuration.');
+    ph.breadcrumbs = [
+      { label: 'Policies',     href: '#' },
+      { label: 'All Policies', href: '#' },
+      { label: policy.name },
+    ];
+    $('pd-list').items = [
+      { term: 'Name',              description: policy.name },
+      { term: 'Type',              description: policy.type },
+      { term: 'Platform',          description: policy.platform || 'Windows' },
+      { term: 'Scope',             description: policy.scope === 'user' ? 'User' : 'Device' },
+      { term: 'Status',            type: 'badge', variant: 'subtle', state: STATUS_STATE[policy.status] || 'default', description: policy.status },
+      { term: 'Created by',        description: policy.createdBy || '—' },
+      { term: 'Last modified by',  description: policy.lastModifiedBy || policy.createdBy || '—' },
+      { term: 'Last modified',     description: policy.lastModifiedTime || '—' },
+    ];
+  }
+
+  $('pd-footer').addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('[data-act]');
+    if (!btn) return;
+    const id = btn.dataset.act;
+    if (id === 'cancel' && window.openContentView) window.openContentView('deployments-policy-list');
+    else if (globalThis.dsToast) globalThis.dsToast.info({ title: id === 'modify' ? 'Modify policy' : 'Deploy policy', description: 'Coming next.', style: 'subtle' });
+  });
+
+  function show() { root.hidden = false; render(); }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-policy-detail'] = { show, hide };
+})();
+</script>
+</template>
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-policy-detail'].show()));
+})();
+</script>
+</body>
+</html>

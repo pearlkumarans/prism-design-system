@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ds-fullscreen-modal — examples</title>
+  <script type="module">import '../../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 24px; background: var(--uems-background); color: var(--uems-text-primary); }
+    section { margin-bottom: 40px; }
+    h2 { font-size: var(--font-size-14); color: var(--uems-text-tertiary); margin: 0 0 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    /* Fullscreen modals fill the viewport. To preview several tones inline on a
+       single page, demote them to bounded boxes instead of fixed full layers. */
+    .stage ds-fullscreen-modal {
+      position: relative; display: block; height: 320px;
+      border: 1px solid var(--uems-border-secondary); border-radius: var(--radius-md, 12px);
+      overflow: hidden;
+    }
+    .stage ds-fullscreen-modal .ds-fullscreen-modal__overlay { display: none; }
+    .stage ds-fullscreen-modal .ds-fullscreen-modal__dialog {
+      position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit;
+    }
+  </style>
+</head>
+<body>
+  <section class="stage">
+    <h2>Info tone (default)</h2>
+    <ds-fullscreen-modal
+      title="Configure SAML SSO"
+      description="Set up SSO so users can sign in with their company directory."
+      show-icon
+      primary-label="Save and apply"
+      secondary-label="Cancel"
+      open>
+      <p style="margin:0;">Body content goes here. This region scrolls independently between the pinned header and footer.</p>
+    </ds-fullscreen-modal>
+  </section>
+
+  <section class="stage">
+    <h2>Warning tone</h2>
+    <ds-fullscreen-modal
+      leading-tone="warning"
+      title="Decommission environment"
+      description="Removing this environment stops all running workloads."
+      show-icon
+      primary-label="Decommission"
+      secondary-label="Cancel"
+      open>
+      <p style="margin:0;">Review the impacted resources below before continuing.</p>
+    </ds-fullscreen-modal>
+  </section>
+
+  <section class="stage">
+    <h2>Success tone</h2>
+    <ds-fullscreen-modal
+      leading-tone="success"
+      title="Deployment complete"
+      description="Your changes are live across all regions."
+      show-icon
+      primary-label="Done"
+      secondary-label="View logs"
+      open>
+      <p style="margin:0;">All 4 regions reported a healthy status.</p>
+    </ds-fullscreen-modal>
+  </section>
+
+  <section class="stage">
+    <h2>Brand tone</h2>
+    <ds-fullscreen-modal
+      leading-tone="brand"
+      title="Add a new widget"
+      description="Pick a widget to add to your dashboard."
+      show-icon
+      primary-label="Add widget"
+      secondary-label="Cancel"
+      open>
+      <p style="margin:0;">Choose from charts, lists, and status tiles.</p>
+    </ds-fullscreen-modal>
+  </section>
+
+  <section class="stage">
+    <h2>No icon (title aligned to leading edge)</h2>
+    <ds-fullscreen-modal
+      title="Edit profile"
+      description="Update your name, avatar, and contact details."
+      primary-label="Save"
+      secondary-label="Cancel"
+      open>
+      <p style="margin:0;">Form fields would render here.</p>
+    </ds-fullscreen-modal>
+  </section>
+
+  <section class="stage">
+    <h2>With tertiary (Back) + footer-left slot</h2>
+    <ds-fullscreen-modal
+      leading-tone="info"
+      title="Step 2 of 3 — Mapping"
+      description="Map directory attributes to user fields."
+      show-icon
+      primary-label="Next"
+      secondary-label="Cancel"
+      tertiary-label="Back"
+      open>
+      <p style="margin:0;">Wizard body content for the current step.</p>
+      <span slot="footer-left"><a href="#" style="color:var(--uems-text-accent-link);">Read the docs</a></span>
+    </ds-fullscreen-modal>
+  </section>
+
+  <section class="stage">
+    <h2>Loading (save in flight)</h2>
+    <ds-fullscreen-modal
+      title="Saving configuration…"
+      description="Please don't close this window."
+      show-icon
+      primary-label="Save and apply"
+      secondary-label="Cancel"
+      loading
+      open>
+      <p style="margin:0;">Applying changes across your fleet.</p>
+    </ds-fullscreen-modal>
+  </section>
+
+  <section class="stage">
+    <h2>Locked (no close, no overlay/Esc dismiss)</h2>
+    <ds-fullscreen-modal
+      title="Accept the agreement"
+      description="You must accept to continue using the product."
+      hide-close
+      dismiss-on-overlay-click="false"
+      dismiss-on-esc="false"
+      primary-label="Accept"
+      secondary-label="Decline"
+      open>
+      <p style="margin:0;">The full agreement text would scroll here.</p>
+    </ds-fullscreen-modal>
+  </section>
+
+  <section>
+    <h2>Trigger (real full-viewport overlay)</h2>
+    <div class="row">
+      <ds-button id="open-real" variant="primary">Configure SAML SSO…</ds-button>
+    </div>
+    <ds-fullscreen-modal
+      id="real-modal"
+      title="Configure SAML SSO"
+      description="Set up SSO so users can sign in with their company directory."
+      show-icon
+      primary-label="Save and apply"
+      secondary-label="Cancel">
+      <p style="margin:0;">Body content goes here…</p>
+      <span slot="footer-left"><a href="#" style="color:var(--uems-text-accent-link);">Read the docs</a></span>
+    </ds-fullscreen-modal>
+  </section>
+
+  <script type="module">
+    const trigger = document.getElementById('open-real');
+    const modal = document.getElementById('real-modal');
+    trigger.addEventListener('click', () => modal.open());
+  </script>
+</body>
+</html>

@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File upload — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/file-upload/file-upload.css">
+<link rel="stylesheet" href="../design-system-library/src/components/field-helper/field-helper.css">
+<link rel="stylesheet" href="../design-system-library/src/components/progress-bar/progress-bar.css">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/file-upload/file-upload.js"></script>
+<style>
+  .page-input-select .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    padding: 32px !important;
+    gap: 32px !important;
+  }
+  .page-input-select .demo-is-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-input-select .demo-is-section > .demo-group-label {
+    font-size: 11px !important; font-weight: 700 !important; letter-spacing: 0.08em !important;
+    color: var(--prism-text-muted) !important; text-transform: uppercase !important;
+    margin: 0 !important; text-align: left !important; width: auto !important;
+  }
+  .page-input-select .demo-is-stack { display: flex; flex-direction: column; gap: 16px; max-width: 480px; }
+  .page-input-select .demo-is-stack--wide { max-width: 720px; }
+  .page-input-select .demo-is-row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  .page-input-select .demo-is-row > * { flex: 1 1 320px; min-width: 300px; max-width: 480px; }
+  .page-input-select .anat-legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 28px; margin-top: 12px; }
+  .page-input-select .anat-legend-item { display: flex; gap: 10px; align-items: flex-start; }
+  .page-input-select .anat-legend-item > div { display: flex; flex-direction: column; gap: 2px; }
+  .page-input-select .anat-legend-item strong { font-size: 13px; color: var(--prism-text); }
+  .page-input-select .anat-legend-item span { font-size: 12px; color: var(--prism-text-muted); line-height: 1.45; }
+  .page-input-select .anat-marker-inline {
+    flex: 0 0 22px; width: 22px; height: 22px; border-radius: 999px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;
+    font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body class="page-input-select page-text-field">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div style="width: 16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search...">
+        <span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 id="components" class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link active">File Upload</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">File upload</h1>
+        <p class="page-desc">
+          Lets users attach files by browsing or dragging &amp; dropping, in two styles: <strong>Form</strong> &mdash; a 40px input-like field that sits inline with other form controls &mdash; and <strong>Prominent</strong> &mdash; a dashed drop zone for upload-centric screens. Both support <strong>single</strong> and <strong>multiple</strong> selection and walk each file through <em>uploading &rarr; scanning &rarr; success / error</em> with cancel, retry, and remove affordances.
+        </p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══════════════════════════════ TAB: OVERVIEW ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-overview">
+
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div style="padding:32px 0;">
+            <div style="display:flex;justify-content:center;margin-bottom:28px;">
+              <div style="width:100%;max-width:520px;border:1px solid var(--prism-border);border-radius:12px;background:var(--prism-surface);padding:24px;">
+                <ds-file-upload id="anat" variant="prominent" multiple helper="Only .csv files are supported"></ds-file-upload>
+              </div>
+            </div>
+            <div class="anat-legend">
+              <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Field / Drop zone</strong><span>The clickable, droppable container. Form: 40px solid field. Prominent: 78px dashed zone.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Placeholder / Hint</strong><span>&ldquo;Choose file (or) drop here&rdquo; (Form) or &ldquo;Drag files here or&rdquo; (Prominent). Text-Quaternary, 14px.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Browse / Upload button</strong><span>Secondary small (Form) or Primary xsmall (Prominent). Opens the OS file picker.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>File row</strong><span>One per file: icon, name, then progress + %, &ldquo;Scanning&hellip;&rdquo;, or error text &mdash; plus cancel / retry / remove.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Summary row</strong><span>Multiple type only: &ldquo;Uploading files (2 of 5)&hellip;&rdquo; with a chevron to collapse/expand the list.</span></div></div>
+              <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Helper row</strong><span>The shared Form Field Helper Row. Follows the state: error &rarr; red + icon, success &rarr; green + tick.</span></div></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div style="margin-bottom: 64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom: 8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom: 28px;">Both styles across the full lifecycle &mdash; and a working playground that simulates real uploads when you drop or pick files.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">File upload &middot; form &times; prominent &times; lifecycle</span>
+                </div>
+              </div>
+              <div class="demo-canvas">
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Try it &mdash; drop files or browse; uploads are simulated (a file named like &ldquo;virus&rdquo; fails the scan)</div>
+                  <div class="demo-is-row">
+                    <ds-file-upload id="fu-live-form" multiple helper="Any file type; uploads are simulated"></ds-file-upload>
+                    <ds-file-upload id="fu-live-prom" variant="prominent" multiple helper="Any file type; uploads are simulated"></ds-file-upload>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Form &mdash; single: default &middot; uploading &middot; scanning &middot; error &middot; success &middot; disabled</div>
+                  <div class="demo-is-stack">
+                    <ds-file-upload class="fu-demo" helper="Only .csv files are supported"></ds-file-upload>
+                    <ds-file-upload class="fu-demo" data-files="uploading" helper="Only .csv files are supported"></ds-file-upload>
+                    <ds-file-upload class="fu-demo" data-files="scanning" helper="Only .csv files are supported"></ds-file-upload>
+                    <ds-file-upload class="fu-demo" data-files="error" helper="This file type is not supported"></ds-file-upload>
+                    <ds-file-upload class="fu-demo" data-files="success" helper="Upload complete"></ds-file-upload>
+                    <ds-file-upload class="fu-demo" disabled helper="Only .csv files are supported"></ds-file-upload>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Prominent &mdash; single: while a file is in flight the drop zone itself hosts the file row</div>
+                  <div class="demo-is-stack">
+                    <ds-file-upload class="fu-demo" variant="prominent" helper="Only .csv files are supported"></ds-file-upload>
+                    <ds-file-upload class="fu-demo" variant="prominent" data-files="uploading" helper="Only .csv files are supported"></ds-file-upload>
+                    <ds-file-upload class="fu-demo" variant="prominent" data-files="error" helper="This file failed the virus scan"></ds-file-upload>
+                    <ds-file-upload class="fu-demo" variant="prominent" data-files="success" helper="Upload complete"></ds-file-upload>
+                    <ds-file-upload class="fu-demo" variant="prominent" disabled helper="Only .csv files are supported"></ds-file-upload>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">Multiple &mdash; the field/zone stays interactive; rows stack below with a collapsible summary</div>
+                  <div class="demo-is-row">
+                    <ds-file-upload class="fu-demo" multiple data-files="multi" helper="Only .csv files are supported"></ds-file-upload>
+                    <ds-file-upload class="fu-demo" variant="prominent" multiple data-files="multi" helper="Only .csv files are supported"></ds-file-upload>
+                  </div>
+                </div>
+
+                <div class="demo-is-section">
+                  <div class="demo-group-label">RTL &mdash; the layout, icons, and actions mirror</div>
+                  <div class="demo-is-row">
+                    <ds-file-upload class="fu-demo" rtl placeholder="&#1575;&#1582;&#1578;&#1585; &#1605;&#1604;&#1601; (&#1571;&#1608;) &#1573;&#1587;&#1602;&#1575;&#1591; &#1607;&#1606;&#1575;" button-label="&#1578;&#1589;&#1601;&#1581;" helper="&#1601;&#1602;&#1591; &#1605;&#1604;&#1601;&#1575;&#1578; csv. &#1605;&#1583;&#1593;&#1608;&#1605;&#1577;"></ds-file-upload>
+                    <ds-file-upload class="fu-demo" variant="prominent" rtl zone-hint="&#1575;&#1587;&#1581;&#1576; &#1575;&#1604;&#1605;&#1604;&#1601; &#1607;&#1606;&#1575; &#1571;&#1608;" button-label="&#1578;&#1581;&#1605;&#1610;&#1604;" helper="&#1601;&#1602;&#1591; &#1605;&#1604;&#1601;&#1575;&#1578; csv. &#1605;&#1583;&#1593;&#1608;&#1605;&#1577;"></ds-file-upload>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ TAB: STYLE ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-style" style="display: none; padding-top: 32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Exact measurements, typography, and tokens. Matches the Figma <strong>File Upload 2.0</strong> component set.</p>
+
+          <div class="doc-section">
+            <h2 id="variant-axes" class="doc-section-title">Variant Axes</h2>
+            <p class="doc-section-subtitle">Four dials describe every file upload.</p>
+            <div style="padding: 24px; background: var(--prism-surface); border: 1px solid var(--prism-border); border-radius: 12px; margin-top: 16px;">
+              <div style="font-size: 15px; color: var(--prism-text); line-height: 1.7;">
+                <strong>2</strong> Styles &times; <strong>2</strong> Types &times; <strong>8</strong> States &times; <strong>2</strong> RTL = <strong style="color: var(--prism-violet); font-size: 18px;">64 variants</strong>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="measurements" class="doc-section-title">Measurements</h2>
+            <table class="size-table">
+              <thead><tr><th>Region</th><th>Value</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>Form field height</td><td>40px</td><td>Padding 0 / 2 / 0 / 12 (button inset 2px)</td></tr>
+                <tr><td>Prominent zone height</td><td>78px</td><td>Padding 8px; 16px horizontal while hosting a file row</td></tr>
+                <tr><td>Corner radius</td><td>8px</td><td>Field and zone; file rows use 4px</td></tr>
+                <tr><td>Dashed border</td><td>1px, dash 4&nbsp;4</td><td>Prominent only; Focus switches to solid 2px (both styles)</td></tr>
+                <tr><td>Root gap</td><td>8px</td><td>Field &rarr; file list &rarr; helper row (<code>spacing/8</code>)</td></tr>
+                <tr><td>File list container</td><td>1px border, radius 6</td><td><code>--uems-border-tertiary</code>; items area padded 4px block, gap 2; summary row flush at the bottom</td></tr>
+                <tr><td>File row</td><td>28px min</td><td>Padding 6/12, gap 8</td></tr>
+                <tr><td>Progress bar</td><td>30% of row</td><td>min 96px / max 180px, small size, no label</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="design-tokens" class="doc-section-title">Design Tokens</h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>--uems-bg-secondary</code> / <code>--uems-bg-primary-alt</code></td><td>Form field &amp; summary-row fill / Prominent zone &amp; file-row fill</td></tr>
+                <tr><td><code>--uems-border-tertiary</code></td><td>File list container border (multiple type)</td></tr>
+                <tr><td><code>--uems-bg-accent-primary-alt</code></td><td>Drop (drag-over) fill, both styles</td></tr>
+                <tr><td><code>--uems-bg-disabled</code>, <code>--uems-border-disabled</code></td><td>Disabled fill + border</td></tr>
+                <tr><td><code>--uems-border-primary</code> &rarr; <code>--uems-border-accent</code></td><td>Resting border &rarr; hover/drop; focus uses <code>--uems-border-accent-focus</code></td></tr>
+                <tr><td><code>--uems-border-error</code>, <code>--uems-text-error</code></td><td>Error border, error file name / status text</td></tr>
+                <tr><td><code>--uems-text-quaternary</code></td><td>Placeholder &amp; zone hint (14px; hint is 500 weight)</td></tr>
+                <tr><td><code>--uems-text-primary</code> / <code>--uems-text-secondary</code></td><td>File name (12px/500) / icons &amp; &ldquo;Scanning&hellip;&rdquo;</td></tr>
+                <tr><td><code>--uems-text-accent-primary</code></td><td>Upload percentage label</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ TAB: USAGE ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-usage" style="display: none; padding-top: 32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When to Use</h2>
+            <ul class="doc-list">
+              <li><strong>Form</strong> &mdash; one attachment inside a form, sitting inline with text fields and selects (e.g. &ldquo;attach license file&rdquo;).</li>
+              <li><strong>Prominent</strong> &mdash; screens where uploading is the primary task (import wizards, bulk agent installers, evidence upload).</li>
+              <li><strong>Don&rsquo;t</strong> build ad-hoc drop zones &mdash; drag &amp; drop, picker, progress, and error handling are all here.</li>
+              <li><strong>Single type blocks</strong> a new pick while one file is in flight &mdash; cancel or remove it first (don&rsquo;t silently replace).</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="lifecycle" class="doc-section-title">Lifecycle &amp; ownership</h2>
+            <p class="doc-section-subtitle">The component renders the UI; <strong>your code owns the upload</strong>. Listen for <code>ds-file-upload-select</code>, start your request, and drive <code>el.files</code> / <code>el.updateFile()</code> as bytes move. The visual state is derived: any error &rarr; error, any busy &rarr; uploading, all success &rarr; success.</p>
+            <table class="size-table">
+              <thead><tr><th>Status</th><th>Row shows</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr><td><code>uploading</code></td><td>progress bar + % (accent)</td><td>cancel &#10005;</td></tr>
+                <tr><td><code>scanning</code></td><td>&ldquo;Scanning&hellip;&rdquo; (fixed copy)</td><td>&mdash;</td></tr>
+                <tr><td><code>success</code></td><td>tick icon</td><td>remove &#10005;</td></tr>
+                <tr><td><code>error</code></td><td>reason via <code>statusText</code> (red)</td><td>retry &#8635; &middot; remove &#10005;</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="validation" class="doc-section-title">Validation</h2>
+            <ul class="doc-list">
+              <li>Pass <code>accept</code> to pre-filter the OS picker &mdash; but always re-validate on <code>select</code> (drag &amp; drop bypasses <code>accept</code>).</li>
+              <li>Reject oversize / wrong-type files <em>before</em> uploading: set the file to <code>status:'error'</code> with the reason in <code>statusText</code>, and echo it in <code>helper</code>.</li>
+              <li>Keep the helper line for constraints (&ldquo;Only .csv files are supported&rdquo;) &mdash; it doubles as the error/success message via the shared helper row.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+            <p class="doc-section-subtitle">Set <code>rtl</code> to mirror the layout (logical properties throughout). Provide localized <code>placeholder</code> / <code>zone-hint</code> / <code>button-label</code> / <code>helper</code> strings.</p>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="related-components" class="doc-section-title">Related Components</h2>
+            <div class="related-grid">
+              <a href="Progress-bar.html" class="related-chip"><ds-icon name="chart" size="16"></ds-icon> Progress bar</a>
+              <a href="Button.html" class="related-chip"><ds-icon name="cursor-click" size="16"></ds-icon> Button</a>
+              <a href="Text-field.html" class="related-chip"><ds-icon name="edit" size="16"></ds-icon> Text field</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="figma-reference" class="doc-section-title">Figma Reference</h2>
+            <p class="doc-section-subtitle">Built from the <strong>File Upload 2.0</strong> section &mdash; main set (64 variants) plus the <strong>File Item</strong> and <strong>Files Summary</strong> sub-components.</p>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ TAB: CODE ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-code" style="display: none; padding-top: 32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo</h2>
+          <p class="doc-section-subtitle">Toggle the controls and watch the component &mdash; and the code below &mdash; update live.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Variant</label><select class="cp-select" id="fu-var"><option value="form" selected>form</option><option value="prominent">prominent</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Multiple</label><select class="cp-select" id="fu-multi"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">State</label><select class="cp-select" id="fu-state"><option value="default" selected>default</option><option value="uploading">uploading</option><option value="scanning">scanning</option><option value="error">error</option><option value="success">success</option><option value="disabled">disabled</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show helper</label><select class="cp-select" id="fu-helper"><option value="true" selected>true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="fu-rtl"><option value="false" selected>false</option><option value="true">true</option></select></div>
+            </div>
+            <div class="cp-preview" id="fu-pg-preview" style="padding:24px;"><div id="fu-pg-host" style="width:100%;max-width:480px;margin:0 auto;"></div></div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML + JS</div>
+              <button class="cp-action-btn" id="fu-pg-copy"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+            </div>
+            <div class="cp-code-area" id="fu-pg-code"></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="usage-code" class="doc-section-title">Usage</h2>
+          <p class="doc-section-subtitle">Listen for the selection, run the upload yourself, and drive <code>files</code> as bytes move.</p>
+          <div class="cp-code-area" style="padding:20px;">
+<pre style="margin:0;white-space:pre-wrap;font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.7">&lt;<span style="color:#60a5fa">ds-file-upload</span> <span style="color:#38bdf8">variant</span>=<span style="color:#34d399">"prominent"</span> <span style="color:#38bdf8">multiple</span> <span style="color:#38bdf8">accept</span>=<span style="color:#34d399">".csv"</span>
+                <span style="color:#38bdf8">helper</span>=<span style="color:#34d399">"Only .csv files are supported"</span>&gt;&lt;/<span style="color:#60a5fa">ds-file-upload</span>&gt;
+
+&lt;script&gt;
+  <span style="color:#c084fc">const</span> up = <span style="color:#c084fc">document</span>.querySelector(<span style="color:#34d399">'ds-file-upload'</span>);
+  up.addEventListener(<span style="color:#34d399">'ds-file-upload-select'</span>, (e) =&gt; {
+    <span style="color:#64748b">/* start your upload for each picked/dropped File… */</span>
+    up.files = e.detail.files.map((f) =&gt; ({ id: f.name, name: f.name, status: <span style="color:#34d399">'uploading'</span>, progress: <span style="color:#f59e0b">0</span> }));
+  });
+  <span style="color:#64748b">/* …then report progress and outcomes: */</span>
+  up.updateFile(<span style="color:#34d399">'report.csv'</span>, { progress: <span style="color:#f59e0b">80</span> });
+  up.updateFile(<span style="color:#34d399">'report.csv'</span>, { status: <span style="color:#34d399">'success'</span> });
+  up.addEventListener(<span style="color:#34d399">'ds-file-upload-cancel'</span>, (e) =&gt; up.removeFile(e.detail.file.id));
+&lt;/script&gt;</pre>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="component-properties" class="doc-section-title">Component Properties</h2>
+
+          <div class="doc-section">
+            <h3 id="props-core" class="doc-h3">Attributes<span class="h3-badge" style="background: rgba(37,99,235,0.1); color: var(--prism-violet);">11 props</span></h3>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>variant</code></td><td><code>form &middot; prominent</code></td><td><code>form</code></td><td>Input-like field vs. dashed drop zone.</td></tr>
+                <tr><td><code>multiple</code></td><td>Boolean</td><td><code>false</code></td><td>Allow multiple files; rows stack below with a summary. Single hosts the status in the field/zone.</td></tr>
+                <tr><td><code>placeholder</code></td><td>String</td><td><code>Choose file(s) (or) drop here</code></td><td>Form field placeholder (auto-pluralised).</td></tr>
+                <tr><td><code>zone-hint</code></td><td>String</td><td><code>Drag file(s) here or</code></td><td>Prominent zone hint (auto-pluralised).</td></tr>
+                <tr><td><code>button-label</code></td><td>String</td><td><code>Browse</code> / <code>Upload</code></td><td>Picker button text (default depends on variant).</td></tr>
+                <tr><td><code>helper</code></td><td>String</td><td><code>&mdash;</code></td><td>Helper-row text. Colour/icon follow the derived state.</td></tr>
+                <tr><td><code>show-helper</code></td><td>Boolean</td><td><code>true</code></td><td>Set <code>"false"</code> to hide the helper row.</td></tr>
+                <tr><td><code>accept</code></td><td>String</td><td><code>&mdash;</code></td><td>Passed to the native picker (e.g. <code>".csv,.xlsx"</code>). Re-validate drops yourself.</td></tr>
+                <tr><td><code>expanded</code></td><td>Boolean</td><td><code>true</code></td><td>Multiple type: whether the file list is expanded (summary chevron toggles it).</td></tr>
+                <tr><td><code>disabled</code></td><td>Boolean</td><td><code>false</code></td><td>Blocks picker, drop, and actions.</td></tr>
+                <tr><td><code>rtl</code></td><td>Boolean</td><td><code>false</code></td><td>Mirror the layout.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h3 id="props-files" class="doc-h3">The <code>files</code> property &amp; methods</h3>
+            <table class="size-table">
+              <thead><tr><th>Member</th><th>Type</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>files</code></td><td>Array (JS prop)</td><td><code>[{ id, name, status, progress, statusText }]</code> &mdash; <code>status</code> &isin; <code>uploading &middot; scanning &middot; success &middot; error</code>; <code>progress</code> 0&ndash;100; <code>statusText</code> is the red error reason (e.g. &ldquo;Virus found&rdquo;).</td></tr>
+                <tr><td><code>updateFile(id, patch)</code></td><td>Method</td><td>Merge <code>patch</code> into one file (progress ticks, status flips).</td></tr>
+                <tr><td><code>removeFile(id)</code> / <code>clear()</code></td><td>Method</td><td>Drop one file / all files.</td></tr>
+                <tr><td><code>openPicker()</code></td><td>Method</td><td>Open the OS file picker programmatically.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h3 id="props-events" class="doc-h3">Events</h3>
+            <table class="size-table">
+              <thead><tr><th>Event</th><th>Detail</th><th>Fires when</th></tr></thead>
+              <tbody>
+                <tr><td><code>ds-file-upload-select</code></td><td><code>{ files: File[] }</code></td><td>Files picked or dropped (single type delivers at most one).</td></tr>
+                <tr><td><code>ds-file-upload-cancel</code></td><td><code>{ file }</code></td><td>&#10005; pressed on an uploading file &mdash; abort your request.</td></tr>
+                <tr><td><code>ds-file-upload-retry</code></td><td><code>{ file }</code></td><td>&#8635; pressed on an error row.</td></tr>
+                <tr><td><code>ds-file-upload-remove</code></td><td><code>{ file }</code></td><td>&#10005; pressed on a success/error row.</td></tr>
+                <tr><td><code>ds-file-upload-toggle</code></td><td><code>{ expanded }</code></td><td>Summary chevron toggled.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ TAB: ACCESSIBILITY ═══════════════════════════════ -->
+        <div class="tab-content" id="tab-accessibility" style="display: none; padding-top: 32px;">
+          <div class="doc-section">
+            <h2 id="a11y-overview" class="doc-section-title">Accessibility</h2>
+            <p class="doc-section-subtitle">A visually-hidden native <code>&lt;input type="file"&gt;</code> does the picking, so the OS dialog and form semantics come for free.</p>
+            <ul class="doc-list">
+              <li>The field/zone is a keyboard-reachable <code>role="button"</code> (<code>tabindex="0"</code>) labelled with the placeholder text and described by the helper row (<code>aria-describedby</code>).</li>
+              <li><strong>Drag &amp; drop always has a click/keyboard equivalent</strong> &mdash; the whole zone and the Browse/Upload button open the picker.</li>
+              <li>Every row action carries the file name in its <code>aria-label</code> (&ldquo;Cancel upload of report.csv&rdquo;, &ldquo;Retry upload of&hellip;&rdquo;, &ldquo;Remove&hellip;&rdquo;).</li>
+              <li>The progress bar is a real <code>role="progressbar"</code> (via <code>ds-progress-bar</code>) with <code>aria-valuenow</code>.</li>
+              <li>The helper row is a live region: polite normally, <strong>assertive on error</strong> &mdash; error copy placed there is announced immediately.</li>
+              <li>Disabled sets <code>aria-disabled="true"</code> and removes the box from the tab order.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h3 id="keyboard-navigation" class="doc-h3">Keyboard</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><code>Tab</code></td><td>Field/zone &rarr; Browse/Upload button &rarr; each row action &rarr; summary toggle.</td></tr>
+                <tr><td><code>Enter</code> / <code>Space</code></td><td>On the field/zone or button: open the file picker. On row actions: activate.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        </div><!-- close main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="../handoff/file-upload.md" download="file-upload.md" class="action-link">
+              <ds-icon name="download" size="15"></ds-icon>
+              Download MD
+            </a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=22034-1809572" target="_blank" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+
+      </div> <!-- close main-content-area -->
+    </main>
+  </div>
+
+  <!-- ── Static preview data ── -->
+  <script type="module">
+    const FILES = {
+      uploading: [{ id: 'f1', name: 'repository.fon', status: 'uploading', progress: 45 }],
+      scanning: [{ id: 'f1', name: 'repository.fon', status: 'scanning' }],
+      error: [{ id: 'f1', name: 'repository.fon', status: 'error', statusText: 'Virus found' }],
+      success: [{ id: 'f1', name: 'repository.fon', status: 'success' }],
+      multi: [
+        { id: 'f1', name: 'inventory.csv', status: 'success' },
+        { id: 'f2', name: 'patch-rollout.csv', status: 'uploading', progress: 62 },
+        { id: 'f3', name: 'legacy-agents.csv', status: 'error', statusText: 'Virus found' },
+      ],
+    };
+    customElements.whenDefined('ds-file-upload').then(() => {
+      document.querySelectorAll('.fu-demo[data-files]').forEach((el) => { el.files = FILES[el.dataset.files] || []; });
+      const anat = document.getElementById('anat');
+      if (anat) anat.files = [
+        { id: 'a1', name: 'inventory.csv', status: 'uploading', progress: 45 },
+        { id: 'a2', name: 'patch-rollout.csv', status: 'success' },
+      ];
+    });
+  </script>
+
+  <!-- ── Simulated live uploads (Preview "Try it" + demo state re-emitters) ── -->
+  <script type="module">
+    customElements.whenDefined('ds-file-upload').then(() => {
+      /* Fake upload driver: progress ticks → scan → success (or error when the
+         name contains "virus"). The consumer contract is identical to a real app. */
+      const timers = new Map();
+      function simulate(up, file) {
+        const id = file.name + '-' + Math.random().toString(36).slice(2, 7);
+        const list = up.files;
+        list.push({ id, name: file.name, status: 'uploading', progress: 0 });
+        up.files = list;
+        const t = setInterval(() => {
+          const cur = up.files.find((f) => f.id === id);
+          if (!cur) { clearInterval(t); return; }
+          if (cur.progress >= 100) {
+            clearInterval(t); timers.delete(id);
+            up.updateFile(id, { status: 'scanning' });
+            setTimeout(() => {
+              if (/virus/i.test(file.name)) up.updateFile(id, { status: 'error', statusText: 'Virus found' });
+              else up.updateFile(id, { status: 'success' });
+            }, 1200);
+          } else {
+            up.updateFile(id, { progress: cur.progress + 10 });
+          }
+        }, 250);
+        timers.set(id, t);
+      }
+      ['fu-live-form', 'fu-live-prom'].forEach((hostId) => {
+        const up = document.getElementById(hostId);
+        if (!up) return;
+        up.addEventListener('ds-file-upload-select', (e) => {
+          if (!up.hasAttribute('multiple')) up.clear();
+          e.detail.files.forEach((f) => simulate(up, f));
+        });
+        up.addEventListener('ds-file-upload-cancel', (e) => { clearInterval(timers.get(e.detail.file.id)); up.removeFile(e.detail.file.id); });
+        up.addEventListener('ds-file-upload-remove', (e) => up.removeFile(e.detail.file.id));
+        up.addEventListener('ds-file-upload-retry', (e) => {
+          up.removeFile(e.detail.file.id);
+          simulate(up, { name: e.detail.file.name });
+        });
+      });
+    });
+  </script>
+
+  <!-- ── Code playground (live demo in the Code tab) ── -->
+  <script type="module">
+    customElements.whenDefined('ds-file-upload').then(() => {
+      const host = document.getElementById('fu-pg-host');
+      const codeOut = document.getElementById('fu-pg-code');
+      const copyBtn = document.getElementById('fu-pg-copy');
+      if (!host) return;
+      const ctrl = {
+        variant: document.getElementById('fu-var'), multi: document.getElementById('fu-multi'),
+        state: document.getElementById('fu-state'), helper: document.getElementById('fu-helper'),
+        rtl: document.getElementById('fu-rtl'),
+      };
+      const STATE_FILES = {
+        default: [],
+        uploading: [{ id: 'f1', name: 'repository.fon', status: 'uploading', progress: 45 }],
+        scanning: [{ id: 'f1', name: 'repository.fon', status: 'scanning' }],
+        error: [{ id: 'f1', name: 'repository.fon', status: 'error', statusText: 'Virus found' }],
+        success: [{ id: 'f1', name: 'repository.fon', status: 'success' }],
+        disabled: [],
+      };
+      const MULTI_EXTRA = { id: 'f2', name: 'inventory.csv', status: 'success' };
+      let rawCode = '';
+      const escH = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      function jsVal(v, c) {
+        const S = '#34d399', A = '#f59e0b';
+        const wrap = (col, t) => c ? '<span style="color:' + col + '">' + t + '</span>' : t;
+        if (typeof v === 'string') return wrap(S, "'" + (c ? escH(v) : v).replace(/'/g, "\\'") + "'");
+        return wrap(A, String(v));
+      }
+      const itemLine = (it, c) => '    { ' + Object.entries(it).map(([k, v]) =>
+        (c ? '<span style="color:#38bdf8">' + k + '</span>' : k) + ': ' + jsVal(v, c)).join(', ') + ' },';
+
+      function build() {
+        const variant = ctrl.variant.value, multi = ctrl.multi.value === 'true';
+        const state = ctrl.state.value, showHelper = ctrl.helper.value === 'true', rtl = ctrl.rtl.value === 'true';
+        const helperText = state === 'error' ? 'This file failed the virus scan'
+          : state === 'success' ? 'Upload complete' : 'Only .csv files are supported';
+        let files = (STATE_FILES[state] || []).map((f) => Object.assign({}, f));
+        if (multi && files.length) files = files.concat([Object.assign({}, MULTI_EXTRA)]);
+
+        host.innerHTML = '';
+        const el = document.createElement('ds-file-upload');
+        if (variant !== 'form') el.setAttribute('variant', variant);
+        if (multi) el.setAttribute('multiple', '');
+        if (showHelper) el.setAttribute('helper', helperText);
+        else el.setAttribute('show-helper', 'false');
+        if (state === 'disabled') el.setAttribute('disabled', '');
+        if (rtl) el.setAttribute('rtl', '');
+        host.appendChild(el);
+        el.files = files;
+
+        const attrs = [];
+        if (variant !== 'form') attrs.push('variant="' + variant + '"');
+        if (multi) attrs.push('multiple');
+        if (showHelper) attrs.push('helper="' + helperText + '"');
+        else attrs.push('show-helper="false"');
+        if (state === 'disabled') attrs.push('disabled');
+        if (rtl) attrs.push('rtl');
+        const openTag = '<ds-file-upload' + (attrs.length ? ' ' + attrs.join(' ') : '') + '></ds-file-upload>';
+        rawCode = openTag + (files.length
+          ? '\n\n<script>\n  document.querySelector(\'ds-file-upload\').files = [\n'
+            + files.map((it) => itemLine(it, false)).join('\n') + '\n  ];\n<\/script>'
+          : '');
+
+        const coloredAttrs = attrs.map((p) => {
+          const eq = p.indexOf('=');
+          if (eq === -1) return '<span style="color:#38bdf8">' + p + '</span>';
+          return '<span style="color:#38bdf8">' + p.slice(0, eq) + '</span>=<span style="color:#34d399">' + p.slice(eq + 1) + '</span>';
+        }).join(' ');
+        let colored = '&lt;<span style="color:#60a5fa">ds-file-upload</span>'
+          + (attrs.length ? ' ' + coloredAttrs : '') + '&gt;&lt;/<span style="color:#60a5fa">ds-file-upload</span>&gt;';
+        if (files.length) {
+          colored += '\n\n&lt;script&gt;\n  <span style="color:#c084fc">document</span>.querySelector(<span style="color:#34d399">\'ds-file-upload\'</span>).files = [\n'
+            + files.map((it) => itemLine(it, true)).join('\n') + '\n  ];\n&lt;/script&gt;';
+        }
+        codeOut.innerHTML = '<pre style="margin:0;white-space:pre-wrap;font-family:\'JetBrains Mono\',monospace;font-size:13.5px;line-height:1.6">' + colored + '</pre>';
+      }
+      Object.values(ctrl).forEach((el) => el.addEventListener('change', build));
+      copyBtn?.addEventListener('click', () => {
+        const done = () => { const o = copyBtn.innerHTML; copyBtn.textContent = 'Copied!'; setTimeout(() => { copyBtn.innerHTML = o; }, 2000); };
+        if (navigator.clipboard?.writeText) navigator.clipboard.writeText(rawCode).then(done).catch(done); else done();
+      });
+      build();
+    });
+  </script>
+
+  <!-- ── Tabs + TOC + sidebar (shared template behaviour) ── -->
+  <script>
+    let _tocObserver = null;
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav');
+      if (!tocList) return;
+      tocList.innerHTML = '';
+      const activePanel = document.getElementById(targetId);
+      if (!activePanel) return;
+      activePanel.querySelectorAll('h2[id], h3[id]').forEach((h) => {
+        if (h.style.display === 'none') return;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + h.id; a.className = 'toc-link';
+        let text = Array.from(h.childNodes).filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim();
+        if (!text) text = h.innerText;
+        a.textContent = text;
+        a.addEventListener('click', (e) => { e.preventDefault(); document.getElementById(h.id).scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+        li.appendChild(a); tocList.appendChild(li);
+      });
+      initScrollSpy();
+    }
+    function initScrollSpy() {
+      if (_tocObserver) _tocObserver.disconnect();
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sections = Array.from(tocLinks).map((l) => document.getElementById(l.getAttribute('href').slice(1))).filter(Boolean);
+      if (!sections.length) return;
+      _tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            tocLinks.forEach((link) => link.classList.toggle('active', link.getAttribute('href') === '#' + id));
+          }
+        });
+      }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+      sections.forEach((s) => _tocObserver.observe(s));
+    }
+    document.querySelectorAll('.tab-item').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabMap = { 'Overview': 'tab-overview', 'Style': 'tab-style', 'Usage': 'tab-usage', 'Code': 'tab-code', 'Accessibility': 'tab-accessibility' };
+        document.querySelectorAll('.tab-content').forEach((panel) => panel.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) { document.getElementById(target).style.display = 'block'; updateTOC(target); }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+    updateTOC('tab-overview');
+    (function () {
+      const searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      const items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function () {
+        const q = this.value.toLowerCase().trim();
+        items.forEach((li) => { const link = li.querySelector('a'); if (!link) return; li.style.display = (!q || link.textContent.toLowerCase().indexOf(q) !== -1) ? '' : 'none'; });
+      });
+      document.addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchInput.focus(); searchInput.select(); } });
+    })();
+    (function () {
+      const active = document.querySelector('.sidebar-link.active');
+      if (active) { const sidebar = active.closest('.sidebar'); if (sidebar) sidebar.scrollTop = Math.max(0, active.offsetTop - sidebar.offsetTop - sidebar.clientHeight / 3); }
+    })();
+  </script>
+  <script src="js/main.js"></script>
+</body>
+</html>

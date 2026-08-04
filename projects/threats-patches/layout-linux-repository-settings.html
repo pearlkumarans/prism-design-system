@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<!-- Linux Repository Settings · DUAL-MODE file (projects/threats-patches/).
+     Archetype: list view (data table + toggleable filter sidebar).
+     Open directly -> standalone harness (bottom) mounts it.
+     Fetched by Shell.html -> injectDrawer('../projects/threats-patches/layout-linux-repository-settings','content'). -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    .sa-host { display: flex; flex-direction: column; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  /* View-specific styles — every selector scoped to #lrs-pop so it can't leak. */
+  #lrs-pop .lay__scroll { display: flex; flex-direction: column; gap: var(--spacing-16, 16px); }
+
+  /* Banner hides unless agents are restricted to default repositories. */
+  #lrs-pop #lrs-banner[hidden] { display: none; }
+
+  /* Filter sidebar (toggled by the table's built-in filter button) + table.
+     Grid-column reveal so the table reflows in lockstep as the panel slides.
+     Default OPEN (facet filtering is primary here); the filter button collapses it. */
+  #lrs-pop .lrs-grid { display: grid; grid-template-columns: 240px minmax(0, 1fr); column-gap: var(--spacing-20, 20px); align-items: start; flex: 1 1 auto; min-height: 0;
+    transition: grid-template-columns 260ms var(--ease-standard, ease), column-gap 260ms var(--ease-standard, ease); }
+  #lrs-pop .lrs-grid.is-collapsed { grid-template-columns: 0px minmax(0, 1fr); column-gap: 0; }
+  @media (prefers-reduced-motion: reduce) { #lrs-pop .lrs-grid { transition: none; } }
+  #lrs-pop .lrs-filter-col { overflow: hidden; min-width: 0; }
+  #lrs-pop .lrs-grid.is-collapsed .lrs-filter-col { visibility: hidden; }
+  #lrs-pop .lrs-content { min-width: 0; }
+  /* Version chips in the table cell */
+  #lrs-pop .lrs-vers { display: inline-flex; gap: var(--spacing-4, 4px); align-items: center; }
+  /* Repository name + inline "Default" tag */
+  #lrs-pop .lrs-name { display: inline-flex; gap: var(--spacing-8, 8px); align-items: center; min-width: 0; }
+  #lrs-pop .lrs-name__text { overflow: hidden; text-overflow: ellipsis; }
+  /* Offline Metadata: status + dimmed secondary detail */
+  #lrs-pop .lrs-meta { display: inline-flex; gap: var(--spacing-8, 8px); align-items: center; min-width: 0; }
+  #lrs-pop .lrs-meta__detail { color: var(--uems-text-tertiary); font-size: var(--font-size-13); overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 900px) {
+    #lrs-pop .lrs-grid, #lrs-pop .lrs-grid.is-collapsed { grid-template-columns: 1fr; column-gap: 0; }
+    #lrs-pop .lrs-grid.is-collapsed .lrs-filter-col { display: none; }
+  }
+</style>
+
+<div id="lrs-pop" class="lay-root" hidden>
+  <div class="lay">
+    <ds-page-header id="lrs-ph" structure="default" icon="hard-disk"
+      title="Repository Management"
+      description="Linux patch repositories discovered across your managed machines."
+      show-description show-breadcrumbs show-actions
+      collapse-on-scroll scroll-target=".lay__scroll">
+      <ds-icon-button slot="actions" id="lrs-settings-btn" shape="square" type="tertiary-grey"
+        size="large" icon="settings" label="Repository source"></ds-icon-button>
+    </ds-page-header>
+    <div class="lay__scroll">
+      <!-- Shown only when agents are restricted to default repositories. The mode
+           itself is changed via the header ⚙ "Repository source" dialog. -->
+      <ds-inline-alert id="lrs-banner" type="warning" show-icon hidden></ds-inline-alert>
+
+      <!-- Repository source — two mutually-exclusive modes with inline descriptions,
+           via ds-radio-group (label + options set from JS). ds-modal portals to <body>. -->
+      <ds-modal id="lrs-settings-modal" size="md" title="Linux repository settings">
+        <ds-radio-group slot="body" id="lrs-src" name="lrs-src" label-position="top" size="m"></ds-radio-group>
+        <ds-button slot="footer" variant="outline" data-cancel>Cancel</ds-button>
+        <ds-button slot="footer" variant="primary" data-save>Save</ds-button>
+      </ds-modal>
+
+      <div class="lrs-grid" id="lrs-grid">
+        <div class="lrs-filter-col">
+          <ds-filter-panel id="lrs-filter" title="Filters" show-count fit-viewport></ds-filter-panel>
+        </div>
+        <section class="lrs-content">
+          <!-- search + filter button come from the data table's built-in toolbar -->
+          <ds-data-table id="lrs-table" fit-viewport sticky-header filter-open
+            selection-mode="none" show-footer rows-per-page="50"></ds-data-table>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('lrs-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  /* ---- i18n (chrome strings; repo names/counts stay canonical) ------------ */
+  const MSGS = {
+    en: {
+      'title': 'Repository Management',
+      'desc': 'Linux patch repositories discovered across your managed machines.',
+      'crumb.tp': 'Threats & Patches', 'crumb.settings': 'Settings', 'crumb.self': 'Linux repository settings',
+      'filters': 'Filters',
+      'src.dialogTitle': 'Linux repository settings',
+      'src.groupLabel': 'Repositories agents patch from',
+      'src.save': 'Save', 'src.cancel': 'Cancel',
+      'toast.saved': 'Repository source updated',
+      'toast.machine': 'Agents now use the repositories present on each machine.',
+      'toast.default': 'Agents are now restricted to default repositories only.',
+      'mode.machine.title': 'Repositories present on each machine',
+      'mode.machine.desc': 'Agents patch from each machine’s own repositories — nothing to configure. The server downloads <strong>offline metadata for every supported repo reported by at least one machine</strong>.',
+      'mode.default.title': 'Default repositories only',
+      'mode.default.desc': 'Repositories added on machines are ignored; their packages show as not patch-managed.',
+      'mode.warn.title': 'Agents will use default repositories only',
+      'mode.warn.desc': 'Repositories added on machines are ignored for patching, and their packages are reported as not patch-managed.',
+      'f.os': 'OS', 'f.versions': 'Versions', 'f.types': 'Types', 'f.arch': 'Architectures',
+      'col.category': 'Repository Category', 'col.name': 'Repository Name', 'col.versions': 'Versions', 'col.arch': 'Arch', 'col.type': 'Type', 'col.meta': 'Offline Metadata',
+      'type.vendor': 'Vendor', 'type.3rd': '3rd Party',
+      'tag.default': 'Default',
+      'meta.downloaded': 'Downloaded', 'meta.notdownloaded': 'Not downloaded',
+      'meta.d.inuse': 'in use on machines', 'meta.d.none': 'no machine reports it',
+      'empty': 'No repositories match your filters.',
+    },
+    ar: {  /* machine-translated — flag for native review */
+      'title': 'إدارة المستودعات',
+      'desc': 'مستودعات تصحيحات Linux المكتشفة عبر الأجهزة المُدارة.',
+      'crumb.tp': 'التهديدات والتصحيحات', 'crumb.settings': 'الإعدادات', 'crumb.self': 'إعدادات مستودع Linux',
+      'filters': 'الفلاتر',
+      'src.dialogTitle': 'إعدادات مستودع Linux',
+      'src.groupLabel': 'المستودعات التي تُصلّح منها الوكلاء',
+      'src.save': 'حفظ', 'src.cancel': 'إلغاء',
+      'toast.saved': 'تم تحديث مصدر المستودع',
+      'toast.machine': 'تستخدم الوكلاء الآن المستودعات الموجودة على كل جهاز.',
+      'toast.default': 'الوكلاء الآن مقيّدون بالمستودعات الافتراضية فقط.',
+      'mode.machine.title': 'المستودعات الموجودة على كل جهاز',
+      'mode.machine.desc': 'تُصلّح الوكلاء من مستودعات كل جهاز نفسه — لا شيء لإعداده. يقوم الخادم بتنزيل <strong>البيانات الوصفية دون اتصال لكل مستودع مدعوم يبلّغ عنه جهاز واحد على الأقل</strong>.',
+      'mode.default.title': 'المستودعات الافتراضية فقط',
+      'mode.default.desc': 'يتم تجاهل المستودعات المُضافة على الأجهزة؛ وتظهر حِزمها بأنها غير مُدارة بالتصحيح.',
+      'mode.warn.title': 'ستستخدم الوكلاء المستودعات الافتراضية فقط',
+      'mode.warn.desc': 'يتم تجاهل المستودعات المُضافة على الأجهزة في التصحيح، ويُبلَّغ عن حِزمها بأنها غير مُدارة بالتصحيح.',
+      'f.os': 'نظام التشغيل', 'f.versions': 'الإصدارات', 'f.types': 'الأنواع', 'f.arch': 'المعماريات',
+      'col.category': 'فئة المستودع', 'col.name': 'اسم المستودع', 'col.versions': 'الإصدارات', 'col.arch': 'المعمارية', 'col.type': 'النوع', 'col.meta': 'البيانات دون اتصال',
+      'type.vendor': 'المورّد', 'type.3rd': 'طرف ثالث',
+      'tag.default': 'افتراضي',
+      'meta.downloaded': 'تم التنزيل', 'meta.notdownloaded': 'لم يتم التنزيل',
+      'meta.d.inuse': 'مستخدم على الأجهزة', 'meta.d.none': 'لا يبلّغ عنه أي جهاز',
+      'empty': 'لا توجد مستودعات مطابقة للفلاتر.',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+
+  /* ---- Data ---------------------------------------------------------------- */
+  const OS_ORDER = ['rhel', 'rocky', 'oracle'];
+  const OS_LABEL = { rhel: 'RHEL', rocky: 'Rocky Linux', oracle: 'Oracle Linux' };
+  const STATUS = { default: 'success', inuse: 'success', none: 'neutral' };
+  // Offline Metadata → short status label + dimmed secondary detail.
+  const META = {
+    default: { labelKey: 'meta.downloaded', detailKey: 'meta.d.inuse' },
+    inuse: { labelKey: 'meta.downloaded', detailKey: 'meta.d.inuse' },
+    none: { labelKey: 'meta.notdownloaded', detailKey: 'meta.d.none' },
+  };
+  // { os, name, vers: string[] (OS versions the repo covers), type: 'vendor'|'3rd', status: 'default'|'inuse'|'none' }
+  const REPOS = [
+    // RHEL (17) — versions span 7, 8, 9, 10
+    { os: 'rhel', name: 'RHEL OS', vers: ['7'], type: 'vendor', status: 'default' },
+    { os: 'rhel', name: 'RHEL Extras', vers: ['7'], type: 'vendor', status: 'default' },
+    { os: 'rhel', name: 'RHEL Optional', vers: ['7'], type: 'vendor', status: 'default' },
+    { os: 'rhel', name: 'RHEL BaseOS', vers: ['8', '9', '10'], type: 'vendor', status: 'default' },
+    { os: 'rhel', name: 'RHEL AppStream', vers: ['8', '9', '10'], type: 'vendor', status: 'default' },
+    { os: 'rhel', name: 'RHEL Supplementary', vers: ['8', '9'], type: 'vendor', status: 'none' },
+    { os: 'rhel', name: 'RHEL CodeReady Builder', vers: ['8', '9', '10'], type: 'vendor', status: 'none' },
+    { os: 'rhel', name: 'RHEL High Availability', vers: ['8', '9'], type: 'vendor', status: 'inuse' },
+    { os: 'rhel', name: 'RHEL BaseOS E4S', vers: ['8', '9'], type: 'vendor', status: 'inuse' },
+    { os: 'rhel', name: 'RHEL BaseOS EUS', vers: ['8', '9'], type: 'vendor', status: 'inuse' },
+    { os: 'rhel', name: 'RHEL High Availability E4S', vers: ['8', '9'], type: 'vendor', status: 'inuse' },
+    { os: 'rhel', name: 'RHEL High Availability EUS', vers: ['8'], type: 'vendor', status: 'none' },
+    { os: 'rhel', name: 'RHEL ELS', vers: ['7'], type: 'vendor', status: 'inuse' },
+    { os: 'rhel', name: 'CrowdStrike Falcon Sensor', vers: ['8', '9'], type: '3rd', status: 'none' },
+    { os: 'rhel', name: 'Zabbix 7.0', vers: ['8', '9'], type: '3rd', status: 'none' },
+    { os: 'rhel', name: 'EPEL', vers: ['8', '9'], type: '3rd', status: 'inuse' },
+    { os: 'rhel', name: 'Docker CE', vers: ['8', '9'], type: '3rd', status: 'inuse' },
+    // Rocky Linux (9) — versions span 8, 9
+    { os: 'rocky', name: 'Rocky BaseOS', vers: ['8', '9'], type: 'vendor', status: 'inuse' },
+    { os: 'rocky', name: 'Rocky AppStream', vers: ['8', '9'], type: 'vendor', status: 'inuse' },
+    { os: 'rocky', name: 'Rocky Extras', vers: ['8', '9'], type: 'vendor', status: 'default' },
+    { os: 'rocky', name: 'Rocky PowerTools', vers: ['8'], type: 'vendor', status: 'none' },
+    { os: 'rocky', name: 'Rocky Devel', vers: ['9'], type: 'vendor', status: 'none' },
+    { os: 'rocky', name: 'Rocky CRB', vers: ['9'], type: 'vendor', status: 'none' },
+    { os: 'rocky', name: 'Rocky High Availability', vers: ['8', '9'], type: 'vendor', status: 'inuse' },
+    { os: 'rocky', name: 'EPEL', vers: ['8', '9'], type: '3rd', status: 'inuse' },
+    { os: 'rocky', name: 'Docker CE', vers: ['9'], type: '3rd', status: 'none' },
+    // Oracle Linux (10) — versions span 7, 8, 9, 10
+    { os: 'oracle', name: 'OL7 Latest', vers: ['7'], type: 'vendor', status: 'inuse' },
+    { os: 'oracle', name: 'OL BaseOS Latest', vers: ['8', '9'], type: 'vendor', status: 'inuse' },
+    { os: 'oracle', name: 'OL AppStream', vers: ['8', '9'], type: 'vendor', status: 'inuse' },
+    { os: 'oracle', name: 'OL Addons', vers: ['8'], type: 'vendor', status: 'default' },
+    { os: 'oracle', name: 'UEK Release 6', vers: ['8'], type: 'vendor', status: 'inuse' },
+    { os: 'oracle', name: 'UEK Release 7', vers: ['9'], type: 'vendor', status: 'none' },
+    { os: 'oracle', name: 'OL10 BaseOS Latest', vers: ['10'], type: 'vendor', status: 'inuse' },
+    { os: 'oracle', name: 'OL10 AppStream', vers: ['10'], type: 'vendor', status: 'inuse' },
+    { os: 'oracle', name: 'EPEL', vers: ['7', '8', '9'], type: '3rd', status: 'inuse' },
+    { os: 'oracle', name: 'MySQL 8.0 Community', vers: ['8', '9'], type: '3rd', status: 'none' },
+  ];
+
+  const state = { search: '', filters: { os: [], ver: [], type: [], arch: [] }, repoMode: 'machine' };
+  let _modalEl = null;
+
+  /* ---- Filter panel groups ------------------------------------------------- */
+  const count = (pred) => REPOS.filter(pred).length;
+  function buildFilterGroups() {
+    return [
+      { id: 'os', label: t('f.os'), type: 'checkbox', options: OS_ORDER.map((o) => ({ label: OS_LABEL[o], value: o, count: count((r) => r.os === o) })) },
+      { id: 'ver', label: t('f.versions'), type: 'checkbox', options: ['7', '8', '9', '10'].map((v) => ({ label: v, value: v, count: count((r) => r.vers.includes(v)) })) },
+      { id: 'type', label: t('f.types'), type: 'checkbox', options: [
+        { label: t('type.vendor'), value: 'vendor', count: count((r) => r.type === 'vendor') },
+        { label: t('type.3rd'), value: '3rd', count: count((r) => r.type === '3rd') },
+      ] },
+      { id: 'arch', label: t('f.arch'), type: 'checkbox', options: [{ label: 'x86_64', value: 'x86_64', count: REPOS.length }] },
+    ];
+  }
+
+  /* ---- Table --------------------------------------------------------------- */
+  function matches(r) {
+    const f = state.filters;
+    if (state.search && !(r.name.toLowerCase().includes(state.search) || r.os.includes(state.search) || OS_LABEL[r.os].toLowerCase().includes(state.search))) return false;
+    if (f.os.length && !f.os.includes(r.os)) return false;
+    if (f.ver.length && !f.ver.some((v) => r.vers.includes(v))) return false;
+    if (f.type.length && !f.type.includes(r.type)) return false;
+    if (f.arch.length && !f.arch.includes('x86_64')) return false;
+    return true;
+  }
+  function columns() {
+    return [
+      { id: 'name', header: t('col.name'), render: (r) => `<span class="lrs-name"><span class="lrs-name__text">${esc(r.name)}</span>${r.status === 'default' ? `<ds-badge variant="subtle" state="acknowledge" size="medium">${esc(t('tag.default'))}</ds-badge>` : ''}</span>` },
+      { id: 'category', header: t('col.category'), render: (r) => esc(OS_LABEL[r.os]) },
+      { id: 'vers', header: t('col.versions'), render: (r) => `<span class="lrs-vers">${r.vers.map((v) => `<ds-badge variant="subtle" state="default" size="medium">v${esc(v)}</ds-badge>`).join('')}</span>` },
+      { id: 'arch', header: t('col.arch'), render: () => 'x86_64' },
+      { id: 'type', header: t('col.type'), render: (r) => `<ds-badge variant="subtle" state="${r.type === 'vendor' ? 'default' : 'moderate'}" size="medium">${esc(t('type.' + r.type))}</ds-badge>` },
+      { id: 'meta', header: t('col.meta'), render: (r) => { const m = META[r.status] || META.inuse; return `<span class="lrs-meta"><ds-tag variant="${STATUS[r.status]}" size="medium" leading="dot" show-close="false">${esc(t(m.labelKey))}</ds-tag><span class="lrs-meta__detail">${esc(t(m.detailKey))}</span></span>`; } },
+    ];
+  }
+  function renderTable() {
+    const table = $('lrs-table'); if (!table) return;
+    const shown = REPOS.filter(matches).slice()
+      .sort((a, b) => (OS_ORDER.indexOf(a.os) - OS_ORDER.indexOf(b.os)) || a.name.localeCompare(b.name));
+    table.setAttribute('empty-text', t('empty'));
+    table.columns = columns();
+    table.rows = shown.map((r, i) => ({ id: r.os + '-' + i, ...r }));
+  }
+
+  function applyStrings() {
+    const ph = $('lrs-ph');
+    if (ph) {
+      ph.setAttribute('title', t('title'));
+      ph.setAttribute('description', t('desc'));
+      ph.breadcrumbs = [{ label: t('crumb.tp') }, { label: t('crumb.settings') }, { label: t('crumb.self') }];
+    }
+    const fp = $('lrs-filter'); if (fp) { fp.setAttribute('title', t('filters')); fp.groups = buildFilterGroups(); }
+    const banner = $('lrs-banner'); if (banner) { banner.setAttribute('title', t('mode.warn.title')); banner.setAttribute('description', t('mode.warn.desc')); }
+    /* Repository-source dialog (ds-modal portals to <body> once opened, so grab it
+       before that via the cached ref and query its own subtree for the internals). */
+    const m = _modalEl || (_modalEl = $('lrs-settings-modal'));
+    if (m) {
+      m.setAttribute('title', t('src.dialogTitle'));
+      /* ds-radio-group: built-in group label + per-option label/description. */
+      const rg = m.querySelector('#lrs-src');
+      if (rg) {
+        rg.setAttribute('label', t('src.groupLabel'));
+        rg.options = [
+          { value: 'machine', label: t('mode.machine.title'), description: t('mode.machine.desc'), selected: state.repoMode === 'machine' },
+          { value: 'default', label: t('mode.default.title'), description: t('mode.default.desc'), selected: state.repoMode === 'default' },
+        ];
+      }
+      /* ds-button's built-in `label` attr — reactive and non-destructive (never
+         set host.textContent, which would wipe the rendered <button>). */
+      const bS = m.querySelector('[data-save]'); if (bS) bS.setAttribute('label', t('src.save'));
+      const bC = m.querySelector('[data-cancel]'); if (bC) bC.setAttribute('label', t('src.cancel'));
+    }
+    renderTable();
+  }
+
+  let _wired = false;
+  function wire() {
+    if (_wired) return; _wired = true;
+    const grid = $('lrs-grid'), table = $('lrs-table'), fp = $('lrs-filter');
+    /* The data table's built-in Filter button toggles the sidebar (grid-column reveal). */
+    table && table.addEventListener('ds-data-table-filter', () => {
+      const collapsed = grid.classList.toggle('is-collapsed');
+      table.toggleAttribute('filter-open', !collapsed);
+    });
+    /* The data table's built-in search box narrows the rows. */
+    table && table.addEventListener('ds-data-table-search', (e) => { state.search = (e.detail && e.detail.value || '').trim().toLowerCase(); renderTable(); });
+    /* Reflect whether any facet is active as the table's red "filter applied" dot. */
+    const syncApplied = () => {
+      const active = Object.values(state.filters).some((a) => a && a.length);
+      if (table) table.toggleAttribute('filter-applied', active);
+    };
+    /* Facet changes + Clear all come from the filter panel. */
+    fp && fp.addEventListener('ds-filter-panel-change', (e) => {
+      const v = (e.detail && e.detail.value) || {};
+      state.filters = { os: v.os || [], ver: v.ver || [], type: v.type || [], arch: v.arch || [] };
+      syncApplied(); renderTable();
+    });
+    fp && fp.addEventListener('ds-filter-panel-clear', () => { state.filters = { os: [], ver: [], type: [], arch: [] }; syncApplied(); renderTable(); });
+
+    /* Repository source: the header ⚙ opens the modal (loaded with the current
+       mode); Save applies it, Cancel discards. Banner reflects "default only". */
+    const banner = $('lrs-banner');
+    const syncBanner = () => { if (banner) banner.toggleAttribute('hidden', state.repoMode !== 'default'); };
+    const openSettings = () => { _modalEl = _modalEl || $('lrs-settings-modal'); if (!_modalEl) return; const g = _modalEl.querySelector('#lrs-src'); if (g) g.value = state.repoMode; _modalEl.open(); };
+    const settingsBtn = $('lrs-settings-btn');
+    settingsBtn && settingsBtn.addEventListener('click', openSettings);
+    if (_modalEl) {
+      _modalEl.querySelector('[data-cancel]').addEventListener('click', () => _modalEl.close());
+      _modalEl.querySelector('[data-save]').addEventListener('click', () => {
+        const g = _modalEl.querySelector('#lrs-src');
+        const next = (g && g.value) || 'machine';
+        const changed = next !== state.repoMode;
+        state.repoMode = next;
+        syncBanner(); _modalEl.close();
+        /* Confirm via the shared toaster: success for machine repos, warning for
+           the restricted default-only mode. Only announce an actual change. */
+        if (changed) {
+          const kind = next === 'default' ? 'warning' : 'success';
+          globalThis.dsToast?.[kind]?.({ title: t('toast.saved'), description: t('toast.' + next), style: 'subtle' });
+        }
+      });
+    }
+    syncBanner();
+  }
+
+  function show() { root.hidden = false; applyStrings(); wire(); }
+  function hide() { root.hidden = true; }
+  if (window.ShellCtx && window.ShellCtx.onLangChange) window.ShellCtx.onLangChange(() => { if (!root.hidden) applyStrings(); });
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['threats-patches-linux-repository-settings'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS — runs ONLY when opened directly. == */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers['threats-patches-linux-repository-settings'] && window.ShellDrawers['threats-patches-linux-repository-settings'].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

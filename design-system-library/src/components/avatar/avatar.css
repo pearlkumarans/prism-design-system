@@ -1,0 +1,150 @@
+/* =============================================================================
+   Avatar Component
+   Spec: components/avatar/avatar.md
+   ============================================================================= */
+
+.ds-avatar,
+:host(ds-avatar) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+  background-color: var(--uems-bg-tertiary);
+  color: var(--uems-text-secondary);
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-semibold);
+  user-select: none;
+  flex: 0 0 auto;
+}
+
+/* Sizes */
+.ds-avatar--small,
+:host([size="small"]) {
+  width: 24px; height: 24px;
+  font-size: var(--font-size-10);
+}
+.ds-avatar--medium,
+:host([size="medium"]),
+:host(:not([size])) {
+  width: 32px; height: 32px;
+  font-size: var(--font-size-12);
+}
+.ds-avatar--large,
+:host([size="large"]) {
+  width: 52px; height: 52px;
+  font-size: var(--font-size-16);
+}
+
+/* Inner image */
+.ds-avatar__image {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Initials + placeholder share the live binding: BG-Quaternary-Solid (#5F6C89)
+   fill with a white foreground, per MD §Design tokens. */
+.ds-avatar__initials {
+  background-color: var(--uems-bg-quaternary-solid);
+  color: var(--uems-text-white);
+  /* Zoho Puvi Medium per spec §Typography (not semibold). */
+  font-weight: var(--font-weight-medium);
+  width: 100%; height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: var(--radius-full);
+  /* Figma: initials + placeholder carry a subtle accent ring. */
+  border: 1px solid var(--uems-border-accent-subtle);
+}
+
+.ds-avatar__placeholder {
+  width: 100%; height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uems-icon-white);
+  background-color: var(--uems-bg-quaternary-solid);
+  box-sizing: border-box;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--uems-border-accent-subtle);
+}
+
+/* Hover type — Figma "Hover": solid black surface + white image icon. */
+.ds-avatar__hover {
+  width: 100%; height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uems-icon-white);
+  background-color: var(--grey-modern-950);
+}
+
+/* Editable / hover overlay */
+.ds-avatar--editable,
+:host([editable]) {
+  cursor: pointer;
+}
+
+.ds-avatar__overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  /* Round + clip so the backdrop blur stays inside the circle (backdrop-filter
+     ignores the ancestor's overflow/border-radius). */
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  /* Hover scrim — LIGHT frosted glass: a stronger 12px backdrop blur with only
+     a faint dim, so the avatar behind stays softly visible. */
+  background-color: rgba(21, 24, 30, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: var(--uems-icon-white);
+}
+
+/* Hover state for every type (image / initials / placeholder). Editable also
+   reveals it on keyboard focus. Disabled is excluded (pointer-events:none). */
+.ds-avatar:hover .ds-avatar__overlay,
+.ds-avatar--editable:focus-visible .ds-avatar__overlay,
+:host(:hover) .ds-avatar__overlay,
+:host([editable]:focus-visible) .ds-avatar__overlay {
+  display: inline-flex;
+}
+
+:host([editable]:focus-visible) {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+
+/* Disabled — per MD: BG-Disabled surface, Text/Icon-Disabled foreground,
+   image fill dimmed. No blanket opacity (which muddied the initials). */
+.ds-avatar[aria-disabled="true"],
+:host([disabled]) {
+  pointer-events: none;
+}
+.ds-avatar[aria-disabled="true"] .ds-avatar__initials,
+:host([disabled]) .ds-avatar__initials {
+  background-color: var(--uems-bg-disabled);
+  color: var(--uems-text-disabled);
+  border-color: transparent;
+}
+.ds-avatar[aria-disabled="true"] .ds-avatar__placeholder,
+:host([disabled]) .ds-avatar__placeholder {
+  background-color: var(--uems-bg-disabled);
+  color: var(--uems-icon-disabled);
+  border-color: transparent;
+}
+.ds-avatar[aria-disabled="true"] .ds-avatar__hover,
+:host([disabled]) .ds-avatar__hover {
+  background-color: var(--uems-bg-disabled);
+  color: var(--uems-icon-disabled);
+}
+.ds-avatar[aria-disabled="true"] .ds-avatar__image,
+:host([disabled]) .ds-avatar__image {
+  opacity: 0.5;
+}

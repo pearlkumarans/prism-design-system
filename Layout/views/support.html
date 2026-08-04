@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<!--
+  Support PAGE — DUAL-MODE file (lives in Layout/views/, like the drawers).
+  • Open directly in a browser  → the standalone harness (bottom) mounts + shows it.
+  • Fetched by Shell.html        → injectDrawer() extracts ONLY <template id="drawer-fragment">.
+  Unlike the slide-over drawers, this is a full CONTENT page: it fills the
+  shell-area (hides L1/L2/ds-content) when the "Support" module is selected.
+
+  Structure (revamp): Get help → Contact us → lower two-column
+  (User community discussions + General details w/ upgrade table).
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Support — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="../design-system-library/src/components/drawer/drawer.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-base); }
+    .sa-host { position: relative; display: flex; flex: 1; min-height: 0; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  /* ── Support page (fills the shell-area; opened by the "Support" module) ── */
+  #support-pop { display: none; flex: 1; min-width: 0; flex-direction: column; background: var(--uems-bg-secondary-subtle); border-radius: 16px; overflow-y: auto; }
+  .shell-area.support-open #support-pop { display: flex; }
+  .shell-area.support-open > ds-content,
+  .shell-area.support-open > ds-sidebar-l1,
+  .shell-area.support-open > ds-sidebar-l2 { display: none !important; }
+
+  .sup-page { display: flex; flex-direction: column; gap: var(--spacing-32, 32px); padding: var(--spacing-24, 24px); }
+
+  /* Section heading */
+  .sup-section__head { margin-bottom: var(--spacing-16, 16px); }
+  .sup-section__title { margin: 0; font-size: var(--font-size-18); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+  .sup-section__sub { display: block; margin-top: 2px; font-size: var(--font-size-13); color: var(--uems-text-tertiary); }
+
+  /* Shared icon chip */
+  .sup-chip { flex: none; border-radius: var(--radius-md, 10px); background: var(--uems-bg-accent-primary-subtle, var(--uems-bg-secondary)); color: var(--uems-icon-accent, var(--uems-text-secondary)); display: flex; align-items: center; justify-content: center; }
+  .sup-chip--sm { width: 40px; height: 40px; }
+  .sup-chip--lg { width: 48px; height: 48px; }
+
+  /* Whole-card link wrapper (lifts on hover; border comes from the ds-container) */
+  .sup-cardlink { display: block; text-decoration: none; color: inherit; border-radius: var(--radius-lg, 12px); transition: box-shadow .15s, transform .15s; }
+  .sup-cardlink:hover { text-decoration: none; box-shadow: 0 2px 8px rgba(0,0,0,.06); transform: translateY(-1px); }
+  /* ds-container defaults to inline; blockify it inside the card link so it fills
+     the anchor (an inline container overflows its line box as a tall white shape). */
+  .sup-cardlink > ds-container { display: block; height: 100%; }
+
+  /* Get help — 4-col resource cards */
+  .sup-help { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: var(--spacing-16, 16px); }
+  @media (max-width: 1080px) { .sup-help { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (max-width: 560px)  { .sup-help { grid-template-columns: 1fr; } }
+  .sup-rescard { display: flex; gap: var(--spacing-12, 12px); align-items: flex-start; }
+  .sup-rescard__title { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); margin: 2px 0 4px; }
+  .sup-rescard__desc { font-size: var(--font-size-12); line-height: 1.5; color: var(--uems-text-tertiary); }
+
+  /* Contact us — 2 primary cards + a row of secondary links */
+  .sup-contact-primary { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: var(--spacing-16, 16px); margin-bottom: var(--spacing-16, 16px); }
+  @media (max-width: 980px) { .sup-contact-primary { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 640px) { .sup-contact-primary { grid-template-columns: 1fr; } }
+  .sup-cta { display: flex; align-items: center; gap: var(--spacing-16, 16px); }
+  .sup-cta__title { font-size: var(--font-size-15); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); margin: 0 0 4px; }
+  .sup-cta__desc { font-size: var(--font-size-13); color: var(--uems-text-tertiary); }
+  .sup-cta__badge { margin-inline-start: auto; align-self: flex-start; }
+
+  .sup-links { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: var(--spacing-12, 12px); }
+  @media (max-width: 1080px) { .sup-links { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (max-width: 560px)  { .sup-links { grid-template-columns: 1fr; } }
+  .sup-link { display: flex; align-items: center; gap: var(--spacing-8, 8px); padding: var(--spacing-12, 12px) var(--spacing-16, 16px); border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md, 10px); background: var(--uems-bg-primary); color: var(--uems-text-secondary); font-size: var(--font-size-13); font-weight: var(--font-weight-medium); text-decoration: none; transition: box-shadow .15s, transform .15s; }
+  .sup-link:hover { text-decoration: none; box-shadow: 0 2px 8px rgba(0,0,0,.06); transform: translateY(-1px); }
+  .sup-link ds-icon { color: var(--uems-text-tertiary); flex: none; }
+
+  /* Lower two-column: community discussions + general details */
+  .sup-lower { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: var(--spacing-16, 16px); align-items: stretch; }
+  @media (max-width: 1180px) { .sup-lower { grid-template-columns: minmax(0, 1fr); } }
+  /* ds-widget caps itself at 580px (dashboard tile); release it and give both
+     panels an EQUAL bounded height so they sit parallel and their bodies scroll
+     when content overflows (the ds-widget list body already has overflow-y:auto —
+     it only engages once the surface height is constrained). */
+  .sup-lower > ds-widget { max-width: none; width: 100%; height: 560px; }
+  .sup-lower > ds-widget .ds-widget__surface { height: 100%; }
+  /* Mobile: stacked and never force horizontal overflow (minmax(0,1fr) track lets
+     content shrink). Keep a bounded height so a long list (e.g. Upgrade details)
+     scrolls inside the widget instead of stretching the page. */
+  @media (max-width: 1180px) { .sup-lower > ds-widget { height: 440px; } }
+  /* The widget body has 0 horizontal padding (list widgets self-inset via
+     ds-description-list); our custom body content isn't, so inset it 16px to
+     line up with the header title + footer link. */
+  .sup-lower ds-widget .ds-widget__body { padding-inline: var(--spacing-16, 16px); }
+  /* ds-description-list carries its own 16px container padding. Drop only the
+     HORIZONTAL padding so its rows line up with the body inset (header title /
+     tabs); keep the vertical padding for breathing room below the tab bar. */
+  .sup-lower ds-widget .ds-description-list { padding-inline: 0; }
+
+  /* Discussion threads */
+  .sup-thread { display: block; padding: var(--spacing-16, 16px) var(--spacing-12, 12px); margin-inline: calc(-1 * var(--spacing-12, 12px)); border-radius: var(--radius-md, 10px); border-top: 1px solid var(--uems-border-tertiary); text-decoration: none; color: inherit; transition: background-color .12s ease; }
+  .sup-thread:first-of-type { border-top: 0; }
+  .sup-thread:hover { text-decoration: none; background: var(--uems-bg-primary-hover); }
+  .sup-thread:hover .sup-thread__title { color: var(--uems-text-info); }
+  .sup-thread__head { display: flex; align-items: center; gap: var(--spacing-8, 8px); margin-bottom: 4px; }
+  .sup-thread__title { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sup-thread__excerpt { font-size: var(--font-size-13); line-height: 1.5; color: var(--uems-text-tertiary); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 6px; }
+  .sup-thread__meta { font-size: var(--font-size-12); color: var(--uems-text-quaternary); }
+
+  /* General details */
+  .sup-gd__tabs { margin-bottom: var(--spacing-8, 8px); flex: 0 0 auto; }
+  /* Tabs stay pinned at the top while only the rows below scroll vertically:
+     make the body a flex column that clips, and scroll the content region only.
+     (The tab bar's own horizontal-scroll behavior is left untouched.) */
+  #sup-gd-widget .ds-widget__body { display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+  #sup-gd-widget #sup-gd-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+
+  /* Upgrade details — stacked list */
+  .sup-upg__head { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-12, 12px); padding: var(--spacing-8, 8px) 0 var(--spacing-4, 4px); }
+  .sup-upg__lead { font-size: var(--font-size-13); line-height: 20px; font-weight: var(--font-weight-medium); color: var(--uems-text-tertiary); }
+  .sup-upg__total { font-size: var(--font-size-13); line-height: 20px; color: var(--uems-text-quaternary); }
+  .sup-upg__item { padding: var(--spacing-12, 12px) 0; border-top: 1px solid var(--uems-border-tertiary); }
+  .sup-upg__head + .sup-upg__item { border-top: 0; }   /* no divider directly under the caption */
+  .sup-upg__row1 { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-8, 8px); }
+  .sup-upg__meta { margin-top: 2px; font-size: var(--font-size-13); line-height: 20px; color: var(--uems-text-tertiary); }
+  .sup-upg__error { margin-top: var(--spacing-8, 8px); font-size: var(--font-size-12); line-height: 1.5; color: var(--uems-text-error); }
+  .sup-upg__error ds-text-link { margin-inline-start: var(--spacing-4, 4px); }
+</style>
+
+<section id="support-pop" aria-label="Support">
+  <div class="sup-page">
+
+    <!-- GET HELP — self-service resources -->
+    <section class="sup-section">
+      <div class="sup-section__head">
+        <h2 class="sup-section__title" data-sup="help.title">Get help</h2>
+        <span class="sup-section__sub" data-sup="help.sub">Self-service — resolve most issues without waiting</span>
+      </div>
+      <div class="sup-help" id="sup-help"></div>
+    </section>
+
+    <!-- CONTACT US — primary actions + secondary links -->
+    <section class="sup-section">
+      <div class="sup-section__head">
+        <h2 class="sup-section__title" data-sup="contact.title">Contact us</h2>
+        <span class="sup-section__sub" data-sup="contact.sub">Still stuck? Talk to our support team</span>
+      </div>
+      <div class="sup-contact-primary" id="sup-contact-primary"></div>
+      <div class="sup-links" id="sup-links"></div>
+    </section>
+
+    <!-- LOWER — community discussions + general details (ds-widget chrome) -->
+    <div class="sup-lower">
+      <ds-widget id="sup-comm-widget" type="list" title="User community discussions"
+                 show-drag="false" show-action="false"
+                 show-footer footer-label="Show all discussions" footer-href="#">
+        <ds-button slot="filter" variant="secondary-color" size="xsmall" prefix-icon="add" data-sup="comm.newtopic">New topic</ds-button>
+        <div id="sup-threads"></div>
+      </ds-widget>
+
+      <ds-widget id="sup-gd-widget" type="list" title="General details"
+                 show-drag="false" show-action="false" show-footer="false">
+        <ds-tab-bar-horizontal class="sup-gd__tabs" id="sup-gd-tabs" type="underline" active-id="product"></ds-tab-bar-horizontal>
+        <div id="sup-gd-body"></div>
+      </ds-widget>
+    </div>
+
+  </div>
+</section>
+
+<script>
+(function () {
+  const shellArea = () => window.ShellCtx && window.ShellCtx.shellArea;
+
+  const MSGS = {
+    en: {
+      'sup.help.title': 'Get help',
+      'sup.help.sub': 'Self-service — resolve most issues without waiting',
+      'sup.contact.title': 'Contact us',
+      'sup.contact.sub': 'Still stuck? Talk to our support team',
+      'sup.comm.title': 'User community discussions',
+      'sup.comm.newtopic': 'New topic',
+      'sup.comm.browseall': 'Show all discussions',
+      'sup.gd.title': 'General details',
+      'sup.online': 'Online',
+      // Get help cards
+      'sup.help.0.title': 'Knowledge base',
+      'sup.help.0.desc': 'Guides, docs and fixes.',
+      'sup.help.1.title': 'FAQ',
+      'sup.help.1.desc': 'Answers to common questions.',
+      'sup.help.2.title': "What's new",
+      'sup.help.2.desc': 'Latest releases and features.',
+      'sup.help.3.title': 'User community',
+      'sup.help.3.desc': 'Ask peers and share fixes.',
+      // Contact — primary
+      'sup.cp.0.title': 'Live chat',
+      'sup.cp.0.desc': 'Chat with a support engineer in real time.',
+      'sup.cp.1.title': 'Request support',
+      'sup.cp.1.desc': 'Raise a ticket — typical first response under 4 hrs.',
+      'sup.cp.2.title': 'Toll free',
+      'sup.cp.2.desc': 'Call us anytime — regional numbers for 14 countries.',
+      // Contact — secondary links
+      'sup.cs.0': 'Upload logs',
+      'sup.cs.1': 'Need features',
+      'sup.cs.2': 'Data breach notification',
+      'sup.cs.3': 'Testimonials',
+      'sup.cs.4': 'Blog',
+      // Community tags
+      'sup.tag.announcement': 'Announcement',
+      'sup.tag.problem': 'Problem',
+      'sup.tag.question': 'Question',
+      // Threads
+      'sup.th.0.title': 'ManageEngine recognized in the 2026 Gartner® Magic Quadrant™ for DEX Tools',
+      'sup.th.0.excerpt': "We're pleased to announce that ManageEngine has been recognized in the 2026 Gartner® Magic Quadrant™ for Digital Employee Experience…",
+      'sup.th.1.title': 'Endpoint Central 11.5.2622.05 — deployment task not starting',
+      'sup.th.1.excerpt': "I updated to 11.5.2622.05. I configure immediate deployment to clients but the task doesn't start anymore. After a day it's still queued…",
+      'sup.th.2.title': 'Still getting "Network error occurred with error code : 2" on installs?',
+      'sup.th.2.excerpt': "I heard the bug fix that went out today was supposed to resolve this, but it's still happening to me. Anyone else seeing this?",
+      'sup.th.3.title': 'New feature releases in Endpoint Central and Vulnerability Manager Plus!',
+      'sup.th.3.excerpt': "We've introduced new features — threat prioritization and risk scoring. Every vulnerability is now scored so you can focus first…",
+      'sup.th.4.title': 'Is there a report for Remediated/Resolved Vulnerabilities (not just Applied Patches)?',
+      'sup.th.4.excerpt': 'Looking for evidence-style vulnerability reporting in EC. Currently we can export reports showing patches applied to endpoints…',
+      // General details — tabs
+      'sup.gdtab.product': 'Product info',
+      'sup.gdtab.system': 'System info',
+      'sup.gdtab.installation': 'Installation',
+      'sup.gdtab.database': 'Database',
+      'sup.gdtab.upgrade': 'Upgrade details',
+      // General details — key/value rows
+      'sup.gd.product.0': 'Product name',
+      'sup.gd.product.1': 'Architecture',
+      'sup.gd.product.2': 'Build version',
+      'sup.gd.product.3': 'Vendor',
+      'sup.gd.product.4': 'Agent (Win)',
+      'sup.gd.product.5': 'Agent (Mac)',
+      'sup.gd.product.6': 'Agent (Linux)',
+      'sup.gd.product.7': 'Distribution server version',
+      'sup.gd.system.0': 'Operating system',
+      'sup.gd.system.1': 'CPU',
+      'sup.gd.system.2': 'Memory',
+      'sup.gd.system.3': 'Free disk',
+      'sup.gd.system.4': 'Hostname',
+      'sup.gd.system.5': 'Server time zone',
+      'sup.gd.installation.0': 'Installed path',
+      'sup.gd.installation.1': 'Installed on',
+      'sup.gd.installation.2': 'Server port',
+      'sup.gd.installation.3': 'Web server',
+      'sup.gd.installation.4': 'Run as',
+      'sup.gd.database.0': 'Database type',
+      'sup.gd.database.1': 'DB version',
+      'sup.gd.database.2': 'DB size',
+      'sup.gd.database.3': 'DB host',
+      'sup.gd.database.4': 'DB port',
+      // Upgrade details (list)
+      'sup.upg.lead': 'Recent upgrades',
+      'sup.upg.total': 'Total',
+      'sup.gd.status.success': 'Success',
+      'sup.gd.status.failed': 'Failed',
+      'sup.upg.viewlogs': 'View logs',
+      'sup.upg.err.0': 'Update failed during database migration. Rolled back to build 114252210.',
+    },
+    ar: {
+      'sup.help.title': 'احصل على المساعدة',
+      'sup.help.sub': 'خدمة ذاتية — حُلّ معظم المشكلات دون انتظار',
+      'sup.contact.title': 'تواصل معنا',
+      'sup.contact.sub': 'ما زلت عالقًا؟ تحدّث مع فريق الدعم',
+      'sup.comm.title': 'مناقشات مجتمع المستخدمين',
+      'sup.comm.newtopic': 'موضوع جديد',
+      'sup.comm.browseall': 'عرض كل المناقشات',
+      'sup.gd.title': 'تفاصيل عامة',
+      'sup.online': 'متصل',
+      'sup.help.0.title': 'قاعدة المعرفة',
+      'sup.help.0.desc': 'أدلة ووثائق وحلول.',
+      'sup.help.1.title': 'الأسئلة الشائعة',
+      'sup.help.1.desc': 'إجابات على الأسئلة الشائعة.',
+      'sup.help.2.title': 'ما الجديد',
+      'sup.help.2.desc': 'أحدث الإصدارات والميزات.',
+      'sup.help.3.title': 'مجتمع المستخدمين',
+      'sup.help.3.desc': 'اسأل الأقران وشارك الحلول.',
+      'sup.cp.0.title': 'الدردشة المباشرة',
+      'sup.cp.0.desc': 'تحدّث مع مهندس دعم في الوقت الفعلي.',
+      'sup.cp.1.title': 'طلب الدعم',
+      'sup.cp.1.desc': 'افتح تذكرة — أول رد عادةً خلال أقل من 4 ساعات.',
+      'sup.cp.2.title': 'الاتصال المجاني',
+      'sup.cp.2.desc': 'اتصل بنا في أي وقت — أرقام إقليمية لـ 14 دولة.',
+      'sup.cs.0': 'تحميل السجلات',
+      'sup.cs.1': 'اقتراح ميزات',
+      'sup.cs.2': 'الإبلاغ عن خرق البيانات',
+      'sup.cs.3': 'آراء العملاء',
+      'sup.cs.4': 'المدونة',
+      'sup.tag.announcement': 'إعلان',
+      'sup.tag.problem': 'مشكلة',
+      'sup.tag.question': 'سؤال',
+      'sup.th.0.title': 'تم إدراج ManageEngine في تقرير Gartner® Magic Quadrant™ لعام 2026 لأدوات DEX',
+      'sup.th.0.excerpt': 'يسرّنا الإعلان عن إدراج ManageEngine في تقرير Gartner® Magic Quadrant™ لعام 2026 لتجربة الموظف الرقمية…',
+      'sup.th.1.title': 'Endpoint Central 11.5.2622.05 — مهمة النشر لا تبدأ',
+      'sup.th.1.excerpt': 'قمت بالتحديث إلى 11.5.2622.05. أعددت النشر الفوري للأجهزة لكن المهمة لم تعد تبدأ. وبعد يوم لا تزال في قائمة الانتظار…',
+      'sup.th.2.title': 'ما زلت أحصل على "حدث خطأ في الشبكة برمز الخطأ: 2" أثناء التثبيت؟',
+      'sup.th.2.excerpt': 'سمعت أن إصلاح اليوم كان من المفترض أن يحل هذا، لكنه ما زال يحدث لي. هل يواجه أحد غيري ذلك؟',
+      'sup.th.3.title': 'ميزات جديدة في Endpoint Central وVulnerability Manager Plus!',
+      'sup.th.3.excerpt': 'قدّمنا ميزات جديدة — تحديد أولويات التهديدات وتسجيل المخاطر. تُسجَّل الآن كل ثغرة كي تركّز أولًا…',
+      'sup.th.4.title': 'هل يوجد تقرير للثغرات المعالَجة/المحلولة (وليس فقط التصحيحات المطبَّقة)؟',
+      'sup.th.4.excerpt': 'أبحث عن تقارير ثغرات إثباتية في EC. حاليًا يمكننا تصدير تقارير تُظهر التصحيحات المطبَّقة على الأجهزة…',
+      'sup.gdtab.product': 'معلومات المنتج',
+      'sup.gdtab.system': 'معلومات النظام',
+      'sup.gdtab.installation': 'التثبيت',
+      'sup.gdtab.database': 'قاعدة البيانات',
+      'sup.gdtab.upgrade': 'تفاصيل الترقية',
+      'sup.gd.product.0': 'اسم المنتج',
+      'sup.gd.product.1': 'البنية',
+      'sup.gd.product.2': 'إصدار البناء',
+      'sup.gd.product.3': 'المورّد',
+      'sup.gd.product.4': 'الوكيل (ويندوز)',
+      'sup.gd.product.5': 'الوكيل (ماك)',
+      'sup.gd.product.6': 'الوكيل (لينكس)',
+      'sup.gd.product.7': 'إصدار خادم التوزيع',
+      'sup.gd.system.0': 'نظام التشغيل',
+      'sup.gd.system.1': 'المعالج',
+      'sup.gd.system.2': 'الذاكرة',
+      'sup.gd.system.3': 'المساحة الحرة',
+      'sup.gd.system.4': 'اسم المضيف',
+      'sup.gd.system.5': 'المنطقة الزمنية',
+      'sup.gd.installation.0': 'مسار التثبيت',
+      'sup.gd.installation.1': 'تاريخ التثبيت',
+      'sup.gd.installation.2': 'منفذ الخادم',
+      'sup.gd.installation.3': 'خادم الويب',
+      'sup.gd.installation.4': 'التشغيل كـ',
+      'sup.gd.database.0': 'نوع قاعدة البيانات',
+      'sup.gd.database.1': 'إصدار قاعدة البيانات',
+      'sup.gd.database.2': 'حجم قاعدة البيانات',
+      'sup.gd.database.3': 'مضيف قاعدة البيانات',
+      'sup.gd.database.4': 'منفذ قاعدة البيانات',
+      'sup.upg.lead': 'الترقيات الأخيرة',
+      'sup.upg.total': 'الإجمالي',
+      'sup.gd.status.success': 'ناجح',
+      'sup.gd.status.failed': 'فشل',
+      'sup.upg.viewlogs': 'عرض السجلات',
+      'sup.upg.err.0': 'فشل التحديث أثناء ترحيل قاعدة البيانات. تمت الاستعادة إلى البناء 114252210.',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  const HELP = [
+    { icon: 'book-open' },
+    { icon: 'help-circle' },
+    { icon: 'rocket' },
+    { icon: 'users' },
+  ];
+  const CONTACT_PRIMARY = [
+    { icon: 'message-chat-square', online: true },
+    { icon: 'ticket' },
+    { icon: 'calling' },
+  ];
+  const CONTACT_LINKS = [
+    { icon: 'file-upload' },
+    { icon: 'thumbs-up' },
+    { icon: 'shield' },
+    { icon: 'star' },
+    { icon: 'blog-write' },
+  ];
+  const TAG = {
+    announcement: { key: 'sup.tag.announcement', state: 'important' },
+    problem: { key: 'sup.tag.problem', state: 'critical' },
+    question: { key: 'sup.tag.question', state: 'acknowledge' },
+  };
+  const THREADS = [
+    { tag: 'announcement', author: 'ManageEngine Team', date: 'Jun 25, 2026' },
+    { tag: 'problem', author: 'm.keller', date: 'Jun 23, 2026' },
+    { tag: 'question', author: 'd.osei', date: 'Jun 23, 2026' },
+    { tag: 'announcement', author: 'ManageEngine Team', date: 'Jun 24, 2026' },
+    { tag: 'question', author: 's.varma', date: 'Jun 23, 2026' },
+  ];
+  const GD_TABS = [
+    { id: 'product', key: 'sup.gdtab.product' },
+    { id: 'system', key: 'sup.gdtab.system' },
+    { id: 'installation', key: 'sup.gdtab.installation' },
+    { id: 'database', key: 'sup.gdtab.database' },
+    { id: 'upgrade', key: 'sup.gdtab.upgrade' },
+  ];
+  const GD_DETAILS = {
+    product: [{ key: 'sup.gd.product.0', value: 'ManageEngine Endpoint Central 11' }, { key: 'sup.gd.product.1', value: '64-bit' }, { key: 'sup.gd.product.2', value: '11.5.2613.04' }, { key: 'sup.gd.product.3', value: 'ZOHO Corp.' }, { key: 'sup.gd.product.4', value: '11.5.2613.04.W' }, { key: 'sup.gd.product.5', value: '11.5.2613.01.M' }, { key: 'sup.gd.product.6', value: '11.5.2613.04.L' }, { key: 'sup.gd.product.7', value: '11.5.2613.04' }],
+    system: [{ key: 'sup.gd.system.0', value: 'Windows Server 2022' }, { key: 'sup.gd.system.1', value: 'Intel Xeon E5 · 8 cores' }, { key: 'sup.gd.system.2', value: '32 GB' }, { key: 'sup.gd.system.3', value: '412 GB' }, { key: 'sup.gd.system.4', value: 'EC-PRIMARY-01' }, { key: 'sup.gd.system.5', value: '(GMT+05:30) IST' }],
+    installation: [{ key: 'sup.gd.installation.0', value: 'C:\\Program Files\\ManageEngine\\Endpoint Central' }, { key: 'sup.gd.installation.1', value: '12 Jan 2026' }, { key: 'sup.gd.installation.2', value: '8383 (HTTPS)' }, { key: 'sup.gd.installation.3', value: 'Apache · TLS 1.3' }, { key: 'sup.gd.installation.4', value: 'Service (Local System)' }],
+    database: [{ key: 'sup.gd.database.0', value: 'PostgreSQL' }, { key: 'sup.gd.database.1', value: '15.4' }, { key: 'sup.gd.database.2', value: '6.8 GB' }, { key: 'sup.gd.database.3', value: 'localhost' }, { key: 'sup.gd.database.4', value: '5432' }],
+  };
+  const UPGRADE_TOTAL = 58;
+  const UPGRADES = [
+    { id: 'u1', build: '115261610', type: 'Hotfix', date: 'Jun 10, 2026 06:32 AM', status: 'success' },
+    { id: 'u2', build: '115261304', type: 'Hotfix', date: 'Apr 14, 2026 02:58 PM', status: 'success' },
+    { id: 'u3', build: '115260013', type: 'Service Pack', date: 'Jan 26, 2026 09:58 PM', status: 'success' },
+    { id: 'u4', build: '114252810', type: 'Hotfix', date: 'Oct 13, 2025 12:32 PM', status: 'failed', errorKey: 'sup.upg.err.0' },
+    { id: 'u5', build: '114252210', type: 'Quickfix', date: 'Sep 25, 2025 06:54 PM', status: 'success' },
+    { id: 'u6', build: '114251908', type: 'Hotfix', date: 'Aug 19, 2025 11:14 AM', status: 'success' },
+    { id: 'u7', build: '114251502', type: 'Service Pack', date: 'Jul 07, 2025 03:41 PM', status: 'success' },
+    { id: 'u8', build: '114250110', type: 'Hotfix', date: 'Jun 02, 2025 09:20 AM', status: 'success' },
+    { id: 'u9', build: '114240815', type: 'Quickfix', date: 'Apr 28, 2025 05:07 PM', status: 'success' },
+    { id: 'u10', build: '114240311', type: 'Hotfix', date: 'Mar 17, 2025 10:52 AM', status: 'success' },
+    { id: 'u11', build: '114239907', type: 'Service Pack', date: 'Feb 05, 2025 08:33 PM', status: 'success' },
+    { id: 'u12', build: '114239504', type: 'Hotfix', date: 'Jan 09, 2025 01:15 PM', status: 'success' },
+  ];
+  const UPG_STATUS = { success: { state: 'success', icon: 'circle-tick', key: 'sup.gd.status.success' }, failed: { state: 'critical', icon: 'close', key: 'sup.gd.status.failed' } };
+
+  function buildHelp() {
+    const box = document.getElementById('sup-help'); if (!box) return;
+    box.innerHTML = HELP.map((c, i) => `
+      <a class="sup-cardlink" href="#" aria-label="${esc(t('sup.help.' + i + '.title'))}">
+        <ds-container variant="outline" radius="lg" padding="lg">
+          <div class="sup-rescard">
+            <div class="sup-chip sup-chip--sm"><ds-icon name="${c.icon}" size="20"></ds-icon></div>
+            <div>
+              <div class="sup-rescard__title">${esc(t('sup.help.' + i + '.title'))}</div>
+              <div class="sup-rescard__desc">${esc(t('sup.help.' + i + '.desc'))}</div>
+            </div>
+          </div>
+        </ds-container>
+      </a>`).join('');
+  }
+  function buildContact() {
+    const p = document.getElementById('sup-contact-primary');
+    if (p) p.innerHTML = CONTACT_PRIMARY.map((c, i) => `
+      <a class="sup-cardlink" href="#" aria-label="${esc(t('sup.cp.' + i + '.title'))}">
+        <ds-container variant="outline" radius="lg" padding="lg">
+          <div class="sup-cta">
+            <div class="sup-chip sup-chip--lg"><ds-icon name="${c.icon}" size="24"></ds-icon></div>
+            <div>
+              <div class="sup-cta__title">${esc(t('sup.cp.' + i + '.title'))}</div>
+              <div class="sup-cta__desc">${esc(t('sup.cp.' + i + '.desc'))}</div>
+            </div>
+            ${c.online ? `<ds-tag class="sup-cta__badge" variant="success" size="medium" leading="status" status="success" label="${esc(t('sup.online'))}" show-close="false"></ds-tag>` : ''}
+          </div>
+        </ds-container>
+      </a>`).join('');
+    const l = document.getElementById('sup-links');
+    if (l) l.innerHTML = CONTACT_LINKS.map((c, i) => `<a class="sup-link" href="#"><ds-icon name="${c.icon}" size="16"></ds-icon>${esc(t('sup.cs.' + i))}</a>`).join('');
+  }
+  function buildThreads() {
+    const box = document.getElementById('sup-threads'); if (!box) return;
+    box.innerHTML = THREADS.map((x, i) => {
+      const tag = TAG[x.tag] || TAG.question;
+      return `
+      <a class="sup-thread" href="#">
+        <div class="sup-thread__head">
+          <span class="sup-thread__title">${esc(t('sup.th.' + i + '.title'))}</span>
+          <ds-badge variant="subtle" state="${tag.state}" size="small" shape="rounded">${esc(t(tag.key))}</ds-badge>
+        </div>
+        <div class="sup-thread__excerpt">${esc(t('sup.th.' + i + '.excerpt'))}</div>
+        <div class="sup-thread__meta">${esc(x.author)} · ${esc(x.date)}</div>
+      </a>`;
+    }).join('');
+  }
+  function renderGD(tab) {
+    const box = document.getElementById('sup-gd-body'); if (!box) return;
+    if (tab === 'upgrade') {
+      const items = UPGRADES.map((u) => {
+        const st = UPG_STATUS[u.status] || UPG_STATUS.success;
+        const err = (u.status === 'failed' && u.errorKey)
+          ? `<div class="sup-upg__error">${esc(t(u.errorKey))} <ds-text-link href="#" variant="primary" size="small">${esc(t('sup.upg.viewlogs'))}</ds-text-link></div>`
+          : '';
+        return `
+        <div class="sup-upg__item">
+          <div class="sup-upg__row1">
+            <ds-text-link href="#" variant="primary" size="medium" trailing-icon="link-square">${esc(u.build)}</ds-text-link>
+            <ds-badge variant="subtle" state="${st.state}" size="medium" shape="rounded" icon="${st.icon}">${esc(t(st.key))}</ds-badge>
+          </div>
+          <div class="sup-upg__meta">${esc(u.type)} · ${esc(u.date)}</div>
+          ${err}
+        </div>`;
+      }).join('');
+      box.innerHTML =
+        `<div class="sup-upg__head">
+           <span class="sup-upg__lead">${esc(t('sup.upg.lead'))}</span>
+           <span class="sup-upg__total">${esc(t('sup.upg.total'))}: ${UPGRADE_TOTAL}</span>
+         </div>${items}`;
+    } else {
+      const rows = GD_DETAILS[tab] || GD_DETAILS.product;
+      box.innerHTML = '<ds-description-list id="sup-gd-dl" orientation="horizontal"></ds-description-list>';
+      const dl = document.getElementById('sup-gd-dl');
+      if (dl) dl.items = rows.map((r) => ({ term: t(r.key), description: r.value }));
+    }
+  }
+  function applyStrings() {
+    const p = document.getElementById('support-pop'); if (!p) return;
+    p.querySelectorAll('[data-sup]').forEach((el) => {
+      const k = el.getAttribute('data-sup');
+      if (MSGS.en['sup.' + k] == null) return;
+      const s = t('sup.' + k);
+      if (el.tagName === 'DS-BUTTON' || el.tagName === 'DS-TEXT-LINK') { (el.querySelector('.ds-button__label') || el.querySelector('a > span') || el).textContent = s; }
+      else el.textContent = s;
+    });
+    const gt = document.getElementById('sup-gd-tabs');
+    if (gt) gt.items = GD_TABS.map((x) => ({ id: x.id, label: t(x.key) }));
+    /* ds-widget header title + footer label are attributes, not data-sup nodes. */
+    const cw = document.getElementById('sup-comm-widget');
+    if (cw) { cw.setAttribute('title', t('sup.comm.title')); cw.setAttribute('footer-label', t('sup.comm.browseall')); }
+    const gw = document.getElementById('sup-gd-widget');
+    if (gw) gw.setAttribute('title', t('sup.gd.title'));
+  }
+  let _wired = false;
+  let _gdTab = 'product';
+  function build() {
+    buildHelp();
+    buildContact();
+    buildThreads();
+    applyStrings();
+    renderGD(_gdTab);
+    if (!_wired) {
+      _wired = true;
+      const gt = document.getElementById('sup-gd-tabs');
+      gt && gt.addEventListener('ds-tab-change', (e) => { _gdTab = (e.detail && e.detail.id) || 'product'; renderGD(_gdTab); });
+    }
+  }
+  function show() {
+    const sa = shellArea(); if (!sa) return;
+    sa.classList.remove('set-open', 'zia-open');
+    sa.classList.add('support-open');
+    build();
+  }
+  function hide() { const sa = shellArea(); if (sa) sa.classList.remove('support-open'); }
+  function onLang() { const sa = shellArea(); if (sa && sa.classList.contains('support-open')) build(); }
+  document.addEventListener('shell:langchange', onLang);
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers.support = { show, hide, build, onLang };
+})();
+</script>
+</template>
+
+<script>
+/* ── STANDALONE HARNESS — runs ONLY when opened directly. ── */
+(function () {
+  const KEY = 'support';
+  const host = document.createElement('div'); host.className = 'shell-area sa-host'; document.body.appendChild(host);
+  let lang = 'en';
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellCtx = window.ShellCtx || { get shellArea() { return host; }, get lang() { return lang; }, setActiveIcon() {} };
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers[KEY] && window.ShellDrawers[KEY].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

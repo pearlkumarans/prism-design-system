@@ -1,0 +1,245 @@
+/* =============================================================================
+   ds-rich-text-editor / .ds-rte
+   Visual chrome + minimal contenteditable surface. Pair with a real editor
+   runtime (ProseMirror, Lexical, TipTap, Slate) for production use.
+   ============================================================================= */
+
+:host { display: block; font-family: var(--font-family-sans); }
+
+.ds-rte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  width: 100%;
+}
+
+.ds-rte__label {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-secondary);            /* spec: Label = Text-Secondary */
+}
+
+.ds-rte__frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  /* Size container so the toolbar can collapse responsively to the editor's
+     own width (works when the editor is resized via the grip, not just the
+     viewport). */
+  container-type: inline-size;
+  border: 1px solid var(--uems-border-secondary);
+  border-radius: var(--radius-md);
+  background: var(--uems-bg-base);
+  overflow: hidden;
+  /* Spec: reference width ~480px; fills its container (not fixed). On narrow
+     widths the Fixed toolbar collapses into the More menu (responsive). */
+  width: 100%;
+  min-width: 280px;
+  min-height: 96px;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              box-shadow var(--duration-fast) var(--ease-standard);
+}
+/* Focus: 2px Border-Accent-Focus + soft Blue-Shadow (per live). */
+.ds-rte:focus-within .ds-rte__frame {
+  border-color: var(--uems-border-accent-focus);
+  border-width: 1px;
+  box-shadow: 0 2px 4px rgba(44, 102, 221, 0.2);
+}
+/* Error: 1px Border-Error + soft Error-Shadow. */
+.ds-rte--error .ds-rte__frame {
+  border-color: var(--uems-border-error);
+  box-shadow: 0 2px 4px rgba(232, 90, 75, 0.2);
+}
+.ds-rte--disabled .ds-rte__frame,
+.ds-rte--readonly .ds-rte__frame {
+  border-color: var(--uems-border-disabled);
+}
+/* Disabled: token-driven surface + text (BG-Disabled / Text-Disabled), NO opacity. */
+.ds-rte--disabled .ds-rte__frame { border-color: var(--uems-border-disabled); }
+.ds-rte--disabled .ds-rte__body {
+  background: var(--uems-bg-disabled);
+  color: var(--uems-text-disabled);
+  cursor: not-allowed;
+}
+
+/* ---- Fixed toolbar --------------------------------------------------- */
+.ds-rte__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4) var(--spacing-8);
+  background: var(--uems-bg-primary);
+  border-bottom: 1px solid var(--uems-border-secondary);
+  flex-shrink: 0;
+}
+.ds-rte__toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+.ds-rte__toolbar-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--uems-border-secondary);
+  margin: 0 var(--spacing-4);
+}
+.ds-rte__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--uems-text-secondary);
+  cursor: pointer;
+}
+.ds-rte__btn:hover { background: var(--uems-bg-secondary-hover); color: var(--uems-text-primary); }
+.ds-rte__btn:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+.ds-rte__btn[aria-pressed="true"] {
+  background: var(--uems-bg-accent-primary);
+  color: var(--uems-text-accent-link);
+}
+.ds-rte__select {
+  height: 28px;
+  padding: 0 var(--spacing-8);
+  border: 0;
+  background: transparent;
+  color: var(--uems-text-primary);
+  font-size: var(--font-size-13);
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.ds-rte__select:hover { background: var(--uems-bg-secondary-hover); }
+
+/* ---- Responsive toolbar --------------------------------------------- */
+/* The frame is a size container; when it gets narrow (resized via the grip or a
+   tight layout) the secondary groups (lists · align · insert) collapse into the
+   More (⋯) button, which toggles them open as a wrapped second row. */
+/* More (⋯) is always present in the fixed toolbar (overflow affordance, per
+   spec). When the editor is narrow it also doubles as the toggle that opens the
+   collapsed groups. */
+
+@container (max-width: 480px) {
+  .ds-rte__toolbar { flex-wrap: nowrap; }
+  .ds-rte__opt { display: none !important; }
+
+  .ds-rte--toolbar-expanded .ds-rte__toolbar { flex-wrap: wrap; }
+  .ds-rte--toolbar-expanded .ds-rte__opt { display: inline-flex !important; }
+  .ds-rte--toolbar-expanded .ds-rte__btn--more {
+    background: var(--uems-bg-accent-primary);
+    color: var(--uems-text-accent-link);
+  }
+}
+
+/* ---- Body ----------------------------------------------------------- */
+.ds-rte__body {
+  flex: 1 1 auto;
+  padding: var(--spacing-16);
+  min-height: 160px;
+  font-size: var(--font-size-14);
+  color: var(--uems-text-primary);
+  line-height: 20px;                              /* 14/20 per spec */
+  outline: none;
+  /* Native `resize: vertical` produced a gripper that collided with the frame's
+     rounded border and only resized one axis. Replaced by .ds-rte__resize-grip. */
+  resize: none;
+  overflow: auto;
+}
+
+/* ---- Resize grip — drag the bottom-right corner (both axes) ---------- */
+.ds-rte__resize-grip {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uems-text-tertiary, var(--uems-text-quaternary));
+  cursor: nwse-resize;
+  opacity: 0.65;
+  z-index: 2;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ds-rte__resize-grip:hover { opacity: 1; }
+.ds-rte__resize-grip svg { width: 12px; height: 12px; display: block; pointer-events: none; }
+/* No drag-resize when the editor can't be edited. */
+.ds-rte--disabled .ds-rte__resize-grip,
+.ds-rte--readonly .ds-rte__resize-grip { display: none; }
+.ds-rte__body:empty::before {
+  content: attr(data-placeholder);
+  color: var(--uems-text-placeholder, var(--uems-text-tertiary));
+  pointer-events: none;
+}
+.ds-rte__body h1 { font-size: 24px; font-weight: var(--font-weight-semibold); margin: 0.5em 0; }
+.ds-rte__body h2 { font-size: 20px; font-weight: var(--font-weight-semibold); margin: 0.5em 0; }
+.ds-rte__body h3 { font-size: 16px; font-weight: var(--font-weight-semibold); margin: 0.5em 0; }
+.ds-rte__body ul, .ds-rte__body ol { padding-inline-start: 1.5em; margin: 0.5em 0; }
+.ds-rte__body a { color: var(--uems-text-accent-link); text-decoration: underline; }
+
+.ds-rte--readonly .ds-rte__body {
+  background: var(--uems-bg-disabled-subtle);    /* Read Only surface #F0F2F5 */
+  resize: none;
+}
+
+/* ---- Helper row -----------------------------------------------------
+   The helper/validation + counter row is the shared <ds-field-helper>
+   ("Form Field Helper Row") component — styled by field-helper.css. No
+   RTE-specific helper styling here; state colour + icon come from it. */
+
+/* ---- Hidden toolbar variant ----------------------------------------- */
+.ds-rte--toolbar-hidden .ds-rte__toolbar { display: none; }
+
+/* ---- Floating toolbar ----------------------------------------------- */
+/* Compact popover shown only on a text selection, anchored at the selection
+   (positioned by JS). A leading drag handle (⋮⋮ move icon) lets the user move
+   it; there is no pointer arrow. */
+.ds-rte__floating {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+  background: var(--uems-bg-base);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg, 0 8px 24px rgba(0,0,0,0.16));
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+/* Drag handle — the move grip; dragging it repositions the toolbar. */
+.ds-rte__floating-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 28px;
+  flex: 0 0 auto;
+  color: var(--uems-text-tertiary, var(--uems-text-quaternary));
+  cursor: grab;
+  touch-action: none;
+}
+.ds-rte__floating-handle:active { cursor: grabbing; }
+.ds-rte__floating-handle svg { width: 16px; height: 16px; pointer-events: none; }
+/* Shown only while there is a text selection — JS toggles --visible and
+   positions the bubble at the selection (and lets the user drag it). It no
+   longer reserves space at the top of the body, so it never blocks content. */
+.ds-rte__floating--visible {
+  opacity: 1;
+  pointer-events: auto;
+}

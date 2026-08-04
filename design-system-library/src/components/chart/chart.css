@@ -1,0 +1,324 @@
+/* =============================================================================
+   <ds-chart> — self-contained SVG chart renderer.
+   Bare container: width 100%, no padding / border / surface (the host widget
+   owns chrome). All colors come from --uems-* / --spacing-* / --radius-* vars
+   so the chart re-themes across light/dark/night/green.
+   ============================================================================= */
+
+ds-chart {
+  display: block;
+  width: 100%;
+}
+
+.ds-chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16, 16px);
+  width: 100%;
+  position: relative;            /* tooltip anchor */
+  font-family: var(--font-family-sans);
+}
+
+/* Wrapper around the SVG — the flex item that actually grows/shrinks. */
+.ds-chart__plot-wrap { display: block; width: 100%; min-width: 0; }
+.ds-chart__plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  /* The chart mirrors RTL itself via coordinate math (the `rtl` attr), and its
+     text-anchor values assume LTR anchor semantics. Force LTR here so an RTL
+     ancestor (e.g. a dir="rtl" widget) can't flip `text-anchor` and shove the
+     axis labels into the plot. */
+  direction: ltr;
+}
+/* Each label's content still orders correctly (Arabic categories shape RTL,
+   numeric ticks stay LTR) while the anchor reference stays coordinate-based. */
+.ds-chart__plot text { unicode-bidi: plaintext; }
+
+/* ---- Legend placement (stack direction + order) ------------------------- */
+.ds-chart--legend-bottom { flex-direction: column; }
+.ds-chart--legend-top    { flex-direction: column; }
+.ds-chart--legend-top .ds-chart__legend    { order: -1; }
+.ds-chart--legend-left   { flex-direction: row; }
+.ds-chart--legend-left .ds-chart__legend   { order: -1; flex-direction: column; align-self: center; }
+.ds-chart--legend-right  { flex-direction: row; }
+.ds-chart--legend-right .ds-chart__legend  { flex-direction: column; align-self: center; }
+/* Vertical (left/right) legends stack in a single column, left-aligned — a
+   wrapping/centered layout produces ragged "zigzag" rows. */
+.ds-chart--legend-left .ds-chart__legend,
+.ds-chart--legend-right .ds-chart__legend { flex-wrap: nowrap; align-items: flex-start; justify-content: flex-start; }
+.ds-chart--legend-left .ds-chart__plot-wrap,
+.ds-chart--legend-right .ds-chart__plot-wrap { flex: 1 1 auto; min-width: 0; }
+/* Round charts (pie/donut) with a side legend: keep the plot SQUARE and group it
+   with the legend, centered — otherwise a wide card spreads them far apart. */
+.ds-chart--donut.ds-chart--legend-right, .ds-chart--pie.ds-chart--legend-right,
+.ds-chart--donut.ds-chart--legend-left,  .ds-chart--pie.ds-chart--legend-left { justify-content: center; gap: var(--spacing-24, 24px); }
+.ds-chart--donut.ds-chart--legend-right .ds-chart__plot-wrap, .ds-chart--pie.ds-chart--legend-right .ds-chart__plot-wrap,
+.ds-chart--donut.ds-chart--legend-left .ds-chart__plot-wrap,  .ds-chart--pie.ds-chart--legend-left .ds-chart__plot-wrap { flex: 0 1 auto; width: auto; aspect-ratio: 1 / 1; }
+/* fit="fill" — the chart fills its (host-defined) height instead of keeping the
+   natural aspect; the plot stretches to the remaining box. */
+/* fit="fill" — plot fills its box, stretching to it (cartesian charts). height
+   stays auto so its natural aspect still drives the (max-height-capped) row, but
+   min-height:100% forces it to grow to the card — SVGs don't reliably grow via
+   flex-grow alone. (max-height:100% from .md-grid keeps it from overflowing.) */
+/* The wrapper is the flex item that fills the card; the SVG then fills the
+   wrapper (height:100% of a definite div works; on the SVG directly it doesn't). */
+.ds-chart--fit-fill, .ds-chart--fit-contain { height: 100%; }
+.ds-chart--fit-fill .ds-chart__plot-wrap,
+.ds-chart--fit-contain .ds-chart__plot-wrap { flex: 1 1 auto; min-height: 0; }
+.ds-chart--fit-fill .ds-chart__plot,
+.ds-chart--fit-contain .ds-chart__plot { height: 100%; min-height: 0; }
+
+/* =============================================================================
+   Series colors — fill (bars/slices/funnel) + stroke (lines/dots/gauge).
+   Cycle 1..7 maps to the categorical chart palette.
+   ============================================================================= */
+.ds-chart__series-1 { --ds-chart-color: var(--uems-bg-chart-blue-primary); }
+.ds-chart__series-2 { --ds-chart-color: var(--uems-bg-chart-green-primary); }
+.ds-chart__series-3 { --ds-chart-color: var(--uems-bg-chart-orange-primary); }
+.ds-chart__series-4 { --ds-chart-color: var(--uems-bg-chart-charoite-primary); }
+.ds-chart__series-5 { --ds-chart-color: var(--uems-bg-chart-red-primary); }
+.ds-chart__series-6 { --ds-chart-color: var(--uems-bg-chart-yellow-primary); }
+.ds-chart__series-7 { --ds-chart-color: var(--uems-bg-chart-grey-primary); }
+
+/* Funnel — per Figma (Charts / Part-to-whole → Shape=Funnel), stages use a
+   single-hue sequential ramp (lightest at the widest/top stage → darkest at
+   the narrowest/bottom stage), not the 7-hue categorical palette above. */
+.ds-chart__funnel-1 { --ds-chart-color: var(--uems-bg-chart-yellow-senary); }
+.ds-chart__funnel-2 { --ds-chart-color: var(--uems-bg-chart-yellow-quinary); }
+.ds-chart__funnel-3 { --ds-chart-color: var(--uems-bg-chart-yellow-quaternary); }
+.ds-chart__funnel-4 { --ds-chart-color: var(--uems-bg-chart-yellow-tertiary); }
+.ds-chart__funnel-5 { --ds-chart-color: var(--uems-bg-chart-yellow-secondary); }
+.ds-chart__funnel-6 { --ds-chart-color: var(--uems-bg-chart-yellow-primary); }
+
+.ds-chart__bar,
+.ds-chart__slice,
+.ds-chart__funnel { fill: var(--ds-chart-color); }
+
+/* stroke-width is counter-scaled (like the fonts) so the line renders ~2px at
+   any chart size — WITHOUT non-scaling-stroke, which would break the pathLength
+   draw animation into dashes. */
+.ds-chart__line { stroke: var(--ds-chart-color); fill: none; stroke-width: var(--ds-chart-stroke, 2px); }
+/* Dot radius is counter-scaled too (CSS `r` overrides the r="3" attr), so the
+   marker stays a light ~3px regardless of chart size — matching the 2px line. */
+.ds-chart__dot  { fill: var(--ds-chart-color); r: var(--ds-chart-dot, 3px); }
+/* Opt-in gradient area under a line (fill set inline via url(#gradient)). */
+.ds-chart__area { stroke: none; pointer-events: none; }
+.ds-chart__gauge-value { stroke: var(--ds-chart-color); }
+
+/* ---- Axes / grid / ticks ------------------------------------------------ */
+/* Axis and gridlines share the same subtle border token so they read as one
+   coherent grid — the chart data (bars / lines / series) stays the focal point.
+   `vector-effect: non-scaling-stroke` pins the stroke at exactly 1 CSS pixel
+   regardless of how wide the chart's SVG viewBox stretches, so the grid stays
+   equally subtle whether the chart is a compact 320px KPI card or a full-page
+   dashboard chart. */
+.ds-chart__axis,
+.ds-chart__gridline {
+  stroke: var(--uems-border-tertiary);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.ds-chart__tick,
+.ds-chart__cat {
+  fill: var(--uems-text-tertiary);
+  /* Counter-scaled so it renders a true 10px on screen regardless of the SVG's
+     viewBox→width scale (see _fitFonts in chart.js). */
+  font-size: var(--ds-chart-fs-fixed, 10px);
+  font-family: var(--font-family-sans);
+}
+
+/* ---- Data labels -------------------------------------------------------- */
+.ds-chart__data-label {
+  fill: var(--uems-text-secondary);
+  font-size: var(--ds-chart-fs, 11px);
+  font-weight: 600;
+  font-family: var(--font-family-sans);
+}
+.ds-chart__data-label--on-fill { fill: var(--uems-bg-primary-alt); }
+/* Funnel stage % — dark label per Figma; the yellow ramp stays light enough
+   throughout (senary → primary) that a light on-fill label would be
+   unreadable, unlike a saturated bar/slice fill. */
+.ds-chart__data-label--funnel { fill: var(--uems-text-tertiary); }
+
+/* ---- Donut / gauge center ---------------------------------------------- */
+.ds-chart__gauge-track { stroke: var(--uems-border-tertiary); }
+.ds-chart__center-value {
+  fill: var(--uems-text-primary);
+  font-size: var(--ds-chart-fs-lg, 22px);
+  font-weight: 700;
+  font-family: var(--font-family-sans);
+}
+.ds-chart__center-label {
+  fill: var(--uems-text-tertiary);
+  font-size: var(--ds-chart-fs, 11px);
+  font-family: var(--font-family-sans);
+}
+
+/* =============================================================================
+   Legend
+   ============================================================================= */
+.ds-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-8, 8px) var(--spacing-16, 16px);
+  justify-content: center;
+  align-items: center;
+}
+.ds-chart__legend-item {
+  display: inline-flex;
+  /* Top-align so a wrapping (2-line) label keeps its swatch on the FIRST line
+     instead of centering the dot against the whole multi-line block (which broke
+     alignment vs single-line items when the card/legend narrows). */
+  align-items: flex-start;
+  /* Legend items are <button>s, which default to text-align:center. Reset to
+     start so a label that WRAPS (narrow card / side legend) left-aligns its lines
+     instead of centering them. `start` keeps it RTL-correct. */
+  text-align: start;
+  gap: var(--spacing-6, 6px);
+  padding: var(--spacing-2, 2px) var(--spacing-4, 4px);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  font-family: var(--font-family-sans);
+  font-size: 13px;
+  line-height: 1.4;   /* known first-line height (~18px) for the swatch offset below */
+  color: var(--uems-text-secondary);
+}
+.ds-chart__legend-item:focus-visible {
+  outline: 2px solid var(--uems-bg-chart-blue-primary);
+  outline-offset: 1px;
+}
+.ds-chart__legend-item.is-off { opacity: 0.4; }
+.ds-chart__legend-item.is-off .ds-chart__legend-label { text-decoration: line-through; }
+
+/* Nudge the swatch down so its center lands on the first text line (row is now
+   top-aligned). Offsets = (first-line height ~18px − swatch height) / 2. */
+.ds-chart__swatch { flex: none; }
+.ds-chart__swatch--dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--ds-chart-color);
+  margin-top: 4px;
+}
+.ds-chart__swatch--line {
+  width: 14px; height: 3px; border-radius: 2px;
+  background: var(--ds-chart-color);
+  margin-top: 8px;
+}
+
+/* =============================================================================
+   Tooltip (reuses popover surface tokens)
+   ============================================================================= */
+.ds-chart__tooltip {
+  position: absolute;
+  z-index: 10;
+  pointer-events: none;
+  min-width: 120px;
+  padding: var(--spacing-8, 8px) var(--spacing-12, 12px);
+  background: var(--uems-bg-primary-alt);
+  border: 1px solid var(--uems-border-secondary);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-md);
+  font-family: var(--font-family-sans);
+  font-size: 12px;
+  color: var(--uems-text-primary);
+}
+.ds-chart__tip-head {
+  font-weight: 600;
+  margin-bottom: var(--spacing-4, 4px);
+  color: var(--uems-text-primary);
+}
+.ds-chart__tip-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6, 6px);
+  line-height: 1.6;
+}
+.ds-chart__tip-name { color: var(--uems-text-secondary); }
+.ds-chart__tip-val { margin-inline-start: auto; font-weight: 600; padding-inline-start: var(--spacing-12, 12px); }
+
+/* =============================================================================
+   Skeleton (loading)
+   ============================================================================= */
+.ds-chart__skeleton-rect {
+  fill: var(--uems-bg-disabled);
+  animation: ds-chart-skeleton-pulse 1.4s ease-in-out infinite;
+}
+@keyframes ds-chart-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+/* =============================================================================
+   Visually-hidden data table fallback
+   ============================================================================= */
+.ds-chart__a11y-table {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* =============================================================================
+   Entrance animations
+   ============================================================================= */
+.ds-chart__bar {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: ds-chart-grow 400ms ease-out both;
+}
+.ds-chart--bar .ds-chart__bar {
+  transform-origin: left center;
+}
+@keyframes ds-chart-grow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+.ds-chart--bar .ds-chart__bar {
+  animation-name: ds-chart-grow-x;
+}
+@keyframes ds-chart-grow-x {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.ds-chart__line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: ds-chart-draw 600ms ease-out forwards;
+}
+@keyframes ds-chart-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.ds-chart__slice,
+.ds-chart__gauge-value {
+  animation: ds-chart-fade 600ms ease-out both;
+}
+.ds-chart__funnel {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ds-chart-fade 400ms ease-out both;
+}
+@keyframes ds-chart-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-chart__bar,
+  .ds-chart__line,
+  .ds-chart__slice,
+  .ds-chart__funnel,
+  .ds-chart__gauge-value,
+  .ds-chart__skeleton-rect {
+    animation: none;
+  }
+  .ds-chart__line { stroke-dashoffset: 0; }
+}

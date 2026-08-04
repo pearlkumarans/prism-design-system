@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charts — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/chart/chart.css?v=3">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/chart/chart.js?v=12"></script>
+<style>
+  /* ds-chart is bare/transparent — wrap each preview in a demo "widget" frame so
+     it has a surface. The .demo-chart-frame / .demo-chart-grid rules also live in
+     components.css (.page-charts block); kept here for the inline previews. */
+  .page-charts .demo-chart-frame { background: var(--uems-bg-base, #fff); border: 1px solid var(--uems-border-tertiary); border-radius: 12px; padding: 20px; }
+  .page-charts .demo-chart-frame ds-chart { display:block; width:100%; }
+  .page-charts .demo-chart-grid { display:grid; grid-template-columns: 1fr 1fr; gap:24px; }
+  @media (max-width: 980px) { .page-charts .demo-chart-grid { grid-template-columns: 1fr; } }
+
+  .page-charts .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-charts .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .page-charts .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    padding: 32px !important;
+    gap: 36px !important;
+  }
+  .page-charts .demo-mod-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-charts .demo-mod-section > .demo-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+    margin: 0; text-align: left; width: auto;
+  }
+  .page-charts .demo-mod-section > .demo-mod-desc { font-size: 12px; color: var(--prism-text-muted); line-height: 1.5; }
+  .page-charts .demo-mod-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 980px) { .page-charts .demo-mod-grid { grid-template-columns: 1fr; } }
+  .page-charts .demo-mod-card { display: flex; flex-direction: column; gap: 10px; }
+  .page-charts .demo-mod-card .card-cap {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+  }
+  .page-charts .anat-marker-inline {
+    background: #2563eb; color: #fff; font-size: 11px; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  /* "Show code" toggle blocks under each Style showcase card */
+  .page-charts .code-toggle-btn {
+    display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+    background: transparent; border: 1px solid var(--prism-border);
+    font-family: inherit; font-size: 12.5px; font-weight: 600;
+    color: var(--prism-text-muted); cursor: pointer; padding: 5px 10px; border-radius: 8px; transition: all 0.2s;
+  }
+  .page-charts .code-toggle-btn:hover { color: var(--prism-violet); border-color: rgba(37,99,235,0.25); }
+  .page-charts .code-block { display: none; margin-top: 8px; background: #0a0a0c; border-radius: 10px; overflow: hidden; }
+  .page-charts .code-block.open { display: block; }
+  .page-charts .code-block .code-block-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .page-charts .code-block .code-block-head span { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+  .page-charts .code-block .cb-copy {
+    display: inline-flex; align-items: center; gap: 5px; background: transparent; border: none;
+    font-family: inherit; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.6); cursor: pointer;
+  }
+  .page-charts .code-block .cb-copy:hover { color: #fff; }
+  .page-charts .code-block pre {
+    margin: 0; padding: 16px; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0;
+  }
+  .page-charts .code-block .token-tag { color: #a78bfa; }
+  .page-charts .code-block .token-attr { color: #38bdf8; }
+  .page-charts .code-block .token-string { color: #34d399; }
+
+  /* Categorical palette legend swatches (Overview) */
+  .page-charts .palette-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  .page-charts .palette-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--prism-text-muted); }
+  .page-charts .palette-dot { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; }
+</style>
+</head>
+<body class="page-charts">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link active">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Charts</h1>
+        <p class="page-desc">The <strong>Chart</strong> (<code>&lt;ds-chart&gt;</code>) is a data-visualization primitive covering <strong>9 types</strong> across 4 families &mdash; <strong>column / bar</strong> (single, grouped, stacked), <strong>line</strong>, <strong>pie / donut / funnel</strong>, and <strong>gauge</strong>. It renders gridlines, axes, series, and an optional legend as a self-contained SVG, themed entirely from the chart tokens so it re-themes across light / dark / night / green. It is <strong>bare by design</strong> &mdash; no header, surface, or padding &mdash; because it lives inside a host widget that owns the chrome. <code>ds-chart</code> owns only a <code>loading</code> skeleton; empty and error states belong to the host.</p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══════════════ OVERVIEW ═══════════════ -->
+        <div class="tab-content" id="tab-overview">
+
+          <!-- ───── Anatomy ───── -->
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram" style="overflow:visible;">
+            <div style="display:flex;justify-content:center;margin:24px 0;padding:48px 96px;">
+              <div style="position:relative;width:440px;max-width:100%;height:300px;border-radius:12px;background:var(--uems-bg-base,#fff);border:1px solid var(--uems-border-tertiary);padding:24px 28px;overflow:visible;">
+                <!-- Plot area -->
+                <div style="position:relative;height:200px;">
+                  <div style="position:absolute;left:-20px;top:-8px;transform:translate(-100%,0);display:flex;align-items:center;gap:6px;"><span class="anat-marker-inline">1</span><div style="width:24px;height:2px;background:#2563eb;"></div></div>
+                  <!-- Y axis -->
+                  <div style="position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--uems-border-secondary,#c3c9d6);"></div>
+                  <!-- X axis -->
+                  <div style="position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--uems-border-secondary,#c3c9d6);"></div>
+                  <div style="position:absolute;left:calc(100% + 16px);bottom:-4px;display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">2</span></div>
+                  <!-- Gridlines -->
+                  <div style="position:absolute;left:0;right:0;top:25%;height:1px;background:var(--uems-border-tertiary,#e1e4eb);"></div>
+                  <div style="position:absolute;left:0;right:0;top:50%;height:1px;background:var(--uems-border-tertiary,#e1e4eb);"></div>
+                  <div style="position:absolute;left:0;right:0;top:75%;height:1px;background:var(--uems-border-tertiary,#e1e4eb);"></div>
+                  <div style="position:absolute;left:calc(100% + 16px);top:46%;display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">3</span></div>
+                  <!-- Series (bars) -->
+                  <div style="position:absolute;left:0;right:0;bottom:1px;height:100%;display:flex;align-items:flex-end;justify-content:space-around;padding:0 12px;">
+                    <div style="display:flex;align-items:flex-end;gap:4px;"><div style="width:14px;height:90px;background:#2c66dd;border-radius:2px 2px 0 0;"></div><div style="width:14px;height:50px;background:#0c8844;border-radius:2px 2px 0 0;"></div></div>
+                    <div style="display:flex;align-items:flex-end;gap:4px;"><div style="width:14px;height:130px;background:#2c66dd;border-radius:2px 2px 0 0;"></div><div style="width:14px;height:75px;background:#0c8844;border-radius:2px 2px 0 0;"></div></div>
+                    <div style="display:flex;align-items:flex-end;gap:4px;"><div style="width:14px;height:110px;background:#2c66dd;border-radius:2px 2px 0 0;"></div><div style="width:14px;height:62px;background:#0c8844;border-radius:2px 2px 0 0;"></div></div>
+                  </div>
+                  <div style="position:absolute;left:calc(50% + 8px);top:8px;display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">4</span></div>
+                </div>
+                <!-- Legend -->
+                <div style="position:relative;display:flex;align-items:center;justify-content:center;gap:16px;margin-top:16px;font-size:12px;color:var(--uems-text-secondary,#2a303d);">
+                  <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:#2c66dd;"></span>Revenue</span>
+                  <span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:#0c8844;"></span>Profit</span>
+                  <div style="position:absolute;left:calc(100% + 16px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">5</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Plot area</strong><span>The region bounded by the axes where series are drawn. Fills the container width; ~180px reference height that scales with the widget.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Axes (X / Y)</strong><span>Value axis (Y) with ticks at gridlines, category axis (X) with labels centered under groups. Axis line is <code>--uems-border-secondary</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Gridlines</strong><span>Up to 5 horizontal gridlines aligned to value ticks (<code>--uems-border-tertiary</code>). Toggle with <code>show-gridlines="false"</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Series</strong><span>Bars, lines + dots, slices, or arc &mdash; colored from the categorical palette (cycles 1&ndash;7). Optional data labels via <code>show-data-labels</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Legend</strong><span>Keyboard-operable <code>&lt;button&gt;</code>s with a swatch + label; click toggles series visibility (<code>aria-pressed</code>). Position via <code>legend-position</code>.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- ───── Preview ───── -->
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Rendered with the live <code>&lt;ds-chart&gt;</code> web component. Each chart is bare/transparent, so it sits inside a demo <strong>widget frame</strong> that provides the surface. Charts ship with built-in sample data, so they render with nothing set.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Chart &middot; default column + one of each family</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Default example -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Default &mdash; column, legend bottom</div>
+                  <div class="demo-mod-desc">The standard chart: gridlines, value + category axes, three series, and a clickable legend. Shown inside a widget frame.</div>
+                  <div class="demo-chart-frame">
+                    <ds-chart type="column"></ds-chart>
+                  </div>
+                </div>
+
+                <!-- One of each family -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">One of each family</div>
+                  <div class="demo-mod-desc">Bar/column (comparison), line (trend), donut (part-to-whole), funnel (stage drop-off), gauge (single value).</div>
+                  <div class="demo-chart-grid">
+                    <div class="demo-chart-frame"><ds-chart type="column" mode="grouped"></ds-chart></div>
+                    <div class="demo-chart-frame"><ds-chart type="bar"></ds-chart></div>
+                    <div class="demo-chart-frame"><ds-chart type="line"></ds-chart></div>
+                    <div class="demo-chart-frame"><ds-chart type="donut"></ds-chart></div>
+                    <div class="demo-chart-frame"><ds-chart type="funnel"></ds-chart></div>
+                    <div class="demo-chart-frame"><ds-chart type="gauge"></ds-chart></div>
+                  </div>
+                </div>
+
+                <!-- Palette -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Categorical palette (default order)</div>
+                  <div class="demo-mod-desc">Series cycle through these 7 hues, then repeat. Use &le;7 categorical colors.</div>
+                  <div class="palette-grid">
+                    <div class="palette-item"><span class="palette-dot" style="background:#2c66dd;"></span> 1 &middot; Blue</div>
+                    <div class="palette-item"><span class="palette-dot" style="background:#0c8844;"></span> 2 &middot; Green</div>
+                    <div class="palette-item"><span class="palette-dot" style="background:#e65100;"></span> 3 &middot; Orange</div>
+                    <div class="palette-item"><span class="palette-dot" style="background:#663399;"></span> 4 &middot; Charoite</div>
+                    <div class="palette-item"><span class="palette-dot" style="background:#e42527;"></span> 5 &middot; Red</div>
+                    <div class="palette-item"><span class="palette-dot" style="background:#f9b21d;"></span> 6 &middot; Yellow</div>
+                    <div class="palette-item"><span class="palette-dot" style="background:#6a7898;"></span> 7 &middot; Grey</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- ───── Content Guidelines ───── -->
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Pick the type by intent &mdash; bar/column for comparison, line for trend, pie/donut for part-to-whole, gauge for a single value.</li>
+                <li>Keep series to <strong>&le;7</strong> so the categorical palette doesn't repeat.</li>
+                <li>Label both axes and keep the value axis anchored at 0.</li>
+                <li>Let the host widget own the header, surface, and empty/error states.</li>
+                <li>Provide real <code>data</code> via the JS property; rely on the token theme for color.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Use more than 7 categorical colors &mdash; switch to a sequential ramp instead.</li>
+                <li>Use 3-D, truncated axes, or distorted aspect ratios.</li>
+                <li>Hardcode series colors &mdash; use the chart tokens so it re-themes.</li>
+                <li>Rely on color alone to convey meaning &mdash; pair with labels.</li>
+                <li>Render an empty/error placeholder inside the chart &mdash; that's the widget's job.</li>
+              </ul></div>
+            </div>
+          </div>
+
+        </div> <!-- end tab-overview -->
+
+        <!-- ═══════════════ STYLE ═══════════════ -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Types, options, loading, and direction that define the Chart's visual language. Every preview is a live <code>&lt;ds-chart&gt;</code> in a widget frame &mdash; use <strong>Show code</strong> to reveal the markup.</p>
+
+          <!-- Types -->
+          <div class="doc-section">
+            <h3 id="types" class="doc-h3">Types</h3>
+            <p class="doc-section-subtitle">Set <code>type</code> &rarr; <code>column | bar | line | pie | donut | funnel | gauge</code>. For <code>column</code>, <code>bar</code>, and <code>line</code>, <code>mode</code> &rarr; <code>single | grouped | stacked</code>.</p>
+            <div class="demo-mod-grid">
+              <div class="demo-mod-card">
+                <span class="card-cap">type="column" &middot; mode="single"</span>
+                <div class="demo-chart-frame"><ds-chart type="column" mode="single"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"column"</span> <span class="token-attr">mode</span>=<span class="token-string">"single"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">type="column" &middot; mode="grouped"</span>
+                <div class="demo-chart-frame"><ds-chart type="column" mode="grouped"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"column"</span> <span class="token-attr">mode</span>=<span class="token-string">"grouped"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">type="column" &middot; mode="stacked"</span>
+                <div class="demo-chart-frame"><ds-chart type="column" mode="stacked"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"column"</span> <span class="token-attr">mode</span>=<span class="token-string">"stacked"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">type="bar" &middot; mode="single"</span>
+                <div class="demo-chart-frame"><ds-chart type="bar" mode="single"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"bar"</span> <span class="token-attr">mode</span>=<span class="token-string">"single"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">type="bar" &middot; mode="grouped"</span>
+                <div class="demo-chart-frame"><ds-chart type="bar" mode="grouped"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"bar"</span> <span class="token-attr">mode</span>=<span class="token-string">"grouped"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">type="bar" &middot; mode="stacked"</span>
+                <div class="demo-chart-frame"><ds-chart type="bar" mode="stacked"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"bar"</span> <span class="token-attr">mode</span>=<span class="token-string">"stacked"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">type="line" &middot; mode="single"</span>
+                <div class="demo-chart-frame"><ds-chart type="line" mode="single"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"line"</span> <span class="token-attr">mode</span>=<span class="token-string">"single"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">type="line" &middot; mode="grouped"</span>
+                <div class="demo-chart-frame"><ds-chart type="line" mode="grouped"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"line"</span> <span class="token-attr">mode</span>=<span class="token-string">"grouped"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">type="line" &middot; mode="stacked"</span>
+                <div class="demo-chart-frame"><ds-chart type="line" mode="stacked"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"line"</span> <span class="token-attr">mode</span>=<span class="token-string">"stacked"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">type="pie"</span>
+                <div class="demo-chart-frame"><ds-chart type="pie"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"pie"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">type="donut" &middot; center total</span>
+                <div class="demo-chart-frame"><ds-chart type="donut"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"donut"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">type="funnel" &middot; 5 levels</span>
+                <div class="demo-chart-frame"><ds-chart type="funnel"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"funnel"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">type="gauge" &middot; single value</span>
+                <div class="demo-chart-frame"><ds-chart type="gauge"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"gauge"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Options -->
+          <div class="doc-section">
+            <h3 id="options" class="doc-h3">Options</h3>
+            <p class="doc-section-subtitle">Toggle data labels and gridlines; move the legend. Defaults: <code>show-legend</code> + <code>show-gridlines</code> on, <code>show-data-labels</code> off, <code>legend-position="bottom"</code>.</p>
+            <div class="demo-mod-grid">
+              <div class="demo-mod-card">
+                <span class="card-cap">show-data-labels</span>
+                <div class="demo-chart-frame"><ds-chart type="column" mode="grouped" show-data-labels></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"column"</span> <span class="token-attr">mode</span>=<span class="token-string">"grouped"</span> <span class="token-attr">show-data-labels</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">show-gridlines="false"</span>
+                <div class="demo-chart-frame"><ds-chart type="column" show-gridlines="false"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"column"</span> <span class="token-attr">show-gridlines</span>=<span class="token-string">"false"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">legend-position="top"</span>
+                <div class="demo-chart-frame"><ds-chart type="line" legend-position="top"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"line"</span> <span class="token-attr">legend-position</span>=<span class="token-string">"top"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">legend-position="right"</span>
+                <div class="demo-chart-frame"><ds-chart type="donut" legend-position="right"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"donut"</span> <span class="token-attr">legend-position</span>=<span class="token-string">"right"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">show-legend="false"</span>
+                <div class="demo-chart-frame"><ds-chart type="column" show-legend="false"></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"column"</span> <span class="token-attr">show-legend</span>=<span class="token-string">"false"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Loading -->
+          <div class="doc-section">
+            <h3 id="loading" class="doc-h3">Loading skeleton</h3>
+            <p class="doc-section-subtitle">Set <code>loading</code> to render a chart-shaped silhouette (<code>--uems-bg-disabled</code>) while data resolves. This is the only state <code>ds-chart</code> owns &mdash; empty / error belong to the host widget.</p>
+            <div class="demo-mod-grid">
+              <div class="demo-mod-card">
+                <span class="card-cap">loading</span>
+                <div class="demo-chart-frame"><ds-chart type="column" loading></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"column"</span> <span class="token-attr">loading</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- RTL -->
+          <div class="doc-section">
+            <h3 id="rtl" class="doc-h3">RTL</h3>
+            <p class="doc-section-subtitle">Set <code>rtl</code> (or host <code>dir="rtl"</code>) to mirror the axis side, legend alignment, and label direction.</p>
+            <div class="demo-mod-grid">
+              <div class="demo-mod-card">
+                <span class="card-cap">rtl</span>
+                <div class="demo-chart-frame"><ds-chart type="column" mode="grouped" rtl></ds-chart></div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"column"</span> <span class="token-attr">mode</span>=<span class="token-string">"grouped"</span> <span class="token-attr">rtl</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Theme map -->
+          <div class="doc-section">
+            <h3 id="theme" class="doc-h3">Chart theme map</h3>
+            <p class="doc-section-subtitle">All chrome and series colors bind to tokens, so the chart re-themes across light / dark / night / green.</p>
+            <table class="size-table">
+              <thead><tr><th>Role</th><th>Token</th><th>Light</th></tr></thead>
+              <tbody>
+                <tr><td>Axis line / baseline</td><td><code>--uems-border-secondary</code></td><td>#c3c9d6</td></tr>
+                <tr><td>Gridline</td><td><code>--uems-border-tertiary</code></td><td>#e1e4eb</td></tr>
+                <tr><td>Axis &amp; tick labels</td><td><code>--uems-text-tertiary</code></td><td>#40485b</td></tr>
+                <tr><td>Data labels</td><td><code>--uems-text-secondary</code></td><td>#2a303d</td></tr>
+                <tr><td>Surface (tooltip / segments)</td><td><code>--uems-bg-primary-alt</code></td><td>#ffffff</td></tr>
+                <tr><td>Skeleton (loading)</td><td><code>--uems-bg-disabled</code></td><td>#e1e4eb</td></tr>
+                <tr><td>Tick / label font</td><td><code>Inter</code> 11px (axis), 13px (legend)</td><td>&mdash;</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ USAGE ═══════════════ -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <h2 id="usage" class="doc-section-title">Usage</h2>
+          <p class="doc-section-subtitle">Which chart type to reach for, and how the chart shares responsibility with its host widget.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">When to use each type</h3>
+            <table class="size-table">
+              <thead><tr><th>Intent</th><th>Type</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>Compare categories</td><td><code>bar</code> / <code>column</code></td><td>Use <code>grouped</code> for side-by-side series, <code>stacked</code> for part-of-total within a category. Switch to <code>bar</code> for long category labels.</td></tr>
+                <tr><td>Show a trend over time</td><td><code>line</code></td><td>Continuous data across an ordered axis; supports multiple series.</td></tr>
+                <tr><td>Part-to-whole</td><td><code>pie</code> / <code>donut</code> / <code>funnel</code></td><td>Few slices (≤6). <code>donut</code> shows a center total; <code>funnel</code> for stage drop-off.</td></tr>
+                <tr><td>A single value vs. a target</td><td><code>gauge</code></td><td>One 0&ndash;100 value with a label (e.g. capacity, completion).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">State ownership</h3>
+            <p class="doc-section-subtitle">The <strong>host widget owns the data lifecycle.</strong> Empty and error states are rendered by the widget using the system <strong>Empty state</strong> component &mdash; consistently across all widget content (chart, table, KPI). <code>ds-chart</code> owns only the <code>loading</code> skeleton; it never draws an empty or error placeholder itself.</p>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Do &amp; Don't</h3>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Keep series to <strong>&le;7</strong> so categorical colors stay distinct.</li>
+                <li>Label both axes and use the categorical palette in order.</li>
+                <li>Anchor the value axis at 0; use <code>bar</code> for long labels.</li>
+                <li>Let the host widget render empty/error via the Empty state.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Use more than 7 categorical colors at once.</li>
+                <li>Use 3-D effects or distorted aspect ratios.</li>
+                <li>Truncate the value axis &mdash; it misrepresents magnitude.</li>
+                <li>Rely on color as the only signal.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related components</h2>
+            <p class="doc-section-subtitle">Components that complement or share a host widget with the Chart.</p>
+            <div class="related-grid">
+              <a href="Counter.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h4M7 13h6"/></svg> KPI card</a>
+              <a href="Data-table.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg> Data table</a>
+              <a href="Empty-state.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8"/></svg> Empty state</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════ CODE ═══════════════ -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="install" class="doc-section-title">Install &amp; usage</h2>
+          <p class="doc-section-subtitle">Register the component, then drive it with attributes and the <code>data</code> property. Source: <code>design-system-library/src/components/chart/chart.js</code>.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Register the component</h3>
+            <div class="code-block open" style="margin-top:0;"><div class="code-block-head"><span>JS</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-attr">&lt;script</span> <span class="token-attr">type</span>=<span class="token-string">"module"</span> <span class="token-attr">src</span>=<span class="token-string">"design-system-library/src/components/chart/chart.js"</span><span class="token-attr">&gt;&lt;/script&gt;</span></pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Basic markup</h3>
+            <p class="doc-section-subtitle">Ships with sample data, so it renders standalone &mdash; place it inside a widget that owns the surface.</p>
+            <div class="code-block open" style="margin-top:0;"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"column"</span> <span class="token-attr">mode</span>=<span class="token-string">"grouped"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Setting data (cartesian)</h3>
+            <div class="code-block open" style="margin-top:0;"><div class="code-block-head"><span>JS</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre>const chart = document.querySelector(<span class="token-string">'#sales'</span>);
+chart.data = {
+  categories: [<span class="token-string">'Q1'</span>, <span class="token-string">'Q2'</span>, <span class="token-string">'Q3'</span>, <span class="token-string">'Q4'</span>],
+  series: [
+    { name: <span class="token-string">'Revenue'</span>, values: [42, 58, 50, 71] },
+    { name: <span class="token-string">'Profit'</span>,  values: [22, 30, 28, 45] },
+  ],
+};</pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Per-type data</h3>
+            <div class="code-block open" style="margin-top:0;"><div class="code-block-head"><span>JS</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-attr">// Pie / donut / funnel — first series' values are the slices</span>
+chart.data = {
+  categories: [<span class="token-string">'Direct'</span>, <span class="token-string">'Organic'</span>, <span class="token-string">'Referral'</span>],
+  series: [{ name: <span class="token-string">'Sessions'</span>, values: [38, 27, 18] }],
+};
+
+<span class="token-attr">// Gauge — a single 0–100 value + label</span>
+chart.data = { value: 68, label: <span class="token-string">'Capacity'</span> };</pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Options &amp; per-type markup</h3>
+            <div class="code-block open" style="margin-top:0;"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"line"</span> <span class="token-attr">legend-position</span>=<span class="token-string">"top"</span> <span class="token-attr">show-data-labels</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span>
+<span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"bar"</span> <span class="token-attr">mode</span>=<span class="token-string">"stacked"</span> <span class="token-attr">show-gridlines</span>=<span class="token-string">"false"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span>
+<span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"donut"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span>
+<span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"gauge"</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span>
+<span class="token-tag">&lt;ds-chart</span> <span class="token-attr">type</span>=<span class="token-string">"column"</span> <span class="token-attr">loading</span><span class="token-tag">&gt;&lt;/ds-chart&gt;</span></pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Theme note</h3>
+            <p class="doc-section-subtitle">All colors are token-driven &mdash; never hardcode series hues. The chart reads from <code>--uems-bg-chart-*</code>, <code>--uems-border-*</code>, and <code>--uems-text-*</code>, so it re-themes automatically.</p>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="api" class="doc-section-title">Component API</h2>
+          <p class="doc-section-subtitle">HTML attributes, the <code>data</code> shape, and the chart theme token map for <code>&lt;ds-chart&gt;</code>.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Attributes</h3>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Values</th><th>Default</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>type</code></td><td><code>column</code> &middot; <code>bar</code> &middot; <code>line</code> &middot; <code>pie</code> &middot; <code>donut</code> &middot; <code>funnel</code> &middot; <code>gauge</code></td><td><code>column</code></td><td>Chart family.</td></tr>
+                <tr><td><code>mode</code></td><td><code>single</code> &middot; <code>grouped</code> &middot; <code>stacked</code></td><td><code>single</code></td><td>Bar/column only.</td></tr>
+                <tr><td><code>show-legend</code></td><td><code>true</code> &middot; <code>false</code></td><td><code>true</code></td><td>Set <code>show-legend="false"</code> to hide.</td></tr>
+                <tr><td><code>show-gridlines</code></td><td><code>true</code> &middot; <code>false</code></td><td><code>true</code></td><td>Set <code>show-gridlines="false"</code> to hide.</td></tr>
+                <tr><td><code>show-data-labels</code></td><td>boolean</td><td><code>false</code></td><td>Value callouts on bars / points / slices.</td></tr>
+                <tr><td><code>legend-position</code></td><td><code>top</code> &middot; <code>bottom</code> &middot; <code>left</code> &middot; <code>right</code></td><td><code>bottom</code></td><td>Legend placement relative to the plot.</td></tr>
+                <tr><td><code>loading</code></td><td>boolean</td><td>unset</td><td>Chart-shaped loading skeleton (the only state the chart owns).</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td>unset</td><td>Mirror axis side / legend / labels (or use host <code>dir="rtl"</code>).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Data shape (JS property)</h3>
+            <table class="size-table">
+              <thead><tr><th>Type</th><th>Shape</th></tr></thead>
+              <tbody>
+                <tr><td>column / bar / line</td><td><code>{ categories: [...], series: [{ name, values: [...] }] }</code></td></tr>
+                <tr><td>pie / donut / funnel</td><td><code>{ categories: [...], series: [{ name, values: [...] }] }</code> &mdash; first series' values are the slices</td></tr>
+                <tr><td>gauge</td><td><code>{ value, label }</code> &mdash; a single 0&ndash;100 value</td></tr>
+              </tbody>
+            </table>
+            <ul class="doc-list" style="margin-top:16px;">
+              <li><code>el.data = {…}</code> / <code>el.setData({…})</code> set data; the getter returns the active data (sample data if unset).</li>
+              <li>Setting <code>data</code> resets any legend-toggled series and re-renders.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3"><code>dsChartTheme</code> token map</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Tokens / value</th></tr></thead>
+              <tbody>
+                <tr><td><code>categorical</code></td><td>blue · green · orange · charoite · red · yellow · grey <code>--uems-bg-chart-{hue}-primary</code></td></tr>
+                <tr><td><code>sequential</code></td><td>Chart-Blue ramp: <code>#2c66dd · #4276e0 · #6b94e7 · #96b3ee · #c0d1f5 · #eaf0fc</code></td></tr>
+                <tr><td><code>diverging</code></td><td>Red shades ↔ neutral (Grey) ↔ Blue shades</td></tr>
+                <tr><td><code>semantic</code></td><td>positive → green · negative → red · neutral → grey · target → blue · forecast → orange</td></tr>
+                <tr><td><code>axisLine</code></td><td><code>var(--uems-border-secondary)</code></td></tr>
+                <tr><td><code>gridline</code></td><td><code>var(--uems-border-tertiary)</code></td></tr>
+                <tr><td><code>axisLabel</code></td><td><code>var(--uems-text-tertiary)</code></td></tr>
+                <tr><td><code>dataLabel</code></td><td><code>var(--uems-text-secondary)</code></td></tr>
+                <tr><td><code>surface</code></td><td><code>var(--uems-bg-primary-alt)</code></td></tr>
+                <tr><td><code>skeleton</code></td><td><code>var(--uems-bg-disabled)</code></td></tr>
+                <tr><td><code>fontFamily</code> / sizes</td><td><code>Inter, sans-serif</code> · axis 11 · legend 13</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ ACCESSIBILITY ═══════════════ -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for an accessible Chart across assistive tech and input methods.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Roles &amp; ARIA</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Implementation</th></tr></thead>
+              <tbody>
+                <tr><td>Role</td><td>The chart container has <code>role="img"</code> with an <code>aria-label</code> summarizing the data (e.g. "column chart, 3 series, categories: Q1, Q2, Q3, Q4").</td></tr>
+                <tr><td>Data-table fallback</td><td>A <strong>visually-hidden <code>&lt;table&gt;</code></strong> mirrors the real data behind the chart for screen readers (with <code>&lt;caption&gt;</code> and row/column headers).</td></tr>
+                <tr><td>SVG</td><td>The drawn SVG is <code>aria-hidden="true"</code> / <code>focusable="false"</code> &mdash; meaning is carried by the label + table.</td></tr>
+                <tr><td>Loading</td><td>While <code>loading</code>, the container sets <code>aria-busy="true"</code> and <code>aria-label="Loading chart"</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Keyboard &amp; focus</h3>
+            <table class="size-table">
+              <thead><tr><th>Key / action</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td>Legend items</td><td>Real <code>&lt;button&gt;</code>s &mdash; <kbd>Tab</kbd> to focus, <kbd>Enter</kbd> / <kbd>Space</kbd> to toggle the series. <code>aria-pressed</code> reflects on/off.</td></tr>
+                <tr><td>Focus ring</td><td>Legend buttons show a visible <code>:focus-visible</code> outline.</td></tr>
+                <tr><td>Tooltip</td><td>Hover-only; its content is also in the hidden data table so it isn't AT-only on hover.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Other concerns</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Requirement</th></tr></thead>
+              <tbody>
+                <tr><td>Color not the sole signal</td><td>Pair color with labels / values; never rely on hue alone to convey meaning (e.g. positive vs. negative).</td></tr>
+                <tr><td>Contrast</td><td>Axis / tick labels use <code>--uems-text-tertiary</code> on the surface and meet WCAG 2.1 AA.</td></tr>
+                <tr><td>Reduced motion</td><td><code>prefers-reduced-motion: reduce</code> disables the bar grow, line draw, and arc sweep entrance animations.</td></tr>
+                <tr><td>RTL</td><td><code>rtl</code> (or host <code>dir="rtl"</code>) mirrors the axis side, legend alignment, and label direction.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/charts.md" download="charts.md" class="action-link"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=21540-796217" target="_blank" rel="noopener" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+      <div id="feedback" class="feedback-banner" style="display:none;">
+        <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+        <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+      </div>
+
+    </main>
+  </div>
+
+  <a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+    <span class="float-cliq-label">Share feedback</span>
+    <span class="float-cliq-icon">
+      <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke-width="1.4">
+        <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+  </a>
+
+  <!-- Custom data example — a real <ds-chart> driven via the data property -->
+  <script>
+    const custom = document.querySelector('#customData');
+    if (custom) custom.data = {
+      categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      series: [
+        { name: 'Tickets', values: [12, 19, 14, 22, 17] },
+        { name: 'Resolved', values: [9, 15, 12, 18, 16] },
+      ],
+    };
+  </script>
+
+  <!-- "Show code" toggles + copy buttons for Style / Code blocks -->
+  <script>
+    document.querySelectorAll('.code-toggle-btn[data-toggle]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const block = btn.nextElementSibling;
+        if (!block || !block.classList.contains('code-block')) return;
+        const open = block.classList.toggle('open');
+        btn.textContent = open ? 'Hide code' : 'Show code';
+      });
+    });
+    document.querySelectorAll('.code-block .cb-copy').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const pre = btn.closest('.code-block').querySelector('pre');
+        if (!pre) return;
+        try {
+          await navigator.clipboard.writeText(pre.textContent);
+          const original = btn.innerHTML;
+          btn.innerHTML = '<ds-icon name="check" size="13"></ds-icon> Copied';
+          setTimeout(() => { btn.innerHTML = original; }, 2000);
+        } catch {}
+      });
+    });
+  </script>
+
+  <script src="js/components/toc.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

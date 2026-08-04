@@ -1,0 +1,64 @@
+/* =============================================================================
+   ds-form-footer / .ds-form-footer
+   Spec source: design-system/handoff/FormFooter.md (Figma 20025:601543)
+
+   Sticky form action bar: left status/content area + right-aligned button group.
+   The host IS the bar (72h, pad 16/24, space-between). Elevation is an UPWARD
+   drop-shadow, not a border. Height is min (grows if content wraps).
+   ============================================================================= */
+
+ds-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-sizing: border-box;
+  min-height: 72px;
+  padding: 16px 24px;
+  background: var(--uems-bg-primary);
+  /* Upward elevation shadow (Figma: 0 -2px 8px rgba(0,0,0,0.08)) — NOT a border. */
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+  font-family: var(--font-family-sans);
+  /* Pinned to the bottom of the scrolling form/page; the body scrolls beneath. */
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+/* ── Left area — fills the row so the button group is pushed to the trailing
+   edge (Figma: Left Slot layoutGrow 1 + primaryAxis MAX). ─────────────── */
+.ds-form-footer__left {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* Default status-text styling (Figma: Text/small/Regular, Text-Secondary).
+   Only applies to the built-in `left-text`; slotted content styles itself. */
+.ds-form-footer__status {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  color: var(--uems-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Button group — right-aligned, never shrinks. Buttons are ds-button. ── */
+.ds-form-footer__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* No left area → nothing fills the row, so keep the group on the trailing edge. */
+.ds-form-footer--no-left { justify-content: flex-end; }
+
+/* ── RTL — plain flex row mirrors natively via inherited direction:rtl
+   (left area moves to the visual right, buttons to the left). Do NOT add
+   flex-direction:row-reverse — that double-reverses (same bug fixed in
+   ds-card / ds-widget). Only text-align needs help. ─────────────────────── */
+.ds-form-footer[dir="rtl"] .ds-form-footer__status { text-align: right; }

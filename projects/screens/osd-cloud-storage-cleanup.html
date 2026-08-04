@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clean up Cloud Storage — OS Deployment · Prism</title>
+
+  <link rel="stylesheet" href="../../design-system-library/src/styles/index.css" />
+  <script type="module">import '../../design-system-library/src/components/index.js';</script>
+
+  <script>
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+    window.UEMS_ICON_SPRITE = '../../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body { margin: 0; font-family: var(--font-family-sans); background: var(--cobalt-15); }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+    .body { display: flex; flex: 1; min-height: 0; padding: 0 0 var(--spacing-12) var(--spacing-12); gap: 0; }
+    .shell-area { flex: 1; display: flex; min-width: 0; min-height: 0;
+      border: 1px solid var(--uems-border-accent-subtle); border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle); overflow: hidden; }
+    ds-sidebar-l1, ds-sidebar-l2 { max-width: 400px; overflow: hidden; }
+    ds-sidebar-l1.is-hidden, ds-sidebar-l2.is-hidden { max-width: 0 !important; opacity: 0 !important; pointer-events: none; }
+    .shell-area .ds-sidebar-l1 { border: 0 !important; border-radius: 0 !important; padding-top: 4px !important; }
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+
+    .page { display: flex; flex-direction: column; min-width: 0; height: 100%; }
+    .cl { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column;
+      gap: var(--spacing-16); padding: 0 var(--spacing-20) var(--spacing-16); }
+
+    /* Over-limit strip */
+    .overbar { border: 1px solid var(--uems-border-error, #f2b8b5); border-radius: var(--radius-md, 10px);
+      background: var(--uems-bg-error-primary, #fdecea); padding: var(--spacing-16);
+      display: flex; flex-direction: column; gap: var(--spacing-12); }
+    .overbar__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-12); flex-wrap: wrap; }
+    .overbar__used { font-size: var(--font-size-16); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+    .overbar__used b { color: var(--uems-text-error, #c0392b); }
+    .overbar__need { font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+
+    .cl-table-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .cl-table-wrap ds-data-table { flex: 0 1 auto; min-height: 0; display: flex; }
+
+    .img-name { display: inline-flex; align-items: center; gap: var(--spacing-8); }
+    .img-name ds-icon { color: var(--uems-icon-tertiary); }
+    .img-file { color: var(--uems-text-primary); font-weight: var(--font-weight-medium); }
+    .cell-muted { color: var(--uems-text-secondary); }
+    .lru-old { color: var(--uems-text-warning, #a8620a); font-weight: var(--font-weight-medium); }
+
+    /* Sticky selection summary bar */
+    .sumbar { position: sticky; bottom: 0; margin: 0 calc(-1 * var(--spacing-20));
+      padding: var(--spacing-12) var(--spacing-20);
+      border-top: 1px solid var(--uems-border-tertiary); background: var(--uems-bg-base);
+      display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-16); flex-wrap: wrap; }
+    .sumbar__info { display: flex; align-items: center; gap: var(--spacing-12); font-size: var(--font-size-13); color: var(--uems-text-primary); }
+    .sumbar__info ds-icon { color: var(--uems-icon-tertiary); }
+    .sumbar__reclaim strong { color: var(--uems-text-primary); }
+    .sumbar__actions { display: inline-flex; gap: var(--spacing-8); }
+    .sumbar[data-ok="true"] .sumbar__info ds-icon { color: var(--uems-icon-success, #2e7d32); }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+  <div class="body">
+    <div class="shell-area">
+      <ds-sidebar-l1 id="shell-l1" class="is-hidden" style="height:100%;"></ds-sidebar-l1>
+      <ds-sidebar-l2 id="shell-l2" class="is-hidden" style="height:100%;"></ds-sidebar-l2>
+
+      <ds-content role="main">
+        <div class="page">
+
+          <ds-page-header id="ph"
+            structure="default"
+            title="Clean up cloud storage"
+            description="Your cloud storage is over the limit, so image uploads and replications are paused. Select image files to remove — or buy an add-on — to get back under the limit and resume."
+            show-description show-breadcrumbs show-overflow="false">
+            <ds-button slot="actions" id="buy-btn" variant="secondary" size="small" prefix-icon="cart">Buy storage add-on</ds-button>
+          </ds-page-header>
+
+          <div class="cl">
+
+            <!-- Exceeded alert -->
+            <ds-inline-alert id="exceeded" type="error" style-variant="subtle" accent-bar
+              title="Cloud storage limit exceeded — image replication paused"
+              description="New image uploads are already blocked. Replication to remote offices stays paused until usage is back under 30 GB. Free up at least 1.2 GB or add more storage."
+              action="Buy storage add-on" action-position="inline" show-icon></ds-inline-alert>
+
+            <!-- Over-limit meter -->
+            <div class="overbar">
+              <div class="overbar__row">
+                <div class="overbar__used"><b>31.2 GB</b> used of 30 GB</div>
+                <div class="overbar__need">Free up at least <strong>1.2 GB</strong> to resume replication</div>
+              </div>
+              <ds-progress-bar variant="error" size="large" value="100" max="100"
+                label="Cloud storage used" value-label="104%"></ds-progress-bar>
+            </div>
+
+            <!-- Image cleanup table -->
+            <div class="cl-table-wrap">
+              <ds-data-table id="cl-table"
+                selection-mode="multi"
+                row-height="default"
+                sticky-header
+                show-footer
+                rows-per-page="10"
+                page="1"></ds-data-table>
+            </div>
+
+            <!-- Selection summary -->
+            <div class="sumbar" id="sumbar" data-ok="false">
+              <div class="sumbar__info">
+                <ds-icon id="sum-ico" name="info-circle" size="18"></ds-icon>
+                <span id="sum-text" class="sumbar__reclaim">Select image files to reclaim space. Free up at least <strong>1.2 GB</strong> to resume replication.</span>
+              </div>
+              <div class="sumbar__actions">
+                <ds-button id="autopick-btn" variant="secondary" size="small" prefix-icon="hard-disk-clean">Auto-select oldest unused</ds-button>
+                <ds-button id="del-btn" variant="destructive" size="small" prefix-icon="delete" disabled>Delete selected</ds-button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </ds-content>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm deletion -->
+<ds-confirmation-modal id="confirm-del"
+  variant="destructive"
+  title="Delete selected image files?"
+  icon="delete"
+  primary-label="Delete permanently"
+  secondary-label="Cancel"></ds-confirmation-modal>
+
+<script type="module">
+  import '../../design-system-library/src/components/index.js';
+
+  /* ── Header tabs — OS Deployment active ── */
+  document.getElementById('ec-header').tabs = [
+    { id: 'home', label: 'Home' }, { id: 'configs', label: 'Configurations' },
+    { id: 'tp', label: 'Threats & Patches' }, { id: 'sd', label: 'Software Deployment' },
+    { id: 'inv', label: 'Inventory' }, { id: 'osd', label: 'OS Deployment', active: true },
+    { id: 'mdm', label: 'MDM' }, { id: 'tools', label: 'Tools' }, { id: 'reports', label: 'Reports' },
+  ];
+
+  /* ── L1 rail — Settings active ── */
+  const l1El = document.getElementById('shell-l1');
+  l1El.items = [
+    { id: 'dash',      label: 'Dashboard',            icon: 'add-widget' },
+    { id: 'images',    label: 'Image Repository',     icon: 'image' },
+    { id: 'drivers',   label: 'Driver Repository',    icon: 'hard-disk' },
+    { id: 'templates', label: 'Deployment Templates', icon: 'layers' },
+    { id: 'tasks',     label: 'Deployment Tasks',     icon: 'settings-deploy' },
+    { id: 'media',     label: 'Boot Media (WinPE)',   icon: 'usb-drive' },
+    { id: 'set',       label: 'Settings',             icon: 'settings', active: true },
+  ];
+  l1El.bottomItems = [{ id: 'update', label: 'Update Now', icon: 'refresh-time' }];
+  l1El.classList.remove('is-hidden');
+
+  /* ── L2 — Cloud Storage active ── */
+  const l2El = document.getElementById('shell-l2');
+  l2El.groups = [
+    { id: 'settings', label: 'Settings', expanded: true, items: [
+      { id: 'general',    label: 'General Settings' },
+      { id: 'cloud',      label: 'Cloud Storage', active: true },
+      { id: 'replication',label: 'Image Replication' },
+      { id: 'remote',     label: 'Remote Office Settings' },
+      { id: 'notif',      label: 'Notifications' },
+    ] },
+  ];
+  l2El.classList.remove('is-hidden');
+
+  /* ── Breadcrumbs ── */
+  const ph = document.getElementById('ph');
+  customElements.whenDefined('ds-page-header').then(() => {
+    ph.breadcrumbs = [
+      { id: 'osd',   label: 'OS Deployment' },
+      { id: 'set',   label: 'Settings' },
+      { id: 'cloud', label: 'Cloud Storage', href: 'osd-cloud-storage.html' },
+      { id: 'clean', label: 'Clean up' },
+    ];
+  });
+
+  /* ── Image data ── */
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const OVER = 1.2; /* GB to free to resume */
+
+  const IMAGES = [
+    { id: 'i1',  name: 'Ubuntu-22.04-Base.img',      icon: 'file',         size: 2.0, used: '4 months ago', ageDays: 122, ro: 1 },
+    { id: 'i2',  name: 'macOS-Ventura-Ref.dmg',      icon: 'file',         size: 1.1, used: '4 months ago', ageDays: 120, ro: 0 },
+    { id: 'i3',  name: 'Win10-Ent-LTSC-2019.wim',    icon: 'file-windows', size: 3.8, used: '3 months ago', ageDays: 95,  ro: 1 },
+    { id: 'i4',  name: 'Win11-Corp-Golden-v3.wim',   icon: 'file-windows', size: 5.9, used: '2 months ago', ageDays: 63,  ro: 0 },
+    { id: 'i5',  name: 'Win11-LoB-Apps.wim',         icon: 'file-windows', size: 1.1, used: '6 weeks ago',  ageDays: 44,  ro: 0 },
+    { id: 'i6',  name: 'Server2022-Base.wim',        icon: 'file-windows', size: 2.2, used: '1 month ago',  ageDays: 32,  ro: 1 },
+    { id: 'i7',  name: 'Win11-Dev-Image.wim',        icon: 'file-windows', size: 3.1, used: '3 weeks ago',  ageDays: 21,  ro: 1 },
+    { id: 'i8',  name: 'Win10-Ent-LTSC-2021.wim',    icon: 'file-windows', size: 4.2, used: '3 weeks ago',  ageDays: 20,  ro: 2 },
+    { id: 'i9',  name: 'Win11-Corp-Golden-v4.wim',   icon: 'file-windows', size: 6.4, used: '2 days ago',   ageDays: 2,   ro: 3 },
+    { id: 'i10', name: 'WinPE-Boot-x64.wim',         icon: 'usb-drive',    size: 1.4, used: '5 min ago',    ageDays: 0,   ro: 5 },
+  ];
+  const sizeOf = (id) => IMAGES.find((x) => x.id === id)?.size || 0;
+
+  const tbl = document.getElementById('cl-table');
+  tbl.columns = [
+    { id: 'name', header: 'Image file',
+      render: (r) => `<span class="img-name"><ds-icon name="${r.icon}" size="16"></ds-icon><span class="img-file">${esc(r.name)}</span></span>` },
+    { id: 'size', header: 'Size', align: 'end', render: (r) => `${r.size.toFixed(1)} GB` },
+    { id: 'used', header: 'Last used (LRU)',
+      render: (r) => r.ageDays >= 30 ? `<span class="lru-old">${esc(r.used)}</span>` : `<span class="cell-muted">${esc(r.used)}</span>` },
+    { id: 'ro',   header: 'Remote offices', align: 'center', render: (r) => String(r.ro) },
+    { id: 'st',   header: 'Replication', align: 'start',
+      render: (r) => `<ds-badge variant="subtle" state="${r.ro > 0 ? 'moderate' : 'default'}" shape="rounded" size="medium">${r.ro > 0 ? 'Paused' : 'Not replicated'}</ds-badge>` },
+  ];
+  tbl.rows = IMAGES;
+
+  /* ── Selection summary logic ── */
+  const sumbar = document.getElementById('sumbar');
+  const sumText = document.getElementById('sum-text');
+  const sumIco = document.getElementById('sum-ico');
+  const delBtn = document.getElementById('del-btn');
+
+  function refreshSummary(ids) {
+    const reclaimed = ids.reduce((a, id) => a + sizeOf(id), 0);
+    const enough = reclaimed >= OVER;
+    delBtn.toggleAttribute('disabled', ids.length === 0);
+    sumbar.setAttribute('data-ok', enough ? 'true' : 'false');
+    sumIco.setAttribute('name', enough ? 'circle-tick' : (ids.length ? 'exclamation-triangle' : 'info-circle'));
+    if (ids.length === 0) {
+      sumText.innerHTML = 'Select image files to reclaim space. Free up at least <strong>1.2 GB</strong> to resume replication.';
+    } else if (enough) {
+      sumText.innerHTML = `<strong>${ids.length}</strong> selected · reclaims <strong>${reclaimed.toFixed(1)} GB</strong> — enough to resume replication.`;
+    } else {
+      sumText.innerHTML = `<strong>${ids.length}</strong> selected · reclaims <strong>${reclaimed.toFixed(1)} GB</strong> — free up <strong>${(OVER - reclaimed).toFixed(1)} GB</strong> more.`;
+    }
+  }
+  tbl.addEventListener('ds-data-table-selection', (e) => refreshSummary(e.detail?.ids || []));
+  refreshSummary([]);
+
+  /* ── Auto-select oldest unused (LRU) until we clear the overage ── */
+  document.getElementById('autopick-btn').addEventListener('click', () => {
+    const candidates = IMAGES.filter((x) => x.ro === 0).sort((a, b) => b.ageDays - a.ageDays);
+    const pick = [];
+    let sum = 0;
+    for (const c of candidates) { pick.push(c.id); sum += c.size; if (sum >= OVER) break; }
+    tbl.selectedIds = pick;
+    refreshSummary(pick);
+  });
+
+  /* ── Delete → confirm ── */
+  const confirm = document.getElementById('confirm-del');
+  document.getElementById('del-btn').addEventListener('click', () => {
+    const ids = tbl.selectedIds;
+    if (!ids.length) return;
+    const gb = ids.reduce((a, id) => a + sizeOf(id), 0).toFixed(1);
+    confirm.setAttribute('description', `${ids.length} image file(s) totalling ${gb} GB will be permanently deleted from cloud storage. This cannot be undone.`);
+    confirm.open();
+  });
+  confirm.addEventListener('ds-confirmation-primary', () => {
+    const ids = new Set(tbl.selectedIds);
+    tbl.rows = IMAGES.filter((r) => !ids.has(r.id));
+    tbl.selectedIds = [];
+    refreshSummary([]);
+    confirm.removeAttribute('open');
+  });
+
+  /* ── Navigation ── */
+  const goBuy = () => { window.location.href = 'osd-cloud-storage-buy.html'; };
+  document.getElementById('buy-btn').addEventListener('click', goBuy);
+  document.getElementById('exceeded').addEventListener('ds-inline-alert-action', goBuy);
+</script>
+
+</body>
+</html>

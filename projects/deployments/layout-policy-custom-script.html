@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<!-- Deployments · Policy · Custom Script (Computer) — sectioned form. -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Custom Script — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+#pol-cs-pop .lay__section { padding: 20px 0 4px; }
+#pol-cs-pop .lay__fields { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; }
+#pol-cs-pop .lay__field { max-width: 900px; padding-bottom: 20px; }
+#pol-cs-pop .lay__field:has(ds-field-helper) { padding-bottom: 0; }
+#pol-cs-pop .lay__control-only { padding-inline-start: 288px; }
+#pol-cs-pop #cs-run-mode .ds-radio-group__items,
+#pol-cs-pop #cs-frequency .ds-radio-group__items,
+#pol-cs-pop #cs-runas-mode .ds-radio-group__items { display: flex; flex-direction: row; gap: 32px; flex-wrap: nowrap; }
+#pol-cs-pop .cs-tip {
+  display: flex; gap: 12px; padding: 12px 14px; border-radius: var(--uems-radius-m, 10px);
+  background: var(--uems-bg-info-primary); color: var(--uems-text-info); max-width: 380px;
+  font-size: var(--font-size-13); align-self: flex-start;
+}
+#pol-cs-pop .cs-tip strong { display: block; margin-bottom: 4px; color: var(--uems-text-info); }
+#pol-cs-pop .cs-row-tip { display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: start; }
+</style>
+
+<div id="pol-cs-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <ds-page-header id="cs-ph" icon="code" structure="default"
+      title="Custom Script (Computer)"
+      description="Run a script from the repository or a one-line command line — with logging, arguments, and frequency control."
+      show-description show-breadcrumbs>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large"
+          title="Name and description"
+          description="Name this policy and add an optional description."></ds-section-header>
+        <div class="lay__fields">
+          <div class="lay__field">
+            <ds-text-input id="cs-name" size="medium" required
+              label="Name" label-position="left"
+              placeholder="MyConfiguration51826"
+              value="MyConfiguration51826"
+              show-counter counter="20/100"></ds-text-input>
+          </div>
+          <div class="lay__field">
+            <div class="lay__control-only">
+              <ds-text-link href="#" size="medium" prefix-icon="plus">Add description</ds-text-link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large"
+          title="Configure custom script"
+          description="Pick the script source, its arguments, exit codes and how often it runs."></ds-section-header>
+
+        <div class="lay__fields">
+          <div class="lay__field">
+            <ds-radio-group id="cs-run-mode"
+              label="Execute script from / Run" label-position="left"
+              value="repo"></ds-radio-group>
+          </div>
+          <div class="lay__field">
+            <div style="display: flex; align-items: center; gap: 12px; max-width: 820px;">
+              <ds-input-select id="cs-script" size="medium" required
+                label="Script name" label-position="left"
+                placeholder="Search and select from script repository"></ds-input-select>
+              <ds-text-link href="#" size="medium">Create/modify script</ds-text-link>
+            </div>
+          </div>
+          <div class="lay__field">
+            <ds-text-input id="cs-args" size="medium"
+              label="Script arguments" label-position="left"
+              placeholder=""></ds-text-input>
+          </div>
+          <div class="lay__field">
+            <div class="cs-row-tip">
+              <div class="lay__control-only" style="padding-inline-start:0;">
+                <div style="padding-inline-start: 288px;">
+                  <ds-checkbox id="cs-mask" size="medium" label="Mask sensitive data."></ds-checkbox>
+                  <p style="margin: 6px 0 0; color: var(--uems-text-secondary); font-size: var(--font-size-12); max-width: 520px;">
+                    Note: Users who can modify this custom script configuration can access
+                    protected sensitive data. <ds-text-link href="#" size="small">Learn more</ds-text-link>
+                  </p>
+                </div>
+              </div>
+              <aside class="cs-tip">
+                <ds-icon name="notification" size="18"></ds-icon>
+                <div>
+                  <strong>Safeguard sensitive information</strong>
+                  Ensure sensitive information (e.g. password, license keys) is not included in
+                  command line arguments, as the script may be reused by other users.
+                </div>
+              </aside>
+            </div>
+          </div>
+          <div class="lay__field">
+            <ds-file-upload id="cs-deps"
+              label="Dependency files" label-position="left"
+              placeholder="Choose files (or) drop here"></ds-file-upload>
+          </div>
+          <div class="lay__field">
+            <ds-text-input id="cs-exit" size="medium" required
+              label="Specify the exit code(s)" label-position="left"
+              placeholder="0"
+              value="0"
+              helper-text="The exit code(s) confirm if the script has been executed successfully. In case of multiple exit codes, enter them separated by comma."></ds-text-input>
+          </div>
+          <div class="lay__field">
+            <ds-radio-group id="cs-frequency"
+              label="Frequency" label-position="left"
+              value="once"></ds-radio-group>
+          </div>
+          <div class="lay__field">
+            <div class="lay__control-only">
+              <ds-checkbox id="cs-log" size="medium" checked label="Enable logging for troubleshooting"></ds-checkbox>
+            </div>
+          </div>
+        </div>
+
+        <!-- Run As — user-variant only; hidden for the computer variant. -->
+        <ds-accordion id="cs-runas" expanded hidden>
+          <span slot="title">Run As</span>
+        </ds-accordion>
+      </div>
+
+    </div>
+
+    <ds-form-footer id="cs-footer" show-left="false">
+      <ds-button data-act="cancel"     variant="outline">Cancel</ds-button>
+      <ds-button data-act="save-draft" variant="secondary">Save as Draft</ds-button>
+      <ds-button data-act="add"        variant="primary">Add Policy</ds-button>
+    </ds-form-footer>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('pol-cs-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+
+  const ph = $('cs-ph');
+  ph.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    const label = (a.textContent || '').trim();
+    if (label === 'Policies'   && window.openContentView) { e.preventDefault(); window.openContentView('deployments-policy-list'); }
+    else if (label === 'Add Policy' && window.openContentView) { e.preventDefault(); window.openContentView('deployments-policy'); }
+  });
+
+  $('cs-run-mode').options = [
+    { value: 'repo',    label: 'Repository', selected: true },
+    { value: 'command', label: 'Command line' },
+  ];
+  $('cs-script').options = [
+    { value: 'ps-defender-scan',   label: 'PS · Defender full scan' },
+    { value: 'ps-inventory-check', label: 'PS · Inventory check' },
+    { value: 'bash-log-cleanup',   label: 'Bash · Log cleanup' },
+    { value: 'ps-print-mapping',   label: 'PS · Map network printers' },
+  ];
+
+  /* ---- Run As accordion body (populated once; toggled on show()) ------- */
+  const runAsAcc = $('cs-runas');
+  const runAsBody = document.createElement('div');
+  runAsBody.setAttribute('slot', 'body');
+  runAsBody.innerHTML = `
+    <div style="padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 20px; max-width: 820px;">
+      <ds-radio-group id="cs-runas-mode"
+        label="Execute the script As" label-position="left"
+        value="target"></ds-radio-group>
+      <div id="cs-cred-row" style="display: flex; align-items: center; gap: 12px; max-width: 820px;">
+        <ds-input-select id="cs-cred" size="medium"
+          label="Credential" label-position="left"
+          placeholder="Select domain credential"></ds-input-select>
+        <ds-text-link href="#" size="medium" prefix-icon="refresh">Manage credentials</ds-text-link>
+      </div>
+    </div>`;
+  runAsAcc.appendChild(runAsBody);
+  const runAsMode = runAsBody.querySelector('#cs-runas-mode');
+  const credRow   = runAsBody.querySelector('#cs-cred-row');
+  const credField = runAsBody.querySelector('#cs-cred');
+  /* First-radio label is set inside applyScope() — Target User for the user
+     variant, System User for the computer variant. */
+  runAsMode.options = [
+    { value: 'target', label: 'Target User', selected: true },
+    { value: 'runas',  label: 'Run As User' },
+  ];
+  credField.options = [
+    { value: 'domain-admin', label: 'DOMAIN\\Administrator' },
+    { value: 'ec-service',   label: 'EC-Service-Account' },
+    { value: 'ops-svc',      label: 'ITOps-svc' },
+  ];
+  /* Credential row is hidden when "Target User" is picked. */
+  function syncCredRow() {
+    const v = runAsMode.value || 'target';
+    credRow.style.display = v === 'runas' ? '' : 'none';
+  }
+  runAsMode.addEventListener('ds-radio-change', syncCredRow);
+  syncCredRow();
+
+  $('cs-footer').addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('[data-act]');
+    if (!btn) return;
+    const id = btn.dataset.act;
+    if (id === 'cancel') { if (window.openContentView) window.openContentView('deployments-policy'); return; }
+    const scope = (root.__scope || 'computer');
+    const name  = ($('cs-name').value || '').trim() || 'Untitled policy';
+    if (window.savePolicyAndOpen) window.savePolicyAndOpen({
+      name,
+      type: 'Custom Script',
+      platform: 'Windows',
+      scope,
+      status: id === 'save-draft' ? 'Draft' : 'Ready to Execute',
+    });
+  });
+
+  /* ---- Scope-aware rendering — reads `window.__policyPendingScope` set
+     by the Policy card chip click, and picks either the user variant or
+     the computer variant. Frequency wording (Logon vs Startup) and the
+     Run As accordion (user only) swap accordingly. */
+  function applyScope() {
+    const scope = window.__policyPendingScope === 'user' ? 'user' : 'computer';
+    delete window.__policyPendingScope;
+    root.__scope = scope;
+    const suffix = scope === 'user' ? '(User)' : '(Computer)';
+    ph.setAttribute('title', 'Custom Script ' + suffix);
+    ph.breadcrumbs = [
+      { label: 'Policies',   href: '#' },
+      { label: 'Add Policy', href: '#' },
+      { label: 'Custom Script ' + suffix },
+    ];
+    $('cs-frequency').options = scope === 'user'
+      ? [
+          { value: 'once',      label: 'Once', selected: true },
+          { value: 'logon',     label: 'During every logon' },
+          { value: 'sub-logon', label: 'During subsequent logon' },
+          { value: 'refresh',   label: 'Every refresh cycle' },
+        ]
+      : [
+          { value: 'once',        label: 'Once', selected: true },
+          { value: 'startup',     label: 'During every startup' },
+          { value: 'sub-startup', label: 'During subsequent startup' },
+          { value: 'refresh',     label: 'Every refresh cycle' },
+        ];
+    /* Run As is present for BOTH variants — only the first-radio label
+       differs (Target User for user scope, System User for device scope). */
+    runAsAcc.removeAttribute('hidden');
+    runAsMode.options = [
+      { value: 'target', label: scope === 'user' ? 'Target User' : 'System User', selected: true },
+      { value: 'runas',  label: 'Run As User' },
+    ];
+    syncCredRow();
+  }
+
+  function show() { root.hidden = false; applyScope(); }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-policy-custom-script'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-policy-custom-script'].show()));
+})();
+</script>
+</body>
+</html>

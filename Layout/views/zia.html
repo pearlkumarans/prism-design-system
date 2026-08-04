@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<!--
+  Ask Zia — DUAL-MODE drawer (header-takeover overlay inside .shell-area).
+  • Open directly → standalone harness mounts a .shell-area host + auto-opens.
+  • Fetched by Shell → injectDrawer('zia') extracts only <template id="drawer-fragment">.
+  Talks to the shell via window.ShellCtx (shellArea / lang / setActiveIcon);
+  registers window.ShellDrawers.zia. The header Zia *button* stays in Shell.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Ask Zia — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="../design-system-library/src/components/drawer/drawer.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-base); }
+    .sa-host { position: relative; display: flex; flex: 1; min-height: 0; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  #zia-pop { display: none; flex: 1; min-width: 0; background: var(--uems-bg-primary); border-radius: 16px; overflow: hidden; }
+  .shell-area.zia-open #zia-pop { display: flex; }
+  .shell-area.zia-open > ds-content,
+  .shell-area.zia-open > ds-sidebar-l1,
+  .shell-area.zia-open > ds-sidebar-l2 { display: none !important; }
+  .zia-side { flex: 0 0 232px; display: flex; flex-direction: column; border-inline-end: 1px solid var(--uems-border-tertiary); background: var(--uems-bg-primary-alt); overflow: hidden; }
+  .zia-side__head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 8px; }
+  .zia-side__brand { display: flex; align-items: center; gap: 8px; font-size: var(--font-size-16); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+  .zia-side__logo { width: 24px; height: 24px; }
+  .zia-side .ds-sidebar-l2 { width: 100%; border: 0 !important; border-radius: 0 !important; background: transparent; padding-top: 0; }
+  .zia-main { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 24px 32px; overflow-y: auto; }
+  .zia-hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .zia-hero__logo { width: 44px; height: 44px; margin-bottom: 16px; }
+  .zia-hero__title { font-size: var(--font-size-28, 28px); font-weight: var(--font-weight-bold); margin: 0 0 8px; background: linear-gradient(90deg, #6B4FD8, #2C66DD); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .zia-hero__sub { font-size: var(--font-size-15); color: var(--uems-text-secondary); margin: 0 0 32px; }
+  .zia-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; width: 100%; max-width: 960px; }
+  /* surface (border/radius/bg/hover) comes from <ds-container>; keep alignment + selected state */
+  .zia-card { text-align: start; }
+  .zia-card.is-active { border-color: var(--uems-text-accent-link); box-shadow: 0 0 0 1px var(--uems-text-accent-link); }
+  .zia-card__head { display: flex; align-items: center; gap: 8px; font-size: var(--font-size-15); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); margin-bottom: 8px; }
+  .zia-card__desc { font-size: var(--font-size-13); line-height: 18px; color: var(--uems-text-secondary); }
+  .zia-input { margin: 16px auto 0; width: 100%; max-width: 960px; border: 1.5px solid transparent; border-radius: 16px; background: linear-gradient(var(--uems-bg-primary), var(--uems-bg-primary)) padding-box, linear-gradient(90deg, #d138c4, #2C66DD) border-box; padding: 12px 16px; }
+  .zia-input__field { width: 100%; border: 0; outline: 0; resize: none; background: transparent; font-family: inherit; font-size: var(--font-size-15); color: var(--uems-text-primary); min-height: 44px; }
+  .zia-input__field::placeholder { color: var(--uems-text-secondary); }
+  .zia-input__bar { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .zia-input__tools { display: flex; align-items: center; gap: 8px; }
+  .zia-tool, .zia-mic { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--uems-border-tertiary); background: var(--uems-bg-primary); color: var(--uems-text-secondary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; }
+  .zia-tool:hover, .zia-mic:hover { background: var(--uems-bg-secondary); }
+  .zia-tool-ib .ds-icon-button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--uems-border-tertiary); background: var(--uems-bg-primary); color: var(--uems-text-secondary); }
+  .zia-tool-ib .ds-icon-button:hover { background: var(--uems-bg-secondary); }
+  .zia-tool-ib .ds-icon-button ds-icon, .zia-tool-ib .ds-icon-button svg { width: 18px !important; height: 18px !important; }
+  .zia-send { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--uems-bg-accent-primary); color: var(--uems-text-accent-link); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  html.a11y-kbd-nav .zia-input__field:focus-visible { outline: none !important; }
+</style>
+
+<section class="zia-page" id="zia-pop" aria-label="Ask Zia">
+  <aside class="zia-side">
+    <div class="zia-side__head">
+      <span class="zia-side__brand"><img class="zia-side__logo" src="../design-system-library/src/icons/logos/Zia-logo.svg" alt="" /> <span data-zia-brand>Ask Zia</span></span>
+    </div>
+    <ds-sidebar-l2 id="zia-l2" show-search="false" style="flex:1;min-height:0;"></ds-sidebar-l2>
+  </aside>
+  <div class="zia-main">
+    <div class="zia-hero">
+      <img class="zia-hero__logo" src="../design-system-library/src/icons/logos/Zia-logo.svg" alt="" />
+      <h1 class="zia-hero__title" data-zia-hero>How can we assist you?</h1>
+      <p class="zia-hero__sub" data-zia-sub>Choose a prompt below or write your own to start chatting with Zia</p>
+      <div class="zia-cards" id="zia-cards"></div>
+    </div>
+    <div class="zia-input">
+      <textarea class="zia-input__field" id="zia-input" rows="1" placeholder="Ask Zia assist" data-zia-ph></textarea>
+      <div class="zia-input__bar">
+        <div class="zia-input__tools">
+          <button type="button" class="zia-tool zia-tool--slash" aria-label="Commands">/</button>
+          <ds-icon-button class="zia-tool-ib" icon="image" label="Attach image" no-tooltip type="tertiary-grey" size="small"></ds-icon-button>
+        </div>
+        <div class="zia-input__tools">
+          <button type="button" class="zia-tool zia-mic" aria-label="Voice"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+          <button type="button" class="zia-send" aria-label="Send"><ds-icon name="send" size="18"></ds-icon></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  const MSGS = {
+    en: {
+      'zia.brand': 'Ask Zia',
+      'zia.hero': 'How can we assist you?',
+      'zia.sub': 'Choose a prompt below or write your own to start chatting with Zia',
+      'zia.placeholder': 'Ask Zia assist',
+      'zia.new': 'New chat',
+      'zia.search': 'Search chats',
+      'zia.projects': 'Projects',
+      'zia.card.0.t': 'Patch Management',
+      'zia.card.0.d': 'Analyzes historical patch data, CVE trends, and exploit databases & more.',
+      'zia.card.1.t': 'Remote Troubleshooting',
+      'zia.card.1.d': 'Runs diagnostics and either resolves it, escalates with logs & more.',
+      'zia.card.2.t': 'Security & Compliance',
+      'zia.card.2.d': 'Scans endpoint behavior, logs, network activity & more',
+      'zia.card.3.t': 'Configuration',
+      'zia.card.3.d': 'Analyzes device usage, security gaps, Suggests optimal config policies.',
+      'zia.card.4.t': 'Asset Management',
+      'zia.card.4.d': 'Predicts when hardware will fail, tracks actual usage & more.',
+      'zia.card.5.t': 'Others',
+      'zia.card.5.d': 'BitLocker management, browser security controls & more.',
+      'zia.grp.0': 'Recent',
+      'zia.grp.0.item.0': 'Show devices pending patch inst…',
+      'zia.grp.0.item.1': 'Generate compliance report.',
+      'zia.grp.0.item.2': 'List BitLocker-disabled systems',
+      'zia.grp.1': 'July',
+      'zia.grp.1.item.0': 'Open all high severity vulnerabili…',
+      'zia.grp.1.item.1': 'My failed deployments this week',
+      'zia.grp.1.item.2': 'Add a new patch task',
+      'zia.grp.1.item.3': 'Show unassigned vulnerabilities i…',
+      'zia.grp.1.item.4': 'Pending reboot devices list',
+      'zia.grp.2': 'June',
+      'zia.grp.2.item.0': 'My open requests',
+      'zia.grp.2.item.1': 'All devices with outdated antivirus',
+      'zia.grp.2.item.2': 'Show machines without latest C…',
+    },
+    ar: {
+      'zia.brand': 'اسأل Zia',
+      'zia.hero': 'كيف يمكننا مساعدتك؟',
+      'zia.sub': 'اختر موجّهًا أدناه أو اكتب موجّهك الخاص لبدء الدردشة مع Zia',
+      'zia.placeholder': 'اسأل Zia للمساعدة',
+      'zia.new': 'محادثة جديدة',
+      'zia.search': 'بحث في المحادثات',
+      'zia.projects': 'المشاريع',
+      'zia.card.0.t': 'إدارة التصحيحات',
+      'zia.card.0.d': 'يحلّل بيانات التصحيح التاريخية واتجاهات CVE وقواعد بيانات الثغرات والمزيد.',
+      'zia.card.1.t': 'استكشاف الأخطاء عن بُعد',
+      'zia.card.1.d': 'يُجري التشخيصات ويحلّها أو يصعّدها مع السجلات والمزيد.',
+      'zia.card.2.t': 'الأمان والامتثال',
+      'zia.card.2.d': 'يفحص سلوك الأجهزة الطرفية والسجلات ونشاط الشبكة والمزيد',
+      'zia.card.3.t': 'التهيئة',
+      'zia.card.3.d': 'يحلّل استخدام الجهاز والثغرات الأمنية ويقترح سياسات التهيئة المثلى.',
+      'zia.card.4.t': 'إدارة الأصول',
+      'zia.card.4.d': 'يتنبأ بموعد فشل الأجهزة ويتتبع الاستخدام الفعلي والمزيد.',
+      'zia.card.5.t': 'أخرى',
+      'zia.card.5.d': 'إدارة BitLocker وعناصر التحكم في أمان المتصفح والمزيد.',
+      'zia.grp.0': 'الأخيرة',
+      'zia.grp.0.item.0': 'عرض الأجهزة المعلّقة لتثبيت التصحيح…',
+      'zia.grp.0.item.1': 'إنشاء تقرير الامتثال.',
+      'zia.grp.0.item.2': 'سرد الأنظمة المعطّل بها BitLocker',
+      'zia.grp.1': 'يوليو',
+      'zia.grp.1.item.0': 'فتح جميع الثغرات عالية الخطورة…',
+      'zia.grp.1.item.1': 'عمليات النشر الفاشلة لديّ هذا الأسبوع',
+      'zia.grp.1.item.2': 'إضافة مهمة تصحيح جديدة',
+      'zia.grp.1.item.3': 'عرض الثغرات غير المعيّنة…',
+      'zia.grp.1.item.4': 'قائمة الأجهزة المعلّقة لإعادة التشغيل',
+      'zia.grp.2': 'يونيو',
+      'zia.grp.2.item.0': 'طلباتي المفتوحة',
+      'zia.grp.2.item.1': 'جميع الأجهزة ذات مكافح الفيروسات القديم',
+      'zia.grp.2.item.2': 'عرض الأجهزة بدون أحدث C…',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+  const CARDS = [
+    { icon: 'patch-block', key: 0 },
+    { icon: 'headphone', key: 1 },
+    { icon: 'shield', key: 2 },
+    { icon: 'settings', key: 3 },
+    { icon: 'layers', key: 4 },
+    { icon: 'grid', key: 5 },
+  ];
+  const HIST = [
+    { key: 0, count: 3 },
+    { key: 1, count: 5 },
+    { key: 2, count: 3 },
+  ];
+  const shellArea = () => window.ShellCtx && window.ShellCtx.shellArea;
+  const setIcon = (a) => window.ShellCtx && window.ShellCtx.setActiveIcon && window.ShellCtx.setActiveIcon(a);
+
+  function applyStrings() {
+    const set = (sel, v) => { const el = document.querySelector(sel); if (el) el.textContent = v; };
+    set('[data-zia-brand]', t('zia.brand'));
+    set('[data-zia-hero]', t('zia.hero'));
+    set('[data-zia-sub]', t('zia.sub'));
+    const ta = document.getElementById('zia-input'); if (ta) ta.setAttribute('placeholder', t('zia.placeholder'));
+  }
+  function buildZia() {
+    const cards = document.getElementById('zia-cards'); const input = document.getElementById('zia-input');
+    applyStrings();
+    if (cards && !cards.children.length) {
+      cards.innerHTML = CARDS.map((c) => { const title = t('zia.card.' + c.key + '.t'); const desc = t('zia.card.' + c.key + '.d'); return `<ds-container class="zia-card" variant="outline" radius="lg" interactive role="button" tabindex="0" data-prompt="${title}"><div class="zia-card__head"><ds-icon name="${c.icon}" size="20"></ds-icon><span>${title}</span></div><div class="zia-card__desc">${desc}</div></ds-container>`; }).join('');
+      cards.querySelectorAll('[data-prompt]').forEach((b) => {
+        b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.click(); } });
+        b.addEventListener('click', () => {
+          cards.querySelectorAll('.zia-card').forEach((x) => x.classList.toggle('is-active', x === b));
+          if (input) { input.value = b.dataset.prompt; input.focus(); }
+        });
+      });
+    }
+    const l2 = document.getElementById('zia-l2');
+    if (l2 && !l2._ziaBuilt) {
+      l2._ziaBuilt = true;
+      l2.groups = [
+        { type: 'item', id: 'new', label: t('zia.new'), icon: 'edit' },
+        { type: 'item', id: 'search', label: t('zia.search'), icon: 'search' },
+        { type: 'item', id: 'projects', label: t('zia.projects'), icon: 'folder' },
+        ...HIST.map((g) => ({ id: 'h' + g.key, label: t('zia.grp.' + g.key), items: Array.from({ length: g.count }, (_, i) => ({ id: 'h' + g.key + '-' + i, label: t('zia.grp.' + g.key + '.item.' + i) })) })),
+      ];
+    }
+  }
+  function show() { const sa = shellArea(); if (!sa) return; sa.classList.remove('set-open'); sa.classList.add('zia-open'); buildZia(); setIcon('zia'); }
+  function hide() { const sa = shellArea(); if (sa) sa.classList.remove('zia-open'); setIcon(null); }
+  function onLang() {
+    const l2 = document.getElementById('zia-l2'); const cards = document.getElementById('zia-cards');
+    if (l2) l2._ziaBuilt = false; if (cards) cards.innerHTML = '';
+    const sa = shellArea();
+    if (sa && sa.classList.contains('zia-open')) buildZia(); else applyStrings();
+  }
+  document.addEventListener('shell:langchange', onLang);
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers.zia = { show, hide, build: buildZia, onLang };
+})();
+</script>
+</template>
+
+<script>
+/* ── STANDALONE HARNESS — runs ONLY when opened directly. ── */
+(function () {
+  const KEY = 'zia';
+  const host = document.createElement('div'); host.className = 'shell-area sa-host'; document.body.appendChild(host);
+  let lang = 'en';
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellCtx = window.ShellCtx || { get shellArea() { return host; }, get lang() { return lang; }, setActiveIcon() {} };
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers[KEY] && window.ShellDrawers[KEY].show();
+  customElements.whenDefined('ds-sidebar-l2').then(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

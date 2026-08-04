@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Empty State — examples</title>
+  <link rel="stylesheet" href="../../styles/index.css" />
+  <script>
+    window.UEMS_ICON_SPRITE = '../../icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../icons/illustrations.svg';
+  </script>
+  <script type="module" src="../../index.js"></script>
+  <style>
+    body { padding: 24px; font-family: var(--font-family-sans); display: flex; flex-direction: column; gap: 32px; }
+    .panel { border: 1px dashed var(--uems-border-tertiary); border-radius: var(--radius-md); padding: 24px; }
+  </style>
+</head>
+<body>
+  <h1>Empty State</h1>
+
+  <h2>Centered (default)</h2>
+  <div class="panel">
+    <ds-empty-state
+      illustration="common-search"
+      title="Explore a diverse array of configurations"
+      description="Configurations helps you manage applications, system settings, and security policies across your network."
+      primary-label="Create configuration"
+      secondary-label="Learn more"
+      supported="windows,macos,linux"
+      useful-link="#" watch-video="#">
+    </ds-empty-state>
+  </div>
+
+  <div class="panel">
+    <ds-empty-state
+      illustration="file-search"
+      title="No results found"
+      description="Try adjusting your filters or search terms."
+      primary-label="Clear filters"
+      show-secondary="false"
+      show-supported="false">
+    </ds-empty-state>
+  </div>
+
+  <div class="panel">
+    <ds-empty-state
+      size="sm"
+      show-illustration="false"
+      title="Invite your first teammate"
+      description="Share work, assign tickets, and collaborate in real time."
+      primary-label="Invite teammate"
+      show-secondary="false"
+      show-supported="false">
+    </ds-empty-state>
+  </div>
+
+  <h2>Steps</h2>
+  <div class="panel">
+    <ds-empty-state id="ex-steps"
+      type="steps"
+      title="Samsung Knox Mobile Enrollment"
+      description='Automate the deployment of corporate Samsung devices. <ds-text-link href="#" variant="primary" size="medium">Learn more</ds-text-link>'
+      primary-label="Start enrollment"
+      supported="windows,macos,linux"
+      useful-link="#" watch-video="#">
+    </ds-empty-state>
+  </div>
+
+  <h2>Option cards</h2>
+  <div class="panel">
+    <ds-empty-state id="ex-options"
+      type="option-cards"
+      title="Kickstart Your OSD Image Creation"
+      description='Configure your source system and choose how you would like to deploy. <ds-text-link href="#" variant="primary" size="medium">Learn more</ds-text-link>'
+      banner-text="Configure a Remote Office to start creating an image."
+      banner-action-label="Configure">
+    </ds-empty-state>
+  </div>
+
+  <h2>Promo</h2>
+  <div class="panel">
+    <ds-empty-state id="ex-promo"
+      type="promo"
+      media="common-search"
+      title="Advanced Analytics for Endpoint Central"
+      description='In-depth analysis of your endpoints and server infrastructure. <ds-text-link href="#" variant="primary" size="medium">Learn more</ds-text-link>'
+      primary-label="Download"
+      supported="windows,macos,linux"
+      useful-link="#" watch-video="#"
+      benefits-label="Feature Benefits">
+    </ds-empty-state>
+  </div>
+
+  <script type="module">
+    customElements.whenDefined('ds-empty-state').then(() => {
+      document.getElementById('ex-steps').steps = [
+        { badge: 'Step 1', label: 'Set up a Samsung Knox account', icon: 'help-circle' },
+        { badge: 'Step 2', label: 'Enroll devices using Knox Mobile Enrollment', icon: 'info-circle' },
+        { badge: 'Step 3', label: 'Bulk prepare / assign', icon: 'circle-tick' },
+      ];
+      document.getElementById('ex-options').options = [
+        { icon: 'common-search', title: 'Install Image Creator Manually', description: 'Download the Image Creator component.', actionLabel: 'Configure now', actionIcon: 'download' },
+        { icon: 'file-search', title: 'Create Image in 3 Simple Steps', description: 'Create an image directly from the source computer.', actionLabel: 'Image creation', actionIcon: 'download' },
+      ];
+      document.getElementById('ex-promo').benefits = [
+        'Seamless integration for real-time threat detection and response',
+        'Empower data for rapid incident investigation',
+        'Identify blind-spots in your infrastructure',
+        'Foster proactive defence strategies with data-driven insights',
+        'Automate compliance reporting with scheduled exports',
+      ];
+    });
+  </script>
+</body>
+</html>

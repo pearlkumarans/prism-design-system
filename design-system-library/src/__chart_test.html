@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <title>ds-chart test</title>
+  <link rel="stylesheet" href="./tokens/index.css">
+  <link rel="stylesheet" href="./components/chart/chart.css">
+  <style>
+    body { font-family: Inter, sans-serif; padding: 24px; display: grid; grid-template-columns: repeat(2, 320px); gap: 32px; }
+    .cell { border: 1px solid #ddd; padding: 12px; }
+    .cell h4 { margin: 0 0 8px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="cell"><h4>column grouped</h4><ds-chart id="c1" type="column" mode="grouped"></ds-chart></div>
+  <div class="cell"><h4>column stacked</h4><ds-chart id="c2" type="column" mode="stacked"></ds-chart></div>
+  <div class="cell"><h4>bar grouped</h4><ds-chart id="c3" type="bar" mode="grouped"></ds-chart></div>
+  <div class="cell"><h4>line</h4><ds-chart id="c4" type="line"></ds-chart></div>
+  <div class="cell"><h4>pie</h4><ds-chart id="c5" type="pie"></ds-chart></div>
+  <div class="cell"><h4>donut</h4><ds-chart id="c6" type="donut"></ds-chart></div>
+  <div class="cell"><h4>funnel</h4><ds-chart id="c7" type="funnel"></ds-chart></div>
+  <div class="cell"><h4>gauge</h4><ds-chart id="c8" type="gauge"></ds-chart></div>
+  <div class="cell"><h4>data labels</h4><ds-chart id="c9" type="column" show-data-labels></ds-chart></div>
+  <div class="cell"><h4>loading</h4><ds-chart id="c10" loading></ds-chart></div>
+  <div class="cell"><h4>rtl</h4><ds-chart id="c11" type="column" mode="grouped" rtl></ds-chart></div>
+
+  <script type="module">
+    import './components/index.js';
+    window.__ready = false;
+    customElements.whenDefined('ds-chart').then(() => {
+      // set explicit data on one to exercise the property setter
+      document.getElementById('c1').data = {
+        categories: ['A','B','C'],
+        series: [{ name:'X', values:[10,20,30] }, { name:'Y', values:[5,15,25] }]
+      };
+      requestAnimationFrame(() => { window.__ready = true; });
+    });
+  </script>
+</body>
+</html>

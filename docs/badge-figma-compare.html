@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<title>badge ↔ figma compare harness</title>
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/badge/badge.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/badge/badge.js"></script>
+<style>body{background:#fff;padding:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;} pre{width:100%;font-size:11px;}</style>
+</head>
+<body>
+  <!-- sizes × shapes (subtle default) -->
+  <ds-badge id="s-pill"  variant="subtle" state="default" size="small"  shape="pill"    icon="add" label="Badge"></ds-badge>
+  <ds-badge id="m-pill"  variant="subtle" state="default" size="medium" shape="pill"    icon="add" label="Badge"></ds-badge>
+  <ds-badge id="l-pill"  variant="intense" state="default" size="large" shape="pill"    icon="add" label="Badge"></ds-badge>
+  <ds-badge id="m-round" variant="subtle" state="default" size="medium" shape="rounded" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="m-rtl"   variant="subtle" state="default" size="medium" shape="pill"    icon="add" label="شارة" rtl></ds-badge>
+
+  <!-- all 7 states × 2 styles, medium pill -->
+  <ds-badge id="i-default"     variant="intense" state="default"     size="medium" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="i-active"      variant="intense" state="active"      size="medium" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="i-success"     variant="intense" state="success"     size="medium" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="i-critical"    variant="intense" state="critical"    size="medium" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="i-moderate"    variant="intense" state="moderate"    size="medium" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="i-important"   variant="intense" state="important"   size="medium" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="i-acknowledge" variant="intense" state="acknowledge" size="medium" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="u-default"     variant="subtle"  state="default"     size="medium" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="u-active"      variant="subtle"  state="active"      size="medium" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="u-success"     variant="subtle"  state="success"     size="medium" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="u-critical"    variant="subtle"  state="critical"    size="medium" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="u-moderate"    variant="subtle"  state="moderate"    size="medium" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="u-important"   variant="subtle"  state="important"   size="medium" icon="add" label="Badge"></ds-badge>
+  <ds-badge id="u-acknowledge" variant="subtle"  state="acknowledge" size="medium" icon="add" label="Badge"></ds-badge>
+
+  <pre id="report">measuring…</pre>
+
+<script type="module">
+const hex = (rgb) => {
+  const m = rgb.match(/\d+/g); if (!m) return rgb;
+  return '#' + m.slice(0,3).map(n => (+n).toString(16).padStart(2,'0')).join('').toUpperCase();
+};
+const EXPECT = {
+  geometry: {
+    's-pill':  { h: 16, minW: '16px', fs: '10px', lh: '14px', fw: '500', iconW: 8, padH: '4px' },
+    'm-pill':  { h: 20, minW: '20px', fs: '12px', lh: '16px', fw: '500', iconW: 12, padH: '8px' },
+    'l-pill':  { h: 24, minW: 'auto', fs: '14px', lh: '20px', fw: '400', iconW: 16, padH: '8px' },
+  },
+  colors: { // light theme, from Figma variable bindings
+    'i-default':     { bg: '#5F6C89', fg: '#FFFFFF' },
+    'i-active':      { bg: '#2C66DD', fg: '#FFFFFF' },
+    'i-success':     { bg: '#0C8844', fg: '#FFFFFF' },
+    'i-critical':    { bg: '#E42527', fg: '#FFFFFF' },
+    'i-moderate':    { bg: '#F9B21D', fg: '#000000' },
+    'i-important':   { bg: '#E65100', fg: '#FFFFFF' },
+    'i-acknowledge': { bg: '#663399', fg: '#FFFFFF' },
+    'u-default':     { bg: '#F0F2F5', fg: '#2A303D' },
+    'u-active':      { bg: '#EAF0FC', fg: '#1E52BB' },
+    'u-success':     { bg: '#E7F3ED', fg: '#0A7138' },
+    'u-critical':    { bg: '#FDEBEB', fg: '#C1181B' },
+    'u-moderate':    { bg: '#FEF8EB', fg: '#956B11' },
+    'u-important':   { bg: '#FFEEE5', fg: '#BC4200' },
+    'u-acknowledge': { bg: '#F1EAF8', fg: '#663399' },
+  }
+};
+await customElements.whenDefined('ds-badge');
+await new Promise(r => setTimeout(r, 600));
+const lines = [];
+let pass = 0, fail = 0;
+const check = (id, what, got, want) => {
+  const ok = String(got) === String(want);
+  ok ? pass++ : fail++;
+  lines.push(`${ok ? 'PASS' : 'FAIL'} ${id} ${what}: got=${got} want=${want}`);
+};
+for (const [id, e] of Object.entries(EXPECT.geometry)) {
+  const el = document.getElementById(id);
+  const cs = getComputedStyle(el);
+  const r = el.getBoundingClientRect();
+  check(id, 'height', Math.round(r.height), e.h);
+  check(id, 'min-width', cs.minWidth, e.minW);
+  check(id, 'font-size', cs.fontSize, e.fs);
+  check(id, 'line-height', cs.lineHeight, e.lh);
+  check(id, 'font-weight', cs.fontWeight, e.fw);
+  check(id, 'pad-v', cs.paddingTop, '2px');
+  check(id, 'pad-h', cs.paddingLeft, e.padH);
+  check(id, 'gap', cs.gap, '2px');
+  const icon = el.querySelector('.ds-badge__icon ds-icon svg, .ds-badge__icon svg, .ds-badge__icon ds-icon');
+  if (icon) check(id, 'icon-width', Math.round(icon.getBoundingClientRect().width), e.iconW);
+  else { lines.push(`WARN ${id} icon element not found`); }
+  check(id, 'font-family-head', cs.fontFamily.split(',')[0].replace(/"/g,''), 'Zoho Puvi');
+}
+{ // shapes
+  const pill = getComputedStyle(document.getElementById('m-pill')).borderRadius;
+  const round = getComputedStyle(document.getElementById('m-round')).borderRadius;
+  check('m-pill', 'radius', pill, '9999px');
+  check('m-round', 'radius', round, '4px');
+}
+{ // rtl order: icon should be visually after text
+  const el = document.getElementById('m-rtl');
+  const cs = getComputedStyle(el);
+  check('m-rtl', 'dir-attr', el.getAttribute('dir'), 'rtl');
+  const reversed = cs.flexDirection === 'row-reverse' || cs.direction === 'rtl';
+  check('m-rtl', 'mirrored', reversed, true);
+}
+for (const [id, e] of Object.entries(EXPECT.colors)) {
+  const el = document.getElementById(id);
+  const cs = getComputedStyle(el);
+  check(id, 'bg', hex(cs.backgroundColor), e.bg);
+  check(id, 'fg', hex(cs.color), e.fg);
+}
+lines.unshift(`RESULT: ${pass} pass / ${fail} fail`);
+document.getElementById('report').textContent = lines.join('\n');
+document.title = `DONE ${pass}/${pass+fail}`;
+</script>
+</body>
+</html>

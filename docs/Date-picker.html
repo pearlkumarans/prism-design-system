@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Date Picker — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/date-picker/date-picker.css">
+<link rel="stylesheet" href="../design-system-library/src/components/calendar/calendar.css">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/button/button.js"></script>
+<script type="module" src="../design-system-library/src/components/calendar/calendar.js"></script>
+<script type="module" src="../design-system-library/src/components/date-picker/date-picker.js"></script>
+<style>
+  .demo-dp-section { margin-bottom: 28px; }
+  .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+</style>
+</head>
+<body class="page-date-picker">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link active">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Date Picker</h1>
+        <p class="page-desc">A date picker is the field where the user lands when they need to set a date &mdash; they can type it in DD/MM/YYYY for speed, or click the calendar icon to open a picker. Use date ranges (with two thumbs) for filters and report periods; offer preset shortcuts (Today, Yesterday, Last 7 days) so users with a common need don&rsquo;t have to click through the calendar.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <p class="doc-section-subtitle" style="margin-bottom:28px;">The date picker input is composed of three numbered regions. Each label is anchored to the live preview with a connector line.</p>
+          <div style="padding:40px 0;overflow:visible;">
+            <div id="anatomy-dp-wrap" style="position:relative;display:inline-block;padding:32px 80px;">
+              <ds-date-picker id="anatomy-dp" label="" type="single" show-helper-row="false"></ds-date-picker>
+              <div class="anat-mk anat-mk-left"  data-target="container" style="top:0;"><span class="anat-marker-inline">1</span><div class="anat-mk-line"></div></div>
+              <div class="anat-mk-top" data-target="icon" style="left:0;"><span class="anat-marker-inline">2</span><div class="anat-mk-vline"></div></div>
+              <div class="anat-mk anat-mk-right" data-target="input" style="top:0;"><div class="anat-mk-line"></div><span class="anat-marker-inline">3</span></div>
+            </div>
+          </div>
+          <style>
+            .anat-mk { position: absolute; display: flex; align-items: center; gap: 8px; white-space: nowrap; transform: translateY(-50%); z-index: 20; }
+            .anat-mk-left  { right: calc(100% - 80px); }
+            .anat-mk-right { left:  calc(100% - 80px); }
+            .anat-mk-line  { width: 40px; height: 2px; background: #2563eb; }
+            .anat-mk-top { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; transform: translate(-50%, -100%); padding-bottom: 4px; z-index: 20; }
+            .anat-mk-vline { width: 2px; height: 14px; background: #2563eb; }
+          </style>
+
+          <script type="module">
+            customElements.whenDefined('ds-date-picker').then(() => {
+              const host = document.getElementById('anatomy-dp');
+              const wrap = document.getElementById('anatomy-dp-wrap');
+              if (!host || !wrap) return;
+              const place = () => {
+                const wrapRect = wrap.getBoundingClientRect();
+                const targets = {
+                  container: host.querySelector('.ds-date-picker__input'),
+                  icon:      host.querySelector('.ds-date-picker__input ds-icon'),
+                  input:     host.querySelector('.ds-date-picker__input input'),
+                };
+                wrap.querySelectorAll('.anat-mk').forEach((mk) => {
+                  const t = targets[mk.dataset.target];
+                  if (!t) { mk.style.display = 'none'; return; }
+                  const r = t.getBoundingClientRect();
+                  mk.style.top = (r.top + r.height / 2 - wrapRect.top) + 'px';
+                });
+                wrap.querySelectorAll('.anat-mk-top').forEach((mk) => {
+                  const t = targets[mk.dataset.target];
+                  if (!t) { mk.style.display = 'none'; return; }
+                  const r = t.getBoundingClientRect();
+                  mk.style.left = (r.left + r.width / 2 - wrapRect.left) + 'px';
+                  mk.style.top  = (r.top - wrapRect.top) + 'px';
+                });
+              };
+              requestAnimationFrame(() => requestAnimationFrame(place));
+              window.addEventListener('load', place, { once: true });
+              if (document.fonts?.ready) document.fonts.ready.then(place);
+              new ResizeObserver(place).observe(host);
+            });
+          </script>
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Input Container</strong><span>Wrapper with border, radius, and focus ring. Holds the icon and input. Reacts to hover, focus, error, and disabled states.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Calendar Icon</strong><span>Leading affordance indicating the field opens a date picker. Clicking the icon toggles the popover.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Input</strong><span>Read-only text input displaying the selected date in <code style="font-family:monospace;font-size:13px;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,0.06);">DD/MM/YYYY</code> format. Falls back to placeholder when empty.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Every <code>type</code> &times; <code>show-presets</code> &times; <code>show-footer</code> &times; validation-state combination from <code>date-picker.css</code>, plus real-world report/scheduling patterns &mdash; rendered with the live <code>&lt;ds-date-picker&gt;</code> web component.</p>
+
+            <style>
+              .page-date-picker .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+              .page-date-picker .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; }
+              .page-date-picker .demo-container .demo-canvas {
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+                min-height: 0 !important;
+                flex-direction: column !important;
+                padding: 32px !important;
+                gap: 32px !important;
+              }
+              .page-date-picker .demo-dp-section { display: flex; flex-direction: column; gap: 14px; }
+              .page-date-picker .demo-dp-section > .demo-group-label {
+                font-size: 11px !important; font-weight: 700 !important; letter-spacing: 0.08em !important;
+                color: var(--prism-text-muted) !important; text-transform: uppercase !important;
+                margin: 0 !important; text-align: left !important; width: auto !important;
+              }
+              .page-date-picker .demo-dp-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px 24px;
+              }
+              @media (max-width: 880px) {
+                .page-date-picker .demo-dp-grid { grid-template-columns: 1fr; }
+              }
+              .page-date-picker .demo-dp-card {
+                display: flex; flex-direction: column; gap: 10px;
+                padding: 16px;
+                border: 1px solid var(--prism-border);
+                border-radius: 12px;
+                background: rgba(255,255,255,0.02);
+              }
+              [data-theme="light"] .page-date-picker .demo-dp-card {
+                background: rgba(255,255,255,0.55);
+                border-color: rgba(37,99,235,0.1);
+              }
+              .page-date-picker .demo-dp-card .mini-label {
+                font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+                color: var(--prism-text-muted); text-transform: uppercase;
+              }
+              .page-date-picker .demo-dp-card .mini-desc {
+                font-size: 12px; color: var(--prism-text-muted); line-height: 1.5;
+              }
+              .page-date-picker .demo-realworld-card {
+                display: flex; flex-direction: column; gap: 14px;
+                padding: 20px;
+                border: 1px solid var(--prism-border);
+                border-radius: 12px;
+                background: rgba(255,255,255,0.02);
+              }
+              [data-theme="light"] .page-date-picker .demo-realworld-card {
+                background: rgba(255,255,255,0.55);
+                border-color: rgba(37,99,235,0.1);
+              }
+              .page-date-picker .demo-realworld-card-label {
+                font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+                color: var(--prism-text-muted); text-transform: uppercase;
+              }
+              .page-date-picker .demo-filter-bar {
+                display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;
+              }
+              .page-date-picker .demo-filter-bar > ds-date-picker { flex: 1 1 240px; min-width: 240px; }
+            </style>
+
+            <div class="demo-container">
+              <!-- Mac-window toolbar -->
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Date Picker &middot; type &times; configuration + real-world report patterns</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Types -->
+                <div class="demo-dp-section">
+                  <div class="demo-group-label">Types &mdash; single (one date) vs range (start + end)</div>
+                  <div class="demo-dp-grid">
+                    <div class="demo-dp-card">
+                      <span class="mini-label">Single</span>
+                      <span class="mini-desc">One input + one calendar. Use for due dates, birthdays, single events.</span>
+                      <ds-date-picker label="Due date" type="single"></ds-date-picker>
+                    </div>
+                    <div class="demo-dp-card">
+                      <span class="mini-label">Range</span>
+                      <span class="mini-desc">Two inputs + dual calendar. Enforces end &ge; start automatically.</span>
+                      <ds-date-picker label="Date range" type="range"></ds-date-picker>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Configurations -->
+                <div class="demo-dp-section">
+                  <div class="demo-group-label">Configurations &mdash; presets &amp; staged Apply footer</div>
+                  <div class="demo-dp-grid">
+                    <div class="demo-dp-card">
+                      <span class="mini-label">With presets &mdash; <code>show-presets</code></span>
+                      <span class="mini-desc">Surface Today / Last 7 / Last 30 / This month as quick-pick shortcuts.</span>
+                      <ds-date-picker label="Reporting period" type="range" show-presets></ds-date-picker>
+                    </div>
+                    <div class="demo-dp-card">
+                      <span class="mini-label">With footer &mdash; <code>show-footer</code></span>
+                      <span class="mini-desc">Clear / Cancel / Apply row. Use when the picker drives an expensive query.</span>
+                      <ds-date-picker label="Schedule date" type="range" show-presets show-footer></ds-date-picker>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Validation + disabled -->
+                <div class="demo-dp-section">
+                  <div class="demo-group-label">States &mdash; validation &amp; disabled</div>
+                  <div class="demo-dp-grid">
+                    <div class="demo-dp-card">
+                      <span class="mini-label">Error state &mdash; <code>validation-state="error"</code></span>
+                      <span class="mini-desc">Red border + helper text. Pair with a clear remediation message.</span>
+                      <ds-date-picker label="Expires on" type="single" validation-state="error" helper-text="Pick a future date"></ds-date-picker>
+                    </div>
+                    <div class="demo-dp-card">
+                      <span class="mini-label">Disabled &mdash; <code>disabled</code></span>
+                      <span class="mini-desc">Greyed input, non-interactive. Use for read-only fields or locked records.</span>
+                      <ds-date-picker label="Locked date" type="single" disabled></ds-date-picker>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Real-world patterns -->
+                <div class="demo-dp-section">
+                  <div class="demo-group-label">Real-world patterns</div>
+
+                  <div class="demo-realworld-card">
+                    <span class="demo-realworld-card-label">Reports filter bar &mdash; range picker driving an analytics query</span>
+                    <div class="demo-filter-bar">
+                      <ds-date-picker label="Reporting window" type="range" show-presets></ds-date-picker>
+                      <ds-button variant="primary" size="medium">Run report</ds-button>
+                    </div>
+                    <div style="font-size:12px;color:var(--prism-text-muted);line-height:1.5;">Use presets so 80% of users pick a common span in one click without opening the calendar.</div>
+                  </div>
+
+                  <div class="demo-realworld-card">
+                    <span class="demo-realworld-card-label">Patch schedule form &mdash; staged Apply for expensive operations</span>
+                    <ds-date-picker label="Deploy window" type="range" show-presets show-footer helper-text="Patches will be rolled out in this window across all 248 endpoints."></ds-date-picker>
+                    <div style="display:flex;gap:8px;justify-content:flex-end;">
+                      <ds-button variant="secondary" size="medium">Save draft</ds-button>
+                      <ds-button variant="primary"   size="medium">Schedule deploy</ds-button>
+                    </div>
+                  </div>
+
+                  <div class="demo-realworld-card">
+                    <span class="demo-realworld-card-label">Two-field form row &mdash; single + range side by side</span>
+                    <div class="demo-filter-bar">
+                      <ds-date-picker label="Effective from" type="single"></ds-date-picker>
+                      <ds-date-picker label="Review cycle" type="range"></ds-date-picker>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">type="range"</code> when start and end dates are both required.</li>
+                <li>Surface common spans as presets (Today, Last 7 / 30 days, This month).</li>
+                <li>Enable <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">showFooter</code> when the picker drives an expensive operation.</li>
+                <li>Respect <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">minDate</code> / <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">maxDate</code> &mdash; disable invalid days in the grid.</li>
+                <li>Announce the selected date via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-live</code> on selection.</li>
+                <li>Close the popover after Apply (or after single-click selection when no Footer).</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Use two independent Single pickers for a date range &mdash; they can't enforce end &ge; start.</li>
+                <li>Hide presets behind "Custom" when &ge; 60% of users pick one of them.</li>
+                <li>Enable Footer for inline form fields where immediate commit is expected.</li>
+                <li>Let users pick an invalid date and only reject it on form submit.</li>
+                <li>Flip only the input without mirroring the calendar grid in RTL.</li>
+                <li>Hard-code one date format globally &mdash; keep it locale-aware.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Icon usage -->
+          <div class="doc-section">
+            <h2 id="icon-usage" class="doc-section-title">Icon Usage</h2>
+            <p class="doc-section-subtitle">The Date Picker composes a text input with a trailing calendar icon and a popover calendar. Use the right icon for each interaction surface.</p>
+
+            <h3 class="doc-h4" style="margin-top:24px;">Trigger input icons</h3>
+            <table class="size-table" style="margin-top:16px;">
+              <thead><tr><th>Slot</th><th>Icon</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td>Suffix (default)</td><td><code>calendar</code></td><td>Opens the calendar popover on click. 20px in default size, 16px for small inputs.</td></tr>
+                <tr><td>Suffix (range type)</td><td><code>calendar-range</code></td><td>Visually distinguishes a range picker from a single date picker.</td></tr>
+                <tr><td>Suffix (date-time picker)</td><td><code>clock</code> after <code>calendar</code></td><td>Two icons separated by a 1px divider when both date and time are selectable.</td></tr>
+                <tr><td>Clear button</td><td><code>close-circle</code></td><td>Shown inside the input before the calendar icon, only when a value is set. Click clears the input without opening the popover.</td></tr>
+                <tr><td>Error state</td><td><code>exclamation-circle</code></td><td>Replaces or sits next to the calendar icon in error state. Critical-default color.</td></tr>
+              </tbody>
+            </table>
+
+            <h3 class="doc-h4" style="margin-top:32px;">Popover header icons</h3>
+            <table class="size-table" style="margin-top:16px;">
+              <thead><tr><th>Element</th><th>Icon</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>Previous month</td><td><code>chevron-left</code></td><td>Swaps to <code>chevron-right</code> in RTL automatically.</td></tr>
+                <tr><td>Next month</td><td><code>chevron-right</code></td><td>Swaps to <code>chevron-left</code> in RTL automatically.</td></tr>
+                <tr><td>Year picker toggle</td><td><code>chevron-down</code></td><td>Inline next to the month/year title.</td></tr>
+                <tr><td>Close (optional)</td><td><code>close</code></td><td>Top-right of popover for explicit dismissal. Usually omitted &mdash; outside-click closes.</td></tr>
+              </tbody>
+            </table>
+
+            <h3 class="doc-h4" style="margin-top:32px;">Presets panel icons</h3>
+            <p style="color:var(--prism-text-muted);font-size:14px;line-height:1.7;margin-top:8px;">
+              When showing the side panel with preset ranges (Today, Last 7 days, etc.), keep the preset list mostly text-based. Icons are optional and should only be used for spatial/semantic clarity:
+            </p>
+            <ul class="doc-list" style="margin-top:8px;">
+              <li><strong><code>circle-dot</code></strong> &mdash; "Today" preset (matches the current-day indicator inside the grid).</li>
+              <li><strong><code>arrow-left</code></strong> &mdash; "Last N days" presets (looking backward in time).</li>
+              <li><strong><code>arrow-right</code></strong> &mdash; "Next N days" presets (looking forward).</li>
+              <li><strong><code>calendar-range</code></strong> &mdash; "Custom range" preset that opens a free-form range selector.</li>
+            </ul>
+
+            <h3 class="doc-h4" style="margin-top:32px;">Footer action icons</h3>
+            <p style="color:var(--prism-text-muted);font-size:14px;line-height:1.7;margin-top:8px;">
+              When <code>showFooter</code> is enabled, the footer has Cancel and Apply buttons. These are text-only by convention &mdash; do not add icons. The only exception is when space is extremely constrained:
+            </p>
+            <ul class="doc-list" style="margin-top:8px;">
+              <li><strong><code>check</code></strong> + "Apply" &mdash; icon-button variant for mobile/compact layouts.</li>
+              <li><strong><code>close</code></strong> + "Cancel" &mdash; matches the check pattern in compact mode.</li>
+            </ul>
+            <p style="margin-top:16px;font-size:13.5px;color:var(--prism-text-muted);">
+              <strong>Rule of thumb:</strong> calendar/clock icons identify the picker. Inside the popover, chevrons are the only critical icons &mdash; everything else should be text. Avoid icon-only buttons in this surface; the popover is the user's chance to read a label, so use that affordance.
+            </p>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Design tokens, variants, and visual specifications that define the Date Picker's appearance.</p>
+
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">2 Type &times; 2 State = 4 core variants. Runtime toggles (Show Presets, Show Footer, validation) multiply usage surfaces.</p>
+            <table class="size-table">
+              <thead><tr><th>Axis</th><th>Values</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Type</strong></td><td><code>Single</code>, <code>Range</code></td><td>Single = one input + one calendar. Range = two inputs + dual calendar.</td></tr>
+                <tr><td><strong>State</strong></td><td><code>Closed</code>, <code>Open</code></td><td>Closed only renders the input(s); Open mounts the popover.</td></tr>
+                <tr><td><strong>Show Presets</strong></td><td><code>false</code>, <code>true</code></td><td>Toggles the quick-select shortcuts column.</td></tr>
+                <tr><td><strong>Show Footer</strong></td><td><code>false</code>, <code>true</code></td><td>Toggles the Clear / Cancel / Apply action row.</td></tr>
+                <tr><td><strong>Label Position</strong></td><td><code>none</code>, <code>left</code> (default), <code>top</code></td><td>Left puts the label in a 280px column beside the field (auto-stacks below 640px); Top stacks it above; None hides it (text kept as <code>aria-label</code>).</td></tr>
+                <tr><td><strong>Full Width</strong></td><td><code>false</code> (default), <code>true</code></td><td>Stretches the input(s) to fill the container, overriding the fixed trigger width.</td></tr>
+              </tbody>
+            </table>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:14px;">
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-bottom:12px;">Single</div>
+                <ds-date-picker label="" type="single" show-helper-row="false"></ds-date-picker>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:10px;">One input, one calendar.</div>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:14px;">
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-bottom:12px;">Range</div>
+                <ds-date-picker label="" type="range" show-helper-row="false"></ds-date-picker>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:10px;">Two inputs + dual calendar panel.</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="input-states" class="doc-section-title">Input States</h2>
+            <p class="doc-section-subtitle">Five validation and interaction states driving border, shadow, and opacity. The <code>validationState</code> prop accepts <code>none</code> | <code>success</code> | <code>error</code> per MD &sect;Props.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:24px;">
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-date-picker label="" type="single" show-helper-row="false"></ds-date-picker>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">Default</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:2px;">Empty, ready for input</div>
+              </div>
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-date-picker label="" type="single" show-helper-row="false" value="2026-03-15"></ds-date-picker>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">Filled</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:2px;">Value committed</div>
+              </div>
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-date-picker label="" type="single" validation-state="success" value="2026-03-15" helper-text="Date confirmed"></ds-date-picker>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">Success</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:2px;"><code>validation-state="success"</code></div>
+              </div>
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-date-picker label="" type="single" validation-state="error" helper-text="Invalid date"></ds-date-picker>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">Error</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:2px;"><code>validation-state="error"</code></div>
+              </div>
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-date-picker label="" type="single" show-helper-row="false" disabled></ds-date-picker>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">Disabled</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:2px;">Read-only, skip in tab order</div>
+              </div>
+            </div>
+            <p class="doc-section-subtitle" style="margin-top:20px;font-size:13.5px;"><strong>Hover and Focus</strong> are inherited from the underlying text input &mdash; hover deepens the border, keyboard focus draws a 2&nbsp;px <code>Border-Accent-Focus</code> ring (per MD &sect;Spacing &amp; Sizing). Try tabbing into the Default card or hovering its border.</p>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="calendar-popover" class="doc-section-title">Calendar Popover</h2>
+            <p class="doc-section-subtitle">The popover surface that anchors 8px below the input. BG-Primary-alt, 8px radius, 1px border, Shadow-Medium.</p>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Popover width (single month)</strong></td><td>280 px</td></tr>
+                <tr><td><strong>Popover width (dual month)</strong></td><td>568 px (2 &times; 280px + 8px internal gap)</td></tr>
+                <tr><td><strong>Popover corner radius</strong></td><td>8 px (<code>radius-8</code>)</td></tr>
+                <tr><td><strong>Popover offset from input</strong></td><td>8 px (below)</td></tr>
+                <tr><td><strong>Internal padding</strong></td><td>12 px (<code>spacing/12</code>)</td></tr>
+                <tr><td><strong>Day cell size</strong></td><td>32 &times; 32 px</td></tr>
+                <tr><td><strong>Selected-day pill / circle</strong></td><td>28 &times; 28 px centred inside cell</td></tr>
+                <tr><td><strong>Preset column width</strong></td><td>160 px</td></tr>
+                <tr><td><strong>Footer height</strong></td><td>48 px</td></tr>
+                <tr><td><strong>Input width</strong></td><td>240 px (Single); 2 &times; 240 px + 8 px gap (Range)</td></tr>
+                <tr><td><strong>Input height</strong></td><td>32 px</td></tr>
+                <tr><td><strong>Input corner radius</strong></td><td>6 px (<code>radius-6</code>)</td></tr>
+                <tr><td><strong>Default border stroke</strong></td><td>1 px</td></tr>
+                <tr><td><strong>Focus border stroke</strong></td><td>2 px</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="color-tokens" class="doc-section-title">Colour Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Role</th></tr></thead>
+              <tbody>
+                <tr><td><code>Background/BG-Primary-alt</code></td><td>Input background; popover background</td></tr>
+                <tr><td><code>Background/BG-Accent</code></td><td>Selected day fill (Single); range endpoints (Range)</td></tr>
+                <tr><td><code>Background/BG-Accent-Subtle</code></td><td>Days between range endpoints</td></tr>
+                <tr><td><code>Background/BG-Hover</code></td><td>Day cell hover</td></tr>
+                <tr><td><code>Background/BG-Disabled</code></td><td>Disabled input background</td></tr>
+                <tr><td><code>Border/Border-Secondary</code></td><td>Input default border; popover border</td></tr>
+                <tr><td><code>Border/Border-Accent</code></td><td>Focused input border (2 px)</td></tr>
+                <tr><td><code>Border/Border-Error</code></td><td>Error input border</td></tr>
+                <tr><td><code>Text/Text-Primary</code></td><td>Input value, current-month day numbers, header title</td></tr>
+                <tr><td><code>Text/Text-Placeholder</code></td><td>Input placeholder (DD/MM/YYYY)</td></tr>
+                <tr><td><code>Text/Text-Tertiary</code></td><td>Weekday-row abbreviations; helper text</td></tr>
+                <tr><td><code>Text/Text-Disabled</code></td><td>Outside-month days; disabled days (min/max/disabledDates)</td></tr>
+                <tr><td><code>Text/Text-Inverse</code></td><td>Day number on a selected cell (on BG-Accent)</td></tr>
+                <tr><td><code>Text/Text-Link</code></td><td>Header chevrons + month-year label (clickable)</td></tr>
+                <tr><td><code>Text/Text-Error</code></td><td>Required *; error helper text</td></tr>
+                <tr><td><code>Shadow/Shadow-Medium</code></td><td>Popover drop shadow</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="spacing-tokens" class="doc-section-title">Spacing Tokens</h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>spacing/4</code></td><td>4 px</td><td>Weekday-row vertical gap; footer button inner gap</td></tr>
+                <tr><td><code>spacing/8</code></td><td>8 px</td><td>Input &harr; popover gap; input horizontal padding; day-cell gap</td></tr>
+                <tr><td><code>spacing/12</code></td><td>12 px</td><td>Popover internal padding</td></tr>
+                <tr><td><code>spacing/16</code></td><td>16 px</td><td>Header padding; footer padding</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="border-radius" class="doc-section-title">Border Radius</h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>border-radius/radius-6</code></td><td>6 px</td><td>Input box</td></tr>
+                <tr><td><code>border-radius/radius-8</code></td><td>8 px</td><td>Popover outer corners</td></tr>
+                <tr><td><code>border-radius/radius-full</code></td><td>999 px</td><td>Selected-day pill / circle</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="typography" class="doc-section-title">Typography</h2>
+            <p class="doc-section-subtitle">All Date Picker text uses <strong>Zoho Puvi</strong>.</p>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Size</th><th>Weight</th><th>Line Height</th></tr></thead>
+              <tbody>
+                <tr><td>Label</td><td>13 px</td><td><code>600 Semibold</code></td><td>20 px</td></tr>
+                <tr><td>Input value / placeholder</td><td>14 px</td><td><code>400 Regular</code></td><td>20 px</td></tr>
+                <tr><td>Popover header (month-year)</td><td>14 px</td><td><code>600 Semibold</code></td><td>20 px</td></tr>
+                <tr><td>Weekday row</td><td>12 px</td><td><code>500 Medium</code></td><td>16 px</td></tr>
+                <tr><td>Day number</td><td>13 px</td><td><code>400 Regular</code></td><td>20 px</td></tr>
+                <tr><td>Day number (selected)</td><td>13 px</td><td><code>500 Medium</code></td><td>20 px</td></tr>
+                <tr><td>Preset item</td><td>13 px</td><td><code>400 Regular</code></td><td>20 px</td></tr>
+                <tr><td>Footer button</td><td>13 px</td><td><code>500 Medium</code></td><td>20 px</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">Date Picker is designed for calendar date selection via a text input and popover.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When users must select a specific calendar date (date of birth, due date, appointment).</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When users must select a span of dates (report range, booking, date filter) &rarr; use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">type="range"</code>.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When presets (Today, Last 7 days, This month) cover the majority of cases &rarr; enable <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">showPresets</code>.</li>
+                  <li style="border:none;background:transparent;">When the selection must be confirmed before applying (filters, batch ops) &rarr; enable <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">showFooter</code>.</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#e42527" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For single-day recurring selection (day-of-week) &mdash; use Checkbox Group or Radio Group.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For date + time input &mdash; use a DateTime Picker (Date Picker + time input).</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For free-form text dates in prose &mdash; use a plain Text Input.</li>
+                  <li style="border:none;background:transparent;">For scheduling multiple discrete dates &mdash; use a multi-date calendar pattern.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="single-vs-range" class="doc-section-title">Single vs Range</h2>
+            <p class="doc-section-subtitle">Pick the Type axis based on the selection model required.</p>
+            <table class="size-table">
+              <thead><tr><th>Type</th><th>Behaviour</th><th>When to pick</th></tr></thead>
+              <tbody>
+                <tr><td><code>single</code></td><td>One input, one calendar. Selecting a day commits immediately (or stages if <code>showFooter</code>).</td><td>DOB, appointment, due date, scheduling.</td></tr>
+                <tr><td><code>range</code></td><td>Two inputs (start, end) + dual calendar. First click = start; second click = end. Days between render a range highlight.</td><td>Report period, booking, filtering records between dates.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="presets-vs-manual" class="doc-section-title">Presets vs Manual Entry</h2>
+            <p class="doc-section-subtitle">Presets short-circuit common date spans. Keep manual entry available for everything else.</p>
+            <ul class="doc-list">
+              <li><strong>Surface presets</strong> when &ge; 60% of users pick one of them (Today, Last 7 days, This month). They reduce clicks to one.</li>
+              <li><strong>Always keep manual day-grid selection available</strong> &mdash; presets are shortcuts, not replacements.</li>
+              <li><strong>Keep presets concise</strong> &mdash; a long list clutters the popover and increases scan time.</li>
+              <li><strong>Allow custom presets</strong> via the <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">presets</code> prop (e.g. "This quarter", "Year to date") when the domain calls for it.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do's and Don'ts</h2>
+            <p class="doc-section-subtitle">Guidelines for effective Date Picker usage.</p>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li><strong>Range for spans:</strong> Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">type="range"</code> when start and end dates are both required.</li>
+                <li><strong>Surface presets:</strong> Offer Today, Last 7 / 30 days, This month for common spans.</li>
+                <li><strong>Staged commit:</strong> Enable <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">showFooter</code> for expensive operations (report, query).</li>
+                <li><strong>Respect bounds:</strong> Disable invalid days in the grid &mdash; don't error only on apply.</li>
+                <li><strong>Mirror for RTL:</strong> Mirror the weekday row and grid order, not just the input.</li>
+                <li><strong>Locale-aware format:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">DD/MM/YYYY</code> for APAC/EU, <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">MM/DD/YYYY</code> for en-US.</li>
+                <li><strong>Close after commit:</strong> Close the popover after Apply (or after single-click select without Footer).</li>
+                <li><strong>Announce selection:</strong> Read the selected date via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-live</code> for screen readers.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li><strong>Two Single pickers:</strong> Don't use two independent Single pickers for a range &mdash; they can't enforce end &ge; start.</li>
+                <li><strong>Hide frequent presets:</strong> Don't tuck popular presets behind "Custom" when most users need them.</li>
+                <li><strong>Footer on inline forms:</strong> Don't gate immediate-commit form fields behind an Apply button.</li>
+                <li><strong>Errors only on submit:</strong> Don't let users pick an invalid date and reject it only at form time.</li>
+                <li><strong>Half-RTL:</strong> Don't flip only the input without mirroring the calendar grid.</li>
+                <li><strong>Hard-coded format:</strong> Don't force one format globally &mdash; respect locale.</li>
+                <li><strong>Leave popover open:</strong> Don't keep the popover open after Apply &mdash; the user has moved on.</li>
+                <li><strong>Visual-only highlight:</strong> Don't rely on visual selection alone &mdash; non-sighted users won't know.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Components that complement or can be used instead of Date Picker.</p>
+            <div class="related-grid">
+              <a href="Calendar.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Calendar</a>
+              <a href="Dropdown.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg> Dropdown</a>
+              <a href="Text-field.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg> Text Field</a>
+              <a href="Checkbox.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg> Checkbox Group</a>
+              <a href="Radio-button.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg> Radio Group</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <p class="doc-section-subtitle">Design tokens and resources for implementing the Date Picker component.</p>
+            <ul class="doc-list">
+              <li><strong>Figma Node:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">17195:1122073</code> &mdash; Component Set: Date Picker</li>
+              <li><strong>Figma File:</strong> <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=17195-1122073" target="_blank" style="color:var(--prism-violet);text-decoration:none;font-weight:600;">UEMS Design System 3.0 &mdash; Date Picker</a></li>
+              <li><strong>Variant Matrix:</strong> 2 Type &times; 2 State = 4 base variants, multiplied by Show Presets &times; Show Footer &times; Validation.</li>
+              <li><strong>Typography:</strong> Zoho Puvi Regular (400), Medium (500), Semibold (600)</li>
+              <li><strong>Last updated:</strong> 2026-04-19</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Use the controls below to configure the Date Picker component and view the generated HTML code.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Type</label><select class="cp-select" id="pg-type"><option value="single" selected>Single</option><option value="range">Range</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show Presets</label><select class="cp-select" id="pg-presets"><option value="no" selected>No</option><option value="yes">Yes</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show Footer</label><select class="cp-select" id="pg-footer"><option value="no" selected>No</option><option value="yes">Yes</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">State</label><select class="cp-select" id="pg-state"><option value="default" selected>Default</option><option value="error">Error</option><option value="disabled">Disabled</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Label position</label><select class="cp-select" id="pg-labelpos"><option value="none">none</option><option value="left" selected>left</option><option value="top">top</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Full width</label><select class="cp-select" id="pg-fullwidth"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="pg-rtl"><option value="false" selected>No</option><option value="true">Yes</option></select></div>
+            </div>
+            <div class="cp-preview" id="pg-preview-area" style="padding:32px;justify-content:center;">
+              <ds-date-picker id="pg-dp-element" label="Select date" type="single"></ds-date-picker>
+            </div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-copy-btn"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg> Copy code</button>
+            </div>
+            <div style="background:#0a0a0c;">
+              <div class="cp-code-area" id="pg-code-output"></div>
+            </div>
+          </div>
+
+          <script type="module">
+            customElements.whenDefined('ds-date-picker').then(() => {
+              const typeEl    = document.getElementById('pg-type');
+              const presetsEl = document.getElementById('pg-presets');
+              const footerEl  = document.getElementById('pg-footer');
+              const stateEl   = document.getElementById('pg-state');
+              const labelPosEl = document.getElementById('pg-labelpos');
+              const fullWidthEl = document.getElementById('pg-fullwidth');
+              const rtlEl     = document.getElementById('pg-rtl');
+              const dp        = document.getElementById('pg-dp-element');
+              const codeOut   = document.getElementById('pg-code-output');
+              const copyBtn   = document.getElementById('pg-copy-btn');
+
+              const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+              const COPY_LTR = { label: 'Select date', errHelper: 'Please enter a valid date' };
+              const COPY_RTL = { label: 'اختر التاريخ', errHelper: 'يرجى إدخال تاريخ صالح' };
+
+              function update() {
+                const isRtl = rtlEl.value === 'true';
+                const copy  = isRtl ? COPY_RTL : COPY_LTR;
+                dp.setAttribute('type', typeEl.value);
+                dp.setAttribute('label', copy.label);
+                if (presetsEl.value === 'yes') dp.setAttribute('show-presets', '');
+                else dp.removeAttribute('show-presets');
+                if (footerEl.value === 'yes') dp.setAttribute('show-footer', '');
+                else dp.removeAttribute('show-footer');
+                if (stateEl.value === 'error') {
+                  dp.setAttribute('validation-state', 'error');
+                  dp.setAttribute('helper-text', copy.errHelper);
+                } else {
+                  dp.removeAttribute('validation-state');
+                  dp.removeAttribute('helper-text');
+                }
+                if (stateEl.value === 'disabled') dp.setAttribute('disabled', '');
+                else dp.removeAttribute('disabled');
+                if (labelPosEl.value !== 'left') dp.setAttribute('label-position', labelPosEl.value);
+                else dp.removeAttribute('label-position');
+                if (fullWidthEl.value === 'true') dp.setAttribute('full-width', '');
+                else dp.removeAttribute('full-width');
+                if (isRtl) dp.setAttribute('rtl', '');
+                else dp.removeAttribute('rtl');
+
+                const attrs = [];
+                attrs.push(`type="${typeEl.value}"`);
+                attrs.push(`label="${copy.label}"`);
+                if (presetsEl.value === 'yes')  attrs.push('show-presets');
+                if (footerEl.value === 'yes')   attrs.push('show-footer');
+                if (stateEl.value === 'error') {
+                  attrs.push('validation-state="error"');
+                  attrs.push(`helper-text="${copy.errHelper}"`);
+                }
+                if (stateEl.value === 'disabled') attrs.push('disabled');
+                if (labelPosEl.value !== 'left') attrs.push(`label-position="${labelPosEl.value}"`);
+                if (fullWidthEl.value === 'true') attrs.push('full-width');
+                if (isRtl) attrs.push('rtl');
+                const raw = `<ds-date-picker\n  ${attrs.join('\n  ')}\n></ds-date-picker>`;
+                codeOut.innerHTML = esc(raw)
+                  .replace(/&lt;(\/?)(ds-date-picker)/g, '&lt;$1<span style="color:#a78bfa;">$2</span>')
+                  .replace(/(type|label|label-position|full-width|show-presets|show-footer|validation-state|helper-text|disabled|rtl)(=|&gt;)/g, '<span style="color:#38bdf8;">$1</span>$2')
+                  .replace(/&quot;(.*?)&quot;/g, '<span style="color:#34d399;">"$1"</span>');
+                codeOut.dataset.raw = raw;
+              }
+
+              [typeEl, presetsEl, footerEl, stateEl, labelPosEl, fullWidthEl, rtlEl].forEach((el) => el.addEventListener('change', update));
+              copyBtn.addEventListener('click', () => {
+                const raw = codeOut.dataset.raw || '';
+                navigator.clipboard.writeText(raw).then(() => {
+                  const o = copyBtn.innerHTML;
+                  copyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+                  setTimeout(() => { copyBtn.innerHTML = o; }, 2000);
+                });
+              });
+
+              update();
+            });
+          </script>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="component-api-properties" class="doc-section-title">Component API &amp; Properties</h2>
+            <table class="size-table">
+              <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>type</code></td><td><code>'single' | 'range'</code></td><td><code>'single'</code></td><td>Selection model. Range renders two inputs and a dual calendar.</td></tr>
+                <tr><td><code>value</code></td><td><code>Date | null | [Date, Date]</code></td><td><code>null</code></td><td>Controlled value. Single &rarr; Date; Range &rarr; [start, end].</td></tr>
+                <tr><td><code>onChange</code></td><td><code>(value) =&gt; void</code></td><td>&mdash;</td><td>Fires when the selection changes (or per-endpoint when no Footer).</td></tr>
+                <tr><td><code>label</code></td><td><code>string</code></td><td><code>"Select Date"</code></td><td>Field label text.</td></tr>
+                <tr><td><code>required</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Appends a red <code>*</code> to the label.</td></tr>
+                <tr><td><code>label-position</code></td><td><code>'none' | 'left' | 'top'</code></td><td><code>'left'</code></td><td>Label inline in a 280px column (left), stacked above (top), or hidden with the text kept as <code>aria-label</code> (none). A left label auto-stacks below 640px.</td></tr>
+                <tr><td><code>full-width</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Stretches the input(s) to fill the container, overriding the fixed trigger width (single 240 / range 320).</td></tr>
+                <tr><td><code>isDisabled</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Disables the inputs and prevents the popover from opening.</td></tr>
+                <tr><td><code>validationState</code></td><td><code>'none' | 'success' | 'error'</code></td><td><code>'none'</code></td><td>Drives border colour and helper-row icon/text.</td></tr>
+                <tr><td><code>helperText</code></td><td><code>string</code></td><td>&mdash;</td><td>Helper or validation message below the input.</td></tr>
+                <tr><td><code>placeholder</code></td><td><code>string</code></td><td><code>"DD/MM/YYYY"</code></td><td>Input placeholder. For Range, use <code>placeholderStart</code> / <code>placeholderEnd</code>.</td></tr>
+                <tr><td><code>format</code></td><td><code>string</code></td><td><code>"DD/MM/YYYY"</code></td><td>Display format for the input value. Locale-aware.</td></tr>
+                <tr><td><code>minDate</code></td><td><code>Date</code></td><td>&mdash;</td><td>Earliest selectable date. Days before are disabled in the grid.</td></tr>
+                <tr><td><code>maxDate</code></td><td><code>Date</code></td><td>&mdash;</td><td>Latest selectable date.</td></tr>
+                <tr><td><code>disabledDates</code></td><td><code>(d: Date) =&gt; boolean</code></td><td>&mdash;</td><td>Predicate to disable specific days (e.g. weekends, holidays).</td></tr>
+                <tr><td><code>showPresets</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Show the preset-shortcut column in the popover.</td></tr>
+                <tr><td><code>presets</code></td><td><code>Preset[]</code></td><td>Defaults</td><td>Override the default preset list.</td></tr>
+                <tr><td><code>showFooter</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Show Apply / Cancel / Clear footer. Enables "staged" selection.</td></tr>
+                <tr><td><code>applyLabel / cancelLabel / clearLabel</code></td><td><code>string</code></td><td><code>"Apply" / "Cancel" / "Clear"</code></td><td>Footer button labels.</td></tr>
+                <tr><td><code>weekStartsOn</code></td><td><code>0 | 1 | 2 | 3 | 4 | 5 | 6</code></td><td><code>0</code> (Sun)</td><td>First day of the week in the grid.</td></tr>
+                <tr><td><code>locale</code></td><td><code>string</code></td><td><code>"en"</code></td><td>BCP 47 locale tag for month / weekday labels.</td></tr>
+                <tr><td><code>numberOfMonths</code></td><td><code>1 | 2</code></td><td><code>type === 'range' ? 2 : 1</code></td><td>Override the number of calendar panels shown.</td></tr>
+                <tr><td><code>isOpen / onOpenChange</code></td><td><code>boolean / (open) =&gt; void</code></td><td><code>false</code></td><td>Controlled open state.</td></tr>
+                <tr><td><code>rtl</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Mirrors the layout for right-to-left reading order.</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin:24px 0 12px;">Preset shape</h4>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Type</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>id</code></td><td><code>string</code></td><td>Unique preset id.</td></tr>
+                <tr><td><code>label</code></td><td><code>string</code></td><td>Visible label (e.g. "Last 7 days").</td></tr>
+                <tr><td><code>getRange</code></td><td><code>() =&gt; Date | [Date, Date]</code></td><td>Function returning the preset's value at activation time.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="html-example" class="doc-section-title">HTML Example</h2>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">div</span> <span style="color:#D19A66;">class</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"dp-wrapper"</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">label</span> <span style="color:#D19A66;">for</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"dueDate"</span><span style="color:#ABB2BF;">&gt;</span>Due date <span style="color:#E06C75;">*</span><span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">label</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">div</span> <span style="color:#D19A66;">class</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"dp-input-field"</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">span</span> <span style="color:#D19A66;">class</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"dp-cal-icon"</span><span style="color:#ABB2BF;">&gt;</span>&#128197;<span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">span</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">input</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">id</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"dueDate"</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">class</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"dp-input"</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">type</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"text"</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">inputmode</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"numeric"</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">placeholder</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"DD/MM/YYYY"</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">aria-haspopup</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"dialog"</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#D19A66;">aria-describedby</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"dueDate-help"</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">/&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">div</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">div</span> <span style="color:#D19A66;">id</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"dueDate-help"</span> <span style="color:#D19A66;">class</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"dp-helper"</span><span style="color:#ABB2BF;">&gt;</span>Please enter a future date.<span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">div</span><span style="color:#ABB2BF;">&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">div</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="react-examples" class="doc-section-title">React Examples</h2>
+
+            <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin:16px 0 10px;">Basic &mdash; Single date</h4>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#C678DD;">const</span> [<span style="color:#E5C07B;">date</span>, <span style="color:#E5C07B;">setDate</span>] = <span style="color:#61AFEF;">useState</span>&lt;<span style="color:#E5C07B;">Date</span> | <span style="color:#C678DD;">null</span>&gt;(<span style="color:#C678DD;">null</span>);<br><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">DatePicker</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Due date"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span>{<span style="color:#E5C07B;">date</span>}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">onChange</span><span style="color:#56B6C2;">=</span>{<span style="color:#E5C07B;">setDate</span>}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">required</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin:24px 0 10px;">Range</h4>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#C678DD;">const</span> [<span style="color:#E5C07B;">range</span>, <span style="color:#E5C07B;">setRange</span>] = <span style="color:#61AFEF;">useState</span>&lt;[<span style="color:#E5C07B;">Date</span> | <span style="color:#C678DD;">null</span>, <span style="color:#E5C07B;">Date</span> | <span style="color:#C678DD;">null</span>]&gt;([<span style="color:#C678DD;">null</span>, <span style="color:#C678DD;">null</span>]);<br><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">DatePicker</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">type</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"range"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Report period"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span>{<span style="color:#E5C07B;">range</span>}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">onChange</span><span style="color:#56B6C2;">=</span>{<span style="color:#E5C07B;">setRange</span>}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">required</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin:24px 0 10px;">With presets + footer (staged commit)</h4>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">DatePicker</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">type</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"range"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Report period"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span>{<span style="color:#E5C07B;">range</span>}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">onChange</span><span style="color:#56B6C2;">=</span>{<span style="color:#E5C07B;">setRange</span>}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">showPresets</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">showFooter</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin:24px 0 10px;">Min / Max bounded</h4>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">DatePicker</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Appointment date"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span>{<span style="color:#E5C07B;">date</span>}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">onChange</span><span style="color:#56B6C2;">=</span>{<span style="color:#E5C07B;">setDate</span>}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">minDate</span><span style="color:#56B6C2;">=</span>{<span style="color:#C678DD;">new</span> <span style="color:#E5C07B;">Date</span>()}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">maxDate</span><span style="color:#56B6C2;">=</span>{<span style="color:#61AFEF;">addDays</span>(<span style="color:#C678DD;">new</span> <span style="color:#E5C07B;">Date</span>(), <span style="color:#D19A66;">90</span>)}<br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin:24px 0 10px;">Weekends disabled</h4>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">DatePicker</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Working day"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span>{<span style="color:#E5C07B;">date</span>}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">onChange</span><span style="color:#56B6C2;">=</span>{<span style="color:#E5C07B;">setDate</span>}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">disabledDates</span><span style="color:#56B6C2;">=</span>{<span style="color:#E5C07B;">d</span> =&gt; [<span style="color:#D19A66;">0</span>, <span style="color:#D19A66;">6</span>].<span style="color:#61AFEF;">includes</span>(<span style="color:#E5C07B;">d</span>.<span style="color:#61AFEF;">getDay</span>())}<br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin:24px 0 10px;">Error state</h4>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">DatePicker</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Due date"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span>{<span style="color:#E5C07B;">date</span>}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">onChange</span><span style="color:#56B6C2;">=</span>{<span style="color:#E5C07B;">setDate</span>}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">validationState</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"error"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">helperText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Due date must be in the future."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">required</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin:24px 0 10px;">Localised (German, Monday-first)</h4>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">DatePicker</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Geburtsdatum"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">locale</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"de-DE"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">weekStartsOn</span><span style="color:#56B6C2;">=</span>{<span style="color:#D19A66;">1</span>}<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">format</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"DD.MM.YYYY"</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for ensuring Date Picker is accessible across assistive technologies and input methods.</p>
+
+          <div class="doc-section">
+            <h3 id="keyboard-navigation" class="doc-h3">Keyboard Navigation</h3>
+            <p class="doc-section-subtitle" style="margin-bottom:18px;">The input accepts direct typing; the popover grid supports full arrow-key navigation.</p>
+            <table class="size-table">
+              <thead><tr><th>Target</th><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td rowspan="3"><strong>Input</strong></td><td><code>Down Arrow</code> / <code>Space</code></td><td>Opens the calendar popover.</td></tr>
+                <tr><td><code>Esc</code></td><td>Closes the popover; returns focus to the input.</td></tr>
+                <tr><td>Direct typing</td><td>Type in <code>DD/MM/YYYY</code> format (locale-aware).</td></tr>
+                <tr><td rowspan="7"><strong>Day grid</strong></td><td><code>Arrow Left</code> / <code>Arrow Right</code></td><td>Moves focus &plusmn;1 day.</td></tr>
+                <tr><td><code>Arrow Up</code> / <code>Arrow Down</code></td><td>Moves focus &plusmn;1 week.</td></tr>
+                <tr><td><code>PageUp</code> / <code>PageDown</code></td><td>Moves focus &plusmn;1 month.</td></tr>
+                <tr><td><code>Shift+PageUp</code> / <code>Shift+PageDown</code></td><td>Moves focus &plusmn;1 year.</td></tr>
+                <tr><td><code>Home</code> / <code>End</code></td><td>Jumps to the start / end of the week.</td></tr>
+                <tr><td><code>Enter</code> / <code>Space</code></td><td>Selects the focused day.</td></tr>
+                <tr><td><code>Esc</code></td><td>Closes the popover without committing.</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:16px;padding:16px 20px;background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.15);border-radius:12px;">
+              <p style="font-size:14px;color:var(--prism-text);line-height:1.6;margin:0;">The popover must trap focus within itself while open. <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Tab</code> cycles through: grid &rarr; presets &rarr; footer buttons &rarr; back to the grid.</p>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="aria-attributes" class="doc-h3">ARIA Attributes</h3>
+            <ul class="doc-list">
+              <li><strong>Input element:</strong> Native <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;input type="text"&gt;</code> with pattern mask, or <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;input type="date"&gt;</code> as a progressive-enhancement baseline.</li>
+              <li><strong>Popover:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="dialog" aria-modal="false"</code> anchored to the input.</li>
+              <li><strong>Label association:</strong> Connect <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;label for="id"&gt;</code> to the input. For Range, wrap in a <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;fieldset&gt;</code> + <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;legend&gt;</code> with Start / End labelled inputs.</li>
+              <li><strong>Calendar grid semantics:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="grid"</code> on the day grid, <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="row"</code> on each week, <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="gridcell"</code> on each day, <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="columnheader"</code> on weekday abbreviations.</li>
+              <li><strong>Current day:</strong> Mark today with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-current="date"</code>.</li>
+              <li><strong>Selected state:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-selected="true"</code> on selected day cells. For Range, also on days between endpoints.</li>
+              <li><strong>Validation:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-invalid="true"</code> in Error state; link the helper via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-describedby</code>.</li>
+              <li><strong>Range completion:</strong> When the user has a start but no end, set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-describedby</code> to say "End date required".</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="screen-reader-guidance" class="doc-h3">Screen Reader Guidance</h3>
+            <ul class="doc-list">
+              <li><strong>Month navigation announcement:</strong> On month change, announce the new month/year via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-live="polite"</code> on a hidden status node.</li>
+              <li><strong>Selection announcement:</strong> After the user picks a day, announce the fully-formatted date (e.g. "15 March 2026 selected") via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-live</code>.</li>
+              <li><strong>Visual-only highlight:</strong> Never rely on colour alone &mdash; always pair with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-selected</code> and live announcements.</li>
+              <li><strong>Contrast:</strong> Selected-day text on BG-Accent must meet WCAG AA 4.5:1. Outside-month days use Text-Disabled &mdash; verify against grid background.</li>
+              <li><strong>RTL:</strong> Mirror the weekday-row order, chevron direction, and Range input order (end on the left, start on the right).</li>
+              <li><strong>Time zones:</strong> Always store UTC internally; format on display. The component must not shift the selected date due to the local time-zone offset.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="focus-management" class="doc-h3">Focus Management</h3>
+            <ul class="doc-list">
+              <li><strong>On open:</strong> Focus moves to the currently selected day in the grid. If no selection, focus moves to today.</li>
+              <li><strong>On close:</strong> Focus returns to the input that opened the popover.</li>
+              <li><strong>Tab order inside popover:</strong> Header chevrons &rarr; month/year label &rarr; grid (single focus target, internal arrow-key nav) &rarr; presets &rarr; footer buttons.</li>
+              <li><strong>Focus trap:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Tab</code> at the end of the popover wraps to the top; <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Shift+Tab</code> at the top wraps to the end. Focus must not escape the popover via keyboard while it is open.</li>
+              <li><strong>Visible focus indicator:</strong> The focused day cell shows a 2px accent border (WCAG 2.4.7). This must not be overridden.</li>
+              <li><strong>Clicking outside:</strong> Dismisses the popover and restores focus to the input.</li>
+            </ul>
+            <div style="margin-top:24px;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+              <div style="font-weight:600;font-size:15px;color:var(--prism-text);margin-bottom:8px;">Focus ring spec</div>
+              <div style="font-size:14px;color:var(--prism-text-muted);line-height:1.6;">Focused day cell: 2px Border-Accent ring. Focused input: 2px Border-Accent + 3px accent shadow (<code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">rgba(0,106,255,0.15)</code>).</div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/date-picker.md" download="date-picker.md" class="action-link"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=17195-1122073" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  <script type="text/disabled">
+    // ========== Date Picker Interactive Component (DEAD — replaced by <ds-date-picker>) ==========
+    var DP_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var DP_WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    function dpFormatDate(d) {
+      if (!d) return '';
+      var dd = String(d.getDate()).padStart(2,'0');
+      var mm = String(d.getMonth()+1).padStart(2,'0');
+      var yyyy = d.getFullYear();
+      return dd + '/' + mm + '/' + yyyy;
+    }
+    function dpSameDay(a, b) { return a && b && a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+    function dpInRange(d, s, e) {
+      if (!s || !e) return false;
+      var ds = new Date(s.getFullYear(),s.getMonth(),s.getDate()).getTime();
+      var de = new Date(e.getFullYear(),e.getMonth(),e.getDate()).getTime();
+      if (ds > de) { var t=ds; ds=de; de=t; }
+      var dt = new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+      return dt > ds && dt < de;
+    }
+
+    function createDatePicker(mountEl, opts) {
+      opts = opts || {};
+      var state = {
+        open: false,
+        viewDate: new Date(),
+        selected: opts.initialSelected || null,
+        rangeStart: opts.initialRangeStart || null,
+        rangeEnd: opts.initialRangeEnd || null,
+        type: opts.type || 'single',
+        presets: !!opts.presets,
+        footer: !!opts.footer,
+        staged: null,
+        stagedStart: null,
+        stagedEnd: null
+      };
+      var today = new Date();
+
+      function render() {
+        var inputVal = '';
+        if (state.type === 'single') {
+          inputVal = state.selected ? dpFormatDate(state.selected) : '';
+        } else {
+          if (state.rangeStart && state.rangeEnd) {
+            inputVal = dpFormatDate(state.rangeStart) + ' - ' + dpFormatDate(state.rangeEnd);
+          } else if (state.rangeStart) {
+            inputVal = dpFormatDate(state.rangeStart) + ' - ...';
+          }
+        }
+        var focusedCls = state.open ? ' focused' : '';
+        var popHtml = state.open ? buildPopover() : '';
+        mountEl.innerHTML =
+          '<div class="dp-input-field' + focusedCls + '" data-dp-toggle>' +
+          '  <span class="dp-cal-icon">' +
+          '    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' +
+          '  </span>' +
+          '  <input class="dp-input" type="text" placeholder="DD/MM/YYYY" readonly value="' + inputVal + '">' +
+          '</div>' + popHtml;
+        bind();
+      }
+
+      function buildPopover() {
+        var y = state.viewDate.getFullYear();
+        var m = state.viewDate.getMonth();
+        var first = new Date(y, m, 1);
+        var startDow = first.getDay();
+        var daysInMonth = new Date(y, m+1, 0).getDate();
+        var daysInPrev = new Date(y, m, 0).getDate();
+        var cells = [];
+        for (var i = startDow - 1; i >= 0; i--) {
+          cells.push({ d: daysInPrev - i, other: true, date: new Date(y, m-1, daysInPrev - i) });
+        }
+        for (var d = 1; d <= daysInMonth; d++) {
+          cells.push({ d: d, other: false, date: new Date(y, m, d) });
+        }
+        var nextDay = 1;
+        while (cells.length < 42) {
+          cells.push({ d: nextDay, other: true, date: new Date(y, m+1, nextDay) });
+          nextDay++;
+        }
+
+        var daysHtml = cells.map(function(c) {
+          var cls = 'dp-day';
+          if (c.other) cls += ' other-month';
+          if (dpSameDay(c.date, today) && !c.other) cls += ' today';
+          if (state.type === 'single') {
+            var sel = state.footer ? state.staged : state.selected;
+            if (sel && dpSameDay(c.date, sel) && !c.other) cls += ' selected';
+          } else {
+            var s = state.footer ? state.stagedStart : state.rangeStart;
+            var e = state.footer ? state.stagedEnd : state.rangeEnd;
+            if (s && dpSameDay(c.date, s) && !c.other) cls += ' range-start';
+            else if (e && dpSameDay(c.date, e) && !c.other) cls += ' range-end';
+            else if (dpInRange(c.date, s, e) && !c.other) cls += ' in-range';
+          }
+          return '<div class="' + cls + '" data-dp-day="' + c.date.getTime() + '" role="gridcell">' + c.d + '</div>';
+        }).join('');
+
+        var presetsHtml = '';
+        if (state.presets) {
+          presetsHtml =
+            '<div class="dp-presets">' +
+            '  <button class="dp-preset-btn" data-dp-preset="today">Today</button>' +
+            '  <button class="dp-preset-btn" data-dp-preset="yesterday">Yesterday</button>' +
+            '  <button class="dp-preset-btn" data-dp-preset="last7">Last 7 days</button>' +
+            '  <button class="dp-preset-btn" data-dp-preset="last30">Last 30 days</button>' +
+            '  <button class="dp-preset-btn" data-dp-preset="thisMonth">This month</button>' +
+            '</div>';
+        }
+        var footerHtml = '';
+        if (state.footer) {
+          footerHtml =
+            '<div class="dp-footer">' +
+            '  <button class="dp-footer-btn secondary" data-dp-footer="clear">Clear</button>' +
+            '  <button class="dp-footer-btn secondary" data-dp-footer="cancel">Cancel</button>' +
+            '  <button class="dp-footer-btn primary" data-dp-footer="apply">Apply</button>' +
+            '</div>';
+        }
+
+        return '' +
+          '<div class="dp-popover" role="dialog" aria-label="Choose date">' +
+          '  <div class="dp-popover-header">' +
+          '    <button class="dp-nav-btn" data-dp-nav="-1" aria-label="Previous month"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>' +
+          '    <div class="dp-month-year">' + DP_MONTHS[m] + ' ' + y + '</div>' +
+          '    <button class="dp-nav-btn" data-dp-nav="1" aria-label="Next month"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>' +
+          '  </div>' +
+          '  <div class="dp-weekdays" role="row">' + DP_WEEKDAYS.map(function(w){return '<div role="columnheader">'+w+'</div>';}).join('') + '</div>' +
+          '  <div class="dp-days" role="grid">' + daysHtml + '</div>' +
+          presetsHtml + footerHtml +
+          '</div>';
+      }
+
+      function bind() {
+        var toggle = mountEl.querySelector('[data-dp-toggle]');
+        if (toggle) {
+          toggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            state.open = !state.open;
+            if (state.open && state.footer) {
+              state.staged = state.selected;
+              state.stagedStart = state.rangeStart;
+              state.stagedEnd = state.rangeEnd;
+            }
+            render();
+          });
+        }
+        mountEl.querySelectorAll('[data-dp-nav]').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var delta = parseInt(btn.getAttribute('data-dp-nav'));
+            state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() + delta, 1);
+            render();
+          });
+        });
+        mountEl.querySelectorAll('[data-dp-day]').forEach(function(cell) {
+          cell.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (cell.classList.contains('other-month')) return;
+            var d = new Date(parseInt(cell.getAttribute('data-dp-day')));
+            if (state.type === 'single') {
+              if (state.footer) {
+                state.staged = d;
+              } else {
+                state.selected = d;
+                state.open = false;
+              }
+            } else {
+              var startKey = state.footer ? 'stagedStart' : 'rangeStart';
+              var endKey = state.footer ? 'stagedEnd' : 'rangeEnd';
+              if (!state[startKey] || (state[startKey] && state[endKey])) {
+                state[startKey] = d;
+                state[endKey] = null;
+              } else {
+                if (d < state[startKey]) {
+                  state[endKey] = state[startKey];
+                  state[startKey] = d;
+                } else {
+                  state[endKey] = d;
+                }
+                if (!state.footer) state.open = false;
+              }
+            }
+            render();
+          });
+        });
+        mountEl.querySelectorAll('[data-dp-preset]').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var key = btn.getAttribute('data-dp-preset');
+            var now = new Date();
+            now.setHours(0,0,0,0);
+            var s, e1;
+            switch(key) {
+              case 'today': s = now; e1 = now; break;
+              case 'yesterday': s = new Date(now); s.setDate(s.getDate()-1); e1 = new Date(s); break;
+              case 'last7': e1 = now; s = new Date(now); s.setDate(s.getDate()-6); break;
+              case 'last30': e1 = now; s = new Date(now); s.setDate(s.getDate()-29); break;
+              case 'thisMonth': s = new Date(now.getFullYear(), now.getMonth(), 1); e1 = now; break;
+            }
+            if (state.type === 'single') {
+              if (state.footer) state.staged = s;
+              else { state.selected = s; state.open = false; }
+            } else {
+              if (state.footer) { state.stagedStart = s; state.stagedEnd = e1; }
+              else { state.rangeStart = s; state.rangeEnd = e1; state.open = false; }
+            }
+            state.viewDate = new Date(s.getFullYear(), s.getMonth(), 1);
+            render();
+          });
+        });
+        mountEl.querySelectorAll('[data-dp-footer]').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var action = btn.getAttribute('data-dp-footer');
+            if (action === 'clear') {
+              state.staged = null; state.stagedStart = null; state.stagedEnd = null;
+            } else if (action === 'cancel') {
+              state.staged = null; state.stagedStart = null; state.stagedEnd = null;
+              state.open = false;
+            } else if (action === 'apply') {
+              state.selected = state.staged;
+              state.rangeStart = state.stagedStart;
+              state.rangeEnd = state.stagedEnd;
+              state.open = false;
+            }
+            render();
+          });
+        });
+      }
+
+      document.addEventListener('click', function(e) {
+        if (state.open && !mountEl.contains(e.target)) {
+          state.open = false;
+          render();
+        }
+      });
+
+      render();
+      return state;
+    }
+
+    // Initialise demo pickers
+    (function() {
+      var s = document.getElementById('demo-single');
+      var r = document.getElementById('demo-range');
+      var p = document.getElementById('demo-presets');
+      var f = document.getElementById('demo-footer');
+      if (s) createDatePicker(s, { type: 'single' });
+      if (r) createDatePicker(r, { type: 'range' });
+      if (p) createDatePicker(p, { type: 'single', presets: true });
+      if (f) createDatePicker(f, { type: 'single', presets: true, footer: true });
+    })();
+  </script>
+
+  <script>
+    let _tocObserver = null;
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav'); if (!tocList) return; tocList.innerHTML = '';
+      const activePanel = document.getElementById(targetId); if (!activePanel) return;
+      activePanel.querySelectorAll('h2[id], h3[id]').forEach(h => {
+        if (h.style.display === 'none') return;
+        const li = document.createElement('li'), a = document.createElement('a');
+        a.href = '#' + h.id; a.className = 'toc-link';
+        let text = Array.from(h.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+        if (!text) text = h.innerText; a.textContent = text;
+        a.addEventListener('click', e => { e.preventDefault(); document.getElementById(h.id).scrollIntoView({behavior:'smooth',block:'start'}); });
+        li.appendChild(a); tocList.appendChild(li);
+      });
+      initScrollSpy();
+    }
+    function initScrollSpy() {
+      if (_tocObserver) _tocObserver.disconnect();
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sections = Array.from(tocLinks).map(l => document.getElementById(l.getAttribute('href').slice(1))).filter(Boolean);
+      if (!sections.length) return;
+      _tocObserver = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { const id = e.target.getAttribute('id'); tocLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+id)); } }); }, {rootMargin:'-80px 0px -60% 0px',threshold:0});
+      sections.forEach(s => _tocObserver.observe(s));
+    }
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active')); tab.classList.add('active');
+        const tabMap = {'Overview':'tab-overview','Usage':'tab-usage','Style':'tab-style','Code':'tab-code','Accessibility':'tab-accessibility'};
+        document.querySelectorAll('.tab-content').forEach(p => p.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) { document.getElementById(target).style.display = 'block'; updateTOC(target); }
+        window.scrollTo({top:0,behavior:'smooth'});
+      });
+    });
+    updateTOC('tab-overview');
+
+    // Sidebar search filter
+    (function(){
+      var searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      var items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function(){
+        var q = this.value.toLowerCase().trim();
+        items.forEach(function(li){
+          var link = li.querySelector('a');
+          if (!link) return;
+          var text = link.textContent.toLowerCase();
+          li.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+      });
+      document.addEventListener('keydown', function(e){
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      });
+    })();
+
+    // Scroll sidebar to active link on page load
+    (function(){
+      var active = document.querySelector('.sidebar-link.active');
+      if (active) {
+        var sidebar = active.closest('.sidebar');
+        if (sidebar) {
+          var top = active.offsetTop - sidebar.offsetTop - (sidebar.clientHeight / 3);
+          sidebar.scrollTop = Math.max(0, top);
+        }
+      }
+    })();
+  </script>
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/main.js"></script>
+
+</body>
+</html>

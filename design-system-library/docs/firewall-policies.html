@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  {
+    "imports": {
+      "@uems/design-system": "../src/index.js"
+    }
+  }
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Malware Protection — Firewall Policies</title>
+
+  <script type="module">import '@uems/design-system';</script>
+  <script>
+  (function () {
+    var t = localStorage.getItem('uems-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', t);
+    document.addEventListener('ds-right-pane-theme', function (e) {
+      document.documentElement.setAttribute('data-theme', e.detail.theme);
+      try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+    });
+    window.addEventListener('DOMContentLoaded', function () {
+      customElements.whenDefined('ds-right-pane').then(function () {
+        document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+          rp.setAttribute('theme', t);
+        });
+      });
+    });
+  })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../src/icons/illustrations.svg';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body { background: var(--cobalt-15); }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+    .body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      padding: 0 0 var(--spacing-12) var(--spacing-12);
+      gap: 0;
+    }
+    .content {
+      flex: 1;
+      background: var(--uems-bg-base);
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: 16px 0 0 16px; box-shadow: -8px 0 24px rgba(15, 23, 42, 0.08);
+      margin-inline-start: -1px;
+      overflow-y: auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Truncation + uniform body cell sizing --------------------------- */
+    ds-data-table .ds-data-table__table tbody td,
+    ds-data-table .ds-data-table__table tbody th[scope="row"] {
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 240px;
+    }
+    ds-data-table .ds-data-table__table tbody td > a,
+    ds-data-table .ds-data-table__table tbody th[scope="row"] > a {
+      display: inline-block; max-width: 100%;
+      overflow: hidden; text-overflow: ellipsis;
+      vertical-align: bottom;
+    }
+    /* Truncation-tooltip cells must NOT clip the absolutely-positioned tip popup. */
+    ds-data-table .ds-data-table__table tbody td:has(ds-tooltip),
+    ds-data-table .ds-data-table__table tbody th[scope="row"]:has(ds-tooltip) { overflow: visible; }
+    ds-data-table ds-tooltip { display: inline-block; max-width: 100%; vertical-align: bottom; }
+    ds-data-table ds-tooltip .cell-truncate {
+      display: inline-block; max-width: 220px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom;
+    }
+    ds-data-table .ds-data-table__table tbody td,
+    ds-data-table .ds-data-table__table tbody td *,
+    ds-data-table .ds-data-table__table tbody th[scope="row"],
+    ds-data-table .ds-data-table__table tbody th[scope="row"] * {
+      font-size: var(--font-size-14);
+    }
+    ds-data-table .ds-data-table__table tbody ds-tag,
+    ds-data-table .ds-data-table__table tbody ds-tag *,
+    ds-data-table .ds-data-table__table tbody ds-status-indicator,
+    ds-data-table .ds-data-table__table tbody ds-status-indicator *,
+    ds-data-table .ds-data-table__table tbody ds-badge,
+    ds-data-table .ds-data-table__table tbody ds-badge * {
+      font-size: var(--font-size-12);
+    }
+
+    /* ---- Page head -------------------------------------------------------- */
+    .page-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--spacing-16);
+      padding: var(--spacing-24) var(--spacing-32) var(--spacing-12);
+    }
+    .page-head h1 {
+      margin: var(--spacing-8) 0 0;
+      font-size: var(--font-size-20); font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+    }
+    .page-head__sub {
+      margin-top: 4px; font-size: var(--font-size-14); color: var(--uems-text-secondary);
+    }
+    .page-head__actions {
+      display: flex; gap: var(--spacing-8); margin-top: var(--spacing-12);
+    }
+
+    /* ---- Sub-tabs (Firewall Policies | Firewall Rule Groups) ------------- */
+    .subtabs {
+      display: flex; gap: var(--spacing-4);
+      padding: 0 var(--spacing-32);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+    }
+    .subtab {
+      position: relative;
+      padding: var(--spacing-12) var(--spacing-16);
+      font-size: var(--font-size-14); font-weight: var(--font-weight-medium);
+      color: var(--uems-text-secondary); text-decoration: none;
+      transition: color 120ms ease;
+    }
+    .subtab:hover { color: var(--uems-text-primary); }
+    .subtab[aria-selected="true"] { color: var(--uems-text-accent-primary); }
+    .subtab[aria-selected="true"]::after {
+      content: ''; position: absolute; left: 8px; right: 8px; bottom: -1px;
+      height: 2px; background: var(--uems-text-accent-primary); border-radius: 2px 2px 0 0;
+    }
+
+    /* ---- KPI strip ------------------------------------------------------- */
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--spacing-12);
+      padding: var(--spacing-16) var(--spacing-32) 0;
+    }
+    .kpi {
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-16) var(--spacing-20);
+      background: var(--uems-bg-base);
+      display: flex; flex-direction: column; gap: var(--spacing-8);
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+    .kpi:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(15,23,42,0.06); }
+    .kpi__label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: var(--font-size-12); color: var(--uems-text-secondary);
+    }
+    .kpi__value {
+      font-size: var(--font-size-24); font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-accent-primary); line-height: 1;
+    }
+    .kpi__value--success { color: var(--uems-text-success, #137a3d); }
+    .kpi__value--warning { color: #b25b00; }
+
+    /* ---- Architecture inheritance hint ----------------------------------- */
+    .arch-strip { padding: var(--spacing-16) var(--spacing-32) 0; }
+
+    /* ---- Table region ---------------------------------------------------- */
+    .table-region {
+      padding: var(--spacing-16) var(--spacing-24) var(--spacing-24);
+      flex: 1; min-height: 0;
+    }
+
+    /* ---- Filter dropdown anchor ------------------------------------------ */
+    .filter { position: relative; display: inline-flex; }
+    .filter > ds-dropdown-menu {
+      position: absolute; top: calc(100% + 6px); left: 0;
+      z-index: 60; min-width: 240px;
+    }
+    .filter:last-of-type > ds-dropdown-menu { left: auto; right: 0; }
+    .filter > ds-dropdown-menu[open] {
+      animation: ddpop 120ms cubic-bezier(.2,.8,.2,1);
+    }
+    @keyframes ddpop {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .filter-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; padding: 0 6px;
+      margin-inline-start: 6px;
+      background: var(--uems-text-accent-primary);
+      color: #fff;
+      border-radius: 9px; font-size: 11px; font-weight: var(--font-weight-semibold);
+    }
+
+    .active-filters {
+      display: flex; align-items: center; gap: var(--spacing-8);
+      padding: 0 var(--spacing-32) var(--spacing-8);
+      flex-wrap: wrap;
+      font-size: var(--font-size-12); color: var(--uems-text-secondary);
+    }
+    .active-filters:empty { display: none; }
+
+    /* ---- Drag handle / priority ----------------------------------------- */
+    .drag-cell {
+      display: inline-flex; align-items: center; gap: var(--spacing-8);
+      cursor: grab; user-select: none;
+    }
+    .drag-cell:active { cursor: grabbing; }
+    .drag-cell ds-icon { color: var(--uems-text-tertiary); }
+    .priority-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 22px; height: 22px; padding: 0 6px;
+      border-radius: 6px;
+      background: var(--uems-bg-secondary, var(--cobalt-15));
+      color: var(--uems-text-primary); font-size: var(--font-size-12);
+      font-weight: var(--font-weight-semibold);
+    }
+    .priority-num--default {
+      background: transparent; border: 1px dashed var(--uems-border-tertiary);
+      color: var(--uems-text-secondary); font-weight: var(--font-weight-regular);
+    }
+
+    /* ---- Toggle cell ----------------------------------------------------- */
+    .toggle-cell { display: inline-flex; align-items: center; gap: var(--spacing-8); }
+
+    /* ---- Action icons --------------------------------------------------- */
+    .row-actions {
+      display: inline-flex; gap: 2px; align-items: center;
+    }
+
+    /* ---- Toast host ------------------------------------------------------ */
+    .toast-host {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: var(--spacing-8);
+      z-index: 100; pointer-events: none;
+    }
+    .toast-host > * { pointer-events: auto; }
+
+    /* ---- Row hover stripe ----------------------------------------------- */
+    ds-data-table .ds-data-table__table tbody tr {
+      transition: background-color 120ms ease, box-shadow 120ms ease;
+    }
+    ds-data-table .ds-data-table__table tbody tr:hover {
+      box-shadow: inset 3px 0 0 var(--uems-text-accent-primary);
+    }
+    ds-data-table .ds-data-table__table tbody tr.row-default {
+      background: var(--uems-bg-secondary, rgba(15, 23, 42, 0.02));
+    }
+
+    /* ---- Modal (Create Policy) ------------------------------------------ */
+    dialog.fw-modal {
+      border: none;
+      padding: 0;
+      border-radius: var(--radius-lg, 12px);
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+      width: min(560px, 92vw);
+      background: var(--uems-bg-base);
+      color: var(--uems-text-primary);
+    }
+    dialog.fw-modal::backdrop {
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(2px);
+    }
+    .fw-modal__head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--spacing-20) var(--spacing-24) var(--spacing-12);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+    }
+    .fw-modal__title {
+      font-size: var(--font-size-16); font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+    }
+    .fw-modal__body {
+      display: flex; flex-direction: column; gap: var(--spacing-16);
+      padding: var(--spacing-20) var(--spacing-24);
+    }
+    .fw-modal__foot {
+      display: flex; justify-content: flex-end; gap: var(--spacing-8);
+      padding: var(--spacing-16) var(--spacing-24);
+      border-top: 1px solid var(--uems-border-tertiary);
+      background: var(--uems-bg-secondary, rgba(15, 23, 42, 0.02));
+      border-radius: 0 0 var(--radius-lg, 12px) var(--radius-lg, 12px);
+    }
+    .fw-field-label {
+      display: block;
+      font-size: var(--font-size-12);
+      color: var(--uems-text-secondary);
+      margin-bottom: var(--spacing-4);
+    }
+    .fw-field-label .req { color: var(--uems-text-error, #c62828); margin-inline-start: 2px; }
+    .fw-help {
+      font-size: var(--font-size-12); color: var(--uems-text-tertiary);
+      margin-top: var(--spacing-4);
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+
+    <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+    <div class="body">
+      <ds-sidebar-l1 id="shell-l1" style="height: 100%;"></ds-sidebar-l1>
+      <ds-sidebar-l2 id="shell-l2" title="Firewall" style="height: 100%; margin-left: -10px;"></ds-sidebar-l2>
+
+      <ds-content class="content" role="main">
+
+        <!-- Page head -->
+        <div class="page-head">
+          <div>
+            <ds-breadcrumb>
+              <a href="#">Malware Protection</a>
+              <a href="firewall-policies.html">Firewall</a>
+              <span>Policies</span>
+            </ds-breadcrumb>
+            <h1>Firewall Policies</h1>
+            <div class="page-head__sub">Active deployment containers. Each policy bundles rule groups, default traffic actions, and target computer groups.</div>
+          </div>
+          <div class="page-head__actions">
+            <ds-button id="btn-rule-groups" variant="secondary" size="small" prefix-icon="settings-deploy">Manage Rule Groups</ds-button>
+            <ds-button id="btn-create" variant="primary" size="small" prefix-icon="add">Create New Policy</ds-button>
+          </div>
+        </div>
+
+        <!-- Sub-tabs (PDF: two main tabs at the top of the Firewall landing) -->
+        <nav class="subtabs" role="tablist" aria-label="Firewall sections">
+          <a class="subtab" role="tab" aria-selected="true"  href="firewall-policies.html">Firewall Policies</a>
+          <a class="subtab" role="tab" aria-selected="false" href="firewall-rule-groups.html">Firewall Rule Groups</a>
+        </nav>
+
+        <!-- KPIs -->
+        <div class="kpis">
+          <div class="kpi">
+            <div class="kpi__label">
+              <ds-icon name="settings-deploy" size="12"></ds-icon>
+              Total Policies
+            </div>
+            <div class="kpi__value">6</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__label">
+              <ds-icon name="circle-tick" size="12"></ds-icon>
+              Active
+            </div>
+            <div class="kpi__value kpi__value--success">5</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__label">
+              <ds-icon name="computer-security" size="12"></ds-icon>
+              Applied Machines
+            </div>
+            <div class="kpi__value">1,182</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__label">
+              <ds-icon name="clock" size="12"></ds-icon>
+              Pending Sync
+            </div>
+            <div class="kpi__value kpi__value--warning">37</div>
+          </div>
+        </div>
+
+        <!-- Architecture inheritance helper -->
+        <div class="arch-strip">
+          <ds-inline-alert
+            type="info"
+            style-variant="subtle"
+            show-dismiss
+            title="How firewall enforcement works"
+            description="Computer Groups → Policies → Rule Groups → Rules. Higher priority policies are checked first; if a machine matches multiple, the top-priority active policy wins. The System Default Policy is the safety net (priority 1, last row)."></ds-inline-alert>
+        </div>
+
+        <!-- Active filter pills -->
+        <div id="active-filters" class="active-filters"></div>
+
+        <!-- Policies table -->
+        <div class="table-region">
+          <ds-data-table
+            row-height="comfortable"
+            id="policies-table"
+            empty-text="No firewall policies match your filters">
+            <div slot="toolbarLeft" style="display: flex; gap: var(--spacing-8); align-items: center; flex-wrap: wrap;">
+              <span style="font-size: var(--font-size-14); color: var(--uems-text-secondary);">Filter By :</span>
+              <div class="filter">
+                <ds-button id="btn-status" variant="secondary" size="small" suffix-icon="chevron-down">Status</ds-button>
+                <ds-dropdown-menu id="dd-status" type="multi" header-text="Status"></ds-dropdown-menu>
+              </div>
+              <div class="filter">
+                <ds-button id="btn-modified" variant="secondary" size="small" prefix-icon="calendar" suffix-icon="chevron-down">Last Modified</ds-button>
+                <ds-dropdown-menu id="dd-modified" type="single" header-text="Last Modified"></ds-dropdown-menu>
+              </div>
+            </div>
+          </ds-data-table>
+        </div>
+
+      </ds-content>
+
+      <ds-right-pane id="shell-rp" style="height: 100%;"></ds-right-pane>
+    </div>
+  </div>
+
+  <!-- Create Policy modal -->
+  <dialog id="modal-create" class="fw-modal" aria-labelledby="modal-create-title">
+    <div class="fw-modal__head">
+      <div id="modal-create-title" class="fw-modal__title">Create New Policy</div>
+      <ds-icon-button id="modal-close" shape="square" type="tertiary-grey" size="small" icon="close" label="Close"></ds-icon-button>
+    </div>
+    <div class="fw-modal__body">
+      <div>
+        <label class="fw-field-label" for="np-name">Name<span class="req">*</span></label>
+        <ds-text-input id="np-name" placeholder="e.g., Developer Team-A Policy" max-length="50"></ds-text-input>
+        <div class="fw-help">Alphanumeric. Max 50 characters.</div>
+      </div>
+      <div>
+        <label class="fw-field-label" for="np-desc">Description</label>
+        <ds-text-area id="np-desc" placeholder="What does this policy enforce?" max-lines="4" show-counter max-length="250"></ds-text-area>
+        <div class="fw-help">Optional. Max 250 characters.</div>
+      </div>
+      <div style="position: relative;">
+        <label class="fw-field-label">Import Settings From</label>
+        <ds-button id="np-import-btn" variant="secondary" size="medium" suffix-icon="chevron-down" style="width: 100%; justify-content: space-between;">Select a policy (optional)</ds-button>
+        <ds-dropdown-menu id="np-import-dd" type="single" header-text="Import from existing" style="position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 70;"></ds-dropdown-menu>
+        <div class="fw-help">If selected, the new policy will pre-load the same rule groups and default actions.</div>
+      </div>
+    </div>
+    <div class="fw-modal__foot">
+      <ds-button id="np-cancel" variant="tertiary" size="small">Cancel</ds-button>
+      <ds-button id="np-save" variant="primary" size="small" prefix-icon="check">Save</ds-button>
+    </div>
+  </dialog>
+
+  <!-- Toast host -->
+  <div id="toast-host" class="toast-host" aria-live="polite" aria-atomic="true"></div>
+
+  <script type="module">
+    import '@uems/design-system';
+
+    /* ---- Header tabs --------------------------------------------------- */
+    document.getElementById('ec-header').tabs = [
+      { id: 'home',     label: 'Home' },
+      { id: 'configs',  label: 'Configurations', href: 'configurations-all.html' },
+      { id: 'tp',       label: 'Threats & Patches', href: 'patches-missing.html' },
+      { id: 'sd',       label: 'Software Deployment' },
+      { id: 'inv',      label: 'Inventory' },
+      { id: 'osd',      label: 'OS Deployment' },
+      { id: 'mdm',      label: 'MDM', href: 'mdm-groups.html' },
+      { id: 'bl',       label: 'BitLocker', href: 'bitlocker-dashboard.html' },
+      { id: 'mp',       label: 'Malware Protection', active: true, href: 'firewall-policies.html' },
+      { id: 'tools',    label: 'Tools' },
+      { id: 'agent',    label: 'Agent' },
+    ];
+
+    /* ---- L1 (Malware Protection scope) --------------------------------- */
+    document.getElementById('shell-l1').items = [
+      { id: 'fw',       label: 'Firewall',          icon: 'computer-security', href: 'firewall-policies.html', active: true },
+      { id: 'av',       label: 'Antivirus',         icon: 'file-shield' },
+      { id: 'threats',  label: 'Threat Detection',  icon: 'bug' },
+      { id: 'quaran',   label: 'Quarantine',        icon: 'cancel-circle' },
+      { id: 'reports',  label: 'Reports',           icon: 'file-report' },
+    ];
+    document.getElementById('shell-l1').bottomItems = [
+      { id: 'set', label: 'Settings', icon: 'settings' },
+    ];
+
+    /* ---- L2 (Firewall scope) ------------------------------------------- */
+    document.getElementById('shell-l2').groups = [
+      { id: 'manage', label: 'Manage', expanded: true, items: [
+        { id: 'pol',     label: 'Policies',         count: 6, active: true,  href: 'firewall-policies.html' },
+        { id: 'groups',  label: 'Rule Groups',      count: 14,                href: 'firewall-rule-groups.html' },
+        { id: 'targets', label: 'Computer Groups',  count: 12 },
+      ] },
+      { id: 'monitor', label: 'Monitor', expanded: true, items: [
+        { id: 'log',     label: 'Activity Log' },
+        { id: 'reports', label: 'Reports' },
+      ] },
+    ];
+
+    /* ---- Toast utility ------------------------------------------------- */
+    function showToast(status, title, description, opts = {}) {
+      const host = document.getElementById('toast-host');
+      const t = document.createElement('ds-toast');
+      t.setAttribute('status', status);
+      t.setAttribute('title',  title || '');
+      if (description) t.setAttribute('description', description);
+      t.setAttribute('duration', String(opts.duration ?? 4000));
+      if (opts.cta) {
+        t.setAttribute('cta-text', opts.cta);
+        t.setAttribute('show-cta', '');
+        t.addEventListener('ds-toast-cta', () => {
+          if (opts.href) window.location.href = opts.href;
+        });
+      }
+      host.appendChild(t);
+    }
+
+    /* ---- Policies table ------------------------------------------------- */
+    customElements.whenDefined('ds-data-table').then(() => {
+      const dt = document.getElementById('policies-table');
+
+      const ALL_ROWS = [
+        { id: 'p1', priority: 5, status: 'Enabled',  name: 'Developer Team-A Policy',     ruleGroups: 6, modified: '28 Apr 2026, 16:42', applied: 218, pending: 4,  isDefault: false, owner: 'Kumaran Murugan' },
+        { id: 'p2', priority: 4, status: 'Enabled',  name: 'Finance Workstations Strict', ruleGroups: 9, modified: '24 Apr 2026, 10:08', applied: 142, pending: 0,  isDefault: false, owner: 'Priya Krishnan' },
+        { id: 'p3', priority: 3, status: 'Enabled',  name: 'Remote VPN Lockdown',         ruleGroups: 7, modified: '22 Apr 2026, 18:35', applied: 311, pending: 18, isDefault: false, owner: 'Marcus Chen' },
+        { id: 'p4', priority: 2, status: 'Disabled', name: 'Sales Field Devices',         ruleGroups: 4, modified: '15 Apr 2026, 09:21', applied: 0,   pending: 0,  isDefault: false, owner: 'Linda Wong' },
+        { id: 'p5', priority: 6, status: 'Enabled',  name: 'Executive High Trust',        ruleGroups: 3, modified: '11 Apr 2026, 14:55', applied: 41,  pending: 2,  isDefault: false, owner: 'Sébastien Laurent' },
+        { id: 'p6', priority: 1, status: 'Enabled',  name: 'System Default Policy',       ruleGroups: 2, modified: '01 Jan 2026, 00:00', applied: 470, pending: 13, isDefault: true,  owner: 'System' },
+      ];
+
+      const linkCell = (text, isDefault) => {
+        const accent = isDefault ? 'var(--uems-text-secondary)' : 'var(--uems-text-accent-link)';
+        return `<a href="firewall-policy-editor.html?id=${encodeURIComponent(text)}" style="color:${accent};text-decoration:none;font-weight:var(--font-weight-medium);">${text}${isDefault ? ' <span style="font-size:11px;color:var(--uems-text-tertiary);font-weight:var(--font-weight-regular);">(System)</span>' : ''}</a>`;
+      };
+
+      /* Long policy names truncate with an ellipsis and reveal the full name
+         in a ds-tooltip on hover/focus. */
+      const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const tip = (full, inner) =>
+        `<ds-tooltip text="${esc(full)}" show-icon="false" position="up-center"><span class="cell-truncate">${inner}</span></ds-tooltip>`;
+
+      const priorityCell = (n, isDefault) => `
+        <span class="drag-cell" title="Drag to reorder">
+          <ds-icon name="${isDefault ? 'lock' : 'move-vertical'}" size="14"></ds-icon>
+          <span class="priority-num ${isDefault ? 'priority-num--default' : ''}">${n}</span>
+        </span>`;
+
+      const statusToggleCell = (status, rowId, isDefault) => `
+        <span class="toggle-cell">
+          <ds-toggle
+            data-row="${rowId}"
+            data-action="status"
+            ${status === 'Enabled' ? 'checked' : ''}
+            size="small"
+            show-text
+            text="${status === 'Enabled' ? 'Enabled' : 'Disabled'}">
+          </ds-toggle>
+        </span>`;
+
+      const appliedCell = (n) =>
+        n === 0
+          ? `<span style="color:var(--uems-text-tertiary);">—</span>`
+          : `<ds-tag variant="success" size="small" show-close="false" leading="dot" label="${n.toLocaleString()}"></ds-tag>`;
+
+      const pendingCell = (n) =>
+        n === 0
+          ? `<span style="color:var(--uems-text-tertiary);">—</span>`
+          : `<ds-tag variant="warning" size="small" show-close="false" leading="dot" label="${n.toLocaleString()}"></ds-tag>`;
+
+      const actionsCell = (rowId, isDefault) => `
+        <span class="row-actions">
+          <ds-icon-button data-row="${rowId}" data-action="edit" shape="square" type="tertiary-grey" size="small" icon="edit" label="Edit"></ds-icon-button>
+          <ds-icon-button data-row="${rowId}" data-action="delete" shape="square" type="tertiary-grey" size="small" icon="delete" label="Delete" ${isDefault ? 'disabled' : ''}></ds-icon-button>
+          <ds-icon-button data-row="${rowId}" data-action="more" shape="square" type="tertiary-grey" size="small" icon="more-horizontal" label="More"></ds-icon-button>
+        </span>`;
+
+      dt.columns = [
+        { id: 'priority',  header: 'Priority',         accessor: 'priority',  align: 'center',
+          render: (r) => priorityCell(r.priority, r.isDefault) },
+        { id: 'status',    header: 'Status',           accessor: 'status',    align: 'left',
+          render: (r) => statusToggleCell(r.status, r.id, r.isDefault) },
+        { id: 'name',      header: 'Policy Name',      accessor: 'name',      sortable: true, rowHeader: true,
+          render: (r) => tip(r.name, linkCell(r.name, r.isDefault)) },
+        { id: 'rg',        header: 'Rule Groups',      accessor: 'ruleGroups',align: 'center',
+          render: (r) => `<ds-badge variant="neutral" size="small">${r.ruleGroups}</ds-badge>` },
+        { id: 'modified',  header: 'Last Modified',    accessor: 'modified',  sortable: true },
+        { id: 'applied',   header: 'Applied Machines', accessor: 'applied',   align: 'center', sortable: true,
+          render: (r) => appliedCell(r.applied) },
+        { id: 'pending',   header: 'Pending Machines', accessor: 'pending',   align: 'center', sortable: true,
+          render: (r) => pendingCell(r.pending) },
+        { id: 'actions',   header: '',                 accessor: 'actions',   align: 'center',
+          render: (r) => actionsCell(r.id, r.isDefault) },
+      ];
+
+      // Sort: System Default goes last; others by priority desc (highest first).
+      const sortRows = (rows) =>
+        rows.slice().sort((a, b) => {
+          if (a.isDefault) return 1;
+          if (b.isDefault) return -1;
+          return b.priority - a.priority;
+        });
+
+      dt.rows = sortRows(ALL_ROWS);
+      dt.setAttribute('total-rows', String(ALL_ROWS.length));
+
+      /* Mark the default row visually */
+      const tagDefaultRow = () => {
+        const trs = [...dt.querySelectorAll('tbody tr')];
+        const rows = dt.rows;
+        trs.forEach((tr, i) => {
+          if (rows[i]?.isDefault) tr.classList.add('row-default');
+        });
+      };
+      requestAnimationFrame(tagDefaultRow);
+      const obs = new MutationObserver(tagDefaultRow);
+      obs.observe(dt, { childList: true, subtree: true });
+
+      /* ---- Filter engine ----------------------------------------------- */
+      const filters = { status: [], modified: null, search: '' };
+      const MOD_PRESETS = {
+        '7':  Date.now() - 7  * 24 * 3600 * 1000,
+        '30': Date.now() - 30 * 24 * 3600 * 1000,
+        '90': Date.now() - 90 * 24 * 3600 * 1000,
+      };
+      const parseDate = (s) => { const t = Date.parse(s.replace(',', '')); return isNaN(t) ? null : t; };
+
+      const applyFilters = () => {
+        let rows = ALL_ROWS.slice();
+        if (filters.status.length) rows = rows.filter((r) => filters.status.includes(r.status));
+        if (filters.modified) {
+          const cutoff = MOD_PRESETS[filters.modified];
+          if (cutoff) rows = rows.filter((r) => {
+            const t = parseDate(r.modified);
+            return t && t >= cutoff;
+          });
+        }
+        if (filters.search) {
+          const q = filters.search.toLowerCase();
+          rows = rows.filter((r) =>
+            (r.name + ' ' + r.owner).toLowerCase().includes(q));
+        }
+        dt.rows = sortRows(rows);
+        dt.setAttribute('total-rows', String(rows.length));
+        renderActiveFilters();
+      };
+
+      const setBtnLabel = (btn, base, count) => {
+        const old = btn.querySelector('.filter-count');
+        if (old) old.remove();
+        [...btn.childNodes].forEach((n) => { if (n.nodeType === 3) btn.removeChild(n); });
+        btn.insertBefore(document.createTextNode(base), btn.firstChild);
+        if (count) {
+          const chip = document.createElement('span');
+          chip.className = 'filter-count';
+          chip.textContent = String(count);
+          btn.insertBefore(chip, btn.firstChild.nextSibling);
+        }
+      };
+
+      const wireFilter = (btnId, ddId, key, baseLabel, items, opts = {}) => {
+        const btn = document.getElementById(btnId);
+        const dd  = document.getElementById(ddId);
+        const reflect = () => {
+          dd.items = items.map((it) => {
+            if (it.type === 'divider' || it.type === 'heading') return it;
+            const sel = opts.single
+              ? filters[key] === it.value
+              : (filters[key] || []).includes(it.value);
+            return { ...it, selected: sel };
+          });
+        };
+        btn.addEventListener('click', () => { reflect(); dd.toggle(); });
+        if (opts.single) {
+          dd.addEventListener('ds-dropdown-select', (e) => {
+            filters[key] = e.detail.value || null;
+            const lbl = (items.find((i) => i.value === filters[key]) || {}).label;
+            setBtnLabel(btn, baseLabel, 0);
+            if (filters[key]) setBtnLabel(btn, lbl || baseLabel, 0);
+            applyFilters();
+          });
+        } else {
+          dd.addEventListener('ds-dropdown-apply', (e) => {
+            filters[key] = e.detail.values || [];
+            setBtnLabel(btn, baseLabel, filters[key].length);
+            applyFilters();
+            dd.close();
+          });
+          dd.addEventListener('ds-dropdown-clear', () => {
+            filters[key] = [];
+            setBtnLabel(btn, baseLabel, 0);
+            applyFilters();
+          });
+        }
+      };
+
+      wireFilter('btn-status', 'dd-status', 'status', 'Status', [
+        { label: 'Enabled',  value: 'Enabled',  type: 'checkbox' },
+        { label: 'Disabled', value: 'Disabled', type: 'checkbox' },
+      ]);
+
+      wireFilter('btn-modified', 'dd-modified', 'modified', 'Last Modified', [
+        { label: 'Last 7 days',  value: '7',  type: 'radio' },
+        { label: 'Last 30 days', value: '30', type: 'radio' },
+        { label: 'Last 90 days', value: '90', type: 'radio' },
+        { type: 'divider' },
+        { label: 'Clear', value: '', icon: 'edit-off' },
+      ], { single: true });
+
+      document.addEventListener('click', (e) => {
+        ['dd-status', 'dd-modified'].forEach((id) => {
+          const dd = document.getElementById(id);
+          if (dd && !dd.parentElement.contains(e.target)) dd.close();
+        });
+      });
+
+      dt.addEventListener('ds-data-table-search', (e) => {
+        filters.search = e.detail.value;
+        applyFilters();
+      });
+
+      /* ---- Active-filter pills ---------------------------------------- */
+      const af = document.getElementById('active-filters');
+      const renderActiveFilters = () => {
+        const pills = [];
+        const push = (label) => pills.push(
+          `<ds-tag variant="primary" size="small" show-close label="${label}"></ds-tag>`);
+        filters.status.forEach((v) => push(`Status: ${v}`));
+        if (filters.modified) push(`Modified: Last ${filters.modified} days`);
+        af.innerHTML = pills.length
+          ? `<span>Active filters:</span> ${pills.join(' ')} <a href="#" id="clear-all" style="color:var(--uems-text-accent-link);text-decoration:none;font-weight:var(--font-weight-medium);margin-left:auto;">Clear all</a>`
+          : '';
+        af.querySelector('#clear-all')?.addEventListener('click', (e) => {
+          e.preventDefault();
+          filters.status = []; filters.modified = null;
+          ['btn-status','btn-modified'].forEach((id, i) => {
+            const labels = ['Status','Last Modified'];
+            setBtnLabel(document.getElementById(id), labels[i], 0);
+          });
+          applyFilters();
+          showToast('info', 'Filters cleared');
+        });
+        af.querySelectorAll('ds-tag[show-close]').forEach((tag) => {
+          tag.addEventListener('ds-tag-close', () => {
+            const label = tag.getAttribute('label');
+            if (label.startsWith('Status: '))        filters.status = filters.status.filter((v) => v !== label.slice(8));
+            else if (label.startsWith('Modified: ')) filters.modified = null;
+            applyFilters();
+          });
+        });
+      };
+
+      /* ---- Row interactions: status toggle, edit, delete --------------- */
+      dt.addEventListener('ds-toggle-change', (e) => {
+        const rowId = e.target?.dataset?.row;
+        if (!rowId) return;
+        const row = ALL_ROWS.find((r) => r.id === rowId);
+        if (!row) return;
+        const next = e.detail.checked ? 'Enabled' : 'Disabled';
+        row.status = next;
+        e.target.setAttribute('text', next);
+        showToast(
+          next === 'Enabled' ? 'success' : 'info',
+          `${row.name} ${next.toLowerCase()}`,
+          next === 'Enabled'
+            ? 'Policy is being pushed to the assigned computer groups.'
+            : 'Machines in this group will fall back to the next priority active policy.'
+        );
+      });
+
+      dt.addEventListener('click', (e) => {
+        const trigger = e.target.closest('ds-icon-button[data-action]');
+        if (!trigger) return;
+        const action = trigger.dataset.action;
+        const rowId  = trigger.dataset.row;
+        const row    = ALL_ROWS.find((r) => r.id === rowId);
+        if (!row) return;
+        if (action === 'edit') {
+          window.location.href = `firewall-policy-editor.html?id=${encodeURIComponent(row.name)}`;
+        } else if (action === 'delete') {
+          if (row.isDefault) return;
+          showToast('warning',
+            `Delete "${row.name}"?`,
+            'Confirmation modal would open in the full flow.',
+            { cta: 'Undo' });
+        } else if (action === 'more') {
+          showToast('info', row.name, 'Row menu — Duplicate / Export / View History (TBD).');
+        }
+      });
+
+      /* ---- Sub-tab + L2 + header actions ------------------------------ */
+      document.getElementById('btn-rule-groups').addEventListener('click', () => {
+        window.location.href = 'firewall-rule-groups.html';
+      });
+
+      document.getElementById('shell-l2').addEventListener('ds-sidebar-l2-select', (e) => {
+        const id = e.detail.id;
+        if (id === 'groups')      window.location.href = 'firewall-rule-groups.html';
+        else if (id === 'pol')    window.location.href = 'firewall-policies.html';
+        else if (id === 'targets')showToast('info', 'Computer Groups', 'Standalone computer-group manager (coming soon).');
+        else if (id === 'log')    showToast('info', 'Firewall Activity Log', 'Live event stream (coming soon).');
+        else if (id === 'reports')showToast('info', 'Firewall Reports', 'Coming soon.');
+      });
+
+      /* ---- Create Policy modal --------------------------------------- */
+      const modal      = document.getElementById('modal-create');
+      const modalOpen  = document.getElementById('btn-create');
+      const modalClose = document.getElementById('modal-close');
+      const npName    = document.getElementById('np-name');
+      const npDesc    = document.getElementById('np-desc');
+      const npImportBtn = document.getElementById('np-import-btn');
+      const npImportDd  = document.getElementById('np-import-dd');
+      const npCancel  = document.getElementById('np-cancel');
+      const npSave    = document.getElementById('np-save');
+
+      let importedFrom = null;
+
+      const refreshImportDd = () => {
+        npImportDd.items = [
+          { label: '— None —', value: '', selected: !importedFrom },
+          { type: 'divider' },
+          ...ALL_ROWS.map((r) => ({
+            label: r.name,
+            value: r.id,
+            icon: r.isDefault ? 'lock' : 'settings-deploy',
+            selected: importedFrom === r.id,
+          })),
+        ];
+      };
+
+      npImportBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        refreshImportDd();
+        npImportDd.toggle();
+      });
+      npImportDd.addEventListener('ds-dropdown-select', (e) => {
+        importedFrom = e.detail.value || null;
+        const r = ALL_ROWS.find((x) => x.id === importedFrom);
+        npImportBtn.textContent = r ? r.name : 'Select a policy (optional)';
+        // Re-add the chevron icon.
+        npImportBtn.setAttribute('suffix-icon', 'chevron-down');
+      });
+      document.addEventListener('click', (e) => {
+        if (!npImportBtn.contains(e.target) && !npImportDd.contains(e.target)) npImportDd.close();
+      });
+
+      const openModal = () => {
+        importedFrom = null;
+        npName.value = '';
+        npDesc.value = '';
+        npImportBtn.textContent = 'Select a policy (optional)';
+        npImportBtn.setAttribute('suffix-icon', 'chevron-down');
+        modal.showModal();
+        setTimeout(() => npName.focus?.(), 50);
+      };
+      const closeModal = () => modal.close();
+
+      modalOpen.addEventListener('click', openModal);
+      modalClose.addEventListener('click', closeModal);
+      npCancel.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => {
+        // Click on backdrop closes.
+        if (e.target === modal) closeModal();
+      });
+
+      npSave.addEventListener('click', () => {
+        const name = (npName.value || '').trim();
+        if (!name) {
+          showToast('error', 'Name is required', 'Enter a policy name to continue.');
+          npName.focus?.();
+          return;
+        }
+        if (name.length > 50) {
+          showToast('error', 'Name too long', 'Maximum 50 characters.');
+          return;
+        }
+        // Simulate save.
+        const newRow = {
+          id: 'p' + (Date.now() % 1000),
+          priority: ALL_ROWS.length, // top-priority new row
+          status: 'Enabled',
+          name,
+          ruleGroups: importedFrom ? (ALL_ROWS.find((r) => r.id === importedFrom)?.ruleGroups ?? 0) : 0,
+          modified: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ','),
+          applied: 0,
+          pending: 0,
+          isDefault: false,
+          owner: 'Kumaran Murugan',
+        };
+        ALL_ROWS.unshift(newRow);
+        applyFilters();
+        closeModal();
+        showToast('success',
+          `${name} created`,
+          importedFrom ? 'Settings imported. Open the editor to assign computer groups.' : 'Open the editor to add rule groups and assign computer groups.',
+          { cta: 'Open editor', href: `firewall-policy-editor.html?id=${encodeURIComponent(name)}` });
+      });
+    });
+  </script>
+</body>
+</html>

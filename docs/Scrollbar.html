@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scrollbar — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<!-- Live web component: ds-scrollbar (no sub-component dependencies). Do NOT load design-system-library/src/index.js (its global reset disturbs the doc chrome). -->
+<link rel="stylesheet" href="../design-system-library/src/components/scrollbar/scrollbar.css">
+<script type="module" src="../design-system-library/src/components/scrollbar/scrollbar.js"></script>
+<style>
+  /* ============================================================
+     Scrollbar — previews are driven by the LIVE web component
+     <ds-scrollbar> (design-system-library/src/components/scrollbar). Its styles are
+     loaded via the linked component stylesheet in <head>; this page
+     only defines doc-scaffolding below.
+     ============================================================ */
+
+  /* Demo scaffolding for this page */
+  .page-scrollbar .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-scrollbar .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .page-scrollbar .demo-container .demo-canvas {
+    align-items: stretch !important; justify-content: flex-start !important; min-height: 0 !important;
+    flex-direction: column !important; padding: 32px !important; gap: 28px !important;
+  }
+  .demo-sb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 22px; }
+  .demo-sb-section { display: flex; flex-direction: column; gap: 10px; }
+  .demo-sb-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--prism-text-muted); text-transform: uppercase; margin: 0; text-align: left; }
+  .demo-sb-desc { font-size: 12px; color: var(--prism-text-muted); line-height: 1.5; margin: 0; }
+  .demo-sb-frame { background: var(--uems-bg-base); border: 1px solid var(--uems-border-tertiary); border-radius: 12px; overflow: hidden; }
+  .demo-sb-content { padding: 16px; font-size: 13px; color: var(--prism-text); line-height: 1.6; }
+  .demo-sb-content p { margin: 0 0 12px; }
+  .demo-sb-content p:last-child { margin-bottom: 0; }
+  .demo-sb-htrack { display: flex; gap: 16px; padding: 16px; width: max-content; }
+  .demo-sb-block { flex: 0 0 200px; height: 80px; border-radius: 6px; background: var(--uems-bg-secondary); }
+
+  /* Anatomy */
+  .sb-anat-wrap { background: var(--uems-bg-base); border: 1px solid var(--uems-border-tertiary); border-radius: 12px; padding: 28px 24px; }
+  .sb-marker { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#2563eb; color:#fff; font-size:12px; font-weight:700; flex:0 0 auto; }
+  .anat-legend { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; margin-top:28px; }
+  .anat-legend-item { display:flex; gap:12px; align-items:flex-start; }
+  .anat-legend-item strong { display:block; font-size:14.5px; color:var(--prism-text); margin-bottom:2px; }
+  .anat-legend-item span { font-size:13px; color:var(--prism-text-muted); line-height:1.5; }
+
+  /* Style tab live cells */
+  .sb-variant-cell { background: var(--uems-bg-base); border:1px solid var(--uems-border-tertiary); border-radius:10px; overflow:hidden; min-width:220px; }
+  .state-card { background: var(--prism-surface); border:1px solid var(--prism-border); border-radius:12px; padding:18px; }
+  .state-card .sc-title { font-size:13px; font-weight:700; color:var(--prism-text); margin-bottom:4px; }
+  .state-card .sc-desc { font-size:12.5px; color:var(--prism-text-muted); line-height:1.5; }
+
+  /* Static thumb specimens (Hover/Active can't be forced on the live element) */
+  .sb-spec-track { background: var(--uems-bg-base); border:1px solid var(--uems-border-tertiary); border-radius:10px; padding:20px; display:flex; align-items:center; justify-content:center; height:120px; }
+  .sb-spec-thumb { width:6px; height:64px; border-radius:9999px; }
+
+  /* Contrast cards */
+  .sb-contrast-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; }
+  .contrast-card { border:1px solid var(--prism-border); border-radius:14px; overflow:hidden; }
+  .contrast-swatch { padding:28px 18px; font-size:18px; font-weight:600; display:flex; align-items:center; gap:14px; }
+  .contrast-meta { padding:14px 16px; background:var(--prism-surface); }
+  .contrast-meta .cc-name { font-size:13.5px; font-weight:700; color:var(--prism-text); }
+  .contrast-meta .cc-val { font-size:12.5px; color:var(--prism-text-muted); margin:4px 0 8px; font-family:monospace; }
+  .pass-chip { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; background:rgba(34,197,94,0.15); color:#16a34a; }
+  .note-chip { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; background:rgba(234,179,8,0.15); color:#a16207; }
+  .ratio-chip { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; background:rgba(37,99,235,0.12); color:var(--prism-violet); margin-right:6px; }
+
+  .info-callout { margin-top:16px; padding:16px 20px; background:rgba(37,99,235,0.05); border:1px solid rgba(37,99,235,0.15); border-radius:12px; }
+  .info-callout p { font-size:14px; color:var(--prism-text); line-height:1.6; margin:0; }
+  .touch-box { width:48px; height:48px; border:2px dashed var(--prism-violet); border-radius:8px; flex:0 0 auto; }
+  .inline-code { font-family:monospace; font-size:13px; padding:2px 8px; border-radius:6px; background:rgba(37,99,235,0.06); color:var(--prism-violet); }
+</style>
+</head>
+<body class="page-scrollbar">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link active">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Scrollbar</h1>
+        <p class="page-desc">A custom <strong>overlay</strong> scrollbar &mdash; a thumb-only, theme-aware scroll indicator that floats over scrollable content instead of taking layout width. The track is a transparent rail; the pill thumb is the only visible part, computed at runtime from the viewport-to-content ratio. Works on both axes (vertical &amp; horizontal), in two thicknesses (Thin / Regular), with cursor-presence auto-hide and RTL support &mdash; 6 variants &times; 2 orientations in Figma.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <p class="doc-section-subtitle">An overlay scrollbar is just two parts: a transparent full-length <strong>Track</strong> and a pill <strong>Thumb</strong> that fills the cross-axis and is positioned along the long axis to mirror scroll offset. A 2px accent <strong>Focus Ring</strong> appears on the thumb only when the scroll region holds keyboard focus.</p>
+
+          <div class="sb-anat-wrap">
+            <!-- Live <ds-scrollbar> · always visible so the thumb is shown without hover -->
+            <ds-scrollbar autohide="false" aria-label="Anatomy specimen" style="height:160px;max-width:420px;">
+              <div class="demo-sb-content">
+                <p>Hover anywhere in this region and a pill thumb appears on the right edge. With <code>autohide="false"</code> it stays visible regardless of the cursor.</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+              </div>
+            </ds-scrollbar>
+            <!-- numbered callouts -->
+            <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:18px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="sb-marker">1</span> Track (transparent)</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="sb-marker">2</span> Thumb (pill)</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="sb-marker">3</span> Focus Ring (on keyboard focus)</span>
+            </div>
+          </div>
+
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="sb-marker">1</span><div><strong>Track</strong><span>Full-length rail spanning the scroll axis. <strong>Transparent</strong> in overlay &mdash; no fill, no border, no groove.</span></div></div>
+            <div class="anat-legend-item"><span class="sb-marker">2</span><div><strong>Thumb</strong><span>The only visible part. A pill (<code>radius 9999</code>) that fills the track's cross-axis; its length is runtime-driven by the viewport-to-content ratio (floored at 24px).</span></div></div>
+            <div class="anat-legend-item"><span class="sb-marker">3</span><div><strong>Focus Ring</strong><span>2px <code>Border-Accent</code> ring shown only on keyboard focus of the scroll region. Fixed rounded-rect radius (6 Thin / 9 Regular), not the thumb's pill.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Live Demo</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Real rendered <code>&lt;ds-scrollbar&gt;</code> instances &mdash; vertical Regular &amp; Thin, horizontal, always-visible, RTL (bar on the left), and a no-overflow case where the scrollbar renders nothing. Hover a region to reveal the thumb; drag it to scroll.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Scrollbar &middot; orientations, sizes, auto-hide &amp; RTL</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <div class="demo-sb-grid">
+                  <!-- Vertical Regular -->
+                  <div class="demo-sb-section">
+                    <p class="demo-sb-label">Vertical &middot; Regular (default)</p>
+                    <p class="demo-sb-desc">Hover to reveal a 6px pill thumb; drag to scroll.</p>
+                    <div class="demo-sb-frame">
+                      <ds-scrollbar aria-label="Activity log" style="height:200px;">
+                        <div class="demo-sb-content">
+                          <p>Custom overlay scrollbar. Hover to reveal the thumb; drag it to scroll.</p>
+                          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                          <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                          <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                          <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                        </div>
+                      </ds-scrollbar>
+                    </div>
+                  </div>
+
+                  <!-- Vertical Thin -->
+                  <div class="demo-sb-section">
+                    <p class="demo-sb-label">Vertical &middot; Thin</p>
+                    <p class="demo-sb-desc">A 4px thumb (grows to 6px while dragging).</p>
+                    <div class="demo-sb-frame">
+                      <ds-scrollbar size="thin" aria-label="Thin example" style="height:200px;">
+                        <div class="demo-sb-content">
+                          <p>The thin size renders a 4px thumb (6px while dragging).</p>
+                          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.</p>
+                          <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.</p>
+                          <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla.</p>
+                          <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit.</p>
+                        </div>
+                      </ds-scrollbar>
+                    </div>
+                  </div>
+
+                  <!-- Always visible -->
+                  <div class="demo-sb-section">
+                    <p class="demo-sb-label">Always visible &middot; autohide="false"</p>
+                    <p class="demo-sb-desc">The thumb stays visible even without the cursor over it.</p>
+                    <div class="demo-sb-frame">
+                      <ds-scrollbar autohide="false" aria-label="Always visible example" style="height:200px;">
+                        <div class="demo-sb-content">
+                          <p>With autohide off, the thumb stays visible even without the cursor.</p>
+                          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.</p>
+                          <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.</p>
+                          <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla.</p>
+                          <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id.</p>
+                        </div>
+                      </ds-scrollbar>
+                    </div>
+                  </div>
+
+                  <!-- RTL vertical -->
+                  <div class="demo-sb-section">
+                    <p class="demo-sb-label">RTL &middot; Vertical (bar on the left)</p>
+                    <p class="demo-sb-desc">In RTL the vertical bar moves to the left edge.</p>
+                    <div class="demo-sb-frame">
+                      <ds-scrollbar rtl autohide="false" aria-label="RTL example" style="height:200px;">
+                        <div class="demo-sb-content" dir="rtl">
+                          <p>في وضع RTL ينتقل الشريط إلى الحافة اليسرى.</p>
+                          <p>لوريم إيبسوم دولور سيت أميت، كونسيكتيتور أديبيسسينج إليت.</p>
+                          <p>سيد دو إيوسمود تيمبور إنسيديدونت أوت لابوري إت دولوري ماجنا أليكوا.</p>
+                          <p>أوت إنيم أد مينيم فينيام، كويس نوستر إكسير سيتاتيون أولامكو لابوريس.</p>
+                          <p>دويس أوتي إيروري دولور إن ريبريهينديريت إن فولوبتاتي فيليت إيسي.</p>
+                          <p>كورابيتور بريتيوم تينسيدونت لاكوس نولا جرافيدا أورسي أ أوديو.</p>
+                        </div>
+                      </ds-scrollbar>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Horizontal -->
+                <div class="demo-sb-section">
+                  <p class="demo-sb-label">Horizontal</p>
+                  <p class="demo-sb-desc">Transposed: height is fixed, width fills. The pill thumb runs along the bottom edge.</p>
+                  <div class="demo-sb-frame">
+                    <ds-scrollbar orientation="horizontal" aria-label="Horizontal gallery" style="width:100%;height:120px;">
+                      <div class="demo-sb-htrack">
+                        <div class="demo-sb-block"></div>
+                        <div class="demo-sb-block"></div>
+                        <div class="demo-sb-block"></div>
+                        <div class="demo-sb-block"></div>
+                        <div class="demo-sb-block"></div>
+                        <div class="demo-sb-block"></div>
+                      </div>
+                    </ds-scrollbar>
+                  </div>
+                </div>
+
+                <!-- No overflow -->
+                <div class="demo-sb-section">
+                  <p class="demo-sb-label">No overflow &rarr; no thumb</p>
+                  <p class="demo-sb-desc">When the content fits, there is nothing to scroll, so the scrollbar renders nothing (no Disabled state exists).</p>
+                  <div class="demo-sb-frame">
+                    <ds-scrollbar autohide="false" aria-label="No overflow example" style="height:120px;">
+                      <div class="demo-sb-content"><p style="margin:0;">Short content &mdash; nothing to scroll, so no thumb appears.</p></div>
+                    </ds-scrollbar>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Best Practices<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Attach a scrollbar to a region that already scrolls with the wheel and keyboard &mdash; it is a supplemental affordance.</li>
+                <li>Give the host a bounded size so it can establish a scroll viewport.</li>
+                <li>Prefer <strong>Regular</strong> on touch surfaces; <strong>Thin</strong> is fine on dense mouse-driven panels.</li>
+                <li>Let the thumb auto-hide on hover and stay visible while dragging or focused &mdash; the default behavior.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Use the scrollbar as the <strong>only</strong> way to scroll &mdash; keyboard and wheel must still work.</li>
+                <li>Render a filled groove or arrow step buttons &mdash; the track is transparent, overlay-only.</li>
+                <li>Clip the host's overflow so tightly that the 2px focus ring is cut off.</li>
+              </ul></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Variants, states, sizes, colour tokens, and corner radius that define the Scrollbar's visual language. The scrollbar is overlay-only: a transparent track and a pill thumb.</p>
+
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants (Size &times; Orientation)</h2>
+            <p class="doc-section-subtitle">Two thicknesses across two orientations. Each Figma set (vertical / horizontal) carries Thin and Regular at Rest / Hover / Active &mdash; 6 variants per set.</p>
+            <table class="size-table">
+              <thead><tr><th>Variant</th><th>Usage</th><th>Live example</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><code>Regular</code></td>
+                  <td>The default thickness (6px rest, 8px on drag). Comfortable for most lists, panels and touch surfaces.</td>
+                  <td><div class="sb-variant-cell"><ds-scrollbar autohide="false" aria-label="Regular variant" style="height:130px;"><div class="demo-sb-content"><p>Regular &mdash; 6px pill thumb.</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.</p><p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p><p>Duis aute irure dolor in reprehenderit in voluptate velit esse.</p></div></ds-scrollbar></div></td>
+                </tr>
+                <tr>
+                  <td><code>Thin</code></td>
+                  <td>A slimmer 4px thumb (6px on drag) for dense, mouse-driven UIs &mdash; code/editor panes, tight data tables.</td>
+                  <td><div class="sb-variant-cell"><ds-scrollbar size="thin" autohide="false" aria-label="Thin variant" style="height:130px;"><div class="demo-sb-content"><p>Thin &mdash; 4px pill thumb.</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.</p><p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p><p>Duis aute irure dolor in reprehenderit in voluptate velit esse.</p></div></ds-scrollbar></div></td>
+                </tr>
+                <tr>
+                  <td><code>Horizontal</code></td>
+                  <td>The same sizes, transposed (height fixed, width fills). Use for wide galleries, timelines and tables that overflow sideways.</td>
+                  <td><div class="sb-variant-cell" style="min-width:280px;"><ds-scrollbar orientation="horizontal" autohide="false" aria-label="Horizontal variant" style="width:100%;height:110px;"><div class="demo-sb-htrack"><div class="demo-sb-block"></div><div class="demo-sb-block"></div><div class="demo-sb-block"></div><div class="demo-sb-block"></div></div></ds-scrollbar></div></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="info-callout"><p>There is <strong>no Disabled variant</strong>. When the content fits the viewport there is no overflow, so the scrollbar simply renders nothing.</p></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="states" class="doc-section-title">States</h2>
+            <p class="doc-section-subtitle">States are <strong>interaction-driven</strong>, not authored. <strong>Rest &rarr; Hover = colour</strong> (light grey darkens). <strong>Hover &rarr; Active = thickness</strong> (the thumb grows on drag); Hover and Active share the same fill. Because hover/active can't be forced on a live element, the swatches below are static styled pills.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:20px;">
+              <div class="state-card"><div class="sc-title">Rest</div><div class="sc-desc">Subtle light fill <code>#d2d7e0</code> (<code>BG-Quaternary</code>). Thin 4px / Regular 6px. Intentionally low-contrast chrome.</div></div>
+              <div class="state-card"><div class="sc-title">Hover</div><div class="sc-desc">Fill darkens to <code>#5f6c89</code> (<code>BG-Quaternary-Solid</code>). Thickness unchanged. Fade ~120ms.</div></div>
+              <div class="state-card"><div class="sc-title">Active (drag)</div><div class="sc-desc">Same dark fill, but the thumb <strong>grows</strong> &mdash; Thin 4&rarr;6px, Regular 6&rarr;8px. Scrolls 1:1 with the thumb.</div></div>
+              <div class="state-card"><div class="sc-title">Focused</div><div class="sc-desc">2px <code>Border-Accent</code> ring on the thumb when the scroll region has keyboard focus (<code>:focus-within</code>).</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+              <div>
+                <p class="demo-sb-label" style="margin-bottom:8px;">Rest fill &middot; #d2d7e0</p>
+                <div class="sb-spec-track"><div class="sb-spec-thumb" style="background:#d2d7e0;"></div></div>
+              </div>
+              <div>
+                <p class="demo-sb-label" style="margin-bottom:8px;">Hover / Active fill &middot; #5f6c89</p>
+                <div class="sb-spec-track"><div class="sb-spec-thumb" style="background:#5f6c89;"></div></div>
+              </div>
+              <div>
+                <p class="demo-sb-label" style="margin-bottom:8px;">Active thickness &middot; 8px (Regular)</p>
+                <div class="sb-spec-track"><div class="sb-spec-thumb" style="background:#5f6c89;width:8px;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="sizes" class="doc-section-title">Sizes</h2>
+            <p class="doc-section-subtitle">Size controls cross-axis thumb thickness only (width for vertical, height for horizontal). Both sizes grow on Active (drag). The thumb is always a pill.</p>
+            <table class="size-table">
+              <thead><tr><th>Size</th><th>Rest / Hover thickness</th><th>Active (drag) thickness</th><th>Thumb radius</th><th>Use for</th></tr></thead>
+              <tbody>
+                <tr><td><code>Thin</code></td><td>4px</td><td><strong>6px</strong> &uarr;</td><td>pill (9999)</td><td>Dense, mouse-driven panels (editors, tables).</td></tr>
+                <tr><td><code>Regular</code></td><td>6px</td><td><strong>8px</strong> &uarr;</td><td>pill (9999)</td><td>Default; comfortable on touch and general UI.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="color-tokens" class="doc-section-title">Color Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+            <p class="doc-section-subtitle">All colours are theme variables &mdash; bind to the named token, never the hex. The Light resolution is shown.</p>
+            <table class="size-table">
+              <thead><tr><th>Element / State</th><th>Token</th><th>Light hex</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>Thumb &mdash; Rest</td><td><code>Background/BG-Quaternary</code></td><td><code>#d2d7e0</code></td><td>Grey Modern 150. Subtle, non-essential chrome.</td></tr>
+                <tr><td>Thumb &mdash; Hover &amp; Active</td><td><code>Background/BG-Quaternary-Solid</code></td><td><code>#5f6c89</code></td><td>Grey Modern 550. Hover &amp; Active share this fill.</td></tr>
+                <tr><td>Focus ring</td><td><code>Border/Border-Accent</code></td><td><code>#006aff</code></td><td>Hyperlink. 2px outside stroke on the thumb.</td></tr>
+                <tr><td>Track</td><td>&mdash;</td><td><code>transparent</code></td><td>Overlay track has no fill and no border.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="corner-radius" class="doc-section-title">Corner Radius</h2>
+            <p class="doc-section-subtitle">The thumb is a full pill so it stays rounded at any thickness; the focus ring is a fixed rounded-rect.</p>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Radius</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>Thumb</td><td>pill (<code>9999</code>)</td><td>Bind to <code>radius/radius-pill</code>; fully rounded at 4 / 6 / 8 px.</td></tr>
+                <tr><td>Focus ring &mdash; Thin</td><td>6px</td><td>Fixed rounded-rect ring, <strong>not</strong> the thumb's pill.</td></tr>
+                <tr><td>Focus ring &mdash; Regular</td><td>9px</td><td>Fixed rounded-rect ring.</td></tr>
+                <tr><td>Track</td><td>n/a</td><td>Transparent &mdash; nothing to round.</td></tr>
+              </tbody>
+            </table>
+            <div class="info-callout"><p><strong>Auto-hide = cursor presence.</strong> The thumb is shown while the pointer is over the scroll region (fade in 80ms) and hidden when it leaves (fade out 200ms). It stays visible while the thumb is being dragged or while the region has keyboard focus. On touch it reveals on scroll and fades ~800ms after scrolling stops. <code>autohide="false"</code> = always visible.</p></div>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">Reach for the overlay scrollbar to indicate scroll position in a bounded region without spending layout width on a native gutter.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">On a <strong>scrollable list</strong> or feed that overflows its container.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Inside a <strong>data table</strong> body, modal body, or side rail.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">In <strong>code / editor panes</strong> where a thin, unobtrusive indicator suits dense content.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For <strong>horizontal galleries</strong> or timelines that overflow sideways.</li>
+                  <li style="border:none;background:transparent;">When you want a <strong>consistent cross-browser look</strong> instead of the OS scrollbar.</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#e42527" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">As the <strong>only</strong> scroll mechanism &mdash; keyboard and wheel must still work.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">As a <strong>progress indicator</strong> &mdash; use a <a href="Progress-bar.html">Progress bar</a>.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">As a <strong>range input</strong> &mdash; use a <a href="Slider.html">Slider</a>.</li>
+                  <li style="border:none;background:transparent;">On a region that <strong>doesn't actually overflow</strong> &mdash; it will render nothing anyway.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="alignment-placement" class="doc-section-title">Alignment &amp; Placement</h2>
+            <p class="doc-section-subtitle">Attach a scrollbar to a host that owns the scroll viewport &mdash; it floats over content rather than occupying layout width.</p>
+            <ul class="doc-list">
+              <li><strong>Lists &amp; feeds:</strong> wrap the scroll region so the vertical bar tracks down the trailing (right in LTR) edge.</li>
+              <li><strong>Data tables:</strong> use it on the body for vertical overflow and a horizontal instance for wide column sets.</li>
+              <li><strong>Modal bodies:</strong> let the body scroll under a fixed header/footer; the overlay bar avoids a layout-shifting gutter.</li>
+              <li><strong>Side rails:</strong> thin vertical bar for long navigation or filter rails.</li>
+              <li><strong>Code / editor panes:</strong> Thin size keeps the indicator subtle against dense monospace content.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do's and Don'ts</h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li><strong>Keep keyboard &amp; wheel working:</strong> the container is the accessible scroll path; the bar is supplemental.</li>
+                <li><strong>Prefer Regular on touch:</strong> the larger thumb is easier to perceive on coarse pointers.</li>
+                <li><strong>Bound the host:</strong> give it an explicit size so it establishes a scroll viewport.</li>
+                <li><strong>Re-measure on change:</strong> the thumb recomputes on scroll, resize and DOM mutation &mdash; let it.</li>
+                <li><strong>Name the region:</strong> add <code>aria-label</code> on the host when the scroll area needs a name.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li><strong>Don't make it the only scroll path:</strong> never remove wheel/keyboard scrolling.</li>
+                <li><strong>Don't enlarge it into a heavy groove:</strong> keep the track transparent and overlay-only.</li>
+                <li><strong>Don't add arrow buttons:</strong> the design has no step arrows.</li>
+                <li><strong>Don't clip the focus ring:</strong> avoid <code>overflow:hidden</code> that cuts the 2px outside ring.</li>
+                <li><strong>Don't fight nested scroll:</strong> give each scroll area its own instance.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Components that commonly host or are confused with the Scrollbar.</p>
+            <div class="related-grid">
+              <a href="Data-table.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 10h18M9 4v16"/></svg> Data table</a>
+              <a href="Modal.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="14" rx="2"/></svg> Modal</a>
+              <a href="List.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> List</a>
+              <a href="Right-pane.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M15 4v16"/></svg> Right pane</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <ul class="doc-list">
+              <li><strong>Figma Node (vertical):</strong> <code class="inline-code">21449:586344</code> &mdash; Component Set: ds-scrollbar/vertical</li>
+              <li><strong>Figma Node (horizontal):</strong> <code class="inline-code">21449:586382</code> &mdash; Component Set: ds-scrollbar/horizontal</li>
+              <li><strong>Typography:</strong> Zoho Puvi (chrome only &mdash; the scrollbar carries no text)</li>
+              <li><strong>Border Radius:</strong> pill (9999) on the thumb; fixed 6 / 9 on the focus ring</li>
+              <li><strong>Total Variants:</strong> 6 per orientation = Size(2) &times; State(3); two orientations (vertical + horizontal). No Disabled variant.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div id="feedback-inline" class="feedback-banner">
+            <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+            <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+          </div>
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live Playground</h2>
+          <p class="doc-section-subtitle">Configure the Scrollbar and copy the generated markup. The preview renders a live <code>&lt;ds-scrollbar&gt;</code> with bounded size and overflowing sample content reflecting the controls.</p>
+
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group">
+                <label class="cp-label">Theme</label>
+                <select class="cp-select" id="sb-theme"><option value="light" selected>Light</option><option value="dark">Dark</option></select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Orientation</label>
+                <select class="cp-select" id="sb-orientation"><option value="vertical" selected>Vertical</option><option value="horizontal">Horizontal</option></select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Size</label>
+                <select class="cp-select" id="sb-size"><option value="regular" selected>Regular</option><option value="thin">Thin</option></select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Auto-hide</label>
+                <select class="cp-select" id="sb-autohide"><option value="on" selected>On</option><option value="off">Off</option></select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Direction</label>
+                <select class="cp-select" id="sb-dir"><option value="ltr" selected>LTR</option><option value="rtl">RTL</option></select>
+              </div>
+            </div>
+
+            <div class="cp-preview" id="sb-preview-area" style="padding:32px;flex-direction:column;align-items:stretch;">
+              <div id="sb-preview-frame" style="background:var(--uems-bg-base);border:1px solid var(--uems-border-tertiary);border-radius:12px;overflow:hidden;">
+                <!-- live <ds-scrollbar> injected by JS -->
+              </div>
+            </div>
+
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="sb-copy-btn">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                Copy code
+              </button>
+            </div>
+            <div style="background:#0a0a0c;">
+              <div class="cp-code-area" id="sb-code-output" style="white-space:pre;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;padding:20px;color:#e2e8f0;max-height:280px;overflow:auto;"></div>
+            </div>
+            <div style="background:#0a0a0c;padding:0 20px 16px;">
+              <button class="cp-action-btn" id="sb-more-btn" style="font-size:12.5px;">Show more</button>
+            </div>
+          </div>
+
+          <script>
+          (function(){
+            var orientation = document.getElementById('sb-orientation');
+            var size = document.getElementById('sb-size');
+            var autohide = document.getElementById('sb-autohide');
+            var dir = document.getElementById('sb-dir');
+            var theme = document.getElementById('sb-theme');
+            var frame = document.getElementById('sb-preview-frame');
+            var codeOut = document.getElementById('sb-code-output');
+            var copyBtn = document.getElementById('sb-copy-btn');
+            var moreBtn = document.getElementById('sb-more-btn');
+            if (!frame) return;
+
+            function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+            var V_HTML = '<div class="demo-sb-content"><p>Custom overlay scrollbar. Hover to reveal the thumb; drag it to scroll.</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p><p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.</p><p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla.</p><p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim.</p></div>';
+            var V_HTML_RTL = '<div class="demo-sb-content" dir="rtl"><p>في وضع RTL ينتقل الشريط إلى الحافة اليسرى.</p><p>لوريم إيبسوم دولور سيت أميت، كونسيكتيتور أديبيسسينج إليت.</p><p>سيد دو إيوسمود تيمبور إنسيديدونت أوت لابوري إت دولوري ماجنا.</p><p>أوت إنيم أد مينيم فينيام، كويس نوستر إكسير سيتاتيون أولامكو.</p><p>دويس أوتي إيروري دولور إن ريبريهينديريت إن فولوبتاتي.</p></div>';
+            var H_HTML = '<div class="demo-sb-htrack"><div class="demo-sb-block"></div><div class="demo-sb-block"></div><div class="demo-sb-block"></div><div class="demo-sb-block"></div><div class="demo-sb-block"></div></div>';
+
+            function render(){
+              var isH = orientation.value === 'horizontal';
+              var isRtl = dir.value === 'rtl';
+              var autoOff = autohide.value === 'off';
+
+              // ---- live <ds-scrollbar> element (the real web component) ----
+              var el = document.createElement('ds-scrollbar');
+              if (isH) el.setAttribute('orientation', 'horizontal');
+              if (size.value === 'thin') el.setAttribute('size', 'thin');
+              if (autoOff) el.setAttribute('autohide', 'false');
+              if (isRtl) el.setAttribute('rtl', '');
+              el.setAttribute('aria-label', 'Scrollable region');
+              el.setAttribute('style', isH ? 'width:100%;height:120px;' : 'height:200px;');
+              el.innerHTML = isH ? H_HTML : (isRtl ? V_HTML_RTL : V_HTML);
+              frame.replaceChildren(el);
+              frame.closest('.cp-preview').setAttribute('data-theme-preview', theme.value);
+
+              // ---- generated markup (mirrors the attributes above) ----
+              var styleStr = isH ? 'width:100%;height:120px' : 'height:200px';
+              var attrs = [];
+              if (isH) attrs.push('orientation="horizontal"');
+              if (size.value === 'thin') attrs.push('size="thin"');
+              if (autoOff) attrs.push('autohide="false"');
+              if (isRtl) attrs.push('rtl');
+              attrs.push('aria-label="Scrollable region"');
+              attrs.push('style="' + styleStr + '"');
+
+              var inner = isH
+                ? '  <div class="gallery">…wide content…</div>'
+                : '  <div class="content">…long content…</div>';
+              var code = '<ds-scrollbar\n  ' + attrs.join('\n  ') + '>\n' + inner + '\n</ds-scrollbar>';
+              codeOut.dataset.raw = code;
+              codeOut.innerHTML = highlight(code);
+            }
+
+            function highlight(code){
+              return esc(code)
+                .replace(/([a-z][a-z-]*)=/g, '<span style="color:#38bdf8;">$1</span>=')
+                .replace(/&lt;(\/?)(ds-scrollbar)/g, '&lt;$1<span style="color:#a78bfa;">$2</span>')
+                .replace(/&quot;(.*?)&quot;/g, '<span style="color:#34d399;">&quot;$1&quot;</span>');
+            }
+
+            [orientation, size, autohide, dir, theme].forEach(function(el){ if (el) el.addEventListener('change', render); });
+
+            copyBtn.addEventListener('click', function(){
+              var raw = codeOut.dataset.raw || '';
+              navigator.clipboard.writeText(raw).then(function(){
+                var o = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+                setTimeout(function(){ copyBtn.innerHTML = o; }, 2000);
+              });
+            });
+
+            moreBtn.addEventListener('click', function(){
+              var expanded = codeOut.style.maxHeight === 'none';
+              codeOut.style.maxHeight = expanded ? '280px' : 'none';
+              moreBtn.textContent = expanded ? 'Show more' : 'Show less';
+            });
+
+            render();
+          })();
+          </script>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="component-api" class="doc-section-title">Component API &amp; Properties</h2>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>orientation</code></td><td><code>'vertical' | 'horizontal'</code></td><td><code>'vertical'</code></td><td>Which axis the bar tracks. Maps to the two Figma sets.</td></tr>
+                <tr><td><code>size</code></td><td><code>'thin' | 'regular'</code></td><td><code>'regular'</code></td><td>Cross-axis thumb thickness (Thin 4&rarr;6, Regular 6&rarr;8 on drag).</td></tr>
+                <tr><td><code>autohide</code></td><td>boolean</td><td><code>true</code> (on)</td><td>Show while the pointer is over the region; fade out on leave. Stays visible while dragging or focused. <code>autohide="false"</code> = always visible.</td></tr>
+                <tr><td><code>disabled</code></td><td>boolean</td><td><code>false</code></td><td>Forces the bar inert / hidden. (No overflow also hides it automatically.)</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td><code>false</code></td><td>Mirrors the layout (sets <code>dir="rtl"</code>); the vertical bar moves to the left edge.</td></tr>
+              </tbody>
+            </table>
+            <div class="info-callout"><p><code>&lt;ds-scrollbar&gt;</code> is a <strong>wrapper</strong>: it adopts its children into a scroll viewport and overlays the thumb. Give the host a bounded size (e.g. <code>style="height:200px"</code>) and real overflowing content. Interaction states (<code>hover</code>, <code>active</code>, <code>focused</code>) are reflected at runtime, not authored.</p></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="implementation-example" class="doc-section-title">Implementation Example</h2>
+            <p class="doc-section-subtitle">Ember / Handlebars usage &mdash; a Thin vertical scrollbar wrapping a long activity list.</p>
+            <div class="cp-code-area" style="border-radius:12px;margin-top:16px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.7;">
+                <span style="color:#94a3b8;">{{!-- MyApp/templates/components/activity-list.hbs --}}</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#a78bfa;">UemsScrollbar</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@orientation</span>=<span style="color:#34d399;">"vertical"</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@size</span>=<span style="color:#34d399;">"thin"</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@autohide</span>=<span style="color:#C678DD;">{{true}}</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">aria-label</span>=<span style="color:#34d399;">"Recent activity"</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">style</span>=<span style="color:#34d399;">"height:240px"</span><br>
+                <span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#e06c75;">ul</span> <span style="color:#38bdf8;">class</span>=<span style="color:#34d399;">"activity"</span><span style="color:#ABB2BF;">&gt;…long list…&lt;/</span><span style="color:#e06c75;">ul</span><span style="color:#ABB2BF;">&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;/</span><span style="color:#a78bfa;">UemsScrollbar</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+            <ul class="doc-list">
+              <li>The <strong>vertical bar moves to the left edge</strong> in RTL (right edge in LTR).</li>
+              <li>Horizontal logic mirrors &mdash; the thumb's position origin flips; no separate RTL variants are needed (the thumb is visually symmetric).</li>
+              <li>Implemented with <code>dir</code>-aware logic and <strong>logical properties</strong> (<code>inset-inline-start</code>, <code>inline-size</code> / <code>block-size</code>).</li>
+              <li>Set the <code class="inline-code">rtl</code> attribute (the component reflects it to <code>dir="rtl"</code>) or place the host inside an RTL ancestor.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">The scrollbar is a <strong>supplemental affordance</strong>. The accessible scroll path is the keyboard and wheel on the scroll container; the thumb is decorative.</p>
+
+          <div class="doc-section">
+            <h3 id="keyboard-interaction" class="doc-h3">Keyboard Interaction</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><code>Tab</code></td><td>Moves focus to the scroll region &mdash; focusable (<code>tabindex=0</code>) <strong>only when there is overflow</strong>.</td></tr>
+                <tr><td><code>&uarr; &darr;</code></td><td>Scroll the region by a line (vertical).</td></tr>
+                <tr><td><code>&larr; &rarr;</code></td><td>Scroll the region by a line (horizontal).</td></tr>
+                <tr><td><code>PageUp</code> / <code>PageDown</code></td><td>Scroll by a viewport page.</td></tr>
+                <tr><td><code>Home</code> / <code>End</code></td><td>Jump to the start / end of the content.</td></tr>
+                <tr><td>Wheel / trackpad</td><td>Scroll the region; the thumb reflects position 1:1.</td></tr>
+              </tbody>
+            </table>
+            <div class="info-callout"><p>The scroll region is focusable only while it overflows, so empty/short regions stay out of the tab order. When focused, the thumb shows the 2px accent focus ring.</p></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="aria-screen-reader" class="doc-h3">ARIA Attributes &amp; Screen Reader Guidance</h3>
+            <ul class="doc-list">
+              <li><strong>Decorative thumb:</strong> a thumb that only mirrors native scroll is marked <code>aria-hidden="true"</code> &mdash; it is not announced.</li>
+              <li><strong>Supplemental affordance:</strong> the scrollbar is never the only way to scroll; keyboard and wheel on the container satisfy operability.</li>
+              <li><strong>Name the region:</strong> the focusable scroll container needs an accessible name &mdash; provide <code>aria-label</code> on the host (e.g. &ldquo;Recent activity&rdquo;).</li>
+              <li><strong>Optional control role:</strong> if the thumb is promoted to a real control, use <code>role="scrollbar"</code> with <code>aria-controls</code>, <code>aria-orientation</code>, and <code>aria-valuenow / valuemin / valuemax</code>.</li>
+              <li><strong>No focus trap:</strong> the thumb must never capture or hold keyboard focus.</li>
+              <li><strong>Don't rely on the bar alone:</strong> scroll affordance is reinforced by content overflow and keyboard operability, not the thumb's subtle colour.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="focus-state" class="doc-h3">Focus State Design</h3>
+            <ul class="doc-list">
+              <li><strong>Focus ring:</strong> 2px solid <code>Border-Accent</code> (#006AFF) on the thumb.</li>
+              <li><strong>Trigger:</strong> shown on <code>:focus-within</code> / <code>:focus-visible</code> of the scroll region (keyboard focus).</li>
+              <li><strong>Shape:</strong> fixed rounded-rect &mdash; 6px (Thin) / 9px (Regular), not the thumb's pill radius.</li>
+              <li><strong>Don't clip it:</strong> the ring is an outside stroke, so the host must not clip overflow around the thumb.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="color-contrast" class="doc-h3">Color Contrast<span class="h3-badge" style="background:rgba(34,197,94,0.15);color:#16a34a;">WCAG 1.4.11</span></h3>
+            <p class="doc-section-subtitle">As a graphical UI object, the <strong>strong</strong> (Hover/Active) thumb should reach &ge;3:1 against the content background. Rest is intentionally subtle &mdash; acceptable for non-essential chrome.</p>
+            <div class="sb-contrast-grid">
+              <div class="contrast-card">
+                <div class="contrast-swatch" style="background:#FFFFFF;"><span style="display:inline-block;width:12px;height:48px;border-radius:9999px;background:#5f6c89;"></span><span style="font-size:14px;color:#15181E;">Strong thumb</span></div>
+                <div class="contrast-meta"><div class="cc-name">Hover / Active thumb</div><div class="cc-val">#5f6c89 on #FFFFFF</div><span class="ratio-chip">4.6:1</span><span class="pass-chip">&ge;3:1 Pass</span></div>
+              </div>
+              <div class="contrast-card">
+                <div class="contrast-swatch" style="background:#FFFFFF;"><span style="display:inline-block;width:12px;height:48px;border-radius:9999px;background:#d2d7e0;"></span><span style="font-size:14px;color:#15181E;">Rest thumb</span></div>
+                <div class="contrast-meta"><div class="cc-name">Rest thumb</div><div class="cc-val">#d2d7e0 on #FFFFFF</div><span class="ratio-chip">1.3:1</span><span class="note-chip">Subtle by design</span></div>
+              </div>
+              <div class="contrast-card">
+                <div class="contrast-swatch" style="background:#FFFFFF;"><span style="display:inline-block;width:12px;height:48px;border-radius:9999px;outline:2px solid #006AFF;outline-offset:2px;background:#5f6c89;"></span><span style="font-size:14px;color:#15181E;">Focus ring</span></div>
+                <div class="contrast-meta"><div class="cc-name">Focus ring</div><div class="cc-val">#006AFF on #FFFFFF</div><span class="ratio-chip">4.6:1</span><span class="pass-chip">&ge;3:1 Pass</span></div>
+              </div>
+            </div>
+            <div class="info-callout"><p><strong>WCAG 2.1 Level AA Requires:</strong> a contrast ratio of at least <strong>3.0:1</strong> for graphical objects and UI components (1.4.11) such as the strong-state thumb and the focus ring. The Rest thumb is intentionally below this &mdash; it is non-essential chrome, and the strong state plus keyboard operability carry the affordance.</p></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="touch-target" class="doc-h3">Touch Target Size</h3>
+            <div style="display:flex;align-items:center;gap:20px;padding:20px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:14px;">
+              <div class="touch-box"></div>
+              <div style="font-size:14px;color:var(--prism-text);line-height:1.6;">
+                <strong>Thumb hit area = its visible size, by design.</strong> Like the overlay scrollbars in VS Code, GitHub and macOS, the thumb's interactive area equals its 4&ndash;8px visible width &mdash; we deliberately do <strong>not</strong> add an enlarged hit target. This is acceptable because the scrollbar is supplemental: the <strong>keyboard and wheel on the container are the accessible path</strong>, so operability never depends on grabbing the thin thumb.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/scrollbar.md" download="scrollbar.md" class="action-link"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=21449-586344" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/components/toc.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>

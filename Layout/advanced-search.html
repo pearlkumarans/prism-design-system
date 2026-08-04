@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Search — Endpoint Central · Prism</title>
+
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100vh; margin: 0; overflow: hidden; }
+    body { font-family: var(--font-family-sans); background: var(--uems-bg-base); color: var(--uems-text-primary); display: flex; flex-direction: column; }
+
+    /* ── Top bar — MODULE selector FIRST, then the search field + action ── */
+    .as-bar {
+      display: flex; align-items: center; gap: var(--spacing-12);
+      padding: var(--spacing-12) var(--spacing-20);
+      background: var(--uems-bg-secondary-subtle);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+      flex-shrink: 0;
+    }
+    /* 1 — module scope picker (what you're searching) comes first */
+    .as-module { display: flex; align-items: center; gap: var(--spacing-8); flex-shrink: 0; }
+    .as-module__label { font-size: var(--font-size-13); color: var(--uems-text-secondary); white-space: nowrap; }
+    .as-module ds-input-select { width: 210px; }
+    /* medium trigger has min-width:320 by default — let it shrink to the 210px host so it never overlaps the search field */
+    .as-module ds-input-select .ds-input-select__trigger { min-width: 0; }
+    /* a divider between the scope and the query — reads as one search unit */
+    .as-bar__sep { width: 1px; align-self: stretch; background: var(--uems-border-tertiary); margin: var(--spacing-2) 0; }
+    /* 2 — search field */
+    .as-search { flex: 1; min-width: 0; }
+    /* 3 — search action */
+    .as-bar ds-button { flex-shrink: 0; }
+    .as-bar .as-close { margin-inline-start: var(--spacing-4); }
+
+    /* ── Body ── */
+    .as-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+    .as-empty { flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--spacing-32); }
+    /* `hidden` must win over the display rules above */
+    .as-empty[hidden], .as-results[hidden] { display: none !important; }
+
+    .as-results { padding: var(--spacing-16) var(--spacing-20) var(--spacing-32); max-width: 920px; width: 100%; margin: 0 auto; }
+    .as-results__summary { font-size: var(--font-size-13); color: var(--uems-text-secondary); padding: var(--spacing-8) var(--spacing-4) var(--spacing-12); }
+    .as-results__summary b { color: var(--uems-text-primary); font-weight: var(--font-weight-semibold); }
+    .as-group { margin-bottom: var(--spacing-20); }
+    .as-group__label { font-size: var(--font-size-11); font-weight: var(--font-weight-semibold); letter-spacing: .06em; text-transform: uppercase; color: var(--uems-text-tertiary); padding: var(--spacing-8) var(--spacing-4); }
+    .as-row { display: flex; align-items: center; gap: var(--spacing-12); padding: var(--spacing-12) var(--spacing-12); border-radius: var(--radius-md); cursor: pointer; transition: background .1s ease; }
+    .as-row:hover { background: var(--uems-bg-secondary); }
+    .as-ibox { width: 36px; height: 36px; border-radius: var(--radius-md); flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--uems-bg-accent-primary-subtle); color: var(--uems-icon-accent); }
+    .as-ibox--neutral { background: var(--uems-bg-secondary); color: var(--uems-icon-tertiary); }
+    .as-rbody { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .as-rtitle { font-size: var(--font-size-14); color: var(--uems-text-primary); }
+    .as-rsub { font-size: var(--font-size-12); color: var(--uems-text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .as-row mark { background: var(--uems-bg-accent-primary-subtle); color: var(--uems-text-accent-link); border-radius: 3px; padding: 0 1px; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Top bar : [ Search in ▼ ] | [ 🔍 search field ] [ Search ]   … ✕ ── -->
+  <header class="as-bar">
+    <div class="as-module">
+      <span class="as-module__label">Search in</span>
+      <ds-input-select id="as-module" size="medium" value="all" show-label="false" show-helper-row="false"></ds-input-select>
+    </div>
+    <span class="as-bar__sep" aria-hidden="true"></span>
+    <ds-search-field id="as-search" class="as-search" size="medium" placeholder="Search everything…" aria-label="Search query"></ds-search-field>
+    <ds-button id="as-go" variant="primary" size="medium" prefix-icon="search">Search</ds-button>
+    <ds-icon-button id="as-close" class="as-close" icon="close" label="Close search" type="tertiary-grey" size="medium"></ds-icon-button>
+  </header>
+
+  <main class="as-body">
+    <div class="as-empty" id="as-empty">
+      <ds-empty-state
+        illustration="computer-search"
+        title="Search devices, features &amp; articles"
+        description="Pick a scope above, then search for any information on devices managed, features and articles available."
+        show-primary="false"
+        show-secondary="false"></ds-empty-state>
+    </div>
+    <div class="as-results" id="as-results" hidden></div>
+  </main>
+
+  <script type="module">
+    import '../design-system-library/src/components/index.js';
+    await customElements.whenDefined('ds-input-select');
+    await customElements.whenDefined('ds-search-field');
+
+    const moduleSel = document.getElementById('as-module');
+    const search    = document.getElementById('as-search');
+    const goBtn     = document.getElementById('as-go');
+    const closeBtn  = document.getElementById('as-close');
+    const emptyEl   = document.getElementById('as-empty');
+    const resultsEl = document.getElementById('as-results');
+
+    /* ── Scope (module) options — selected FIRST, drives the search ── */
+    const MODULES = [
+      { value:'all',      label:'All' },
+      { value:'devices',  label:'Devices managed' },
+      { value:'features', label:'Features' },
+      { value:'articles', label:'Articles' },
+      { value:'patches',  label:'Patches' },
+      { value:'software', label:'Software' },
+    ];
+    moduleSel.options = MODULES.map(m => ({ value:m.value, label:m.label }));
+    const PLACEHOLDER = {
+      all:'Search everything…', devices:'Search managed devices…', features:'Search features…',
+      articles:'Search help articles…', patches:'Search patches & bulletins…', software:'Search software & packages…',
+    };
+
+    /* ── Searchable data per scope ── */
+    const DATA = {
+      devices: { label:'Devices', icon:'computer', items:[
+        { title:'ARAVINTH-WIN11', sub:'Kumaran M R · Windows 11 Pro · Managed' },
+        { title:'ARAVINTH-MAC',   sub:'Kumaran M R · macOS 14 Sonoma · Managed' },
+        { title:'PRIYA-WIN10',    sub:'Priya N · Windows 10 Ent · Pending' },
+        { title:'KARTHIK-UBUNTU', sub:'Karthik S · Ubuntu 22.04 LTS · Managed' },
+        { title:'FIN-BLR-042',    sub:'Divya R · Windows 11 Pro · Error' },
+      ]},
+      features: { label:'Features', icon:'grid', items:[
+        { title:'Patch Management',    sub:'Automate OS & third-party patching' },
+        { title:'Software Deployment', sub:'Package & distribute applications' },
+        { title:'Remote Control',      sub:'Securely access endpoints' },
+        { title:'Vulnerability Scan',  sub:'Detect & remediate CVEs' },
+        { title:'Device Groups',       sub:'Organise endpoint collections' },
+        { title:'MDM Profiles',        sub:'Mobile device configuration' },
+      ]},
+      articles: { label:'Articles', icon:'file-report', items:[
+        { title:'How to deploy a patch to a device group', sub:'KB-1042 · Patch Management' },
+        { title:'Configure Wake-on-LAN for remote wake',   sub:'KB-2087 · Remote Operations' },
+        { title:'Set up an automatic patch deployment policy', sub:'KB-1190 · Patch Management' },
+        { title:'Troubleshoot agent not reporting',        sub:'KB-3320 · Agent' },
+        { title:'Enroll macOS devices via MDM',            sub:'KB-2501 · MDM' },
+      ]},
+      patches: { label:'Patches', icon:'file-shield', items:[
+        { title:'KB5034123 — Cumulative Update Windows 11', sub:'Critical · Missing on 12 devices' },
+        { title:'Apache Tomcat 9.0.98 security fix',        sub:'Important · CVE-2024-56337' },
+        { title:'Microsoft Edge 145.0.3800',               sub:'Moderate · 8 devices' },
+      ]},
+      software: { label:'Software', icon:'layout-grid', items:[
+        { title:'7-Zip 24.09 (x64)',          sub:'Package · 41 installs' },
+        { title:'Google Chrome Enterprise',   sub:'Package · 318 installs' },
+        { title:'ManageEngine UEMS Agent',    sub:'Package · all devices' },
+      ]},
+    };
+
+    const esc = (s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const hi = (text,q)=>{ if(!q) return esc(text); const i=text.toLowerCase().indexOf(q.toLowerCase()); if(i<0) return esc(text); return esc(text.slice(0,i))+'<mark>'+esc(text.slice(i,i+q.length))+'</mark>'+esc(text.slice(i+q.length)); };
+
+    let scope = 'all', query = '';
+
+    function scopesToSearch(){ return scope==='all' ? Object.keys(DATA) : [scope]; }
+
+    function run(){
+      const q = query.trim().toLowerCase();
+      if(!q){ emptyEl.hidden=false; resultsEl.hidden=true; resultsEl.innerHTML=''; return; }
+      let total=0; const blocks=[];
+      scopesToSearch().forEach(key=>{
+        const g=DATA[key]; if(!g) return;
+        const matches=g.items.filter(it=>(it.title+' '+it.sub).toLowerCase().includes(q));
+        if(!matches.length) return; total+=matches.length;
+        blocks.push(
+          `<div class="as-group"><div class="as-group__label">${esc(g.label)} (${matches.length})</div>`+
+          matches.map(it=>
+            `<div class="as-row"><span class="as-ibox ${key==='devices'?'':'as-ibox--neutral'}"><ds-icon name="${g.icon}" size="18"></ds-icon></span>`+
+            `<span class="as-rbody"><span class="as-rtitle">${hi(it.title,query.trim())}</span><span class="as-rsub">${hi(it.sub,query.trim())}</span></span></div>`
+          ).join('')+`</div>`);
+      });
+      if(!total){
+        emptyEl.hidden=true; resultsEl.hidden=false;
+        resultsEl.innerHTML=`<ds-empty-state illustration="common-search" title="No results found" description="No matches for &ldquo;${esc(query.trim())}&rdquo; in ${esc(scopeLabel())}. Try a different term or scope." show-primary="false" show-secondary="false"></ds-empty-state>`;
+        return;
+      }
+      emptyEl.hidden=true; resultsEl.hidden=false;
+      resultsEl.innerHTML=`<div class="as-results__summary"><b>${total}</b> result${total>1?'s':''} for &ldquo;${esc(query.trim())}&rdquo; in <b>${esc(scopeLabel())}</b></div>`+blocks.join('');
+    }
+    const scopeLabel = ()=> (MODULES.find(m=>m.value===scope)||{}).label || 'All';
+
+    /* scope change → update placeholder, re-run */
+    moduleSel.addEventListener('ds-input-select-change', (e)=>{ scope=e.detail?.value||'devices'; search.setAttribute('placeholder', PLACEHOLDER[scope]||'Search…'); run(); search.querySelector('input')?.focus(); });
+    /* search field */
+    search.addEventListener('ds-search-field-input', (e)=>{ query=e.detail?.value||''; run(); });
+    search.addEventListener('ds-search-field-submit', (e)=>{ query=e.detail?.value||query; run(); });
+    search.addEventListener('ds-search-field-clear', ()=>{ query=''; run(); });
+    goBtn.addEventListener('click', ()=>{ run(); });
+    closeBtn.addEventListener('click', ()=>{ if(history.length>1) history.back(); else window.location.href='../screens/quick-links.html'; });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeBtn.click(); });
+
+    /* Prefill from ?q= (the command palette's "Advanced Search" passes the query) */
+    const params = new URLSearchParams(location.search);
+    const q0 = params.get('q') || '';
+    const m0 = params.get('module');
+    if(m0 && MODULES.some(m=>m.value===m0)){ scope=m0; moduleSel.setAttribute('value', m0); }
+    search.setAttribute('placeholder', PLACEHOLDER[scope]||'Search…');
+    if(q0){ query=q0; search.setAttribute('value', q0); run(); }
+    requestAnimationFrame(()=>search.querySelector('input')?.focus());
+  </script>
+</body>
+</html>

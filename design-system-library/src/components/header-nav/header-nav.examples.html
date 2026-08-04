@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ds-header-nav — examples</title>
+  <script type="module">import '../../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 24px; background: var(--uems-background); color: var(--uems-text-primary); }
+    section { margin-bottom: 40px; }
+    h2 { font-size: var(--font-size-14); color: var(--uems-text-tertiary); margin: 0 0 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .row { display: block; }
+    .note { font-size: var(--font-size-12); color: var(--uems-text-tertiary); margin: 0 0 8px; }
+    ds-header-nav { display: flex; }
+  </style>
+</head>
+<body>
+  <section>
+    <h2>Endpoint Central — top tab nav + search icon</h2>
+    <p class="note">Combined product: centre holds the horizontal tab nav, search is a plain icon in the right cluster. Tabs are set via the <code>tabs</code> property.</p>
+    <div class="row">
+      <ds-header-nav id="hn-ec" variant="endpoint-central" product-name="Endpoint Central"></ds-header-nav>
+    </div>
+  </section>
+
+  <section>
+    <h2>Endpoint Central MSP — with customer selector</h2>
+    <p class="note">MSP variant turns the customer selector ON by default (next to the right cluster).</p>
+    <div class="row">
+      <ds-header-nav id="hn-msp" variant="endpoint-central-msp" product-name="Endpoint Central MSP"></ds-header-nav>
+    </div>
+  </section>
+
+  <section>
+    <h2>Patch Manager Plus — centred search field</h2>
+    <p class="note">Point product: primary nav lives in a left rail, so the centre holds a full centre-aligned search field.</p>
+    <div class="row">
+      <ds-header-nav variant="patch-manager-plus" product-name="Patch Manager Plus"></ds-header-nav>
+    </div>
+  </section>
+
+  <section>
+    <h2>Mobile Device Manager Plus — centred search field</h2>
+    <div class="row">
+      <ds-header-nav variant="mdm" product-name="Mobile Device Manager Plus"
+                     search-placeholder="Search devices, profiles, apps…"></ds-header-nav>
+    </div>
+  </section>
+
+  <section>
+    <h2>Vulnerability Manager Plus</h2>
+    <div class="row">
+      <ds-header-nav variant="vulnerability-manager-plus"></ds-header-nav>
+    </div>
+  </section>
+
+  <section>
+    <h2>Reduced right cluster</h2>
+    <p class="note">Toggle individual icons off with <code>show-*="false"</code> (all are ON by default).</p>
+    <div class="row">
+      <ds-header-nav variant="device-control-plus"
+                     show-bookmark="false" show-bento="false"
+                     show-notifications="false"></ds-header-nav>
+    </div>
+  </section>
+
+  <section>
+    <h2>Endpoint Central in LEFT-nav mode (center="search")</h2>
+    <p class="note"><code>center="search"</code> forces the centred search field even on a combined product — used by the shell's left-navigation mode.</p>
+    <div class="row">
+      <ds-header-nav variant="endpoint-central" center="search"></ds-header-nav>
+    </div>
+  </section>
+
+  <section>
+    <h2>RTL — Endpoint Central</h2>
+    <div class="row">
+      <ds-header-nav id="hn-rtl" variant="endpoint-central" rtl product-name="مركز النقاط الطرفية"></ds-header-nav>
+    </div>
+  </section>
+
+  <script type="module">
+    /* Tabs are a JS property on the host — set after the elements upgrade. */
+    customElements.whenDefined('ds-header-nav').then(() => {
+      const tabs = [
+        { id: 'home',      label: 'Home',                active: true },
+        { id: 'patches',   label: 'Patch Management' },
+        { id: 'software',  label: 'Software Deployment' },
+        { id: 'inventory', label: 'Inventory' },
+        { id: 'config',    label: 'Configurations' },
+        { id: 'reports',   label: 'Reports' },
+        { id: 'agent',     label: 'Agent' },
+        { id: 'admin',     label: 'Admin' },
+      ];
+      const clone = () => tabs.map((t) => ({ ...t }));
+      document.getElementById('hn-ec').tabs = clone();
+      document.getElementById('hn-msp').tabs = clone();
+      document.getElementById('hn-rtl').tabs = clone();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Popover — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/popover/popover.css">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<link rel="stylesheet" href="../design-system-library/src/components/text-link/text-link.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/button/button.js"></script>
+<script type="module" src="../design-system-library/src/components/text-link/text-link.js"></script>
+<script type="module" src="../design-system-library/src/components/popover/popover.js"></script>
+<style>
+  /* Popover is position:fixed and anchored at runtime. For inline static showcase
+     cards, render an anchorless <ds-popover> inside a relative "frame" and force its
+     surface visible (no anchor/open, so it does NOT steal focus, lock scroll, or add
+     Esc/outside handlers). The interactive grid below uses real anchored popovers. */
+  .page-popover .demo-pop-frame { display:flex; justify-content:center; padding:32px; background:var(--uems-bg-base,#f4f5f7); border:1px solid var(--uems-border-tertiary); border-radius:12px; }
+  .page-popover .demo-pop-frame ds-popover { display:block !important; }
+  .page-popover .demo-pop-frame .ds-popover__surface { position:static !important; animation:none !important; }
+
+  .page-popover .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-popover .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .page-popover .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    padding: 32px !important;
+    gap: 36px !important;
+  }
+  .page-popover .demo-mod-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-popover .demo-mod-section > .demo-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+    margin: 0; text-align: left; width: auto;
+  }
+  .page-popover .demo-mod-section > .demo-mod-desc { font-size: 12px; color: var(--prism-text-muted); line-height: 1.5; }
+  .page-popover .demo-mod-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 980px) { .page-popover .demo-mod-grid { grid-template-columns: 1fr; } }
+  .page-popover .demo-mod-card { display: flex; flex-direction: column; gap: 10px; }
+  .page-popover .demo-mod-card .card-cap {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+  }
+  .page-popover .anat-marker-inline {
+    background: #2563eb; color: #fff; font-size: 11px; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  /* Interactive placement grid — 3×3 layout of trigger buttons with center spacer */
+  .page-popover .placement-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  .page-popover .placement-grid .pg-cell { display: flex; align-items: center; justify-content: center; }
+  .page-popover .placement-grid .pg-center {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: var(--prism-text-muted);
+    border: 1px dashed var(--prism-border); border-radius: 10px; padding: 18px 12px; text-align: center;
+  }
+
+  /* "Show code" toggle blocks under each Style showcase card */
+  .page-popover .code-toggle-btn {
+    display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+    background: transparent; border: 1px solid var(--prism-border);
+    font-family: inherit; font-size: 12.5px; font-weight: 600;
+    color: var(--prism-text-muted); cursor: pointer; padding: 5px 10px; border-radius: 8px; transition: all 0.2s;
+  }
+  .page-popover .code-toggle-btn:hover { color: var(--prism-violet); border-color: rgba(37,99,235,0.25); }
+  .page-popover .code-block { display: none; margin-top: 8px; background: #0a0a0c; border-radius: 10px; overflow: hidden; }
+  .page-popover .code-block.open { display: block; }
+  .page-popover .code-block .code-block-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .page-popover .code-block .code-block-head span { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+  .page-popover .code-block .cb-copy {
+    display: inline-flex; align-items: center; gap: 5px; background: transparent; border: none;
+    font-family: inherit; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.6); cursor: pointer;
+  }
+  .page-popover .code-block .cb-copy:hover { color: #fff; }
+  .page-popover .code-block pre {
+    margin: 0; padding: 16px; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #e2e8f0;
+  }
+  .page-popover .code-block .token-tag { color: #a78bfa; }
+  .page-popover .code-block .token-attr { color: #38bdf8; }
+  .page-popover .code-block .token-string { color: #34d399; }
+</style>
+</head>
+<body class="page-popover">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link active">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Popover</h1>
+        <p class="page-desc">The <strong>Popover</strong> is a non-modal overlay anchored to a trigger &mdash; an optional header (title + close), a body for rich content, and an optional footer for actions, with an optional arrow pointing at the trigger. Use it for contextual detail, lightweight forms, or supporting actions that should appear beside an element without leaving the page. Width hugs its content (240px floor); it anchors at one of twelve placements, flips on collision, clamps to the viewport, and dismisses on outside-click, <kbd>Esc</kbd>, or the close button.</p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══════════════ OVERVIEW ═══════════════ -->
+        <div class="tab-content" id="tab-overview">
+
+          <!-- ───── Anatomy ───── -->
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram" style="overflow:visible;">
+            <div style="display:flex;justify-content:center;margin:24px 0;padding:48px 96px;">
+              <div style="position:relative;width:300px;max-width:100%;border-radius:8px;background:var(--uems-bg-primary-alt,#fff);border:1px solid var(--uems-border-secondary,#c3c9d6);box-shadow:0 4px 16px rgba(13,18,28,0.12);display:flex;flex-direction:column;text-align:left;color:var(--uems-text-primary,#15181e);overflow:visible;">
+                <!-- Arrow / beak -->
+                <div style="position:absolute;top:-6px;left:50%;transform:translateX(-50%) rotate(45deg);width:10px;height:10px;background:var(--uems-bg-primary-alt,#fff);border-top:1px solid var(--uems-border-secondary,#c3c9d6);border-left:1px solid var(--uems-border-secondary,#c3c9d6);"></div>
+                <div style="position:absolute;left:50%;top:-44px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;"><span class="anat-marker-inline">1</span><div style="width:2px;height:24px;background:#2563eb;"></div></div>
+                <!-- Surface marker -->
+                <div style="position:absolute;left:calc(100% + 16px);top:6px;display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">2</span></div>
+                <!-- Header -->
+                <div style="position:relative;display:flex;align-items:center;gap:8px;padding:12px 12px 12px 16px;border-bottom:1px solid #b4bbcc;">
+                  <div style="flex:1 1 auto;min-width:0;font-size:14px;font-weight:600;line-height:1.35;">Popover title</div>
+                  <div style="flex:0 0 auto;width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#96a0b7;"><ds-icon name="close" size="16"></ds-icon></div>
+                  <div style="position:absolute;left:calc(100% + 16px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">3</span></div>
+                </div>
+                <!-- Body -->
+                <div style="position:relative;font-size:14px;line-height:20px;color:#2a303d;padding:16px;">
+                  Body content goes here &mdash; any rich content the popover holds.
+                  <div style="position:absolute;left:calc(100% + 16px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">4</span></div>
+                </div>
+                <!-- Footer -->
+                <div style="position:relative;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid #b4bbcc;">
+                  <button style="padding:6px 10px;border-radius:8px;border:0;background:#e1e4eb;color:#1F242E;font:inherit;font-size:13px;cursor:default;">Cancel</button>
+                  <button style="padding:6px 10px;border-radius:8px;border:0;background:#006aff;color:#fff;font:inherit;font-size:13px;font-weight:500;cursor:default;">Save</button>
+                  <div style="position:absolute;left:calc(100% + 16px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">5</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Arrow / beak</strong><span>Optional pointer (<code>arrow</code>, default off). Shares the surface fill + 1px <code>--uems-border-secondary</code>; sits on the edge facing the trigger and points at it.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Surface</strong><span>The popover container. <code>--uems-bg-primary-alt</code>, 1px <code>--uems-border-secondary</code>, <code>--radius-md</code> (8px), <code>--shadow-md</code>. Width hugs content, min 240px.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Header</strong><span>Optional title (14 Semibold, <code>--uems-text-primary</code>) + close ✕ (16px, <code>--uems-icon-subtle</code>). Padding 12/16, bottom divider 1px <code>--uems-border-primary</code> (hide via <code>hide-divider</code>).</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Body</strong><span>Default slot. Any content; 14/20 <code>--uems-text-secondary</code>, padding 16. The surface grows to fit (no max-width).</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Footer</strong><span>Optional action region (<code>slot="footer"</code>, default off). Top divider 1px, padding 12/16. <code>footer-align="centered"</code> centers the group.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- ───── Preview ───── -->
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Rendered with the live <code>&lt;ds-popover&gt;</code> web component. The default popover below is a static, anchorless surface forced visible inside a frame (no <code>open</code>, so it doesn't position itself, lock scroll, or trap focus); the interactive grid wires real triggers to real anchored popovers so the beak points at the button at every placement.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Popover &middot; default surface + interactive placements</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Default static example -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Default &mdash; title, body, close, arrow</div>
+                  <div class="demo-mod-desc">A header (title + close + divider), a body, and an upward-pointing beak. Shown as a static surface inside a frame.</div>
+                  <div class="demo-pop-frame">
+                    <ds-popover arrow data-static-arrow="up" title="Popover title">
+                      <p>Popovers hold rich, focused content anchored to a trigger. Dismiss on outside-click, Esc, or the close button.</p>
+                    </ds-popover>
+                  </div>
+                </div>
+
+                <!-- Interactive placement grid -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Interactive &mdash; all 12 placements</div>
+                  <div class="demo-mod-desc">Click any trigger to open a real anchored popover with the beak pointing at the button. Click outside or press <kbd>Esc</kbd> to dismiss.</div>
+                  <div class="placement-grid">
+                    <div class="pg-cell"><ds-button id="pg-tl" variant="outline" size="small">Top start</ds-button></div>
+                    <div class="pg-cell"><ds-button id="pg-tc" variant="outline" size="small">Top center</ds-button></div>
+                    <div class="pg-cell"><ds-button id="pg-tr" variant="outline" size="small">Top end</ds-button></div>
+                    <div class="pg-cell"><ds-button id="pg-lt" variant="outline" size="small">Left start</ds-button></div>
+                    <div class="pg-center">Anchored popovers<br>flip + clamp to fit</div>
+                    <div class="pg-cell"><ds-button id="pg-rt" variant="outline" size="small">Right start</ds-button></div>
+                    <div class="pg-cell"><ds-button id="pg-lc" variant="outline" size="small">Left center</ds-button></div>
+                    <div class="pg-cell"><ds-button id="pg-rc" variant="outline" size="small">Right center</ds-button></div>
+                    <div class="pg-cell"><ds-button id="pg-bc" variant="outline" size="small">Bottom center</ds-button></div>
+                    <div class="pg-cell"><ds-button id="pg-le" variant="outline" size="small">Left end</ds-button></div>
+                    <div class="pg-cell"><ds-button id="pg-bs" variant="outline" size="small">Bottom start</ds-button></div>
+                    <div class="pg-cell"><ds-button id="pg-re" variant="outline" size="small">Right end</ds-button></div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- ───── Content Guidelines ───── -->
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Anchor the popover to the element that triggered it and keep them visually connected.</li>
+                <li>Keep content focused &mdash; a short title, concise body, and at most a couple of actions.</li>
+                <li>Turn the <code>arrow</code> on to make the relationship to the trigger explicit.</li>
+                <li>Dismiss on outside-click and <kbd>Esc</kbd>; provide a close button when there's a header.</li>
+                <li>Let the surface hug its content, or set <code>--ds-popover-width</code> for longer prose.</li>
+                <li>Return focus to the trigger when the popover closes.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Put a long form or multi-step flow in a popover &mdash; use a <strong>Drawer</strong> or <strong>Modal</strong>.</li>
+                <li>Open a popover from inside another popover, or nest them.</li>
+                <li>Trigger it on hover &mdash; that's a <strong>Tooltip</strong>'s job.</li>
+                <li>Use it for a menu of choices &mdash; reach for a <strong>Dropdown</strong>.</li>
+                <li>Hardcode the surface or border colors &mdash; use the <code>--uems-*</code> tokens.</li>
+                <li>Block the page behind a scrim &mdash; the popover is non-modal by design.</li>
+              </ul></div>
+            </div>
+          </div>
+
+        </div> <!-- end tab-overview -->
+
+        <!-- ═══════════════ STYLE ═══════════════ -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Placement, arrow, header, footer, sizing, and RTL that define the Popover's visual language. Each card forces an anchorless surface visible inside a frame &mdash; use <strong>Show code</strong> to reveal the markup.</p>
+
+          <!-- Placements -->
+          <div class="doc-section">
+            <h3 id="placements" class="doc-h3">Placements</h3>
+            <p class="doc-section-subtitle">Set <code>placement="&lt;side&gt;-&lt;start|center|end&gt;"</code> &mdash; <code>top</code>, <code>bottom</code>, <code>left</code>, or <code>right</code> with an alignment (default <code>bottom-start</code>). The arrow sits on the edge facing the anchor; at runtime the popover flips and clamps to stay on-screen.</p>
+            <div class="demo-mod-grid">
+              <div class="demo-mod-card">
+                <span class="card-cap">bottom &middot; arrow points up</span>
+                <div class="demo-pop-frame">
+                  <ds-popover arrow data-static-arrow="up" title="Bottom placement">
+                    <p>Below the anchor; the beak points up at the trigger.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">placement</span>=<span class="token-string">"bottom-start"</span> <span class="token-attr">arrow</span> <span class="token-attr">title</span>=<span class="token-string">"Bottom placement"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">top &middot; arrow points down</span>
+                <div class="demo-pop-frame">
+                  <ds-popover arrow data-static-arrow="down" title="Top placement">
+                    <p>Above the anchor; the beak points down at the trigger.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">placement</span>=<span class="token-string">"top-center"</span> <span class="token-attr">arrow</span> <span class="token-attr">title</span>=<span class="token-string">"Top placement"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">right &middot; arrow points left</span>
+                <div class="demo-pop-frame">
+                  <ds-popover arrow data-static-arrow="left" title="Right placement">
+                    <p>To the right of the anchor; the beak points left.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">placement</span>=<span class="token-string">"right-center"</span> <span class="token-attr">arrow</span> <span class="token-attr">title</span>=<span class="token-string">"Right placement"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">left &middot; arrow points right</span>
+                <div class="demo-pop-frame">
+                  <ds-popover arrow data-static-arrow="right" title="Left placement">
+                    <p>To the left of the anchor; the beak points right.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">placement</span>=<span class="token-string">"left-center"</span> <span class="token-attr">arrow</span> <span class="token-attr">title</span>=<span class="token-string">"Left placement"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Arrow on/off -->
+          <div class="doc-section">
+            <h3 id="arrow" class="doc-h3">Arrow</h3>
+            <p class="doc-section-subtitle">The beak is off by default. Add <code>arrow</code> to render it on the edge facing the anchor; it shares the surface fill and 1px border and points at the trigger.</p>
+            <div class="demo-mod-grid">
+              <div class="demo-mod-card">
+                <span class="card-cap">arrow (on)</span>
+                <div class="demo-pop-frame">
+                  <ds-popover arrow data-static-arrow="up" title="With arrow">
+                    <p>The beak makes the connection to the trigger explicit.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">arrow</span> <span class="token-attr">title</span>=<span class="token-string">"With arrow"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">no arrow (default)</span>
+                <div class="demo-pop-frame">
+                  <ds-popover title="No arrow">
+                    <p>A clean surface with no beak &mdash; the default.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">title</span>=<span class="token-string">"No arrow"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Header options -->
+          <div class="doc-section">
+            <h3 id="header-options" class="doc-h3">Header options</h3>
+            <p class="doc-section-subtitle">A header appears automatically when <code>title</code> is set (or force it with <code>has-header</code>). Drop the close button with <code>hide-close</code>, drop the bottom divider with <code>hide-divider</code>, or omit the title for a header-less surface.</p>
+            <div class="demo-mod-grid">
+              <div class="demo-mod-card">
+                <span class="card-cap">title + close (default)</span>
+                <div class="demo-pop-frame">
+                  <ds-popover title="Popover title">
+                    <p>Title on the left, close ✕ trailing, with a bottom divider.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">title</span>=<span class="token-string">"Popover title"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">hide-close</span>
+                <div class="demo-pop-frame">
+                  <ds-popover hide-close title="No close button">
+                    <p>The close ✕ is hidden; dismiss on outside-click or Esc.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">hide-close</span> <span class="token-attr">title</span>=<span class="token-string">"No close button"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">hide-divider</span>
+                <div class="demo-pop-frame">
+                  <ds-popover hide-divider title="No header divider">
+                    <p>The header's bottom divider is removed for a flush look.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">hide-divider</span> <span class="token-attr">title</span>=<span class="token-string">"No header divider"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">no header</span>
+                <div class="demo-pop-frame">
+                  <ds-popover>
+                    <p>With no <code>title</code> and no <code>has-header</code>, the body fills the surface.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span><span class="token-tag">&gt;</span>
+  <span class="token-tag">&lt;p&gt;</span>Body only — no header.<span class="token-tag">&lt;/p&gt;</span>
+<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Footer options -->
+          <div class="doc-section">
+            <h3 id="footer-options" class="doc-h3">Footer</h3>
+            <p class="doc-section-subtitle">The footer is off by default; it appears when you provide a <code>slot="footer"</code> (or force it with <code>has-footer</code>). Children are unwrapped into the footer row. <code>footer-align="centered"</code> centers the button group; the default right-aligns it.</p>
+            <div class="demo-mod-grid">
+              <div class="demo-mod-card">
+                <span class="card-cap">default footer</span>
+                <div class="demo-pop-frame">
+                  <ds-popover title="Default footer">
+                    <p>Right-aligned button group with a top divider.</p>
+                    <div slot="footer">
+                      <ds-button variant="outline" size="small">Cancel</ds-button>
+                      <ds-button variant="primary" size="small">Save</ds-button>
+                    </div>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">title</span>=<span class="token-string">"Default footer"</span><span class="token-tag">&gt;</span>
+  <span class="token-tag">&lt;p&gt;</span>…<span class="token-tag">&lt;/p&gt;</span>
+  <span class="token-tag">&lt;div</span> <span class="token-attr">slot</span>=<span class="token-string">"footer"</span><span class="token-tag">&gt;</span>
+    <span class="token-tag">&lt;ds-button</span> <span class="token-attr">variant</span>=<span class="token-string">"outline"</span> <span class="token-attr">size</span>=<span class="token-string">"small"</span><span class="token-tag">&gt;</span>Cancel<span class="token-tag">&lt;/ds-button&gt;</span>
+    <span class="token-tag">&lt;ds-button</span> <span class="token-attr">variant</span>=<span class="token-string">"primary"</span> <span class="token-attr">size</span>=<span class="token-string">"small"</span><span class="token-tag">&gt;</span>Save<span class="token-tag">&lt;/ds-button&gt;</span>
+  <span class="token-tag">&lt;/div&gt;</span>
+<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">footer-align="centered"</span>
+                <div class="demo-pop-frame">
+                  <ds-popover footer-align="centered" title="Centered footer">
+                    <p>A single, prominent action centered in the footer.</p>
+                    <div slot="footer">
+                      <ds-button variant="primary" size="small">Continue</ds-button>
+                    </div>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">footer-align</span>=<span class="token-string">"centered"</span> <span class="token-attr">title</span>=<span class="token-string">"Centered footer"</span><span class="token-tag">&gt;</span>
+  <span class="token-tag">&lt;div</span> <span class="token-attr">slot</span>=<span class="token-string">"footer"</span><span class="token-tag">&gt;</span>
+    <span class="token-tag">&lt;ds-button</span> <span class="token-attr">variant</span>=<span class="token-string">"primary"</span> <span class="token-attr">size</span>=<span class="token-string">"small"</span><span class="token-tag">&gt;</span>Continue<span class="token-tag">&lt;/ds-button&gt;</span>
+  <span class="token-tag">&lt;/div&gt;</span>
+<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">no footer (default)</span>
+                <div class="demo-pop-frame">
+                  <ds-popover title="No footer">
+                    <p>With no footer slot, the body fills the bottom of the surface.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">title</span>=<span class="token-string">"No footer"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Sizing -->
+          <div class="doc-section">
+            <h3 id="sizing" class="doc-h3">Sizing</h3>
+            <p class="doc-section-subtitle">Width hugs content with a <strong>240px floor</strong> and <strong>no max</strong> &mdash; longer content makes the popover wider. To wrap long prose, set a fixed width with the <code>--ds-popover-width</code> CSS variable (or an inline width).</p>
+            <div class="demo-mod-grid">
+              <div class="demo-mod-card">
+                <span class="card-cap">hug content (default, 240px min)</span>
+                <div class="demo-pop-frame">
+                  <ds-popover title="Hugs content">
+                    <p>Short body — the surface stays at the 240px minimum.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">title</span>=<span class="token-string">"Hugs content"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
+                <span class="card-cap">--ds-popover-width: 280px</span>
+                <div class="demo-pop-frame">
+                  <ds-popover title="Fixed width" style="--ds-popover-width:280px;">
+                    <p>With <code>--ds-popover-width</code> set, long body text wraps within the chosen width instead of growing the surface indefinitely.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">title</span>=<span class="token-string">"Fixed width"</span>
+  <span class="token-attr">style</span>=<span class="token-string">"--ds-popover-width:280px;"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- RTL -->
+          <div class="doc-section">
+            <h3 id="rtl" class="doc-h3">RTL</h3>
+            <p class="doc-section-subtitle">Add <code>rtl</code> (or host <code>dir="rtl"</code>) to mirror the layout: the close ✕ moves left, the title right-aligns, the body right-aligns, and the footer group moves to the leading (left) edge. The title uses <code>rtl-title</code> (Arabic) when set, and the arrow's start/end inset mirrors.</p>
+            <div class="demo-mod-grid">
+              <div class="demo-mod-card">
+                <span class="card-cap">rtl &middot; Arabic title + footer</span>
+                <div class="demo-pop-frame">
+                  <ds-popover rtl rtl-title="عنوان منبثق" arrow data-static-arrow="up">
+                    <p>محتوى النافذة المنبثقة هنا. النص محاذى إلى اليمين.</p>
+                    <div slot="footer">
+                      <ds-button variant="outline" size="small">إلغاء</ds-button>
+                      <ds-button variant="primary" size="small">حفظ</ds-button>
+                    </div>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">rtl</span> <span class="token-attr">rtl-title</span>=<span class="token-string">"عنوان منبثق"</span> <span class="token-attr">arrow</span><span class="token-tag">&gt;</span>
+  <span class="token-tag">&lt;p&gt;</span>محتوى النافذة المنبثقة هنا.<span class="token-tag">&lt;/p&gt;</span>
+  <span class="token-tag">&lt;div</span> <span class="token-attr">slot</span>=<span class="token-string">"footer"</span><span class="token-tag">&gt;</span>
+    <span class="token-tag">&lt;ds-button</span> <span class="token-attr">variant</span>=<span class="token-string">"outline"</span> <span class="token-attr">size</span>=<span class="token-string">"small"</span><span class="token-tag">&gt;</span>إلغاء<span class="token-tag">&lt;/ds-button&gt;</span>
+    <span class="token-tag">&lt;ds-button</span> <span class="token-attr">variant</span>=<span class="token-string">"primary"</span> <span class="token-attr">size</span>=<span class="token-string">"small"</span><span class="token-tag">&gt;</span>حفظ<span class="token-tag">&lt;/ds-button&gt;</span>
+  <span class="token-tag">&lt;/div&gt;</span>
+<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Container tokens -->
+          <div class="doc-section">
+            <h3 id="container" class="doc-h3">Container &amp; layout</h3>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Surface</td><td><code>--uems-bg-primary-alt</code></td></tr>
+                <tr><td>Border</td><td>1px <code>--uems-border-secondary</code></td></tr>
+                <tr><td>Corner radius</td><td><code>--radius-md</code> &middot; 8&thinsp;px</td></tr>
+                <tr><td>Drop shadow</td><td><code>--shadow-md</code> &middot; <code>0 4px 16px rgb(13 18 28 / .12)</code></td></tr>
+                <tr><td>Width</td><td>Hugs content (<code>max-content</code>) &middot; min <strong>240&thinsp;px</strong> &middot; no max &middot; override via <code>--ds-popover-width</code></td></tr>
+                <tr><td>Header padding</td><td>12px y / 16px lead / 12px trail &middot; gap 8 &middot; bottom divider 1px <code>--uems-border-primary</code></td></tr>
+                <tr><td>Body padding</td><td><code>16px</code> all sides</td></tr>
+                <tr><td>Footer padding</td><td>12px y / 16px x &middot; gap 8 &middot; top divider 1px <code>--uems-border-primary</code></td></tr>
+                <tr><td>Title font</td><td><code>--font-size-14</code> Semibold, <code>--uems-text-primary</code> (single-line, ellipsis)</td></tr>
+                <tr><td>Body font</td><td><code>--font-size-14</code> / 20 Regular, <code>--uems-text-secondary</code></td></tr>
+                <tr><td>Close glyph</td><td>16px <code>ds-icon</code>, <code>--uems-icon-subtle</code></td></tr>
+                <tr><td>Arrow / beak</td><td>10px square, surface fill + 1px <code>--uems-border-secondary</code> on the outward edges</td></tr>
+                <tr><td>Anchoring</td><td>8px gap from the anchor &middot; 8px viewport clamp &middot; flip on collision</td></tr>
+                <tr><td>Stacking</td><td><code>z-index: var(--z-popover, 1500)</code> &middot; non-modal (no scrim, no scroll-lock)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="motion" class="doc-h3">Motion</h3>
+            <table class="size-table">
+              <thead><tr><th>Transition</th><th>Duration</th><th>Easing</th></tr></thead>
+              <tbody>
+                <tr><td>Open (<code>ds-popover-in</code> &mdash; fade + slight rise)</td><td>130&thinsp;ms</td><td><code>--ease-standard</code> (ease-out)</td></tr>
+                <tr><td>Close ✕ hover (background fade)</td><td><code>--duration-fast</code> &middot; 120&thinsp;ms</td><td>ease</td></tr>
+                <tr><td><code>prefers-reduced-motion</code></td><td>Animation removed (instant show)</td><td>&mdash;</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ USAGE ═══════════════ -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <h2 id="usage" class="doc-section-title">Usage</h2>
+          <p class="doc-section-subtitle">When to reach for the Popover versus its overlay siblings.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">When to use</h3>
+            <ul class="doc-list">
+              <li>Contextual detail or supporting content tied to a specific trigger, shown beside it without leaving the page.</li>
+              <li>A lightweight, focused action set &mdash; a couple of buttons or a small form-let next to the element they affect.</li>
+              <li>Rich content (text, a thumbnail, links) that's too much for a Tooltip but doesn't warrant a Drawer or Modal.</li>
+              <li>Inline confirmations or quick edits that should stay non-blocking while the page remains interactive.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">When not to use</h3>
+            <ul class="doc-list">
+              <li>Plain hover text or a short label &mdash; use a <strong>Tooltip</strong>.</li>
+              <li>A menu of selectable options or actions &mdash; use a <strong>Dropdown</strong>.</li>
+              <li>A long form, multi-step flow, or dense detail &mdash; use a <strong>Drawer</strong> or <strong>Modal</strong>.</li>
+              <li>A decision that must block the page until resolved &mdash; use a <strong>Modal</strong> (the popover is non-modal).</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Do &amp; Don't</h3>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Anchor the popover to the trigger and keep them visually connected.</li>
+                <li>Keep content focused &mdash; short title, concise body, minimal actions.</li>
+                <li>Dismiss on outside-click and <kbd>Esc</kbd>; return focus to the trigger on close.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Put long forms in a popover &mdash; use a <strong>Drawer</strong> or <strong>Modal</strong>.</li>
+                <li>Nest popovers or open one from inside another.</li>
+                <li>Rely on hover to open it &mdash; that's a <strong>Tooltip</strong>.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related components</h2>
+            <p class="doc-section-subtitle">Components that complement or can be confused with the Popover.</p>
+            <div class="related-grid">
+              <a href="Tooltip.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Tooltip</a>
+              <a href="Dropdown.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10l4 4 4-4"/></svg> Dropdown</a>
+              <a href="Modal.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 9h16"/></svg> Modal</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Overlay family</h3>
+            <table class="size-table">
+              <thead><tr><th>Pattern</th><th>Trigger</th><th>Use for</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Popover</strong> (this)</td><td>Click / focus, anchored, non-modal</td><td>Rich contextual content + light actions beside a trigger</td></tr>
+                <tr><td>Tooltip</td><td>Hover / focus, anchored</td><td>Short, descriptive text labels</td></tr>
+                <tr><td>Dropdown</td><td>Click, anchored menu</td><td>A list of selectable options or actions</td></tr>
+                <tr><td>Modal</td><td>Centered on a scrim, blocking</td><td>Tasks that must be resolved or dismissed</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ CODE ═══════════════ -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="install" class="doc-section-title">Install &amp; usage</h2>
+          <p class="doc-section-subtitle">Register the component, then drive it with attributes and slots. Source: <code>design-system-library/src/components/popover/popover.js</code>.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Register the component</h3>
+            <div class="code-block open" style="margin-top:0;"><div class="code-block-head"><span>JS</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-attr">&lt;script</span> <span class="token-attr">type</span>=<span class="token-string">"module"</span> <span class="token-attr">src</span>=<span class="token-string">"design-system-library/src/components/popover/popover.js"</span><span class="token-attr">&gt;&lt;/script&gt;</span></pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Basic markup</h3>
+            <div class="code-block open" style="margin-top:0;"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-button</span> <span class="token-attr">id</span>=<span class="token-string">"trigger"</span> <span class="token-attr">variant</span>=<span class="token-string">"outline"</span><span class="token-tag">&gt;</span>Open popover<span class="token-tag">&lt;/ds-button&gt;</span>
+
+<span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">placement</span>=<span class="token-string">"bottom-start"</span> <span class="token-attr">arrow</span> <span class="token-attr">title</span>=<span class="token-string">"Popover title"</span><span class="token-tag">&gt;</span>
+  <span class="token-tag">&lt;p&gt;</span>Body content goes here.<span class="token-tag">&lt;/p&gt;</span>
+<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+            <p class="doc-section-subtitle" style="margin-top:12px;">Set the <code>anchor</code> to the trigger's <code>id</code> and the popover wires the click toggle and <code>aria-*</code> automatically.</p>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">All attributes</h3>
+            <div class="code-block open" style="margin-top:0;"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span>
+  <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span>          <span class="token-attr">&lt;!-- id of the trigger element --&gt;</span>
+  <span class="token-attr">placement</span>=<span class="token-string">"bottom-start"</span>  <span class="token-attr">&lt;!-- top|bottom|left|right (+ -start|-center|-end) --&gt;</span>
+  <span class="token-attr">title</span>=<span class="token-string">"Popover title"</span>
+  <span class="token-attr">rtl-title</span>=<span class="token-string">"عنوان منبثق"</span>     <span class="token-attr">&lt;!-- shown when rtl --&gt;</span>
+  <span class="token-attr">has-header</span>             <span class="token-attr">&lt;!-- auto-on when title set --&gt;</span>
+  <span class="token-attr">hide-close</span>
+  <span class="token-attr">hide-divider</span>           <span class="token-attr">&lt;!-- hide header bottom divider --&gt;</span>
+  <span class="token-attr">has-footer</span>             <span class="token-attr">&lt;!-- auto-on when footer slot present --&gt;</span>
+  <span class="token-attr">footer-align</span>=<span class="token-string">"default"</span>  <span class="token-attr">&lt;!-- default | centered --&gt;</span>
+  <span class="token-attr">arrow</span>                  <span class="token-attr">&lt;!-- show the beak (default off) --&gt;</span>
+  <span class="token-attr">rtl</span>
+  <span class="token-attr">open</span><span class="token-tag">&gt;</span>
+<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Slots</h3>
+            <div class="code-block open" style="margin-top:0;"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">title</span>=<span class="token-string">"With actions"</span><span class="token-tag">&gt;</span>
+  <span class="token-attr">&lt;!-- default slot → body --&gt;</span>
+  <span class="token-tag">&lt;p&gt;</span>Body content goes here.<span class="token-tag">&lt;/p&gt;</span>
+
+  <span class="token-attr">&lt;!-- slot="footer" → action region (children unwrapped) --&gt;</span>
+  <span class="token-tag">&lt;div</span> <span class="token-attr">slot</span>=<span class="token-string">"footer"</span><span class="token-tag">&gt;</span>
+    <span class="token-tag">&lt;ds-text-link</span> <span class="token-attr">href</span>=<span class="token-string">"#"</span><span class="token-tag">&gt;</span>Learn more<span class="token-tag">&lt;/ds-text-link&gt;</span>
+    <span class="token-tag">&lt;ds-button</span> <span class="token-attr">variant</span>=<span class="token-string">"primary"</span> <span class="token-attr">size</span>=<span class="token-string">"small"</span><span class="token-tag">&gt;</span>Save<span class="token-tag">&lt;/ds-button&gt;</span>
+  <span class="token-tag">&lt;/div&gt;</span>
+<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Events &amp; methods</h3>
+            <div class="code-block open" style="margin-top:0;"><div class="code-block-head"><span>JS</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre>const popover = document.querySelector(<span class="token-string">'ds-popover'</span>);
+
+<span class="token-attr">// Methods</span>
+popover.open();
+popover.close();
+popover.toggle();
+
+<span class="token-attr">// Events</span>
+popover.addEventListener(<span class="token-string">'ds-popover-open'</span>, () =&gt; {});
+popover.addEventListener(<span class="token-string">'ds-popover-close'</span>, (e) =&gt; {
+  console.log(e.detail.reason); <span class="token-attr">// 'esc' | 'outside' | 'close' | 'api'</span>
+});</pre></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="api" class="doc-section-title">Component API</h2>
+          <p class="doc-section-subtitle">HTML attributes, slots, events, and methods for <code>&lt;ds-popover&gt;</code>.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Attributes</h3>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Values</th><th>Default</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>anchor</code></td><td>element <code>id</code></td><td>&mdash;</td><td>Trigger the popover anchors to; wires click toggle + <code>aria-*</code>.</td></tr>
+                <tr><td><code>placement</code></td><td><code>top</code> &middot; <code>bottom</code> &middot; <code>left</code> &middot; <code>right</code> <code>(+ -start|-center|-end)</code></td><td><code>bottom-start</code></td><td>Anchor side + alignment. Flips / clamps on collision.</td></tr>
+                <tr><td><code>title</code></td><td>string</td><td>&mdash;</td><td>Header title (14 Semibold). Setting it auto-shows the header.</td></tr>
+                <tr><td><code>rtl-title</code></td><td>string</td><td>&mdash;</td><td>Arabic / RTL title shown when <code>rtl</code> is set.</td></tr>
+                <tr><td><code>has-header</code></td><td>boolean</td><td>auto</td><td>Force the header on (auto-on when <code>title</code>/<code>rtl-title</code> set).</td></tr>
+                <tr><td><code>hide-close</code></td><td>boolean</td><td>unset</td><td>Hide the close ✕ when a header is shown.</td></tr>
+                <tr><td><code>hide-divider</code></td><td>boolean</td><td>unset</td><td>Hide the header bottom divider.</td></tr>
+                <tr><td><code>has-footer</code></td><td>boolean</td><td>auto</td><td>Force the footer on (auto-on when a footer slot is present).</td></tr>
+                <tr><td><code>footer-align</code></td><td><code>default</code> &middot; <code>centered</code></td><td><code>default</code></td><td>Right-align (default) or center the footer button group.</td></tr>
+                <tr><td><code>arrow</code></td><td>boolean</td><td>off</td><td>Render the beak pointing at the anchor.</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td>unset</td><td>Mirror layout (or use host <code>dir="rtl"</code>).</td></tr>
+                <tr><td><code>open</code></td><td>boolean</td><td>unset</td><td>Open / close state.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Slots</h3>
+            <table class="size-table">
+              <thead><tr><th>Slot</th><th>Purpose</th></tr></thead>
+              <tbody>
+                <tr><td><strong>default</strong></td><td>Body content region (any rich content).</td></tr>
+                <tr><td><code>footer</code></td><td>Footer action region &mdash; children are unwrapped into the footer row.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Methods &amp; events</h3>
+            <table class="size-table">
+              <thead><tr><th>API</th><th>Detail</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>.open()</code> / <code>.close()</code></td><td>&mdash;</td><td>Toggle the <code>open</code> attribute.</td></tr>
+                <tr><td><code>.toggle()</code></td><td>&mdash;</td><td>Open if closed, close if open.</td></tr>
+                <tr><td><code>ds-popover-open</code></td><td>&mdash;</td><td>Fires when the popover opens.</td></tr>
+                <tr><td><code>ds-popover-close</code></td><td><code>{ reason: 'esc' | 'outside' | 'close' | 'api' }</code></td><td>Fires when dismissed.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ ACCESSIBILITY ═══════════════ -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for an accessible Popover across assistive tech and input methods.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Roles &amp; ARIA</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Implementation</th></tr></thead>
+              <tbody>
+                <tr><td>Role</td><td><code>role="dialog"</code> with <code>tabindex="-1"</code> on the surface.</td></tr>
+                <tr><td>Name</td><td><code>aria-labelledby</code> points to the title when present; otherwise <code>aria-label</code> falls back to <code>"Popover"</code>.</td></tr>
+                <tr><td>Trigger</td><td><code>aria-haspopup="dialog"</code>, <code>aria-controls</code> to the popover id, and <code>aria-expanded</code> reflecting open state.</td></tr>
+                <tr><td>Close button</td><td><code>aria-label="Close"</code>.</td></tr>
+                <tr><td>Arrow</td><td>Decorative &mdash; <code>aria-hidden="true"</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Keyboard &amp; focus</h3>
+            <table class="size-table">
+              <thead><tr><th>Key / action</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td><kbd>Enter</kbd> / <kbd>Space</kbd> on trigger</td><td>Opens (or toggles) the popover.</td></tr>
+                <tr><td><kbd>Esc</kbd></td><td>Dismiss (emits <code>ds-popover-close</code> with reason <code>esc</code>).</td></tr>
+                <tr><td><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></td><td>Moves through the popover's content; focus softly cycles within the surface while open.</td></tr>
+                <tr><td>Click outside</td><td>Dismiss (reason <code>outside</code>).</td></tr>
+              </tbody>
+            </table>
+            <ul class="doc-list" style="margin-top:16px;">
+              <li>Non-modal: focus is <strong>not trapped</strong> &mdash; on open, focus moves into the popover (first focusable, or the surface).</li>
+              <li>On close, focus returns to the trigger (or the element focused before opening).</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Other concerns</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Requirement</th></tr></thead>
+              <tbody>
+                <tr><td>Non-modal</td><td>The page stays interactive &mdash; no scrim, no body scroll-lock. Page content behind the popover remains reachable.</td></tr>
+                <tr><td>Color contrast</td><td>Title <code>--uems-text-primary</code> and body <code>--uems-text-secondary</code> on the surface meet WCAG 2.1 AA.</td></tr>
+                <tr><td>Motion</td><td><code>prefers-reduced-motion: reduce</code> removes the open animation (instant show).</td></tr>
+                <tr><td>RTL</td><td><code>rtl</code> (or host <code>dir="rtl"</code>) mirrors header order, text alignment, footer group, and the arrow start/end inset; the title uses <code>rtl-title</code>.</td></tr>
+                <tr><td>Off-screen anchor</td><td>The popover clamps to an 8px viewport margin and flips toward available space to stay on-screen.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/popover.md" download="popover.md" class="action-link"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=21532-788062" target="_blank" rel="noopener" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+      <div id="feedback" class="feedback-banner" style="display:none;">
+        <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+        <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+      </div>
+
+    </main>
+  </div>
+
+  <a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+    <span class="float-cliq-label">Share feedback</span>
+    <span class="float-cliq-icon">
+      <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke-width="1.4">
+        <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+  </a>
+
+  <!-- Interactive placement demo — real anchored popovers at end of body -->
+  <ds-popover anchor="pg-tl" placement="top-start" arrow title="Top start"><p>Anchored above, aligned to the start edge.</p></ds-popover>
+  <ds-popover anchor="pg-tc" placement="top-center" arrow title="Top center"><p>Anchored above, centered on the trigger.</p></ds-popover>
+  <ds-popover anchor="pg-tr" placement="top-end" arrow title="Top end"><p>Anchored above, aligned to the end edge.</p></ds-popover>
+  <ds-popover anchor="pg-lt" placement="left-start" arrow title="Left start"><p>Anchored left, aligned to the start edge.</p></ds-popover>
+  <ds-popover anchor="pg-lc" placement="left-center" arrow title="Left center"><p>Anchored left, centered on the trigger.</p></ds-popover>
+  <ds-popover anchor="pg-le" placement="left-end" arrow title="Left end"><p>Anchored left, aligned to the end edge.</p></ds-popover>
+  <ds-popover anchor="pg-rt" placement="right-start" arrow title="Right start"><p>Anchored right, aligned to the start edge.</p></ds-popover>
+  <ds-popover anchor="pg-rc" placement="right-center" arrow title="Right center"><p>Anchored right, centered on the trigger.</p></ds-popover>
+  <ds-popover anchor="pg-re" placement="right-end" arrow title="Right end"><p>Anchored right, aligned to the end edge.</p></ds-popover>
+  <ds-popover anchor="pg-bs" placement="bottom-start" arrow title="Bottom start"><p>Anchored below, aligned to the start edge.</p></ds-popover>
+  <ds-popover anchor="pg-bc" placement="bottom-center" arrow title="Bottom center"><p>Anchored below, centered on the trigger.</p></ds-popover>
+
+  <!-- Static-preview arrow init — point the beak per data-static-arrow on inline previews -->
+  <script>
+    window.addEventListener('DOMContentLoaded',()=>{
+      document.querySelectorAll('ds-popover[data-static-arrow]').forEach(p=>{
+        const dir=p.getAttribute('data-static-arrow');
+        const ar=p.querySelector('.ds-popover__arrow'); if(!ar) return;
+        ar.hidden=false; ar.dataset.dir=dir;
+        ar.style.top=ar.style.bottom=ar.style.left=ar.style.right=ar.style.marginLeft=ar.style.marginTop='';
+        if(dir==='up'){ar.style.top='-5px';ar.style.left='50%';ar.style.marginLeft='-5px';}
+        if(dir==='down'){ar.style.bottom='-5px';ar.style.left='50%';ar.style.marginLeft='-5px';}
+        if(dir==='left'){ar.style.left='-5px';ar.style.top='50%';ar.style.marginTop='-5px';}
+        if(dir==='right'){ar.style.right='-5px';ar.style.top='50%';ar.style.marginTop='-5px';}
+      });
+    });
+  </script>
+
+  <!-- "Show code" toggles + copy buttons for Style / Code blocks -->
+  <script>
+    document.querySelectorAll('.code-toggle-btn[data-toggle]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const block = btn.nextElementSibling;
+        if (!block || !block.classList.contains('code-block')) return;
+        const open = block.classList.toggle('open');
+        btn.textContent = open ? 'Hide code' : 'Show code';
+      });
+    });
+    document.querySelectorAll('.code-block .cb-copy').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const pre = btn.closest('.code-block').querySelector('pre');
+        if (!pre) return;
+        try {
+          await navigator.clipboard.writeText(pre.textContent);
+          const original = btn.innerHTML;
+          btn.innerHTML = '<ds-icon name="check" size="13"></ds-icon> Copied';
+          setTimeout(() => { btn.innerHTML = original; }, 2000);
+        } catch {}
+      });
+    });
+  </script>
+
+  <script src="js/components/toc.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

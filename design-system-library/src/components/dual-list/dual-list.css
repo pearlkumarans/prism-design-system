@@ -1,0 +1,214 @@
+/* =============================================================================
+   ds-dual-list / .ds-dual-list
+   Dual list selection (shuttle / transfer / pick-list). Two token-styled panels
+   with a transfer-control column between them. Composes ds-checkbox,
+   ds-search-field, ds-badge, ds-text-link, ds-field-helper, ds-icon.
+   All values come from design tokens — no hardcoded colors, spacing, or radii.
+   ============================================================================= */
+
+.ds-dual-list {
+  display: block;
+  font-family: var(--font-family-sans);
+  --ds-dl-height: 360px;                 /* panel height; override per instance */
+}
+
+.ds-dual-list__body {
+  display: flex;
+  align-items: center;                   /* controls column centres against panels */
+  gap: var(--spacing-12);
+}
+
+/* ---- Panel ---------------------------------------------------------- */
+.ds-dual-list__panel {
+  flex: 1 1 0;
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  height: var(--ds-dl-height);
+  background: var(--uems-bg-base);
+  border: 1px solid var(--uems-border-secondary);
+  border-radius: var(--uems-radius-m);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.ds-dual-list--error .ds-dual-list__panel {
+  border-color: var(--uems-border-error);
+}
+
+/* ---- Header --------------------------------------------------------- */
+.ds-dual-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+  padding: var(--spacing-8) var(--spacing-12);
+  background: var(--uems-bg-secondary);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+  flex: none;
+}
+.ds-dual-list__head-left {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-width: 0;
+}
+.ds-dual-list__title {
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-primary);
+  white-space: nowrap;
+}
+.ds-dual-list__toggle-all { flex: none; }
+
+/* ---- Search --------------------------------------------------------- */
+.ds-dual-list__search {
+  padding: var(--spacing-8) var(--spacing-8) 0;
+  flex: none;
+}
+.ds-dual-list__search ds-search-field { display: block; width: 100%; }
+
+/* ---- List ----------------------------------------------------------- */
+.ds-dual-list__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4) var(--spacing-8);
+  scrollbar-width: thin;
+  scrollbar-color: var(--uems-border-secondary) transparent;
+}
+.ds-dual-list__list::-webkit-scrollbar { width: 8px; }
+.ds-dual-list__list::-webkit-scrollbar-thumb {
+  background: var(--uems-border-secondary);
+  border-radius: var(--radius-full);
+}
+
+.ds-dual-list__row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: var(--spacing-6) var(--spacing-8);
+  border-radius: var(--radius-6);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+.ds-dual-list__row:hover:not(.ds-dual-list__row--locked) {
+  background: var(--uems-bg-accent-primary-hover);
+}
+/* Drag & drop */
+.ds-dual-list__row[draggable="true"] { cursor: grab; }
+.ds-dual-list__row[draggable="true"]:active { cursor: grabbing; }
+.ds-dual-list__row--dragging { opacity: 0.45; }
+/* Outset ring (not inset) so the opaque header + list overflow don't clip its top edge. */
+.ds-dual-list__panel--drop { box-shadow: 0 0 0 2px var(--uems-border-accent); }
+/* Drop-position indicator: a straight 2px accent line showing exactly where the
+   item lands. Drawn as a pseudo-element (not an inset box-shadow) so it doesn't
+   follow the row's border-radius and curve at the ends. */
+.ds-dual-list__row--drop-before,
+.ds-dual-list__row--drop-after { position: relative; }
+.ds-dual-list__row--drop-before::before,
+.ds-dual-list__row--drop-after::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: 2px;
+  background: var(--uems-border-accent);
+  pointer-events: none;
+}
+.ds-dual-list__row--drop-before::before { top: -2px; }
+.ds-dual-list__row--drop-after::after  { bottom: -2px; }
+.ds-dual-list__list--drop-empty { box-shadow: inset 0 0 0 2px var(--uems-border-accent); border-radius: var(--radius-6); }
+.ds-dual-list__row ds-checkbox { flex: 1 1 auto; min-width: 0; }
+.ds-dual-list__row--locked { color: var(--uems-text-tertiary); }
+.ds-dual-list__lock {
+  flex: none;
+  margin-inline-start: auto;
+  color: var(--uems-icon-tertiary);
+}
+
+/* Grouped section header */
+.ds-dual-list__group {
+  padding: var(--spacing-8) var(--spacing-8) var(--spacing-2);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-tertiary);
+}
+.ds-dual-list__group:first-child { padding-top: var(--spacing-4); }
+
+/* Empty / no-results message */
+.ds-dual-list__empty {
+  margin: auto;
+  padding: var(--spacing-16);
+  text-align: center;
+  font-size: var(--font-size-13);
+  color: var(--uems-text-tertiary);
+}
+
+/* Loading skeleton rows */
+.ds-dual-list__skeleton {
+  height: 20px;
+  margin: var(--spacing-6) var(--spacing-8);
+  border-radius: var(--radius-6);
+  background: var(--uems-bg-secondary);
+  animation: ds-dl-shimmer 1.2s ease-in-out infinite;
+}
+@keyframes ds-dl-shimmer { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) {
+  .ds-dual-list__skeleton { animation: none; }
+}
+
+/* ---- Transfer controls --------------------------------------------- */
+.ds-dual-list__controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  flex: none;
+}
+/* [hidden] must beat the explicit display on these flex items/containers. */
+.ds-dual-list__controls[hidden],
+.ds-dual-list__reorder[hidden],
+.ds-dual-list__ctrl[hidden] { display: none; }
+/* .ds-dual-list__ctrl is a <ds-icon-button> — its size / colours / states come
+   from the component (type="outline", size="xl"); no box styling needed here. */
+
+.ds-dual-list__reorder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  margin-top: var(--spacing-8);
+  padding-top: var(--spacing-8);
+  border-top: 1px solid var(--uems-border-tertiary);
+}
+
+/* ---- Read-only ------------------------------------------------------ */
+.ds-dual-list--readonly .ds-dual-list__row { pointer-events: none; }
+
+/* ---- Helper / live region ------------------------------------------ */
+.ds-dual-list__helper { display: block; margin-top: var(--spacing-8); }
+.ds-dual-list__sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Responsive: stack under 768px --------------------------------- */
+@media (max-width: 767px) {
+  .ds-dual-list__body { flex-direction: column; align-items: stretch; }
+  .ds-dual-list__panel { height: 240px; }
+  .ds-dual-list__controls { flex-direction: row; justify-content: center; }
+  .ds-dual-list__controls .ds-dual-list__ctrl ds-icon { transform: rotate(90deg); }
+  .ds-dual-list__reorder {
+    flex-direction: row;
+    margin-top: 0; padding-top: 0;
+    margin-inline-start: var(--spacing-8); padding-inline-start: var(--spacing-8);
+    border-top: 0;
+    border-inline-start: 1px solid var(--uems-border-tertiary);
+  }
+  .ds-dual-list__reorder .ds-dual-list__ctrl ds-icon { transform: none; }
+}

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prism Gap Analysis — Endpoint Central · Prism</title>
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('theme');
+    if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    else document.documentElement.removeAttribute('data-theme');
+  } catch(e){}
+})();
+</script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --prism-black: #0a0a0c;
+  --prism-violet: #2563eb;
+  --prism-violet-light: #60a5fa;
+  --prism-fuchsia: #0ea5e9;
+  --prism-cyan: #06b6d4;
+  --prism-surface: rgba(255, 255, 255, 0.05);
+  --prism-surface-hover: rgba(255, 255, 255, 0.09);
+  --prism-border: rgba(255, 255, 255, 0.07);
+  --prism-text: rgba(255, 255, 255, 0.92);
+  --prism-text-muted: rgba(255, 255, 255, 0.48);
+  --nav-bg: rgba(10,10,12,0.75);
+  --nav-link-color: var(--prism-text-muted);
+  --radius: 20px;
+}
+[data-theme="light"] {
+  --prism-black: #ffffff;
+  --prism-violet: #2563eb;
+  --prism-violet-light: #1d4ed8;
+  --prism-fuchsia: #0284c7;
+  --prism-cyan: #0891b2;
+  --prism-surface: rgba(37, 99, 235, 0.028);
+  --prism-surface-hover: rgba(37, 99, 235, 0.055);
+  --prism-border: rgba(37, 99, 235, 0.10);
+  --prism-text: #1a1a2e;
+  --prism-text-muted: #64748b;
+  --nav-bg: rgba(255, 255, 255, 0.82);
+  --nav-link-color: #475569;
+}
+
+html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", "Zoho Puvi", sans-serif;
+  background: var(--prism-black);
+  color: var(--prism-text);
+  transition: background 0.5s cubic-bezier(0.4,0,0.2,1), color 0.4s ease;
+  min-height: 100vh;
+}
+[data-theme="light"] body {
+  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+}
+
+/* Background glows */
+.bg-glow {
+  position: fixed; border-radius: 50%; filter: blur(140px); opacity: 0.35; pointer-events: none; z-index: 0;
+}
+.glow-1 { top: -200px; left: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(37,99,235,0.6), transparent 70%); }
+.glow-2 { bottom: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(6,182,212,0.4), transparent 70%); }
+[data-theme="light"] .bg-glow { opacity: 0.18; }
+
+/* Top nav */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 32px;
+  background: var(--nav-bg); backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid var(--prism-border);
+}
+.nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+.nav-logo-mark {
+  font-size: 18px; font-weight: 700; letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #0058ff 40%, #3c50ff 30%, #0fd095 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.nav-logo-sub { font-size: 11px; color: var(--prism-text-muted); display: block; }
+.nav-logo-img { width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--prism-violet), var(--prism-cyan));
+}
+.nav-links { display: flex; align-items: center; gap: 24px; margin-left: auto; }
+.nav-links a {
+  color: var(--nav-link-color); text-decoration: none; font-size: 14px; font-weight: 500;
+  transition: color 0.2s ease;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--prism-text); }
+.nav-links a.active { font-weight: 600; }
+.icon-btn {
+  background: var(--prism-surface); border: 1px solid var(--prism-border);
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--prism-text); cursor: pointer; transition: background 0.2s ease;
+}
+.icon-btn:hover { background: var(--prism-surface-hover); }
+
+/* Layout */
+.components-layout {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 260px 1fr;
+  max-width: 1440px; margin: 0 auto;
+}
+
+.sidebar {
+  padding: 28px 16px 60px 32px;
+  border-right: 1px solid var(--prism-border);
+  position: sticky; top: 65px;
+  height: calc(100vh - 65px);
+  overflow-y: auto;
+}
+.sidebar-heading {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--prism-text-muted); margin: 16px 0 12px;
+}
+.sidebar ul { list-style: none; padding: 0; margin: 0; }
+.sidebar ul li { margin: 0; }
+.sidebar a {
+  display: block; padding: 7px 12px; border-radius: 8px;
+  font-size: 14px; color: var(--prism-text-muted); text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.sidebar a:hover { color: var(--prism-text); background: var(--prism-surface); }
+.sidebar a.active { color: var(--prism-text); background: var(--prism-surface-hover); font-weight: 600; }
+
+/* Main panel */
+.main-panel { padding: 28px 48px 100px; min-width: 0; }
+
+.page-header-area {
+  padding: 24px 0 28px;
+  border-bottom: 1px solid var(--prism-border);
+  margin-bottom: 36px;
+}
+.page-title {
+  font-size: 44px; font-weight: 700; letter-spacing: -0.025em;
+  color: var(--prism-text); margin-bottom: 12px;
+}
+.page-desc {
+  font-size: 17px; line-height: 1.6; color: var(--prism-text-muted);
+  max-width: 760px;
+}
+.page-eyebrow {
+  display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--prism-violet); text-transform: uppercase; margin-bottom: 12px;
+  background: var(--prism-surface); padding: 4px 10px; border-radius: 6px;
+  border: 1px solid var(--prism-border);
+}
+
+.main-content-area { min-width: 0; }
+.main-content-inner { min-width: 0; max-width: 100%; }
+
+.doc-section { margin-top: 40px; min-width: 0; }
+.doc-section > * { max-width: 100%; min-width: 0; box-sizing: border-box; }
+.doc-section h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 16px; color: var(--prism-text); }
+.doc-section h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin: 32px 0 14px; color: var(--prism-text); }
+.doc-section h3 { font-size: 19px; font-weight: 600; margin: 28px 0 10px; color: var(--prism-text); }
+.doc-section h4 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; color: var(--prism-text); }
+.doc-section p {
+  font-size: 15px; line-height: 1.75; color: var(--prism-text);
+  margin-bottom: 16px; max-width: 780px;
+}
+.doc-section p code, .doc-section li code, td code, th code {
+  font-family: 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+  font-size: 13px; padding: 2px 6px; border-radius: 5px;
+  background: var(--prism-surface); border: 1px solid var(--prism-border);
+  color: var(--prism-text);
+}
+.doc-section strong { font-weight: 600; }
+.doc-section em { font-style: italic; color: var(--prism-text-muted); }
+.doc-section a { color: var(--prism-violet); text-decoration: none; border-bottom: 1px dashed currentColor; }
+.doc-section a:hover { color: var(--prism-violet-light); }
+.doc-section ul, .doc-section ol {
+  list-style: none; padding: 0; margin: 0 0 20px 0;
+}
+.doc-section ul li, .doc-section ol li {
+  position: relative; padding-left: 22px;
+  font-size: 14.5px; line-height: 1.75; color: var(--prism-text); margin-bottom: 6px;
+  max-width: 760px;
+}
+.doc-section ul li::before {
+  content: "\2022"; position: absolute; left: 4px; color: var(--prism-violet); font-weight: 700;
+}
+.doc-section ol { counter-reset: olist; }
+.doc-section ol li::before {
+  counter-increment: olist;
+  content: counter(olist) ".";
+  position: absolute; left: 0; color: var(--prism-violet); font-weight: 700;
+  font-size: 13.5px;
+}
+.doc-section ol li { padding-left: 26px; }
+
+hr, .doc-divider {
+  border: none; border-top: 1px solid var(--prism-border); margin: 40px 0;
+}
+
+/* Code blocks */
+.doc-section pre, .code-block {
+  background: rgba(0,0,0,0.3); border: 1px solid var(--prism-border); border-radius: 12px;
+  padding: 18px 22px; margin: 16px 0 24px;
+  font-family: 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+  font-size: 13px; line-height: 1.7; color: var(--prism-text);
+  overflow-x: auto; white-space: pre;
+}
+[data-theme="light"] .doc-section pre,
+[data-theme="light"] .code-block {
+  background: #f8faff; border: 1px solid rgba(37,99,235,0.08);
+}
+.doc-section pre code {
+  background: transparent; border: none; padding: 0; color: inherit; font-size: inherit;
+}
+
+/* Tables */
+.doc-section table, .doc-table {
+  width: 100%; max-width: 100%; border-collapse: separate; border-spacing: 0;
+  margin: 18px 0 26px;
+  font-size: 14px;
+  background: var(--prism-surface);
+  border: 1px solid var(--prism-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.doc-section th, .doc-section td {
+  padding: 11px 16px;
+  text-align: left; vertical-align: top;
+  color: var(--prism-text);
+  border-bottom: 1px solid var(--prism-border);
+  line-height: 1.55;
+}
+.doc-section th {
+  font-weight: 600; font-size: 12.5px;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--prism-text-muted);
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid var(--prism-border);
+}
+[data-theme="light"] .doc-section th { background: rgba(37,99,235,0.025); }
+.doc-section tbody tr:last-child td { border-bottom: none; }
+.doc-section tbody tr:hover td { background: var(--prism-surface-hover); }
+
+/* Make tables scrollable on small screens */
+.doc-section table { display: block; overflow-x: auto; }
+.doc-section table > tbody, .doc-section table > thead { width: 100%; }
+
+/* Blockquote / callout */
+.doc-section blockquote {
+  border-left: 3px solid var(--prism-violet);
+  background: var(--prism-surface);
+  padding: 12px 18px;
+  margin: 16px 0 20px;
+  border-radius: 0 12px 12px 0;
+  color: var(--prism-text);
+  font-size: 14.5px; line-height: 1.7;
+}
+.doc-section blockquote p { margin-bottom: 6px; max-width: none; }
+.doc-section blockquote p:last-child { margin-bottom: 0; }
+
+/* GAP highlight */
+.doc-section td:nth-child(n+1) { word-break: break-word; }
+.doc-section em:contains("GAP") { color: #d97706; }
+.gap-pill {
+  display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; padding: 2px 7px; border-radius: 4px;
+  background: rgba(217, 119, 6, 0.14); color: #f59e0b;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+  vertical-align: middle; margin-left: 4px;
+}
+[data-theme="light"] .gap-pill { background: rgba(217, 119, 6, 0.08); color: #b45309; }
+
+/* Tier pills */
+.tier-1, .tier-2, .tier-3 {
+  display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; padding: 2px 8px; border-radius: 4px;
+  vertical-align: middle;
+}
+.tier-1 { background: rgba(34,197,94,0.14); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+.tier-2 { background: rgba(245,158,11,0.14); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.tier-3 { background: rgba(249,115,22,0.14); color: #fb923c; border: 1px solid rgba(249,115,22,0.3); }
+[data-theme="light"] .tier-1 { background: rgba(34,197,94,0.10); color: #15803d; }
+[data-theme="light"] .tier-2 { background: rgba(245,158,11,0.10); color: #b45309; }
+[data-theme="light"] .tier-3 { background: rgba(249,115,22,0.10); color: #c2410c; }
+
+@media (max-width: 1000px) {
+  .components-layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .main-panel { padding: 20px 24px 80px; }
+  .page-title { font-size: 34px; }
+  .nav { padding: 12px 20px; }
+  .nav-links { gap: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="bg-glow glow-1"></div>
+<div class="bg-glow glow-2"></div>
+
+
+<nav class="nav">
+  <a class="nav-logo" href="layouts.html">
+    <div class="nav-logo-img"></div>
+    <span>
+      <span class="nav-logo-mark">Prism</span>
+      <span class="nav-logo-sub">Built by <strong>UEMS</strong></span>
+    </span>
+  </a>
+  <div class="nav-links">
+    <a href="layouts.html">Page Layouts</a>
+    <a href="prism-gap-analysis.html" class="active">Gap Analysis</a>
+    <a href="https://prism" tabindex="-1" onclick="return false;" style="opacity:.5;cursor:default;">Prism Docs</a>
+    <button id="themeToggle" class="icon-btn" title="Toggle theme">
+      <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+</nav>
+
+
+<div class="components-layout">
+  <aside class="sidebar">
+    <h3 class="sidebar-heading">On this page</h3>
+    <ul>
+        <li><a href="#summary">Summary</a></li>
+        <li><a href="#1-true-component-gaps-need-new-prism-specs">1. True component gaps (need new Prism specs)</a></li>
+        <li><a href="#high-priority-block-tier-1-layouts-l02-l03-l04-l08" style="padding-left: 22px; font-size: 13px;">High priority — block Tier 1 layouts (L02, L03, L04, L08)</a></li>
+        <li><a href="#medium-priority-block-tier-2-layouts-l11-l12-l14" style="padding-left: 22px; font-size: 13px;">Medium priority — block Tier 2 layouts (L11, L12, L14)</a></li>
+        <li><a href="#low-priority-tier-3-specialty-l17l20" style="padding-left: 22px; font-size: 13px;">Low priority — Tier 3 specialty (L17–L20)</a></li>
+        <li><a href="#2-composition-patterns-no-new-prism-components-needed">2. Composition patterns (no new Prism components needed)</a></li>
+        <li><a href="#existing-prism-components-that-may-need-extension">Existing Prism components that may need extension</a></li>
+        <li><a href="#net-new-categories-worth-adding-to-prism">Net-new categories worth adding to Prism</a></li>
+        <li><a href="#suggested-phasing">Suggested phasing</a></li>
+        <li><a href="#unused-prism-components">Unused Prism components</a></li>
+    </ul>
+  </aside>
+
+  <main class="main-panel">
+    <div class="page-header-area">
+      <span class="page-eyebrow">Companion to Page Layouts v1.1</span>
+      <h1 class="page-title">Prism Gap Analysis</h1>
+      <p class="page-desc">Components the page-layout spec needs that Prism doesn't yet ship — mapped to Prism's in-progress categories with suggested phasing.</p>
+    </div>
+
+    <div class="main-content-area">
+      <div class="main-content-inner doc-section">
+<blockquote>
+<p>Companion to <code>layouts.md</code> v1.3. This file lists every component the page-layout spec needs that Prism doesn't yet ship, mapped to Prism's remaining "in-progress" categories (<code>Cards · Widgets · KPIs · Popovers</code>) or flagged as net-new.</p>
+</blockquote>
+<h2 id="summary">Summary</h2>
+<p>The 22 page layouts in <code>layouts.md</code> use:</p>
+<ul>
+<li><strong>38 Prism components that exist today</strong> — directly referenced (Page header, Sidebar Nav L1/L2, Tab Bars, Data table, <strong>Modal</strong>, <strong>Confirmation Modal</strong>, Fullscreen Modal, <strong>Menu</strong>, <strong>Dropdown menu</strong>, Empty state, <strong>Right pane</strong> — which now hosts Quick Links — and more).</li>
+<li><strong>~11 true component gaps</strong> — items that need genuinely new visual or interaction work to land in Prism (see §1).</li>
+<li><strong>~16 composition patterns</strong> — items that look like missing components but are actually assemblies of existing Prism atoms; they need pattern documentation, not new components (see §2).</li>
+</ul>
+<p><strong>Recently resolved (formerly gaps):</strong></p>
+<ul>
+<li><strong>Dialogs</strong> category → Prism now ships <strong>Modal</strong> (default) and <strong>Confirmation Modal</strong>.</li>
+<li><strong>Menus</strong> category → Prism now ships <strong>Menu</strong> and <strong>Dropdown menu</strong>.</li>
+<li><strong>Quick links footer</strong> → folded into <strong>Right pane</strong> (no longer a separate page primitive).</li>
+<li><strong>Bulk action bar</strong> and <strong>Filter sidebar</strong> → composed from existing <strong>Menu</strong> / <strong>Button</strong> / <strong>Counter</strong> / <strong>Checkbox</strong>; documented as patterns.</li>
+<li><strong>Form section · Form footer · Wizard footer · Activity feed · Score banner · Key-value group · Checklist group · Benefit list · Branded hero · Setup step list · Link section · Variable token panel · Icon picker · Legend</strong> → all reclassified as composition patterns (they assemble from existing Prism atoms — no new component work).</li>
+</ul>
+<p>The remaining true gaps cluster around three areas: <strong>dashboards</strong> (KPI tile, Chart card), <strong>catalog surfaces</strong> (Catalog card, Add tile, Info card), and <strong>specialty workflows</strong> (Stepper, Dual-list panel, Map canvas, Diagram canvas, Config panel, Preview pane, Canvas, Node palette).</p>
+<h2 id="1-true-component-gaps-need-new-prism-specs">1. True component gaps (need new Prism specs)</h2>
+<p>These items need genuine visual or interaction work in Prism. Layouts that depend on them should either wait for the component or use the §8.2 placeholder recipe in <code>layouts.md</code>.</p>
+<h3 id="high-priority-block-tier-1-layouts-l02-l03-l04-l08">High priority — block Tier 1 layouts (L02, L03, L04, L08)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap component</th>
+<th>Used in</th>
+<th>Maps to Prism category</th>
+<th>Effort hint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Stepper</strong> (horizontal + vertical)</td>
+<td>L08</td>
+<td>New (suggest <code>specs/molecules/stepper.md</code>)</td>
+<td>Medium — two layouts + state model</td>
+</tr>
+<tr>
+<td><strong>KPI tile</strong></td>
+<td>L02, L03, L04</td>
+<td><strong>KPIs</strong> (in-progress)</td>
+<td>Medium — design + variants + skeleton</td>
+</tr>
+<tr>
+<td><strong>Chart card</strong></td>
+<td>L02</td>
+<td><strong>Widgets</strong> (in-progress)</td>
+<td>High — donut · bar · gauge · heatmap variants</td>
+</tr>
+</tbody>
+</table>
+<h3 id="medium-priority-block-tier-2-layouts-l11-l12-l14">Medium priority — block Tier 2 layouts (L11, L12, L14)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap component</th>
+<th>Used in</th>
+<th>Maps to Prism category</th>
+<th>Effort hint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Catalog card</strong></td>
+<td>L12, L18</td>
+<td><strong>Cards</strong> (in-progress)</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><strong>Add tile</strong></td>
+<td>L12</td>
+<td><strong>Cards</strong> (variant of Catalog card)</td>
+<td>Low</td>
+</tr>
+<tr>
+<td><strong>Info card</strong></td>
+<td>L05, L14</td>
+<td><strong>Cards</strong> (hosted inside Right pane)</td>
+<td>Low</td>
+</tr>
+<tr>
+<td><strong>Dual-list panel</strong> + <strong>Transfer controls</strong></td>
+<td>L11</td>
+<td>New (suggest <code>specs/organisms/dual-list-picker.md</code>)</td>
+<td>Medium</td>
+</tr>
+</tbody>
+</table>
+<h3 id="low-priority-tier-3-specialty-l17l20">Low priority — Tier 3 specialty (L17–L20)</h3>
+<p>Domain-specific surfaces; ship when the matching workflow needs to land.</p>
+<table>
+<thead>
+<tr>
+<th>Gap component</th>
+<th>Used in</th>
+<th>Maps to Prism category</th>
+<th>Effort hint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Map canvas</strong></td>
+<td>L17</td>
+<td>New (third-party wrapper)</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><strong>Diagram canvas</strong></td>
+<td>L18</td>
+<td>New</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><strong>Config panel</strong> + <strong>Preview pane</strong></td>
+<td>L19</td>
+<td>New</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>Canvas</strong> + <strong>Node palette</strong></td>
+<td>L20</td>
+<td>New</td>
+<td>High</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-composition-patterns-no-new-prism-components-needed">2. Composition patterns (no new Prism components needed)</h2>
+<p>These look like missing components but are actually compositions over existing Prism atoms. They need pattern documentation, not new specs. Detailed recipes are in <code>layouts.md §8.1</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Used in</th>
+<th>Composed from</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Form section</strong></td>
+<td>L06, L07, L08, L10</td>
+<td>Heading + <strong>Divider</strong> + Text field / Text area / Dropdown / Checkbox / Radio button / Switch / Slider / Date picker / Calendar / OTP input / Script editor + Inline message</td>
+</tr>
+<tr>
+<td><strong>Form footer</strong></td>
+<td>L06, L07, L10, L11, L21</td>
+<td>Sticky bar + <strong>Button</strong> group</td>
+</tr>
+<tr>
+<td><strong>Wizard footer</strong></td>
+<td>L08</td>
+<td>Form footer variant for wizard nav (<code>Cancel</code> · <code>Previous</code> · <code>Next</code> / <code>Finish</code> / <code>Save as Draft</code>)</td>
+</tr>
+<tr>
+<td><strong>Bulk action bar</strong></td>
+<td>L03</td>
+<td><strong>Counter</strong> + <strong>Button</strong> group + <strong>Menu</strong> / <strong>Dropdown menu</strong> + <strong>Link</strong></td>
+</tr>
+<tr>
+<td><strong>Filter sidebar</strong></td>
+<td>L03 variant B</td>
+<td><strong>Menu</strong> + <strong>Checkbox</strong> + <strong>Counter</strong> + <strong>Link</strong></td>
+</tr>
+<tr>
+<td><strong>Quick Links group</strong></td>
+<td>L02, L03, L05 (in Right pane)</td>
+<td>Heading + <strong>Divider</strong> + <strong>Link</strong> stack</td>
+</tr>
+<tr>
+<td><strong>Activity feed</strong></td>
+<td>L02 (in Right pane)</td>
+<td><strong>Avatar</strong> + text + timestamp rows + <strong>Divider</strong> day groupings</td>
+</tr>
+<tr>
+<td><strong>Key-value group</strong></td>
+<td>L05</td>
+<td>Label / value grid; <strong>Status indicator</strong> or <strong>Badges</strong> for state</td>
+</tr>
+<tr>
+<td><strong>Key-value strip</strong></td>
+<td>L15</td>
+<td>Horizontal label / value pairs with vertical <strong>Divider</strong></td>
+</tr>
+<tr>
+<td><strong>Score banner</strong></td>
+<td>L16</td>
+<td><strong>Progress bar</strong> + headline + summary text</td>
+</tr>
+<tr>
+<td><strong>Checklist group / row</strong></td>
+<td>L16</td>
+<td>Label + <strong>Status indicator</strong> + <code>Modify</code> <strong>Button</strong></td>
+</tr>
+<tr>
+<td><strong>Benefit list</strong></td>
+<td>L13, L14</td>
+<td><strong>Icon</strong> + heading + supporting text rows</td>
+</tr>
+<tr>
+<td><strong>Branded hero</strong></td>
+<td>L14</td>
+<td>Logo + headline + <strong>Button</strong> + secondary <strong>Link</strong></td>
+</tr>
+<tr>
+<td><strong>Setup step list</strong></td>
+<td>L14</td>
+<td>Numbered cards with <strong>Icon</strong> + title + description + per-step <strong>Button</strong></td>
+</tr>
+<tr>
+<td><strong>Link section</strong></td>
+<td>L22</td>
+<td>Section heading + <strong>Divider</strong> + <strong>Link</strong> stack</td>
+</tr>
+<tr>
+<td><strong>Variable token panel</strong></td>
+<td>L21 (in Right pane)</td>
+<td>Heading + <strong>Divider</strong> + <strong>Tag</strong> chip list</td>
+</tr>
+<tr>
+<td><strong>Icon picker</strong></td>
+<td>L21</td>
+<td><strong>Modal</strong> (sm) + <strong>Text field</strong> search + <strong>Icon</strong> grid</td>
+</tr>
+<tr>
+<td><strong>Legend</strong></td>
+<td>L18</td>
+<td><strong>Tag</strong> chips + caption text</td>
+</tr>
+</tbody>
+</table>
+<h2 id="existing-prism-components-that-may-need-extension">Existing Prism components that may need extension</h2>
+<p>These exist but need small extensions to fully serve the page layouts.</p>
+<table>
+<thead>
+<tr>
+<th>Prism component</th>
+<th>Extension needed</th>
+<th>For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Page header</strong></td>
+<td>Inline editable name <strong>Text field</strong> variant; record-context variant with <strong>Avatar</strong> + <strong>Status indicator</strong></td>
+<td>L04, L06, L08, L20, L21</td>
+</tr>
+<tr>
+<td><strong>Data table</strong></td>
+<td>Documented states for: skeleton loading, sticky header, in-row hover actions, empty body using <strong>Empty state</strong>, bulk-action header (used with the inline-composed Bulk action bar)</td>
+<td>L03, L15, all list surfaces</td>
+</tr>
+<tr>
+<td><strong>Tab Bar Vertical</strong></td>
+<td>Verify counts ≥6 categories don't break responsive behavior</td>
+<td>L07 vertical variant</td>
+</tr>
+<tr>
+<td><strong>Right pane</strong></td>
+<td>Document the Quick Links group variant (heading + Divider + Link list); confirm drawer variant that slides over content</td>
+<td>L02/L03/L05 Quick Links; L17 marker detail; L20 node inspector</td>
+</tr>
+<tr>
+<td><strong>Inline message</strong></td>
+<td>Page-level full-width banner variant (vs. inline-only)</td>
+<td>All layouts' <code>SystemBanner</code> / <code>PageBanner</code> slots</td>
+</tr>
+<tr>
+<td><strong>Snackbar</strong></td>
+<td>Undo action chip with timer per Prism confirmation pattern (Low severity)</td>
+<td>L03/L04/L05 destructive actions</td>
+</tr>
+<tr>
+<td><strong>Menu</strong> / <strong>Dropdown menu</strong></td>
+<td>Bulk-action overflow variant; checkbox-with-counter list variant for use as a Filter sidebar</td>
+<td>L03 Bulk action bar; L03 Filter sidebar</td>
+</tr>
+<tr>
+<td><strong>Modal</strong> <em>(default)</em></td>
+<td>Confirm width tiers (sm 480 / md 640 / lg 880) and per-tier use cases</td>
+<td>L09 short forms · detail viewers · simple pickers</td>
+</tr>
+</tbody>
+</table>
+<h2 id="net-new-categories-worth-adding-to-prism">Net-new categories worth adding to Prism</h2>
+<p>Some true gaps don't fit Prism's published in-progress list cleanly. Consider naming these as new categories under <code>specs/</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Suggested category</th>
+<th>Rationale</th>
+<th>Initial members</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Form primitives</code></td>
+<td>Form-level state machines (not inputs themselves)</td>
+<td>Stepper</td>
+</tr>
+<tr>
+<td><code>Builder surfaces</code></td>
+<td>Specialty editing canvases</td>
+<td>Config panel, Preview pane, Canvas, Node palette</td>
+</tr>
+<tr>
+<td><code>Map / Diagram</code></td>
+<td>Visual canvases for non-form content</td>
+<td>Map canvas, Diagram canvas</td>
+</tr>
+</tbody>
+</table>
+<h2 id="suggested-phasing">Suggested phasing</h2>
+<p>Build the true gaps in this order to unlock page layouts cleanly. Composition patterns can be documented in parallel — they don't block the component roadmap.</p>
+<ol>
+<li><strong>Stepper</strong> — unlocks L08 wizards across the product.</li>
+<li><strong>KPI tile + Chart card</strong> (Prism KPIs and Widgets in-progress categories) — unlocks L02 dashboards and the optional KPI rows in L03, L04.</li>
+<li><strong>Card family</strong> — Catalog card · Add tile · Info card. Unlocks L05, L12, L14, L18.</li>
+<li><strong>Dual-list panel + Transfer controls</strong> — unlocks L11 dual-list pickers.</li>
+<li><strong>Specialty surfaces</strong> — Map canvas · Diagram canvas · Config panel · Preview pane · Canvas · Node palette. Ship as the matching workflows land (L17–L20).</li>
+</ol>
+<p>Phases 1–3 cover ~85 % of the 198-screen sample.</p>
+<h2 id="unused-prism-components">Unused Prism components</h2>
+<p>Components that exist in Prism but aren't named as page-level slots in <code>layouts.md</code>. They're still used — slotted inside <code>Form section</code>, table cells, or page header actions — but the page-layout spec doesn't headline them.</p>
+<p><code>Avatar · Accordion · Badges · Button · Calendar · Checkbox · Counter · Date picker · Divider · Dropdown · Dropdown menu · Icon · Link · Menu · OTP input · Progress bar · Radio button · Script editor · Slider · Split button · Status indicator · Switch · Tag · Text area · Text field · Tooltip · Zia Experience</code></p>
+<p><code>Zia Experience</code> is the AI-assistant surface — slot it as a <strong>Right pane</strong> variant or floating launcher case by case; not a default page slot.</p>
+<p><code>Menu</code> and <code>Dropdown menu</code> are used inside the inline-composed Bulk action bar (L03) and Filter sidebar (L03 variant B), but aren't called out as standalone page-layout slots since they appear inside other primitives.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var btn = document.getElementById('themeToggle');
+  if (!btn) return;
+  var sun = document.getElementById('sunIcon');
+  var moon = document.getElementById('moonIcon');
+  function sync() {
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if (sun) sun.style.display = isLight ? 'none' : 'block';
+    if (moon) moon.style.display = isLight ? 'block' : 'none';
+  }
+  sync();
+  btn.addEventListener('click', function(){
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if (isLight) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'dark'); }
+    else { document.documentElement.setAttribute('data-theme', 'light'); localStorage.setItem('theme', 'light'); }
+    sync();
+  });
+});
+</script>
+</body>
+</html>

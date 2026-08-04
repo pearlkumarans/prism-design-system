@@ -1,0 +1,157 @@
+/* =============================================================================
+   ds-tab-filter / .ds-tab-filter
+   Hug-width segmented filter on a tinted neutral track. The active option
+   lifts to a white "card" with a 1px subtle border so the control reads as
+   a switch, not navigation. Always exactly one option is selected.
+
+   Tab Item = Type=Fill Subtle. Two sizes: Medium (default) and Small —
+   only dimensions + label size differ; colours/states/tokens are identical.
+   ============================================================================= */
+
+:host { display: block; }
+
+.ds-tab-filter {
+  position: relative;                             /* anchors the sliding indicator */
+  display: inline-flex;
+  align-items: stretch;
+  gap: var(--spacing-4);                          /* 4px inter-tab */
+  padding: var(--spacing-2);                      /* 2px all sides */
+  height: var(--_tf-h, 40px);                     /* Medium 40 · Small 32 */
+  background: var(--uems-bg-secondary-alt);       /* track #F0F2F5 */
+  border-radius: var(--uems-radius-default);      /* 6px */
+  font-family: var(--font-family-sans);
+  box-sizing: border-box;
+}
+
+/* Sliding active "card" — a single element JS positions over the active tab;
+   it glides (left + width) across the row on selection. Geometry (top/left/
+   width/height) is set inline from the active button's box. */
+.ds-tab-filter__indicator {
+  position: absolute;
+  top: var(--spacing-2);
+  left: 0;
+  width: 0;
+  height: var(--_tf-tab-h, 36px);
+  background: var(--uems-bg-primary-alt);         /* white card #FFFFFF */
+  border: 1px solid var(--uems-border-tertiary);  /* 1px #E1E4EB */
+  border-radius: var(--uems-radius-default);      /* 6px */
+  box-sizing: border-box;
+  z-index: 0;
+  pointer-events: none;
+  transition: left 220ms cubic-bezier(0.4, 0, 0.2, 1),
+              width 220ms cubic-bezier(0.4, 0, 0.2, 1),
+              top 220ms cubic-bezier(0.4, 0, 0.2, 1),
+              height 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-tab-filter__indicator { transition: none; }
+}
+
+/* Group disabled — token-driven, NO blanket opacity (per spec). Each option
+   button is natively `disabled` (set in JS), so clicks are already blocked;
+   keep `cursor: not-allowed` visible across the whole track (no pointer-events:
+   none, which would suppress the cursor). */
+.ds-tab-filter--disabled { cursor: not-allowed; }
+
+/* ---- Option (Tab Item · Fill Subtle) -------------------------------- */
+.ds-tab-filter__option {
+  position: relative;
+  z-index: 1;                                    /* sits above the sliding card */
+  display: inline-flex;
+  align-items: center;
+  gap: var(--_tf-gap, var(--spacing-8));         /* icon·label·badge gap */
+  height: var(--_tf-tab-h, 36px);                /* Medium 36 · Small 28 */
+  padding: 0 var(--_tf-pad, var(--spacing-8));   /* Medium 8 · Small 6 */
+  background: transparent;
+  border: 1px solid transparent;                 /* reserves the focus ring */
+  border-radius: var(--uems-radius-default);     /* 6px nests in 6px track */
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--_tf-font, var(--font-size-14));   /* Medium 14 · Small 12 */
+  line-height: var(--_tf-lh, 20px);                  /* Medium 20 · Small 16 */
+  font-weight: var(--font-weight-regular);       /* Default = Regular */
+  color: var(--uems-text-tertiary);              /* Default label #40485B */
+  white-space: nowrap;
+  box-sizing: border-box;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard);
+}
+
+/* Hover (non-active, non-disabled) — white card + accent label/icon. */
+.ds-tab-filter__option:hover:not(.ds-tab-filter__option--active):not(.ds-tab-filter__option--disabled) {
+  background: var(--uems-bg-primary-alt);        /* white card #FFFFFF */
+  color: var(--uems-text-accent-link);           /* accent label #006AFF */
+}
+.ds-tab-filter__option:hover:not(.ds-tab-filter__option--active):not(.ds-tab-filter__option--disabled) .ds-tab-filter__option-icon {
+  color: var(--uems-icon-accent-button);
+}
+
+/* Active — Text-Secondary Medium label. The white card + 1px border is drawn
+   by the sliding .ds-tab-filter__indicator behind it (so it can glide), not on
+   the button itself. */
+.ds-tab-filter__option--active {
+  color: var(--uems-text-secondary);             /* #2A303D */
+  font-weight: var(--font-weight-medium);        /* Active = Medium */
+}
+
+/* Focus — 1px accent border (recolours the reserved border, no layout shift);
+   badge tints to info blue. Use :focus-visible only. */
+.ds-tab-filter__option:focus-visible {
+  outline: none;
+  border-color: var(--uems-border-accent-focus); /* 1px #006AFF */
+  z-index: 1;
+}
+.ds-tab-filter__option:focus-visible .ds-badge {
+  --_badge-bg: var(--uems-bg-info-primary);      /* #EAF0FC */
+  --_badge-fg: var(--uems-text-info);            /* #1E52BB */
+}
+
+/* Disabled — recolour via tokens only, NO opacity. */
+.ds-tab-filter__option--disabled {
+  cursor: not-allowed;            /* shows on the disabled tab (button is natively disabled) */
+  color: var(--uems-text-disabled);              /* #8893AD */
+}
+.ds-tab-filter__option--disabled .ds-badge { --_badge-fg: var(--uems-text-disabled); }
+
+/* ---- Inner slots ----------------------------------------------------- */
+.ds-tab-filter__option-icon {
+  flex: 0 0 var(--_tf-icon, 20px);               /* Medium 20 · Small 16 */
+  width: var(--_tf-icon, 20px);
+  height: var(--_tf-icon, 20px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  color: var(--uems-icon-tertiary);              /* Default icon #55607A */
+}
+.ds-tab-filter__option--active .ds-tab-filter__option-icon { color: var(--uems-icon-secondary); }  /* #2A303D */
+.ds-tab-filter__option--disabled .ds-tab-filter__option-icon { color: var(--uems-icon-disabled); } /* #8893AD */
+
+.ds-tab-filter__option-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ds-tab-filter__option-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ---- Sizes — only Small overrides; Medium uses the base defaults ----- */
+.ds-tab-filter--small { --_tf-h: 32px; }
+.ds-tab-filter--small .ds-tab-filter__option {
+  --_tf-tab-h: 28px;
+  --_tf-pad: var(--spacing-6);
+  --_tf-gap: var(--spacing-6);
+  --_tf-font: var(--font-size-12);
+  --_tf-lh: 16px;
+  --_tf-icon: 16px;
+}
+
+/* ---- Reduced motion ------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .ds-tab-filter__option { transition: none; }
+}

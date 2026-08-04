@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<!--
+  Deployments · Policies · All Policies — table view.
+  Shows every saved policy from window.__policiesStore. Renders the same
+  empty-state block from the earlier iteration when the store is empty.
+  Add Policy split-button on top with Windows / Mac / Linux dropdown.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>All Policies — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+<template id="drawer-fragment">
+<style>
+#pol-list-pop .pol-list-toolbar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 16px 0 12px;
+}
+#pol-list-pop .pol-list-toolbar-spacer { flex: 1 1 auto; }
+
+/* Split-button polish — remove the vertical divider between the main pill
+   and the caret so the two halves read as one cohesive primary control. */
+#pol-list-pop #pol-add-btn .ds-split-button__main,
+#pol-list-pop #pol-add-btn-empty .ds-split-button__main { border-inline-end: 0; text-align: start; justify-content: flex-start; }
+
+/* Table cell renderers. */
+#pol-list-pop .pol-cell-name { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+#pol-list-pop .cell-scope-icon { color: var(--uems-icon-tertiary); flex: none; }
+#pol-list-pop .pol-actions { display: inline-flex; justify-content: flex-end; width: 100%; gap: 2px; }
+#pol-list-pop .pol-actions button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border: 0; background: transparent;
+  border-radius: var(--radius-sm); cursor: pointer; color: var(--uems-icon-secondary);
+}
+#pol-list-pop .pol-actions button:hover { background: var(--uems-bg-secondary-hover); }
+
+/* Empty state — kept for the zero-policy case. */
+#pol-list-pop .lay__scroll { display: flex; flex-direction: column; }
+#pol-list-pop .pol-empty { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: var(--spacing-32); }
+#pol-list-pop .pol-empty[hidden] { display: none; }
+#pol-list-pop .pol-list-toolbar[hidden] { display: none; }
+#pol-list-pop #pol-table[hidden] { display: none; }
+#pol-list-pop #pol-list-ph[hidden] { display: none; }
+
+/* Add-Policy split-button dropdown — grow to fit the widest item so
+   "Windows / Mac / Linux" never truncate, but never smaller than the
+   button width. Same rule applies to both the header + empty-state
+   instances of the button. */
+#pol-list-pop #pol-add-btn .ds-split-button__menu,
+#pol-list-pop #pol-add-btn .ds-dropdown-menu,
+#pol-list-pop #pol-add-btn-empty .ds-split-button__menu,
+#pol-list-pop #pol-add-btn-empty .ds-dropdown-menu {
+  min-width: 160px !important;
+  width: max-content !important;
+  white-space: nowrap;
+}
+#pol-list-pop #pol-add-btn .ds-dropdown-menu__item,
+#pol-list-pop #pol-add-btn-empty .ds-dropdown-menu__item {
+  justify-content: flex-start;
+  text-align: start;
+  white-space: nowrap;
+}
+#pol-list-pop .pol-empty-inner { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-16); text-align: center; max-width: 480px; }
+#pol-list-pop .pol-empty ds-illustration { width: 220px; height: auto; display: block; margin-top: var(--spacing-24); }
+#pol-list-pop .pol-empty h2 { margin: 4px 0 0; font-size: var(--uems-font-size-18, 18px); font-weight: var(--font-weight-semibold, 600); color: var(--uems-text-primary); }
+#pol-list-pop .pol-empty p { margin: 0; font-size: var(--uems-font-size-13, 13px); line-height: 1.5; color: var(--uems-text-secondary); }
+#pol-list-pop .pol-empty-actions { display: inline-flex; align-items: center; gap: var(--spacing-12); margin-top: var(--spacing-8); }
+</style>
+
+<div id="pol-list-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <!-- Page header — shown ONLY when the table has rows. Empty state
+         renders on its own with no header per the empty-page convention. -->
+    <ds-page-header id="pol-list-ph" icon="shield" structure="default"
+      title="All Policies"
+      description="Every policy created in your Administrative Group — profile, software, patch, script."
+      hidden>
+      <ds-split-button slot="actions" id="pol-add-btn" size="small" variant="primary" label="Add Policy"></ds-split-button>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+
+      <!-- Toolbar placeholder retained so the empty-state hiding logic keeps
+           its symmetry; the data table's built-in search + filter is the
+           canonical filter surface, so no extra search field lives here. -->
+      <div id="pol-toolbar" class="pol-list-toolbar" hidden></div>
+
+      <!-- Table -->
+      <ds-data-table id="pol-table"
+        selection-mode="multi"
+        row-height="comfortable"
+        show-footer
+        sticky-header
+        fit-viewport
+        rows-per-page="10"
+        rows-per-page-options="10,25,50"
+        page="1"
+        hidden></ds-data-table>
+      <ds-dropdown-menu id="pol-row-menu" type="action"></ds-dropdown-menu>
+
+      <!-- Empty state — shown only when the store has zero policies. -->
+      <div id="pol-empty" class="pol-empty">
+        <div class="pol-empty-inner">
+          <ds-illustration name="config" size="lg"></ds-illustration>
+          <h2>Create Deployment Policy</h2>
+          <p>Define a single action — a profile, software package, patch bundle or script — and reuse it across every deployment in your Administrative Group.</p>
+          <div class="pol-empty-actions">
+            <ds-text-link id="pol-learn-more" href="#" size="medium">Learn more</ds-text-link>
+            <ds-split-button id="pol-add-btn-empty" size="medium" variant="primary" label="Add Policy"></ds-split-button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('pol-list-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  /* ---- Add-Policy split button (works for both empty state + toolbar) --- */
+  function wireAddBtn(btn) {
+    btn.menuItems = [
+      { value: 'windows', label: 'Windows', icon: 'microsoft' },
+      { value: 'mac',     label: 'Mac',     icon: 'apple' },
+      { value: 'linux',   label: 'Linux',   icon: 'terminal-square' },
+    ];
+    btn.addEventListener('ds-split-button-main', () => {
+      const chev = btn.querySelector('.ds-split-button__chev');
+      if (chev) chev.click();
+    });
+    btn.addEventListener('ds-split-button-menu-select', (e) => {
+      const os = e.detail && e.detail.value;
+      if (os) window.__addPolicyPendingOS = os;
+      if (window.openContentView) window.openContentView('deployments-policy');
+    });
+  }
+  wireAddBtn($('pol-add-btn'));
+  wireAddBtn($('pol-add-btn-empty'));
+
+  /* ---- Table columns ---------------------------------------------------- */
+  const SCOPE_ICON = (scope) => scope === 'user' ? 'user' : 'computer';
+  const STATUS_STATE = {
+    'Draft':                'default',
+    'Ready to Execute':     'success',
+    'Executed':             'success',
+    'In Progress':          'info',
+    'In Progress (Failed)': 'critical',
+    'Suspended':            'moderate',
+    'Rejected':             'critical',
+    'Expired':              'default',
+  };
+  const table = $('pol-table');
+  table.columns = [
+    { id: 'name', header: 'Policy name', render: (r) =>
+      `<span class="pol-cell-name"><ds-icon class="cell-scope-icon" name="${SCOPE_ICON(r.scope)}" size="16"></ds-icon><ds-text-link class="pol-name-link" data-policy-id="${esc(r.id)}" variant="primary" size="medium" underline="hover" href="#">${esc(r.name)}</ds-text-link></span>` },
+    { id: 'category', header: 'Category', accessor: 'platform' },
+    { id: 'type',     header: 'Type',     accessor: 'type' },
+    { id: 'status',   header: 'Status',   align: 'start', render: (r) =>
+      `<ds-badge variant="subtle" state="${STATUS_STATE[r.status] || 'default'}" shape="rounded" size="medium">${esc(r.status)}</ds-badge>` },
+    { id: 'createdBy', header: 'Created by',        accessor: 'createdBy' },
+    { id: 'modified',  header: 'Last modified',     accessor: 'lastModifiedTime' },
+    { id: 'modifiedBy',header: 'Last modified by',  accessor: 'lastModifiedBy' },
+    { id: 'actions', header: 'Actions', align: 'end', render: (r) =>
+      `<span class="pol-actions"><button type="button" data-act="more" data-id="${esc(r.id)}" aria-label="Row actions"><ds-icon name="more-vertical" size="16"></ds-icon></button></span>` },
+  ];
+
+  const rowMenu = $('pol-row-menu');
+  rowMenu.items = [
+    { label: 'Edit',   value: 'edit',   icon: 'edit'   },
+    { label: 'Delete', value: 'delete', icon: 'delete' },
+  ];
+  let menuTargetId = null;
+  table.addEventListener('click', (e) => {
+    const moreBtn = e.target.closest && e.target.closest('button[data-act="more"]');
+    if (moreBtn) {
+      menuTargetId = moreBtn.dataset.id;
+      rowMenu.openFrom(moreBtn, { side: 'below', align: 'end', offset: 4 });
+      return;
+    }
+    const link = e.target.closest && e.target.closest('.pol-name-link');
+    if (!link) return;
+    e.preventDefault();
+    window.__policyDetailId = link.dataset.policyId;
+    if (window.openContentView) window.openContentView('deployments-policy-detail');
+  });
+  rowMenu.addEventListener('ds-dropdown-select', (e) => {
+    const id = menuTargetId; menuTargetId = null;
+    rowMenu.close();
+    if (e.detail.value === 'edit') {
+      window.__policyDetailId = id;
+      if (window.openContentView) window.openContentView('deployments-policy-detail');
+    } else if (e.detail.value === 'delete') {
+      if (confirm('Delete this policy?')) {
+        window.__policiesStore = (window.__policiesStore || []).filter((r) => r.id !== id);
+        refresh();
+      }
+    }
+  });
+
+  /* ---- Render / hide toggle ------------------------------------------- */
+  function refresh() {
+    const rows = (window.__policiesStore || []).slice();
+    const has = rows.length > 0;
+    $('pol-list-ph').hidden = !has;
+    $('pol-empty').hidden   = has;
+    $('pol-toolbar').hidden = !has;
+    table.hidden            = !has;
+    if (!has) return;
+    table.rows = rows;
+    table.setAttribute('page', '1');
+  }
+
+  function show() { root.hidden = false; refresh(); }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-policy-list'] = { show, hide };
+})();
+</script>
+</template>
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-policy-list'].show()));
+})();
+</script>
+</body>
+</html>

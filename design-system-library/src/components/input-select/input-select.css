@@ -1,0 +1,302 @@
+/* =============================================================================
+   ds-input-select / .ds-input-select
+   Form select with single & multi-select patterns + dropdown surface.
+   Per UEMS Design System 3.0 — Input Select spec (Figma 16926:796521).
+   ============================================================================= */
+
+:host { display: block; font-family: var(--font-family-sans); width: 100%; }
+/* Light-DOM host: :host doesn't apply, so set display + the query container on
+   the element directly (drives the responsive label collapse below). */
+ds-input-select { display: block; width: 100%; container-type: inline-size; }
+
+.ds-input-select {
+  display: flex;
+  width: 100%;
+  gap: var(--spacing-8);   /* label ↔ field gap (stacked) — aligned across fields */
+  font-family: var(--font-family-sans);
+}
+.ds-input-select--top,
+.ds-input-select--none { flex-direction: column; align-items: stretch; }
+.ds-input-select--left { flex-direction: row; align-items: flex-start; gap: var(--spacing-8); }
+.ds-input-select--left > .ds-input-select__label-row {
+  width: 280px;
+  flex-shrink: 0;
+  padding-top: 10px;
+}
+
+/* Responsive: narrow screens collapse the left-label layout to stacked (label
+   on top, field below) — same as label-position="top". */
+@container (max-width: 520px) {
+  .ds-input-select--left { flex-direction: column; align-items: stretch; }
+  .ds-input-select--left > .ds-input-select__label-row { width: auto; flex-shrink: 1; padding-top: 0; }
+}
+.ds-input-select__field-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+/* Trigger and its floating dropdown share this wrapper as their positioning
+   context, so the dropdown anchors directly under the trigger and never
+   shifts the helper row below. */
+.ds-input-select__trigger-wrap { position: relative; }
+
+/* ---- Label row ----------------------------------------------------- */
+.ds-input-select__label-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.ds-input-select__label {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  /* Figma: label uses Text-Tertiary (#40485B), line-height 20px. */
+  color: var(--uems-text-tertiary);
+  line-height: 20px;
+}
+.ds-input-select__required { color: var(--uems-text-error); margin-inline-start: 2px; }
+/* Label help icon — toggleable help-circle (Figma `Show Label Help Icon`, off by default). */
+.ds-input-select__label-help {
+  background: transparent; border: 0; padding: 0; line-height: 0; cursor: pointer;
+  display: inline-flex; color: var(--uems-text-tertiary); margin-inline-start: 4px;
+}
+.ds-input-select__label-help:hover { color: var(--uems-text-secondary); }
+.ds-input-select__label-help:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; border-radius: 2px; }
+/* When the help icon is wrapped in <ds-tooltip>, keep it inline with the label. */
+.ds-input-select__label-help-tip { display: inline-flex; align-items: center; line-height: 0; }
+
+/* ---- Trigger ------------------------------------------------------- */
+.ds-input-select__trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  width: 100%;
+  /* Figma: field surface = BG-Primary-Alt, border = Border-Primary (#B4BBCC). */
+  background: var(--uems-bg-primary-alt);
+  border: 1px solid var(--uems-border-primary);
+  border-radius: var(--radius-md);
+  color: var(--uems-text-primary);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: start;
+  padding: 0 var(--spacing-12);
+  height: 40px;
+  font-size: var(--font-size-14);
+  line-height: 20px;
+  transition: border-color var(--duration-fast, 150ms) var(--ease-standard, ease);
+}
+
+/* Sizes — match Figma exactly: radius S=6px, M/L=8px. */
+.ds-input-select--small  .ds-input-select__trigger { height: 36px; border-radius: 6px; font-size: var(--font-size-14); line-height: 20px; }
+.ds-input-select--medium .ds-input-select__trigger { height: 40px; border-radius: var(--radius-md); }
+.ds-input-select--large  .ds-input-select__trigger { height: 44px; border-radius: var(--radius-md); font-size: var(--font-size-16); line-height: 24px; }
+
+/* Per-size width caps (Figma reference widths: S 160 / M 320 / L 400). The field
+   fills its container but never exceeds its size cap — so the three sizes read as
+   distinct widths, while still shrinking responsively in narrow containers. */
+.ds-input-select--small  .ds-input-select__field-col { max-width: 160px; }
+.ds-input-select--medium .ds-input-select__field-col { max-width: 320px; }
+.ds-input-select--large  .ds-input-select__field-col { max-width: 400px; }
+/* Full-width: field stretches to fill the container, overriding the per-size cap. */
+ds-input-select[full-width] .ds-input-select__field-col { max-width: none; }
+
+/* States — spec: hover 1px, focus/active 2px (compensate padding to keep height stable) */
+.ds-input-select__trigger:hover,
+.ds-input-select[data-state="hover"] .ds-input-select__trigger {
+  border-color: var(--uems-border-accent);
+}
+.ds-input-select__trigger:focus-visible,
+.ds-input-select[data-state="focus"]        .ds-input-select__trigger,
+.ds-input-select[data-state="active"]       .ds-input-select__trigger,
+.ds-input-select[data-state="active-multi"] .ds-input-select__trigger {
+  outline: none;
+  border: 2px solid var(--uems-border-accent-focus);
+  padding-left: calc(var(--spacing-12) - 1px);
+  padding-right: calc(var(--spacing-12) - 1px);
+}
+.ds-input-select[data-state="error"]   .ds-input-select__trigger { border-color: var(--uems-border-error); }
+.ds-input-select[data-state="success"] .ds-input-select__trigger { border-color: var(--uems-border-success); }
+.ds-input-select[data-state="read-only"] .ds-input-select__trigger {
+  /* Figma: Read Only = BG-Secondary-alt fill, Border-Disabled border. */
+  background: var(--uems-bg-secondary-alt);
+  border-color: var(--uems-border-disabled);
+  cursor: default;
+}
+.ds-input-select[data-state="disabled"] {
+  opacity: 0.5;
+}
+/* The trigger's click/keydown handlers bail when state==="disabled", so clicks
+   are already blocked — keep pointer-events on so the not-allowed cursor shows
+   (a container pointer-events:none would suppress the cursor entirely). */
+.ds-input-select[data-state="disabled"] .ds-input-select__trigger {
+  /* Figma: Disabled = BG-Secondary fill, Border-Primary, with the whole field
+     at 0.5 opacity (set on the container above). */
+  background: var(--uems-bg-secondary);
+  cursor: not-allowed;
+}
+
+/* ---- Multi-select trigger: HUG height for chip wrap ---------------- */
+.ds-input-select--multi .ds-input-select__trigger {
+  height: auto;
+  min-height: 40px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: var(--spacing-4);
+  padding-bottom: var(--spacing-4);
+}
+.ds-input-select--small.ds-input-select--multi  .ds-input-select__trigger { min-height: 36px; }
+.ds-input-select--large.ds-input-select--multi  .ds-input-select__trigger { min-height: 44px; }
+
+/* ---- Inner parts --------------------------------------------------- */
+.ds-input-select__chevron {
+  flex: 0 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  color: var(--uems-text-secondary);
+}
+/* The chevron stays as a static chevron-down in every state — it does not swap
+   or rotate when the menu is open. */
+
+/* Prefix / Suffix — each its own 4px-gap group (text + icon), Figma anatomy.
+   Default off; rendered only when a prefix/suffix text or icon is supplied.
+   Suffix sits at the trailing edge (after the chevron); RTL mirrors via the
+   root dir="rtl" flex reversal. */
+.ds-input-select__prefix,
+.ds-input-select__suffix {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  flex: 0 0 auto;
+  line-height: 0;
+  color: var(--uems-text-secondary);
+}
+/* Unit-selection affix — the prefix/suffix is a dropdown trigger button
+   (mirrors ds-text-input's suffix-dropdown). Hover background + focus ring. */
+.ds-input-select__prefix--dropdown,
+.ds-input-select__suffix--dropdown {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  padding: 2px var(--spacing-4);
+  border-radius: var(--radius-xs, 4px);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+.ds-input-select__prefix--dropdown:hover,
+.ds-input-select__suffix--dropdown:hover { background: var(--uems-bg-secondary-hover); }
+.ds-input-select__prefix--dropdown:focus-visible,
+.ds-input-select__suffix--dropdown:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 0; }
+
+.ds-input-select__affix-text {
+  /* Figma: prefix/suffix text = Text-Primary, 14px. */
+  font-size: var(--font-size-14);
+  line-height: 20px;
+  color: var(--uems-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ds-input-select--small  .ds-input-select__affix-text { max-width: 6ch; }
+.ds-input-select--medium .ds-input-select__affix-text { max-width: 10ch; }
+
+.ds-input-select__value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--uems-text-primary);
+}
+.ds-input-select__value--placeholder { color: var(--uems-text-placeholder, var(--uems-text-tertiary)); }
+
+.ds-input-select__tags {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+.ds-input-select__badge {
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-secondary);
+  background: var(--uems-bg-secondary);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.ds-input-select__clear {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--uems-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  flex: 0 0 auto;
+}
+.ds-input-select__clear:hover { color: var(--uems-text-primary); }
+.ds-input-select__clear:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* ---- Dropdown surface --------------------------------------------- */
+.ds-input-select__dropdown {
+  position: absolute;
+  top: calc(100% + var(--spacing-8));
+  left: 0;
+  right: 0;
+  z-index: 50;
+}
+.ds-input-select__dropdown ds-dropdown-menu { display: block; }
+/* Match the menu to the input container width (Figma: dropdown width == field
+   width). The portal sets the wrapper width to the trigger width; override the
+   menu's own min/max-width so it fills that exactly at every size (e.g. Small
+   160 < its 200 min, Large 400 > its 360 max would otherwise mismatch). */
+.ds-input-select__dropdown .ds-dropdown-menu {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+/* ---- Searchable dropdown ------------------------------------------- */
+/* When `searchable`, the wrapper becomes the single popover surface and a
+   search box sits at the top; the inner menu drops its own border/shadow so
+   the two read as one panel. */
+.ds-input-select__dropdown--search {
+  background: var(--uems-bg-primary-alt);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08));
+  overflow: hidden;
+}
+.ds-input-select__dropdown--search .ds-dropdown-menu {
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  width: 100%;
+}
+/* Header wraps the shared <ds-search-field> (self-contained: icon, input,
+   clear). Just give it padding + a divider from the option list below. */
+.ds-input-select__search {
+  padding: var(--spacing-8);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+}
+
+/* ---- Helper row --------------------------------------------------- */
+/* The helper/counter row is the shared <ds-field-helper> sub-component; it owns
+   the icon + text + counter, layout and per-state colour (see field-helper.css).
+   Reserve the row height so the field doesn't jump when the message toggles. */
+.ds-input-select__helper { min-height: 16px; }
+
+/* ---- RTL ----------------------------------------------------------- */
+.ds-input-select--left[dir="rtl"] .ds-input-select__label-row { padding-top: 10px; }

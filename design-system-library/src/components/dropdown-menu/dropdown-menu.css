@@ -1,0 +1,402 @@
+/* =============================================================================
+   ds-dropdown-menu / .ds-dropdown-menu
+   Floating panel with default / select / multi-select / action / select-tick
+   Type variants per UEMS Design System 3.0 spec.
+   ============================================================================= */
+
+:host {
+  display: inline-block;
+  position: relative;
+  font-family: var(--font-family-sans);
+}
+
+.ds-dropdown-menu {
+  /* Spec: surface hugs content — consumer sets min-width / matches trigger. */
+  width: max-content;
+  min-width: 200px;
+  max-width: 360px;
+  background: var(--uems-bg-primary-alt);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08));
+  padding: var(--spacing-4) 0;
+  font-family: var(--font-family-sans);
+  color: var(--uems-text-primary);
+}
+/* Multi-select footer (Reset to default + Cancel + Apply) needs more room. */
+.ds-dropdown-menu[data-type="multi-select"] { min-width: 280px; }
+
+.ds-dropdown-menu[hidden] { display: none; }
+
+/* Smooth open/close motion — only on the host element. The inner
+   .ds-dropdown-menu div doesn't carry the `open` attribute. */
+ds-dropdown-menu {
+  transition: opacity 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 220ms linear;
+  transform-origin: top center;
+}
+ds-dropdown-menu:not([open]) {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  pointer-events: none;
+  visibility: hidden;
+}
+ds-dropdown-menu[open] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  visibility: visible;
+}
+
+/* ---- Title row ----------------------------------------------------- */
+.ds-dropdown-menu__title {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-12);
+  padding-inline-start: var(--spacing-20, 20px);  /* align with inset item content (8 list + 12 item) */
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-secondary);   /* Figma: title = Text-Secondary, sentence case */
+}
+
+/* Ensure a hidden TextLink action (e.g. Select all once all are selected) is
+   actually removed from layout regardless of TextLink's own host display. */
+.ds-dropdown-menu ds-text-link[hidden] { display: none; }
+
+/* ---- List & dividers ---------------------------------------------- */
+.ds-dropdown-menu__list {
+  list-style: none;
+  margin: 0;
+  /* Items region: vertical, gap 2, inset 8 (so the radius-6 hover wash is
+     inset from the panel edges, per Figma). */
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--spacing-8);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.ds-dropdown-menu__section-heading {
+  padding: var(--spacing-8) var(--spacing-12) var(--spacing-4);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-tertiary);
+}
+/* Heading with a trailing action (e.g. "Clear all"): title left, link right. */
+.ds-dropdown-menu__section-heading--with-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+}
+.ds-dropdown-menu__section-heading-action { flex: 0 0 auto; }
+
+/* No-truncate variant (host attribute `data-no-truncate`): row labels show in
+   full — the menu hugs content with a wider cap and labels don't ellipsize.
+   Scoped so other menus (e.g. input-select with long options) keep truncating. */
+ds-dropdown-menu[data-no-truncate] .ds-dropdown-menu { max-width: 480px; }
+ds-dropdown-menu[data-no-truncate] .ds-dropdown-menu__item-label {
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.ds-dropdown-menu__divider,
+hr.ds-dropdown-menu__divider {
+  height: 1px;
+  background: var(--uems-border-tertiary);
+  border: 0;
+  margin: var(--spacing-4) 0;
+  list-style: none;
+}
+
+/* ---- Item rows ----------------------------------------------------- */
+.ds-dropdown-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-height: 36px;              /* Figma row height */
+  padding: var(--spacing-8) var(--spacing-12);
+  border-radius: var(--radius-6, 6px);  /* rounded hover/selected wash (Figma: 6) */
+  font-size: var(--font-size-14);
+  line-height: 20px;
+  color: var(--uems-text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+.ds-dropdown-menu__item:hover { background: var(--uems-bg-accent-primary-action); }
+.ds-dropdown-menu__item:active { background: var(--uems-bg-tertiary); }
+.ds-dropdown-menu__item:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: -2px;
+}
+.ds-dropdown-menu__item[aria-disabled="true"] {
+  color: var(--uems-text-disabled);
+  cursor: not-allowed;
+}
+
+.ds-dropdown-menu__item-icon,
+.ds-dropdown-menu__tick,
+.ds-dropdown-menu__item-chevron {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  color: var(--uems-text-secondary);
+}
+
+.ds-dropdown-menu__item-content {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ds-dropdown-menu__item-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ds-dropdown-menu__item-description {
+  font-size: var(--font-size-12);
+  color: var(--uems-text-tertiary);
+  line-height: 1.3;
+}
+
+/* Per-row hover actions (share / edit / delete etc.). Reserve no label space —
+   item-content is flex:1 so these sit at the row's end. Hidden until the row is
+   hovered or focused (keyboard focus-within reveals them too); invisible buttons
+   are also click-through so they never intercept a row click. */
+.ds-dropdown-menu__item-actions {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2, 2px);
+  margin-inline-start: var(--spacing-8);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms var(--ease-standard, ease);
+}
+.ds-dropdown-menu__item:hover .ds-dropdown-menu__item-actions,
+.ds-dropdown-menu__item:focus-within .ds-dropdown-menu__item-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+.ds-dropdown-menu__item-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius-sm, 6px);
+  color: var(--uems-icon-secondary);
+  cursor: pointer;
+}
+.ds-dropdown-menu__item-action:hover {
+  background: var(--uems-bg-secondary-hover);
+  color: var(--uems-icon-primary);
+}
+.ds-dropdown-menu__item-action--danger:hover {
+  background: var(--uems-bg-error-primary);
+  color: var(--uems-icon-error);
+}
+/* "New" tag — violet pill highlight (charoite token) for new items */
+.ds-dropdown-menu__item-new {
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--uems-bg-acknowledge-solid);
+  color: var(--uems-text-white);
+  line-height: 1.4;
+  margin-inline-start: var(--spacing-4);
+  flex-shrink: 0;
+}
+
+.ds-dropdown-menu__item-badge {
+  font-size: 10px;
+  font-weight: var(--font-weight-medium);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: var(--uems-bg-secondary);
+  color: var(--uems-text-secondary);
+  white-space: nowrap;
+}
+.ds-dropdown-menu__item-shortcut {
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  color: var(--uems-text-tertiary);
+  white-space: nowrap;
+}
+
+/* ── Cascade sub-menu support ─────────────────────────────────────────
+   Items configured with `subItems` open a secondary <ds-dropdown-menu>
+   flyout (managed by the component, appended to <body>). The parent
+   row stays highlighted while its flyout is open. */
+.ds-dropdown-menu__item[data-sub-open] {
+  background: var(--uems-bg-secondary-hover);
+}
+.ds-dropdown-menu--cascade-sub {
+  /* Fixed-positioned at runtime by _positionSubmenu(); auto-flips between
+     opening to the right vs. left of the parent menu based on space. */
+  z-index: 601;
+}
+
+/* ---- Selected state (Select / Multi-select / Select-tick) ---------
+   Figma: the Selected item state carries the accent wash + accent label,
+   regardless of type. */
+.ds-dropdown-menu__item--selected,
+.ds-dropdown-menu__item[aria-selected="true"],
+.ds-dropdown-menu__item[aria-checked="true"] {
+  background: var(--uems-bg-accent-primary-action);
+  color: var(--uems-text-accent-primary);
+}
+
+/* ---- Link-styled row (e.g. "Create advanced filter") --------------
+   Reads as a text link — accent label + icon — while staying a normal menuitem
+   (row click still emits select; keyboard nav unaffected). The row's hover
+   background is the hover affordance; no text underline. */
+.ds-dropdown-menu__item--link,
+.ds-dropdown-menu__item--link .ds-dropdown-menu__item-icon {
+  color: var(--uems-text-accent-link);   /* same token as ds-text-link primary */
+}
+
+/* ---- Danger row (Action) ------------------------------------------ */
+.ds-dropdown-menu__item--danger,
+.ds-dropdown-menu__item--danger .ds-dropdown-menu__item-icon {
+  color: var(--uems-text-error);
+}
+.ds-dropdown-menu__item--danger:hover {
+  background: var(--uems-bg-error-primary, rgba(228, 37, 39, 0.08));
+}
+
+/* ---- Selection indicators (real ds-radio / ds-checkbox) -------------
+   Rendered as presentational visuals — the row (<li>) owns the role and
+   aria state, so the controls are non-interactive and out of tab order. */
+.ds-dropdown-menu__radio,
+.ds-dropdown-menu__checkbox {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  pointer-events: none;   /* clicks fall through to the row */
+}
+/* Indicator only — collapse the label-row sizing and hide the empty label
+   text so just the box/circle shows, centered in the row. */
+.ds-dropdown-menu__radio .ds-radio,
+.ds-dropdown-menu__checkbox .ds-checkbox {
+  min-height: 0;
+  gap: 0;
+}
+.ds-dropdown-menu__radio .ds-radio__label,
+.ds-dropdown-menu__checkbox .ds-checkbox__label {
+  display: none;
+}
+
+/* ---- Tick control (Select-tick) ----------------------------------- */
+.ds-dropdown-menu__tick { color: var(--uems-bg-button-primary); }
+
+/* ---- Footer rows --------------------------------------------------- */
+.ds-dropdown-menu__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+  padding: var(--spacing-8) var(--spacing-12);
+  min-height: 40px;
+}
+.ds-dropdown-menu__footer--multi { gap: var(--spacing-8); }
+.ds-dropdown-menu__footer-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+/* Thin separator between the bulk-toggle links (Select all | Clear all) so the
+   pair reads as two distinct actions rather than one cramped run. */
+.ds-dropdown-menu__footer-links > * + *::before {
+  content: "";
+  display: inline-block;
+  align-self: center;
+  width: 1px;
+  height: 14px;
+  margin-inline: var(--spacing-12);
+  background: var(--uems-border-tertiary);
+  vertical-align: middle;
+}
+.ds-dropdown-menu__footer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+/* Footer action button (e.g., "Customise Menu") — composes ds-button. */
+.ds-dropdown-menu__footer-action {
+  width: 100%;
+  display: block;
+}
+.ds-dropdown-menu__footer-action .ds-button {
+  width: 100%;
+  justify-content: center;
+  background: var(--uems-bg-accent-primary);
+  color: var(--uems-text-accent-link);
+}
+.ds-dropdown-menu__footer-action .ds-button:hover {
+  background: var(--uems-bg-accent-primary-hover);
+}
+
+.ds-dropdown-menu__footer-link {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--uems-text-accent-link);
+  font: inherit;
+  font-size: var(--font-size-13);
+}
+.ds-dropdown-menu__footer-link:hover { text-decoration: underline; }
+.ds-dropdown-menu__footer-link:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* ---- Empty state ("No options") ------------------------------------ */
+.ds-dropdown-menu__empty {
+  list-style: none;
+  padding: var(--spacing-12);
+  text-align: center;
+  font-size: var(--font-size-13);
+  color: var(--uems-text-tertiary);
+}
+
+/* ---- Selection bar (bulk actions row) ------------------------------ */
+.ds-dropdown-menu__selection-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  padding: var(--spacing-8) var(--spacing-12);
+  list-style: none;
+}
+.ds-dropdown-menu__selection-count {
+  font-size: var(--font-size-12);
+  color: var(--uems-text-quaternary);  /* Figma: Text-Quaternary */
+  white-space: nowrap;
+}
+.ds-dropdown-menu__selection-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-16);
+}
+.ds-dropdown-menu__selection-actions .ds-dropdown-menu__footer-link { font-size: var(--font-size-12); }
+
+/* ---- RTL ----------------------------------------------------------- */
+.ds-dropdown-menu[dir="rtl"] .ds-dropdown-menu__title { text-align: right; }
+.ds-dropdown-menu[dir="rtl"] .ds-dropdown-menu__section-heading { text-align: right; }
+.ds-dropdown-menu[dir="rtl"] .ds-dropdown-menu__selection-bar { flex-direction: row-reverse; }

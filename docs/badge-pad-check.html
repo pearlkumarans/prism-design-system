@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<title>badge padding check</title>
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/badge/badge.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/badge/badge.js"></script>
+<style>body{background:#fff;padding:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;} pre{width:100%;font-size:11px;}</style>
+</head>
+<body>
+<script type="module">
+// generate every size × style × shape × state × rtl combo = 3*2*2*7*2 = 168
+const sizes=['small','medium','large'], variants=['intense','subtle'], shapes=['pill','rounded'],
+      states=['default','active','success','critical','moderate','important','acknowledge'];
+for (const s of sizes) for (const v of variants) for (const sh of shapes) for (const st of states) for (const rtl of [false,true]) {
+  const b = document.createElement('ds-badge');
+  b.setAttribute('size',s); b.setAttribute('variant',v); b.setAttribute('shape',sh); b.setAttribute('state',st);
+  b.setAttribute('icon','add'); b.setAttribute('label', rtl ? 'شارة' : 'Badge');
+  if (rtl) b.setAttribute('rtl','');
+  document.body.appendChild(b);
+}
+const pre = document.createElement('pre'); pre.id='report'; document.body.appendChild(pre);
+
+await customElements.whenDefined('ds-badge');
+await new Promise(r => setTimeout(r, 800));
+
+let pass=0, fails=[];
+const badges = [...document.querySelectorAll('ds-badge')];
+for (const el of badges) {
+  const cs = getComputedStyle(el);
+  const key = ['size','variant','shape','state'].map(a=>el.getAttribute(a)).join('/') + (el.hasAttribute('rtl')?'/rtl':'');
+  const wantH = el.getAttribute('size')==='small' ? '4px' : '8px';
+  const ok = cs.paddingTop==='2px' && cs.paddingBottom==='2px' && cs.paddingLeft===wantH && cs.paddingRight===wantH;
+  ok ? pass++ : fails.push(`${key}: ${cs.paddingTop} ${cs.paddingRight} ${cs.paddingBottom} ${cs.paddingLeft}`);
+}
+// pixel measurement: icon edge offset from container edge (LTR: left = 4px; RTL: right = 4px)
+const sample = badges[0]; // small/intense/pill/default LTR
+const sampleRtl = badges.find(b => b.hasAttribute('rtl'));
+const px = [];
+for (const [name, el, side] of [['LTR-icon-offset', sample, 'left'], ['RTL-icon-offset', sampleRtl, 'right']]) {
+  const icon = el.querySelector('.ds-badge__icon');
+  const br = el.getBoundingClientRect(), ir = icon.getBoundingClientRect();
+  const off = side==='left' ? (ir.left - br.left) : (br.right - ir.right);
+  const wantOff = el.getAttribute('size')==='small' ? 4 : 8;
+  px.push(`${name} (${el.getAttribute('size')}): ${off.toFixed(1)}px (want ${wantOff})`);
+}
+// vertical: label box vs container centre
+const lab = sample.querySelector('.ds-badge__label').getBoundingClientRect();
+const sb = sample.getBoundingClientRect();
+px.push(`label-centre-drift: ${(((lab.top+lab.bottom)/2)-((sb.top+sb.bottom)/2)).toFixed(1)}px (want 0)`);
+
+pre.textContent = [
+  `PADDING 2px/4px on ${pass}/${badges.length} combos`,
+  ...(fails.length ? ['FAILS:', ...fails] : []),
+  ...px,
+].join('\n');
+</script>
+</body>
+</html>

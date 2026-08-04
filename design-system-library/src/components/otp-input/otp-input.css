@@ -1,0 +1,113 @@
+/* =============================================================================
+   ds-otp-input / .ds-otp-input
+   3 sizes × 5 states × length 4|6 × RTL.
+   ============================================================================= */
+
+:host { display: inline-block; vertical-align: top; font-family: var(--font-family-sans); }
+
+.ds-otp-input {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-8);
+}
+
+/* RTL note: do NOT override align-items here. On a column flex container the
+   cross axis is horizontal, and `flex-start` already follows the inline
+   direction — so dir="rtl" makes the base `align-items: flex-start` right-align
+   the label / fields / helper automatically. (A `flex-end` override would push
+   them back to the LEFT in RTL.) */
+
+.ds-otp-input__label {
+  /* Spec: Zoho Puvi Semibold, Text-Tertiary (all sizes). */
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-tertiary);
+}
+
+.ds-otp-input__fields {
+  display: inline-flex;
+  gap: var(--_otp-gap);
+}
+
+.ds-otp-input[dir="rtl"] .ds-otp-input__label { text-align: right; }
+
+.ds-otp-input__box {
+  box-sizing: border-box;          /* 2px active border must not shift the grid */
+  width: var(--_otp-box);
+  height: var(--_otp-box);
+  border-radius: var(--_otp-radius);
+  border: 1px solid var(--uems-border-secondary);
+  background: var(--uems-bg-primary-alt);   /* spec: BG-Primary-alt (#FFFFFF), unified */
+  color: var(--uems-text-primary);          /* typed digit = Text-Primary */
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-medium);   /* spec: Zoho Puvi Medium (not bold) */
+  font-size: var(--_otp-font);
+  text-align: center;
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+/* Untyped placeholder digit = Text-Placeholder. */
+.ds-otp-input__box::placeholder { color: var(--uems-text-placeholder); }
+
+/* Active = the focused / currently-typed cell: a 2px accent INLINE border
+   replaces Border-Secondary (per spec). For a text input the focused cell IS
+   the active one — and browsers ALWAYS match :focus-visible on text inputs, so
+   keying the inline border off :focus (not :focus-visible) is what actually
+   renders the Active state. The 2px accent border is itself the visible focus
+   indicator, so no separate offset ring is needed. */
+.ds-otp-input__box:focus {
+  border-color: var(--uems-border-accent-focus);
+  border-width: 2px;
+  outline: none;
+}
+
+/* Error — Border-Error on ALL cells; digit stays Text-Primary, no glow. */
+.ds-otp-input--error .ds-otp-input__box {
+  border-color: var(--uems-border-error);
+}
+
+/* Disabled — BG-Disabled-subtle + Border-Disabled + Text-Disabled (token
+   swaps, no blanket opacity). */
+.ds-otp-input--disabled .ds-otp-input__box,
+.ds-otp-input__box:disabled {
+  background: var(--uems-bg-disabled-subtle);
+  border-color: var(--uems-border-disabled);
+  color: var(--uems-text-disabled);
+  cursor: not-allowed;
+}
+
+/* ---- Sizes ---------------------------------------------------------- */
+/* Per spec table: small/medium/large gives 36/40/48 box, 8/10/12 gap,
+   6/8/8 radius (small uses literal 6 — not in the token scale), 16/18/22 digit
+   font, 12/13/14 label font. */
+.ds-otp-input--small {
+  --_otp-box: 36px;
+  --_otp-gap: 8px;
+  --_otp-radius: 6px;            /* radius-default */
+  --_otp-font: var(--font-size-14);
+}
+.ds-otp-input--medium {
+  --_otp-box: 40px;
+  --_otp-gap: 10px;
+  --_otp-radius: var(--radius-md); /* radius-s, 8px */
+  --_otp-font: var(--font-size-16);
+}
+.ds-otp-input--large {
+  --_otp-box: 48px;
+  --_otp-gap: 12px;
+  --_otp-radius: var(--radius-md);
+  --_otp-font: var(--font-size-18);
+}
+
+/* ---- Helper row ----------------------------------------------------- */
+.ds-otp-input__helper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  font-size: var(--font-size-11);            /* spec: 11px */
+  color: var(--uems-text-quaternary);        /* spec: Text-Quaternary */
+}
+.ds-otp-input--error .ds-otp-input__helper { color: var(--uems-text-error); }

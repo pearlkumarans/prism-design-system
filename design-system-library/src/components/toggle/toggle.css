@@ -1,0 +1,160 @@
+/* =============================================================================
+   ds-toggle / .ds-toggle
+   Pill-shaped binary on/off switch. 3 sizes × Toggled × State × Show-Text × RTL.
+   Spec: docs/MD/toggle.md · Figma node 15898:21879 (96 variants).
+
+   Geometry (unlabeled): Small 28×16 thumb 12 · Medium 36×20 thumb 16 ·
+   Large 48×28 thumb 20. The thumb is centred vertically and sits `--_pad`
+   from the active edge (2/2/4). Medium's 16px thumb exceeds the declared 4px
+   track padding, so it renders centred with a 2px effective gap — handled
+   automatically here by `top:50%` + a 2px edge inset.
+
+   Thumb travel + RTL mirroring use LOGICAL insets (inset-inline-start/end), so
+   `dir="rtl"` flips for free (On = thumb leading in RTL) — no left/right.
+   ============================================================================= */
+
+:host { display: inline-block; vertical-align: middle; font-family: var(--font-family-sans); }
+
+/* Host shrink-wraps the control. inline-flex removes the inline line-box
+   descender that otherwise made <ds-toggle> ~5px taller than the track and
+   pushed the toggle off-centre against adjacent label text. */
+ds-toggle { display: inline-flex; align-items: center; gap: var(--spacing-8); vertical-align: middle; }
+
+/* Field label beside the switch (like other form fields). Clicking it toggles. */
+.ds-toggle__label {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular, 400);
+  line-height: 1.4;
+  color: var(--uems-text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+.ds-toggle__label[hidden] { display: none; }
+ds-toggle[disabled] .ds-toggle__label { color: var(--uems-text-disabled); cursor: not-allowed; }
+ds-toggle[disabled] { cursor: not-allowed; }
+/* Label position: default `end` (label after the switch); `start` puts the
+   label before it (settings-row style). */
+ds-toggle[label-position="start"] { flex-direction: row-reverse; }
+
+.ds-toggle {
+  /* Medium is the design default — baked onto the base class so a bare
+     <ds-toggle> still renders at medium. Small/Large override. */
+  --_t-w: 36px;
+  --_t-h: 20px;
+  --_t-thumb: 16px;
+  --_pad: 2px;                 /* edge gap on the active side (Medium = 2px) */
+  --_t-font: var(--uems-font-size-14, 14px);
+  --_t-line: 20px;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: var(--_t-w);
+  height: var(--_t-h);
+  border: 0;
+  padding: 0;
+  border-radius: var(--uems-radius-pill, 9999px);
+  background: var(--_tg-track);
+  color: var(--_tg-label);
+  cursor: pointer;
+  font-family: inherit;
+  /* Track colour glides on the same soft curve as the thumb so On/Off feels
+     like one smooth, gel-like motion. */
+  transition: background-color 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---- Track + label colour matrix (Toggled × State) ------------------- */
+/* On — accent track, white label. */
+.ds-toggle[aria-checked="true"]  { --_tg-track: var(--uems-bg-button-primary); --_tg-label: var(--uems-text-white); }
+/* Off — neutral grey track, secondary label. */
+.ds-toggle[aria-checked="false"] { --_tg-track: var(--uems-bg-quaternary);     --_tg-label: var(--uems-text-secondary); }
+/* Hover — track shifts; Off previews the accent tint. */
+.ds-toggle[aria-checked="true"]:hover:not(:disabled)  { --_tg-track: var(--uems-bg-button-primary-hover); }
+.ds-toggle[aria-checked="false"]:hover:not(:disabled) { --_tg-track: var(--uems-bg-accent-primary-hover); }
+/* Disabled — token swap only, FULL opacity (system convention, no 50% dim).
+   On/Disabled label intentionally stays white: the dimmed accent track is the
+   disabled signal. Off/Disabled label → Text-Disabled. */
+.ds-toggle:disabled { cursor: not-allowed; }
+.ds-toggle[aria-checked="true"]:disabled  { --_tg-track: var(--uems-bg-accent-disabled); }
+.ds-toggle[aria-checked="false"]:disabled { --_tg-track: var(--uems-bg-disabled); --_tg-label: var(--uems-text-disabled); }
+
+/* Focus — 2px Border-Accent-Focus ring hugging the track (offset 0, per the
+   Figma inside-stroke). Intentionally tighter than the offset:2px components. */
+.ds-toggle:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 0;
+}
+
+/* ---- Thumb ----------------------------------------------------------- */
+.ds-toggle__thumb {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: var(--_pad);
+  transform: translateY(-50%);
+  width: var(--_t-thumb);
+  height: var(--_t-thumb);
+  border-radius: var(--uems-radius-pill, 9999px);
+  background: var(--uems-bg-base-white);
+  /* No resting shadow — the drop shadow is a HOVER-only affordance. */
+  box-shadow: none;
+  /* Slide via ONE logical offset (start auto-flips in RTL). Animating to `auto`
+     is not interpolatable — keep `inset-inline-start` a length at BOTH ends so
+     the thumb glides instead of jumping. Soft ease-out = the smooth, gel feel. */
+  transition: inset-inline-start 240ms cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 150ms var(--ease-standard, ease);
+}
+.ds-toggle[aria-checked="true"] .ds-toggle__thumb {
+  inset-inline-start: calc(100% - var(--_t-thumb) - var(--_pad));
+}
+.ds-toggle:hover:not(:disabled) .ds-toggle__thumb { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15); }
+
+/* Respect reduced-motion — snap instead of gliding. */
+@media (prefers-reduced-motion: reduce) {
+  .ds-toggle, .ds-toggle__thumb { transition: none; }
+}
+.ds-toggle:disabled .ds-toggle__thumb { background: var(--uems-bg-secondary-subtle); box-shadow: none; }
+
+/* ---- In-track label (Show-Text mode) --------------------------------- */
+.ds-toggle__text {
+  position: relative;
+  font-family: inherit;
+  font-size: var(--_t-font);
+  line-height: var(--_t-line);
+  font-weight: var(--font-weight-medium, 500);
+  color: inherit;              /* follows the track colour matrix above */
+  white-space: nowrap;
+  pointer-events: none;
+}
+/* Label-side outer gap 8px; thumb-side gap = pad(4) + thumb + gap(4) =
+   thumb + 8. Flips with state so the label always sits opposite the thumb. */
+.ds-toggle[aria-checked="true"] .ds-toggle__text {
+  margin-inline-start: 8px;
+  margin-inline-end: calc(var(--_t-thumb) + 8px);
+}
+.ds-toggle[aria-checked="false"] .ds-toggle__text {
+  margin-inline-start: calc(var(--_t-thumb) + 8px);
+  margin-inline-end: 8px;
+}
+
+/* ---- Sizes — unlabeled ---------------------------------------------- */
+.ds-toggle--small { --_t-w: 28px; --_t-h: 16px; --_t-thumb: 12px; --_pad: 2px; }
+.ds-toggle--large { --_t-w: 48px; --_t-h: 28px; --_t-thumb: 20px; --_pad: 4px; }
+
+/* ---- Labeled — track grows +4px taller, hugs the label, edge pad 4px.
+   Thumbs: Small 12, Medium 16, Large 24 (Large grows from 20). ----------- */
+.ds-toggle:has(.ds-toggle__text) {
+  width: auto;
+  height: 24px;                /* Medium labeled default */
+  --_pad: 4px;
+  --_t-thumb: 16px;
+  --_t-font: var(--uems-font-size-14, 14px);
+  --_t-line: 20px;
+}
+.ds-toggle--small.ds-toggle:has(.ds-toggle__text) { height: 20px; --_t-thumb: 12px; --_t-font: var(--uems-font-size-12, 12px); --_t-line: 16px; }
+.ds-toggle--large.ds-toggle:has(.ds-toggle__text) { height: 32px; --_t-thumb: 24px; --_t-font: var(--uems-font-size-16, 16px); --_t-line: 24px; }
+
+/* Reduced motion — snap, no slide. */
+@media (prefers-reduced-motion: reduce) {
+  .ds-toggle, .ds-toggle__thumb { transition: none; }
+}

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ds-confirmation-modal — examples</title>
+  <script type="module">import '../../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 24px; background: var(--uems-background); color: var(--uems-text-primary); }
+    section { margin-bottom: 40px; }
+    h2 { font-size: var(--font-size-14); color: var(--uems-text-tertiary); margin: 0 0 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    /* Confirmation modals are overlays. To show several side by side in one
+       page, demote them to inline boxes instead of full-viewport fixed layers. */
+    .stage ds-confirmation-modal {
+      position: relative; display: inline-block; width: 360px;
+    }
+    .stage ds-confirmation-modal .ds-confirmation-modal__overlay { display: none; }
+    .stage ds-confirmation-modal .ds-confirmation-modal__dialog {
+      position: relative; inset: auto; transform: none; box-shadow: var(--shadow-md, 0 8px 24px rgba(0,0,0,.12));
+    }
+  </style>
+</head>
+<body>
+  <section class="stage">
+    <h2>Information</h2>
+    <div class="row">
+      <ds-confirmation-modal
+        variant="information"
+        title="Enable two-factor auth?"
+        description="You'll be asked for a code from your authenticator each sign-in."
+        primary-label="Enable"
+        secondary-label="Not now"
+        open></ds-confirmation-modal>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h2>Warning</h2>
+    <div class="row">
+      <ds-confirmation-modal
+        variant="warning"
+        title="Unsaved changes"
+        description="Leaving this page will discard your edits."
+        primary-label="Leave page"
+        secondary-label="Stay"
+        open></ds-confirmation-modal>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h2>Destructive</h2>
+    <div class="row">
+      <ds-confirmation-modal
+        variant="destructive"
+        title="Delete this asset?"
+        description="This change can't be undone."
+        primary-label="Delete asset"
+        secondary-label="Cancel"
+        icon="delete"
+        open></ds-confirmation-modal>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h2>With tertiary action</h2>
+    <div class="row">
+      <ds-confirmation-modal
+        variant="information"
+        title="Update available"
+        description="Version 4.2 is ready to install."
+        primary-label="Install now"
+        secondary-label="Later"
+        tertiary-label="Learn more"
+        open></ds-confirmation-modal>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h2>Loading (confirm in flight)</h2>
+    <div class="row">
+      <ds-confirmation-modal
+        variant="destructive"
+        title="Deleting asset…"
+        description="Please wait while we remove this asset."
+        primary-label="Delete asset"
+        secondary-label="Cancel"
+        icon="delete"
+        loading
+        open></ds-confirmation-modal>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h2>With body slot + dividers</h2>
+    <div class="row">
+      <ds-confirmation-modal
+        variant="warning"
+        title="Reset device?"
+        primary-label="Reset"
+        secondary-label="Cancel"
+        show-divider-header
+        show-divider-footer
+        open>
+        <p style="margin:0;font-size:var(--font-size-14);color:var(--uems-text-secondary);">
+          The device will be wiped and re-enrolled on next check-in. This may take several minutes.
+        </p>
+      </ds-confirmation-modal>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h2>Hide close button</h2>
+    <div class="row">
+      <ds-confirmation-modal
+        variant="information"
+        title="Accept the terms"
+        description="You must accept the updated terms to continue."
+        primary-label="Accept"
+        secondary-label="Decline"
+        hide-close
+        open></ds-confirmation-modal>
+    </div>
+  </section>
+
+  <section class="stage">
+    <h2>RTL</h2>
+    <div class="row">
+      <ds-confirmation-modal
+        rtl
+        variant="destructive"
+        title="حذف هذا الأصل؟"
+        description="لا يمكن التراجع عن هذا التغيير."
+        primary-label="حذف"
+        secondary-label="إلغاء"
+        icon="delete"
+        open></ds-confirmation-modal>
+    </div>
+  </section>
+
+  <section>
+    <h2>Trigger (real overlay)</h2>
+    <div class="row">
+      <ds-button id="open-real" variant="destructive">Delete asset…</ds-button>
+    </div>
+    <ds-confirmation-modal
+      id="real-modal"
+      variant="destructive"
+      title="Delete this asset?"
+      description="This change can't be undone."
+      primary-label="Delete asset"
+      secondary-label="Cancel"
+      icon="delete"></ds-confirmation-modal>
+  </section>
+
+  <script type="module">
+    const trigger = document.getElementById('open-real');
+    const modal = document.getElementById('real-modal');
+    trigger.addEventListener('click', () => modal.open());
+  </script>
+</body>
+</html>

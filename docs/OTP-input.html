@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OTP Input — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/otp-input/otp-input.css">
+<!-- OTP's helper row is the shared <ds-field-helper> sub-component -->
+<link rel="stylesheet" href="../design-system-library/src/components/field-helper/field-helper.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/otp-input/otp-input.js"></script>
+<script type="module" src="../design-system-library/src/components/field-helper/field-helper.js"></script>
+<style>
+  .demo-otp-section { margin-bottom: 28px; }
+  .page-otp-input .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; text-align: left; }
+  .demo-otp-card { padding: 20px; background: var(--prism-surface, rgba(255,255,255,.02)); border: 1px solid var(--prism-border, rgba(255,255,255,.08)); border-radius: 12px; flex: 1 1 0; min-width: 0; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
+  .demo-otp-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: stretch; }
+  /* Override page-otp-input's centered demo-canvas. */
+  .page-otp-input .demo-container .demo-canvas { align-items: stretch !important; justify-content: flex-start !important; min-height: 0 !important; }
+</style>
+</head>
+<body class="page-otp-input">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link active">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">OTP Input</h1>
+        <p class="page-desc">An OTP field is for typing in a short verification code &mdash; the 4 or 6 digits the user just got by SMS, email, or authenticator app. Each box reads one digit, auto-advances on type, and pastes a whole code in one go. Use it for login challenges, two-step verification, and email confirmations.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin:20px 0;">
+              <!-- Label row -->
+              <div style="position:relative;display:flex;align-items:center;gap:6px;">
+                <span class="anat-marker-inline">1</span>
+                <div style="width:28px; height:2px; background:#2563eb;"></div>
+                <span style="font-size:13px;font-weight:600;color:var(--prism-text);margin-left:2px;">Verification Code</span>
+              </div>
+              <!-- Digit boxes row -->
+              <div style="position:relative;display:flex;align-items:center;gap:10px;">
+                <div style="position:absolute;right:calc(100% + 6px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><span class="anat-marker-inline">2</span><div style="width:28px; height:2px; background:#2563eb;"></div></div>
+                <div class="otp-box">0</div>
+                <div class="otp-box">0</div>
+                <div class="otp-box">0</div>
+                <div class="otp-box">0</div>
+              </div>
+              <!-- Helper row -->
+              <div style="position:relative;display:flex;align-items:center;gap:6px;">
+                <span class="anat-marker-inline">3</span>
+                <div style="width:28px; height:2px; background:#2563eb;"></div>
+                <span style="font-size:12px;color:var(--prism-text-muted);display:flex;align-items:center;gap:4px;margin-left:2px;">&#9432; Help text</span>
+              </div>
+            </div>
+          </div>
+          <div class="anat-legend" style="grid-template-columns:repeat(3,1fr);">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Label</strong><span>Semibold label text above the digit boxes. Toggleable via Show Label property. Uses Text-Primary color.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Digit Boxes</strong><span>Individual square input fields (4 or 6). Each box displays a single digit, centered. Styled by size and state.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Helper Row</strong><span>Contextual help or error message below the boxes. Shared sub-component (Form Field Helper Row). Toggleable via Show Helper Row.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Every length, size, and state side by side. Type, paste, and tab between boxes &mdash; this is exactly how it behaves in production.</p>
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">OTP Input Variants</span>
+                </div>
+              </div>
+              <div class="demo-canvas" style="flex-direction:column;align-items:stretch;gap:24px;padding:32px;">
+
+                <!-- Lengths — 4-digit + 6-digit side-by-side -->
+                <div class="demo-otp-section">
+                  <div class="demo-group-label">Lengths — 4-digit · 6-digit (medium)</div>
+                  <div class="demo-otp-row">
+                    <div class="demo-otp-card">
+                      <ds-otp-input length="4" size="medium" label="4-digit code" helper="Enter the code sent to your device"></ds-otp-input>
+                    </div>
+                    <div class="demo-otp-card">
+                      <ds-otp-input length="6" size="medium" label="6-digit code" helper="Code sent to your email"></ds-otp-input>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sizes — small / medium / large -->
+                <div class="demo-otp-section">
+                  <div class="demo-group-label">Sizes — Small 36 · Medium 40 · Large 48 (4-digit)</div>
+                  <div class="demo-otp-row">
+                    <div class="demo-otp-card">
+                      <ds-otp-input length="4" size="small" label="Small (36 × 36)" helper="Compact rows, tables"></ds-otp-input>
+                    </div>
+                    <div class="demo-otp-card">
+                      <ds-otp-input length="4" size="medium" label="Medium (40 × 40)" helper="Standard form input"></ds-otp-input>
+                    </div>
+                    <div class="demo-otp-card">
+                      <ds-otp-input length="4" size="large" label="Large (48 × 48)" helper="Onboarding / mobile flows"></ds-otp-input>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Filled / pre-populated -->
+                <div class="demo-otp-section">
+                  <div class="demo-group-label">Filled — pre-populated value</div>
+                  <div class="demo-otp-row">
+                    <div class="demo-otp-card">
+                      <ds-otp-input length="4" size="medium" label="4-digit code" value="4827" helper="Code verified successfully"></ds-otp-input>
+                    </div>
+                    <div class="demo-otp-card">
+                      <ds-otp-input length="6" size="medium" label="6-digit code" value="739205" helper="Code sent to +91 ••••••7890"></ds-otp-input>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- States — Error + Disabled -->
+                <div class="demo-otp-section">
+                  <div class="demo-group-label">States — Error · Disabled</div>
+                  <div class="demo-otp-row">
+                    <div class="demo-otp-card">
+                      <ds-otp-input length="6" size="medium" state="error" label="Verification code" value="123456" helper="Incorrect code. Please try again."></ds-otp-input>
+                    </div>
+                    <div class="demo-otp-card">
+                      <ds-otp-input length="6" size="medium" disabled label="Verification code" helper="Wait until SMS arrives…"></ds-otp-input>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- RTL -->
+                <div class="demo-otp-section">
+                  <div class="demo-group-label">RTL — mirrored layout</div>
+                  <div class="demo-otp-row">
+                    <div class="demo-otp-card">
+                      <ds-otp-input length="4" size="medium" rtl label="رمز التحقق" helper="تم إرسال الرمز إلى بريدك الإلكتروني"></ds-otp-input>
+                    </div>
+                    <div class="demo-otp-card">
+                      <ds-otp-input length="6" size="medium" rtl value="٧٣٩٢٠٥" label="رمز ٦ أرقام" helper="تم إرسال الرمز"></ds-otp-input>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Without label / helper — minimal -->
+                <div class="demo-otp-section">
+                  <div class="demo-group-label">Minimal — no label, no helper</div>
+                  <div class="demo-otp-row">
+                    <div class="demo-otp-card">
+                      <ds-otp-input length="4" size="medium"></ds-otp-input>
+                    </div>
+                    <div class="demo-otp-card">
+                      <ds-otp-input length="6" size="large"></ds-otp-input>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Set Length to match the actual code length sent to the user.</li>
+                <li>Display the Error state + helper text immediately on incorrect code.</li>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">autocomplete="one-time-code"</code> for SMS autofill.</li>
+                <li>Show a clear helper text (e.g. "Code sent to +91 &#8226;&#8226;&#8226;&#8226;&#8226;&#8226;7890").</li>
+                <li>Clear all boxes and show Error state on wrong code.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Show a 6-box OTP for a 4-digit code &#8212; mismatched lengths confuse users.</li>
+                <li>Only reveal errors after the user submits the full form.</li>
+                <li>Disable paste &#8212; it frustrates users switching from SMS.</li>
+                <li>Leave the helper row empty &#8212; context reduces re-send rates.</li>
+                <li>Keep entered digits in Error state without clearing.</li>
+              </ul></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Design tokens, size specifications, and visual states that define the OTP Input's appearance.</p>
+
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">60 variants across Size (3) &times; State (5) &times; Length (2) &times; RTL (2).</p>
+            <table class="size-table">
+              <thead><tr><th>Axis</th><th>Values</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Size</strong></td><td><code>Small</code>, <code>Medium</code>, <code>Large</code></td><td>Controls box dimensions, font size, gap, and radius.</td></tr>
+                <tr><td><strong>State</strong></td><td><code>Default</code>, <code>Focus</code>, <code>Filled</code>, <code>Error</code>, <code>Disabled</code></td><td>Interaction / validation state.</td></tr>
+                <tr><td><strong>Length</strong></td><td><code>4</code>, <code>6</code></td><td>Number of digit boxes.</td></tr>
+                <tr><td><strong>RTL</strong></td><td><code>False</code>, <code>True</code></td><td>Reverses visual order; Arabic label and helper text.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="states" class="doc-section-title">States</h2>
+            <p class="doc-section-subtitle">OTP Input has five interaction states controlling borders, shadows, and text colors.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-top:24px;">
+              <div style="padding:24px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="display:flex;gap:6px;justify-content:center;margin-bottom:16px;"><div class="otp-box" style="width:32px;height:32px;font-size:14px;">0</div><div class="otp-box" style="width:32px;height:32px;font-size:14px;">0</div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Default</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Border-Secondary stroke</div>
+              </div>
+              <div style="padding:24px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="display:flex;gap:6px;justify-content:center;margin-bottom:16px;"><div class="otp-box focus" style="width:32px;height:32px;font-size:14px;">|</div><div class="otp-box" style="width:32px;height:32px;font-size:14px;">0</div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Focus</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">2px blue border + shadow</div>
+              </div>
+              <div style="padding:24px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="display:flex;gap:6px;justify-content:center;margin-bottom:16px;"><div class="otp-box filled" style="width:32px;height:32px;font-size:14px;">4</div><div class="otp-box filled" style="width:32px;height:32px;font-size:14px;">8</div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Filled</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Border-Primary, Text-Primary</div>
+              </div>
+              <div style="padding:24px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="display:flex;gap:6px;justify-content:center;margin-bottom:16px;"><div class="otp-box error" style="width:32px;height:32px;font-size:14px;">1</div><div class="otp-box error" style="width:32px;height:32px;font-size:14px;">2</div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Error</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Red border + shadow ring</div>
+              </div>
+              <div style="padding:24px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="display:flex;gap:6px;justify-content:center;margin-bottom:16px;"><div class="otp-box disabled" style="width:32px;height:32px;font-size:14px;">0</div><div class="otp-box disabled" style="width:32px;height:32px;font-size:14px;">0</div></div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Disabled</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">BG-Disabled, 50% opacity</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="sizes" class="doc-section-title">Sizes</h2>
+            <p class="doc-section-subtitle">Three sizes for different layout contexts.</p>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Small</th><th>Medium</th><th>Large</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Box size</strong></td><td>36 &times; 36 px</td><td>40 &times; 40 px</td><td>48 &times; 48 px</td></tr>
+                <tr><td><strong>Digit font size</strong></td><td>16 px</td><td>18 px</td><td>22 px</td></tr>
+                <tr><td><strong>Inter-box gap</strong></td><td>8 px</td><td>10 px</td><td>12 px</td></tr>
+                <tr><td><strong>Corner radius</strong></td><td>6 px (<code>radius-6</code>)</td><td>8 px (<code>radius-8</code>)</td><td>8 px (<code>radius-8</code>)</td></tr>
+                <tr><td><strong>Label font size</strong></td><td>12 px</td><td>13 px</td><td>14 px</td></tr>
+                <tr><td><strong>Root vertical gap</strong></td><td>8 px</td><td>8 px</td><td>8 px</td></tr>
+              </tbody>
+            </table>
+            <!-- Size previews -->
+            <div style="display:flex;gap:40px;flex-wrap:wrap;margin-top:32px;align-items:flex-end;">
+              <div style="text-align:center;">
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                  <div class="otp-box otp-sm filled">3</div><div class="otp-box otp-sm filled">7</div><div class="otp-box otp-sm filled">1</div><div class="otp-box otp-sm filled">9</div>
+                </div>
+                <div style="font-size:12px;font-weight:600;color:var(--prism-text-muted);">Small (36px)</div>
+              </div>
+              <div style="text-align:center;">
+                <div style="display:flex;gap:10px;margin-bottom:8px;">
+                  <div class="otp-box filled">4</div><div class="otp-box filled">8</div><div class="otp-box filled">2</div><div class="otp-box filled">7</div>
+                </div>
+                <div style="font-size:12px;font-weight:600;color:var(--prism-text-muted);">Medium (40px)</div>
+              </div>
+              <div style="text-align:center;">
+                <div style="display:flex;gap:12px;margin-bottom:8px;">
+                  <div class="otp-box otp-lg filled">5</div><div class="otp-box otp-lg filled">0</div><div class="otp-box otp-lg filled">6</div><div class="otp-box otp-lg filled">2</div>
+                </div>
+                <div style="font-size:12px;font-weight:600;color:var(--prism-text-muted);">Large (48px)</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="color-tokens" class="doc-section-title">Color Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Box Fill</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>State</th><th>Token</th><th>Resolves (Light)</th></tr></thead>
+              <tbody>
+                <tr><td>Default, Focus, Filled, Error</td><td><code>Background/BG-Base-White</code></td><td>#FFFFFF</td></tr>
+                <tr><td>Disabled</td><td><code>Background/BG-Disabled</code></td><td>#E1E4EB</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Box Border</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>State</th><th>Token</th><th>Resolves (Light)</th></tr></thead>
+              <tbody>
+                <tr><td>Default</td><td><code>Border/Border-Secondary</code></td><td>#C3C9D6</td></tr>
+                <tr><td>Focus (active box)</td><td><code>Border/Border-Accent</code> (2px)</td><td>#006AFF</td></tr>
+                <tr><td>Filled</td><td><code>Border/Border-Primary</code></td><td>#B4BBCC</td></tr>
+                <tr><td>Error</td><td><code>Border/Border-Error</code></td><td>#E42527</td></tr>
+                <tr><td>Disabled</td><td><code>Border/Border-Disabled</code></td><td>#E1E4EB</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Box Shadow</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>State</th><th>Effect</th></tr></thead>
+              <tbody>
+                <tr><td>Focus</td><td>Blue shadow ring (accent glow)</td></tr>
+                <tr><td>Error</td><td>Red shadow ring (error glow)</td></tr>
+                <tr><td>Others</td><td>None</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Digit Text</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>State</th><th>Token</th><th>Resolves (Light)</th></tr></thead>
+              <tbody>
+                <tr><td>Default (placeholder)</td><td><code>Text/Text-Disabled</code></td><td>#8893AD</td></tr>
+                <tr><td>Focus</td><td><code>Text/Text-Primary</code></td><td>#15181E</td></tr>
+                <tr><td>Filled</td><td><code>Text/Text-Primary</code></td><td>#15181E</td></tr>
+                <tr><td>Error</td><td><code>Text/Text-Error</code></td><td>#C1181B</td></tr>
+                <tr><td>Disabled</td><td><code>Text/Text-Disabled</code></td><td>#8893AD</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Label Text</h4>
+            <table class="size-table">
+              <thead><tr><th>State</th><th>Token</th></tr></thead>
+              <tbody>
+                <tr><td>All non-disabled</td><td><code>Text/Text-Primary</code></td></tr>
+                <tr><td>Disabled</td><td><code>Text/Text-Disabled</code> at 50%</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="spacing-tokens" class="doc-section-title">Spacing Tokens</h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Small</th><th>Medium</th><th>Large</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Inter-box gap</strong></td><td>8 px</td><td>10 px</td><td>12 px</td></tr>
+                <tr><td><strong>Root vertical gap</strong></td><td>8 px</td><td>8 px</td><td>8 px</td></tr>
+                <tr><td><strong>Label gap</strong></td><td>4 px</td><td>4 px</td><td>4 px</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="corner-radius-border-radius" class="doc-section-title">Corner Radius (Border Radius)</h2>
+            <p class="doc-section-subtitle">OTP digit boxes use rounded corners that scale with size.</p>
+            <div style="display:flex;gap:24px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:200px;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;text-align:center;">
+                <div style="width:36px;height:36px;border:2px dashed #006AFF;border-radius:6px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:rgba(0,106,255,0.05);color:#006AFF;font-weight:600;font-size:11px;">6</div>
+                <div style="font-size:14px;font-weight:600;color:var(--prism-text);">radius-6</div>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:4px;">Small size</div>
+              </div>
+              <div style="flex:1;min-width:200px;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;text-align:center;">
+                <div style="width:40px;height:40px;border:2px dashed #006AFF;border-radius:8px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:rgba(0,106,255,0.05);color:#006AFF;font-weight:600;font-size:11px;">8</div>
+                <div style="font-size:14px;font-weight:600;color:var(--prism-text);">radius-8</div>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:4px;">Medium / Large size</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="typography-family" class="doc-section-title">Typography Family</h2>
+            <p class="doc-section-subtitle">All OTP Input text uses <strong>Zoho Puvi</strong>. Digits are Bold weight, labels are Semibold.</p>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Weight</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>Digit text</td><td><code>700 (Bold)</code></td><td>Centered inside each box, sized per variant</td></tr>
+                <tr><td>Label text</td><td><code>600 (Semibold)</code></td><td>12px (S) / 13px (M) / 14px (L)</td></tr>
+                <tr><td>Helper text</td><td><code>400 (Regular)</code></td><td>12px, Text-Tertiary or Text-Error</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">Reach for an OTP field anywhere the user has to type a short numeric code &mdash; SMS one-time passwords, email verification, two-step login, transaction confirmations. For passwords or other secrets, use a Text field with type="password" instead.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><ds-icon name="check" size="20" style="color:#2563eb;"></ds-icon>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Verify identity via a numeric code sent by SMS, email, or authenticator app.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For 2FA (two-factor authentication) flows.</li>
+                  <li style="border:none;background:transparent;">For PIN entry where each digit is individually confirmed.</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><ds-icon name="close" size="20" style="color:#e42527;"></ds-icon>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For passwords &#8212; use a password input field instead.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For codes longer than 6 digits &#8212; use a single text input with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">inputmode="numeric"</code>.</li>
+                  <li style="border:none;background:transparent;">For alphanumeric codes &#8212; extend the component or use a standard text input.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Choosing Length / Size -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:32px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Choosing Length</h4>
+                <table class="size-table" style="font-size:13px;">
+                  <thead><tr><th>Scenario</th><th>Length</th></tr></thead>
+                  <tbody>
+                    <tr><td>Standard SMS OTP, email verification</td><td><code>6</code></td></tr>
+                    <tr><td>PIN / short code</td><td><code>4</code></td></tr>
+                    <tr><td>Authenticator app TOTP</td><td><code>6</code></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Choosing Size</h4>
+                <table class="size-table" style="font-size:13px;">
+                  <thead><tr><th>Context</th><th>Size</th></tr></thead>
+                  <tbody>
+                    <tr><td>Dense forms, compact UI</td><td><code>Small</code></td></tr>
+                    <tr><td>Default web UI</td><td><code>Medium</code></td></tr>
+                    <tr><td>Prominent / hero placement (e.g. login page)</td><td><code>Large</code></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="alignment-placement" class="doc-section-title">Alignment &amp; Placement</h2>
+            <p class="doc-section-subtitle">Consistent placement ensures the OTP Input is predictable and easy to locate.</p>
+            <ul class="doc-list">
+              <li><strong>Login / verification pages:</strong> Center the OTP Input horizontally on the page for a focused, hero-style placement.</li>
+              <li><strong>Inline forms:</strong> Left-align the OTP Input with other form fields for visual consistency.</li>
+              <li><strong>Mobile:</strong> Use Large size for comfortable touch targets. Center on screen for single-purpose verification flows.</li>
+              <li><strong>RTL layouts:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> on the wrapper and let the browser handle visual mirroring. Do not reorder DOM inputs.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do's and Don'ts</h2>
+            <p class="doc-section-subtitle">Specifics &mdash; how long the code should be, when to show a resend timer, what error text actually helps. Each rule has a reason; read both before you bend one.</p>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li><strong>Match length to code:</strong> Set Length to match the actual code length sent to the user.</li>
+                <li><strong>Immediate error feedback:</strong> Display the Error state + helper text immediately on incorrect code.</li>
+                <li><strong>Enable SMS autofill:</strong> Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">autocomplete="one-time-code"</code> for SMS autofill.</li>
+                <li><strong>Show context:</strong> Show a clear helper text (e.g. "Code sent to +91 &#8226;&#8226;&#8226;&#8226;&#8226;&#8226;7890").</li>
+                <li><strong>Use Show Label=OFF only</strong> when the label is already provided by surrounding page content.</li>
+                <li><strong>Clear on error:</strong> Clear all boxes and show Error state on wrong code &#8212; users should re-enter cleanly.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li><strong>Mismatched length:</strong> Show a 6-box OTP for a 4-digit code &#8212; mismatched lengths confuse users.</li>
+                <li><strong>Delayed errors:</strong> Only reveal errors after the user submits the full form.</li>
+                <li><strong>Block paste:</strong> Disable paste &#8212; it frustrates users switching from SMS.</li>
+                <li><strong>Empty helpers:</strong> Leave the helper row empty &#8212; context reduces re-send rates.</li>
+                <li><strong>Hidden label without context:</strong> Hide the label without another visible indication of what the field expects.</li>
+                <li><strong>Stale error digits:</strong> Keep entered digits in Error state without clearing.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Components that complement or can be used alongside OTP Input.</p>
+            <div class="related-grid">
+              <a href="Text-field.html" class="related-chip"><ds-icon name="align-justify" size="16"></ds-icon> Text Input</a>
+              <a href="Text-field.html" class="related-chip"><ds-icon name="list-bullet" size="16"></ds-icon> Form</a>
+              <a href="Tooltip.html" class="related-chip"><ds-icon name="info-circle" size="16"></ds-icon> Form Field Helper Row</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <p class="doc-section-subtitle">Design tokens and resources for implementing the OTP Input component.</p>
+            <ul class="doc-list">
+              <li><strong>Figma Node:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">18019:574607</code> &#8212; Component Set: OTP Input</li>
+              <li><strong>Total Variants:</strong> 3 Sizes &times; 5 States &times; 2 Lengths &times; 2 RTL = <strong>60 variants</strong></li>
+              <li><strong>Typography:</strong> Zoho Puvi Bold (700) for digits, Semibold (600) for labels</li>
+              <li><strong>Sub-component:</strong> Form Field Helper Row (<code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">17905:5403</code>)</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Configure the OTP Input component and view generated HTML.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Length</label><select class="cp-select" id="pg-length"><option value="4" selected>4 digits</option><option value="6">6 digits</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Size</label><select class="cp-select" id="pg-size"><option value="small">small</option><option value="medium" selected>medium</option><option value="large">large</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">State</label><select class="cp-select" id="pg-state"><option value="" selected>default</option><option value="filled">filled</option><option value="error">error</option><option value="disabled">disabled</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Label position</label><select class="cp-select" id="pg-labelpos"><option value="top" selected>top</option><option value="none">none</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="pg-dir"><option value="ltr" selected>false</option><option value="rtl">true</option></select></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Label</label><input class="cp-select" id="pg-label" type="text" value="Verification code" style="font-family:inherit"></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Helper text</label><input class="cp-select" id="pg-helper" type="text" value="Enter the code sent to your device" style="font-family:inherit"></div>
+            </div>
+            <div class="cp-preview" id="pg-preview-area" style="padding:24px;display:flex;justify-content:center"></div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-copy-btn"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+            </div>
+            <div class="cp-code-area" id="pg-code-output"></div>
+          </div>
+          <script>
+          (function(){
+            var els = {
+              length: document.getElementById('pg-length'),
+              size:   document.getElementById('pg-size'),
+              state:  document.getElementById('pg-state'),
+              dir:    document.getElementById('pg-dir'),
+              labelPos: document.getElementById('pg-labelpos'),
+              label:  document.getElementById('pg-label'),
+              helper: document.getElementById('pg-helper')
+            };
+            var host = document.getElementById('pg-preview-area');
+            var codeOut = document.getElementById('pg-code-output');
+            var copyBtn = document.getElementById('pg-copy-btn');
+            var pgRawCode = '';
+            var OTP_LTR = { label: 'Verification code', helper: 'Enter the code sent to your device' };
+            var OTP_RTL = { label: 'رمز التحقق', helper: 'أدخل الرمز المرسل إلى جهازك' };
+            function build(){
+              var length = parseInt(els.length.value, 10);
+              var size   = els.size.value;
+              var state  = els.state.value;
+              var rtl    = els.dir.value === 'rtl';
+              if (els.label.value === '' || els.label.value === OTP_LTR.label || els.label.value === OTP_RTL.label) {
+                els.label.value = rtl ? OTP_RTL.label : OTP_LTR.label;
+              }
+              if (els.helper.value === '' || els.helper.value === OTP_LTR.helper || els.helper.value === OTP_RTL.helper) {
+                els.helper.value = rtl ? OTP_RTL.helper : OTP_LTR.helper;
+              }
+              var label  = els.label.value || '';
+              var labelPos = els.labelPos.value;
+              var helper = els.helper.value || '';
+              var prefill = state === 'filled' ? (length === 4 ? '4827' : '739205') : (state === 'error' ? (length === 4 ? '1234' : '123456') : '');
+
+              host.innerHTML = '';
+              var otp = document.createElement('ds-otp-input');
+              otp.setAttribute('length', String(length));
+              if (size !== 'medium') otp.setAttribute('size', size);
+              if (state) otp.setAttribute('state', state);
+              if (state === 'disabled') otp.setAttribute('disabled', '');
+              if (rtl) otp.setAttribute('rtl', '');
+              if (label) otp.setAttribute('label', label);
+              if (labelPos !== 'top') otp.setAttribute('label-position', labelPos);
+              if (helper) otp.setAttribute('helper', helper);
+              if (prefill) otp.setAttribute('value', prefill);
+              host.appendChild(otp);
+
+              var attrs = ['length="' + length + '"'];
+              if (size !== 'medium') attrs.push('size="' + size + '"');
+              if (state) attrs.push('state="' + state + '"');
+              if (state === 'disabled') attrs.push('disabled');
+              if (rtl) attrs.push('rtl');
+              if (label) attrs.push('label="' + label.replace(/"/g, '&quot;') + '"');
+              if (labelPos !== 'top') attrs.push('label-position="' + labelPos + '"');
+              if (helper) attrs.push('helper="' + helper.replace(/"/g, '&quot;') + '"');
+              if (prefill) attrs.push('value="' + prefill + '"');
+              pgRawCode = '<ds-otp-input ' + attrs.join(' ') + '></ds-otp-input>';
+              var colored = '&lt;<span style="color:#60a5fa">ds-otp-input</span> '
+                + attrs.map(function(a){
+                    var eq = a.indexOf('=');
+                    if (eq === -1) return '<span style="color:#38bdf8">' + a + '</span>';
+                    return '<span style="color:#38bdf8">' + a.slice(0, eq) + '</span>=<span style="color:#34d399">' + a.slice(eq + 1) + '</span>';
+                  }).join(' ')
+                + '&gt;&lt;/<span style="color:#60a5fa">ds-otp-input</span>&gt;';
+              codeOut.innerHTML = '<pre style="margin:0;white-space:pre-wrap;font-family:\'JetBrains Mono\',monospace;font-size:13.5px;line-height:1.6">' + colored + '</pre>';
+            }
+            Object.keys(els).forEach(function(k){ els[k].addEventListener(els[k].tagName === 'INPUT' ? 'input' : 'change', build); });
+            copyBtn.addEventListener('click', function(){
+              var t = pgRawCode;
+              var done = function(){ var o = copyBtn.innerHTML; copyBtn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!'; setTimeout(function(){ copyBtn.innerHTML = o; }, 2000); };
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(t).then(done).catch(function(){ var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); });
+              } else {
+                var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+              }
+            });
+            if (window.customElements && customElements.whenDefined) {
+              customElements.whenDefined('ds-otp-input').then(build);
+            }
+            build();
+          })();
+          </script>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="component-api-properties" class="doc-section-title">Component API &amp; Properties</h2>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>length</code></td><td><code>4 | 6</code></td><td><code>6</code></td><td>Number of digit boxes.</td></tr>
+                <tr><td><code>size</code></td><td><code>'small' | 'medium' | 'large'</code></td><td><code>'medium'</code></td><td>Box dimensions and font size.</td></tr>
+                <tr><td><code>label</code></td><td>string</td><td>&mdash;</td><td>Group label, rendered as a <code>&lt;label&gt;</code>.</td></tr>
+                <tr><td><code>label-position</code></td><td><code>'top' | 'none'</code></td><td><code>'top'</code></td><td><code>top</code> shows the label above the boxes; <code>none</code> hides it (kept as the field group's <code>aria-label</code>).</td></tr>
+                <tr><td><code>helper</code></td><td>string</td><td>&mdash;</td><td>Helper / error text below the boxes.</td></tr>
+                <tr><td><code>state</code></td><td><code>'' | 'filled' | 'error' | 'disabled'</code></td><td><code>''</code></td><td>Visual state.</td></tr>
+                <tr><td><code>disabled</code></td><td>boolean</td><td>unset</td><td>Same as <code>state="disabled"</code>.</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td>unset</td><td>Right-to-left layout.</td></tr>
+                <tr><td><code>value</code></td><td>string</td><td>&mdash;</td><td>Programmatic value. Setting it fills the boxes.</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:16px;padding:16px 20px;background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.15);border-radius:12px;">
+              <p style="font-size:14px;color:var(--prism-text);line-height:1.6;margin:0;"><strong>Property:</strong> <code>el.value</code> &mdash; get/set the joined digit string. <strong>Events:</strong> <code>ds-otp-change</code> (every keystroke, <code>detail = { value }</code>) and <code>ds-otp-complete</code> (once all boxes are filled). Inputs use <code>autocomplete="one-time-code"</code> for SMS autofill.</p>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="implementation-idea-ember-hook-form" class="doc-section-title">Implementation Idea: Ember Hook Form</h2>
+            <div class="cp-code-area" style="border-radius:12px;margin-top:16px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#94a3b8;">&lt;!-- otp-verification.hbs --&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">UemsOtpInput</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@length</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"6"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@size</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"md"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@state</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.otpState</span><span style="color:#C678DD;">}}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Verification Code"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@helperText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Code sent to +91 &#8226;&#8226;&#8226;&#8226;&#8226;&#8226;7890"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">@onComplete</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{{</span><span style="color:#E5C07B;">this.verifyOtp</span><span style="color:#C678DD;">}}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+            <ul class="doc-list">
+              <li><strong>Wrapper direction:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> on the wrapper element. The browser handles visual mirroring of the flex layout.</li>
+              <li><strong>Do not reorder DOM:</strong> Inputs remain in DOM order (1&#8594;4 or 1&#8594;6). The <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> attribute reverses the visual display.</li>
+              <li><strong>Arabic labels:</strong> RTL variants use Arabic label text (<code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&#x631;&#x645;&#x632; &#x627;&#x644;&#x62A;&#x62D;&#x642;&#x642;</code>) and right-aligned helper text.</li>
+              <li><strong>Keyboard navigation:</strong> Arrow keys follow visual direction &#8212; ArrowRight moves to the visually right box (which is the previous input in DOM order).</li>
+            </ul>
+            <div class="cp-code-area" style="border-radius:12px;margin-top:16px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">div</span> <span style="color:#D19A66;">dir</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"rtl"</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">label</span><span style="color:#ABB2BF;">&gt;</span><span style="color:#e2e8f0;">&#x631;&#x645;&#x632; &#x627;&#x644;&#x62A;&#x62D;&#x642;&#x642;</span><span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">label</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">div</span> <span style="color:#D19A66;">class</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"otp-fields"</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#94a3b8;">&lt;!-- Inputs in DOM order (1&#8594;4), visually reversed by dir="rtl" --&gt;</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">input</span> ... <span style="color:#D19A66;">aria-label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"&#x631;&#x642;&#x645; 1 &#x645;&#x646; 4"</span> <span style="color:#ABB2BF;">/&gt;</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">...</span><br>
+                &nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">div</span><span style="color:#ABB2BF;">&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">div</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for ensuring OTP Input is accessible across assistive technologies and input methods.</p>
+
+          <div class="doc-section">
+            <h3 id="keyboard-interaction" class="doc-h3">Keyboard Interaction</h3>
+            <table class="size-table">
+              <thead><tr><th>Action</th><th>Result</th></tr></thead>
+              <tbody>
+                <tr><td><code>Numeric key (0&#8211;9)</code></td><td>Enters digit in focused box and auto-advances focus to next box.</td></tr>
+                <tr><td><code>Backspace</code> on filled box</td><td>Clears digit, stays on current box.</td></tr>
+                <tr><td><code>Backspace</code> on empty box</td><td>Moves focus to previous box.</td></tr>
+                <tr><td><code>Tab</code></td><td>Moves focus to next box.</td></tr>
+                <tr><td><code>Shift+Tab</code></td><td>Moves focus to previous box.</td></tr>
+                <tr><td>Paste (full code)</td><td>Distributes pasted digits across all boxes from the focused position.</td></tr>
+                <tr><td><code>ArrowLeft</code> / <code>ArrowRight</code></td><td>Moves focus to adjacent box.</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:16px;padding:16px 20px;background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.15);border-radius:12px;">
+              <p style="font-size:14px;color:var(--prism-text);line-height:1.6;margin:0;">Auto-advance on input must not trap keyboard users; <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Tab</code> must still work as expected to move focus out of the OTP group.</p>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="aria-attributes-screen-reader-guidance" class="doc-h3">ARIA Attributes &amp; Screen Reader Guidance</h3>
+            <ul class="doc-list">
+              <li><strong>Group label:</strong> Wrap all digit inputs in a <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;fieldset&gt;</code> with a <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;legend&gt;</code> matching the label text.</li>
+              <li><strong>Per-input label:</strong> Each <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;input&gt;</code> must have <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-label="Digit N of M"</code> (e.g. "Digit 1 of 4").</li>
+              <li><strong>Error announcement:</strong> When Error state activates, update an <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-live="assertive"</code> region with the error message.</li>
+              <li><strong>Helper text association:</strong> Associate the helper text with the group using <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-describedby</code> on the <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;fieldset&gt;</code>.</li>
+              <li><strong>Disabled:</strong> Disabled inputs must have the <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">disabled</code> attribute, not just visual styling.</li>
+              <li><strong>Mobile autofill:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">autocomplete="one-time-code"</code> enables OS-level SMS autofill without ARIA intervention.</li>
+              <li><strong>Screen reader paste:</strong> Ensure paste events reflect the result back through value changes the screen reader can detect.</li>
+              <li><strong>RTL:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> on the wrapper; do not reorder DOM inputs.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="focus-state-design" class="doc-h3">Focus State Design</h3>
+            <ul class="doc-list">
+              <li><strong>Visible focus indicator:</strong> The active box receives a 2px blue border (<code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">#006AFF</code>) plus a blue shadow ring &#8212; this must not be overridden (WCAG 2.4.7).</li>
+              <li><strong>Cursor indicator:</strong> A "|" cursor indicator appears inside the focused box to signal text input readiness.</li>
+              <li><strong>Single active box:</strong> Only one box is focused at a time. Remaining boxes retain their current state styling.</li>
+            </ul>
+            <div style="margin-top:24px;display:flex;gap:16px;align-items:center;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+              <div class="otp-box focus" style="width:48px;height:48px;font-size:22px;">|</div>
+              <div>
+                <div style="font-weight:600;font-size:15px;color:var(--prism-text);">Focus ring: 2px border + 3px shadow</div>
+                <div style="font-size:14px;color:var(--prism-text-muted);margin-top:4px;">Border: #006AFF | Shadow: rgba(0,106,255,0.15)</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="color-contrast-minimums" class="doc-h3">Color Contrast Minimums<span class="h3-badge" style="background:rgba(34,197,94,0.15);color:#16a34a;">WCAG AA Pass</span></h3>
+            <p class="doc-section-subtitle">All color combinations meet WCAG 2.1 AA contrast requirements. Disabled state is exempt.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:24px;">
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#fff;padding:28px 24px;text-align:center;color:#15181E;border:2px solid #B4BBCC;border-radius:12px 12px 0 0;"><div style="font-size:24px;font-weight:700;">4 8 2 7</div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">TEXT-PRIMARY ON WHITE</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#15181E on #FFFFFF</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 17.4:1</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AAA Pass</div></div></div>
+              </div>
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#fff;padding:28px 24px;text-align:center;color:#C1181B;border:2px solid #E42527;border-radius:12px 12px 0 0;"><div style="font-size:24px;font-weight:700;">1 2 3 4</div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">ERROR RED ON WHITE</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#C1181B on #FFFFFF</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 5.9:1</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AA Pass</div></div></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="touch-target-size" class="doc-h3">Touch Target Size</h3>
+            <p class="doc-section-subtitle">Large size boxes meet the 48px minimum touch target. Smaller sizes should ensure adequate spacing.</p>
+            <div style="margin-top:16px;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;display:flex;align-items:center;gap:24px;">
+              <div style="width:48px;height:48px;background:rgba(37,99,235,0.1);border:1px dashed var(--prism-violet);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--prism-violet);font-size:13px;font-weight:600;flex-shrink:0;">48px</div>
+              <div><div style="font-weight:600;font-size:15px;color:var(--prism-text);">Large box: 48&times;48px &#8212; meets minimum</div><div style="font-size:14px;color:var(--prism-text-muted);margin-top:4px;">The Large size (48px) meets the 48px minimum touch target (WCAG 2.5.5). For Small (36px) and Medium (40px), the inter-box gap provides additional touch area.</div></div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/otp-input.md" download="otp-input.md" class="action-link"><ds-icon name="download" size="15"></ds-icon> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=18019-574607" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/components/toc.js"></script>
+<script src="js/main.js"></script>
+
+
+</body>
+</html>

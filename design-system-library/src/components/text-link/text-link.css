@@ -1,0 +1,81 @@
+/* =============================================================================
+   ds-text-link / .ds-text-link
+   ============================================================================= */
+
+:host { display: inline; font-family: var(--font-family-sans); }
+
+.ds-text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  color: var(--_l-color, var(--uems-text-accent-link));
+  font-size: var(--_l-font, var(--font-size-14));
+  font-weight: var(--font-weight-medium);
+  /* Figma: the underline is DOTTED. Line is toggled by the Underline axis
+     classes below; the style + offset stay constant so every underline (always
+     or hover-revealed) reads as the same dotted rule. Underline defaults to
+     NONE — opt in with underline="always" / "hover". */
+  text-decoration-line: var(--_l-deco-line, underline);
+  text-decoration-style: dotted;
+  text-decoration-skip-ink: none;   /* Figma: dots run continuously through descenders (g/y/p) */
+  text-underline-offset: 0.4em;   /* extra gap between the text and the dotted rule */
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+/* Per spec: Default / Hover / Focus all share the SAME color — hover does NOT
+   shift the color. Only the underline changes on hover, and that's driven by
+   the `Underline` axis classes below (HoverOnly adds the underline). A text
+   link never carries a background in any state — keep hover transparent so a
+   surrounding container's link-hover background can't bleed in. */
+.ds-text-link:hover { background: transparent; }
+.ds-text-link:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);   /* Figma Focus: 2px Border-Accent-Focus ring */
+  outline-offset: 2px;
+  border-radius: var(--uems-radius-xs, 4px);            /* Figma focus corner = 4px */
+}
+/* Disabled — the anchor carries no href when disabled (set in JS), so it can't
+   navigate; we keep pointer-events on so the not-allowed cursor shows on hover
+   (a blanket pointer-events:none would suppress the cursor entirely). */
+.ds-text-link[aria-disabled="true"] {
+  color: var(--uems-text-disabled);
+  cursor: not-allowed;
+}
+/*.ds-text-link[aria-disabled="true"]:hover { text-decoration-line: var(--_l-deco-line, none); }*/
+
+/* ---- Styles (text + icon share one color across Default/Hover/Focus) ---- */
+.ds-text-link--primary   { --_l-color: var(--uems-text-accent-link); }
+.ds-text-link--secondary { --_l-color: var(--uems-text-secondary); }
+.ds-text-link--subtle    { --_l-color: var(--uems-text-quaternary); }
+.ds-text-link--danger    { --_l-color: var(--uems-text-error); }
+
+/* ---- Sizes (font-size + line-height per spec) ----------------------- */
+.ds-text-link--small  { --_l-font: var(--font-size-12); line-height: 16px; }
+.ds-text-link--medium { --_l-font: var(--font-size-14); line-height: 20px; }
+.ds-text-link--large  { --_l-font: var(--font-size-16); line-height: 24px; }
+
+/* ---- Underline (line only — the dotted style + offset are set on the base) -- */
+.ds-text-link--underline-always { text-decoration-line: underline; }      /* persistent */
+.ds-text-link--underline-hover  { text-decoration-line: none; }
+.ds-text-link--underline-hover:hover { text-decoration-line: underline; } /* dotted reveal */
+/* None: never underlined — on ANY state, including hover/focus/active (spec:
+   None = no decoration in all states). `!important` makes this immune to a
+   page-level or UA `a:hover { text-decoration: underline }` that would otherwise
+   win the cascade and reveal a stray underline on hover. */
+.ds-text-link--underline-none,
+.ds-text-link--underline-none:hover,
+.ds-text-link--underline-none:focus,
+.ds-text-link--underline-none:focus-visible,
+.ds-text-link--underline-none:active {
+  text-decoration-line: none !important;
+  padding: var(--spacing-2);
+}
+.ds-text-link--underline-none:hover {
+  border-radius: var(--uems-radius-xs, 4px);          /* Figma: border-radius/radius-4 */
+  background: var(--uems-bg-accent-primary-alt);      /* Figma: Background/BG-Accent-Primary_alt */
+}
+
+.ds-text-link__icon { line-height: 0; }

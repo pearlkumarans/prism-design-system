@@ -1,0 +1,261 @@
+/* =============================================================================
+   ds-slider / .ds-slider
+   Native <input type="range"> wrapped with custom styling, label & value badge.
+   ============================================================================= */
+
+:host { display: block; font-family: var(--font-family-sans); width: 100%; }
+
+.ds-slider { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+
+.ds-slider__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ds-slider__label {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-tertiary);
+}
+.ds-slider__value {
+  font-size: var(--font-size-14);
+  color: var(--_s-value-color, var(--uems-text-secondary));
+  background: var(--uems-bg-primary-alt);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  min-width: 32px;
+  text-align: center;
+}
+
+.ds-slider__track-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 24px;
+}
+
+.ds-slider__input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: var(--_s-track-h, 4px);
+  background: var(--uems-border-secondary);
+  border-radius: var(--radius-full);
+  outline: none;
+  cursor: pointer;
+  --_s-fill: var(--uems-bg-button-primary);
+}
+
+/* Webkit thumb — bg / border / shadow parameterised so states swap tokens.
+   Default carries Shadow-Small (0 1px 4px @ 12%) per spec. */
+.ds-slider__input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--_s-thumb, 16px);
+  height: var(--_s-thumb, 16px);
+  border-radius: var(--radius-full);
+  background: var(--_s-thumb-bg, var(--uems-bg-base-white));
+  border: var(--_s-thumb-border, 1.5px) solid var(--_s-thumb-border-color, var(--uems-border-accent));
+  box-shadow: var(--_s-thumb-shadow, 0 1px 4px rgba(13, 17, 29, 0.12));
+  cursor: pointer;
+  transition: box-shadow var(--duration-fast) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard);
+}
+/* Hover thumb fill (not while disabled). */
+.ds-slider:not(.ds-slider--disabled) .ds-slider__input:hover::-webkit-slider-thumb { background: var(--uems-bg-accent-secondary); }
+/* Active (dragging) = solid accent thumb. :active wins over :hover. */
+.ds-slider:not(.ds-slider--disabled) .ds-slider__input:active::-webkit-slider-thumb { background: var(--uems-bg-button-primary); }
+/* Focus = double-ring (2px white gap + 2px accent ring) + Blue-Shadow. */
+.ds-slider__input:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 2px var(--uems-bg-base-white),
+              0 0 0 4px var(--uems-border-accent-focus),
+              0 2px 4px rgba(44, 102, 221, 0.2);
+}
+
+/* Firefox thumb */
+.ds-slider__input::-moz-range-thumb {
+  width: var(--_s-thumb, 16px);
+  height: var(--_s-thumb, 16px);
+  border-radius: var(--radius-full);
+  background: var(--_s-thumb-bg, var(--uems-bg-base-white));
+  border: var(--_s-thumb-border, 1.5px) solid var(--_s-thumb-border-color, var(--uems-border-accent));
+  box-shadow: var(--_s-thumb-shadow, 0 1px 4px rgba(13, 17, 29, 0.12));
+  cursor: pointer;
+}
+.ds-slider:not(.ds-slider--disabled) .ds-slider__input:hover::-moz-range-thumb { background: var(--uems-bg-accent-secondary); }
+.ds-slider:not(.ds-slider--disabled) .ds-slider__input:active::-moz-range-thumb { background: var(--uems-bg-button-primary); }
+.ds-slider__input:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 2px var(--uems-bg-base-white),
+              0 0 0 4px var(--uems-border-accent-focus),
+              0 2px 4px rgba(44, 102, 221, 0.2);
+}
+
+/* Active fill via background-image hack — `to right` in LTR points to the
+   inline-end; we mirror to `to left` in RTL so the fill grows from the
+   leading edge (right side) toward the thumb. */
+.ds-slider__input {
+  background: linear-gradient(to right,
+    var(--_s-fill) 0%,
+    var(--_s-fill) var(--_s-pct, 50%),
+    var(--_s-inactive, var(--uems-border-secondary)) var(--_s-pct, 50%),
+    var(--_s-inactive, var(--uems-border-secondary)) 100%);
+}
+.ds-slider[dir="rtl"] .ds-slider__input {
+  background: linear-gradient(to left,
+    var(--_s-fill) 0%,
+    var(--_s-fill) var(--_s-pct, 50%),
+    var(--_s-inactive, var(--uems-border-secondary)) var(--_s-pct, 50%),
+    var(--_s-inactive, var(--uems-border-secondary)) 100%);
+}
+/* Hover → active track darkens to BG-Button-Primary-Hover; Active (dragging) →
+   back to BG-Button-Primary. Scoped away from error/disabled (those own fill). */
+.ds-slider:not(.ds-slider--error):not(.ds-slider--disabled) .ds-slider__input:hover { --_s-fill: var(--uems-bg-button-primary-hover); }
+.ds-slider:not(.ds-slider--error):not(.ds-slider--disabled) .ds-slider__input:active { --_s-fill: var(--uems-bg-button-primary); }
+
+/* ---- Sizes ---------------------------------------------------------- */
+/* Spec: thumb border 1.5px for S/M, 2px for L. */
+.ds-slider--small  { --_s-track-h: 4px; --_s-thumb: 16px; --_s-thumb-border: 1.5px; }
+.ds-slider--medium { --_s-track-h: 6px; --_s-thumb: 20px; --_s-thumb-border: 1.5px; }
+.ds-slider--large  { --_s-track-h: 8px; --_s-thumb: 24px; --_s-thumb-border: 2px;   }
+
+/* ---- Range mode ----------------------------------------------------- */
+/* Two range inputs stack on top of each other with no native track; a custom
+   bg div + fill div sit underneath. Pointer-events on the inputs let either
+   thumb capture clicks. */
+.ds-slider--range .ds-slider__track-row {
+  position: relative;
+  height: 24px;
+}
+.ds-slider--range .ds-slider__track-bg,
+.ds-slider--range .ds-slider__track-fill {
+  position: absolute;
+  inset-block: 50%;
+  height: var(--_s-track-h, 4px);
+  transform: translateY(-50%);
+  border-radius: var(--radius-full);
+  pointer-events: none;
+}
+.ds-slider--range .ds-slider__track-bg {
+  inset-inline: 0;
+  background: var(--uems-border-secondary);
+}
+.ds-slider--range .ds-slider__track-fill {
+  background: var(--uems-bg-button-primary);
+}
+.ds-slider--range .ds-slider__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  pointer-events: none;
+}
+.ds-slider--range .ds-slider__input::-webkit-slider-thumb { pointer-events: auto; }
+.ds-slider--range .ds-slider__input::-moz-range-thumb     { pointer-events: auto; }
+
+.ds-slider--range.ds-slider--error .ds-slider__track-fill { background: var(--uems-bg-error-solid); }
+.ds-slider--range.ds-slider--disabled .ds-slider__track-fill { background: var(--uems-bg-accent-disabled); }
+/* Range hover → fill darkens (active/dragging handled per-thumb solid fill). */
+.ds-slider--range:not(.ds-slider--error):not(.ds-slider--disabled):hover .ds-slider__track-fill { background: var(--uems-bg-button-primary-hover); }
+
+/* ---- Step markers --------------------------------------------------- */
+.ds-slider__tick {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 8px;
+  background: var(--uems-border-tertiary);
+  border-radius: 1px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+/* In RTL the visual axis flips, so the tick's translate(-50%) on X needs
+   to flip too — otherwise ticks sit half-a-tick to the right of their
+   intended position. */
+.ds-slider[dir="rtl"] .ds-slider__tick {
+  transform: translate(50%, -50%);
+}
+
+/* ---- States --------------------------------------------------------- */
+/* Error — active red, inactive pink; Value/Min-Max/Helper turn red, Label stays
+   Text-Tertiary, value-badge border stays Border-Tertiary (per spec). */
+.ds-slider--error .ds-slider__input {
+  --_s-fill: var(--uems-bg-error-solid);          /* #E42527 */
+  --_s-inactive: var(--uems-bg-error-secondary);  /* #FAD7D8 */
+  --_s-value-color: var(--uems-text-error);
+}
+.ds-slider--range.ds-slider--error .ds-slider__track-bg { background: var(--uems-bg-error-secondary); }
+
+/* Disabled — token swaps (NO blanket opacity, NO shadow) per spec:
+   active #ABC2F1 · inactive #E1E4EB · thumb fill+border #E1E4EB. */
+.ds-slider--disabled .ds-slider__input {
+  cursor: not-allowed;
+  --_s-fill: var(--uems-bg-accent-disabled);       /* #ABC2F1 */
+  --_s-inactive: var(--uems-bg-disabled);          /* #E1E4EB */
+  --_s-thumb-bg: var(--uems-bg-disabled);
+  --_s-thumb-border-color: var(--uems-border-disabled);
+  --_s-thumb-shadow: none;
+}
+/* Disabled thumb must show not-allowed too — the thumb pseudo-element carries
+   its own cursor:pointer, which otherwise wins over the track's not-allowed. */
+.ds-slider--disabled .ds-slider__input::-webkit-slider-thumb { cursor: not-allowed; }
+.ds-slider--disabled .ds-slider__input::-moz-range-thumb     { cursor: not-allowed; }
+.ds-slider--range.ds-slider--disabled .ds-slider__track-bg   { background: var(--uems-bg-disabled); }
+.ds-slider--disabled .ds-slider__label,
+.ds-slider--disabled .ds-slider__value { color: var(--uems-text-disabled); }
+
+.ds-slider__minmax {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-12);
+  color: var(--uems-text-secondary);
+}
+.ds-slider--error .ds-slider__minmax { color: var(--uems-text-error); }
+
+/* Helper/note row = the shared <ds-field-helper> sub-component (leading
+   info/error icon + state-driven colour). */
+.ds-slider__helper { display: block; }
+
+/* ---- Thumb tooltip (value bubble above the thumb) — opt-in via show-tooltip.
+   Positioned by the value %; --_tip-pos is updated in JS as the thumb moves. -- */
+.ds-slider__tooltip {
+  position: absolute;
+  /* Sit above the THUMB, not the thin track — a fixed offset overlapped the
+     thumb (which grows to 24px). Thumb top = row-centre(12px) − thumb/2, so
+     this clears the arrow tip ~4px above the thumb for every size. */
+  bottom: calc(20px + var(--_s-thumb, 16px) / 2);
+  /* Centre on the THUMB's vertical axis: the native thumb centre is inset by its
+     own radius at each end, so map 0–100 across (track − thumb) and add the
+     radius — a raw track % drifts off the thumb near min/max. --_tip-pos is a
+     unitless 0–100 set in JS. */
+  inset-inline-start: calc(var(--_s-thumb, 16px) / 2 + (100% - var(--_s-thumb, 16px)) * var(--_tip-pos, 50) / 100);
+  transform: translateX(-50%);
+  background: var(--uems-bg-tertiary-solid, #4A546B);
+  color: var(--uems-text-white);
+  font-size: var(--font-size-12);
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+}
+.ds-slider__tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--uems-bg-tertiary-solid, #4A546B);
+}
+.ds-slider--disabled .ds-slider__tooltip,
+.ds-slider--disabled .ds-slider__tooltip::after {
+  background: var(--uems-bg-disabled);
+  border-top-color: var(--uems-bg-disabled);
+  color: var(--uems-text-disabled);
+}
+/* The tooltip needs head-room above the track row (raised clear of the thumb). */
+.ds-slider--has-tooltip .ds-slider__track-row { margin-top: 30px; }

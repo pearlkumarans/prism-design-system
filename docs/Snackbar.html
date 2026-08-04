@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toast Message — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/toast/toast.css">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/toast/toast.js"></script>
+<script type="module" src="../design-system-library/src/components/button/button.js"></script>
+<style>
+  .demo-tt-section { margin-bottom: 28px; }
+  /* Real-world pattern cards */
+  .demo-rw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 16px; }
+  .demo-rw-card { border: 1px solid var(--prism-border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; background: var(--prism-surface); }
+  .demo-rw-card-label { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--prism-text-muted); }
+  .demo-rw-card ds-toast .ds-toast { max-width: 100%; }
+  .demo-rw-note { font-size: 12px; color: var(--prism-text-muted); line-height: 1.5; }
+  .demo-rw-stack { display: flex; flex-direction: column; gap: 10px; min-height: 96px; }
+  .page-snackbar .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; text-align: left; }
+  .demo-tt-stack { display: flex; flex-direction: column; gap: 14px; max-width: 520px; }
+  /* Override page-snackbar's centered demo-canvas. */
+  .page-snackbar .demo-container .demo-canvas { align-items: stretch !important; justify-content: flex-start !important; min-height: 0 !important; }
+</style>
+</head>
+<body class="page-snackbar">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link active">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Toast Message</h1>
+        <p class="page-desc">A toast confirms something happened &mdash; &ldquo;Profile saved,&rdquo; &ldquo;Couldn&rsquo;t send invite,&rdquo; &ldquo;Sync paused&rdquo; &mdash; without blocking what the user is doing. It pops in, lingers a few seconds, then slides away. Use it for confirmations and minor errors where no action is required. For something the user must respond to, use an Inline message or a Confirmation modal.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram" style="overflow:visible;">
+            <div style="display:flex;justify-content:center;margin:20px 0;padding:60px 40px 60px;">
+              <div style="position:relative;">
+                <!-- Toast anatomy visual — matches Figma 15938:44865: no left
+                     stripe, dual shadow, BG-Secondary_subtle, 40% bar snapshot -->
+                <div style="width:400px;border-radius:8px;overflow:visible;background:#F9FAFB;box-shadow:0 4px 16px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06);">
+                  <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;">
+                    <!-- 1 Status Icon — 20×20, Icon-Info -->
+                    <div style="position:relative;">
+                      <ds-icon name="info-circle" size="20" style="color:#1E52BB;"></ds-icon>
+                      <div style="position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;"><span class="anat-marker-inline">1</span><div style="width:2px; height:14px; background:#2563eb;"></div></div>
+                    </div>
+                    <!-- 2+3 Title + Description -->
+                    <div style="flex:1;position:relative;">
+                      <div style="font-size:13px;font-weight:500;color:#15181E;line-height:20px;position:relative;">Toast title here
+                        <div style="position:absolute;left:30px;bottom:calc(100% + 6px);display:flex;flex-direction:column;align-items:center;gap:4px;"><span class="anat-marker-inline">2</span><div style="width:2px; height:14px; background:#2563eb;"></div></div>
+                      </div>
+                      <div style="font-size:12px;line-height:16px;color:#2A303D;margin-top:4px;position:relative;">Supporting description for the toast notification.
+                        <div style="position:absolute;left:calc(100% + 6px);top:-4px;display:flex;flex-direction:row-reverse;align-items:center;gap:6px;"><span class="anat-marker-inline">3</span><div style="width:28px; height:2px; background:#2563eb;"></div></div>
+                      </div>
+                    </div>
+                    <!-- 4 CTA — bottom-aligned in the row per Figma -->
+                    <div style="position:relative;white-space:nowrap;align-self:flex-end;">
+                      <span style="font-size:12px;line-height:16px;font-weight:500;color:#0E2553;text-decoration:underline;cursor:pointer;">View Details</span>
+                      <div style="position:absolute;left:50%;bottom:calc(100% + 26px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;"><span class="anat-marker-inline">4</span><div style="width:2px; height:14px; background:#2563eb;"></div></div>
+                    </div>
+                    <!-- 5 Close — 16×16, Icon-Subtle -->
+                    <div style="position:relative;margin-top:2px;">
+                      <ds-icon name="close" size="16" style="color:#96A0B7;"></ds-icon>
+                      <div style="position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;"><span class="anat-marker-inline">5</span><div style="width:2px; height:14px; background:#2563eb;"></div></div>
+                    </div>
+                  </div>
+                  <!-- 6 Timeout Bar — 4px, BG-Quaternary track, BG-Info-Solid fill @40% snapshot -->
+                  <div style="width:100%;height:4px;background:#D2D7E0;position:relative;border-radius:0 0 8px 8px;overflow:hidden;">
+                    <div style="width:40%;height:100%;background:#2C66DD;"></div>
+                    <div style="position:absolute;right:40px;top:calc(100% + 6px);display:flex;flex-direction:column-reverse;align-items:center;gap:4px;z-index:5;"><span class="anat-marker-inline">6</span><div style="width:2px; height:14px; background:#2563eb;"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Status Icon</strong><span>20 &times; 20 px icon that communicates the toast type. Icon colour changes per status. Instance-swappable.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Title</strong><span>Short summary of the notification. 13/20 Zoho Puvi Medium (500), <code>text-primary</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Description</strong><span>Supporting detail text. 12/16 Regular, <code>text-secondary</code>. Toggleable via showDescription prop.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>CTA</strong><span>Action link (e.g. "View Details"). 12/16 Medium, always underlined, bottom-aligned in the row. Color per status (Info: <code>text-accent-primary</code>). Toggleable via showCTA prop.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Close Button</strong><span>16 &times; 16 px dismiss icon, <code>icon-subtle</code>. Toggleable via showClose prop.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Timeout Bar</strong><span>4 px countdown bar at the bottom — <code>bg-quaternary</code> track, <code>bg-{status}-solid</code> fill (Filled style: black track / white fill). Animates 100% &rarr; 0% over <code>duration</code>; pauses on hover/focus; hidden when persistent (<code>duration="0"</code> or error).</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Every style × status × state combination defined in <code>toast.css</code>, rendered with the live <code>&lt;ds-toast&gt;</code> web component.</p>
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Toast / Snackbar Variants</span>
+                </div>
+              </div>
+              <div class="demo-canvas" style="flex-direction:column;align-items:stretch;gap:24px;padding:32px;">
+
+                <!-- Subtle status set -->
+                <div class="demo-tt-section">
+                  <div class="demo-group-label">Subtle &mdash; all four statuses</div>
+                  <div class="demo-tt-stack">
+                    <ds-toast status="info"    title="Update available"    description="A new version of the app is ready to install."    cta-text="Install now"   duration="0"></ds-toast>
+                    <ds-toast status="success" title="Changes saved"       description="Your profile has been updated successfully."        duration="0"></ds-toast>
+                    <ds-toast status="warning" title="Session expiring soon" description="You will be logged out in 5 minutes."             cta-text="Stay logged in" duration="0"></ds-toast>
+                    <ds-toast status="error"   title="Upload failed"       description="The file could not be uploaded. Please try again." cta-text="Retry"         duration="0"></ds-toast>
+                  </div>
+                </div>
+
+                <!-- Filled status set -->
+                <div class="demo-tt-section">
+                  <div class="demo-group-label">Filled &mdash; high-visibility prominent alerts</div>
+                  <div class="demo-tt-stack">
+                    <ds-toast style-variant="filled" status="info"    title="Update available"    description="A new version is ready."                   cta-text="Install" duration="0"></ds-toast>
+                    <ds-toast style-variant="filled" status="success" title="Deployment succeeded" description="Build #482 is live in production."         duration="0"></ds-toast>
+                    <ds-toast style-variant="filled" status="warning" title="Storage almost full"  description="93% of your quota is used."                cta-text="Upgrade" duration="0"></ds-toast>
+                    <ds-toast style-variant="filled" status="error"   title="Upload failed"       description="Network error. Check your connection."     cta-text="Retry"   duration="0"></ds-toast>
+                  </div>
+                </div>
+
+                <!-- Title-only (no description) -->
+                <div class="demo-tt-section">
+                  <div class="demo-group-label">Title-only &mdash; minimal one-line confirmations</div>
+                  <div class="demo-tt-stack">
+                    <ds-toast status="success" title="Saved" duration="0"></ds-toast>
+                    <ds-toast status="info"    title="Link copied to clipboard" duration="0"></ds-toast>
+                    <ds-toast status="warning" title="Unsaved changes" duration="0"></ds-toast>
+                  </div>
+                </div>
+
+                <!-- With CTA only / no close -->
+                <div class="demo-tt-section">
+                  <div class="demo-group-label">CTA only / no close button</div>
+                  <div class="demo-tt-stack">
+                    <ds-toast status="info" title="New message from Aarti" description="Tap to open the conversation." cta-text="Open" show-close="false" duration="0"></ds-toast>
+                    <ds-toast status="success" title="Backup complete" cta-text="View files" show-close="false" duration="0"></ds-toast>
+                  </div>
+                </div>
+
+                <!-- Auto-dismiss with timeout bar -->
+                <div class="demo-tt-section">
+                  <div class="demo-group-label">Auto-dismiss with timeout bar (5s) &mdash; click reload to replay</div>
+                  <div class="demo-tt-stack">
+                    <ds-toast status="success" title="Changes saved" description="Your profile has been updated." duration="5000"></ds-toast>
+                    <ds-toast status="info" title="Reminder set" description="We&rsquo;ll notify you in 10 minutes." duration="5000"></ds-toast>
+                  </div>
+                </div>
+
+                <!-- Filled + timeout bar -->
+                <div class="demo-tt-section">
+                  <div class="demo-group-label">Filled (solid) with timeout bar &mdash; black track &middot; white fill</div>
+                  <div class="demo-tt-stack">
+                    <ds-toast style-variant="filled" status="info"    title="Update available" description="A new version is ready to install." duration="8000"></ds-toast>
+                    <ds-toast style-variant="filled" status="success" title="Deployment succeeded" description="Build #482 is live in production." duration="8000"></ds-toast>
+                    <ds-toast style-variant="filled" status="warning" title="Storage almost full" description="93% of your quota is used." duration="8000"></ds-toast>
+                  </div>
+                </div>
+
+                <!-- No timeout bar -->
+                <div class="demo-tt-section">
+                  <div class="demo-group-label">Without timeout bar &mdash; <code>show-timeout="false"</code></div>
+                  <div class="demo-tt-stack">
+                    <ds-toast status="info" title="Bookmark added" description="Saved to your reading list." show-timeout="false" duration="0"></ds-toast>
+                    <ds-toast style-variant="filled" status="warning" title="Beta feature" description="This feature may change." show-timeout="false" duration="0"></ds-toast>
+                  </div>
+                </div>
+
+                <!-- RTL -->
+                <div class="demo-tt-section">
+                  <div class="demo-group-label">RTL &mdash; mirrored layout</div>
+                  <div class="demo-tt-stack">
+                    <ds-toast rtl status="success" title="تم الحفظ" description="تم تحديث ملفك الشخصي بنجاح." duration="0"></ds-toast>
+                    <ds-toast rtl style-variant="filled" status="error" title="فشل التحميل" description="حدث خطأ في الشبكة." cta-text="إعادة المحاولة" duration="0"></ds-toast>
+                  </div>
+                </div>
+
+                <!-- Real-world patterns -->
+                <div class="demo-tt-section">
+                  <div class="demo-group-label">Real-world patterns</div>
+                  <div class="demo-rw-grid">
+
+                    <!-- Patch job lifecycle -->
+                    <div class="demo-rw-card">
+                      <div class="demo-rw-card-label">Patch job lifecycle &mdash; notify on milestones</div>
+                      <ds-toast status="info" title="Patch job started" description="CVE-2026-1041 rolling out to 500 endpoints." show-close="false" duration="0"></ds-toast>
+                      <ds-toast status="success" title="Patch deployed" description="248 endpoints updated, 0 failures." cta-text="View report" duration="0"></ds-toast>
+                      <div class="demo-rw-note">Notify on start and completion &mdash; not on every endpoint. Success carries the CTA to the detailed report.</div>
+                    </div>
+
+                    <!-- Critical incident -->
+                    <div class="demo-rw-card">
+                      <div class="demo-rw-card-label">Critical incident &mdash; persistent until dismissed</div>
+                      <ds-toast style-variant="filled" status="error" title="Agent offline" description="14 devices unreachable for over 30 minutes." cta-text="Investigate" duration="0"></ds-toast>
+                      <ds-toast style-variant="filled" status="warning" title="License limit reached" description="MDM seats exhausted — new enrollments are blocked." cta-text="Manage licenses" duration="0"></ds-toast>
+                      <div class="demo-rw-note">Errors never auto-dismiss (no timeout bar) &mdash; the user must acknowledge. Filled style for maximum visibility.</div>
+                    </div>
+
+                    <!-- Session & maintenance -->
+                    <div class="demo-rw-card">
+                      <div class="demo-rw-card-label">Session &amp; maintenance &mdash; act-now prompts</div>
+                      <ds-toast style-variant="filled" status="warning" title="Session expiring in 5 minutes" cta-text="Stay signed in" show-description="false" duration="0"></ds-toast>
+                      <ds-toast status="info" title="Maintenance window" description="Server restarts tonight 01:00–02:00 IST. Jobs will queue." show-close="false" duration="0"></ds-toast>
+                      <div class="demo-rw-note">Title-only warning keeps the prompt scannable; the CTA is the action itself.</div>
+                    </div>
+
+                    <!-- Live trigger stack -->
+                    <div class="demo-rw-card">
+                      <div class="demo-rw-card-label">Live demo &mdash; trigger real auto-dismissing toasts</div>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <ds-button variant="secondary" size="small" data-rw-toast="success">Success</ds-button>
+                        <ds-button variant="secondary" size="small" data-rw-toast="info">Info</ds-button>
+                        <ds-button variant="secondary" size="small" data-rw-toast="warning">Warning</ds-button>
+                        <ds-button variant="secondary" size="small" data-rw-toast="error">Error (persists)</ds-button>
+                      </div>
+                      <div class="demo-rw-note">Toasts slide in from the top-right and stack (newest in front) &mdash; hover the stack to fan it out. 6-second countdown with live timeout bar; hover to pause, <kbd>Esc</kbd> or &times; to dismiss. Error stays until dismissed (spec).</div>
+                    </div>
+
+                  </div>
+                </div>
+                <script type="module">
+                  import { toast } from './design-system-library/src/components/toast/toast.js';
+                  /* Stack drops in from the top, centered. */
+                  toast.config({ position: 'top-center' });
+                  const RW_CONTENT = {
+                    success: { title: 'Changes saved',     desc: 'Configuration pushed to all device groups.' },
+                    info:    { title: 'Sync started',      desc: 'Inventory refresh is running in the background.' },
+                    warning: { title: 'Disk space low',    desc: 'Distribution server has under 5 GB free.' },
+                    error:   { title: 'Deployment failed', desc: 'Target group unreachable. Check connectivity.' },
+                  };
+                  document.querySelectorAll('[data-rw-toast]').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                      const status = btn.dataset.rwToast;
+                      const c = RW_CONTENT[status];
+                      /* toast.* auto-mounts a top-right stack region: smooth slide-in,
+                         collapsed stack (newest in front), hover to fan out. Error
+                         persists (duration 0). No <ds-toaster> markup needed. */
+                      toast[status]({ title: c.title, description: c.desc, duration: status === 'error' ? 0 : 6000 });
+                    });
+                  });
+                </script>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Keep the title to one short line (8 words or fewer).</li>
+                <li>Use Success to confirm user actions positively.</li>
+                <li>Use Filled style for high-visibility or prominent alerts.</li>
+                <li>Show the Timeout Bar when duration is set.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Write a full paragraph as the title.</li>
+                <li>Use Info for everything &#8212; reserve statuses semantically.</li>
+                <li>Auto-dismiss Error toasts &#8212; users may not read them in time.</li>
+                <li>Let toasts pile up without a queue limit.</li>
+              </ul></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Design tokens, color mappings, and spacing tokens that define the Toast Message's visual language.</p>
+
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">32 variants across Style (2) &times; Status (4) &times; State (2) &times; Direction (2).</p>
+            <table class="size-table">
+              <thead><tr><th>Axis</th><th>Values</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Style</strong></td><td><code>Subtle</code>, <code>Filled</code></td><td>Subtle = light background with coloured border. Filled = solid colour fill with white text.</td></tr>
+                <tr><td><strong>Status</strong></td><td><code>Info</code>, <code>Success</code>, <code>Warning</code>, <code>Error</code></td><td>Semantic type driving colour, icon, and border.</td></tr>
+                <tr><td><strong>State</strong></td><td><code>Default</code>, <code>Hover</code></td><td>Hover changes background in Filled style only.</td></tr>
+                <tr><td><strong>Direction</strong></td><td><code>LTR</code>, <code>RTL</code></td><td>RTL mirrors layout for right-to-left languages.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="statuses" class="doc-section-title">Statuses</h2>
+            <p class="doc-section-subtitle">Four semantic status types communicate the nature of the notification.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:24px;">
+              <div style="padding:20px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-icon name="info-circle" size="24" style="color:#2563eb;margin-bottom:8px;"></ds-icon>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:4px;">Info</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Neutral announcements</div>
+              </div>
+              <div style="padding:20px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-icon name="check" size="24" style="color:#16a34a;margin-bottom:8px;"></ds-icon>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:4px;">Success</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Confirmations</div>
+              </div>
+              <div style="padding:20px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-icon name="exclamation-triangle" size="24" style="color:#d97706;margin-bottom:8px;"></ds-icon>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:4px;">Warning</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Cautionary notices</div>
+              </div>
+              <div style="padding:20px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-icon name="exclamation-circle" size="24" style="color:#dc2626;margin-bottom:8px;"></ds-icon>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:4px;">Error</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Failures</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="sizing" class="doc-section-title">Sizing Reference</h2>
+            <p class="doc-section-subtitle">Fixed dimensions and spacing used across all snackbar variants.</p>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Width</strong></td><td>400 px (fixed)</td></tr>
+                <tr><td><strong>Height</strong></td><td>84 px (fixed)</td></tr>
+                <tr><td><strong>Corner radius</strong></td><td>8 px</td></tr>
+                <tr><td><strong>Content padding (H)</strong></td><td>16 px left / right</td></tr>
+                <tr><td><strong>Content padding (V)</strong></td><td>12 px top / bottom</td></tr>
+                <tr><td><strong>Gap between children</strong></td><td>12 px</td></tr>
+                <tr><td><strong>Gap: title / description</strong></td><td>4 px</td></tr>
+                <tr><td><strong>Status icon size</strong></td><td>20 &times; 20 px</td></tr>
+                <tr><td><strong>Close icon size</strong></td><td>16 &times; 16 px</td></tr>
+                <tr><td><strong>Timeout Bar height</strong></td><td>4 px</td></tr>
+                <tr><td><strong>Timeout Bar width</strong></td><td>400 px (full width)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="color-tokens" class="doc-section-title">Color Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Backgrounds</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Token</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>Background/BG-Secondary_subtle</code></td><td>Subtle style &#8212; all status backgrounds</td></tr>
+                <tr><td><code>Background/BG-Button-Primary</code></td><td>Filled Info background</td></tr>
+                <tr><td><code>Background/BG-Button-Primary-Hover</code></td><td>Filled Info hover background</td></tr>
+                <tr><td><code>Background/BG-Success-Solid</code></td><td>Filled Success background</td></tr>
+                <tr><td><code>Background/BG-Success-Solid-Hover</code></td><td>Filled Success hover background</td></tr>
+                <tr><td><code>Background/BG-Warning-Solid</code></td><td>Filled Warning background</td></tr>
+                <tr><td><code>Background/BG-Warning-Solid-Hover</code></td><td>Filled Warning hover background</td></tr>
+                <tr><td><code>Background/BG-Error-Solid</code></td><td>Filled Error background</td></tr>
+                <tr><td><code>Background/BG-Error-Solid-Hover</code></td><td>Filled Error hover background</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Borders</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Token</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>Border/Border-Accent</code></td><td>Subtle Info container border</td></tr>
+                <tr><td><code>Border/Border-Success</code></td><td>Subtle Success container border</td></tr>
+                <tr><td><code>Border/Border-Warning</code></td><td>Subtle Warning container border</td></tr>
+                <tr><td><code>Border/Border-Error</code></td><td>Subtle Error container border</td></tr>
+                <tr><td><code>Border/Border-Secondary</code></td><td>Timeout Bar track (Subtle)</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Text &amp; Icons</h4>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>Text/Text-Primary</code></td><td>Title text (Subtle)</td></tr>
+                <tr><td><code>Text/Text-Secondary</code></td><td>Description text (Subtle)</td></tr>
+                <tr><td><code>Text/Text-Accent-Primary</code></td><td>CTA text (Subtle all statuses); Info icon (Subtle)</td></tr>
+                <tr><td><code>Text/Text-Success</code></td><td>Success icon stroke (Subtle)</td></tr>
+                <tr><td><code>Text/Text-Warning</code></td><td>Warning icon stroke (Subtle)</td></tr>
+                <tr><td><code>Text/Text-Error</code></td><td>Error icon stroke (Subtle)</td></tr>
+                <tr><td><code>Text/Text-White</code></td><td>All text + icons (Filled style)</td></tr>
+                <tr><td><code>Border/Icon/Icon-Tertiary</code></td><td>Close icon (Subtle Info, Default state)</td></tr>
+                <tr><td><code>Border/Border-Accent</code></td><td>Timeout Bar progress fill (Subtle)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="typography-family" class="doc-section-title">Typography</h2>
+            <p class="doc-section-subtitle">All snackbar text uses <strong>Zoho Puvi</strong> font family.</p>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Size</th><th>Weight</th><th>Line Height</th><th>Token</th></tr></thead>
+              <tbody>
+                <tr><td>Title</td><td>13 px</td><td>Medium (500)</td><td>20 px</td><td><code>body/Small/Medium</code></td></tr>
+                <tr><td>Description</td><td>12 px</td><td>Regular (400)</td><td>&#8212;</td><td><code>body/Small/Default</code></td></tr>
+                <tr><td>CTA</td><td>12 px</td><td>Medium (500)</td><td>&#8212;</td><td><code>body/Small/Medium</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="timeout-bar" class="doc-section-title">Timeout Bar</h2>
+            <p class="doc-section-subtitle">A 4 px strip at the bottom of every toast variant acting as a visual auto-dismiss countdown indicator.</p>
+            <table class="size-table">
+              <thead><tr><th>Layer</th><th>Token (Subtle)</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Track</strong></td><td><code>Border/Border-Secondary</code></td><td>Always full 400 px wide</td></tr>
+                <tr><td><strong>Progress (fill)</strong></td><td><code>Border/Border-Accent</code></td><td>Animates width from 100% to 0% over duration</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:16px;padding:16px 20px;background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.15);border-radius:12px;">
+              <p style="font-size:14px;color:var(--prism-text);line-height:1.6;margin:0;">In Filled variants the Timeout Bar is present but the progress fill uses a raw colour rather than a semantic token &#8212; use the closest status-appropriate contrast colour in code.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">Toast messages provide brief, temporary feedback about an action or system event.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><ds-icon name="check" size="20" style="color:#2563eb;"></ds-icon>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Confirm that a user-triggered action succeeded (e.g. "File saved", "Record deleted").</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Surface a system event the user should be aware of but doesn't need to act on immediately.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When the notification is temporary and non-blocking &#8212; the user can continue working.</li>
+                  <li style="border:none;background:transparent;">Use Info for neutral announcements, Success for confirmations, Warning for cautionary notices, Error for failures.</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><ds-icon name="close" size="20" style="color:#e42527;"></ds-icon>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Critical errors that block the user &#8212; use an Alert Banner or Inline Message.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Confirmations that require a decision &#8212; use a Dialog.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">Persistent status the user needs to reference &#8212; use an Inline Message or Alert Banner.</li>
+                  <li style="border:none;background:transparent;">Multiple simultaneous toasts beyond 3 &#8212; stack them but limit to 3 at a time maximum.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="placement-guidelines" class="doc-section-title">Placement Guidelines</h2>
+            <p class="doc-section-subtitle">Toast messages are typically positioned absolutely or fixed relative to the viewport.</p>
+            <table class="size-table">
+              <thead><tr><th>Position</th><th>Recommended for</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Top right</strong></td><td>Desktop dashboards &#8212; away from primary action areas</td></tr>
+                <tr><td><strong>Bottom center</strong></td><td>Mobile / touch interfaces &#8212; above the thumb zone</td></tr>
+                <tr><td><strong>Bottom right</strong></td><td>Side-panel heavy UIs</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do's and Don'ts</h2>
+            <p class="doc-section-subtitle">Guidelines for effective snackbar usage.</p>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li><strong>Keep title short:</strong> One line, 8 words or fewer.</li>
+                <li><strong>Use Success to confirm:</strong> Positively confirm user actions.</li>
+                <li><strong>Use Filled for high-visibility:</strong> Prominent alerts that need attention.</li>
+                <li><strong>Show CTA for reversible actions:</strong> Actions that need follow-up.</li>
+                <li><strong>Use duration=0 for Errors:</strong> Errors need user acknowledgement.</li>
+                <li><strong>Show Timeout Bar:</strong> When duration is set, it aids orientation.</li>
+                <li><strong>Consistent positioning:</strong> Top-right or bottom-center consistently.</li>
+                <li><strong>Animate in/out:</strong> Fade or slide transitions feel natural.</li>
+                <li><strong>Limit stack to 3:</strong> Maximum 3 toasts simultaneously.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li><strong>No paragraphs as titles:</strong> Keep titles concise and scannable.</li>
+                <li><strong>Don't use Info for everything:</strong> Reserve statuses semantically.</li>
+                <li><strong>Don't use Filled in dense pages:</strong> It competes visually with content.</li>
+                <li><strong>Don't use CTA for unrelated nav:</strong> CTA should relate to the action.</li>
+                <li><strong>Don't auto-dismiss Errors:</strong> Users may not read them in time.</li>
+                <li><strong>Don't hide Timeout Bar:</strong> On auto-dismissing toasts it aids orientation.</li>
+                <li><strong>Don't move toast position:</strong> Keep consistent between sessions.</li>
+                <li><strong>Don't flash toasts instantly:</strong> No transition feels jarring.</li>
+                <li><strong>Don't pile up without limit:</strong> Use a queue with max 3.</li>
+              </ul></div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Components that complement or can be used instead of the Toast Message.</p>
+            <div class="related-grid">
+              <a href="Inline-message.html" class="related-chip"><ds-icon name="exclamation-triangle" size="16"></ds-icon> Alert Banner</a>
+              <a href="Inline-message.html" class="related-chip"><ds-icon name="info-circle" size="16"></ds-icon> Inline Message</a>
+              <a href="Confirmation-modal.html" class="related-chip"><ds-icon name="message-chat-square" size="16"></ds-icon> Dialog</a>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <p class="doc-section-subtitle">Design tokens and resources for implementing the Toast Message component.</p>
+            <ul class="doc-list">
+              <li><strong>Figma Node:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">15938:44865</code> &#8212; Component Set: Toast</li>
+              <li><strong>Total Variants:</strong> 2 Styles &times; 4 Statuses &times; 2 States &times; 2 Directions = <strong>32 variants</strong></li>
+              <li><strong>Typography:</strong> Zoho Puvi Medium (500) for Title &amp; CTA, Regular (400) for Description</li>
+              <li><strong>Dimensions:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">400 &times; 84 px</code> fixed, 8 px corner radius</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Configure the Toast Message component and view generated HTML.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Style</label><select class="cp-select" id="pg-style"><option value="subtle">subtle</option><option value="filled">filled</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Status</label><select class="cp-select" id="pg-status"><option value="info">info</option><option value="success">success</option><option value="warning">warning</option><option value="error">error</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show description</label><select class="cp-select" id="pg-desc"><option value="true">true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show CTA</label><select class="cp-select" id="pg-cta"><option value="true">true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show close</label><select class="cp-select" id="pg-close"><option value="true">true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show timeout bar</label><select class="cp-select" id="pg-timeout"><option value="true">true</option><option value="false">false</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="pg-rtl"><option value="false">false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Title</label><input class="cp-select" id="pg-title" type="text" value="Toast title here" style="font-family:inherit"></div>
+              <div class="cp-control-group" style="grid-column:1/-1"><label class="cp-label">Description</label><input class="cp-select" id="pg-descText" type="text" value="Supporting description for the toast notification." style="font-family:inherit"></div>
+              <div class="cp-control-group"><label class="cp-label">CTA text</label><input class="cp-select" id="pg-ctaText" type="text" value="View details" style="font-family:inherit"></div>
+            </div>
+            <div class="cp-preview" id="pg-preview-area" style="padding:24px;display:flex;justify-content:center"><div id="pg-host" style="width:520px;max-width:100%"></div></div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-copy-btn"><ds-icon name="copy" size="15"></ds-icon> Copy code</button>
+            </div>
+            <div class="cp-code-area" id="pg-code-output"></div>
+          </div>
+          <script>
+          (function(){
+            var els = {
+              style:    document.getElementById('pg-style'),
+              status:   document.getElementById('pg-status'),
+              desc:     document.getElementById('pg-desc'),
+              cta:      document.getElementById('pg-cta'),
+              close:    document.getElementById('pg-close'),
+              timeout:  document.getElementById('pg-timeout'),
+              rtl:      document.getElementById('pg-rtl'),
+              title:    document.getElementById('pg-title'),
+              descText: document.getElementById('pg-descText'),
+              ctaText:  document.getElementById('pg-ctaText')
+            };
+            var host = document.getElementById('pg-host');
+            var codeOut = document.getElementById('pg-code-output');
+            var copyBtn = document.getElementById('pg-copy-btn');
+            var pgRawCode = '';
+            var SB_COPY_LTR = {
+              title: 'Toast title here',
+              descText: 'Supporting description for the toast notification.',
+              ctaText: 'View details'
+            };
+            var SB_COPY_RTL = {
+              title: 'عنوان الإشعار هنا',
+              descText: 'وصف داعم لإشعار التنبيه.',
+              ctaText: 'عرض التفاصيل'
+            };
+            function build(){
+              var styleVariant = els.style.value;
+              var status = els.status.value;
+              var showDesc = els.desc.value === 'true';
+              var showCta = els.cta.value === 'true';
+              var showClose = els.close.value === 'true';
+              var showTimeout = els.timeout.value === 'true';
+              var rtl = els.rtl.value === 'true';
+              ['title','descText','ctaText'].forEach(function(key){
+                var el = els[key];
+                if (el.value === '' || el.value === SB_COPY_LTR[key] || el.value === SB_COPY_RTL[key]) {
+                  el.value = rtl ? SB_COPY_RTL[key] : SB_COPY_LTR[key];
+                }
+              });
+              var title = els.title.value || '';
+              var descText = els.descText.value || '';
+              var ctaText = els.ctaText.value || '';
+
+              host.innerHTML = '';
+              var t = document.createElement('ds-toast');
+              if (status !== 'info') t.setAttribute('status', status);
+              if (styleVariant !== 'subtle') t.setAttribute('style-variant', styleVariant);
+              if (title) t.setAttribute('title', title);
+              if (showDesc && descText) t.setAttribute('description', descText);
+              if (showCta && ctaText) t.setAttribute('cta-text', ctaText);
+              if (!showCta) t.setAttribute('show-cta', 'false');
+              if (!showClose) t.setAttribute('show-close', 'false');
+              if (!showTimeout) t.setAttribute('show-timeout', 'false');
+              if (rtl) t.setAttribute('rtl', '');
+              t.setAttribute('duration', '0');
+              host.appendChild(t);
+
+              var attrs = [];
+              if (status !== 'info') attrs.push('status="' + status + '"');
+              if (styleVariant !== 'subtle') attrs.push('style-variant="' + styleVariant + '"');
+              if (title) attrs.push('title="' + title.replace(/"/g, '&quot;') + '"');
+              if (showDesc && descText) attrs.push('description="' + descText.replace(/"/g, '&quot;') + '"');
+              if (showCta && ctaText) attrs.push('cta-text="' + ctaText.replace(/"/g, '&quot;') + '"');
+              if (!showCta) attrs.push('show-cta="false"');
+              if (!showClose) attrs.push('show-close="false"');
+              if (!showTimeout) attrs.push('show-timeout="false"');
+              if (rtl) attrs.push('rtl');
+              attrs.push('duration="5000"');
+              pgRawCode = '<ds-toast ' + attrs.join(' ') + '></ds-toast>';
+              var colored = '&lt;<span style="color:#60a5fa">ds-toast</span> '
+                + attrs.map(function(p){
+                    var eq = p.indexOf('=');
+                    if (eq === -1) return '<span style="color:#38bdf8">' + p + '</span>';
+                    return '<span style="color:#38bdf8">' + p.slice(0, eq) + '</span>=<span style="color:#34d399">' + p.slice(eq + 1) + '</span>';
+                  }).join(' ')
+                + '&gt;&lt;/<span style="color:#60a5fa">ds-toast</span>&gt;';
+              codeOut.innerHTML = '<pre style="margin:0;white-space:pre-wrap;font-family:\'JetBrains Mono\',monospace;font-size:13.5px;line-height:1.6">' + colored + '</pre>';
+            }
+            Object.keys(els).forEach(function(k){ els[k].addEventListener(els[k].tagName === 'INPUT' ? 'input' : 'change', build); });
+            copyBtn.addEventListener('click', function(){
+              var t = pgRawCode;
+              var done = function(){ var o = copyBtn.innerHTML; copyBtn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!'; setTimeout(function(){ copyBtn.innerHTML = o; }, 2000); };
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(t).then(done).catch(function(){ var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); });
+              } else {
+                var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+              }
+            });
+            if (window.customElements && customElements.whenDefined) {
+              customElements.whenDefined('ds-toast').then(build);
+            }
+            build();
+          })();
+          </script>
+
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="component-api-properties" class="doc-section-title">Component API &amp; Properties</h2>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>status</code></td><td><code>'info' | 'success' | 'warning' | 'error'</code></td><td><code>'info'</code></td><td>Semantic type &mdash; drives colour, icon, and border.</td></tr>
+                <tr><td><code>style-variant</code></td><td><code>'subtle' | 'filled'</code></td><td><code>'subtle'</code></td><td>Light with border, or solid colour fill.</td></tr>
+                <tr><td><code>title</code></td><td>string</td><td>&mdash;</td><td>Primary message text. Keep to one line.</td></tr>
+                <tr><td><code>description</code></td><td>string</td><td>&mdash;</td><td>Secondary detail text.</td></tr>
+                <tr><td><code>cta-text</code></td><td>string</td><td>&mdash;</td><td>CTA button label.</td></tr>
+                <tr><td><code>show-cta</code></td><td><code>"false"</code> to hide</td><td>shown when <code>cta-text</code> is set</td><td>Hides the CTA explicitly.</td></tr>
+                <tr><td><code>show-close</code></td><td><code>"false"</code> to hide</td><td>shown</td><td>Hides the close (dismiss) button.</td></tr>
+                <tr><td><code>show-timeout</code></td><td><code>"false"</code> to hide</td><td>shown</td><td>Hides the auto-dismiss progress bar.</td></tr>
+                <tr><td><code>duration</code></td><td>ms</td><td><code>5000</code></td><td>Auto-dismiss in ms. <code>0</code> disables. Error toasts never auto-dismiss.</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td>unset</td><td>Right-to-left layout.</td></tr>
+              </tbody>
+            </table>
+            <p class="doc-section-subtitle" style="margin-top:16px">Events: <code>ds-toast-cta</code> (CTA clicked), <code>ds-toast-close</code> (closed via button or timeout). Error toasts never auto-dismiss regardless of <code>duration</code>.</p>
+          </div>
+
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="code-examples" class="doc-section-title">Code Examples</h2>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;margin-top:24px;">Info toast (Subtle, default)</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">Toast</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">status</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Info"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">title</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Update available"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">description</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"A new version of the app is ready to install."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">ctaText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Install now"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">onCTAClick</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">() =&gt; triggerUpdate()</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">onClose</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">() =&gt; dismissToast()</span><span style="color:#C678DD;">}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Success toast</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">Toast</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">status</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Success"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">title</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Changes saved"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">description</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Your profile has been updated successfully."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">showCTA</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">false</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">duration</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">4000</span><span style="color:#C678DD;">}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Error toast (Filled, no auto-dismiss)</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">Toast</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">status</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Error"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">style</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Filled"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">title</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Upload failed"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">description</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"The file could not be uploaded. Please try again."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">ctaText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Retry"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">onCTAClick</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">() =&gt; retryUpload()</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">duration</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">0</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">showTimeoutBar</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">false</span><span style="color:#C678DD;">}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Warning toast (Filled style)</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">Toast</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">status</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Warning"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">style</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Filled"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">title</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Session expiring soon"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">description</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"You will be logged out in 5 minutes."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">ctaText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Stay logged in"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">onCTAClick</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">() =&gt; extendSession()</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">duration</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">0</span><span style="color:#C678DD;">}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Minimal &#8212; title only</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">Toast</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">status</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Success"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">title</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Copied to clipboard"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">showDescription</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">false</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">showCTA</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">false</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">duration</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">2500</span><span style="color:#C678DD;">}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">RTL</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">Toast</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">status</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Info"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">title</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"&#x631;&#x633;&#x627;&#x644;&#x629; &#x627;&#x644;&#x62A;&#x646;&#x628;&#x64A;&#x647;"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">description</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"&#x648;&#x635;&#x641; &#x62A;&#x641;&#x635;&#x64A;&#x644;&#x64A; &#x644;&#x631;&#x633;&#x627;&#x644;&#x629; &#x627;&#x644;&#x62A;&#x646;&#x628;&#x64A;&#x647;."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">ctaText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"&#x639;&#x631;&#x636; &#x627;&#x644;&#x62A;&#x641;&#x627;&#x635;&#x64A;&#x644;"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">rtl</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Toast queue (multiple)</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#94a3b8;">// Render at most 3 toasts at a time</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">ToastProvider</span> <span style="color:#D19A66;">maxToasts</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">3</span><span style="color:#C678DD;">}</span> <span style="color:#D19A66;">position</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"top-right"</span><span style="color:#ABB2BF;">&gt;</span><br>
+                &nbsp;&nbsp;<span style="color:#C678DD;">{</span><span style="color:#E5C07B;">toasts.map</span>(<span style="color:#E06C75;">(t)</span> <span style="color:#56B6C2;">=&gt;</span> (<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">Toast</span> <span style="color:#D19A66;">key</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">t.id</span><span style="color:#C678DD;">}</span> <span style="color:#D19A66;">{...t}</span> <span style="color:#D19A66;">onClose</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">() =&gt; removeToast(t.id)</span><span style="color:#C678DD;">}</span> <span style="color:#ABB2BF;">/&gt;</span><br>
+                &nbsp;&nbsp;))<span style="color:#C678DD;">}</span><br>
+                <span style="color:#ABB2BF;">&lt;/</span><span style="color:#E06C75;">ToastProvider</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="timeout-bar-implementation" class="doc-section-title">Timeout Bar Implementation</h2>
+            <div class="cp-code-area" style="border-radius:12px;margin-top:16px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#94a3b8;">/* CSS for timeout bar animation */</span><br>
+                <span style="color:#E06C75;">.toast-timeout-bar-progress</span> {<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">animation</span>: <span style="color:#98C379;">toast-countdown</span> <span style="color:#E5C07B;">linear</span> <span style="color:#E5C07B;">forwards</span>;<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">animation-duration</span>: <span style="color:#E5C07B;">var(--toast-duration, 5000ms)</span>;<br>
+                }<br><br>
+                <span style="color:#C678DD;">@keyframes</span> <span style="color:#98C379;">toast-countdown</span> {<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">from</span> { <span style="color:#D19A66;">width</span>: <span style="color:#E5C07B;">100%</span>; }<br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">to</span> &nbsp;&nbsp;{ <span style="color:#D19A66;">width</span>: <span style="color:#E5C07B;">0%</span>; }<br>
+                }
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+            <ul class="doc-list">
+              <li>Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> on the toast container to mirror the layout.</li>
+              <li>When RTL is true, the child order becomes: Close &#8594; CTA &#8594; Text Content &#8594; Status Icon.</li>
+              <li>Arabic default text properties are provided for RTL variants.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for ensuring snackbar notifications are accessible across assistive technologies.</p>
+          <div class="doc-section">
+            <h3 id="aria-live-region" class="doc-h3">ARIA Live Region</h3>
+            <ul class="doc-list">
+              <li><strong>Polite announcements:</strong> Wrap the toast container in <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-live="polite"</code> for Info, Success, and Warning toasts so screen readers announce new toasts without interrupting.</li>
+              <li><strong>Assertive announcements:</strong> Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-live="assertive"</code> for Error toasts that need immediate attention.</li>
+              <li><strong>Role:</strong> Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="status"</code> for polite announcements or <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="alert"</code> for assertive (Error) toasts.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="keyboard-interaction" class="doc-h3">Keyboard Interaction</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><code>Tab</code></td><td>The toast must be reachable via keyboard. Focus moves to the CTA or close button within the toast.</td></tr>
+                <tr><td><code>Enter</code> / <code>Space</code></td><td>Activates the close button or CTA link when focused.</td></tr>
+                <tr><td><code>Escape</code></td><td>Optionally dismisses the focused toast.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="auto-dismiss-guidelines" class="doc-h3">Auto-dismiss Guidelines</h3>
+            <ul class="doc-list">
+              <li><strong>Do not auto-dismiss Error toasts.</strong> Users need time to read and act on errors.</li>
+              <li><strong>Minimum duration:</strong> Ensure <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">duration &ge; 5000ms</code> so users have time to read.</li>
+              <li><strong>Pause on hover/focus:</strong> Pause the auto-dismiss timer when the user hovers over or focuses on the toast.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="close-button-aria" class="doc-h3">Close Button</h3>
+            <ul class="doc-list">
+              <li>Provide <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-label="Dismiss notification"</code> on the close button for screen readers.</li>
+              <li>The close button must be activatable with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Enter</code> and <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Space</code> keys.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="focus-management" class="doc-h3">Focus Management</h3>
+            <ul class="doc-list">
+              <li><strong>Do not steal focus</strong> when a toast appears. The user's current task flow should not be disrupted.</li>
+              <li>If the toast contains a CTA, ensure it is reachable via Tab without disrupting the user's current flow.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="color-contrast-minimums" class="doc-h3">Color Contrast Minimums<span class="h3-badge" style="background:rgba(34,197,94,0.15);color:#16a34a;">WCAG AA Pass</span></h3>
+            <p class="doc-section-subtitle">All style/status combinations must meet WCAG 2.1 AA contrast requirements.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:24px;">
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#2563eb;padding:28px 24px;text-align:center;color:#fff;"><div style="font-size:18px;font-weight:600;">Info Filled</div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">FILLED / INFO</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#FFF on #2563EB</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 4.6:1</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AA Pass</div></div></div>
+              </div>
+              <div style="background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;overflow:hidden;">
+                <div style="background:#dc2626;padding:28px 24px;text-align:center;color:#fff;"><div style="font-size:18px;font-weight:600;">Error Filled</div></div>
+                <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--prism-border);"><div><div style="font-size:13px;color:var(--prism-text-muted);font-weight:600;">FILLED / ERROR</div><div style="font-size:15px;color:var(--prism-text);font-family:monospace;margin-top:4px;">#FFF on #DC2626</div></div><div style="text-align:right;"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#16a34a;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 5.5:1</div><div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;font-weight:600;">WCAG AA Pass</div></div></div>
+              </div>
+            </div>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="motion-preferences" class="doc-h3">Motion Preferences</h3>
+            <ul class="doc-list">
+              <li>Respect <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">prefers-reduced-motion</code> &#8212; replace slide/fade animations with instant show/hide.</li>
+              <li>The timeout bar countdown animation should also be disabled or replaced with a static indicator when reduced motion is preferred.</li>
+            </ul>
+          </div>
+          <hr class="doc-divider"/>
+          <div class="doc-section">
+            <h3 id="rtl-accessibility" class="doc-h3">RTL Accessibility</h3>
+            <ul class="doc-list">
+              <li>Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> on the toast container for right-to-left languages.</li>
+              <li>The component's child order already mirrors for RTL; no additional ARIA attributes are needed for directionality.</li>
+            </ul>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/toast.md" download="toast.md" class="action-link"><ds-icon name="download" size="15"></ds-icon> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=15938-44865" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/components/toc.js"></script>
+<script src="js/main.js"></script>
+
+
+</body>
+</html>

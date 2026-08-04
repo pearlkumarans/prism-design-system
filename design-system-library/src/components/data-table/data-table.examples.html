@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ds-data-table — examples</title>
+  <script type="module">import '../../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 24px; background: var(--uems-background); color: var(--uems-text-primary); }
+    section { margin-bottom: 32px; }
+    h2 { font-size: var(--font-size-14); color: var(--uems-text-tertiary); font-weight: 600; margin: 0 0 12px; }
+  </style>
+</head>
+<body>
+  <section>
+    <h2>Default — toolbar + footer + selection</h2>
+    <ds-data-table id="basic" total-rows="243" rows-per-page="20" page="1" sticky-header fit-viewport></ds-data-table>
+  </section>
+
+  <section>
+    <h2>Loading</h2>
+    <ds-data-table id="loading" loading></ds-data-table>
+  </section>
+
+  <section>
+    <h2>Empty</h2>
+    <ds-data-table id="empty" total-rows="0"></ds-data-table>
+  </section>
+
+  <section>
+    <h2>Embedded — toolbar hidden, compact density</h2>
+    <ds-data-table id="embed" show-toolbar="false" row-height="compact" total-rows="5"></ds-data-table>
+  </section>
+
+  <script type="module">
+    const sampleColumns = [
+      { id: 'name', header: 'Name', accessor: 'name', sortable: true, render: (r) =>
+        `<a href="#" class="ds-data-table__cell-link">${r.name}</a>` },
+      { id: 'owner', header: 'Owner', accessor: 'owner', sortable: true },
+      { id: 'status', header: 'Status', accessor: 'status', render: (r) =>
+        `<ds-badge variant="subtle" state="${r.statusState}" size="medium" icon="circle-tick" label="${r.status}"></ds-badge>` },
+      { id: 'updated', header: 'Updated', accessor: 'updated', align: 'end', sortable: true },
+      { id: 'count', header: 'Count', accessor: 'count', align: 'end',
+        render: (r) => `<ds-counter variant="subtle" state="active" size="small" value="${r.count}"></ds-counter>` },
+    ];
+    const sampleRows = [
+      { id: 'r1', name: 'Acme Corp Laptop',  owner: 'Jane Doe',     status: 'Online',  statusState: 'success',     updated: '2m ago', count: 12 },
+      { id: 'r2', name: 'Mac mini Server',   owner: 'Javier',       status: 'Offline', statusState: 'critical',    updated: '14m ago', count: 0 },
+      { id: 'r3', name: 'iPad Pro',          owner: 'Kumaran',     status: 'Online',  statusState: 'success',     updated: '1h ago',  count: 3 },
+      { id: 'r4', name: 'Office Printer',    owner: 'Shared',       status: 'Idle',    statusState: 'moderate',    updated: '4h ago',  count: 7 },
+      { id: 'r5', name: 'Reception Display', owner: 'Front desk',   status: 'Pending', statusState: 'acknowledge', updated: '1d ago',  count: 1 },
+    ];
+
+    const basic = document.getElementById('basic');
+    basic.columns = sampleColumns;
+    basic.rows = sampleRows;
+    basic.addEventListener('ds-data-table-bulk-action', (e) =>
+      console.log('bulk action', e.detail));
+
+    document.getElementById('loading').columns = sampleColumns;
+    document.getElementById('empty').columns   = sampleColumns;
+    const embed = document.getElementById('embed');
+    embed.columns = sampleColumns;
+    embed.rows = sampleRows;
+  </script>
+</body>
+</html>

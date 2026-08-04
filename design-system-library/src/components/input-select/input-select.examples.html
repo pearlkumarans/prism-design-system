@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Input Select — examples</title>
+  <link rel="stylesheet" href="../../styles/index.css" />
+  <script type="module" src="../../index.js"></script>
+  <style>
+    body { padding: 24px; font-family: var(--font-family-sans); display: flex; flex-direction: column; gap: 24px; max-width: 720px; }
+    h2 { margin: 0; font-size: 14px; }
+    .col { display: flex; flex-direction: column; gap: 8px; }
+  </style>
+</head>
+<body>
+  <div class="col">
+    <h2>Single-select (Medium)</h2>
+    <ds-input-select id="single" label="Region" placeholder="Select region" required show-clear
+      helper="Choose data residency region"></ds-input-select>
+  </div>
+
+  <div class="col">
+    <h2>Multi-select (Medium)</h2>
+    <ds-input-select id="multi" multi label="Asset tags" placeholder="Select tags"
+      helper="Pick all that apply"></ds-input-select>
+  </div>
+
+  <div class="col">
+    <h2>Error state</h2>
+    <ds-input-select id="err" state="error" label="Country" placeholder="Select" required
+      helper="Country is required"></ds-input-select>
+  </div>
+
+  <div class="col">
+    <h2>Disabled / Read only</h2>
+    <ds-input-select state="disabled" label="Locked" value="us" placeholder="Select"></ds-input-select>
+    <ds-input-select state="readonly" label="Read only" value="us" placeholder="Select"></ds-input-select>
+  </div>
+
+  <script type="module">
+    const opts = [
+      { label: 'United States', value: 'us' },
+      { label: 'Germany',       value: 'de' },
+      { label: 'India',         value: 'in' },
+      { label: 'Japan',         value: 'jp' },
+      { label: 'Brazil',        value: 'br', disabled: true },
+    ];
+    const single = document.getElementById('single');
+    single.options = opts;
+
+    const multi = document.getElementById('multi');
+    multi.options = [
+      { label: 'Production', value: 'prod' },
+      { label: 'Critical',   value: 'crit' },
+      { label: 'EU',         value: 'eu' },
+      { label: 'Staging',    value: 'stage' },
+      { label: 'Internal',   value: 'int' },
+    ];
+    multi.values = ['prod', 'crit'];
+
+    const err = document.getElementById('err');
+    err.options = opts;
+  </script>
+</body>
+</html>

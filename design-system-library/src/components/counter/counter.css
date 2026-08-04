@@ -1,0 +1,109 @@
+/* =============================================================================
+   ds-counter / .ds-counter
+   Pill-shaped numeric indicator. 2 styles × 3 sizes × 7 states = 42 variants.
+   Token-driven; no hardcoded values.
+   ============================================================================= */
+
+.ds-counter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-medium, 500);
+  border-radius: var(--uems-radius-pill, 9999px);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  user-select: none;
+  box-sizing: border-box;
+
+  --_ctr-bg: var(--uems-bg-secondary);
+  --_ctr-fg: var(--uems-text-secondary);
+  background: var(--_ctr-bg);
+  color: var(--_ctr-fg);
+}
+
+/* ---- Sizes ---------------------------------------------------------- */
+.ds-counter--small {
+  height: 16px;
+  min-width: 16px;
+  padding: var(--uems-spacing-4, 4px); /* 4×4 per spec; fixed height keeps rendering identical */
+  font-size: var(--uems-font-size-10, 10px);
+  line-height: 14px;
+}
+.ds-counter--medium {
+  height: 20px;
+  min-width: 20px;
+  padding: var(--uems-spacing-4, 4px);
+  font-size: var(--uems-font-size-12, 12px);
+  line-height: 16px;
+}
+.ds-counter--large {
+  height: 24px;
+  min-width: 24px;
+  padding: var(--uems-spacing-4, 4px) var(--uems-spacing-8, 8px); /* Large doubles H padding */
+  font-size: var(--uems-font-size-14, 14px);
+  font-weight: var(--font-weight-regular, 400); /* same weight rule as Badge Large */
+  line-height: 20px;
+}
+
+/* ---- Subtle states (tinted bg, colored fg) ------------------------- */
+.ds-counter--subtle.ds-counter--default {
+  --_ctr-bg: var(--uems-bg-secondary);
+  --_ctr-fg: var(--uems-text-secondary);
+}
+.ds-counter--subtle.ds-counter--active {
+  /* Spec: BG-Info-Secondary + Text-Accent-Tertiary — intentionally stronger
+     than Badge's Subtle/Active (info-primary + text-info). Don't share the pair. */
+  --_ctr-bg: var(--uems-bg-info-secondary);
+  --_ctr-fg: var(--uems-text-accent-tertiary);
+}
+.ds-counter--subtle.ds-counter--critical {
+  --_ctr-bg: var(--uems-bg-error-secondary);
+  --_ctr-fg: var(--uems-text-error);
+}
+.ds-counter--subtle.ds-counter--moderate {
+  --_ctr-bg: var(--uems-bg-alert-secondary);
+  --_ctr-fg: var(--uems-text-alert);
+}
+.ds-counter--subtle.ds-counter--important {
+  --_ctr-bg: var(--uems-bg-warning-secondary);
+  --_ctr-fg: var(--uems-text-warning);
+}
+.ds-counter--subtle.ds-counter--success {
+  --_ctr-bg: var(--uems-bg-success-secondary);
+  --_ctr-fg: var(--uems-text-success);
+}
+.ds-counter--subtle.ds-counter--acknowledge {
+  --_ctr-bg: var(--uems-bg-acknowledge-secondary);
+  --_ctr-fg: var(--uems-text-acknowledge);
+}
+
+/* ---- Intense states (solid bg, white fg / black for moderate) ------ */
+.ds-counter--intense.ds-counter--default {
+  --_ctr-bg: var(--uems-bg-quaternary-solid, var(--uems-bg-secondary-solid));
+  --_ctr-fg: var(--uems-text-white);
+}
+.ds-counter--intense.ds-counter--active {
+  --_ctr-bg: var(--uems-bg-info-solid);
+  --_ctr-fg: var(--uems-text-white);
+}
+.ds-counter--intense.ds-counter--critical {
+  --_ctr-bg: var(--uems-bg-error-solid);
+  --_ctr-fg: var(--uems-text-white);
+}
+.ds-counter--intense.ds-counter--moderate {
+  --_ctr-bg: var(--uems-bg-alert-solid);
+  --_ctr-fg: var(--uems-text-black, #000);
+}
+.ds-counter--intense.ds-counter--important {
+  --_ctr-bg: var(--uems-bg-warning-solid);
+  --_ctr-fg: var(--uems-text-white);
+}
+.ds-counter--intense.ds-counter--success {
+  --_ctr-bg: var(--uems-bg-success-solid);
+  --_ctr-fg: var(--uems-text-white);
+}
+.ds-counter--intense.ds-counter--acknowledge {
+  --_ctr-bg: var(--uems-bg-acknowledge-solid);
+  --_ctr-fg: var(--uems-text-white);
+}

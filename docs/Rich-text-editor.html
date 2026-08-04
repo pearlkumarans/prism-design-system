@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rich Text Editor — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/rich-text-editor/rich-text-editor.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/rich-text-editor/rich-text-editor.js"></script>
+<style>
+  .demo-rte-section { margin-bottom: 28px; }
+  .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+</style>
+</head>
+<body class="page-rich-text-editor">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link active">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Rich Text Editor</h1>
+        <p class="page-desc">The rich text editor is where the user writes anything with structure &mdash; an announcement, a ticket reply, an article, a knowledge-base page. They can bold, italicise, link, drop in lists, headings, images, and tables. Pick the Fixed toolbar for editors users open often (so the controls are always there); pick Floating for slim layouts where the toolbar should appear only when text is selected.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div style="padding:24px 0;overflow:visible;">
+            <div id="anatomy-rte-wrap" style="position:relative;display:block;padding:0 100px;">
+              <ds-rich-text-editor id="anatomy-rte" label="Label" placeholder="Start typing..." helper="Type $ to add variables"></ds-rich-text-editor>
+              <div class="anat-mk anat-mk-left" data-target="label"   style="top:0;"><span class="anat-marker-inline">1</span><div class="anat-mk-line"></div></div>
+              <div class="anat-mk anat-mk-left" data-target="frame"   style="top:0;"><span class="anat-marker-inline">2</span><div class="anat-mk-line"></div></div>
+              <div class="anat-mk anat-mk-left" data-target="toolbar" style="top:0;"><span class="anat-marker-inline">3</span><div class="anat-mk-line"></div></div>
+              <div class="anat-mk anat-mk-left" data-target="body"    style="top:0;"><span class="anat-marker-inline">5</span><div class="anat-mk-line"></div></div>
+              <div class="anat-mk anat-mk-left" data-target="helper"  style="top:0;"><span class="anat-marker-inline">7</span><div class="anat-mk-line"></div></div>
+            </div>
+          </div>
+          <style>
+            .anat-mk { position: absolute; display: flex; align-items: center; gap: 8px; white-space: nowrap; transform: translateY(-50%); }
+            .anat-mk-left { right: calc(100% - 100px); }
+            .anat-mk-line { width: 40px; height: 2px; background: #2563eb; }
+          </style>
+
+          <script type="module">
+            customElements.whenDefined('ds-rich-text-editor').then(() => {
+              const host = document.getElementById('anatomy-rte');
+              const wrap = document.getElementById('anatomy-rte-wrap');
+              if (!host || !wrap) return;
+              const place = () => {
+                const wrapRect = wrap.getBoundingClientRect();
+                const targets = {
+                  label:   host.querySelector('.ds-rich-text-editor__label'),
+                  frame:   host.querySelector('.ds-rich-text-editor__frame'),
+                  toolbar: host.querySelector('.ds-rich-text-editor__toolbar'),
+                  body:    host.querySelector('.ds-rich-text-editor__body'),
+                  helper:  host.querySelector('.ds-rich-text-editor__helper, .ds-rich-text-editor__helper-row'),
+                };
+                wrap.querySelectorAll('.anat-mk').forEach((mk) => {
+                  const t = targets[mk.dataset.target];
+                  if (!t) { mk.style.display = 'none'; return; }
+                  const r = t.getBoundingClientRect();
+                  mk.style.top = (r.top + r.height / 2 - wrapRect.top) + 'px';
+                });
+              };
+              requestAnimationFrame(() => requestAnimationFrame(place));
+              window.addEventListener('load', place, { once: true });
+              if (document.fonts?.ready) document.fonts.ready.then(place);
+              new ResizeObserver(place).observe(host);
+            });
+          </script>
+          <div class="anat-legend" style="grid-template-columns:repeat(2,1fr);">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Label Row</strong><span>Field label. Semibold, 13 px. Toggleable via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Show Label</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Editor Frame</strong><span>Outer container: 640 px min-width, 8 px corner radius, 1 px border, overflow hidden.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Fixed Toolbar</strong><span>Persistent formatting controls pinned to the top of the editor frame. Full width, bottom border, BG-Base-White.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Editor Body</strong><span>The editable content surface. BG-Primary-alt, 16 px padding, 160 px min-height. Holds placeholder text or user content.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Resize Grip</strong><span>Diagonal handle at the bottom-right corner for vertical drag-resize (CSS <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">resize: vertical</code>).</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">7</span><div><strong>Helper Row</strong><span>Instance of Form Field Helper Row below the editor. Icon + helper text. Toggleable via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Show Helper Row</code>.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Explore the Rich Text Editor across toolbar styles and states — rendered with the live <code>&lt;ds-rich-text-editor&gt;</code> web component.</p>
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Rich Text Editor Variants</span>
+                </div>
+              </div>
+              <div class="demo-canvas" style="flex-direction:column;align-items:stretch;gap:24px;padding:32px;">
+
+                <div class="demo-rte-section">
+                  <div class="demo-group-label">Default — fixed toolbar</div>
+                  <ds-rich-text-editor label="Description" placeholder="Start typing..." helper="Type $ to add variables"></ds-rich-text-editor>
+                </div>
+
+                <div class="demo-rte-section">
+                  <div class="demo-group-label">Floating toolbar — select text to reveal · drag to move</div>
+                  <ds-rich-text-editor label="Comment" toolbar="floating" placeholder="Start typing..." helper="Select text to format">The quick brown fox jumps over the lazy dog. Select any of this text to reveal the floating toolbar, then drag it wherever you like.</ds-rich-text-editor>
+                </div>
+
+                <div class="demo-rte-section">
+                  <div class="demo-group-label">Error state</div>
+                  <ds-rich-text-editor label="Announcement body" placeholder="Start typing..." helper="Announcement body is required." state="error"></ds-rich-text-editor>
+                </div>
+
+                <div class="demo-rte-section">
+                  <div class="demo-group-label">Disabled</div>
+                  <ds-rich-text-editor label="Body" placeholder="Draft content here..." helper="Type $ to add variables" state="disabled"></ds-rich-text-editor>
+                </div>
+
+                <div class="demo-rte-section">
+                  <div class="demo-group-label">Read-only — no toolbar</div>
+                  <ds-rich-text-editor label="Approved description" toolbar="hidden" state="readonly">The quick brown <strong>fox jumps</strong> over the lazy dog.</ds-rich-text-editor>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Keep the editor at 640 px or wider so the Fixed toolbar fits on one row.</li>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Floating</code> toolbar for compact inline editors (comments, chat).</li>
+                <li>Pair <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Error</code> state with a helper-row message that explains the problem.</li>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Read Only</code> to display rich content outside an edit flow.</li>
+                <li>Persist formatting in a structured format (HTML or editor JSON).</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Shrink below 640 px &#8212; the Fixed toolbar will wrap; switch to <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Floating</code> instead.</li>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Fixed</code> inside a narrow side panel or drawer.</li>
+                <li>Show the red error border without helper text.</li>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Disabled</code> to show read-only content &#8212; it communicates "cannot interact right now".</li>
+                <li>Allow arbitrary HTML and inline <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;script&gt;</code> from pasted content.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Icon usage -->
+          <div class="doc-section">
+            <h2 id="icon-usage" class="doc-section-title">Icon Usage</h2>
+            <p class="doc-section-subtitle">The Rich Text Editor's toolbar is entirely icon-based. Each icon must map to a single, recognized text-formatting action. Use this canonical set across all editor instances for consistency.</p>
+
+            <h3 class="doc-h4" style="margin-top:24px;">Text formatting (always visible)</h3>
+            <table class="size-table" style="margin-top:16px;">
+              <thead><tr><th>Action</th><th>Icon</th><th>Keyboard shortcut</th></tr></thead>
+              <tbody>
+                <tr><td>Bold</td><td><code>bold</code></td><td>&#8984;/Ctrl + B</td></tr>
+                <tr><td>Italic</td><td><code>italic</code></td><td>&#8984;/Ctrl + I</td></tr>
+                <tr><td>Underline</td><td><code>underline</code></td><td>&#8984;/Ctrl + U</td></tr>
+                <tr><td>Strikethrough</td><td><code>strikethrough</code></td><td>&#8984;/Ctrl + Shift + X</td></tr>
+                <tr><td>Inline code</td><td><code>code</code></td><td>&#8984;/Ctrl + E</td></tr>
+              </tbody>
+            </table>
+
+            <h3 class="doc-h4" style="margin-top:32px;">Block formatting</h3>
+            <table class="size-table" style="margin-top:16px;">
+              <thead><tr><th>Action</th><th>Icon</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>Heading dropdown</td><td><code>type</code> + chevron</td><td>Reveals H1&ndash;H3 + Body options.</td></tr>
+                <tr><td>Bulleted list</td><td><code>list-unordered</code></td><td>Disc bullets.</td></tr>
+                <tr><td>Numbered list</td><td><code>list-ordered</code></td><td>1. 2. 3.</td></tr>
+                <tr><td>Checklist</td><td><code>list-check</code></td><td>Toggleable checkboxes inline.</td></tr>
+                <tr><td>Blockquote</td><td><code>quote</code></td><td>Indented + left border.</td></tr>
+                <tr><td>Code block</td><td><code>code-block</code></td><td>Multi-line fenced code (vs inline <code>code</code>).</td></tr>
+              </tbody>
+            </table>
+
+            <h3 class="doc-h4" style="margin-top:32px;">Alignment</h3>
+            <table class="size-table" style="margin-top:16px;">
+              <thead><tr><th>Action</th><th>Icon</th><th>RTL behavior</th></tr></thead>
+              <tbody>
+                <tr><td>Align left</td><td><code>align-left</code></td><td>Becomes "Align start"; icon flips visually via <code>scaleX(-1)</code>.</td></tr>
+                <tr><td>Align center</td><td><code>align-center</code></td><td>Unchanged (symmetric).</td></tr>
+                <tr><td>Align right</td><td><code>align-right</code></td><td>Becomes "Align end"; icon flips.</td></tr>
+                <tr><td>Justify</td><td><code>align-justify</code></td><td>Unchanged (symmetric).</td></tr>
+              </tbody>
+            </table>
+
+            <h3 class="doc-h4" style="margin-top:32px;">Insertion actions</h3>
+            <table class="size-table" style="margin-top:16px;">
+              <thead><tr><th>Action</th><th>Icon</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td>Insert link</td><td><code>link</code></td><td>Opens a popover for URL + label.</td></tr>
+                <tr><td>Insert image</td><td><code>image</code></td><td>Opens file picker; supports paste-from-clipboard.</td></tr>
+                <tr><td>Insert table</td><td><code>table</code></td><td>Opens a size-grid for rows &times; columns.</td></tr>
+                <tr><td>Insert divider</td><td><code>minus</code> or <code>divider-horizontal</code></td><td>Inserts <code>&lt;hr&gt;</code> at cursor.</td></tr>
+                <tr><td>Insert emoji</td><td><code>smile</code></td><td>Opens emoji picker.</td></tr>
+                <tr><td>Insert mention</td><td><code>at-sign</code></td><td>Triggers the @-mention autocomplete (same as typing "@").</td></tr>
+              </tbody>
+            </table>
+
+            <h3 class="doc-h4" style="margin-top:32px;">History &amp; clipboard</h3>
+            <table class="size-table" style="margin-top:16px;">
+              <thead><tr><th>Action</th><th>Icon</th><th>Shortcut</th></tr></thead>
+              <tbody>
+                <tr><td>Undo</td><td><code>undo</code> (flips in RTL)</td><td>&#8984;/Ctrl + Z</td></tr>
+                <tr><td>Redo</td><td><code>redo</code> (flips in RTL)</td><td>&#8984;/Ctrl + Shift + Z</td></tr>
+                <tr><td>Clear formatting</td><td><code>format-clear</code></td><td>Removes inline styles from selection.</td></tr>
+              </tbody>
+            </table>
+
+            <h3 class="doc-h4" style="margin-top:32px;">Toolbar grouping rules</h3>
+            <ul class="doc-list" style="margin-top:8px;">
+              <li>Group related actions with 1px vertical dividers: <strong>[Text format] | [Block format] | [Alignment] | [Insert] | [History]</strong>.</li>
+              <li>Each icon must be 20px inside a 32px tap target. Use 16px icons for compact (small-size) editor instances.</li>
+              <li>Show tooltips on hover with the action label and keyboard shortcut: "Bold &middot; &#8984; B".</li>
+              <li>The active state is a 1px blue ring around the icon button when the selection contains that formatting (e.g., bold icon highlighted while cursor is inside bold text).</li>
+              <li>Disable (greyed) icons for actions that don't apply to the current selection (e.g., heading dropdown when the cursor is in a code block).</li>
+              <li>The Floating toolbar shows only the most-used 5&ndash;7 actions; the Fixed toolbar shows the full set.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Design tokens, size specifications, and visual states that define the Rich Text Editor's appearance.</p>
+
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">36 variants across State (6) &times; Toolbar (3) &times; RTL (2).</p>
+            <table class="size-table">
+              <thead><tr><th>Axis</th><th>Values</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><strong>State</strong></td><td><code>Default</code>, <code>Focus</code>, <code>Filled</code>, <code>Error</code>, <code>Disabled</code>, <code>Read Only</code></td><td>Interaction / validation state of the editor.</td></tr>
+                <tr><td><strong>Toolbar</strong></td><td><code>Fixed</code>, <code>Floating</code>, <code>Hidden</code></td><td>Toolbar presentation style.</td></tr>
+                <tr><td><strong>RTL</strong></td><td><code>False</code>, <code>True</code></td><td>Right-to-left layout for Arabic / Hebrew.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="states" class="doc-section-title">States</h2>
+            <p class="doc-section-subtitle">Rich Text Editor has six interaction states controlling borders, shadows, and content appearance.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-top:24px;">
+              <div style="padding:24px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="width:100%;height:48px;border:1px solid var(--prism-border);border-radius:6px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;background:var(--prism-surface);font-size:11px;color:var(--prism-text-muted);">Start typing...</div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Default</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Border-Secondary stroke</div>
+              </div>
+              <div style="padding:24px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="width:100%;height:48px;border:2px solid #2563eb;border-radius:6px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;background:var(--prism-surface);box-shadow:0 0 0 3px rgba(37,99,235,0.15);font-size:11px;color:var(--prism-text);">|</div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Focus</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">2px accent border + shadow</div>
+              </div>
+              <div style="padding:24px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="width:100%;height:48px;border:1px solid var(--prism-border);border-radius:6px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;background:var(--prism-surface);font-size:11px;color:var(--prism-text);">Content here</div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Filled</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Border-Secondary, content visible</div>
+              </div>
+              <div style="padding:24px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="width:100%;height:48px;border:2px solid #ef4444;border-radius:6px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;background:var(--prism-surface);box-shadow:0 0 0 3px rgba(239,68,68,0.15);font-size:11px;color:#ef4444;">Required</div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Error</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">Red border + error shadow</div>
+              </div>
+              <div style="padding:24px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="width:100%;height:48px;border:1px solid var(--prism-border);border-radius:6px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;background:var(--prism-surface);opacity:0.5;font-size:11px;color:var(--prism-text-muted);">Disabled</div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Disabled</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">50% opacity, BG-Disabled</div>
+              </div>
+              <div style="padding:24px 16px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <div style="width:100%;height:48px;border:1px solid var(--prism-border);border-radius:6px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;background:var(--prism-surface-hover);font-size:11px;color:var(--prism-text);">Read only</div>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);">Read Only</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:4px;">BG-Secondary, no toolbar</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="color-tokens" class="doc-section-title">Color Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Background</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Role</th><th>Token</th></tr></thead>
+              <tbody>
+                <tr><td>Editor body (Default, Focus, Filled, Error)</td><td><code>Background/BG-Primary-alt</code></td></tr>
+                <tr><td>Fixed toolbar / Floating toolbar</td><td><code>Background/BG-Base-White</code></td></tr>
+                <tr><td>Editor body (Read Only)</td><td><code>Background/BG-Secondary</code></td></tr>
+                <tr><td>Editor body + toolbar (Disabled)</td><td><code>Background/BG-Disabled</code></td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Border</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>State</th><th>Token</th></tr></thead>
+              <tbody>
+                <tr><td>Default, Filled</td><td><code>Border/Border-Secondary</code></td></tr>
+                <tr><td>Focus (2 px stroke)</td><td><code>Border/Border-Accent</code></td></tr>
+                <tr><td>Error</td><td><code>Border/Border-Error</code></td></tr>
+                <tr><td>Disabled, Read Only</td><td><code>Border/Border-Disabled</code></td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Text</h4>
+            <table class="size-table" style="margin-bottom:32px;">
+              <thead><tr><th>Role</th><th>Token</th></tr></thead>
+              <tbody>
+                <tr><td>Editor content text</td><td><code>Text/Text-Primary</code></td></tr>
+                <tr><td>Placeholder text</td><td><code>Text/Text-Placeholder</code></td></tr>
+                <tr><td>Label, helper text (default)</td><td><code>Text/Text-Tertiary</code></td></tr>
+                <tr><td>Label, helper text, content (Disabled)</td><td><code>Text/Text-Disabled</code></td></tr>
+                <tr><td>Helper text (Error)</td><td><code>Text/Text-Error</code></td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Shadow</h4>
+            <table class="size-table">
+              <thead><tr><th>State</th><th>Token</th></tr></thead>
+              <tbody>
+                <tr><td>Focus ring on editor frame</td><td><code>Shadow/Shadow-Focus-Blue</code></td></tr>
+                <tr><td>Error glow on editor frame</td><td><code>Shadow/Shadow-Focus-Red</code></td></tr>
+                <tr><td>Floating toolbar drop shadow</td><td><code>Shadow/Shadow-Medium</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="spacing-tokens" class="doc-section-title">Spacing Tokens</h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>spacing/4</code></td><td>4 px</td><td>Toolbar button gap</td></tr>
+                <tr><td><code>spacing/8</code></td><td>8 px</td><td>Root vertical gap (label / editor / helper)</td></tr>
+                <tr><td><code>spacing/16</code></td><td>16 px</td><td>Editor body padding</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="corner-radius" class="doc-section-title">Corner Radius</h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>border-radius/radius-8</code></td><td>8 px</td><td>Editor frame corners</td></tr>
+                <tr><td><code>border-radius/radius-6</code></td><td>6 px</td><td>Floating toolbar popover corners</td></tr>
+                <tr><td><code>border-radius/radius-4</code></td><td>4 px</td><td>Toolbar icon-button corners</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="typography" class="doc-section-title">Typography</h2>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Size</th><th>Weight</th><th>Line Height</th><th>Token</th></tr></thead>
+              <tbody>
+                <tr><td>Label</td><td>13 px</td><td>Semibold (600)</td><td>20 px</td><td><code>body/Small/Medium</code></td></tr>
+                <tr><td>Editor content</td><td>14 px</td><td>Regular (400)</td><td>22 px</td><td><code>body/Default/Regular</code></td></tr>
+                <tr><td>Placeholder</td><td>14 px</td><td>Regular (400)</td><td>22 px</td><td><code>body/Default/Regular</code></td></tr>
+                <tr><td>Helper text</td><td>12 px</td><td>Regular (400)</td><td>16 px</td><td><code>body/Small/Default</code></td></tr>
+                <tr><td>Toolbar block-style label</td><td>13 px</td><td>Regular (400)</td><td>20 px</td><td><code>body/Small/Default</code></td></tr>
+                <tr><td>Heading 1 (inside editor)</td><td>24 px</td><td>Semibold (600)</td><td>32 px</td><td><code>heading/H1</code></td></tr>
+                <tr><td>Heading 2 (inside editor)</td><td>20 px</td><td>Semibold (600)</td><td>28 px</td><td><code>heading/H2</code></td></tr>
+                <tr><td>Heading 3 (inside editor)</td><td>16 px</td><td>Semibold (600)</td><td>24 px</td><td><code>heading/H3</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="sizing-reference" class="doc-section-title">Spacing &amp; Sizing Reference</h2>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Editor frame min-width</td><td><strong>640 px</strong></td></tr>
+                <tr><td>Editor body min-height</td><td><strong>160 px</strong></td></tr>
+                <tr><td>Editor body padding</td><td>16 px</td></tr>
+                <tr><td>Fixed toolbar height</td><td>40 px</td></tr>
+                <tr><td>Fixed toolbar padding</td><td>8 px horizontal / 4 px vertical</td></tr>
+                <tr><td>Floating toolbar padding</td><td>4 px</td></tr>
+                <tr><td>Floating toolbar arrow size</td><td>6 px</td></tr>
+                <tr><td>Toolbar icon-button size</td><td>28 &times; 28 px</td></tr>
+                <tr><td>Toolbar group separator</td><td>1 px &times; 16 px</td></tr>
+                <tr><td>Corner radius (frame)</td><td>8 px</td></tr>
+                <tr><td>Corner radius (toolbar button)</td><td>4 px</td></tr>
+                <tr><td>Default border stroke</td><td>1 px</td></tr>
+                <tr><td>Focus border stroke</td><td><strong>2 px</strong></td></tr>
+                <tr><td>Root vertical gap</td><td>8 px</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">Rich Text Editor is designed for long-form, formatted content authoring.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For <strong>long-form, formatted content</strong> &#8212; descriptions, knowledge-base articles, announcements, email bodies, release notes.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When users need <strong>inline styles</strong> (bold/italic), <strong>block structures</strong> (headings, lists, quotes), or <strong>embedded objects</strong> (links, images, tables).</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When content must be <strong>rendered later</strong> in a non-editable view.</li>
+                  <li style="border:none;background:transparent;">When variable/token insertion (<code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">$variable$</code>) is part of the authoring flow.</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#e42527" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;"><strong>Short single-line input</strong> &#8212; use Text Input Field.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;"><strong>Plain multi-line free text</strong> without formatting &#8212; use Text Area.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;"><strong>Code or scripting input</strong> with syntax highlighting &#8212; use Script Editor.</li>
+                  <li style="border:none;background:transparent;"><strong>Markdown-only</strong> input where live preview is required &#8212; use a dedicated markdown editor pattern.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="toolbar-decision" class="doc-section-title">Toolbar Style Decision</h2>
+            <p class="doc-section-subtitle">Choose the right toolbar based on the editing context.</p>
+            <table class="size-table">
+              <thead><tr><th>Situation</th><th>Recommended Toolbar</th></tr></thead>
+              <tbody>
+                <tr><td>Dedicated authoring surface (article editor, compose screen)</td><td><code>Fixed</code></td></tr>
+                <tr><td>Inline edit zone inside a form with many other fields</td><td><code>Floating</code></td></tr>
+                <tr><td>Comments / chat / reply boxes where chrome is distracting</td><td><code>Floating</code> or <code>Hidden</code></td></tr>
+                <tr><td>Read-only rendering of rich content</td><td><code>Hidden</code> + <code>state="Read Only"</code></td></tr>
+                <tr><td>Mobile / very narrow viewport</td><td><code>Floating</code> (Fixed toolbar wraps below 640 px)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do's and Don'ts</h2>
+            <p class="doc-section-subtitle">Guidelines for effective Rich Text Editor usage.</p>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Keep the editor at 640 px or wider so the Fixed toolbar fits on one row.</li>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Floating</code> toolbar for compact inline editors (comments, chat).</li>
+                <li>Pair <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Error</code> state with a helper-row message that explains the problem.</li>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Read Only</code> to display rich content outside an edit flow.</li>
+                <li>Persist formatting in a structured format (HTML or editor JSON).</li>
+                <li>Allow vertical resize for long-form editing.</li>
+                <li>Use the Floating toolbar's arrow to point at the active selection.</li>
+                <li>Localise the placeholder, label, and helper strings in RTL mode.</li>
+                <li>Sanitise and paste-clean external content (strip styles, scripts).</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Shrink below 640 px &#8212; the Fixed toolbar will wrap; switch to <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Floating</code> instead.</li>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Fixed</code> inside a narrow side panel or drawer.</li>
+                <li>Show the red error border without helper text.</li>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Disabled</code> to show read-only content &#8212; it communicates "cannot interact right now".</li>
+                <li>Store pasted rich content as raw HTML without sanitisation.</li>
+                <li>Allow horizontal resize &#8212; widths should be layout-driven.</li>
+                <li>Leave the Floating toolbar arrow floating over unrelated content when selection is cleared.</li>
+                <li>Force English chrome inside an Arabic/Hebrew layout.</li>
+                <li>Allow arbitrary HTML and inline <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;script&gt;</code> from pasted content.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Components that complement or can be used alongside Rich Text Editor.</p>
+            <div class="related-grid">
+              <a href="Text-area.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg> Text Area</a>
+              <a href="Text-field.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg> Text Input</a>
+              <a href="Script-editor.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Script Editor</a>
+              <a href="Inline-message.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Inline Alert Message</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <p class="doc-section-subtitle">Design tokens and resources for implementing the Rich Text Editor component.</p>
+            <ul class="doc-list">
+              <li><strong>Figma Node:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">18028:832135</code> &#8212; Component Set: Rich Text Editor</li>
+              <li><strong>Total Variants:</strong> 6 States &times; 3 Toolbar Styles &times; 2 RTL = <strong>36 variants</strong></li>
+              <li><strong>Typography:</strong> Zoho Puvi Regular (400) for content, Semibold (600) for labels and headings</li>
+              <li><strong>Sub-component:</strong> Form Field Helper Row, Fixed Toolbar, Floating Toolbar</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Use the controls below to configure the Rich Text Editor component and view the generated HTML code.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Toolbar</label><select class="cp-select" id="pg-toolbar"><option value="fixed" selected>Fixed</option><option value="floating">Floating</option><option value="hidden">Hidden</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">State</label><select class="cp-select" id="pg-state"><option value="default" selected>Default</option><option value="focus">Focus</option><option value="filled">Filled</option><option value="error">Error</option><option value="disabled">Disabled</option><option value="readonly">Read Only</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Direction</label><select class="cp-select" id="pg-dir"><option value="ltr" selected>LTR</option><option value="rtl">RTL</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Label</label><select class="cp-select" id="pg-label"><option value="show" selected>Show</option><option value="hide">Hide</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Helper Row</label><select class="cp-select" id="pg-helper"><option value="show" selected>Show</option><option value="hide">Hide</option></select></div>
+            </div>
+            <div class="cp-preview" id="pg-preview-area" style="padding:24px;flex-direction:column;align-items:stretch;">
+              <ds-rich-text-editor id="pg-rte-element" label="Description" placeholder="Start typing..." helper="Type $ to add variables"></ds-rich-text-editor>
+            </div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-copy-btn"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg> Copy code</button>
+            </div>
+            <div style="background:#0a0a0c;">
+              <div class="cp-code-area" id="pg-code-output"></div>
+            </div>
+          </div>
+
+          <script type="module">
+            customElements.whenDefined('ds-rich-text-editor').then(() => {
+              const toolbarEl = document.getElementById('pg-toolbar');
+              const stateEl   = document.getElementById('pg-state');
+              const dirEl     = document.getElementById('pg-dir');
+              const labelEl   = document.getElementById('pg-label');
+              const helperEl  = document.getElementById('pg-helper');
+              const rte       = document.getElementById('pg-rte-element');
+              const codeOut   = document.getElementById('pg-code-output');
+              const copyBtn   = document.getElementById('pg-copy-btn');
+
+              const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+              const RTE_COPY_LTR = { label: 'Description', placeholder: 'Start typing...', helper: 'Type $ to add variables' };
+              const RTE_COPY_RTL = { label: 'الوصف', placeholder: 'ابدأ الكتابة...', helper: 'اكتب $ لإضافة المتغيرات' };
+
+              function update() {
+                const isRtl = dirEl.value === 'rtl';
+                const copy = isRtl ? RTE_COPY_RTL : RTE_COPY_LTR;
+                rte.setAttribute('label', copy.label);
+                rte.setAttribute('placeholder', copy.placeholder);
+                rte.setAttribute('helper', copy.helper);
+                rte.setAttribute('toolbar', toolbarEl.value);
+                rte.setAttribute('state', stateEl.value === 'focus' || stateEl.value === 'filled' ? 'default' : stateEl.value);
+                if (isRtl) rte.setAttribute('rtl', '');
+                else rte.removeAttribute('rtl');
+                if (labelEl.value === 'hide') rte.setAttribute('show-label', 'false');
+                else rte.removeAttribute('show-label');
+                if (helperEl.value === 'hide') rte.setAttribute('show-helper-row', 'false');
+                else rte.removeAttribute('show-helper-row');
+
+                const attrs = [`label="${copy.label}"`, `placeholder="${copy.placeholder}"`, `helper="${copy.helper}"`, `toolbar="${toolbarEl.value}"`];
+                if (stateEl.value !== 'default' && stateEl.value !== 'focus' && stateEl.value !== 'filled') {
+                  attrs.push(`state="${stateEl.value}"`);
+                }
+                if (dirEl.value === 'rtl') attrs.push('rtl');
+                if (labelEl.value === 'hide') attrs.push('show-label="false"');
+                if (helperEl.value === 'hide') attrs.push('show-helper-row="false"');
+                const raw = `<ds-rich-text-editor\n  ${attrs.join('\n  ')}\n></ds-rich-text-editor>`;
+                codeOut.innerHTML = esc(raw)
+                  .replace(/&lt;(\/?)(ds-rich-text-editor)/g, '&lt;$1<span style="color:#a78bfa;">$2</span>')
+                  .replace(/(toolbar|state|rtl|show-label|show-helper-row|label|placeholder|helper)(=|&gt;)/g, '<span style="color:#38bdf8;">$1</span>$2')
+                  .replace(/&quot;(.*?)&quot;/g, '<span style="color:#34d399;">"$1"</span>');
+                codeOut.dataset.raw = raw;
+              }
+
+              [toolbarEl, stateEl, dirEl, labelEl, helperEl].forEach((el) => el.addEventListener('change', update));
+              copyBtn.addEventListener('click', () => {
+                const raw = codeOut.dataset.raw || '';
+                navigator.clipboard.writeText(raw).then(() => {
+                  const o = copyBtn.innerHTML;
+                  copyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+                  setTimeout(() => { copyBtn.innerHTML = o; }, 2000);
+                });
+              });
+
+              update();
+            });
+          </script>
+
+          <script type="text/disabled">
+          (function(){
+            var els = {toolbar:document.getElementById('pg-toolbar'),state:document.getElementById('pg-state'),dir:document.getElementById('pg-dir'),label:document.getElementById('pg-label'),helper:document.getElementById('pg-helper')};
+            var previewArea = document.getElementById('pg-preview-area');
+            var codeOut = document.getElementById('pg-code-output');
+            var copyBtn = document.getElementById('pg-copy-btn');
+            var activeFormats = {bold:false,italic:false,underline:false};
+
+            function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+            function svgBold(){ return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"/><path d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"/></svg>'; }
+            function svgItalic(){ return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>'; }
+            function svgUnderline(){ return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a6 6 0 006 6 6 6 0 006-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg>'; }
+            function svgStrike(){ return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4c-1.5-1-3.5-1-5 0s-2.5 3-1 5"/><path d="M3 12h18"/><path d="M8 20c1.5 1 3.5 1 5 0s2.5-3 1-5"/></svg>'; }
+            function svgList(){ return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>'; }
+            function svgLink(){ return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>'; }
+            function svgImage(){ return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'; }
+            function svgTable(){ return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>'; }
+            function svgDivider(){ return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/></svg>'; }
+            function svgAlign(){ return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>'; }
+
+            function update(){
+              var tb = els.toolbar.value;
+              var st = els.state.value;
+              var dir = els.dir.value;
+              var showLabel = els.label.value === 'show';
+              var showHelper = els.helper.value === 'show';
+              var isRTL = dir === 'rtl';
+              var label = isRTL ? '\u0627\u0644\u062A\u0633\u0645\u064A\u0629' : 'Description';
+              var placeholder = isRTL ? '\u0627\u0628\u062F\u0623 \u0627\u0644\u0643\u062A\u0627\u0628\u0629...' : 'Start typing...';
+              var helper = isRTL ? '\u0627\u0643\u062A\u0628 $ \u0644\u0625\u0636\u0627\u0641\u0629 \u0627\u0644\u0645\u062A\u063A\u064A\u0631\u0627\u062A' : 'Type $ to add variables';
+              if(st==='error') helper = isRTL ? '\u0627\u0644\u062D\u0642\u0644 \u0645\u0637\u0644\u0648\u0628' : 'This field is required.';
+
+              var frameCls = 'rte-frame';
+              if(st==='focus') frameCls += ' focus';
+              else if(st==='error') frameCls += ' error';
+              else if(st==='disabled') frameCls += ' disabled';
+              else if(st==='readonly') frameCls += ' readonly';
+
+              var isDisabled = st === 'disabled';
+              var isReadOnly = st === 'readonly';
+              var showToolbar = (tb !== 'hidden') && !isDisabled && !isReadOnly;
+              var isFloating = tb === 'floating';
+
+              var html = '<div class="rte-wrapper" style="'+(isRTL?'direction:rtl;':'')+'">';
+              if(showLabel) html += '<span class="rte-label" style="'+(isDisabled?'opacity:0.5;':'')+'">'+label+'</span>';
+              html += '<div class="'+frameCls+'">';
+
+              // Fixed toolbar
+              if(showToolbar && !isFloating){
+                html += '<div class="rte-toolbar" data-pg-toolbar>';
+                html += '<span class="rte-toolbar-dropdown">Normal &#9662;</span>';
+                html += '<span class="rte-toolbar-sep"></span>';
+                html += '<button class="rte-toolbar-btn'+(activeFormats.bold?' active':'')+'" data-format="bold" title="Bold">'+svgBold()+'</button>';
+                html += '<button class="rte-toolbar-btn'+(activeFormats.italic?' active':'')+'" data-format="italic" title="Italic">'+svgItalic()+'</button>';
+                html += '<button class="rte-toolbar-btn'+(activeFormats.underline?' active':'')+'" data-format="underline" title="Underline">'+svgUnderline()+'</button>';
+                html += '<button class="rte-toolbar-btn" data-format="strikethrough" title="Strikethrough">'+svgStrike()+'</button>';
+                html += '<span class="rte-toolbar-sep"></span>';
+                html += '<button class="rte-toolbar-btn" title="Bullet List">'+svgList()+'</button>';
+                html += '<button class="rte-toolbar-btn" title="Align">'+svgAlign()+'</button>';
+                html += '<span class="rte-toolbar-sep"></span>';
+                html += '<button class="rte-toolbar-btn" title="Link">'+svgLink()+'</button>';
+                html += '<button class="rte-toolbar-btn" title="Image">'+svgImage()+'</button>';
+                html += '<button class="rte-toolbar-btn" title="Table">'+svgTable()+'</button>';
+                html += '<button class="rte-toolbar-btn" title="Divider">'+svgDivider()+'</button>';
+                html += '</div>';
+              }
+
+              // Editor body
+              var bodyContent = '';
+              if(st==='filled' || st==='readonly'){
+                bodyContent = '<span style="color:var(--prism-text);">The quick brown fox jumps over the lazy dog. ';
+                if(activeFormats.bold) bodyContent = '<strong>' + bodyContent + '</strong>';
+                if(activeFormats.italic) bodyContent = '<em>' + bodyContent + '</em>';
+                if(activeFormats.underline) bodyContent = '<u>' + bodyContent + '</u>';
+                bodyContent += '</span>';
+              } else if(isDisabled){
+                bodyContent = '<span style="color:var(--prism-text-muted);opacity:0.5;">Draft content here...</span>';
+              } else {
+                bodyContent = '<span class="placeholder">'+placeholder+'</span>';
+              }
+              html += '<div class="rte-body" style="min-height:120px;'+(isDisabled?'opacity:0.5;':'')+'">'+bodyContent;
+
+              // Floating toolbar inside body
+              if(showToolbar && isFloating && (st==='focus' || st==='filled')){
+                html += '<div class="rte-floating-toolbar" style="margin-top:16px;position:relative;">';
+                html += '<button class="rte-toolbar-btn" title="Link">'+svgLink()+'</button>';
+                html += '<span class="rte-toolbar-sep"></span>';
+                html += '<button class="rte-toolbar-btn'+(activeFormats.bold?' active':'')+'" data-format="bold" title="Bold">'+svgBold()+'</button>';
+                html += '<button class="rte-toolbar-btn'+(activeFormats.italic?' active':'')+'" data-format="italic" title="Italic">'+svgItalic()+'</button>';
+                html += '<button class="rte-toolbar-btn'+(activeFormats.underline?' active':'')+'" data-format="underline" title="Underline">'+svgUnderline()+'</button>';
+                html += '<span class="rte-toolbar-sep"></span>';
+                html += '<span class="rte-toolbar-dropdown">Normal &#9662;</span>';
+                html += '</div>';
+              }
+
+              html += '</div>'; // rte-body
+              html += '</div>'; // rte-frame
+              if(showHelper) html += '<span class="rte-helper'+(st==='error'?' error':'')+'" style="'+(isDisabled?'opacity:0.5;':'')+'">'+(st==='error'?'&#10007; ':'&#9432; ')+helper+'</span>';
+              html += '</div>'; // rte-wrapper
+              previewArea.innerHTML = html;
+
+              // Attach toggle events to format buttons
+              previewArea.querySelectorAll('[data-format]').forEach(function(btn){
+                btn.addEventListener('click', function(e){
+                  e.preventDefault();
+                  var fmt = btn.getAttribute('data-format');
+                  if(activeFormats.hasOwnProperty(fmt)){
+                    activeFormats[fmt] = !activeFormats[fmt];
+                    update();
+                  }
+                });
+              });
+
+              // Build code output
+              var dirAttr = isRTL ? ' dir="rtl"' : '';
+              var codeStr = '<div class="rte-editor"'+dirAttr+'>\n';
+              if(showLabel) codeStr += '  <label id="rte-label">'+label+'</label>\n';
+              codeStr += '  <div class="rte-frame'+(st==='error'?' rte-error':'')+'"'+(isDisabled?' aria-disabled="true"':'')+(isReadOnly?' aria-readonly="true"':'')+'>\n';
+              if(showToolbar && !isFloating){
+                codeStr += '    <div class="rte-toolbar" role="toolbar" aria-label="Formatting options">\n';
+                codeStr += '      <select aria-label="Block style"><option>Normal</option><option>H1</option><option>H2</option><option>H3</option></select>\n';
+                codeStr += '      <button aria-pressed="'+(activeFormats.bold?'true':'false')+'" title="Bold">B</button>\n';
+                codeStr += '      <button aria-pressed="'+(activeFormats.italic?'true':'false')+'" title="Italic">I</button>\n';
+                codeStr += '      <button aria-pressed="'+(activeFormats.underline?'true':'false')+'" title="Underline">U</button>\n';
+                codeStr += '      <button title="Strikethrough">S</button>\n';
+                codeStr += '      <button title="Bullet list">List</button>\n';
+                codeStr += '      <button title="Link">Link</button>\n';
+                codeStr += '      <button title="Image">Image</button>\n';
+                codeStr += '    </div>\n';
+              }
+              codeStr += '    <div\n      role="textbox"\n      aria-multiline="true"\n      aria-labelledby="rte-label"\n      contenteditable="'+(isDisabled||isReadOnly?'false':'true')+'"\n      data-placeholder="'+placeholder+'"\n      style="min-height: 160px;"\n';
+              if(st==='error') codeStr += '      aria-invalid="true"\n      aria-describedby="rte-helper"\n';
+              codeStr += '    ></div>\n';
+              codeStr += '  </div>\n';
+              if(showHelper){
+                codeStr += '  <div id="rte-helper" class="rte-helper'+(st==='error'?' error':'')+'" aria-live="'+(st==='error'?'assertive':'polite')+'">\n';
+                codeStr += '    '+helper+'\n  </div>\n';
+              }
+              codeStr += '</div>';
+
+              codeOut.innerHTML = esc(codeStr)
+                .replace(/class=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">class</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/role=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">role</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/aria-multiline=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">aria-multiline</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/aria-labelledby=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">aria-labelledby</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/aria-label=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">aria-label</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/aria-pressed=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">aria-pressed</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/aria-invalid=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">aria-invalid</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/aria-describedby=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">aria-describedby</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/aria-disabled=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">aria-disabled</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/aria-readonly=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">aria-readonly</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/aria-live=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">aria-live</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/contenteditable=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">contenteditable</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/data-placeholder=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">data-placeholder</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/style=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">style</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/id=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">id</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/title=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">title</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/dir=&quot;(.*?)&quot;/g,'<span style="color:#38bdf8;">dir</span>=<span style="color:#34d399;">"$1"</span>')
+                .replace(/ disabled/g,' <span style="color:#f97316;">disabled</span>')
+                .replace(/&lt;(\/?)(div|label|button|select|option|span)(.*?)&gt;/g,'&lt;$1<span style="color:#a78bfa;">$2</span>$3&gt;');
+            }
+            Object.values(els).forEach(function(e){e.addEventListener('change',function(){ activeFormats={bold:false,italic:false,underline:false}; update(); });});
+            copyBtn.addEventListener('click',function(){
+              var r=document.createElement('div');r.innerHTML=codeOut.innerHTML;
+              navigator.clipboard.writeText(r.innerText).then(function(){
+                var o=copyBtn.innerHTML;copyBtn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';setTimeout(function(){copyBtn.innerHTML=o;},2000);
+              });
+            });
+            update();
+          })();
+          </script>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="component-api" class="doc-section-title">Component API &amp; Properties</h2>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>state</code></td><td><code>'Default' | 'Focus' | 'Filled' | 'Error' | 'Disabled' | 'Read Only'</code></td><td><code>'Default'</code></td><td>Interaction / validation state of the editor.</td></tr>
+                <tr><td><code>toolbar</code></td><td><code>'fixed' | 'floating' | 'hidden'</code></td><td><code>'fixed'</code></td><td>Toolbar presentation style.</td></tr>
+                <tr><td><code>rtl</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Switches to right-to-left layout mode.</td></tr>
+                <tr><td><code>showLabel</code></td><td><code>boolean</code></td><td><code>true</code></td><td>Shows or hides the label row.</td></tr>
+                <tr><td><code>label</code></td><td><code>string</code></td><td><code>"Label"</code></td><td>Field label text.</td></tr>
+                <tr><td><code>placeholder</code></td><td><code>string</code></td><td><code>"Start typing..."</code></td><td>Placeholder shown when the editor is empty.</td></tr>
+                <tr><td><code>showHelperRow</code></td><td><code>boolean</code></td><td><code>true</code></td><td>Shows or hides the helper text row below the editor.</td></tr>
+                <tr><td><code>helperText</code></td><td><code>string</code></td><td><code>"Type $ to add variables"</code></td><td>Contextual hint / validation message in the helper row.</td></tr>
+                <tr><td><code>value</code></td><td><code>string</code> (HTML/JSON)</td><td><code>""</code></td><td>Controlled value of the editor.</td></tr>
+                <tr><td><code>onChange</code></td><td><code>(value: string) =&gt; void</code></td><td>&#8212;</td><td>Fires whenever the document changes.</td></tr>
+                <tr><td><code>onFocus</code></td><td><code>() =&gt; void</code></td><td>&#8212;</td><td>Fires on editor focus.</td></tr>
+                <tr><td><code>onBlur</code></td><td><code>() =&gt; void</code></td><td>&#8212;</td><td>Fires on editor blur.</td></tr>
+                <tr><td><code>minHeight</code></td><td><code>number</code></td><td><code>160</code></td><td>Minimum height (px) of the editor body.</td></tr>
+                <tr><td><code>minWidth</code></td><td><code>number</code></td><td><code>640</code></td><td>Minimum width (px) of the editor frame.</td></tr>
+                <tr><td><code>resizable</code></td><td><code>boolean</code></td><td><code>true</code></td><td>Allows vertical drag-resize via the bottom-right grip.</td></tr>
+                <tr><td><code>readOnly</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Convenience alias for <code>state="Read Only"</code>.</td></tr>
+                <tr><td><code>isDisabled</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Convenience alias for <code>state="Disabled"</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="code-examples" class="doc-section-title">Code Examples</h2>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;margin-top:32px;">Basic usage &#8212; Fixed toolbar</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">RichTextEditor</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Description"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">placeholder</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Start typing..."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">helperText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Type $ to add variables"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">toolbar</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"fixed"</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Floating toolbar (inline / compact)</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">RichTextEditor</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Comment"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">toolbar</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"floating"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">placeholder</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Write a reply..."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">helperText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Markdown shortcuts supported"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">minHeight</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#D19A66;">96</span><span style="color:#C678DD;">}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Error state</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">RichTextEditor</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Announcement body"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">state</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Error"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">helperText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Announcement body is required."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">toolbar</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"fixed"</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Controlled value with variables</h4>
+            <div class="cp-code-area" style="border-radius:12px;margin-bottom:24px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#C678DD;">const</span> <span style="color:#ABB2BF;">[</span><span style="color:#E5C07B;">body</span><span style="color:#ABB2BF;">,</span> <span style="color:#E5C07B;">setBody</span><span style="color:#ABB2BF;">]</span> <span style="color:#56B6C2;">=</span> <span style="color:#E5C07B;">useState</span><span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">string</span><span style="color:#ABB2BF;">&gt;(</span><span style="color:#98C379;">""</span><span style="color:#ABB2BF;">);</span><br><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">RichTextEditor</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Email body"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">toolbar</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"fixed"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">body</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">onChange</span><span style="color:#56B6C2;">=</span><span style="color:#C678DD;">{</span><span style="color:#E5C07B;">setBody</span><span style="color:#C678DD;">}</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">helperText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Type $ to add variables"</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">RTL</h4>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">RichTextEditor</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">rtl</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"&#x627;&#x644;&#x62A;&#x633;&#x645;&#x64A;&#x629;"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">placeholder</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"&#x627;&#x628;&#x62F;&#x623; &#x627;&#x644;&#x643;&#x62A;&#x627;&#x628;&#x629;..."</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">helperText</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"&#x627;&#x643;&#x62A;&#x628; $ &#x644;&#x625;&#x636;&#x627;&#x641;&#x629; &#x627;&#x644;&#x645;&#x62A;&#x63A;&#x64A;&#x631;&#x627;&#x62A;"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">toolbar</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"fixed"</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for ensuring the Rich Text Editor is accessible across assistive technologies and input methods.</p>
+
+          <div class="doc-section">
+            <h3 id="editor-runtime" class="doc-h3">Editor Runtime</h3>
+            <ul class="doc-list">
+              <li>Use a proper editor runtime (ProseMirror, Lexical, TipTap, Slate). A bare <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">contenteditable</code> div without a framework will not meet WCAG.</li>
+              <li>The editable region should expose <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="textbox"</code> with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-multiline="true"</code>.</li>
+              <li>Connect the visible label to the editable region via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-labelledby</code>. Do not rely on <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">&lt;label for&gt;</code> &#8212; <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">contenteditable</code> is not a form control.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="keyboard-interaction" class="doc-h3">Keyboard Interaction</h3>
+            <table class="size-table">
+              <thead><tr><th>Action</th><th>Result</th></tr></thead>
+              <tbody>
+                <tr><td><code>Tab</code></td><td>Moves focus into the editor.</td></tr>
+                <tr><td><code>&#8984;/Ctrl+B</code></td><td>Toggle bold.</td></tr>
+                <tr><td><code>&#8984;/Ctrl+I</code></td><td>Toggle italic.</td></tr>
+                <tr><td><code>&#8984;/Ctrl+U</code></td><td>Toggle underline.</td></tr>
+                <tr><td><code>&#8984;/Ctrl+K</code></td><td>Insert / edit link.</td></tr>
+                <tr><td><code>Enter</code></td><td>New paragraph.</td></tr>
+                <tr><td><code>Shift+Enter</code></td><td>Soft break (line break within paragraph).</td></tr>
+                <tr><td><code>Alt+F10</code></td><td>Focus the toolbar. <code>Esc</code> returns to the editor.</td></tr>
+                <tr><td><code>Tab</code> inside lists</td><td>Indent list item (does <strong>not</strong> trap focus by default).</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:16px;padding:16px 20px;background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.15);border-radius:12px;">
+              <p style="font-size:14px;color:var(--prism-text);line-height:1.6;margin:0;"><strong>Note:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Tab</code> inside the editor should <strong>not</strong> trap focus by default &#8212; use it to indent lists only when a list item has focus.</p>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="aria-attributes" class="doc-h3">ARIA Attributes &amp; Screen Reader Guidance</h3>
+            <ul class="doc-list">
+              <li><strong>Validation:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-invalid="true"</code> in Error state; link the helper-row message via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-describedby</code>.</li>
+              <li><strong>Read Only:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-readonly="true"</code> and remove edit controls. Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">contenteditable="false"</code>.</li>
+              <li><strong>Disabled:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-disabled="true"</code> and remove from the tab sequence. The editor is announced as "disabled" and cannot be focused.</li>
+              <li><strong>Toolbar buttons:</strong> Toolbar buttons must be keyboard-reachable via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Alt+F10</code>. Buttons expose <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-pressed="true"</code> when the current selection has that format applied.</li>
+              <li><strong>Floating toolbar:</strong> When the floating toolbar appears, it must not steal focus. Announce only when the user explicitly opens it.</li>
+              <li><strong>Semantic output:</strong> Expose headings as <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="heading"</code> with the correct <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-level</code>, lists as <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="list"</code>/<code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="listitem"</code>. Verify your editor emits semantic HTML.</li>
+              <li><strong>RTL:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">dir="rtl"</code> on the root; the editor runtime must mirror toolbar order, list markers, and cursor movement.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="contrast" class="doc-h3">Color Contrast<span class="h3-badge" style="background:rgba(34,197,94,0.15);color:#16a34a;">WCAG AA Pass</span></h3>
+            <p class="doc-section-subtitle">All color combinations meet WCAG 2.1 AA contrast requirements.</p>
+            <ul class="doc-list">
+              <li><strong>Placeholder contrast:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Text/Text-Placeholder</code> &#8805; 4.5:1 against <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">BG-Primary-alt</code>.</li>
+              <li><strong>Focus border:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Border/Border-Accent</code> (2 px) must be visible independent of colour.</li>
+              <li><strong>Focus ring:</strong> The 2 px accent border + blue focus shadow serves as the focus indicator. Do not remove either.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="focus-state-design" class="doc-h3">Focus State Design</h3>
+            <div style="margin-top:16px;display:flex;gap:16px;align-items:center;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+              <div style="width:200px;height:60px;border:2px solid #2563eb;border-radius:8px;box-shadow:0 0 0 3px rgba(37,99,235,0.15);display:flex;align-items:center;justify-content:center;background:var(--prism-surface);font-size:12px;color:var(--prism-text);flex-shrink:0;">Editor body</div>
+              <div>
+                <div style="font-weight:600;font-size:15px;color:var(--prism-text);">Focus ring: 2px border + 3px shadow</div>
+                <div style="font-size:14px;color:var(--prism-text-muted);margin-top:4px;">Border: Border-Accent | Shadow: Shadow-Focus-Blue</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/rich-text-editor.md" download="rich-text-editor.md" class="action-link"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=18028-832135" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  <script>
+    let _tocObserver = null;
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav'); if (!tocList) return; tocList.innerHTML = '';
+      const activePanel = document.getElementById(targetId); if (!activePanel) return;
+      activePanel.querySelectorAll('h2[id], h3[id]').forEach(h => {
+        if (h.style.display === 'none') return;
+        const li = document.createElement('li'), a = document.createElement('a');
+        a.href = '#' + h.id; a.className = 'toc-link';
+        let text = Array.from(h.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+        if (!text) text = h.innerText; a.textContent = text;
+        a.addEventListener('click', e => { e.preventDefault(); document.getElementById(h.id).scrollIntoView({behavior:'smooth',block:'start'}); });
+        li.appendChild(a); tocList.appendChild(li);
+      });
+      initScrollSpy();
+    }
+    function initScrollSpy() {
+      if (_tocObserver) _tocObserver.disconnect();
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sections = Array.from(tocLinks).map(l => document.getElementById(l.getAttribute('href').slice(1))).filter(Boolean);
+      if (!sections.length) return;
+      _tocObserver = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { const id = e.target.getAttribute('id'); tocLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+id)); } }); }, {rootMargin:'-80px 0px -60% 0px',threshold:0});
+      sections.forEach(s => _tocObserver.observe(s));
+    }
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active')); tab.classList.add('active');
+        const tabMap = {'Overview':'tab-overview','Usage':'tab-usage','Style':'tab-style','Code':'tab-code','Accessibility':'tab-accessibility'};
+        document.querySelectorAll('.tab-content').forEach(p => p.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) { document.getElementById(target).style.display = 'block'; updateTOC(target); }
+        window.scrollTo({top:0,behavior:'smooth'});
+      });
+    });
+    updateTOC('tab-overview');
+
+    // Sidebar search filter
+    (function(){
+      var searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      var items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function(){
+        var q = this.value.toLowerCase().trim();
+        items.forEach(function(li){
+          var link = li.querySelector('a');
+          if (!link) return;
+          var text = link.textContent.toLowerCase();
+          li.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+      });
+      // Cmd+K / Ctrl+K shortcut to focus search
+      document.addEventListener('keydown', function(e){
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      });
+    })();
+
+    // Scroll sidebar to active link on page load
+    (function(){
+      var active = document.querySelector('.sidebar-link.active');
+      if (active) {
+        var sidebar = active.closest('.sidebar');
+        if (sidebar) {
+          var top = active.offsetTop - sidebar.offsetTop - (sidebar.clientHeight / 3);
+          sidebar.scrollTop = Math.max(0, top);
+        }
+      }
+    })();
+
+    // Make demo toolbar buttons interactive (toggle active state)
+    (function(){
+      document.addEventListener('click', function(e){
+        var btn = e.target.closest('.rte-toolbar-btn[data-format]');
+        if (!btn) return;
+        // Only in the demo area, not in the playground
+        if (btn.closest('.code-playground') || btn.closest('#pg-preview-area')) return;
+        e.preventDefault();
+        btn.classList.toggle('active');
+      });
+    })();
+  </script>
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/main.js"></script>
+
+</body>
+</html>

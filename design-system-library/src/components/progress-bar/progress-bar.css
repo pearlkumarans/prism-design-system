@@ -1,0 +1,103 @@
+/* =============================================================================
+   ds-progress-bar / .ds-progress-bar
+   4 variants × 3 sizes × determinate / indeterminate × disabled.
+   ============================================================================= */
+
+:host { display: block; width: 100%; font-family: var(--font-family-sans); }
+
+.ds-progress-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--_pb-gap);
+  width: 100%;
+  --_pb-gap: 4px;
+  --_pb-track-h: 4px;
+  --_pb-text: var(--font-size-12);
+  /* Spec: BG-Info-Secondary — NOT accent-secondary (accent goes green in the
+     Green themes; info stays blue). */
+  --_pb-track-bg: var(--uems-bg-info-secondary);
+  --_pb-fill-bg: var(--uems-bg-button-primary);
+  --_pb-value-color: var(--uems-text-accent-primary);
+}
+
+.ds-progress-bar__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+  font-size: var(--_pb-text);
+  font-weight: var(--font-weight-medium, 500); /* Medium on every size */
+  line-height: var(--_pb-line, 16px);
+  /* Row hugs its line-height (14/16/20). Figma fixes the row at 16px and
+     clips Large's 20px text — authoring quirk, flagged; code doesn't clip. */
+}
+.ds-progress-bar__label { color: var(--uems-text-primary); }
+.ds-progress-bar__value { color: var(--_pb-value-color); }
+
+.ds-progress-bar__track {
+  position: relative;
+  width: 100%;
+  height: var(--_pb-track-h);
+  background: var(--_pb-track-bg);
+  border-radius: var(--uems-radius-pill, 9999px);
+  overflow: hidden;
+}
+.ds-progress-bar__fill {
+  height: 100%;
+  background: var(--_pb-fill-bg);
+  border-radius: var(--uems-radius-pill, 9999px);
+  transition: width 200ms ease-out;
+}
+
+/* ---- Sizes ---------------------------------------------------------- */
+.ds-progress-bar--small  { --_pb-track-h: 4px; --_pb-text: var(--uems-font-size-10, 10px); --_pb-line: 14px; --_pb-gap: var(--uems-spacing-4, 4px); }
+.ds-progress-bar--medium { --_pb-track-h: 6px; --_pb-text: var(--uems-font-size-12, 12px); --_pb-line: 16px; --_pb-gap: 6px; }
+.ds-progress-bar--large  { --_pb-track-h: 8px; --_pb-text: var(--uems-font-size-14, 14px); --_pb-line: 20px; --_pb-gap: var(--uems-spacing-8, 8px); }
+
+/* ---- Variants ------------------------------------------------------- */
+.ds-progress-bar--success {
+  --_pb-track-bg: var(--uems-bg-success-secondary);
+  --_pb-fill-bg: var(--uems-bg-success-solid);
+  --_pb-value-color: var(--uems-text-success);
+}
+.ds-progress-bar--warning {
+  --_pb-track-bg: var(--uems-bg-warning-secondary);
+  --_pb-fill-bg: var(--uems-bg-warning-solid);
+  --_pb-value-color: var(--uems-text-warning);
+}
+.ds-progress-bar--error {
+  --_pb-track-bg: var(--uems-bg-error-secondary);
+  --_pb-fill-bg: var(--uems-bg-error-solid);
+  --_pb-value-color: var(--uems-text-error);
+}
+
+/* ---- Disabled ------------------------------------------------------- */
+.ds-progress-bar--disabled {
+  --_pb-track-bg: var(--uems-bg-disabled-subtle);
+  --_pb-fill-bg: var(--uems-bg-disabled);
+  --_pb-value-color: var(--uems-text-disabled);
+}
+.ds-progress-bar--disabled .ds-progress-bar__label { color: var(--uems-text-disabled); }
+.ds-progress-bar--disabled.ds-progress-bar--indeterminate .ds-progress-bar__fill { animation-play-state: paused; }
+
+/* ---- Indeterminate ------------------------------------------------- */
+.ds-progress-bar--indeterminate .ds-progress-bar__fill {
+  width: 33% !important;
+  animation: ds-progress-sweep 1.2s linear infinite;
+}
+@keyframes ds-progress-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(303%); } /* 100/33 — clears the right edge */
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-progress-bar--indeterminate .ds-progress-bar__fill {
+    animation-duration: 3s; /* slow, don't freeze — the motion IS the signal */
+  }
+  .ds-progress-bar__fill { transition: none; }
+}
+
+/* RTL — dir="rtl" reverses the inline axis automatically, so:
+   - .ds-progress-bar__row's justify-content: space-between swaps label/value
+     (label moves to the right, value to the left)
+   - The fill grows from the inline-start edge, which is the RIGHT in RTL */
+.ds-progress-bar[dir="rtl"] { text-align: right; }

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patches Dashboard — Endpoint Central · Prism</title>
+
+  <link rel="stylesheet" href="../../design-system-library/src/styles/index.css" />
+  <!-- chart.css is not bundled in styles/index.css — link it directly so ds-chart is themed -->
+  <link rel="stylesheet" href="../../design-system-library/src/components/chart/chart.css" />
+  <script type="module">import '../../design-system-library/src/components/index.js';</script>
+
+  <script>
+    /* Theme persistence — sync with ds-right-pane toggle */
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+      document.addEventListener('ds-right-pane-theme', function (e) {
+        document.documentElement.setAttribute('data-theme', e.detail.theme);
+        try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+      });
+    })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body {
+      margin: 0;
+      font-family: var(--font-family-sans);
+      background: var(--cobalt-15);
+      transition: background-color var(--duration-standard, 240ms) var(--ease-standard);
+    }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+    .body { display: flex; flex: 1; min-height: 0; padding: 0 0 var(--spacing-12) var(--spacing-12); gap: 0; }
+    .shell-area {
+      flex: 1; display: flex; min-width: 0; min-height: 0;
+      border: 1px solid var(--uems-border-accent-subtle); border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle); overflow: hidden;
+    }
+    .shell-area .ds-sidebar-l1 { border: 0 !important; border-radius: 0 !important; padding-top: 4px !important; }
+    ds-sidebar-l1 { max-width: 400px; overflow: hidden; }
+    ds-sidebar-l1.is-hidden { max-width: 0 !important; opacity: 0 !important; pointer-events: none; }
+
+    /* ── Page: header → scrollable dashboard grid ── */
+    .page { display: flex; flex-direction: column; min-width: 0; height: 100%; }
+    .dash {
+      flex: 1; min-height: 0; overflow-y: auto;
+      display: flex; flex-direction: column; gap: var(--spacing-20);
+      padding: 0 var(--spacing-20) var(--spacing-20);
+    }
+
+    /* KPI row */
+    .dash__kpis {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));  /* all five KPIs on one row */
+      gap: var(--spacing-16);
+    }
+    /* Make the reliability alert tile read as actionable. */
+    #reliability-kpi { cursor: pointer; }
+
+    /* Chart panels */
+    .dash__panels { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-16); }
+    @media (max-width: 1100px) { .dash__panels { grid-template-columns: 1fr; } }
+    .dash__panel {
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-md, 10px);
+      background: var(--uems-bg-base);
+      padding: var(--spacing-16);
+      display: flex; flex-direction: column; gap: var(--spacing-12);
+    }
+    /* A section header labels the chart right below it — pull it closer. */
+    .dash__panel ds-section-header { margin-bottom: calc(-1 * var(--spacing-8)); }
+    /* ds-chart is bare (no surface) — the panel owns the chrome. Let the chart
+       fill the full widget width; height follows its aspect ratio (no height cap,
+       which would otherwise letterbox the plot and leave side gutters). */
+    .dash__panel ds-chart { width: 100%; }
+    .dash__panel ds-chart .ds-chart__plot { width: 100%; max-height: none; }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- TOP — Header navigation -->
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+  <div class="body">
+    <div class="shell-area">
+
+      <ds-sidebar-l1 id="shell-l1" class="is-hidden" style="height: 100%;"></ds-sidebar-l1>
+
+      <ds-content role="main">
+        <div class="page">
+
+          <ds-page-header id="ph"
+            structure="default"
+            title="Patches"
+            description="Patch posture across your network — what's missing, awaiting approval, and automated."
+            show-description
+            show-breadcrumbs
+            show-overflow="false"></ds-page-header>
+
+          <div class="dash">
+
+            <!-- KPI row -->
+            <div class="dash__kpis">
+              <ds-kpi-card type="default" icon="file-shield"
+                title="Missing Patches" value="587"></ds-kpi-card>
+              <ds-kpi-card type="default" icon="checklist-01"
+                title="Missing patches awaiting approval" value="581"></ds-kpi-card>
+              <ds-kpi-card type="default" icon="download"
+                title="Download Pending Patches" value="1"></ds-kpi-card>
+              <ds-kpi-card type="default" icon="settings-deploy"
+                title="Automated Patch Deployments" value="50"></ds-kpi-card>
+
+              <!-- NEW: redirects to the Reliability Alerts page -->
+              <ds-kpi-card id="reliability-kpi" type="description" state="alert" clickable
+                icon="exclamation-circle"
+                title="Reliability alerts" value="6"
+                subtitle="Unresolved — review before deployment"></ds-kpi-card>
+            </div>
+
+            <!-- Chart panels (placeholders for the dashboard mock) -->
+            <div class="dash__panels">
+              <section class="dash__panel">
+                <ds-section-header size="medium" title="Network Patch Status"></ds-section-header>
+                <ds-chart id="chart-status" type="column" color-by-category show-data-labels show-legend="false"></ds-chart>
+              </section>
+              <section class="dash__panel">
+                <ds-section-header size="medium" title="Missing Patches by Severity"></ds-section-header>
+                <ds-chart id="chart-severity" type="column" color-by-category show-data-labels show-legend="false"></ds-chart>
+              </section>
+            </div>
+
+          </div>
+
+        </div>
+      </ds-content>
+
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import '../../design-system-library/src/components/index.js';
+
+  /* ── Header tabs — Threats & Patches active ── */
+  document.getElementById('ec-header').tabs = [
+    { id: 'home',    label: 'Home' },
+    { id: 'configs', label: 'Configurations' },
+    { id: 'tp',      label: 'Threats & Patches', active: true },
+    { id: 'sd',      label: 'Software Deployment' },
+    { id: 'inv',     label: 'Inventory' },
+    { id: 'osd',     label: 'OS Deployment' },
+    { id: 'mdm',     label: 'MDM' },
+    { id: 'tools',   label: 'Tools' },
+    { id: 'agent',   label: 'Agent' },
+    { id: 'browsers', label: 'Browsers' },
+    { id: 'app-ctrl', label: 'Application Control' },
+    { id: 'malware',  label: 'Malware Protection' },
+    { id: 'dlp',      label: 'Endpoint DLP', newTag: true },
+    { id: 'bitlocker', label: 'BitLocker Management' },
+    { id: 'dev-ctrl',  label: 'Device Control' },
+    { id: 'reports',   label: 'Reports' },
+    { id: 'support',   label: 'Support' },
+    { id: 'dex',       label: 'DEX' },
+  ];
+
+  /* ── L1 module rail — Dashboard active ── */
+  const l1El = document.getElementById('shell-l1');
+  l1El.items = [
+    { id: 'dash',    label: 'Dashboard',  icon: 'add-widget', active: true },
+    { id: 'threats', label: 'Threats',    icon: 'bug' },
+    { id: 'patches', label: 'Patches',    icon: 'file-shield', href: 'reliability-alerts.html' },
+    { id: 'sys',     label: 'Systems',    icon: 'computer' },
+    { id: 'deploy',  label: 'Deployment', icon: 'settings-deploy' },
+    { id: 'comp',    label: 'Compliance', icon: 'checklist-01' },
+    { id: 'rep',     label: 'Reports',    icon: 'file-report' },
+    { id: 'set',     label: 'Settings',   icon: 'settings', href: 'decline-patch.html' },
+  ];
+  l1El.bottomItems = [ { id: 'update', label: 'Update Now', icon: 'refresh-time' } ];
+  l1El.classList.remove('is-hidden');
+
+  /* ── Breadcrumbs ── */
+  const ph = document.getElementById('ph');
+  customElements.whenDefined('ds-page-header').then(() => {
+    ph.breadcrumbs = [
+      { id: 'tp',    label: 'Threats & Patches' },
+      { id: 'patch', label: 'Patches' },
+      { id: 'dash',  label: 'Dashboard' },
+    ];
+  });
+
+  /* ── Charts ── */
+  customElements.whenDefined('ds-chart').then(() => {
+    // Installed = good (green), Missing = needs attention (red).
+    document.getElementById('chart-status').data = {
+      categories: ['Installed Patches', 'Missing Patches'],
+      series: [{ name: 'Patches', values: [4361, 587], colors: ['green', 'red'] }],
+    };
+    // Severity ramp: Critical→red, Important→orange, Moderate→yellow, Low→green, Unrated→grey.
+    document.getElementById('chart-severity').data = {
+      categories: ['Critical', 'Important', 'Moderate', 'Low', 'Unrated'],
+      series: [{ name: 'Missing patches', values: [20, 521, 13, 12, 21], colors: ['red', 'orange', 'yellow', 'green', 'grey'] }],
+    };
+
+    /* Bar colors — applied at the page level so they work even when the deployed
+       ds-chart predates per-bar `colors` support (e.g. the demo server). Maps
+       each bar (in category order) to a chart-palette token; a MutationObserver
+       re-applies after any chart re-render. */
+    const BAR_COLORS = {
+      'chart-status':   ['--uems-bg-chart-green-primary', '--uems-bg-chart-red-primary'],
+      'chart-severity': ['--uems-bg-chart-red-primary', '--uems-bg-chart-orange-primary', '--uems-bg-chart-yellow-primary', '--uems-bg-chart-green-primary', '--uems-bg-chart-grey-primary'],
+    };
+    Object.keys(BAR_COLORS).forEach((id) => {
+      const host = document.getElementById(id);
+      if (!host) return;
+      const tokens = BAR_COLORS[id];
+      const apply = () => {
+        host.querySelectorAll('rect.ds-chart__bar').forEach((bar, i) => {
+          if (tokens[i]) bar.style.fill = `var(${tokens[i]})`;
+        });
+      };
+      apply();
+      new MutationObserver(apply).observe(host, { childList: true, subtree: true });
+    });
+  });
+
+  /* ── Reliability alerts tile → navigate to the Reliability Alerts page ── */
+  const relCard = document.getElementById('reliability-kpi');
+  const goReliability = () => { window.location.href = 'reliability-alerts.html?tab=unresolved'; };
+  relCard.addEventListener('click', goReliability);
+  relCard.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goReliability(); }
+  });
+</script>
+
+</body>
+</html>

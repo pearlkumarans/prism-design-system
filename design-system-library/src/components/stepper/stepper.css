@@ -1,0 +1,289 @@
+/* =============================================================================
+   ds-stepper / .ds-stepper
+   Step progress indicator. The connector is part of each step — a leading
+   segment for horizontal, a trailing segment for vertical — and fills as
+   progress advances. All values come from design tokens; no hardcoded colours,
+   spacing, radii, or type.
+   ============================================================================= */
+
+.ds-stepper {
+  --ds-stepper-node-size: 24px;
+  --ds-stepper-node-gap: var(--spacing-8);       /* node → label spacing (per size) */
+  --ds-stepper-gap: var(--spacing-8);            /* connector inset from node edge */
+  --ds-stepper-connector-thickness: 1px;         /* matches Figma 1px connector */
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family-sans);
+}
+.ds-stepper--sm { --ds-stepper-node-size: 20px; --ds-stepper-node-gap: var(--spacing-6); }
+.ds-stepper--md { --ds-stepper-node-size: 24px; --ds-stepper-node-gap: var(--spacing-8); }
+.ds-stepper--lg { --ds-stepper-node-size: 32px; --ds-stepper-node-gap: var(--spacing-12); }
+
+/* ---- Step + interactive wrapper ------------------------------------------ */
+.ds-stepper__step {
+  position: relative;
+  list-style: none;
+  min-width: 0;
+}
+.ds-stepper__main {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: default;
+}
+button.ds-stepper__main:not([aria-disabled="true"]) { cursor: pointer; }
+.ds-stepper__main[aria-disabled="true"] { cursor: not-allowed; }
+.ds-stepper__main:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-6);
+}
+
+/* ---- Node (indicator) ----------------------------------------------------- */
+.ds-stepper__node {
+  position: relative;
+  z-index: 1;                       /* sits above the connector line */
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: var(--ds-stepper-node-size);
+  height: var(--ds-stepper-node-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--uems-bg-base);
+  border: 1px solid var(--uems-border-secondary);
+  color: var(--uems-text-tertiary);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+.ds-stepper__num { line-height: 1; }
+.ds-stepper--sm .ds-stepper__num { font-size: var(--font-size-10); }
+.ds-stepper--md .ds-stepper__num { font-size: var(--font-size-12); }
+.ds-stepper--lg .ds-stepper__num { font-size: var(--font-size-14); }
+.ds-stepper__glyph { color: inherit; }
+
+/* ---- Label block ---------------------------------------------------------- */
+.ds-stepper__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+.ds-stepper__title {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-primary);
+}
+.ds-stepper__desc {
+  font-size: var(--font-size-12);
+  color: var(--uems-text-secondary);
+}
+.ds-stepper__optional {
+  font-size: var(--font-size-11);
+  color: var(--uems-text-tertiary);
+}
+.ds-stepper--sm .ds-stepper__title { font-size: var(--font-size-12); }
+.ds-stepper--lg .ds-stepper__title { font-size: var(--font-size-16); }
+.ds-stepper--lg .ds-stepper__desc { font-size: var(--font-size-14); }
+
+/* ---- States --------------------------------------------------------------- */
+.ds-stepper__step--active .ds-stepper__node {
+  background: var(--uems-bg-button-primary);
+  border-color: var(--uems-bg-button-primary);
+  color: var(--uems-text-white);
+}
+/* Active title matches Figma: no accent/bold emphasis — the filled node carries
+   the state. (Kept as its own rule for easy override.) */
+.ds-stepper__step--active .ds-stepper__title {
+  color: var(--uems-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+.ds-stepper__step--completed .ds-stepper__node {
+  background: var(--uems-bg-success-solid);
+  border-color: var(--uems-bg-success-solid);
+  color: var(--uems-text-white);
+}
+.ds-stepper__step--error .ds-stepper__node {
+  background: var(--uems-bg-error-solid);
+  border-color: var(--uems-bg-error-solid);
+  color: var(--uems-text-white);
+}
+.ds-stepper__step--error .ds-stepper__title,
+.ds-stepper__step--error .ds-stepper__desc { color: var(--uems-text-error); }
+.ds-stepper__step--warning .ds-stepper__node {
+  background: var(--uems-bg-warning-solid);
+  border-color: var(--uems-bg-warning-solid);
+  color: var(--uems-text-white);
+}
+.ds-stepper__step--warning .ds-stepper__title,
+.ds-stepper__step--warning .ds-stepper__desc { color: var(--uems-text-warning); }
+.ds-stepper__step--disabled .ds-stepper__node {
+  background: var(--uems-bg-disabled);
+  border-color: var(--uems-border-disabled);
+  color: var(--uems-text-disabled);
+}
+.ds-stepper__step--disabled .ds-stepper__title,
+.ds-stepper__step--disabled .ds-stepper__desc,
+.ds-stepper__step--disabled .ds-stepper__optional { color: var(--uems-text-disabled); }
+
+/* Hover on clickable, non-active steps */
+button.ds-stepper__main:not([aria-disabled="true"]):hover .ds-stepper__node {
+  border-color: var(--uems-border-accent);
+}
+.ds-stepper__step--active button.ds-stepper__main:hover .ds-stepper__node { border-color: var(--uems-bg-button-primary); }
+
+/* ---- Connector: base ------------------------------------------------------ */
+.ds-stepper__connector {
+  position: absolute;
+  background: var(--uems-border-secondary);
+  pointer-events: none;
+}
+/* Progress trail: connectors reaching completed/active steps fill accent. */
+.ds-stepper__step--completed .ds-stepper__connector,
+.ds-stepper__step--active .ds-stepper__connector { background: var(--uems-bg-success-solid); }
+.ds-stepper--no-connector .ds-stepper__connector { display: none; }
+
+/* RTL: mirror via the writing direction; logical insets below do the rest. */
+.ds-stepper--rtl { direction: rtl; }
+
+/* ---- Horizontal (labels below) ------------------------------------------- */
+.ds-stepper--horizontal { flex-direction: row; align-items: flex-start; }
+.ds-stepper--horizontal .ds-stepper__step { flex: 1 1 0; }
+.ds-stepper--horizontal .ds-stepper__main {
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ds-stepper-node-gap);
+  text-align: center;
+}
+.ds-stepper--horizontal .ds-stepper__text { align-items: center; text-align: center; }
+/* leading segment: from previous node's right edge to this node's left edge */
+.ds-stepper--horizontal .ds-stepper__connector {
+  top: calc(var(--ds-stepper-node-size) / 2 - var(--ds-stepper-connector-thickness) / 2);
+  inset-inline-start: calc(-50% + var(--ds-stepper-node-size) / 2 + var(--ds-stepper-gap));
+  inset-inline-end: calc(50% + var(--ds-stepper-node-size) / 2 + var(--ds-stepper-gap));
+  height: var(--ds-stepper-connector-thickness);
+}
+.ds-stepper--horizontal .ds-stepper__step:first-of-type .ds-stepper__connector { display: none; }
+
+/* ---- Horizontal, inline labels ------------------------------------------- */
+.ds-stepper--horizontal.ds-stepper--inline .ds-stepper__main {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-8);
+  text-align: start;
+}
+.ds-stepper--horizontal.ds-stepper--inline .ds-stepper__text { align-items: flex-start; text-align: start; }
+.ds-stepper--horizontal.ds-stepper--inline .ds-stepper__step { flex: 0 1 auto; }
+.ds-stepper--horizontal.ds-stepper--inline .ds-stepper__connector {
+  position: static;
+  flex: 1 1 auto;
+  align-self: center;
+  min-width: var(--spacing-24);
+  height: var(--ds-stepper-connector-thickness);
+  margin: 0 var(--spacing-8);
+}
+.ds-stepper--horizontal.ds-stepper--inline { align-items: center; }
+.ds-stepper--horizontal.ds-stepper--inline .ds-stepper__step { display: flex; align-items: center; }
+.ds-stepper--horizontal.ds-stepper--inline .ds-stepper__step:first-of-type .ds-stepper__connector { display: none; }
+
+/* ---- Vertical ------------------------------------------------------------- */
+.ds-stepper--vertical { flex-direction: column; }
+.ds-stepper--vertical .ds-stepper__step { padding-bottom: var(--spacing-24); }
+.ds-stepper--vertical .ds-stepper__step:last-of-type { padding-bottom: 0; }
+.ds-stepper--vertical .ds-stepper__main {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--ds-stepper-node-gap);
+}
+.ds-stepper--vertical .ds-stepper__text { padding-top: calc((var(--ds-stepper-node-size) - var(--font-size-16)) / 2); }
+/* trailing segment: from this node's bottom down to the next node's top */
+.ds-stepper--vertical .ds-stepper__connector {
+  inset-inline-start: calc(var(--ds-stepper-node-size) / 2 - var(--ds-stepper-connector-thickness) / 2);
+  top: calc(var(--ds-stepper-node-size) + var(--spacing-4));
+  bottom: calc(-1 * var(--spacing-4));
+  width: var(--ds-stepper-connector-thickness);
+}
+.ds-stepper--vertical .ds-stepper__step:last-of-type .ds-stepper__connector { display: none; }
+
+/* ---- Dashed connector ----------------------------------------------------- */
+.ds-stepper--dashed.ds-stepper--horizontal .ds-stepper__connector {
+  background: transparent; height: 0;
+  border-top: var(--ds-stepper-connector-thickness) dashed var(--uems-border-secondary);
+}
+.ds-stepper--dashed.ds-stepper--vertical .ds-stepper__connector {
+  background: transparent; width: 0;
+  border-inline-start: var(--ds-stepper-connector-thickness) dashed var(--uems-border-secondary);
+}
+.ds-stepper--dashed .ds-stepper__step--completed .ds-stepper__connector,
+.ds-stepper--dashed .ds-stepper__step--active .ds-stepper__connector { border-color: var(--uems-bg-success-solid); }
+
+/* ---- Hide modes ----------------------------------------------------------- */
+.ds-stepper--hide-desc .ds-stepper__desc { display: none; }
+.ds-stepper--hide-labels .ds-stepper__text { display: none; }
+.ds-stepper--hide-numbers .ds-stepper__num { display: none; }
+
+/* ---- Responsive collapse (horizontal) ------------------------------------
+   When a horizontal stepper is too narrow for its steps, it collapses to a
+   compact "Step N of M" summary with a progress bar. Uses a container query so
+   it collapses under a viewport breakpoint. */
+.ds-stepper__compact {
+  display: none;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  inline-size: 100%;
+}
+.ds-stepper__compact-label {
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-primary);
+}
+.ds-stepper__compact-bar {
+  block-size: 6px;
+  inline-size: 100%;
+  background: var(--uems-border-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.ds-stepper__compact-fill {
+  display: block;
+  block-size: 100%;
+  min-inline-size: 6px;
+  background: var(--uems-bg-button-primary);
+  border-radius: var(--radius-full);
+  transition: inline-size var(--duration-standard) var(--ease-standard);
+}
+@media (max-width: 600px) {
+  .ds-stepper--horizontal > .ds-stepper__step { display: none; }
+  .ds-stepper--horizontal > .ds-stepper__compact { display: flex; }
+}
+
+/* ---- Reduced motion ------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .ds-stepper__node { transition: none; }
+  .ds-stepper__compact-fill { transition: none; }
+}
+
+/* ---- Screen-reader live summary ------------------------------------------ */
+.ds-stepper__sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

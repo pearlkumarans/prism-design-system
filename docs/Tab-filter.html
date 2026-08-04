@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tab Filter — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/tab-filter/tab-filter.css">
+<link rel="stylesheet" href="../design-system-library/src/components/badge/badge.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/badge/badge.js"></script>
+<script type="module" src="../design-system-library/src/components/tab-filter/tab-filter.js"></script>
+<style>
+  .page-snackbar .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-snackbar .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .page-snackbar .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    padding: 32px !important;
+    gap: 32px !important;
+  }
+  .page-snackbar .demo-tf-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-snackbar .demo-tf-section > .demo-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+    margin: 0; text-align: left; width: auto;
+  }
+  .page-snackbar .demo-tf-section > .demo-tf-desc {
+    font-size: 12px; color: var(--prism-text-muted); line-height: 1.5;
+  }
+  .page-snackbar .demo-tf-card {
+    display: flex; flex-direction: column; gap: 14px;
+    padding: 18px;
+    border: 1px solid var(--prism-border);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+  }
+  [data-theme="light"] .page-snackbar .demo-tf-card {
+    background: rgba(255,255,255,0.55);
+    border-color: rgba(37,99,235,0.1);
+  }
+  .page-snackbar .demo-tf-card .card-cap {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+  }
+  .page-snackbar .demo-tf-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .page-snackbar .demo-tf-result {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--prism-text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .page-snackbar .anat-marker-inline {
+    background: #2563eb; color: #fff; font-size: 11px; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body class="page-snackbar">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav" id="sidebar-nav-list">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link active">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Tab Filter</h1>
+        <p class="page-desc">A tab filter slices the same data set by one short axis &mdash; All / Open / Closed, Day / Week / Month, List / Grid. One option is always selected, so the user sees the data immediately update as they switch. Use it for 2&ndash;7 mutually exclusive choices that the user wants to flip between quickly; for longer lists or multi-select, reach for a Dropdown or Checkbox group.</p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══════════════ OVERVIEW ═══════════════ -->
+        <div class="tab-content" id="tab-overview">
+
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram" style="overflow:visible;">
+            <div style="display:flex;justify-content:center;margin:24px 0;padding:32px;">
+              <div style="position:relative;display:inline-flex;padding:2px;gap:4px;background:#F0F2F5;border-radius:6px;">
+                <div style="position:relative;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:6px;background:#FFFFFF;border:1px solid #E1E4EB;font-size:14px;color:#2A303D;font-weight:500;">
+                  All
+                  <span style="background:#F0F2F5;color:#2A303D;font-size:10px;font-weight:600;padding:2px 6px;border-radius:999px;">42</span>
+                  <div style="position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;"><span class="anat-marker-inline">1</span><div style="width:2px;height:14px;background:#2563eb;"></div></div>
+                </div>
+                <div style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;font-size:14px;color:#404968;position:relative;">
+                  Open
+                  <span style="background:#F0F2F5;color:#404968;font-size:10px;font-weight:600;padding:2px 6px;border-radius:999px;">12</span>
+                  <div style="position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;"><span class="anat-marker-inline">2</span><div style="width:2px;height:14px;background:#2563eb;"></div></div>
+                </div>
+                <div style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;font-size:14px;color:#404968;">
+                  Closed
+                  <span style="background:#F0F2F5;color:#404968;font-size:10px;font-weight:600;padding:2px 6px;border-radius:999px;">30</span>
+                </div>
+                <div style="position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">3</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Active option</strong><span>White surface, 1&thinsp;px subtle border, 6&thinsp;px radius. Label promotes to medium weight. There is <strong>always exactly one</strong> active option per Tab Filter.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Default option</strong><span>Transparent background, subtle text colour. Hover fades to <code>--color-neutral-subtle</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Track</strong><span>Tinted neutral-grey container, 6&thinsp;px radius, 2&thinsp;px padding, 4&thinsp;px gap. 40&thinsp;px tall.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <!-- Preview -->
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Every count (2&ndash;7) and slot combination from <code>tab-filter.css</code> &mdash; plus interactive demos that fire <code>ds-tab-filter-change</code>. Each filter renders as a live <code>&lt;ds-tab-filter&gt;</code> with options assigned via JS.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Tab Filter &middot; 2-7 options + live change events</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Counts -->
+                <div class="demo-tf-section">
+                  <div class="demo-group-label">Counts &mdash; 2 / 3 / 4 / 5 / 7 options</div>
+                  <div class="demo-tf-desc">Tab Filter is intentionally tight. If you need more than 7 options, switch to a Single Select dropdown.</div>
+
+                  <div class="demo-tf-card">
+                    <span class="card-cap">2 options &mdash; List / Grid view toggle</span>
+                    <ds-tab-filter id="tf-2"></ds-tab-filter>
+                    <div class="demo-tf-result" id="tf-2-out">selected: list</div>
+                  </div>
+
+                  <div class="demo-tf-card">
+                    <span class="card-cap">3 options &mdash; status filter</span>
+                    <ds-tab-filter id="tf-3"></ds-tab-filter>
+                    <div class="demo-tf-result" id="tf-3-out">selected: all</div>
+                  </div>
+
+                  <div class="demo-tf-card">
+                    <span class="card-cap">4 options &mdash; reporting granularity</span>
+                    <ds-tab-filter id="tf-4"></ds-tab-filter>
+                    <div class="demo-tf-result" id="tf-4-out">selected: week</div>
+                  </div>
+
+                  <div class="demo-tf-card">
+                    <span class="card-cap">5 options &mdash; deployment progress filter</span>
+                    <ds-tab-filter id="tf-5"></ds-tab-filter>
+                    <div class="demo-tf-result" id="tf-5-out">selected: all</div>
+                  </div>
+
+                  <div class="demo-tf-card">
+                    <span class="card-cap">7 options &mdash; max recommended size</span>
+                    <ds-tab-filter id="tf-7"></ds-tab-filter>
+                    <div class="demo-tf-result" id="tf-7-out">selected: mon</div>
+                  </div>
+                </div>
+
+                <!-- Sizes -->
+                <div class="demo-tf-section">
+                  <div class="demo-group-label">Sizes &mdash; Medium (default) / Small</div>
+                  <div class="demo-tf-desc">Small (32&thinsp;px track / 28&thinsp;px tabs / 12&thinsp;px label / 16&thinsp;px icon) suits compact toolbars &amp; dense filter bars; Medium (40 / 36 / 14 / 20) is the default. Colours, states, RTL &amp; tokens are identical across both sizes &mdash; only dimensions and label size differ.</div>
+                  <div class="demo-tf-row">
+                    <div class="demo-tf-card" style="flex:1;min-width:280px;">
+                      <span class="card-cap">Medium &mdash; default (40&thinsp;px)</span>
+                      <ds-tab-filter id="tf-size-md"></ds-tab-filter>
+                    </div>
+                    <div class="demo-tf-card" style="flex:1;min-width:280px;">
+                      <span class="card-cap">Small &mdash; compact (32&thinsp;px) &middot; <code>size="small"</code></span>
+                      <ds-tab-filter id="tf-size-sm" size="small"></ds-tab-filter>
+                    </div>
+                  </div>
+                  <div class="demo-tf-card">
+                    <span class="card-cap">Small with badges</span>
+                    <ds-tab-filter id="tf-size-sm-badges" size="small"></ds-tab-filter>
+                  </div>
+                </div>
+
+                <!-- With icons + badges -->
+                <div class="demo-tf-section">
+                  <div class="demo-group-label">With icons &amp; badges &mdash; counters reinforce what's selected</div>
+                  <div class="demo-tf-card">
+                    <span class="card-cap">Status filter with counts</span>
+                    <ds-tab-filter id="tf-badges"></ds-tab-filter>
+                    <div class="demo-tf-result" id="tf-badges-out">selected: open</div>
+                  </div>
+                  <div class="demo-tf-card">
+                    <span class="card-cap">View toggle with icons</span>
+                    <ds-tab-filter id="tf-icons"></ds-tab-filter>
+                    <div class="demo-tf-result" id="tf-icons-out">selected: list</div>
+                  </div>
+                </div>
+
+                <!-- Disabled + RTL -->
+                <div class="demo-tf-section">
+                  <div class="demo-group-label">States &mdash; disabled + RTL</div>
+                  <div class="demo-tf-row">
+                    <div class="demo-tf-card" style="flex:1;min-width:280px;">
+                      <span class="card-cap">Whole control disabled</span>
+                      <ds-tab-filter id="tf-disabled" disabled></ds-tab-filter>
+                    </div>
+                    <div class="demo-tf-card" style="flex:1;min-width:280px;">
+                      <span class="card-cap">Per-option disabled (Closed)</span>
+                      <ds-tab-filter id="tf-perdisabled"></ds-tab-filter>
+                    </div>
+                  </div>
+                  <div class="demo-tf-card">
+                    <span class="card-cap">RTL &mdash; Arabic labels</span>
+                    <ds-tab-filter id="tf-rtl" rtl></ds-tab-filter>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Variants by usage pattern -->
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">Tab Filter has a single visual style but applies to four common usage patterns. Pick the right one based on what the filter affects.</p>
+
+            <table style="width:100%;border-collapse:collapse;margin-top:24px;text-align:left;font-size:14.5px;color:var(--prism-text);">
+              <thead>
+                <tr style="border-bottom:1px solid var(--prism-border);">
+                  <th style="padding:16px 8px;font-weight:600;color:var(--prism-text-muted);">Pattern</th>
+                  <th style="padding:16px 8px;font-weight:600;color:var(--prism-text-muted);">When to use</th>
+                  <th style="padding:16px 8px;font-weight:600;color:var(--prism-text-muted);">Typical options</th>
+                  <th style="padding:16px 8px;font-weight:600;color:var(--prism-text-muted);">Badge?</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                  <td style="padding:16px 8px;font-weight:600;">Status filter</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">Filter a single dataset by lifecycle state. Most common pattern.</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">All &middot; Open &middot; Closed &middot; Archived</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">Yes &mdash; show count</td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                  <td style="padding:16px 8px;font-weight:600;">View switcher</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">Toggle between presentations of the same data (List vs Grid, Calendar vs Timeline).</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">List &middot; Grid &middot; Calendar</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">No &mdash; use icons</td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                  <td style="padding:16px 8px;font-weight:600;">Time range</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">Re-scope a report or chart to a different window.</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">Day &middot; Week &middot; Month &middot; Year</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">No</td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                  <td style="padding:16px 8px;font-weight:600;">Category filter</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">Limit to a small enumerable set (&le;7) of categories.</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">All &middot; Apps &middot; Devices &middot; Users</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">Optional</td>
+                </tr>
+              </tbody>
+            </table>
+            <p style="margin-top:16px;font-size:13.5px;color:var(--prism-text-muted);"><strong>Rule of thumb:</strong> if the change re-queries the same data &rarr; Tab Filter. If it loads peer-level content &rarr; Tab Bar Horizontal.</p>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Content Guidelines -->
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Always have one option selected &mdash; default to a sensible "All" when applicable.</li>
+                <li>Keep labels parallel &mdash; same part of speech, similar length.</li>
+                <li>Use the smallest count variant that fits your options.</li>
+                <li>Show the result immediately on selection change &mdash; no Apply button.</li>
+                <li>Reflect the selected filter in the URL so deep links work.</li>
+                <li>Use a numeric badge for result size when it adds value (Open &middot; 12).</li>
+                <li>On mobile (&lt; 600px), allow horizontal scroll on the track instead of wrapping options.</li>
+                <li>Persist the last selection in <code>localStorage</code> for view-switcher patterns.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Render Tab Filter with no active option.</li>
+                <li>Mix nouns and verbs (e.g. "Open / Resolve / All").</li>
+                <li>Use Tab Filter for &gt; 7 options or long phrase labels.</li>
+                <li>Use a textual badge (Open &middot; New!) &mdash; the slot is for counts.</li>
+                <li>Defer filtering behind a confirmation &mdash; the white-card metaphor promises "this is your current view".</li>
+                <li>Use Tab Filter for switching between destinations &mdash; reach for Tab Bar Horizontal.</li>
+                <li>Wrap options to two rows on small screens &mdash; collapse to a Single Select dropdown instead.</li>
+                <li>Stack two Tab Filters in the same row &mdash; use only one filter dimension per view.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Mobile / Responsive guidance -->
+          <div class="doc-section">
+            <h2 id="responsive" class="doc-section-title">Responsive behavior</h2>
+            <p class="doc-section-subtitle">How Tab Filter adapts across breakpoints.</p>
+            <table class="size-table">
+              <thead><tr><th>Breakpoint</th><th>Behavior</th><th>Fallback</th></tr></thead>
+              <tbody>
+                <tr><td>&ge; 768px (tablet+)</td><td>Renders inline, all options visible.</td><td>&mdash;</td></tr>
+                <tr><td>600&ndash;767px</td><td>Renders inline; track scrolls horizontally if overflow.</td><td>Hide outer page chrome to give the filter full width.</td></tr>
+                <tr><td>&lt; 600px (mobile)</td><td>Track scrolls horizontally; selected option auto-scrolls into view.</td><td>If &gt; 5 options, swap to a Single Select dropdown.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ STYLE ═══════════════ -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style" class="doc-section-title">Style</h2>
+          <div class="doc-section">
+            <h3 class="doc-h3">Wrapper layout</h3>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Track background</td><td><code>--color-neutral-subtler</code> &middot; <code>#F0F2F5</code></td></tr>
+                <tr><td>Track radius</td><td><code>6px</code></td></tr>
+                <tr><td>Track padding</td><td><code>2px</code> all sides</td></tr>
+                <tr><td>Gap between options</td><td><code>4px</code></td></tr>
+                <tr><td>Wrapper height</td><td><code>40px</code> (36px option + 2px&times;2 pad)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Option per state</h3>
+            <table class="size-table">
+              <thead><tr><th>State</th><th>Background</th><th>Border</th><th>Label</th></tr></thead>
+              <tbody>
+                <tr><td>Default</td><td>transparent</td><td>&mdash;</td><td><code>--color-text-subtle</code></td></tr>
+                <tr><td>Hover</td><td><code>--color-neutral-subtle</code></td><td>&mdash;</td><td><code>--color-text-default</code></td></tr>
+                <tr><td><strong>Active</strong></td><td><code>--color-surface-default</code> (white)</td><td><code>1px</code> solid <code>--color-border-subtle</code></td><td><code>--color-text-default</code>, medium weight</td></tr>
+                <tr><td>Disabled</td><td>transparent</td><td>&mdash;</td><td><code>--color-text-disabled</code>, 38% opacity</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ USAGE ═══════════════ -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <h2 id="comparison" class="doc-section-title">Tab Filter vs Tab Bar Horizontal</h2>
+          <p class="doc-section-subtitle">Quick decision matrix.</p>
+          <table class="size-table">
+            <thead><tr><th>Aspect</th><th>Tab Filter</th><th>Tab Bar Horizontal</th></tr></thead>
+            <tbody>
+              <tr><td>Purpose</td><td>Filter one dataset</td><td>Switch between sections of content</td></tr>
+              <tr><td>Track background</td><td>Yes (tinted)</td><td>No</td></tr>
+              <tr><td>Active treatment</td><td>White card on grey track</td><td>Soft-blue pill (Fill) or 2px underline</td></tr>
+              <tr><td>Default selection</td><td>Always one</td><td>Always one (a tab)</td></tr>
+              <tr><td>URL convention</td><td><code>?status=open</code></td><td><code>?tab=members</code></td></tr>
+              <tr><td>Max options</td><td>7</td><td>10</td></tr>
+              <tr><td>Effect of changing</td><td>Re-queries the same data</td><td>Loads peer-level content</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ═══════════════ CODE ═══════════════ -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+
+          <!-- ───── Live demo (Code playground) ───── -->
+          <h2 id="live-demo-code" class="doc-section-title">Live demo</h2>
+          <p class="doc-section-subtitle">Configure the Tab Filter below and copy the generated HTML &amp; JS. The selected value updates live as you click options or use <kbd>&larr;</kbd>/<kbd>&rarr;</kbd>.</p>
+
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group">
+                <label class="cp-label">Count</label>
+                <select class="cp-select" id="pg-tf-count">
+                  <option value="2">2</option>
+                  <option value="3" selected>3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="7">7</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Show icons</label>
+                <select class="cp-select" id="pg-tf-icons">
+                  <option value="false" selected>No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Show badges</label>
+                <select class="cp-select" id="pg-tf-badges">
+                  <option value="true" selected>Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Disabled</label>
+                <select class="cp-select" id="pg-tf-disabled">
+                  <option value="false" selected>No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">RTL</label>
+                <select class="cp-select" id="pg-tf-rtl">
+                  <option value="false" selected>LTR</option>
+                  <option value="true">RTL (Arabic)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="cp-preview" id="pg-tf-preview-area" style="padding:36px 32px;display:flex;flex-direction:column;align-items:center;gap:14px;">
+              <ds-tab-filter id="pg-tf-element" aria-label="Playground filter"></ds-tab-filter>
+              <div id="pg-tf-output" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--prism-text-muted);">selected: all</div>
+            </div>
+
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML + JS</div>
+              <button class="cp-action-btn" id="pg-tf-copy-btn">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                Copy code
+              </button>
+            </div>
+            <div style="background:#0a0a0c;">
+              <div class="cp-code-area" id="pg-tf-code-output"></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="api" class="doc-section-title">Component API</h2>
+          <p class="doc-section-subtitle">Attributes, property, and event for <code>&lt;ds-tab-filter&gt;</code>. Source: <code>design-system-library/src/components/tab-filter/tab-filter.js</code>.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Attributes</h3>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Values</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>value</code></td><td>string</td><td>Current selected option's <code>value</code>. Required.</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td>Right-to-left layout.</td></tr>
+                <tr><td><code>disabled</code></td><td>boolean</td><td>Disable the entire control.</td></tr>
+                <tr><td><code>aria-label</code></td><td>string</td><td>Accessible name for the radio group.</td></tr>
+                <tr><td><code>aria-labelledby</code></td><td>id ref</td><td>Alternative to <code>aria-label</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Properties</h3>
+            <pre style="background:#0a0a0c;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;padding:20px;border-radius:12px;overflow:auto;">el.options = [
+  { value: 'all',    label: 'All',    badge: 42 },
+  { value: 'open',   label: 'Open',   badge: 12 },
+  { value: 'closed', label: 'Closed', badge: 30 },
+];
+el.value = 'open';
+
+// Per-option fields:
+// { value, label, labelRtl?, icon?, badge?, disabled? }</pre>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Event</h3>
+            <p class="doc-section-subtitle">Listens to keyboard arrows + clicks. Fires on every selection change.</p>
+            <pre style="background:#0a0a0c;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;padding:20px;border-radius:12px;overflow:auto;">el.addEventListener('ds-tab-filter-change', (e) =&gt; {
+  console.log(e.detail.value);   // 'open'
+  console.log(e.detail.option);  // { value, label, &hellip; }
+});</pre>
+          </div>
+        </div>
+
+        <!-- ═══════════════ ACCESSIBILITY ═══════════════ -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <div class="doc-section">
+            <h3 class="doc-h3">Roles &amp; ARIA</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Implementation</th></tr></thead>
+              <tbody>
+                <tr><td>Wrapper role</td><td><code>role="radiogroup"</code> with an accessible name via <code>aria-label</code>.</td></tr>
+                <tr><td>Option role</td><td>Each option is <code>role="radio"</code> with <code>aria-checked</code>.</td></tr>
+                <tr><td>Focus order</td><td>Single tab stop. Inside the group, <kbd>&larr;</kbd> / <kbd>&rarr;</kbd> move the selection (roving tabindex).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Keyboard</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td><kbd>Tab</kbd></td><td>Moves focus into / out of the filter as a single stop, landing on the active option.</td></tr>
+                <tr><td><kbd>&larr;</kbd> / <kbd>&rarr;</kbd></td><td>Moves selection between options. Selection commits on each move &mdash; this is a filter, not a tab.</td></tr>
+                <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>Jumps to first / last option.</td></tr>
+                <tr><td><kbd>Enter</kbd> / <kbd>Space</kbd></td><td>Re-commits the focused option (no-op if already selected).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Indicator</h3>
+            <p class="doc-section-subtitle">Selection is conveyed by <strong>two channels</strong> &mdash; surface (white card) and weight (medium vs regular). Never rely on colour alone.</p>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0" target="_blank" rel="noopener" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+
+      </div><!-- main-content-area -->
+    </main>
+  </div>
+
+  <script type="module">
+    customElements.whenDefined('ds-tab-filter').then(() => {
+      const wire = (id, options, initialValue, outId, labeller) => {
+        const el = document.getElementById(id);
+        const out = document.getElementById(outId);
+        if (!el) return;
+        el.options = options;
+        el.value = initialValue;
+        if (out && labeller) out.textContent = labeller(initialValue, options);
+        if (out) {
+          el.addEventListener('ds-tab-filter-change', (e) => {
+            out.textContent = labeller(e.detail.value, options);
+          });
+        }
+      };
+      const fmt = (val, opts) => `selected: ${val}`;
+
+      wire('tf-2', [
+        { value: 'list', label: 'List' },
+        { value: 'grid', label: 'Grid' },
+      ], 'list', 'tf-2-out', fmt);
+
+      wire('tf-3', [
+        { value: 'all',    label: 'All' },
+        { value: 'open',   label: 'Open' },
+        { value: 'closed', label: 'Closed' },
+      ], 'all', 'tf-3-out', fmt);
+
+      wire('tf-4', [
+        { value: 'day',   label: 'Day' },
+        { value: 'week',  label: 'Week' },
+        { value: 'month', label: 'Month' },
+        { value: 'year',  label: 'Year' },
+      ], 'week', 'tf-4-out', fmt);
+
+      wire('tf-5', [
+        { value: 'all',     label: 'All' },
+        { value: 'queued',  label: 'Queued' },
+        { value: 'running', label: 'Running' },
+        { value: 'done',    label: 'Done' },
+        { value: 'failed',  label: 'Failed' },
+      ], 'all', 'tf-5-out', fmt);
+
+      wire('tf-7', [
+        { value: 'mon', label: 'Mon' },
+        { value: 'tue', label: 'Tue' },
+        { value: 'wed', label: 'Wed' },
+        { value: 'thu', label: 'Thu' },
+        { value: 'fri', label: 'Fri' },
+        { value: 'sat', label: 'Sat' },
+        { value: 'sun', label: 'Sun' },
+      ], 'mon', 'tf-7-out', fmt);
+
+      wire('tf-badges', [
+        { value: 'all',    label: 'All',    badge: 42 },
+        { value: 'open',   label: 'Open',   badge: 12 },
+        { value: 'closed', label: 'Closed', badge: 30 },
+      ], 'open', 'tf-badges-out', fmt);
+
+      wire('tf-icons', [
+        { value: 'list', label: 'List', icon: 'align-justify' },
+        { value: 'grid', label: 'Grid', icon: 'grid' },
+        { value: 'card', label: 'Card', icon: 'bento-menu' },
+      ], 'list', 'tf-icons-out', fmt);
+
+      /* Sizes — same options at Medium (default) and Small (size="small"). */
+      const sizeOpts = [
+        { value: 'all',    label: 'All' },
+        { value: 'active', label: 'Active' },
+        { value: 'done',   label: 'Done' },
+      ];
+      wire('tf-size-md', sizeOpts.map((o) => ({ ...o })), 'all', null, fmt);
+      wire('tf-size-sm', sizeOpts.map((o) => ({ ...o })), 'all', null, fmt);
+      wire('tf-size-sm-badges', [
+        { value: 'all',    label: 'All',    badge: 42 },
+        { value: 'open',   label: 'Open',   badge: 12 },
+        { value: 'closed', label: 'Closed', badge: 30 },
+      ], 'open', null, fmt);
+
+      const dis = document.getElementById('tf-disabled');
+      if (dis) {
+        dis.options = [
+          { value: 'a', label: 'Active' },
+          { value: 'i', label: 'Inactive' },
+        ];
+        dis.value = 'a';
+      }
+
+      const perd = document.getElementById('tf-perdisabled');
+      if (perd) {
+        perd.options = [
+          { value: 'open',   label: 'Open' },
+          { value: 'pending', label: 'Pending' },
+          { value: 'closed', label: 'Closed', disabled: true },
+        ];
+        perd.value = 'open';
+      }
+
+      const rtl = document.getElementById('tf-rtl');
+      if (rtl) {
+        rtl.options = [
+          { value: 'all',    labelRtl: 'الكل',     label: 'All' },
+          { value: 'open',   labelRtl: 'مفتوح', label: 'Open' },
+          { value: 'closed', labelRtl: 'مغلق',     label: 'Closed' },
+        ];
+        rtl.value = 'all';
+      }
+
+      // ── Code playground (controls → live preview + generated HTML/JS) ──
+      const pgEl       = document.getElementById('pg-tf-element');
+      const pgCount    = document.getElementById('pg-tf-count');
+      const pgIcons    = document.getElementById('pg-tf-icons');
+      const pgBadges   = document.getElementById('pg-tf-badges');
+      const pgDisabled = document.getElementById('pg-tf-disabled');
+      const pgRtl      = document.getElementById('pg-tf-rtl');
+      const pgCode     = document.getElementById('pg-tf-code-output');
+      const pgOutput   = document.getElementById('pg-tf-output');
+      const pgCopyBtn  = document.getElementById('pg-tf-copy-btn');
+      if (!pgEl) return;
+
+      const LABELS  = ['All', 'Open', 'Closed', 'Pending', 'Resolved', 'Archived', 'Draft'];
+      const ICONS   = ['layers', 'edit', 'check', 'clock', 'check-circle', 'archive', 'file'];
+      const BADGES  = [42, 12, 30, 7, 18, 4, 2];
+      const RTL_LBL = ['الكل', 'مفتوح', 'مغلق', 'قيد الانتظار', 'تم الحل', 'مؤرشف', 'مسودة'];
+      let pgRaw = '';
+
+      function updatePg() {
+        const count    = parseInt(pgCount.value, 10);
+        const wIcon    = pgIcons.value === 'true';
+        const wBdg     = pgBadges.value === 'true';
+        const disabled = pgDisabled.value === 'true';
+        const rtlMode  = pgRtl.value === 'true';
+
+        const options = [];
+        for (let i = 0; i < count; i++) {
+          const opt = { value: (LABELS[i] || `opt${i}`).toLowerCase().replace(/\s+/g, '-'), label: LABELS[i] || `Option ${i+1}` };
+          if (rtlMode) opt.labelRtl = RTL_LBL[i] || opt.label;
+          if (wIcon)   opt.icon = ICONS[i] || 'circle';
+          if (wBdg)    opt.badge = BADGES[i];
+          options.push(opt);
+        }
+        if (disabled) pgEl.setAttribute('disabled', '');
+        else pgEl.removeAttribute('disabled');
+        if (rtlMode) pgEl.setAttribute('rtl', '');
+        else pgEl.removeAttribute('rtl');
+        pgEl.options = options;
+        pgEl.value = options[0].value;
+        if (pgOutput) pgOutput.textContent = 'selected: ' + options[0].value;
+
+        const attrs = [];
+        if (disabled) attrs.push('disabled');
+        if (rtlMode) attrs.push('rtl');
+        attrs.push('aria-label="Filter status"');
+        const optsJSON = options.map((o) => {
+          const parts = [`value: '${o.value}'`, `label: '${o.label.replace(/'/g, "\\'")}'`];
+          if (o.labelRtl) parts.push(`labelRtl: '${o.labelRtl}'`);
+          if (o.icon)     parts.push(`icon: '${o.icon}'`);
+          if (o.badge != null) parts.push(`badge: ${o.badge}`);
+          return `  { ${parts.join(', ')} }`;
+        }).join(',\n');
+        pgRaw = `<ds-tab-filter ${attrs.join(' ')}></ds-tab-filter>\n\n<script>\n  const filter = document.querySelector('ds-tab-filter');\n  filter.options = [\n${optsJSON}\n  ];\n  filter.value = '${options[0].value}';\n  filter.addEventListener('ds-tab-filter-change', (e) => console.log(e.detail.value));\n<\/script>`;
+
+        const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        pgCode.innerHTML = esc(pgRaw)
+          .replace(/&lt;(\/?)(ds-tab-filter|script)/g, '&lt;$1<span style="color:#a78bfa;">$2</span>')
+          .replace(/([a-z-]+)=&quot;([^&]*)&quot;/g, '<span style="color:#38bdf8;">$1</span>=<span style="color:#34d399;">"$2"</span>')
+          .replace(/\b(const|let|new|true|false|null)\b/g, '<span style="color:#c792ea;">$1</span>')
+          .replace(/'([^']+)'/g, "<span style=\"color:#34d399;\">'$1'</span>")
+          .replace(/\b(addEventListener|querySelector|console|log)\b/g, '<span style="color:#82aaff;">$1</span>')
+          .replace(/\n/g, '<br/>')
+          .replace(/  /g, '&nbsp;&nbsp;');
+      }
+
+      pgEl.addEventListener('ds-tab-filter-change', (e) => {
+        if (pgOutput) pgOutput.textContent = 'selected: ' + e.detail.value;
+      });
+      [pgCount, pgIcons, pgBadges, pgDisabled, pgRtl].forEach((el) => el.addEventListener('change', updatePg));
+      pgCopyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(pgRaw);
+          const o = pgCopyBtn.innerHTML;
+          pgCopyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+          setTimeout(() => { pgCopyBtn.innerHTML = o; }, 2000);
+        } catch {}
+      });
+      updatePg();
+    });
+  </script>
+
+  <script src="js/components/toc.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

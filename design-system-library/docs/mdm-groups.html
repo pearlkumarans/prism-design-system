@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  {
+    "imports": {
+      "@uems/design-system": "../src/index.js"
+    }
+  }
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MDM — Groups › Sales</title>
+
+  <script type="module">import '@uems/design-system';</script>
+  <script>
+  (function () {
+    var t = localStorage.getItem('uems-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', t);
+    document.addEventListener('ds-right-pane-theme', function (e) {
+      document.documentElement.setAttribute('data-theme', e.detail.theme);
+      try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+    });
+    window.addEventListener('DOMContentLoaded', function () {
+      customElements.whenDefined('ds-right-pane').then(function () {
+        document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+          rp.setAttribute('theme', t);
+        });
+      });
+    });
+  })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../src/icons/illustrations.svg';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body { background: var(--cobalt-15); }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+
+    .body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      padding: 0 0 var(--spacing-12) var(--spacing-12);
+      gap: 0;
+    }
+
+    .content {
+      flex: 1;
+      background: var(--uems-bg-base);
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: 16px 0 0 16px; box-shadow: -8px 0 24px rgba(15, 23, 42, 0.08);
+      margin-inline-start: -1px;
+      overflow-y: auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Page header band ------------------------------------------------ */
+    .page-head {
+      padding: var(--spacing-24) var(--spacing-32) var(--spacing-16);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-12);
+    }
+
+    .group-title {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--spacing-16);
+    }
+
+    .group-title__left {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-16);
+      min-width: 0;
+    }
+
+    .group-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: var(--uems-bg-accent-primary-subtle);
+      color: var(--uems-text-accent-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .group-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .group-meta__title {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-8);
+      font-size: var(--font-size-20);
+      font-weight: var(--font-weight-semibold);
+      line-height: 1.2;
+      color: var(--uems-text-primary);
+    }
+    .group-meta__sub {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-12);
+      font-size: var(--font-size-12);
+      color: var(--uems-text-secondary);
+    }
+    .group-meta__sub b { color: var(--uems-text-primary); font-weight: var(--font-weight-medium); }
+    .group-meta__divider {
+      width: 1px; height: 12px; background: var(--uems-border-tertiary);
+    }
+
+    /* ---- Stats cards ----------------------------------------------------- */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--spacing-12);
+      padding: 0 var(--spacing-32);
+    }
+    .stat {
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-16) var(--spacing-20);
+      background: var(--uems-bg-base);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-8);
+    }
+    .stat__label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--font-size-12);
+      color: var(--uems-text-secondary);
+    }
+    .stat__value {
+      font-size: var(--font-size-24);
+      font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-accent-primary);
+      line-height: 1;
+    }
+
+    /* ---- Tabs ------------------------------------------------------------ */
+    .tabs {
+      display: flex;
+      gap: var(--spacing-8);
+      padding: 0 var(--spacing-32);
+      margin-top: var(--spacing-24);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+    }
+    .tab {
+      appearance: none;
+      background: transparent;
+      border: 0;
+      padding: var(--spacing-12) var(--spacing-12);
+      font: inherit;
+      font-size: var(--font-size-14);
+      color: var(--uems-text-secondary);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab:hover { color: var(--uems-text-primary); }
+    .tab[aria-selected="true"] {
+      color: var(--uems-text-accent-primary);
+      border-bottom-color: var(--uems-text-accent-primary);
+      font-weight: var(--font-weight-medium);
+    }
+
+    /* ---- Table region ---------------------------------------------------- */
+    .table-region {
+      padding: var(--spacing-16) var(--spacing-32) var(--spacing-32);
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Single-line truncation in every data-table body cell. */
+    ds-data-table .ds-data-table__table tbody td,
+    ds-data-table .ds-data-table__table tbody th[scope="row"] {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 240px;
+    }
+    ds-data-table .ds-data-table__table tbody td > a,
+    ds-data-table .ds-data-table__table tbody th[scope="row"] > a {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: bottom;
+    }
+    /* Truncation-tooltip cells must NOT clip the absolutely-positioned tip popup. */
+    ds-data-table .ds-data-table__table tbody td:has(ds-tooltip),
+    ds-data-table .ds-data-table__table tbody th[scope="row"]:has(ds-tooltip) { overflow: visible; }
+    ds-data-table ds-tooltip { display: inline-block; max-width: 100%; vertical-align: bottom; }
+    ds-data-table ds-tooltip .cell-truncate {
+      display: inline-block; max-width: 220px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom;
+    }
+    /* Help icon next to a stat label triggers a ds-tooltip on hover/focus */
+    .stat__label ds-tooltip { display: inline-flex; align-items: center; cursor: help; }
+    .stat__label ds-tooltip ds-icon { cursor: help; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+
+    <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+    <div class="body">
+      <ds-sidebar-l1 id="shell-l1" style="height: 100%;"></ds-sidebar-l1>
+      <ds-sidebar-l2 id="shell-l2" title="Management" show-back style="height: 100%; margin-left: -10px;"></ds-sidebar-l2>
+
+      <ds-content class="content" role="main">
+
+        <!-- Page header band -->
+        <div class="page-head">
+          <ds-breadcrumb>
+            <a href="#">Groups</a>
+            <span>Sales</span>
+          </ds-breadcrumb>
+
+          <div class="group-title">
+            <div class="group-title__left">
+              <div class="group-icon">
+                <ds-icon name="mobile-devices" size="24"></ds-icon>
+              </div>
+              <div class="group-meta">
+                <div class="group-meta__title">
+                  <span>Sales</span>
+                  <ds-tag variant="primary" size="small" label="Static Group"></ds-tag>
+                </div>
+                <div class="group-meta__sub">
+                  <span>Created By&nbsp;:&nbsp;<b>admin_en_us</b></span>
+                  <span class="group-meta__divider"></span>
+                  <span>Last Modified By&nbsp;:&nbsp;<b>admin_en_us</b></span>
+                </div>
+              </div>
+            </div>
+            <ds-split-button id="actions-btn" size="small" label="Actions" icon="settings"></ds-split-button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+          <div class="stat">
+            <div class="stat__label">Device count</div>
+            <div class="stat__value">1</div>
+          </div>
+          <div class="stat">
+            <div class="stat__label">Profile(s) associated</div>
+            <div class="stat__value">2</div>
+          </div>
+          <div class="stat">
+            <div class="stat__label">App(s) distributed</div>
+            <div class="stat__value">2</div>
+          </div>
+          <div class="stat">
+            <div class="stat__label">Content distributed</div>
+            <div class="stat__value">1</div>
+          </div>
+          <div class="stat">
+            <div class="stat__label">
+              Recent actions
+              <ds-tooltip text="Commands sent to devices in this group over the last 24 hours — locks, wipes, app pushes and profile updates." show-icon="false" position="up-center"><ds-icon name="info-circle" size="14" style="color: var(--uems-text-tertiary);"></ds-icon></ds-tooltip>
+            </div>
+            <div class="stat__value">0</div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" aria-selected="true">Devices</button>
+          <button class="tab" role="tab" aria-selected="false">Profiles</button>
+          <button class="tab" role="tab" aria-selected="false">Apps</button>
+          <button class="tab" role="tab" aria-selected="false">Content</button>
+          <button class="tab" role="tab" aria-selected="false">Action Summary</button>
+        </div>
+
+        <!-- Data table -->
+        <div class="table-region">
+          <ds-data-table id="devices-table"
+            selection-mode="multi"
+            total-rows="1"
+            rows-per-page="25"
+            empty-text="No devices in this group">
+            <div slot="toolbarLeft" style="display: flex; gap: var(--spacing-8); align-items: center;">
+              <ds-button variant="secondary" size="small" prefix-icon="user-remove">Remove Device</ds-button>
+              <ds-button variant="secondary" size="small" prefix-icon="folder-redirection">Move to Group</ds-button>
+              <ds-icon-button shape="square" type="tertiary-grey" size="small" icon="filter" label="Filter"></ds-icon-button>
+            </div>
+          </ds-data-table>
+        </div>
+
+      </ds-content>
+
+      <ds-right-pane id="shell-rp" style="height: 100%;"></ds-right-pane>
+    </div>
+  </div>
+
+  <script type="module">
+    import '@uems/design-system';
+
+    /* ---- Header tabs (Endpoint Central) -------------------------------- */
+    document.getElementById('ec-header').tabs = [
+      { id: 'home',     label: 'Home' },
+      { id: 'configs',  label: 'Configurations', href: 'configurations-all.html' },
+      { id: 'tp',       label: 'Threats & Patches', href: 'patches-missing.html' },
+      { id: 'sd',       label: 'Software Deployment' },
+      { id: 'inv',      label: 'Inventory' },
+      { id: 'osd',      label: 'OS Deployment' },
+      { id: 'mdm',      label: 'MDM', active: true, href: 'mdm-groups.html' },
+      { id: 'bl',       label: 'BitLocker', href: 'bitlocker-dashboard.html' },
+      { id: 'tools',    label: 'Tools' },
+      { id: 'agent',    label: 'Agent' },
+    ];
+
+    /* ---- L1 sidebar ---------------------------------------------------- */
+    document.getElementById('shell-l1').items = [
+      { id: 'dash',   label: 'Dashboard',   icon: 'add-widget' },
+      { id: 'mgmt',   label: 'Management',  icon: 'folder-settings', href: 'mdm-groups.html', active: true },
+      { id: 'inv',    label: 'Inventory',   icon: 'computer' },
+      { id: 'enroll', label: 'Enrollment',  icon: 'user-add' },
+      { id: 'rep',    label: 'Reports',     icon: 'file-report' },
+      { id: 'set',    label: 'Settings',    icon: 'settings' },
+      { id: 'audit',  label: 'Audit',       icon: 'event-history' },
+    ];
+
+    /* ---- L2 sidebar ---------------------------------------------------- */
+    document.getElementById('shell-l2').groups = [
+      { id: 'manage', label: 'Manage', expanded: true, items: [
+        { id: 'gd',   label: 'Groups & Devices',     active: true },
+        { id: 'prf',  label: 'Profiles' },
+        { id: 'app',  label: 'App Repository' },
+        { id: 'aup',  label: 'App Update Policy' },
+        { id: 'tem',  label: 'Telecom Expense Mgmt' },
+        { id: 'cert', label: 'Certificates' },
+        { id: 'al',   label: 'Alerts' },
+        { id: 'cm',   label: 'Content Management' },
+        { id: 'aou',  label: 'Automate OS Updates' },
+        { id: 'knox', label: 'Knox' },
+      ] },
+      { id: 'tools', label: 'Tools', expanded: true, items: [
+        { id: 'ann', label: 'Announcements' },
+        { id: 'rc',  label: 'Remote Control' },
+      ] },
+      { id: 'cond', label: 'Conditional Access', expanded: true, items: [
+        { id: 'ex',   label: 'Exchange' },
+        { id: 'o365', label: 'Office 365' },
+        { id: 'mam',  label: 'Office 365 MAM policy' },
+      ] },
+      { id: 'geo', label: 'Geofencing', expanded: true, items: [
+        { id: 'fp', label: 'Fence Policy' },
+        { id: 'fr', label: 'Fence Repository' },
+      ] },
+    ];
+
+    /* ---- Devices data table -------------------------------------------- */
+    customElements.whenDefined('ds-data-table').then(() => {
+      const dt = document.getElementById('devices-table');
+
+      const PLATFORM_ICON = {
+        Android: 'mobile',
+        iOS: 'mobile',
+        Windows: 'computer',
+        macOS: 'laptop',
+      };
+
+      /* Long device names / emails truncate with an ellipsis and reveal the full
+         value in a ds-tooltip on hover/focus. */
+      const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const tip = (full, inner) =>
+        `<ds-tooltip text="${esc(full)}" show-icon="false" position="up-center"><span class="cell-truncate">${inner}</span></ds-tooltip>`;
+
+      dt.columns = [
+        { id: 'username', header: 'Username', accessor: 'username', sortable: true, rowHeader: true },
+        { id: 'device',   header: 'Device Name', accessor: 'device', sortable: true,
+          render: (r) => tip(r.device, `<a href="#" style="color:var(--uems-text-accent-link);text-decoration:none;font-weight:var(--font-weight-medium);">${r.device}</a>`) },
+        { id: 'email',    header: 'Email', accessor: 'email', render: (r) => tip(r.email, r.email) },
+        { id: 'platform', header: 'Platform Type', accessor: 'platform',
+          render: (r) => `<span style="display:inline-flex;align-items:center;gap:6px;">
+            <ds-icon name="${PLATFORM_ICON[r.platform] || 'mobile'}" size="14" style="color:var(--uems-text-tertiary)"></ds-icon>
+            ${r.platform}
+          </span>` },
+        { id: 'os',       header: 'OS Version',   accessor: 'os' },
+        { id: 'type',     header: 'Device Type',  accessor: 'type' },
+        { id: 'model',    header: 'Device Model', accessor: 'model' },
+        { id: 'modelno',  header: 'Model no.',    accessor: 'modelno' },
+        { id: 'last',     header: 'Last Contact Time', accessor: 'last', sortable: true },
+        { id: 'action',   header: 'Action', accessor: 'action', align: 'center',
+          render: () => `<ds-icon-button shape="square" type="tertiary-grey" size="small" icon="cancel" label="Remove"></ds-icon-button>` },
+      ];
+
+      dt.rows = [
+        {
+          id: 'd1',
+          username: 'clark',
+          device: 'Bhavik',
+          email: 'clark@zylker.com',
+          platform: 'Android',
+          os: '5.1.1',
+          type: 'Smartphone',
+          model: 'Nexus 6',
+          modelno: 'Nexus 6',
+          last: 'Oct 25, 2024 07:23 PM',
+        },
+      ];
+
+      dt.bulkActions = [
+        { id: 'remove', label: 'Remove Device', icon: 'user-remove', destructive: true },
+        { id: 'move',   label: 'Move to Group', icon: 'folder-redirection' },
+      ];
+    });
+  </script>
+</body>
+</html>

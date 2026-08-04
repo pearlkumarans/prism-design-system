@@ -1,0 +1,2492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page Layout Spec — Endpoint Central · Prism</title>
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('theme');
+    if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    else document.documentElement.removeAttribute('data-theme');
+  } catch(e){}
+})();
+</script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --prism-black: #0a0a0c;
+  --prism-violet: #2563eb;
+  --prism-violet-light: #60a5fa;
+  --prism-fuchsia: #0ea5e9;
+  --prism-cyan: #06b6d4;
+  --prism-surface: rgba(255, 255, 255, 0.05);
+  --prism-surface-hover: rgba(255, 255, 255, 0.09);
+  --prism-border: rgba(255, 255, 255, 0.07);
+  --prism-text: rgba(255, 255, 255, 0.92);
+  --prism-text-muted: rgba(255, 255, 255, 0.48);
+  --nav-bg: rgba(10,10,12,0.75);
+  --nav-link-color: var(--prism-text-muted);
+  --radius: 20px;
+}
+[data-theme="light"] {
+  --prism-black: #ffffff;
+  --prism-violet: #2563eb;
+  --prism-violet-light: #1d4ed8;
+  --prism-fuchsia: #0284c7;
+  --prism-cyan: #0891b2;
+  --prism-surface: rgba(37, 99, 235, 0.028);
+  --prism-surface-hover: rgba(37, 99, 235, 0.055);
+  --prism-border: rgba(37, 99, 235, 0.10);
+  --prism-text: #1a1a2e;
+  --prism-text-muted: #64748b;
+  --nav-bg: rgba(255, 255, 255, 0.82);
+  --nav-link-color: #475569;
+}
+
+html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", "Zoho Puvi", sans-serif;
+  background: var(--prism-black);
+  color: var(--prism-text);
+  transition: background 0.5s cubic-bezier(0.4,0,0.2,1), color 0.4s ease;
+  min-height: 100vh;
+}
+[data-theme="light"] body {
+  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+}
+
+/* Background glows */
+.bg-glow {
+  position: fixed; border-radius: 50%; filter: blur(140px); opacity: 0.35; pointer-events: none; z-index: 0;
+}
+.glow-1 { top: -200px; left: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(37,99,235,0.6), transparent 70%); }
+.glow-2 { bottom: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(6,182,212,0.4), transparent 70%); }
+[data-theme="light"] .bg-glow { opacity: 0.18; }
+
+/* Top nav */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 32px;
+  background: var(--nav-bg); backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid var(--prism-border);
+}
+.nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+.nav-logo-mark {
+  font-size: 18px; font-weight: 700; letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #0058ff 40%, #3c50ff 30%, #0fd095 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.nav-logo-sub { font-size: 11px; color: var(--prism-text-muted); display: block; }
+.nav-logo-img { width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--prism-violet), var(--prism-cyan));
+}
+.nav-links { display: flex; align-items: center; gap: 24px; margin-left: auto; }
+.nav-links a {
+  color: var(--nav-link-color); text-decoration: none; font-size: 14px; font-weight: 500;
+  transition: color 0.2s ease;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--prism-text); }
+.nav-links a.active { font-weight: 600; }
+.icon-btn {
+  background: var(--prism-surface); border: 1px solid var(--prism-border);
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--prism-text); cursor: pointer; transition: background 0.2s ease;
+}
+.icon-btn:hover { background: var(--prism-surface-hover); }
+
+/* Layout */
+.components-layout {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 260px 1fr;
+  max-width: 1440px; margin: 0 auto;
+}
+
+.sidebar {
+  padding: 28px 16px 60px 32px;
+  border-right: 1px solid var(--prism-border);
+  position: sticky; top: 65px;
+  height: calc(100vh - 65px);
+  overflow-y: auto;
+}
+.sidebar-heading {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--prism-text-muted); margin: 16px 0 12px;
+}
+.sidebar ul { list-style: none; padding: 0; margin: 0; }
+.sidebar ul li { margin: 0; }
+.sidebar a {
+  display: block; padding: 7px 12px; border-radius: 8px;
+  font-size: 14px; color: var(--prism-text-muted); text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.sidebar a:hover { color: var(--prism-text); background: var(--prism-surface); }
+.sidebar a.active { color: var(--prism-text); background: var(--prism-surface-hover); font-weight: 600; }
+
+/* Main panel */
+.main-panel { padding: 28px 48px 100px; min-width: 0; }
+
+.page-header-area {
+  padding: 24px 0 28px;
+  border-bottom: 1px solid var(--prism-border);
+  margin-bottom: 36px;
+}
+.page-title {
+  font-size: 44px; font-weight: 700; letter-spacing: -0.025em;
+  color: var(--prism-text); margin-bottom: 12px;
+}
+.page-desc {
+  font-size: 17px; line-height: 1.6; color: var(--prism-text-muted);
+  max-width: 760px;
+}
+.page-eyebrow {
+  display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--prism-violet); text-transform: uppercase; margin-bottom: 12px;
+  background: var(--prism-surface); padding: 4px 10px; border-radius: 6px;
+  border: 1px solid var(--prism-border);
+}
+
+.main-content-area { min-width: 0; }
+.main-content-inner { min-width: 0; max-width: 100%; }
+
+.doc-section { margin-top: 40px; min-width: 0; }
+.doc-section > * { max-width: 100%; min-width: 0; box-sizing: border-box; }
+.doc-section h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 16px; color: var(--prism-text); }
+.doc-section h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin: 32px 0 14px; color: var(--prism-text); }
+.doc-section h3 { font-size: 19px; font-weight: 600; margin: 28px 0 10px; color: var(--prism-text); }
+.doc-section h4 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; color: var(--prism-text); }
+.doc-section p {
+  font-size: 15px; line-height: 1.75; color: var(--prism-text);
+  margin-bottom: 16px; max-width: 780px;
+}
+.doc-section p code, .doc-section li code, td code, th code {
+  font-family: 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+  font-size: 13px; padding: 2px 6px; border-radius: 5px;
+  background: var(--prism-surface); border: 1px solid var(--prism-border);
+  color: var(--prism-text);
+}
+.doc-section strong { font-weight: 600; }
+.doc-section em { font-style: italic; color: var(--prism-text-muted); }
+.doc-section a { color: var(--prism-violet); text-decoration: none; border-bottom: 1px dashed currentColor; }
+.doc-section a:hover { color: var(--prism-violet-light); }
+.doc-section ul, .doc-section ol {
+  list-style: none; padding: 0; margin: 0 0 20px 0;
+}
+.doc-section ul li, .doc-section ol li {
+  position: relative; padding-left: 22px;
+  font-size: 14.5px; line-height: 1.75; color: var(--prism-text); margin-bottom: 6px;
+  max-width: 760px;
+}
+.doc-section ul li::before {
+  content: "\2022"; position: absolute; left: 4px; color: var(--prism-violet); font-weight: 700;
+}
+.doc-section ol { counter-reset: olist; }
+.doc-section ol li::before {
+  counter-increment: olist;
+  content: counter(olist) ".";
+  position: absolute; left: 0; color: var(--prism-violet); font-weight: 700;
+  font-size: 13.5px;
+}
+.doc-section ol li { padding-left: 26px; }
+
+hr, .doc-divider {
+  border: none; border-top: 1px solid var(--prism-border); margin: 40px 0;
+}
+
+/* Code blocks */
+.doc-section pre, .code-block {
+  background: rgba(0,0,0,0.3); border: 1px solid var(--prism-border); border-radius: 12px;
+  padding: 18px 22px; margin: 16px 0 24px;
+  font-family: 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+  font-size: 13px; line-height: 1.7; color: var(--prism-text);
+  overflow-x: auto; white-space: pre;
+}
+[data-theme="light"] .doc-section pre,
+[data-theme="light"] .code-block {
+  background: #f8faff; border: 1px solid rgba(37,99,235,0.08);
+}
+.doc-section pre code {
+  background: transparent; border: none; padding: 0; color: inherit; font-size: inherit;
+}
+
+/* Tables */
+.doc-section table, .doc-table {
+  width: 100%; max-width: 100%; border-collapse: separate; border-spacing: 0;
+  margin: 18px 0 26px;
+  font-size: 14px;
+  background: var(--prism-surface);
+  border: 1px solid var(--prism-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.doc-section th, .doc-section td {
+  padding: 11px 16px;
+  text-align: left; vertical-align: top;
+  color: var(--prism-text);
+  border-bottom: 1px solid var(--prism-border);
+  line-height: 1.55;
+}
+.doc-section th {
+  font-weight: 600; font-size: 12.5px;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--prism-text-muted);
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid var(--prism-border);
+}
+[data-theme="light"] .doc-section th { background: rgba(37,99,235,0.025); }
+.doc-section tbody tr:last-child td { border-bottom: none; }
+.doc-section tbody tr:hover td { background: var(--prism-surface-hover); }
+
+/* Make tables scrollable on small screens */
+.doc-section table { display: block; overflow-x: auto; }
+.doc-section table > tbody, .doc-section table > thead { width: 100%; }
+
+/* Blockquote / callout */
+.doc-section blockquote {
+  border-left: 3px solid var(--prism-violet);
+  background: var(--prism-surface);
+  padding: 12px 18px;
+  margin: 16px 0 20px;
+  border-radius: 0 12px 12px 0;
+  color: var(--prism-text);
+  font-size: 14.5px; line-height: 1.7;
+}
+.doc-section blockquote p { margin-bottom: 6px; max-width: none; }
+.doc-section blockquote p:last-child { margin-bottom: 0; }
+
+/* GAP highlight */
+.doc-section td:nth-child(n+1) { word-break: break-word; }
+.doc-section em:contains("GAP") { color: #d97706; }
+.gap-pill {
+  display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; padding: 2px 7px; border-radius: 4px;
+  background: rgba(217, 119, 6, 0.14); color: #f59e0b;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+  vertical-align: middle; margin-left: 4px;
+}
+[data-theme="light"] .gap-pill { background: rgba(217, 119, 6, 0.08); color: #b45309; }
+
+/* Tier pills */
+.tier-1, .tier-2, .tier-3 {
+  display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; padding: 2px 8px; border-radius: 4px;
+  vertical-align: middle;
+}
+.tier-1 { background: rgba(34,197,94,0.14); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+.tier-2 { background: rgba(245,158,11,0.14); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.tier-3 { background: rgba(249,115,22,0.14); color: #fb923c; border: 1px solid rgba(249,115,22,0.3); }
+[data-theme="light"] .tier-1 { background: rgba(34,197,94,0.10); color: #15803d; }
+[data-theme="light"] .tier-2 { background: rgba(245,158,11,0.10); color: #b45309; }
+[data-theme="light"] .tier-3 { background: rgba(249,115,22,0.10); color: #c2410c; }
+
+@media (max-width: 1000px) {
+  .components-layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .main-panel { padding: 20px 24px 80px; }
+  .page-title { font-size: 34px; }
+  .nav { padding: 12px 20px; }
+  .nav-links { gap: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="bg-glow glow-1"></div>
+<div class="bg-glow glow-2"></div>
+
+
+<nav class="nav">
+  <a class="nav-logo" href="layouts.html">
+    <div class="nav-logo-img"></div>
+    <span>
+      <span class="nav-logo-mark">Prism</span>
+      <span class="nav-logo-sub">Built by <strong>UEMS</strong></span>
+    </span>
+  </a>
+  <div class="nav-links">
+    <a href="layouts.html" class="active">Page Layouts</a>
+    <a href="prism-gap-analysis.html">Gap Analysis</a>
+    <a href="https://prism" tabindex="-1" onclick="return false;" style="opacity:.5;cursor:default;">Prism Docs</a>
+    <button id="themeToggle" class="icon-btn" title="Toggle theme">
+      <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+</nav>
+
+
+<div class="components-layout">
+  <aside class="sidebar">
+    <h3 class="sidebar-heading">On this page</h3>
+    <ul>
+        <li><a href="#how-to-use-this-file">How to use this file</a></li>
+        <li><a href="#1-layout-picker-intent-layout">1. Layout picker (intent → layout)</a></li>
+        <li><a href="#2-mapping-to-prisms-six-pattern-categories">2. Mapping to Prism's six pattern categories</a></li>
+        <li><a href="#3-global-rules">3. Global rules</a></li>
+        <li><a href="#4-page-layouts">4. Page layouts</a></li>
+        <li><a href="#l01-app-shell" style="padding-left: 22px; font-size: 13px;">L01 — App Shell</a></li>
+        <li><a href="#l02-module-dashboard" style="padding-left: 22px; font-size: 13px;">L02 — Module Dashboard</a></li>
+        <li><a href="#l03-list-view" style="padding-left: 22px; font-size: 13px;">L03 — List View</a></li>
+        <li><a href="#l04-listdetail-record-drilldown" style="padding-left: 22px; font-size: 13px;">L04 — List–Detail (record drilldown)</a></li>
+        <li><a href="#l05-read-only-summary" style="padding-left: 22px; font-size: 13px;">L05 — Read-only Summary</a></li>
+        <li><a href="#l06-sectioned-form-single-column" style="padding-left: 22px; font-size: 13px;">L06 — Sectioned Form (single column)</a></li>
+        <li><a href="#l07-tabbed-form-settings" style="padding-left: 22px; font-size: 13px;">L07 — Tabbed Form / Settings</a></li>
+        <li><a href="#l08-wizard-stepper" style="padding-left: 22px; font-size: 13px;">L08 — Wizard / Stepper</a></li>
+        <li><a href="#l09-modal-dialog" style="padding-left: 22px; font-size: 13px;">L09 — Modal / Dialog</a></li>
+        <li><a href="#l10-two-column-matrix-form" style="padding-left: 22px; font-size: 13px;">L10 — Two-Column / Matrix Form</a></li>
+        <li><a href="#l11-dual-list-picker" style="padding-left: 22px; font-size: 13px;">L11 — Dual-List Picker</a></li>
+        <li><a href="#l12-card-grid-chooser-catalog" style="padding-left: 22px; font-size: 13px;">L12 — Card Grid Chooser / Catalog</a></li>
+        <li><a href="#l13-empty-state" style="padding-left: 22px; font-size: 13px;">L13 — Empty State</a></li>
+        <li><a href="#l14-marketing-setup-page-add-on" style="padding-left: 22px; font-size: 13px;">L14 — Marketing / Setup Page (add-on)</a></li>
+        <li><a href="#l15-log-audit-view" style="padding-left: 22px; font-size: 13px;">L15 — Log / Audit View</a></li>
+        <li><a href="#l16-checklist-audit-page" style="padding-left: 22px; font-size: 13px;">L16 — Checklist / Audit Page</a></li>
+        <li><a href="#l17-map-view" style="padding-left: 22px; font-size: 13px;">L17 — Map View</a></li>
+        <li><a href="#l18-architecture-topology-diagram" style="padding-left: 22px; font-size: 13px;">L18 — Architecture / Topology Diagram</a></li>
+        <li><a href="#l19-report-builder" style="padding-left: 22px; font-size: 13px;">L19 — Report Builder</a></li>
+        <li><a href="#l20-canvas-builder-workflow-automation" style="padding-left: 22px; font-size: 13px;">L20 — Canvas Builder (workflow / automation)</a></li>
+        <li><a href="#l21-rich-text-content-editor-page" style="padding-left: 22px; font-size: 13px;">L21 — Rich-Text / Content Editor Page</a></li>
+        <li><a href="#l22-link-hub" style="padding-left: 22px; font-size: 13px;">L22 — Link Hub</a></li>
+        <li><a href="#5-component-mapping-summary-my-slot-prism-component">5. Component mapping summary (my slot → Prism component)</a></li>
+        <li><a href="#6-gaps-components-my-layouts-need-that-prism-doesnt-yet-have">6. Gaps — components my layouts need that Prism doesn't yet have</a></li>
+        <li><a href="#7-prism-components-i-dont-use-at-the-page-layout-level">7. Prism components I don't use at the page-layout level</a></li>
+        <li><a href="#8-composition-patterns">8. Composition patterns</a></li>
+        <li><a href="#81-composition-patterns-build-from-existing-prism-atoms" style="padding-left: 22px; font-size: 13px;">8.1 Composition patterns (build from existing Prism atoms)</a></li>
+        <li><a href="#82-placeholder-recipes-for-true-gaps-replace-once-prism-ships-the-component" style="padding-left: 22px; font-size: 13px;">8.2 Placeholder recipes for true gaps (replace once Prism ships the component)</a></li>
+        <li><a href="#9-generation-prompt-template-for-claude-code">9. Generation prompt template (for Claude Code)</a></li>
+        <li><a href="#10-versioning">10. Versioning</a></li>
+    </ul>
+  </aside>
+
+  <main class="main-panel">
+    <div class="page-header-area">
+      <span class="page-eyebrow">Endpoint Central · v1.1</span>
+      <h1 class="page-title">Page Layout Spec</h1>
+      <p class="page-desc">Generation guide for Claude Code. Twenty-two page layouts that compose Prism components and patterns into complete Endpoint Central pages.</p>
+    </div>
+
+    <div class="main-content-area">
+      <div class="main-content-inner doc-section">
+<blockquote>
+<p>Generation guide for Claude Code. Defines page-level layouts that compose <strong>Prism</strong> components and patterns. Use this together with <code>Prism/specs/</code> (component specs), <code>Prism/tokens/tokens.css</code> (CSS variables), and <code>Prism/foundations/patterns.md</code> (Prism's six pattern categories).</p>
+</blockquote>
+<p>This file is the <strong>page layer</strong> — it tells you which Prism components to drop into which slots to assemble a complete page. Prism's own pattern docs describe sub-page behaviors (form rules, table anatomy, confirmation severity, etc.). The two layers are complementary.</p>
+<hr />
+<h2 id="how-to-use-this-file">How to use this file</h2>
+<p>When generating a new page:</p>
+<ol>
+<li><strong>Classify the intent</strong> (overview, browse, view-one, create, edit, configure, walk-through, pick, author, audit). Map intent → layout ID using the <strong>Layout Picker</strong> table below.</li>
+<li><strong>Open the layout entry</strong> and copy the <strong>Skeleton</strong> block.</li>
+<li><strong>Fill each slot</strong> with the named Prism component. Required slots MUST be present. Optional slots include only when the listed rule applies.</li>
+<li><strong>Apply Prism rules</strong> from <code>foundations/patterns.md</code> for any embedded sub-pattern (table behavior, form behavior, confirmation severity, loading state, search/filter).</li>
+<li><strong>Use <code>--prism-*</code> tokens</strong> from <code>tokens.css</code>. Never hardcode color, spacing, radius, type, or elevation.</li>
+<li><strong>If a slot is marked as a composition pattern</strong>, follow the recipe in §8 <em>Composition patterns</em> — assemble it from existing Prism atoms + tokens. <strong>If a slot is marked GAP</strong>, pause and request the component be added to Prism first (these are items that need genuinely new visual or interaction work — KPI tile, Chart card, Catalog card, Info card, Stepper, Dual-list panel, Map canvas, Diagram canvas, Config panel, Preview pane, Canvas, Node palette).</li>
+</ol>
+<p>If the intent doesn't cleanly fit a layout, <strong>stop and ask</strong> the user. Do not invent a new layout type — that's how drift happens.</p>
+<hr />
+<h2 id="1-layout-picker-intent-layout">1. Layout picker (intent → layout)</h2>
+<table>
+<thead>
+<tr>
+<th>User intent</th>
+<th>Layout</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"Show me what's going on at a glance" / module landing</td>
+<td><strong>L02 Module Dashboard</strong></td>
+</tr>
+<tr>
+<td>"Browse / filter / search / bulk-act on records"</td>
+<td><strong>L03 List View</strong></td>
+</tr>
+<tr>
+<td>"View one record in depth (multi-faceted)"</td>
+<td><strong>L04 List–Detail</strong></td>
+</tr>
+<tr>
+<td>"View one record's static properties"</td>
+<td><strong>L05 Read-only Summary</strong></td>
+</tr>
+<tr>
+<td>"Create or edit a record" (single screen, multi-section)</td>
+<td><strong>L06 Sectioned Form</strong></td>
+</tr>
+<tr>
+<td>"Configure settings grouped by category"</td>
+<td><strong>L07 Tabbed Form</strong></td>
+</tr>
+<tr>
+<td>"Walk the user through a sequenced task"</td>
+<td><strong>L08 Wizard / Stepper</strong></td>
+</tr>
+<tr>
+<td>"Quick task or confirmation on top of current page"</td>
+<td><strong>L09 Modal / Dialog</strong></td>
+</tr>
+<tr>
+<td>"Two parallel sets of fields" / "form with live preview"</td>
+<td><strong>L10 Two-Column / Matrix Form</strong></td>
+</tr>
+<tr>
+<td>"Pick a subset from a known catalog" (text-heavy)</td>
+<td><strong>L11 Dual-List Picker</strong></td>
+</tr>
+<tr>
+<td>"Pick from a visual catalog" (icon/logo)</td>
+<td><strong>L12 Card Grid Chooser</strong></td>
+</tr>
+<tr>
+<td>"First-time view / no data yet"</td>
+<td><strong>L13 Empty State</strong></td>
+</tr>
+<tr>
+<td>"Promote an add-on / integration that isn't enabled"</td>
+<td><strong>L14 Marketing / Setup</strong></td>
+</tr>
+<tr>
+<td>"Show me what happened (chronological)"</td>
+<td><strong>L15 Log / Audit</strong></td>
+</tr>
+<tr>
+<td>"Run a scored checklist (compliance / hardening)"</td>
+<td><strong>L16 Checklist / Audit</strong></td>
+</tr>
+<tr>
+<td>"Geographic data"</td>
+<td><strong>L17 Map View</strong></td>
+</tr>
+<tr>
+<td>"Explain how a feature works visually"</td>
+<td><strong>L18 Architecture Diagram</strong></td>
+</tr>
+<tr>
+<td>"Build a custom report"</td>
+<td><strong>L19 Report Builder</strong></td>
+</tr>
+<tr>
+<td>"Build an automation workflow"</td>
+<td><strong>L20 Canvas Builder</strong></td>
+</tr>
+<tr>
+<td>"Author rich content (emails, announcements)"</td>
+<td><strong>L21 Rich-Text Editor</strong></td>
+</tr>
+<tr>
+<td>"Static directory of links"</td>
+<td><strong>L22 Link Hub</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-mapping-to-prisms-six-pattern-categories">2. Mapping to Prism's six pattern categories</h2>
+<p>Prism organizes patterns into six categories. Each page layout below uses Prism patterns from one or more of these — you should follow the rules from the corresponding Prism pattern file when implementing the slot.</p>
+<table>
+<thead>
+<tr>
+<th>Prism category</th>
+<th>Applies to (page layouts)</th>
+<th>Prism rule source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Layout patterns</strong></td>
+<td>L01, L04, L07 (vertical variant), L10, L19, L20</td>
+<td><code>foundations/patterns.md → Layout patterns</code></td>
+</tr>
+<tr>
+<td><strong>Navigation patterns</strong></td>
+<td>L01, breadcrumbs in all page headers, L07 (tabs), L04 (record tabs)</td>
+<td>Header navigation · Sidebar Nav L1 · Sidebar Nav L2 · Breadcrumbs · Tab Bar specs</td>
+</tr>
+<tr>
+<td><strong>Data entry patterns</strong></td>
+<td>L06, L07, L08, L10, L11</td>
+<td><code>foundations/patterns.md → Form patterns</code></td>
+</tr>
+<tr>
+<td><strong>Data display patterns</strong></td>
+<td>L02, L03, L04, L05, L12, L15, L22</td>
+<td><code>foundations/patterns.md → Table patterns</code></td>
+</tr>
+<tr>
+<td><strong>Feedback patterns</strong></td>
+<td>L13 (empty state), banners across all layouts, loading per Prism duration tiers</td>
+<td><code>foundations/patterns.md → Empty states, Loading patterns</code></td>
+</tr>
+<tr>
+<td><strong>Action patterns</strong></td>
+<td>L09 (modals), wizard finish in L08, destructive actions across L03/L04/L05</td>
+<td><code>foundations/patterns.md → Confirmation patterns</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-global-rules">3. Global rules</h2>
+<p><strong>App shell (L01) wraps every page</strong> unless the page is auth/marketing or an intentional full-screen takeover (declare explicitly).</p>
+<p><strong>Token convention.</strong> All visual properties come from <code>--prism-*</code> CSS variables defined in <code>tokens.css</code>. Never hardcode hex, px, font weights, radii, or shadows. If you need a value that doesn't have a token, stop and request a new token.</p>
+<p><strong>Banner ordering inside <code>PageRegion</code></strong> (top to bottom): system-level Inline message (global health) → page-level Inline message → Snackbar (transient, floats). Never stack more than two persistent banners.</p>
+<p><strong>Footer action vocabulary.</strong> Use these verbs only, primary action on the right:</p>
+<table>
+<thead>
+<tr>
+<th>Action type</th>
+<th>Verbs (left → right)</th>
+<th>Use for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Settings save</td>
+<td><code>Cancel</code> · <code>Save</code></td>
+<td>Mail server, rebranding, simple settings</td>
+</tr>
+<tr>
+<td>Policy publish</td>
+<td><code>Cancel</code> · <code>Save as Draft</code> · <code>Save &amp; Publish</code></td>
+<td>Profiles, DLP rules, security policies</td>
+</tr>
+<tr>
+<td>Deployment</td>
+<td><code>Cancel</code> · <code>Save As</code> · <code>Deploy</code></td>
+<td>Patch/software deployment</td>
+</tr>
+<tr>
+<td>Wizard step</td>
+<td><code>Cancel</code> · <code>Previous</code> · <code>Next</code></td>
+<td>All wizard non-final steps</td>
+</tr>
+<tr>
+<td>Wizard final step</td>
+<td><code>Cancel</code> · <code>Previous</code> · <code>Finish</code> <em>(or domain verb: <code>Deploy</code>, <code>Publish</code>)</em></td>
+<td>Last step only</td>
+</tr>
+<tr>
+<td>Modal</td>
+<td><code>Cancel</code> · <code>&lt;Primary verb&gt;</code> (<code>Add</code> / <code>Save</code> / <code>Confirm</code> / <code>Delete</code>)</td>
+<td>All dialogs</td>
+</tr>
+</tbody>
+</table>
+<p>Do NOT use: <code>Save Settings</code>, <code>Save Changes</code>, <code>Deploy Immediately</code>, <code>Save &amp; Continue</code>, <code>Check</code>, <code>Add</code> (as a save synonym), <code>OK</code>. Stick to the table.</p>
+<p><strong>Confirmation severity (Prism action pattern).</strong> For any destructive or impactful action: choose severity per Prism's confirmation pattern (<code>Low</code> → undo toast only; <code>Medium</code> → standard Confirmation Modal; <code>High</code> → type-to-confirm; <code>Critical</code> → type + re-authenticate). The Snackbar component is the undo channel for <code>Low</code>.</p>
+<p><strong>Loading state per duration tier (Prism feedback pattern):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Duration</th>
+<th>Pattern</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt; 300ms</td>
+<td>No indicator</td>
+</tr>
+<tr>
+<td>300ms – 2s</td>
+<td>Skeleton matching layout shape</td>
+</tr>
+<tr>
+<td>2s – 10s</td>
+<td>Progress bar with label</td>
+</tr>
+<tr>
+<td>10s – 60s</td>
+<td>Progress bar with steps + cancel</td>
+</tr>
+<tr>
+<td>&gt; 60s</td>
+<td>Background task + Snackbar on completion</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Search &amp; filter (Prism data entry pattern):</strong>
+- Search input always above the list/table.
+- <code>Cmd+K</code> / <code>/</code> focuses search.
+- 300ms debounce.
+- Filter chips below search.
+- Active filters render as removable Tags.
+- "Clear all" link visible whenever any filter is applied.</p>
+<p><strong>Empty state inside any layout:</strong> always the Prism <strong>Empty state</strong> component (illustration 200–292px · sentence-case headline ≤8 words · optional 1–2 line description · single primary CTA describing the action · optional secondary link). Never inline ad-hoc empty placeholders.</p>
+<p><strong>Quick Links:</strong> when a page benefits from a curated list of supporting links (docs, related actions, KB articles), put them inside a <strong>Right pane</strong> on the right rail of the page. Do not create a separate page footer for Quick Links — <code>Right pane</code> is the canonical home for that content.</p>
+<hr />
+<h2 id="4-page-layouts">4. Page layouts</h2>
+<h3 id="l01-app-shell">L01 — App Shell</h3>
+<p><strong>Tier:</strong> <span class="tier-1">Tier 1 · Core</span> (chrome — wraps every page)</p>
+<p><strong>Purpose.</strong> Constant chrome around every authenticated screen.</p>
+<p><strong>Use when:</strong> every authenticated screen.
+<strong>Don't use when:</strong> login / signup / standalone marketing pages, intentional full-screen takeover (declare explicitly).</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>TopBar</code></td>
+<td>Single</td>
+<td><strong>Header navigation</strong></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>LeftNav</code></td>
+<td>Single</td>
+<td><strong>Sidebar Nav L1</strong> (collapsed icon rail by default; expands on hover/pin)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>LeftSubNav</code></td>
+<td>Single</td>
+<td><strong>Sidebar Nav L2</strong> (within a module that has sub-sections)</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>PageRegion</code></td>
+<td>Single</td>
+<td>Layout body (L02–L22)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>SystemBanner</code></td>
+<td>Single</td>
+<td><strong>Inline message</strong> (variant: <code>warning</code> / <code>error</code>, full width, top of <code>PageRegion</code>)</td>
+<td>Optional — only if a global health issue is active</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>Toast</code></td>
+<td>Single</td>
+<td><strong>Snackbar</strong> (floats over content)</td>
+<td>Optional — driven by actions, not a literal slot</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>AppShell
+├── Header navigation      [Required, sticky top]
+├── Sidebar Nav L1      [Required, sticky left]
+│   └── Sidebar Nav L2?           [Optional, when module has sub-sections]
+└── PageRegion      [Required, scrollable]
+    ├── Inline message?  (system)           [Optional, top]
+    └── &lt;Layout body — L02–L22&gt;
+    ── Snackbar (overlay)           [Optional, anchored bottom or top-right]
+</code></pre>
+<p><strong>Rules.</strong>
+- Use <strong>Sidebar Nav L2</strong> only when a module has its own sub-sections (e.g., MDM profile categories, Settings sub-tree). Do not introduce a third nav variant.
+- Header navigation and Sidebar Nav are sticky; only <code>PageRegion</code> scrolls.</p>
+<hr />
+<h3 id="l02-module-dashboard">L02 — Module Dashboard</h3>
+<p><strong>Tier:</strong> <span class="tier-1">Tier 1 · Core</span>
+<strong>Purpose.</strong> At-a-glance read of a module: counters, key metrics, recent activity, drill-down entry points.</p>
+<p><strong>Use when:</strong> module landing with measurable health (counts, charts, recent activity).
+<strong>Don't use when:</strong> configuration-only module → <strong>L07</strong> or <strong>L13</strong>. Single-record context → <strong>L05</strong> or <strong>L04</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong> (title · breadcrumb · primary action via Button or Split button)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>PageBanner</code></td>
+<td>Single</td>
+<td><strong>Inline message</strong></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>SecondaryTabs</code></td>
+<td>Single</td>
+<td><strong>Tab Bar Horizontal</strong></td>
+<td>Optional — only when the dashboard has sibling dashboards</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>KpiRow</code></td>
+<td>Single</td>
+<td><code>KPI tile</code> row <span class="gap-pill">Gap</span> <em>(see §8)</em></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>ChartGrid</code></td>
+<td>Single</td>
+<td><code>Chart card</code> grid <span class="gap-pill">Gap</span> <em>(see §8)</em></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>RightRail</code></td>
+<td>Single</td>
+<td><strong>Right pane</strong> containing either an <code>Activity feed</code> <em>(composition pattern — see §8)</em> or a <strong>Quick Links</strong> group (Links + Divider)</td>
+<td>Required — every dashboard ships with a right pane (Quick Links by default, Activity feed when a stream is relevant)</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>BottomTables</code></td>
+<td>Repeating (≤2)</td>
+<td><strong>Data table</strong></td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>PageRegion
+├── Page header      [Required]
+├── Inline message?           [Optional]
+├── Tab Bar Horizontal?           [Optional]
+├── KPI row             (GAP)      [Required, 3–5 tiles]
+├── 2-col layout
+│   ├── Chart grid     (GAP, 2–3 cols)      [Required]
+│   └── Right pane (Quick Links | Activity feed)      [Required, right]
+└── Data table ×0–2           [Optional]
+</code></pre>
+<p><strong>Rules.</strong>
+- KPIs first → charts second → tables last. Never invert.
+- Max 5 KPIs; if more, push to a secondary dashboard via <code>Tab Bar Horizontal</code>.
+- <code>Right pane</code> defaults to a Quick Links group; swap to Activity feed only when the dashboard surfaces a steady, time-ordered stream.
+- Loading: skeleton the entire grid until data resolves (Prism 300ms–2s tier).</p>
+<hr />
+<h3 id="l03-list-view">L03 — List View</h3>
+<p><strong>Tier:</strong> <span class="tier-1">Tier 1 · Core</span>
+<strong>Purpose.</strong> Browse, filter, search, and bulk-act on a collection of records.</p>
+<p><strong>Use when:</strong> primary job is to scan + act on records; &gt; ~10 items.
+<strong>Don't use when:</strong> &lt; 10 items with visual identity → <strong>L12</strong>. Single record → <strong>L04</strong> / <strong>L05</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong> (title · breadcrumb · primary action via <strong>Button</strong> or <strong>Split button</strong>)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>KpiRow</code></td>
+<td>Single</td>
+<td><code>KPI tile</code> row <span class="gap-pill">Gap</span></td>
+<td>Optional — only if the list has measurable summary state</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>Search</code></td>
+<td>Single</td>
+<td><strong>Text field</strong> (search variant, <code>/</code> and <code>Cmd+K</code> shortcut, 300ms debounce)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>FilterBar</code></td>
+<td>Single</td>
+<td><strong>Tab filter</strong> (chip-style filters) OR a left <strong>Filter sidebar</strong> composing <strong>Menu</strong> + <strong>Checkbox</strong> rows + <strong>Counter</strong> counts (used when filters are categorical)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>ActiveFilters</code></td>
+<td>Single</td>
+<td><strong>Tag</strong> row (each active filter is a removable Tag, plus a "Clear all" Link)</td>
+<td>Required (when any filter is applied)</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>BulkActionBar</code></td>
+<td>Single</td>
+<td><strong>Bulk action bar</strong> — composition of <strong>Counter</strong> + <strong>Button</strong> group + overflow <strong>Menu</strong> / <strong>Dropdown menu</strong> + Divider; appears above table when ≥1 row selected</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>DataTable</code></td>
+<td>Single</td>
+<td><strong>Data table</strong> (sticky header · checkbox column first · sortable headers · row hover actions · skeleton loading · pagination at bottom-right)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>Pagination</code></td>
+<td>Single</td>
+<td>Built into Data table</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>RightRail</code></td>
+<td>Single</td>
+<td><strong>Right pane</strong> with a Quick Links group (Links + Divider)</td>
+<td>Optional — include on list landing pages; omit on sub-pages</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton — variant A (top filter bar, default).</strong></p>
+<pre><code>PageRegion
+├── Page header      [Required, primary CTA]
+├── KPI row?           [Optional]
+├── Text field (search)      [Required]
+├── Tab filter      [Required]
+├── Tag row (active filters)      [Required when filters applied]
+├── Bulk action bar                       [Conditional on selection]
+├── 2-col layout
+│   ├── Data table      [Required]
+│   └── Right pane (Quick Links)?           [Optional, landing pages]
+</code></pre>
+<p><strong>Skeleton — variant B (left filter sidebar, for category-driven lists).</strong></p>
+<pre><code>PageRegion
+├── Page header
+├── 3-col layout
+│   ├── Filter sidebar (Menu + Checkboxes)      [Required, left]
+│   ├── Content
+│   │   ├── Text field (search)
+│   │   ├── Tag row (active filters)
+│   │   ├── Bulk action bar
+│   │   └── Data table
+│   └── Right pane (Quick Links)?           [Optional]
+</code></pre>
+<p><strong>Rules.</strong>
+- Follow Prism table pattern: name column first (after checkbox), status as <strong>Status indicator</strong> or <strong>Badge</strong>, dates as relative time with absolute on <strong>Tooltip</strong>, actions last and right-aligned, visible columns ≤ 7–8.
+- Loading: skeleton rows matching the column layout (no spinner overlay).
+- Empty state inside the table uses the Prism <strong>Empty state</strong> component, replacing the body, not the whole page.</p>
+<hr />
+<h3 id="l04-listdetail-record-drilldown">L04 — List–Detail (record drilldown)</h3>
+<p><strong>Tier:</strong> <span class="tier-1">Tier 1 · Core</span>
+<strong>Purpose.</strong> Drill into one record and show all its facets.</p>
+<p><strong>Use when:</strong> record has multiple facets to inspect (devices · apps · certs · threats · audit logs). User arrives from <strong>L03</strong>.
+<strong>Don't use when:</strong> record has only a few static fields → <strong>L05</strong>. Editing is the primary task → <strong>L06</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>RecordHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong> (record name · status via <strong>Status indicator</strong> · <strong>Avatar</strong> when relevant · primary action + overflow Dropdown)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>KpiRow</code></td>
+<td>Single</td>
+<td><code>KPI tile</code> row <span class="gap-pill">Gap</span></td>
+<td>Optional — only when the record has quantifiable state</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>FacetTabs</code></td>
+<td>Single</td>
+<td><strong>Tab Bar Horizontal</strong> (<code>Summary</code> · sub-area 1 · sub-area 2 · <code>Audit Logs</code>)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>FacetContent</code></td>
+<td>Single</td>
+<td>Per-tab body. Each tab uses <strong>L05</strong> (summary) or <strong>L03</strong> (sub-list).</td>
+<td>Required</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>PageRegion
+├── Page header (record context)      [Required]
+├── KPI row?           [Optional, record-scoped]
+├── Tab Bar Horizontal      [Required, &quot;Summary&quot; first, &quot;Audit Logs&quot; last]
+└── Facet content
+    └── &lt;L05 or L03 body&gt;
+</code></pre>
+<p><strong>Rules.</strong>
+- First tab always <code>Summary</code>; last tab always <code>Audit Logs</code> when any audit data exists.
+- KPIs are about the record, not the module.</p>
+<hr />
+<h3 id="l05-read-only-summary">L05 — Read-only Summary</h3>
+<p><strong>Tier:</strong> <span class="tier-1">Tier 1 · Core</span>
+<strong>Purpose.</strong> Display a record's properties without inline editing.</p>
+<p><strong>Use when:</strong> edit happens on a separate page / modal, or data is system-sourced.
+<strong>Don't use when:</strong> most fields are commonly edited → use <strong>L06</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong> (breadcrumb · title · <code>Modify</code> and <code>Delete</code> Buttons)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>PageBanner</code></td>
+<td>Single</td>
+<td><strong>Inline message</strong></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>SummaryGroups</code></td>
+<td>Repeating</td>
+<td><code>Key-value group</code> <em>(composition pattern — see §8)</em> — headings + label/value rows + <strong>Divider</strong> + <strong>Status indicator</strong> / <strong>Badges</strong> for state fields</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>RightRail</code></td>
+<td>Single</td>
+<td><strong>Right pane</strong> — hosts an <code>Info card</code> (GAP: QR · illustration · related Link) and/or a Quick Links group</td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>PageRegion
+├── Page header (Modify, Delete actions)      [Required]
+├── Inline message?           [Optional]
+└── 2-col layout (when Right pane present, else 1-col)
+    ├── Key-value group ×n      [Required]
+    └── Right pane (Info card | Quick Links)?           [Optional, right]
+</code></pre>
+<p><strong>Rules.</strong>
+- Group fields by domain meaning (General, Identity, Hardware, Policy …).
+- Use <strong>Status indicator</strong> for state fields, never raw text.
+- Use <strong>Accordion</strong> when read-only groups exceed 6.</p>
+<hr />
+<h3 id="l06-sectioned-form-single-column">L06 — Sectioned Form (single column)</h3>
+<p><strong>Tier:</strong> <span class="tier-1">Tier 1 · Core</span>
+<strong>Purpose.</strong> Create or edit a record with multiple grouped sections on one page.</p>
+<p><strong>Use when:</strong> &gt; 3 sections of fields; order is not strict.
+<strong>Don't use when:</strong> sequence matters → <strong>L08</strong>. Two parallel field sets → <strong>L10</strong>. Short form (&lt; 8 fields) → still use this but skip section headers per Prism single-page form rule.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong> (breadcrumb · inline editable name <strong>Text field</strong>)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>PageBanner</code></td>
+<td>Single</td>
+<td><strong>Inline message</strong></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>FormSections</code></td>
+<td>Repeating</td>
+<td><code>Form section</code> <em>(composition pattern — see §8)</em> — section heading + <strong>Divider</strong> + slotted form atoms (<strong>Text field</strong> · <strong>Text area</strong> · <strong>Dropdown</strong> · <strong>Checkbox</strong> · <strong>Radio button</strong> · <strong>Switch</strong> · <strong>Slider</strong> · <strong>Date picker</strong> · <strong>Script editor</strong>) + inline <strong>Inline message</strong> for validation</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>HelperPanel</code></td>
+<td>Single</td>
+<td><strong>Right pane</strong> (Best Practices / Tips)</td>
+<td>Optional — only when guidance materially improves success</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>FormFooter</code></td>
+<td>Single</td>
+<td><code>Form footer</code> <em>(composition pattern — see §8)</em> — sticky bar of <strong>Button</strong> group per footer-action vocabulary</td>
+<td>Required</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>PageRegion
+├── Page header (inline name field)      [Required]
+├── Inline message?           [Optional]
+├── 2-col layout (if Right pane present)
+│   ├── Form section ×n      [Required, vertical stack]
+│   └── Right pane           [Optional, sticky right]
+└── Form footer      [Required, sticky bottom]
+</code></pre>
+<p><strong>Rules.</strong>
+- One <code>Form section</code> per logical group. Use <strong>Accordion</strong> when sections &gt; 6.
+- Inline name field at top, not a separate "Name" section.
+- Validate on blur (Prism form rule) — inline <strong>Inline message</strong> under the field.
+- Required indicator on optional fields, not on required ones (Prism form rule).
+- Auto-save draft state where the workflow is long-running.</p>
+<hr />
+<h3 id="l07-tabbed-form-settings">L07 — Tabbed Form / Settings</h3>
+<p><strong>Tier:</strong> <span class="tier-1">Tier 1 · Core</span>
+<strong>Purpose.</strong> Group related settings into top-level categories.</p>
+<p><strong>Use when:</strong> settings fall into clearly distinct categories; one form would exceed ~6 sections.
+<strong>Don't use when:</strong> sequential → <strong>L08</strong>. Categories &gt; 5 → use the <strong>vertical sub-nav variant</strong> below.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>CategoryTabs</code></td>
+<td>Single (default variant)</td>
+<td><strong>Tab Bar Horizontal</strong></td>
+<td>Required (≤ 5 categories)</td>
+</tr>
+<tr>
+<td>2v</td>
+<td><code>CategoryNav</code></td>
+<td>Single (vertical variant)</td>
+<td><strong>Tab Bar Vertical</strong></td>
+<td>Required (&gt; 5 categories)</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>FormSections</code></td>
+<td>Repeating</td>
+<td><code>Form section</code> <em>(composition pattern — see §8)</em></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>FormFooter</code></td>
+<td>Single</td>
+<td><code>Form footer</code> <em>(pattern — see §8)</em></td>
+<td>Required</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton — default (horizontal tabs).</strong></p>
+<pre><code>PageRegion
+├── Page header
+├── Tab Bar Horizontal      [Required]
+├── Form section ×n      [Required, swap with tab]
+└── Form footer      [Required, sticky]
+</code></pre>
+<p><strong>Skeleton — vertical variant (&gt; 5 categories, e.g., MDM Profile Setup).</strong></p>
+<pre><code>PageRegion
+├── Page header
+├── 2-col layout
+│   ├── Tab Bar Vertical      [Required, fixed-width left]
+│   └── Form section ×n      [Required, scroll right]
+└── Form footer      [Required, sticky, full width]
+</code></pre>
+<p><strong>Rules.</strong>
+- ≤ 5 categories → horizontal. &gt; 5 → vertical sub-nav. Never mix.
+- Saving applies across all categories on submit, unless a Publish split is explicit.</p>
+<hr />
+<h3 id="l08-wizard-stepper">L08 — Wizard / Stepper</h3>
+<p><strong>Tier:</strong> <span class="tier-1">Tier 1 · Core</span>
+<strong>Purpose.</strong> Guide the user through a sequenced multi-step task.</p>
+<p><strong>Use when:</strong> ≥ 2 dependent steps.
+<strong>Don't use when:</strong> all fields are independent → <strong>L06</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong> (breadcrumb · inline editable name)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>Stepper</code></td>
+<td>Single</td>
+<td><code>Stepper</code> (horizontal for 2–3 steps; vertical for ≥4 steps) <span class="gap-pill">Gap</span> <em>(see §8; pair with Progress bar for "Step n of N")</em></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>StepContent</code></td>
+<td>Single</td>
+<td>Step body — typically <strong><code>Form section</code> ×n</strong> <em>(pattern)</em>. May host <strong>L11</strong> (dual-list) or <strong>L12</strong> (card grid) inside a step.</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>HelperPanel</code></td>
+<td>Single</td>
+<td><strong>Right pane</strong></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>WizardFooter</code></td>
+<td>Single</td>
+<td><code>Wizard footer</code> <em>(composition pattern — see §8)</em> (Buttons per footer-action vocab; <code>Save as Draft</code> secondary for ≥4 steps)</td>
+<td>Required</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>PageRegion
+├── Page header (inline name)      [Required]
+├── Stepper  (GAP)      [Required, horizontal OR vertical]
+├── Step content      [Required, swaps with step]
+│   └── Form section ×n | L11 | L12
+├── Right pane?           [Optional]
+└── Wizard footer      [Required, sticky]
+</code></pre>
+<p><strong>Rules.</strong>
+- 2–3 steps → horizontal Stepper. ≥ 4 steps → vertical Stepper on the left.
+- Do NOT use inline "Step 1 / Step 2" headings — use the Stepper component.
+- Allow <code>Previous</code>; never block back-nav (Prism form rule).
+- Disable <code>Next</code> until required fields validate (Prism form rule).
+- Final step verb is the domain verb (<code>Deploy</code>, <code>Publish</code>, <code>Finish</code>), not <code>Save</code>.
+- Auto-save draft state at every step boundary.</p>
+<hr />
+<h3 id="l09-modal-dialog">L09 — Modal / Dialog</h3>
+<p><strong>Tier:</strong> <span class="tier-1">Tier 1 · Core</span>
+<strong>Purpose.</strong> Focused short task on top of the current page.</p>
+<p><strong>Use when:</strong> task completes in &lt; 30 s; user shouldn't lose context.
+<strong>Don't use when:</strong> ≥ 4 fields → full page (<strong>L06</strong>). Multi-step → <strong>L08</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>ModalHeader</code></td>
+<td>Single</td>
+<td>Modal header (title + close)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>ModalBody</code></td>
+<td>Single</td>
+<td>Body — form fields, key-value view, embedded picker</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>ModalFooter</code></td>
+<td>Single</td>
+<td>Footer Buttons (<code>Cancel</code> left · primary right)</td>
+<td>Required</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Component selection — pick by purpose first, then by size.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Purpose</th>
+<th>Prism component</th>
+<th>Width</th>
+<th>Use for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Confirm a destructive or impactful action</td>
+<td><strong>Confirmation Modal</strong></td>
+<td>480–640 px</td>
+<td>Severity Medium → standard confirm; High → type-to-confirm; Critical → type + re-auth</td>
+</tr>
+<tr>
+<td>Short form / detail viewer / quick task</td>
+<td><strong>Modal</strong> <em>(default)</em></td>
+<td>480 (sm) · 640 (md) · 880 (lg)</td>
+<td>2–4 field forms · key-value detail viewer · simple picker</td>
+</tr>
+<tr>
+<td>Wide content surface</td>
+<td><strong>Fullscreen Modal</strong></td>
+<td>1100 px / full-bleed</td>
+<td>Catalog picker with sidebar filters · <strong>Rich text editor</strong> · dual-list picker</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>Modal (default) | Confirmation Modal | Fullscreen Modal
+├── Header (title + close)      [Required]
+├── Body      [Required]
+│   └── &lt;form fields | Key-value group | Dual-list | Card grid | Rich text editor&gt;
+└── Footer Buttons      [Required: Cancel left, primary right]
+</code></pre>
+<p><strong>Rules.</strong>
+- Severity per Prism confirmation pattern: Low (no modal — <strong>Snackbar</strong> undo); Medium (<strong>Confirmation Modal</strong>); High (type-to-confirm inside <strong>Confirmation Modal</strong>); Critical (type + re-auth inside <strong>Confirmation Modal</strong>).
+- Use <strong>Modal</strong> (default) for non-destructive tasks — picking, viewing, editing short forms. Use <strong>Confirmation Modal</strong> only when the user is committing to a consequence.
+- Backdrop click dismisses only when there are no unsaved changes.
+- Never nest modals.
+- Lock body scroll while open.</p>
+<hr />
+<h3 id="l10-two-column-matrix-form">L10 — Two-Column / Matrix Form</h3>
+<p><strong>Tier:</strong> <span class="tier-2">Tier 2 · Specialized</span>
+<strong>Purpose.</strong> Edit paired field sets (corporate vs employee-owned, hardware vs software) or form-with-preview.</p>
+<p><strong>Use when:</strong> data has a natural parallel structure, or a live preview is meaningful.
+<strong>Don't use when:</strong> default — single-column <strong>L06</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>LeftColumn</code></td>
+<td>Single</td>
+<td><code>Form section</code> stack <em>(pattern — see §8)</em></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>RightColumn</code></td>
+<td>Single</td>
+<td><code>Form section</code> stack <em>(pattern)</em> OR <code>Live preview</code> pane <span class="gap-pill">Gap</span></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>FormFooter</code></td>
+<td>Single</td>
+<td><code>Form footer</code> <em>(pattern — see §8)</em></td>
+<td>Required</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>PageRegion
+├── Page header
+├── 2-col layout (equal, or 60/40 with preview)
+│   ├── Form section stack (left)   (GAP)
+│   └── Form section stack (right) | Live preview  (GAP)
+└── Form footer      [Required, sticky, full width]
+</code></pre>
+<p><strong>Rules.</strong>
+- Both columns must be parallel in concept. If not, use <strong>L06</strong>.
+- Live preview variant: left 60 % form, right 40 % preview; preview sticky on scroll.</p>
+<hr />
+<h3 id="l11-dual-list-picker">L11 — Dual-List Picker</h3>
+<p><strong>Tier:</strong> <span class="tier-2">Tier 2 · Specialized</span>
+<strong>Purpose.</strong> Move items between Available and Selected.</p>
+<p><strong>Use when:</strong> picking an arbitrary subset of text-heavy items, visibility of selection matters.
+<strong>Don't use when:</strong> one value → <strong>Dropdown</strong>. Items have visual identity → <strong>L12</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong> (page-level use)</td>
+<td>Required (page)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>PickerContext</code></td>
+<td>Single</td>
+<td>Header strip (<code>Dropdown</code> for target, <code>Tag</code> chips for scope)</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>AvailableList</code></td>
+<td>Single</td>
+<td><code>Dual-list panel</code> <span class="gap-pill">Gap</span> (composition of <strong>Text field</strong> search + <strong>Tab filter</strong> + virtualized scroll list of <strong>Checkbox</strong> rows)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>TransferControls</code></td>
+<td>Single</td>
+<td><code>Transfer controls</code> <span class="gap-pill">Gap</span> (Buttons: Add / Remove / Add All / Remove All)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>SelectedList</code></td>
+<td>Single</td>
+<td><code>Dual-list panel</code> with <strong>Counter</strong> badge for selected count</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>InfoCallout</code></td>
+<td>Single</td>
+<td><strong>Inline message</strong> (info variant)</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>FormFooter</code></td>
+<td>Single</td>
+<td><code>Form footer</code> <em>(pattern — see §8)</em></td>
+<td>Required</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>PageRegion (or modal body)
+├── Page header
+├── Picker context?
+├── 3-col layout
+│   ├── Available  (GAP)
+│   ├── Transfer controls  (GAP)
+│   └── Selected   (GAP, with Counter badge)
+├── Inline message?
+└── Form footer
+</code></pre>
+<p><strong>Rules.</strong>
+- Per-list search always present.
+- Selected list shows count badge via <strong>Counter</strong>.
+- Page-level when this is the primary task; modal only when it's a side flow.</p>
+<hr />
+<h3 id="l12-card-grid-chooser-catalog">L12 — Card Grid Chooser / Catalog</h3>
+<p><strong>Tier:</strong> <span class="tier-2">Tier 2 · Specialized</span>
+<strong>Purpose.</strong> Browse a discrete set of options visually.</p>
+<p><strong>Use when:</strong> items have visual identity (icon, logo, screenshot).
+<strong>Don't use when:</strong> uniform records → <strong>L03</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong> (page-level) or <strong>Modal</strong> / <strong>Fullscreen Modal</strong> header (when used as a picker)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>CatalogControls</code></td>
+<td>Single</td>
+<td>Composition: <strong>Text field</strong> (search) · <strong>Dropdown</strong> filters · <strong>Tab Bar Horizontal</strong> for platform · <strong>Tab filter</strong> for facets</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>CardGrid</code></td>
+<td>Single</td>
+<td><code>Catalog card grid</code> <span class="gap-pill">Gap</span> (per Prism, <strong>Cards</strong> are in-progress)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>AddTile</code></td>
+<td>Single</td>
+<td><code>Add tile</code> <span class="gap-pill">Gap</span> (last cell, dashed border)</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>Pagination</code></td>
+<td>Single</td>
+<td>Pagination</td>
+<td>Optional — only when items &gt; 24</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>FormFooter</code></td>
+<td>Single</td>
+<td><code>Form footer</code> <em>(composition pattern — see §8)</em></td>
+<td>Optional — when used as a picker</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>PageRegion (or Modal | Fullscreen Modal body)
+├── Page header
+├── Catalog controls (Text field + Dropdown + Tabs)
+├── Card grid  (GAP)
+│   └── Catalog card * + Add tile?
+├── Pagination?
+└── Form footer?
+</code></pre>
+<p><strong>Rules.</strong>
+- 3 columns default desktop; 4–5 only when cards are compact icon-only.
+- Selected state on cards must be visible (border + check Icon).
+- Use <strong>Status indicator</strong> inside cards for state badges.</p>
+<hr />
+<h3 id="l13-empty-state">L13 — Empty State</h3>
+<p><strong>Tier:</strong> <span class="tier-2">Tier 2 · Specialized</span>
+<strong>Purpose.</strong> Welcome the user to an unconfigured feature or to a list with no data; explain value and provide a CTA.</p>
+<p><strong>Use when:</strong> unconfigured module · first-time view · list with no data.
+<strong>Don't use when:</strong> list has data → <strong>L03</strong>. Promoting paid/integration add-on → <strong>L14</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong></td>
+<td>Required (page-level use)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>EmptyState</code></td>
+<td>Single</td>
+<td><strong>Empty state</strong> (Prism component: Illustration 200–292 px · headline · description · primary action <strong>Button</strong> · optional secondary <strong>Link</strong>)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>BenefitList</code></td>
+<td>Single</td>
+<td><code>Benefit list</code> <em>(composition pattern — see §8)</em> (3–5 bulleted items)</td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>PageRegion (or container inside another layout)
+├── Page header?
+└── Empty state      [Required]
+    ├── Illustration (Prism library)
+    ├── Headline (sentence case, ≤8 words)
+    ├── Description (1–2 lines)
+    ├── Benefit list?
+    └── Primary Button + secondary Link
+</code></pre>
+<p><strong>Rules.</strong>
+- One canonical Prism illustration set; no module-specific empty-state styles.
+- CTA describes the action (e.g., <code>Add device</code>), not the state (<code>No devices</code>).
+- Use inside a Data table body when a filtered list is empty.</p>
+<hr />
+<h3 id="l14-marketing-setup-page-add-on">L14 — Marketing / Setup Page (add-on)</h3>
+<p><strong>Tier:</strong> <span class="tier-2">Tier 2 · Specialized</span>
+<strong>Purpose.</strong> Promote and walk through the activation of an integration or paid add-on.</p>
+<p><strong>Use when:</strong> user has not yet enabled an integration; page is both pitch and onboarding.
+<strong>Don't use when:</strong> already configured → switch to <strong>L05</strong> or <strong>L07</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>BrandedHero</code></td>
+<td>Single</td>
+<td><code>Branded hero</code> <em>(composition pattern — see §8)</em> (Logo + headline + Button)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>BenefitList</code></td>
+<td>Single</td>
+<td><code>Benefit list</code> <em>(composition pattern — see §8)</em></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>SetupSteps</code></td>
+<td>Single</td>
+<td><code>Setup step list</code> <em>(composition pattern — see §8)</em> (numbered cards with Icon + title + per-step Button)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>SideHelper</code></td>
+<td>Single</td>
+<td><code>Info card</code> <span class="gap-pill">Gap</span> (docs Links, contact, video)</td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>PageRegion
+├── Branded hero      [Required, full width]
+├── Benefit list      [Required]
+└── 2-col layout
+    ├── Setup step list      [Required]
+    └── Info card  (GAP)?           [Optional, right]
+</code></pre>
+<p><strong>Rules.</strong>
+- Once activated, migrate the page to <strong>L05</strong> or <strong>L07</strong>.</p>
+<hr />
+<h3 id="l15-log-audit-view">L15 — Log / Audit View</h3>
+<p><strong>Tier:</strong> <span class="tier-2">Tier 2 · Specialized</span>
+<strong>Purpose.</strong> Chronological activity records with filters.</p>
+<p><strong>Use when:</strong> investigating what happened, when, by whom.
+<strong>Don't use when:</strong> user needs to act on rows → <strong>L03</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>FilterBar</code></td>
+<td>Single</td>
+<td>Composition: <strong>Date picker</strong> (range) · <strong>Dropdown</strong> (module/user/device) · <strong>Button</strong> (<code>Apply</code>)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>SummaryStrip</code></td>
+<td>Single</td>
+<td><code>Key-value strip</code> <em>(composition pattern — see §8)</em> (status · last update · totals)</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>ActivityTable</code></td>
+<td>Single</td>
+<td><strong>Data table</strong> (timestamp · actor · action · target · result, sorted DESC by timestamp)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>Pagination</code></td>
+<td>Single</td>
+<td>Pagination</td>
+<td>Required</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>PageRegion
+├── Page header
+├── Filter bar (Date picker + Dropdown + Apply Button)
+├── Key-value strip?
+├── Data table      [Required, timestamp DESC]
+└── Pagination
+</code></pre>
+<p><strong>Rules.</strong>
+- Default sort: timestamp DESC.
+- Filters require explicit <code>Apply</code> (debounce can be expensive).</p>
+<hr />
+<h3 id="l16-checklist-audit-page">L16 — Checklist / Audit Page</h3>
+<p><strong>Tier:</strong> <span class="tier-2">Tier 2 · Specialized</span>
+<strong>Purpose.</strong> Scored compliance / hardening / posture checklist where each row is independently actionable.</p>
+<p><strong>Use when:</strong> security hardening · compliance · posture review.
+<strong>Don't use when:</strong> bulk action → <strong>L03</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>ScoreBanner</code></td>
+<td>Single</td>
+<td><code>Score banner</code> <em>(composition pattern — see §8)</em> (Progress bar + score number + summary text)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>ChecklistGroups</code></td>
+<td>Repeating</td>
+<td><code>Checklist group</code> <em>(composition pattern — see §8)</em> (heading + rows of label · <strong>Status indicator</strong> · <code>Modify</code> <strong>Button</strong>)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>AdvancedSection</code></td>
+<td>Single</td>
+<td><strong>Accordion</strong> (single-expand) wrapping advanced rows</td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Skeleton.</strong></p>
+<pre><code>PageRegion
+├── Page header
+├── Score banner  (GAP, uses Progress bar)
+├── Checklist group ×n  (GAP, uses Status indicator)
+└── Accordion?
+</code></pre>
+<p><strong>Rules.</strong>
+- Status canon: <strong>Status indicator</strong> values <code>Pass</code> · <code>Fail</code> · <code>Warning</code> · <code>Not applicable</code>.
+- Each row has one action: <code>Modify</code> Button → opens <strong>Confirmation Modal</strong> or routes to <strong>L06</strong>.</p>
+<hr />
+<h3 id="l17-map-view">L17 — Map View</h3>
+<p><strong>Tier:</strong> <span class="tier-3">Tier 3 · Domain</span>
+<strong>Purpose.</strong> Geographic visualization (e.g., device location).</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>MapFilterBar</code></td>
+<td>Single</td>
+<td><strong>Tab filter</strong> + <strong>Dropdown</strong> + <strong>Date picker</strong></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>MapCanvas</code></td>
+<td>Single</td>
+<td><code>Map canvas</code> <span class="gap-pill">Gap</span> (third-party map; full-bleed)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>MapDetailDrawer</code></td>
+<td>Single</td>
+<td><strong>Right pane</strong> (drawer, on marker click)</td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<pre><code>PageRegion
+├── Map filter bar
+└── Map canvas  (GAP)
+    └── Right pane?
+</code></pre>
+<hr />
+<h3 id="l18-architecture-topology-diagram">L18 — Architecture / Topology Diagram</h3>
+<p><strong>Tier:</strong> <span class="tier-3">Tier 3 · Domain</span>
+<strong>Purpose.</strong> Visually explain how a feature works.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>DiagramCanvas</code></td>
+<td>Single</td>
+<td><code>Diagram canvas</code> <span class="gap-pill">Gap</span> (boxes + arrows OR zone-grouped cards using <strong>Cards</strong> when available)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>LegendOrCaption</code></td>
+<td>Single</td>
+<td><code>Legend</code> <em>(composition pattern — see §8)</em> (composition of <strong>Tag</strong> + caption text)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>RelatedTable</code></td>
+<td>Single</td>
+<td><strong>Data table</strong></td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<pre><code>PageRegion
+├── Page header
+├── Diagram canvas  (GAP)
+├── Legend  (GAP, uses Tag)
+└── Data table?
+</code></pre>
+<hr />
+<h3 id="l19-report-builder">L19 — Report Builder</h3>
+<p><strong>Tier:</strong> <span class="tier-3">Tier 3 · Domain</span>
+<strong>Purpose.</strong> Compose a custom report with live preview.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong> (inline name <strong>Text field</strong>)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>ConfigPanel</code></td>
+<td>Single</td>
+<td><code>Config panel</code> <span class="gap-pill">Gap</span> (internal <strong>Tab Bar Vertical</strong>: Sub-Module · Type · Columns · Filter)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>PreviewPane</code></td>
+<td>Single</td>
+<td><code>Preview pane</code> <span class="gap-pill">Gap</span> (renders a sample Data table)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>BuilderFooter</code></td>
+<td>Single</td>
+<td>Composition of Buttons (<code>Cancel</code> · <code>Save Draft</code> · <code>Save</code> · <code>Preview</code>)</td>
+<td>Required</td>
+</tr>
+</tbody>
+</table>
+<pre><code>PageRegion
+├── Page header
+├── 2-col layout
+│   ├── Config panel  (GAP)
+│   └── Preview pane  (GAP)
+└── Builder footer (Buttons)
+</code></pre>
+<hr />
+<h3 id="l20-canvas-builder-workflow-automation">L20 — Canvas Builder (workflow / automation)</h3>
+<p><strong>Tier:</strong> <span class="tier-3">Tier 3 · Domain</span>
+<strong>Purpose.</strong> Visual node-and-edge builder.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>BuilderHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong> (inline name · <code>Save</code> / <code>Save as Draft</code> Buttons)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>Canvas</code></td>
+<td>Single</td>
+<td><code>Canvas</code> <span class="gap-pill">Gap</span> (dotted bg, drop zones)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>NodePalette</code></td>
+<td>Single</td>
+<td><code>Node palette</code> <span class="gap-pill">Gap</span> (right column, draggable nodes)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>NodeInspector</code></td>
+<td>Single</td>
+<td><strong>Right pane</strong> (slide-in when node selected; replaces palette)</td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<pre><code>PageRegion
+├── Page header (Save / Save as Draft Buttons)
+└── 2-col layout
+    ├── Canvas  (GAP)
+    └── Node palette  (GAP)
+        └── Right pane?  (replaces palette on selection)
+</code></pre>
+<hr />
+<h3 id="l21-rich-text-content-editor-page">L21 — Rich-Text / Content Editor Page</h3>
+<p><strong>Tier:</strong> <span class="tier-3">Tier 3 · Domain</span>
+<strong>Purpose.</strong> Author rich content (announcements, notifications).</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>TitleField</code></td>
+<td>Single</td>
+<td><strong>Text field</strong></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>Editor</code></td>
+<td>Single</td>
+<td><strong>Rich text editor</strong></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>IconPicker</code></td>
+<td>Single</td>
+<td><code>Icon picker</code> <em>(composition pattern — see §8)</em> (uses <strong>Icon</strong> library)</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>VariablePanel</code></td>
+<td>Single</td>
+<td><code>Variable token panel</code> <em>(composition pattern — see §8)</em> (right rail of <strong>Tag</strong> chips representing variables)</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>FormFooter</code></td>
+<td>Single</td>
+<td><code>Form footer</code> <em>(composition pattern — see §8)</em> (<code>Cancel</code> · <code>Save Draft</code> · <code>Publish</code>)</td>
+<td>Required</td>
+</tr>
+</tbody>
+</table>
+<pre><code>PageRegion
+├── Page header
+├── Text field (title)
+├── 2-col layout (if Variable panel present)
+│   ├── Rich text editor + Icon picker?
+│   └── Variable token panel?
+└── Form footer
+</code></pre>
+<hr />
+<h3 id="l22-link-hub">L22 — Link Hub</h3>
+<p><strong>Tier:</strong> <span class="tier-3">Tier 3 · Domain</span>
+<strong>Purpose.</strong> Curated directory of links.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Slot</th>
+<th>Cardinality</th>
+<th>Prism component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>PageHeader</code></td>
+<td>Single</td>
+<td><strong>Page header</strong></td>
+<td>Required</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>LinkSections</code></td>
+<td>Repeating</td>
+<td><code>Link section</code> <em>(composition pattern — see §8)</em> (composition of section heading + <strong>Divider</strong> + a list of <strong>Link</strong> items)</td>
+<td>Required</td>
+</tr>
+</tbody>
+</table>
+<pre><code>PageRegion
+├── Page header
+└── 3-col layout
+    └── Link section ×n  (GAP, uses Link + Divider)
+</code></pre>
+<hr />
+<h2 id="5-component-mapping-summary-my-slot-prism-component">5. Component mapping summary (my slot → Prism component)</h2>
+<p>Slots that map directly to a single Prism component:</p>
+<table>
+<thead>
+<tr>
+<th>Slot</th>
+<th>Prism component</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TopBar</code></td>
+<td>Header navigation</td>
+</tr>
+<tr>
+<td><code>LeftNav</code></td>
+<td>Sidebar Nav L1</td>
+</tr>
+<tr>
+<td><code>LeftSubNav</code></td>
+<td>Sidebar Nav L2</td>
+</tr>
+<tr>
+<td><code>PageHeader</code></td>
+<td>Page header</td>
+</tr>
+<tr>
+<td><code>PageBanner</code> · <code>SystemBanner</code></td>
+<td>Inline message</td>
+</tr>
+<tr>
+<td><code>Toast</code></td>
+<td>Snackbar</td>
+</tr>
+<tr>
+<td><code>Search</code></td>
+<td>Text field (search variant)</td>
+</tr>
+<tr>
+<td><code>Tabs (horizontal)</code></td>
+<td>Tab Bar Horizontal</td>
+</tr>
+<tr>
+<td><code>Tabs (vertical / sub-nav)</code></td>
+<td>Tab Bar Vertical</td>
+</tr>
+<tr>
+<td><code>FilterBar</code> (chip)</td>
+<td>Tab filter</td>
+</tr>
+<tr>
+<td><code>DataTable</code> · <code>Pagination</code></td>
+<td>Data table</td>
+</tr>
+<tr>
+<td><code>HelperPanel</code> · <code>Drawer</code> · <code>Quick Links</code></td>
+<td>Right pane</td>
+</tr>
+<tr>
+<td><code>Modal (default — short form, picker, viewer)</code></td>
+<td>Modal</td>
+</tr>
+<tr>
+<td><code>Modal (confirmation, type-to-confirm)</code></td>
+<td>Confirmation Modal</td>
+</tr>
+<tr>
+<td><code>Modal (xl, full-bleed)</code></td>
+<td>Fullscreen Modal</td>
+</tr>
+<tr>
+<td><code>EmptyState</code></td>
+<td>Empty state</td>
+</tr>
+<tr>
+<td><code>RichTextEditor</code></td>
+<td>Rich text editor</td>
+</tr>
+<tr>
+<td><code>ScriptEditor</code></td>
+<td>Script editor</td>
+</tr>
+<tr>
+<td><code>StatusPill</code></td>
+<td>Status indicator</td>
+</tr>
+<tr>
+<td><code>Badge / count</code></td>
+<td>Badges · Counter</td>
+</tr>
+<tr>
+<td><code>Date / range input</code></td>
+<td>Date picker · Calendar</td>
+</tr>
+<tr>
+<td><code>Form input (text)</code></td>
+<td>Text field</td>
+</tr>
+<tr>
+<td><code>Form input (multi-line)</code></td>
+<td>Text area</td>
+</tr>
+<tr>
+<td><code>Form input (single choice)</code></td>
+<td>Dropdown · Radio button</td>
+</tr>
+<tr>
+<td><code>Form input (boolean)</code></td>
+<td>Switch · Checkbox</td>
+</tr>
+<tr>
+<td><code>Form input (range)</code></td>
+<td>Slider</td>
+</tr>
+<tr>
+<td><code>Form input (one-time code)</code></td>
+<td>OTP input</td>
+</tr>
+<tr>
+<td><code>Group expand/collapse</code></td>
+<td>Accordion</td>
+</tr>
+<tr>
+<td><code>Identity image</code></td>
+<td>Avatar</td>
+</tr>
+<tr>
+<td><code>Inline tip</code></td>
+<td>Tooltip</td>
+</tr>
+<tr>
+<td><code>Progress</code></td>
+<td>Progress bar</td>
+</tr>
+<tr>
+<td><code>Action menu</code></td>
+<td>Menu · Dropdown menu · Split button</td>
+</tr>
+<tr>
+<td><code>Overflow / contextual menu</code></td>
+<td>Menu · Dropdown menu</td>
+</tr>
+<tr>
+<td><code>Bulk action overflow</code></td>
+<td>Menu (paired with Counter + Buttons in the Bulk action bar)</td>
+</tr>
+<tr>
+<td><code>Removable label</code></td>
+<td>Tag</td>
+</tr>
+<tr>
+<td><code>Hyperlink</code></td>
+<td>Link</td>
+</tr>
+<tr>
+<td><code>Iconography</code></td>
+<td>Icon</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-gaps-components-my-layouts-need-that-prism-doesnt-yet-have">6. Gaps — components my layouts need that Prism doesn't yet have</h2>
+<p>Prism's <code>Components.html</code> listed six <strong>In-progress</strong> categories: <strong>Cards · Widgets · KPIs · Dialogs · Popovers · Menus</strong>. Of these, <strong>Dialogs</strong> (Modal default + Confirmation Modal) and <strong>Menus</strong> (Menu · Dropdown menu) have since shipped, so they no longer appear as gaps. The remaining gaps map to <strong>Cards · Widgets · KPIs · Popovers</strong>, plus new primitives.</p>
+<table>
+<thead>
+<tr>
+<th>Gap component</th>
+<th>Used in layouts</th>
+<th>Maps to Prism in-progress</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>KPI tile</code> (and <code>KPI tile row</code>)</td>
+<td>L02, L03 (optional), L04 (optional)</td>
+<td><strong>KPIs</strong></td>
+<td>Add to Prism KPIs spec. Anatomy: label · value · trend (<code>Status indicator</code> + percent) · optional sparkline.</td>
+</tr>
+<tr>
+<td><code>Chart card</code> (and <code>Chart grid</code>)</td>
+<td>L02</td>
+<td><strong>Widgets</strong></td>
+<td>Donut / bar / gauge / heatmap variants. Add a <code>chart-card.md</code> spec.</td>
+</tr>
+<tr>
+<td><code>Catalog card</code> (and <code>Add tile</code>)</td>
+<td>L12, L18</td>
+<td><strong>Cards</strong></td>
+<td>Visual choice card with icon · title · description · primary Button.</td>
+</tr>
+<tr>
+<td><code>Info card</code> · <code>Side info card</code></td>
+<td>L05, L14</td>
+<td><strong>Cards</strong></td>
+<td>QR / illustration / related Link card. Hosted inside <strong>Right pane</strong>.</td>
+</tr>
+<tr>
+<td><code>Stepper</code> (horizontal + vertical)</td>
+<td>L08</td>
+<td>New</td>
+<td>Step indicator with state (done / active / pending) + optional Progress bar.</td>
+</tr>
+<tr>
+<td><code>Dual-list panel</code> · <code>Transfer controls</code></td>
+<td>L11</td>
+<td>New</td>
+<td>Side-by-side list selector. Worth a dedicated spec.</td>
+</tr>
+<tr>
+<td><code>Map canvas</code></td>
+<td>L17</td>
+<td>New (third-party wrapper)</td>
+<td>Wraps a vendor map; standardize controls + drawer use of <strong>Right pane</strong>.</td>
+</tr>
+<tr>
+<td><code>Diagram canvas</code> · <code>Legend</code></td>
+<td>L18</td>
+<td>New</td>
+<td>Boxes-and-arrows or zone-grouped Cards. Legend composes Tag + caption.</td>
+</tr>
+<tr>
+<td><code>Config panel</code> · <code>Preview pane</code></td>
+<td>L19</td>
+<td>New</td>
+<td>Two-pane builder primitives.</td>
+</tr>
+<tr>
+<td><code>Canvas</code> · <code>Node palette</code></td>
+<td>L20</td>
+<td>New</td>
+<td>Workflow/automation builder primitives.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Resolved (no longer gaps):</strong></p>
+<ul>
+<li><code>Bulk action bar</code> — composes existing <strong>Menu</strong> / <strong>Dropdown menu</strong> + <strong>Button</strong> + <strong>Counter</strong>; documented inline in L03.</li>
+<li><code>Filter sidebar</code> — composes <strong>Menu</strong> + <strong>Checkbox</strong> + <strong>Counter</strong>; documented inline in L03 variant B.</li>
+<li><code>Quick links footer</code> — folded into <strong>Right pane</strong> (Quick Links group), used by L02, L03, L05 right-rail slots.</li>
+<li><code>Modal default</code> / <code>Confirmation Modal</code> — both Prism components; selection rules documented in L09.</li>
+<li><code>Action menu</code> — uses <strong>Menu</strong> / <strong>Dropdown menu</strong> / <strong>Split button</strong>.</li>
+</ul>
+<p><strong>Naming convention for new components.</strong> Use Prism's existing convention: kebab-case file name (<code>kpi-tile.md</code>), Title Case display name (<code>KPI tile</code>). Place atoms under <code>specs/atoms/</code>, molecules under <code>specs/molecules/</code>, organisms under <code>specs/organisms/</code>, layout primitives under <code>specs/patterns/</code>.</p>
+<hr />
+<h2 id="7-prism-components-i-dont-use-at-the-page-layout-level">7. Prism components I don't use at the page-layout level</h2>
+<p>These are component-level atoms that live inside <code>Form section</code>, table cells, or other slots, but are not page-layout slots themselves. They're still required — just slotted, not headlined.</p>
+<p><code>Button · Checkbox · Date picker · Dropdown · Icon · Link · OTP input · Progress bar · Radio button · Slider · Split button · Status indicator · Switch · Tag · Text area · Text field · Tooltip · Avatar · Badges · Counter · Divider · Accordion · Calendar · Script editor · Menu · Dropdown menu</code></p>
+<p>And the AI-assistant surface: <code>Zia Experience</code> — slot it into pages as a <strong>Right pane</strong> variant or a floating launcher, on a case-by-case basis. Not a default page slot.</p>
+<hr />
+<h2 id="8-composition-patterns">8. Composition patterns</h2>
+<p>Many page slots are assembled from existing Prism atoms rather than a dedicated wrapper component. These are <strong>composition patterns</strong> — encode the rules here, compose them from Prism atoms and tokens at generation time. <strong>They do not need new components built in Prism.</strong></p>
+<p>For true component gaps that still need new Prism components, see §6 <em>Gaps</em>. Placeholder recipes for those gaps are at the bottom of this section so generation work can proceed before the real components land.</p>
+<h3 id="81-composition-patterns-build-from-existing-prism-atoms">8.1 Composition patterns (build from existing Prism atoms)</h3>
+<p><strong><code>Form section</code></strong> — grouped block of form atoms:
+- Section heading (h3 type token) + optional description (body type · <code>--prism-text-muted</code>)
+- <strong>Divider</strong>
+- Stack of form atoms (<strong>Text field</strong> · <strong>Text area</strong> · <strong>Dropdown</strong> · <strong>Checkbox</strong> · <strong>Radio button</strong> · <strong>Switch</strong> · <strong>Slider</strong> · <strong>Date picker</strong> · <strong>Calendar</strong> · <strong>OTP input</strong> · <strong>Script editor</strong>)
+- Inline validation: <strong>Inline message</strong> anchored under each invalid field
+- Required indicator on optional fields (per Prism form pattern), not on required ones</p>
+<p><strong><code>Form footer</code></strong> — sticky action bar at the bottom of a form page:
+- Background <code>--prism-surface</code>, top border <code>1px solid --prism-border</code>
+- <strong>Button</strong> group aligned right; primary Button on far right
+- Verbs come from §3 Footer Action Vocabulary</p>
+<p><strong><code>Wizard footer</code></strong> — variant of Form footer for <strong>L08</strong> wizards:
+- <code>Cancel</code> <strong>Button</strong> left
+- <code>Previous</code> + <code>Next</code> (or <code>Finish</code> / domain verb) <strong>Button</strong> group right
+- For wizards with ≥4 steps, add <code>Save as Draft</code> as a secondary Button next to <code>Previous</code></p>
+<p><strong><code>Bulk action bar</code></strong> — appears above a Data table when ≥1 row selected:
+- <strong>Counter</strong> ("3 selected") on the left
+- <strong>Button</strong> group for the most common actions
+- <strong>Menu</strong> / <strong>Dropdown menu</strong> at the end for overflow actions
+- <code>Clear selection</code> <strong>Link</strong> on the right
+- Background <code>--prism-surface-hover</code>, separated from the Data table by a <strong>Divider</strong></p>
+<p><strong><code>Filter sidebar</code></strong> — left-rail filter for category-driven lists (L03 variant B):
+- <strong>Menu</strong> as the container with grouped sections
+- Each row: <strong>Checkbox</strong> + label + <strong>Counter</strong> badge for hit count
+- <code>Clear all</code> <strong>Link</strong> at the top when any filter is active</p>
+<p><strong><code>Quick Links group</code></strong> — content inside <strong>Right pane</strong>:
+- Section heading + <strong>Divider</strong> + stack of <strong>Link</strong> items
+- Multiple categories: repeat heading + <strong>Divider</strong> + Link list</p>
+<p><strong><code>Activity feed</code></strong> — content inside <strong>Right pane</strong> for time-ordered streams:
+- Stack of rows; each row = <strong>Avatar</strong> + actor/action text + relative timestamp + optional <strong>Status indicator</strong>
+- Group rows under day headings (<code>Today</code>, <code>Yesterday</code>, dates) separated by <strong>Divider</strong></p>
+<p><strong><code>Key-value group</code></strong> — read-only label/value display:
+- Section heading (optional)
+- Grid of <code>&lt;label&gt;</code> / <code>&lt;value&gt;</code> pairs (2-column on desktop)
+- Labels: caption type token + <code>--prism-text-muted</code>
+- Values: body type token + <code>--prism-text</code>
+- State fields use <strong>Status indicator</strong> or <strong>Badges</strong> as the value, never raw text
+- Separate groups with <strong>Divider</strong></p>
+<p><strong><code>Key-value strip</code></strong> — horizontal variant for compact summaries (L15):
+- Single row of <code>&lt;label&gt;</code> / <code>&lt;value&gt;</code> pairs separated by vertical <strong>Divider</strong></p>
+<p><strong><code>Score banner</code></strong> (L16) — composition with <strong>Progress bar</strong>:
+- Left: score number (h1) + label
+- Right: <strong>Progress bar</strong> + summary text
+- Use semantic color tokens (<code>--prism-success</code>, <code>--prism-warning</code>, <code>--prism-error</code>) for the bar fill</p>
+<p><strong><code>Checklist group</code> / <code>Checklist row</code></strong> (L16):
+- Group heading + stack of rows
+- Each row: label · <strong>Status indicator</strong> (<code>Pass</code> · <code>Fail</code> · <code>Warning</code> · <code>Not applicable</code>) · <code>Modify</code> <strong>Button</strong>
+- Rows separated by <strong>Divider</strong></p>
+<p><strong><code>Benefit list</code></strong> (L13, L14) — bulleted value list:
+- Stack of rows; each row = leading <strong>Icon</strong> + heading + supporting text
+- 3–5 items maximum</p>
+<p><strong><code>Branded hero</code></strong> (L14):
+- Full-width band; integration <strong>Logo</strong> on the left
+- Headline (h1) + supporting sentence on the right
+- Primary <strong>Button</strong> + optional secondary <strong>Link</strong></p>
+<p><strong><code>Setup step list</code></strong> (L14):
+- Numbered cards; each card = step number circle + <strong>Icon</strong> + step title + short description + per-step <strong>Button</strong>
+- Stack vertically; <strong>Divider</strong> between cards optional</p>
+<p><strong><code>Legend</code></strong> (L18):
+- Inline cluster of <strong>Tag</strong> chips with semantic colors + caption text describing each tag
+- Place adjacent to the <code>Diagram canvas</code></p>
+<p><strong><code>Variable token panel</code></strong> (L21):
+- Content of a <strong>Right pane</strong>
+- Group heading + <strong>Divider</strong> + scrollable list of <strong>Tag</strong> chips representing available variables
+- Each Tag click inserts the token into the <strong>Rich text editor</strong></p>
+<p><strong><code>Icon picker</code></strong> (L21):
+- Modal popover (use <strong>Modal</strong> size <code>sm</code>) containing <strong>Text field</strong> search + scrollable grid of <strong>Icon</strong> components
+- Selecting an Icon dismisses the modal</p>
+<p><strong><code>Link section</code></strong> (L22):
+- Section heading + <strong>Divider</strong> + stack of <strong>Link</strong> items
+- 3-column page layout: one <code>Link section</code> per column</p>
+<h3 id="82-placeholder-recipes-for-true-gaps-replace-once-prism-ships-the-component">8.2 Placeholder recipes for true gaps (replace once Prism ships the component)</h3>
+<p><strong><code>KPI tile</code></strong> <em>(gap — needs Prism KPIs spec)</em>:
+- Card-shaped container using <code>--prism-surface</code> + <code>--prism-radius</code>
+- Label: caption type + <code>--prism-text-muted</code>
+- Value: h2 type + <code>--prism-text</code>
+- Trend: <strong>Status indicator</strong> + signed percentage
+- Defer sparkline until Widgets ship</p>
+<p><strong><code>Chart card</code></strong> <em>(gap — needs Prism Widgets spec)</em>:
+- Card with title + optional filter Dropdown
+- Chart body (donut · bar · gauge · heatmap) inside a fixed-height container
+- Empty state: render Prism <strong>Empty state</strong> inside the chart container</p>
+<p><strong><code>Catalog card</code> / <code>Add tile</code></strong> <em>(gap — needs Prism Cards spec)</em>:
+- Card with <strong>Icon</strong> (top), title, description, primary <strong>Button</strong>
+- Selectable variant adds 2px border in <code>--prism-violet</code> + check <strong>Icon</strong> overlay
+- <code>Add tile</code> is the same card with a dashed border and a <code>+</code> Icon, no title/description</p>
+<p><strong><code>Info card</code></strong> <em>(gap — needs Prism Cards spec)</em>:
+- Card hosted inside <strong>Right pane</strong>
+- QR / illustration / heading / supporting Links</p>
+<p><strong><code>Stepper</code></strong> <em>(gap — needs Prism Stepper spec)</em>:
+- Horizontal (2–3 steps): numbered circles connected by 1px line; active uses <code>--prism-violet</code>, done uses <code>--prism-success</code>, pending uses <code>--prism-text-muted</code>
+- Vertical (≥4 steps): 240px left rail; rows of number circle + step label + sub-label
+- Optional <strong>Progress bar</strong> underneath horizontal variant ("Step n of N")</p>
+<p><strong><code>Dual-list panel</code> + <code>Transfer controls</code></strong> <em>(gap — needs Prism Dual-list spec)</em>:
+- Two side-by-side cards (Available / Selected) with title + <strong>Counter</strong> badge
+- Each card: sticky <strong>Text field</strong> search at top, optional <strong>Tab filter</strong> for facets, virtualized list of <strong>Checkbox</strong> rows
+- Center column: <strong>Button</strong> group for Add / Remove / Add All / Remove All</p>
+<p><strong><code>Map canvas</code></strong> <em>(gap — third-party map wrapper)</em>:
+- Full-bleed map with floating filter bar (composition: <strong>Date picker</strong> + <strong>Dropdown</strong> + <strong>Tab filter</strong>)
+- Marker click opens <strong>Right pane</strong> drawer
+- "View in Google Maps" <strong>Link</strong> top-right</p>
+<p><strong><code>Diagram canvas</code></strong> <em>(gap — needs Prism Diagram spec)</em>:
+- Visual canvas hosting boxes (using <strong>Cards</strong> when available) + connector arrows; or zone-grouped Cards
+- Paired with <code>Legend</code> pattern</p>
+<p><strong><code>Config panel</code> + <code>Preview pane</code></strong> <em>(gap — L19 Report Builder spec)</em>:
+- Two-column workspace; left ~35% config (internal <strong>Tab Bar Vertical</strong> for Sub-Module · Type · Columns · Filter), right ~65% preview rendering a sample <strong>Data table</strong>
+- Sticky <code>BuilderFooter</code> (composition of <strong>Buttons</strong>) at the bottom</p>
+<p><strong><code>Canvas</code> + <code>Node palette</code></strong> <em>(gap — L20 workflow builder spec)</em>:
+- Dotted-background canvas with a <code>StartNode</code> + drop zones
+- Right column: <code>Node palette</code> of draggable node-type Cards
+- Node selection swaps the palette for a <strong>Right pane</strong> node inspector</p>
+<hr />
+<h2 id="9-generation-prompt-template-for-claude-code">9. Generation prompt template (for Claude Code)</h2>
+<pre><code>Generate a page for: &lt;user task&gt;
+
+1. Layout ID: &lt;Lxx from layouts.md&gt;
+2. For each slot in the layout's slot table:
+   - &lt;Slot&gt;: &lt;Prism component | gap recipe ref&gt; (props: …)
+3. Footer actions: &lt;pick from §3 Footer action vocabulary&gt;
+4. Tokens: pull from /design-system/tokens.css (--prism-* only)
+5. Patterns to apply (from /design-system/foundations/patterns.md):
+   - &lt;e.g. Table pattern, Form pattern, Confirmation severity&gt;
+6. Constraints: WCAG 2.1 AA, dark mode parity, mobile breakpoint per Prism grid.
+
+Rules:
+- Use only components in /design-system/specs/.
+- For slots marked as composition patterns, assemble from the §8.1 recipe.
+- For slots marked GAP, use the §8.2 placeholder recipe AND add a TODO comment referencing the missing Prism component.
+- Do not hardcode color, spacing, radius, type, or elevation.
+- Do not invent slots not listed in the layout entry.
+- For Confirmation severity Medium / High / Critical, use Confirmation Modal with the documented severity treatment. Use Modal (default) for non-destructive short tasks.
+</code></pre>
+<hr />
+<h2 id="10-versioning">10. Versioning</h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0</td>
+<td>2026-05-18</td>
+<td>Initial taxonomy from 198-screen audit across 15 modules.</td>
+</tr>
+<tr>
+<td>1.1</td>
+<td>2026-05-18</td>
+<td>Reconciled to Prism design system. All slot components now reference Prism component names. Gap recipes (§8) documented for components not yet in Prism. Mapped layouts to Prism's six pattern categories (§2).</td>
+</tr>
+<tr>
+<td>1.2</td>
+<td>2026-05-18</td>
+<td>Folded in latest Prism updates: <strong>Menu</strong> / <strong>Dropdown menu</strong> shipped (Bulk action bar and Filter sidebar are no longer gaps). <strong>Modal</strong> (default) and <strong>Confirmation Modal</strong> both exist (L09 distinguishes purpose). Quick Links is now hosted inside <strong>Right pane</strong> — the standalone Quick links footer is removed from L02, L03, L05.</td>
+</tr>
+<tr>
+<td>1.3</td>
+<td>2026-05-18</td>
+<td>Reclassified composition-style gaps as <strong>composition patterns</strong> (§8): Form section, Form footer, Wizard footer, Score banner, Key-value group, Benefit list, Branded hero, Setup step list, Checklist group, Legend, Variable token panel, Icon picker, Link section, Activity feed. They compose from existing Prism atoms — no new components needed. True remaining component gaps are now only items that need genuinely new visual/interaction work (KPI tile, Chart card, Catalog card/Add tile/Info card, Stepper, Dual-list panel, Map canvas, Diagram canvas, Config panel/Preview pane, Canvas/Node palette).</td>
+</tr>
+</tbody>
+</table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var btn = document.getElementById('themeToggle');
+  if (!btn) return;
+  var sun = document.getElementById('sunIcon');
+  var moon = document.getElementById('moonIcon');
+  function sync() {
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if (sun) sun.style.display = isLight ? 'none' : 'block';
+    if (moon) moon.style.display = isLight ? 'block' : 'none';
+  }
+  sync();
+  btn.addEventListener('click', function(){
+    var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if (isLight) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'dark'); }
+    else { document.documentElement.setAttribute('data-theme', 'light'); localStorage.setItem('theme', 'light'); }
+    sync();
+  });
+});
+</script>
+</body>
+</html>

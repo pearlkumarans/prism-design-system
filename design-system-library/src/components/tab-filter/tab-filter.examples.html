@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ds-tab-filter — examples</title>
+  <script type="module">import '../../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 24px; background: var(--uems-background); color: var(--uems-text-primary); }
+    section { margin-bottom: 32px; }
+    h2 { font-size: var(--font-size-14); color: var(--uems-text-tertiary); margin: 0 0 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <section>
+    <h2>Default × selected "Open"</h2>
+    <div class="row">
+      <ds-tab-filter id="ex-default" value="open" aria-label="Filter status"></ds-tab-filter>
+    </div>
+  </section>
+
+  <section>
+    <h2>With badges</h2>
+    <div class="row">
+      <ds-tab-filter id="ex-badges" value="all" aria-label="Filter status with counts"></ds-tab-filter>
+    </div>
+  </section>
+
+  <section>
+    <h2>With icons</h2>
+    <div class="row">
+      <ds-tab-filter id="ex-icons" value="list" aria-label="View mode"></ds-tab-filter>
+    </div>
+  </section>
+
+  <section>
+    <h2>Small size</h2>
+    <div class="row">
+      <ds-tab-filter id="ex-small" size="small" value="week" aria-label="Range"></ds-tab-filter>
+    </div>
+  </section>
+
+  <section>
+    <h2>Disabled (whole control)</h2>
+    <div class="row">
+      <ds-tab-filter id="ex-disabled" value="open" disabled aria-label="Filter status (disabled)"></ds-tab-filter>
+    </div>
+  </section>
+
+  <section>
+    <h2>RTL</h2>
+    <div class="row">
+      <ds-tab-filter id="ex-rtl" rtl value="open" aria-label="تصفية الحالة"></ds-tab-filter>
+    </div>
+  </section>
+
+  <script type="module">
+    const statusOptions = [
+      { value: 'all',    label: 'All' },
+      { value: 'open',   label: 'Open' },
+      { value: 'closed', label: 'Closed' },
+    ];
+
+    document.getElementById('ex-default').options = statusOptions;
+    document.getElementById('ex-disabled').options = statusOptions;
+
+    document.getElementById('ex-badges').options = [
+      { value: 'all',    label: 'All',    badge: 99 },
+      { value: 'open',   label: 'Open',   badge: 12 },
+      { value: 'closed', label: 'Closed', badge: 7 },
+    ];
+
+    document.getElementById('ex-icons').options = [
+      { value: 'list', label: 'List', icon: 'list' },
+      { value: 'grid', label: 'Grid', icon: 'grid' },
+    ];
+
+    document.getElementById('ex-small').options = [
+      { value: 'day',   label: 'Day' },
+      { value: 'week',  label: 'Week' },
+      { value: 'month', label: 'Month' },
+    ];
+
+    document.getElementById('ex-rtl').options = [
+      { value: 'all',    label: 'All',    labelRtl: 'الكل',   badge: 99 },
+      { value: 'open',   label: 'Open',   labelRtl: 'مفتوح',  badge: 12 },
+      { value: 'closed', label: 'Closed', labelRtl: 'مغلق',   badge: 7 },
+    ];
+  </script>
+</body>
+</html>

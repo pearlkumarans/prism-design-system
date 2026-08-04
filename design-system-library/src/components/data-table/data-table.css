@@ -1,0 +1,665 @@
+/* =============================================================================
+   ds-data-table / .ds-data-table
+   Toolbar + table + footer + floating bulk-action bar. Token-driven.
+   ============================================================================= */
+
+/* The toolbar search renders a ds-search-field, and the built-in bulk actions
+   use ds-dropdown-menu (export format) + ds-toast — pull in their styles so
+   everything looks right on pages that load only data-table.css (docs pages),
+   not just full-bundle pages. (CSS twin of the JS imports.) */
+@import url('../search-field/search-field.css');
+@import url('../dropdown-menu/dropdown-menu.css');
+@import url('../toast/toast.css');
+
+.ds-data-table {
+  display: flex;
+  flex-direction: column;
+  /* The toolbar (search / filter) floats ABOVE the table, borderless. The
+     card border now wraps only the table + footer (see __scroll / __footer),
+     so the host itself is a transparent, border-less container. */
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-family: var(--font-family-sans);
+  color: var(--uems-text-primary);
+  font-size: var(--font-size-14);
+  position: relative;
+  overflow: visible;
+}
+
+/* ---- Toolbar -------------------------------------------------------- */
+.ds-data-table__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: var(--spacing-4) var(--spacing-0) var(--spacing-8);
+  height: 48px;
+  box-sizing: border-box;
+  /* No divider — the toolbar floats above the bordered table card. */
+}
+.ds-data-table__toolbar-left {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-width: 0;
+}
+.ds-data-table__toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  flex-shrink: 0;
+}
+
+/* Search uses the ds-search-field component (its own icon, border, focus
+   state). Here we only size it within the toolbar. */
+.ds-data-table__search {
+  flex: 0 1 280px;
+  min-width: 200px;
+}
+/* Mouse focus → plain active state (accent border, NO ring). Clicking in
+   should read as an active input, not a keyboard-focus ring. */
+.ds-data-table__search:focus-within {
+  outline: none !important;
+  border-color: var(--uems-border-accent, #006AFF) !important;
+}
+/* Keyboard focus (Tab) → show ONLY the focus ring, with the neutral default
+   border (not the accent active-border) so the two states never mix.
+   `.is-kb-focus` is toggled in JS only when focus arrives via keyboard. */
+.ds-data-table__search.is-kb-focus:focus-within {
+  outline: 2px solid var(--uems-border-accent-focus) !important;
+  outline-offset: 2px !important;
+  border-color: var(--uems-border-tertiary, #E1E4EB) !important;
+}
+
+/* Toolbar buttons (filter, etc.) — shrink the small variant from 36 px → 32 px
+   so it lines up with the 32 px icon buttons and search input next to it. */
+.ds-data-table__toolbar .ds-button .ds-button--small,
+.ds-data-table__toolbar ds-button[size="small"] .ds-button--small {
+  height: 32px;
+  padding: 0 var(--spacing-12);
+}
+/* Filter is a ds-split-button (outline). Shrink its small size from 36px → 32px
+   so it lines up with the 32px search field + icon buttons beside it. The size
+   var is declared on the inner .ds-split-button--small element, so override it
+   there (an inherited value from the host would lose to that declaration). */
+.ds-data-table__filter .ds-split-button--small { --_sb-h: 32px; }
+/* 16px icons read chunky inside the compact 32px control — drop to 14px so the
+   funnel + chevron sit balanced against the 14px label. */
+.ds-data-table__filter ds-icon {
+  width: 14px;
+  height: 14px;
+}
+/* Softer border than the default outline variant — the frame lives on the
+   container, the segment divider on the main button. */
+.ds-data-table__filter .ds-split-button--outline {
+  border-color: var(--uems-border-tertiary);
+}
+.ds-data-table__filter .ds-split-button--outline .ds-split-button__main {
+  border-inline-end-color: var(--uems-border-tertiary);
+}
+
+/* Filter-open → hold the filter control in its hover state while the filter
+   panel is open (same token as the :hover rule in split-button.css). Covers both
+   the split button (main + chevron segments) and the plain outline button. */
+/* Split-button (advanced filter): segments carry the fill directly. */
+.ds-data-table__filter.is-filter-open .ds-split-button__main,
+.ds-data-table__filter.is-filter-open .ds-split-button__chev {
+  background: var(--uems-bg-secondary-alt);
+}
+/* Plain outline button (simple-filter table): drive the button's OWN theming
+   vars so the held state matches its :hover exactly and animates through the
+   button's transition, instead of fighting `.ds-button { background: var(--_btn-bg) }`. */
+.ds-data-table__filter.is-filter-open .ds-button {
+  --_btn-bg: var(--uems-bg-secondary-alt);
+  --_btn-border: var(--uems-border-secondary);
+}
+
+/* Filter-applied → red attention dot at the control's top-right corner. The
+   ring matches the toolbar background so the dot reads as a floating marker. */
+.ds-data-table__filter { position: relative; display: inline-flex; }
+.ds-data-table__filter.is-filter-applied::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  inset-inline-end: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--uems-radius-pill, 9999px);
+  background: var(--uems-bg-error-solid, #E42527);
+  box-shadow: 0 0 0 2px var(--uems-bg-primary-alt, var(--uems-bg-base, #FFFFFF));
+  pointer-events: none;
+}
+
+/* ---- Table ---------------------------------------------------------- */
+.ds-data-table__scroll {
+  flex: 1 1 auto;
+  min-height: 0;   /* allow the body to shrink + scroll when the host height is bounded (fit-viewport) */
+  overflow: auto;
+  /* The table card border + background live here (not on the host) so the
+     toolbar above stays borderless. */
+  background: var(--uems-bg-primary-alt, var(--uems-bg-base));
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-lg);
+}
+/* When a footer follows, square off the scroll's bottom and let the footer
+   close the card with the matching bottom radius. */
+.ds-data-table__scroll:has(+ .ds-data-table__footer) {
+  border-bottom: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.ds-data-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+/* Manual column sizing — once any column is dragged, every column is frozen at
+   an explicit px width and the table switches to fixed layout so the dragged
+   column holds its exact size (surplus scrolls in __scroll). */
+.ds-data-table__table--col-fixed { table-layout: fixed; }
+.ds-data-table__table--col-fixed th,
+.ds-data-table__table--col-fixed td { overflow: hidden; text-overflow: ellipsis; }
+
+/* Resize handle — a slim hit area on the header's trailing edge; the visible
+   2px line appears on hover/drag/focus. */
+.ds-data-table__table thead th { position: relative; }
+.ds-data-table__col-resizer {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: -4px;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 2;
+  touch-action: none;
+}
+.ds-data-table__col-resizer::after {
+  content: '';
+  position: absolute;
+  inset-block: 20%;
+  inset-inline-end: 3px;
+  width: 2px;
+  border-radius: 1px;
+  background: transparent;
+  transition: background-color var(--duration-fast, 120ms) var(--ease-standard, ease);
+}
+/* Discoverability: hovering anywhere on the header cell reveals its resizer as
+   a soft gray line; the line strengthens to accent when on the handle itself. */
+.ds-data-table__table thead th:hover .ds-data-table__col-resizer::after {
+  background: var(--uems-border-primary, #b4bbcc);
+}
+.ds-data-table__col-resizer:hover::after,
+.ds-data-table__col-resizer:focus-visible::after { background: var(--uems-border-accent, #006aff) !important; }
+.ds-data-table__col-resizer:focus-visible { outline: none; }
+/* While dragging: keep the col-resize cursor everywhere and stop text selection. */
+ds-data-table.is-col-resizing { cursor: col-resize; user-select: none; }
+ds-data-table.is-col-resizing .ds-data-table__col-resizer::after { background: var(--uems-border-accent, #006aff) !important; }
+
+.ds-data-table__table th,
+.ds-data-table__table td {
+  padding: 0 var(--spacing-12);
+  text-align: start;
+  vertical-align: middle;
+  box-sizing: border-box;
+  /* Body cells: ultra-soft inter-row divider so the eye reads rows as a
+     calm continuous list, not a heavy grid. Header keeps the stronger
+     stroke (see the thead-th rule further down). */
+  border-bottom: 1px solid color-mix(in srgb, var(--uems-border-tertiary) 45%, transparent);
+  white-space: nowrap;
+}
+/* Last row in the body has no divider — the container border closes it. */
+.ds-data-table__table tbody tr:last-child td,
+.ds-data-table__table tbody tr:last-child th { border-bottom: 0; }
+.ds-data-table__table th[data-align="end"],
+.ds-data-table__table td[data-align="end"] {
+  text-align: end;
+}
+.ds-data-table__table th[data-align="center"],
+.ds-data-table__table td[data-align="center"] {
+  text-align: center;
+}
+
+/* Header row — keeps a slightly stronger divider so the head/body
+   boundary stays legible even with softened body dividers. */
+.ds-data-table__table thead th {
+  background: var(--uems-bg-secondary-alt);
+  color: var(--uems-text-tertiary);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-14);
+  height: 40px;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--uems-border-tertiary);
+}
+.ds-data-table[data-sticky-header="true"] .ds-data-table__table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.ds-data-table__th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+.ds-data-table__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4, 4px);
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;                     /* focus renders as the cell's bottom bar */
+}
+.ds-data-table__sort ds-icon { line-height: 0; transition: opacity var(--duration-fast, 120ms) var(--ease-standard, ease); }
+/* Direction is baked into the glyph (arrow-narrow-up / arrow-narrow-down set in
+   JS) — deliberately NO transform rotation here, so a stale stylesheet can
+   never flip the arrows. */
+
+/* Sort icon states (Figma: table column header spec)
+   - Sorted (asc/desc): arrow always visible in accent blue.
+   - Unsorted: arrow hidden; hovering the header previews a dark ↑ arrow.
+   - Keyboard focus: arrow reads dark while the cell shows the accent bar. */
+.ds-data-table__sort[data-sort] ds-icon { color: var(--uems-icon-accent, #2c66dd); }
+.ds-data-table__sort:not([data-sort]) ds-icon {
+  opacity: 0;                        /* preview points ↑ (ascending comes first) */
+  color: var(--uems-icon-primary, var(--uems-text-primary));
+}
+.ds-data-table__table thead th:hover .ds-data-table__sort:not([data-sort]) ds-icon { opacity: 1; }
+.ds-data-table__sort:focus-visible ds-icon { opacity: 1; color: var(--uems-icon-primary, var(--uems-text-primary)); }
+
+/* Hover — the whole sortable header cell gets a gray wash. */
+.ds-data-table__table thead th:has(.ds-data-table__sort):hover {
+  background: var(--uems-bg-secondary);
+}
+/* Focus — a 2px accent bar along the cell's bottom edge (replaces the outline). */
+.ds-data-table__table thead th:has(.ds-data-table__sort:focus-visible) {
+  box-shadow: inset 0 -2px 0 var(--uems-border-accent-focus, #2c66dd);
+}
+/* Disabled table (aria-busy/loading) — faded header, no hover affordance. */
+.ds-data-table__table[aria-busy="true"] thead th .ds-data-table__sort {
+  color: var(--uems-text-disabled);
+  pointer-events: none;
+}
+.ds-data-table__table[aria-busy="true"] thead th .ds-data-table__sort ds-icon {
+  color: var(--uems-icon-disabled, var(--uems-text-disabled));
+}
+
+/* ── Frozen columns (frozen-columns="N") — pinned during horizontal scroll ── */
+.ds-data-table__cell--frozen { position: sticky; z-index: 2; }
+/* Body frozen cells need an opaque background so scrolling content slides
+   beneath them; it tracks the row's hover/selected states. */
+.ds-data-table__table tbody .ds-data-table__cell--frozen {
+  background: var(--uems-bg-primary-alt, var(--uems-bg-base));
+}
+.ds-data-table__table tbody tr:hover .ds-data-table__cell--frozen {
+  background: var(--uems-bg-primary-hover);
+}
+.ds-data-table__table tbody tr[data-selected="true"] .ds-data-table__cell--frozen {
+  background: var(--uems-bg-accent-primary-subtle, var(--uems-bg-accent-primary));
+}
+/* Header frozen cell sits above both the sticky header row and body frozen
+   cells. The [data-sticky-header] variant must out-rank the sticky-header rule
+   (specificity 0-3-2) that sets every thead th to z-index 1 — with equal
+   z-index, later siblings paint on top and scrolling headers overlapped the
+   pinned one. */
+.ds-data-table__table thead th.ds-data-table__cell--frozen,
+.ds-data-table[data-sticky-header] .ds-data-table__table thead th.ds-data-table__cell--frozen {
+  z-index: 3;
+}
+/* Boundary column: divider always; a soft "content slides under" shadow only
+   while the table is actually scrolled. */
+.ds-data-table__cell--frozen-last { box-shadow: inset -1px 0 0 var(--uems-border-tertiary); }
+.ds-data-table__scroll[data-scrolled-x="true"] .ds-data-table__cell--frozen-last {
+  box-shadow: inset -1px 0 0 var(--uems-border-tertiary), 6px 0 8px -6px rgba(13, 17, 29, 0.18);
+}
+
+/* Body rows */
+.ds-data-table__table tbody tr {
+  background: var(--uems-bg-primary);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+.ds-data-table__table tbody tr:hover { background: var(--uems-bg-primary-hover); }
+.ds-data-table__table tbody tr[data-selected="true"] {
+  background: var(--uems-bg-accent-primary-subtle, var(--uems-bg-accent-primary));
+}
+.ds-data-table__table tbody td {
+  height: 40px;
+  color: var(--uems-text-primary);
+  /* Cells are single-line by default — never wrap to a second line or stack a
+     secondary description below the primary text. Put supporting info inline
+     (name · detail) or in a tooltip, not on a second row. */
+  white-space: nowrap;
+}
+.ds-data-table[data-row-height="compact"]     .ds-data-table__table tbody td { height: 32px; }
+.ds-data-table[data-row-height="comfortable"] .ds-data-table__table tbody td { height: 48px; }
+
+/* First column lead-in — 16px between the table edge and the first
+   cell's content, regardless of whether that cell holds a selection
+   checkbox or real data. Right padding stays at the normal 12px so
+   the cell-to-cell rhythm isn't disturbed. */
+.ds-data-table__table th:first-child,
+.ds-data-table__table td:first-child {
+  padding: 0 var(--spacing-12) 0 16px;
+}
+.ds-data-table[dir="rtl"] .ds-data-table__table th:first-child,
+.ds-data-table[dir="rtl"] .ds-data-table__table td:first-child {
+  padding: 0 16px 0 var(--spacing-12);
+}
+/* When a selection checkbox/radio occupies the first column, pin the
+   column width so the control sits in a narrow, predictable gutter. */
+.ds-data-table[data-selection-mode="multi"]  .ds-data-table__table th:first-child,
+.ds-data-table[data-selection-mode="multi"]  .ds-data-table__table td:first-child,
+.ds-data-table[data-selection-mode="single"] .ds-data-table__table th:first-child,
+.ds-data-table[data-selection-mode="single"] .ds-data-table__table td:first-child {
+  width: 48px;
+  padding: 0 var(--spacing-8) 0 16px;
+}
+.ds-data-table[data-selection-mode="multi"][dir="rtl"]  .ds-data-table__table th:first-child,
+.ds-data-table[data-selection-mode="multi"][dir="rtl"]  .ds-data-table__table td:first-child,
+.ds-data-table[data-selection-mode="single"][dir="rtl"] .ds-data-table__table th:first-child,
+.ds-data-table[data-selection-mode="single"][dir="rtl"] .ds-data-table__table td:first-child {
+  padding: 0 16px 0 var(--spacing-8);
+}
+
+/* Row-header cells (col.rowHeader) — same default styling as <td> in body */
+.ds-data-table__table tbody th[scope="row"] {
+  height: 40px;
+  background: inherit;
+  font-weight: var(--font-weight-regular);
+  color: var(--uems-text-primary);
+  text-align: start;
+  white-space: nowrap;
+}
+.ds-data-table[data-row-height="compact"]     .ds-data-table__table tbody th[scope="row"] { height: 32px; }
+.ds-data-table[data-row-height="comfortable"] .ds-data-table__table tbody th[scope="row"] { height: 48px; }
+
+/* Visually-hidden live region for screen-reader announcements */
+.ds-data-table__sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Cell content helpers — link / icon-only column */
+.ds-data-table__cell-link {
+  color: var(--uems-text-accent-link);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+}
+.ds-data-table__cell-link:hover { text-decoration: underline; }
+
+/* Empty / loading overlays */
+.ds-data-table__empty {
+  padding: var(--spacing-32) var(--spacing-16);
+  text-align: center;
+  color: var(--uems-text-tertiary);
+}
+/* ---- Loading skeleton ---------------------------------------------- */
+/* Each loading row keeps its real cell padding/borders; the "loading"
+   look is provided by skeleton elements rendered inside each cell. This
+   reads as a true data placeholder instead of a single flat gradient row. */
+.ds-data-table__loading-row td {
+  height: 48px;
+  vertical-align: middle;
+}
+
+.ds-data-table__skeleton {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    var(--uems-bg-secondary) 0%,
+    var(--uems-bg-secondary-hover) 45%,
+    var(--uems-bg-secondary-hover) 55%,
+    var(--uems-bg-secondary) 100%);
+  background-size: 200% 100%;
+  border-radius: var(--radius-xs, 4px);
+  animation: ds-data-table-skeleton 1.4s ease-in-out infinite;
+  /* Per-row stagger via a CSS variable on the <tr> so adjacent rows
+     don't pulse in lockstep. */
+  animation-delay: var(--ds-skel-delay, 0ms);
+}
+.ds-data-table__skeleton--bar {
+  height: 12px;
+  max-width: 100%;
+  vertical-align: middle;
+}
+.ds-data-table__skeleton--square {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-xs, 4px);
+}
+
+@keyframes ds-data-table-skeleton {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-data-table__skeleton { animation: none; }
+}
+
+/* ---- Footer --------------------------------------------------------- */
+.ds-data-table__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  padding: 0 var(--spacing-16);
+  height: 48px;
+  flex-shrink: 0;   /* keep the 48px height under fit-viewport — only __scroll shrinks/scrolls */
+  /* Footer closes the table card: full border, bottom corners rounded.
+     border-top acts as the divider from the scroll above. */
+  background: var(--uems-bg-primary-alt, var(--uems-bg-base));
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  font-size: var(--font-size-12);
+  color: var(--uems-text-tertiary);
+}
+/* Left cluster: rows-per-page select + the range count, both inline. */
+.ds-data-table__footer-left {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-16);
+}
+.ds-data-table__rpp {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+.ds-data-table__rpp select {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 28px;
+  /* Tight padding so the chevron glyph (drawn via background-image) sits
+     close to the value instead of leaving the wide native gutter. */
+  padding: 0 22px 0 var(--spacing-8);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-md);
+  background-color: var(--uems-bg-base);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20' fill='none'><path d='M5 7.5L10 12.5L15 7.5' stroke='%231F242E' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 12px;
+  color: var(--uems-text-primary);
+  font: inherit;
+  cursor: pointer;
+}
+.ds-data-table__range {
+  font-variant-numeric: tabular-nums;
+}
+.ds-data-table__range-unknown {
+  color: var(--uems-text-accent-link, var(--hyperlink));
+  font-weight: var(--font-weight-medium);
+}
+.ds-data-table__pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+/* Tertiary buttons inside the table (pagination, action column, etc.) should
+   render with neutral text, not the default accent-link blue. The base
+   tertiary variant exposes --_btn-fg as a CSS var, which we override here. */
+.ds-data-table .ds-button--tertiary {
+  --_btn-fg: var(--uems-text-primary);
+  --_btn-bg-hover: var(--uems-bg-secondary-hover);
+}
+/* Disabled prev/next: drop the button chrome so the row reads as plain
+   muted text (no hover background, no border, no padding-ring). Just a
+   greyed-out text label with its chevron. */
+.ds-data-table__pagination ds-button[disabled] .ds-button,
+.ds-data-table__pagination ds-button[disabled] .ds-button:hover {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  /* Disable pointer events on the inner native <button> so the not-allowed
+     cursor set on the HOST below actually shows on hover — a native
+     `<button disabled>` swallows/ignores the cursor property otherwise. */
+  pointer-events: none;
+  /* Re-assert the disabled text colour: the `.ds-data-table .ds-button--tertiary`
+     rule above pins --_btn-fg to text-primary, which otherwise leaks onto the
+     disabled prev/next so they read as active. */
+  --_btn-fg: var(--uems-text-disabled);
+}
+/* Cursor lives on the HOST (which keeps pointer events) so hovering a disabled
+   prev/next shows not-allowed. Clicks are still ignored — the footer handler
+   bails on [disabled]. */
+.ds-data-table__pagination ds-button[disabled] {
+  cursor: not-allowed;
+}
+
+/* ---- Floating bulk-action bar -------------------------------------- */
+/* Bulk action toolbar — Figma 18191:2197641.
+   [grip] [actions…] | [count Selected] [×] on BG-Secondary-Solid, radius 8. */
+.ds-data-table__bulk-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;                 /* sits centered ON the 48px footer row */
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-12, 12px);
+  padding: var(--spacing-4, 4px) var(--spacing-8, 8px);
+  background: var(--uems-bg-secondary-solid, #313746);
+  color: var(--uems-text-white);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 2px 8px rgba(13, 17, 29, 0.12);
+  z-index: 2;
+  font-size: var(--font-size-14);
+}
+/* Drag grip — the system's move-vertical glyph (2×3 dot grid), Figma: BG-Quaternary. */
+.ds-data-table__bulk-bar-grip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--uems-bg-quaternary, #d2d7e0);
+  cursor: grab;
+  touch-action: none;
+}
+/* While the toolbar is being dragged by its grip. */
+.ds-data-table__bulk-bar.is-dragging { transition: none; }
+.ds-data-table__bulk-bar.is-dragging,
+.ds-data-table__bulk-bar.is-dragging .ds-data-table__bulk-bar-grip { cursor: grabbing; user-select: none; }
+.ds-data-table__bulk-bar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4, 4px);
+}
+.ds-data-table__bulk-bar-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4, 4px);
+  height: 36px;
+  padding: var(--spacing-8, 8px) var(--spacing-12, 12px);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-md, 8px);
+  color: var(--uems-text-white);
+  cursor: pointer;
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+.ds-data-table__bulk-bar-action:hover { background: rgba(255, 255, 255, 0.1); }
+.ds-data-table__bulk-bar-action[data-destructive="true"]:hover {
+  background: rgba(228, 37, 39, 0.25);
+}
+.ds-data-table__bulk-bar-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.18);
+}
+.ds-data-table__bulk-bar-count {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-6, 6px);
+}
+.ds-data-table__bulk-bar-count strong { font-weight: var(--font-weight-semibold, 600); }
+.ds-data-table__bulk-bar-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm, 6px);
+  color: var(--uems-text-white);
+  cursor: pointer;
+}
+.ds-data-table__bulk-bar-close:hover { background: rgba(255, 255, 255, 0.1); }
+
+/* ---- RTL ------------------------------------------------------------ */
+.ds-data-table[dir="rtl"] .ds-data-table__table th,
+.ds-data-table[dir="rtl"] .ds-data-table__table td { text-align: right; }
+.ds-data-table[dir="rtl"] .ds-data-table__table th[data-align="end"],
+.ds-data-table[dir="rtl"] .ds-data-table__table td[data-align="end"] { text-align: left; }
+
+/* ---- Single-select radio (selection-mode="single") -----------------
+   Native input[type="radio"] visually styled to match ds-radio-group.
+   We intentionally avoid `appearance: none` here so the input is
+   recognisable as a radio across browsers; `accent-color` colours the
+   filled state with the brand token. A wider hit-target and bolder
+   border weight make the radio read at a glance, distinguishing this
+   row from the checkbox-equipped multi-select table above. */
+.ds-data-table__radio {
+  appearance: auto;
+  -webkit-appearance: radio;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+  vertical-align: middle;
+  flex-shrink: 0;
+  accent-color: var(--uems-bg-button-primary);
+}
+.ds-data-table__radio:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-full);
+}
+
+/* Built-in toast host — top-center, above the page (delete / export confirms) */
+.ds-data-table__toast-host {
+  position: fixed;
+  top: var(--spacing-16, 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8, 8px);
+  align-items: center;
+  pointer-events: none;
+}
+.ds-data-table__toast-host ds-toast { pointer-events: auto; }

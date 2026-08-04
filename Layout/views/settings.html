@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<!--
+  Settings drawer — DUAL-MODE file.
+  • Open directly in a browser  → the standalone harness (bottom) mounts + auto-opens it.
+  • Fetched by Shell.html        → injectDrawer() extracts ONLY <template id="drawer-fragment">
+                                   (markup + CSS + registration script); head + harness ignored.
+  Paths use ../design-system-library/… and resolve identically in both contexts thanks to <base href="../">.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Settings — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="../design-system-library/src/components/drawer/drawer.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-base); }
+    .sa-host { position: relative; display: flex; flex: 1; min-height: 0; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  /* ── Settings page (fills the shell-area; opened by the header gear icon) ── */
+  #set-pop { display: none; flex: 1; min-width: 0; flex-direction: column; background: var(--uems-bg-primary); border-radius: 16px; overflow-y: auto; }
+  .shell-area.set-open #set-pop { display: flex; }
+  .shell-area.set-open > ds-content,
+  .shell-area.set-open > ds-sidebar-l1,
+  .shell-area.set-open > ds-sidebar-l2 { display: none !important; }
+  /* Header = ds-page-header COMPONENT; sticky, with the same TOKEN-based gradient
+     the drawers (help / updates) use — theme-aware, no hardcoded colours.
+     The gradient must sit on the INNER .ds-page-header (it sets its own bg-base). */
+  #set-pop ds-page-header { position: sticky; top: 0; z-index: 1; display: block; margin-bottom: var(--spacing-24); }
+  /* padding-block: 0 — the component adds 12px top/bottom; the 72px title-row IS the
+     full header height (no extra space around it). */
+  #set-pop ds-page-header .ds-page-header { background: linear-gradient(135deg, var(--uems-bg-accent-primary) 0%, var(--uems-bg-primary) 55%, var(--uems-bg-warning-primary) 100%); padding-block: 0; }
+  /* Title — 20px SemiBold. */
+  #set-pop ds-page-header .ds-page-header__title { font-size: var(--font-size-20, 20px); font-weight: var(--font-weight-semibold); }
+  /* Hide the bottom divider — the component's `show-divider="false"` is a no-op
+     (its boolAttr only checks attribute PRESENCE, not the value), so kill it here. */
+  #set-pop ds-page-header .ds-page-header__divider { display: none; }
+  #set-pop ds-page-header .ds-page-header__title-row,
+  #set-pop ds-page-header .ds-page-header__divider { padding-inline: var(--spacing-32); }
+  /* Vertically centre the title with the search field (component defaults to flex-start). */
+  #set-pop ds-page-header .ds-page-header__title-row { align-items: center; height: 72px; box-sizing: border-box; }
+  #set-pop .set-search { width: clamp(280px, 42vw, 520px); }
+  .set-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-40, 40px) var(--spacing-32); padding-inline: var(--spacing-32); padding-bottom: var(--spacing-40); align-items: start; }
+  @media (max-width: 1280px) { .set-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 760px)  { .set-grid { grid-template-columns: 1fr; } }
+  .set-card { display: flex; flex-direction: column; gap: var(--spacing-16); min-width: 0; }
+  /* surface (gradient/radius/padding/row) now comes from <ds-container>; this only keeps colour + full-width */
+  .set-card__head { align-self: stretch; color: var(--uems-text-secondary); }
+  .set-card__head h2 { margin: 0; font-size: var(--font-size-15, 15px); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+  .set-card__links { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-2) var(--spacing-4); line-height: 1.5; }
+  .set-card__links > ds-text-link::after { content: "|"; color: var(--uems-border-secondary); margin-inline-start: var(--spacing-4); user-select: none; }
+  .set-card__links > ds-text-link.is-last::after { content: none; }
+  .set-card__more { flex-basis: 100%; margin-top: var(--spacing-4); }
+  .set-card__links a.ds-text-link { padding: 4px 8px; margin: -4px 0; border-radius: var(--radius-sm); font-weight: var(--font-weight-regular); line-height: 24px; transition: background-color 120ms var(--ease-standard, ease), color 120ms var(--ease-standard, ease); }
+  .set-card__links a.ds-text-link:hover { background: var(--uems-bg-accent-primary); color: var(--uems-text-accent-link) !important; text-decoration: none; }
+  .set-grid__empty { grid-column: 1 / -1; padding: var(--spacing-32); text-align: center; color: var(--uems-text-tertiary); font-size: var(--font-size-14); }
+</style>
+
+<section class="set-page" id="set-pop" aria-label="Settings">
+  <ds-page-header id="set-header" title="Settings" show-breadcrumbs="false" show-overflow="false" show-divider="false">
+    <ds-search-field slot="actions" class="set-search" id="set-search" size="medium" placeholder="Search Settings"></ds-search-field>
+  </ds-page-header>
+  <div class="set-grid" id="set-grid"></div>
+</section>
+
+<script>
+(function () {
+  const MSGS = {
+    en: {
+      'set.title': 'Settings',
+      'set.search': 'Search Settings',
+      'set.noMatch': 'No settings match',
+      'set.sec.0.title': 'Global Settings',
+      'set.sec.0.link.0': 'Custom Group',
+      'set.sec.0.link.1': 'Get Quote',
+      'set.sec.0.link.2': 'Rebranding',
+      'set.sec.0.link.3': 'Self Service Portal Settings',
+      'set.sec.0.link.4': 'Credential Manager',
+      'set.sec.0.link.5': 'Custom Field',
+      'set.sec.0.link.6': 'Add Custom Data for Computers',
+      'set.sec.0.link.7': 'DEX Manager',
+      'set.sec.0.link.8': 'Private Access',
+      'set.sec.1.title': 'User Administration',
+      'set.sec.1.link.0': 'Users',
+      'set.sec.1.link.1': 'Role',
+      'set.sec.1.link.2': 'Mobile App',
+      'set.sec.1.link.3': 'SAML Authentication',
+      'set.sec.2.title': 'Agent',
+      'set.sec.2.link.0': 'Agent Settings',
+      'set.sec.2.link.1': 'SoM Settings',
+      'set.sec.2.link.2': 'Azure Autopilot',
+      'set.sec.2.link.3': 'Apple Enrollment (ABM)',
+      'set.sec.2.link.4': 'APNS Certificate',
+      'set.sec.3.title': 'Server Settings',
+      'set.sec.3.link.0': 'NAT Settings',
+      'set.sec.3.link.1': 'Proxy Server',
+      'set.sec.3.link.2': 'Mail Server',
+      'set.sec.3.link.3': 'SMS Server',
+      'set.sec.3.link.4': 'Central Server Maintenance',
+      'set.sec.3.link.5': 'Central Server Settings',
+      'set.sec.3.link.6': 'Failover Server',
+      'set.sec.3.link.7': 'Central Server Migration',
+      'set.sec.3.link.8': 'Network Settings',
+      'set.sec.4.title': 'Integrations',
+      'set.sec.4.link.0': 'ServiceDesk Plus Settings',
+      'set.sec.4.link.1': 'Help Desk Settings',
+      'set.sec.4.link.2': 'API Key Management',
+      'set.sec.4.link.3': 'API Explorer',
+      'set.sec.4.link.4': 'ServiceNow Settings',
+      'set.sec.4.link.5': 'Jira Settings',
+      'set.sec.4.link.6': 'Zendesk',
+      'set.sec.4.link.7': 'FreshService',
+      'set.sec.4.link.8': 'FreshDesk',
+      'set.sec.4.link.9': 'Advanced Analytics',
+      'set.sec.4.link.10': 'Threat scanner settings',
+      'set.sec.4.link.11': 'Log360 - EventLog Analyzer',
+      'set.sec.4.link.12': 'Splunk Integration',
+      'set.sec.4.link.13': 'PAM360 Settings',
+      'set.sec.4.link.14': 'Syslog',
+      'set.sec.4.link.15': 'Power BI',
+      'set.sec.4.foot': 'Need More Integrations?',
+      'set.sec.5.title': 'Security & Privacy',
+      'set.sec.5.link.0': 'Manage SSL Certificate',
+      'set.sec.5.link.1': 'Security Settings',
+      'set.sec.5.link.2': 'Privacy Settings',
+      'set.sec.5.link.3': 'Export Settings',
+      'set.sec.5.link.4': 'DPO Dashboard',
+      'set.sec.5.link.5': 'Product Compliance',
+      'set.sec.5.link.6': 'FIPS Compliance',
+      'set.sec.6.title': 'Database Settings',
+      'set.sec.6.link.0': 'Database Settings',
+      'set.sec.6.link.1': 'Remote DB Access',
+      'set.sec.6.link.2': 'Database Migration',
+      'set.sec.7.title': 'Patch Settings',
+      'set.sec.7.link.0': 'Red Hat Linux Settings',
+      'set.sec.7.link.1': 'SUSE Linux Settings',
+      'set.sec.7.link.2': 'Patch Database Settings',
+      'set.sec.7.link.3': 'Office Click-to-Run Settings',
+      'set.sec.7.link.4': 'Patch Download',
+      'set.sec.7.link.5': 'BIOS Credential Settings',
+      'set.sec.7.link.6': 'N-1 Patch Settings',
+      'set.sec.8.title': 'OS Deployment',
+      'set.sec.8.link.0': 'Enable OS Deployment',
+      'set.sec.8.link.1': 'OS Deployment settings',
+      'set.sec.9.title': 'Tools Settings',
+      'set.sec.9.link.0': 'Port Settings',
+      'set.sec.9.link.1': 'System Manager Settings',
+      'set.sec.10.title': 'Inventory Settings',
+      'set.sec.10.link.0': 'Scan Settings',
+      'set.sec.10.link.1': 'Device Privacy',
+      'set.sec.10.link.2': 'Geo tracking',
+      'set.sec.11.title': 'Configuration Settings',
+      'set.sec.11.link.0': 'Deployment Policies',
+      'set.sec.11.link.1': 'Configuration Settings',
+      'set.sec.11.link.2': 'USB Audit Settings',
+    },
+    ar: {
+      'set.title': 'الإعدادات',
+      'set.search': 'بحث في الإعدادات',
+      'set.noMatch': 'لا توجد إعدادات مطابقة',
+      'set.sec.0.title': 'الإعدادات العامة',
+      'set.sec.0.link.0': 'مجموعة مخصصة',
+      'set.sec.0.link.1': 'احصل على عرض سعر',
+      'set.sec.0.link.2': 'إعادة العلامة التجارية',
+      'set.sec.0.link.3': 'إعدادات بوابة الخدمة الذاتية',
+      'set.sec.0.link.4': 'مدير بيانات الاعتماد',
+      'set.sec.0.link.5': 'حقل مخصص',
+      'set.sec.0.link.6': 'إضافة بيانات مخصصة لأجهزة الكمبيوتر',
+      'set.sec.0.link.7': 'مدير DEX',
+      'set.sec.0.link.8': 'الوصول الخاص',
+      'set.sec.1.title': 'إدارة المستخدمين',
+      'set.sec.1.link.0': 'المستخدمون',
+      'set.sec.1.link.1': 'الدور',
+      'set.sec.1.link.2': 'تطبيق الجوال',
+      'set.sec.1.link.3': 'مصادقة SAML',
+      'set.sec.2.title': 'الوكيل',
+      'set.sec.2.link.0': 'إعدادات الوكيل',
+      'set.sec.2.link.1': 'إعدادات نطاق الإدارة',
+      'set.sec.2.link.2': 'Azure Autopilot',
+      'set.sec.2.link.3': 'تسجيل Apple ‏(ABM)',
+      'set.sec.2.link.4': 'شهادة APNS',
+      'set.sec.3.title': 'إعدادات الخادم',
+      'set.sec.3.link.0': 'إعدادات NAT',
+      'set.sec.3.link.1': 'خادم الوكيل',
+      'set.sec.3.link.2': 'خادم البريد',
+      'set.sec.3.link.3': 'خادم الرسائل القصيرة',
+      'set.sec.3.link.4': 'صيانة الخادم المركزي',
+      'set.sec.3.link.5': 'إعدادات الخادم المركزي',
+      'set.sec.3.link.6': 'خادم تجاوز الفشل',
+      'set.sec.3.link.7': 'ترحيل الخادم المركزي',
+      'set.sec.3.link.8': 'إعدادات الشبكة',
+      'set.sec.4.title': 'عمليات التكامل',
+      'set.sec.4.link.0': 'إعدادات ServiceDesk Plus',
+      'set.sec.4.link.1': 'إعدادات مكتب المساعدة',
+      'set.sec.4.link.2': 'إدارة مفاتيح API',
+      'set.sec.4.link.3': 'مستكشف API',
+      'set.sec.4.link.4': 'إعدادات ServiceNow',
+      'set.sec.4.link.5': 'إعدادات Jira',
+      'set.sec.4.link.6': 'Zendesk',
+      'set.sec.4.link.7': 'FreshService',
+      'set.sec.4.link.8': 'FreshDesk',
+      'set.sec.4.link.9': 'التحليلات المتقدمة',
+      'set.sec.4.link.10': 'إعدادات ماسح التهديدات',
+      'set.sec.4.link.11': 'Log360 - محلل سجل الأحداث',
+      'set.sec.4.link.12': 'تكامل Splunk',
+      'set.sec.4.link.13': 'إعدادات PAM360',
+      'set.sec.4.link.14': 'Syslog',
+      'set.sec.4.link.15': 'Power BI',
+      'set.sec.4.foot': 'هل تحتاج المزيد من عمليات التكامل؟',
+      'set.sec.5.title': 'الأمان والخصوصية',
+      'set.sec.5.link.0': 'إدارة شهادة SSL',
+      'set.sec.5.link.1': 'إعدادات الأمان',
+      'set.sec.5.link.2': 'إعدادات الخصوصية',
+      'set.sec.5.link.3': 'إعدادات التصدير',
+      'set.sec.5.link.4': 'لوحة معلومات مسؤول حماية البيانات',
+      'set.sec.5.link.5': 'امتثال المنتج',
+      'set.sec.5.link.6': 'امتثال FIPS',
+      'set.sec.6.title': 'إعدادات قاعدة البيانات',
+      'set.sec.6.link.0': 'إعدادات قاعدة البيانات',
+      'set.sec.6.link.1': 'الوصول إلى قاعدة البيانات عن بُعد',
+      'set.sec.6.link.2': 'ترحيل قاعدة البيانات',
+      'set.sec.7.title': 'إعدادات التصحيح',
+      'set.sec.7.link.0': 'إعدادات Red Hat Linux',
+      'set.sec.7.link.1': 'إعدادات SUSE Linux',
+      'set.sec.7.link.2': 'إعدادات قاعدة بيانات التصحيحات',
+      'set.sec.7.link.3': 'إعدادات Office Click-to-Run',
+      'set.sec.7.link.4': 'تنزيل التصحيحات',
+      'set.sec.7.link.5': 'إعدادات بيانات اعتماد BIOS',
+      'set.sec.7.link.6': 'إعدادات تصحيح N-1',
+      'set.sec.8.title': 'نشر نظام التشغيل',
+      'set.sec.8.link.0': 'تمكين نشر نظام التشغيل',
+      'set.sec.8.link.1': 'إعدادات نشر نظام التشغيل',
+      'set.sec.9.title': 'إعدادات الأدوات',
+      'set.sec.9.link.0': 'إعدادات المنفذ',
+      'set.sec.9.link.1': 'إعدادات مدير النظام',
+      'set.sec.10.title': 'إعدادات الجرد',
+      'set.sec.10.link.0': 'إعدادات الفحص',
+      'set.sec.10.link.1': 'خصوصية الجهاز',
+      'set.sec.10.link.2': 'التتبع الجغرافي',
+      'set.sec.11.title': 'إعدادات التهيئة',
+      'set.sec.11.link.0': 'سياسات النشر',
+      'set.sec.11.link.1': 'إعدادات التهيئة',
+      'set.sec.11.link.2': 'إعدادات تدقيق USB',
+    },
+  };
+  // Section shells — icon + link count + whether a footer link exists. All
+  // visible text resolves through t() against the central catalog by key.
+  const SECTIONS = [
+    { icon: 'settings', links: 9 },
+    { icon: 'user', links: 4 },
+    { icon: 'device-manager', links: 5 },
+    { icon: 'server-01', links: 9 },
+    { icon: 'puzzle', links: 16, foot: true },
+    { icon: 'shield', links: 7 },
+    { icon: 'data-01', links: 3 },
+    { icon: 'patch', links: 7 },
+    { icon: 'settings-deploy', links: 2 },
+    { icon: 'device-control', links: 2 },
+    { icon: 'scan-progress', links: 3 },
+    { icon: 'settings-custom', links: 3 },
+  ];
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+  const shellArea = () => window.ShellCtx && window.ShellCtx.shellArea;
+
+  function applyHeaderStrings() {
+    const h1 = document.getElementById('set-header'); if (h1) h1.setAttribute('title', t('set.title'));
+    const sf = document.getElementById('set-search'); if (sf) sf.setAttribute('placeholder', t('set.search'));
+  }
+  function buildSettings() {
+    const grid = document.getElementById('set-grid'); if (!grid) return;
+    applyHeaderStrings();
+    if (grid.children.length) return;
+    grid.innerHTML = SECTIONS.map((s, si) => {
+      const title = t(`set.sec.${si}.title`);
+      const foot = s.foot ? t(`set.sec.${si}.foot`) : '';
+      const links = Array.from({ length: s.links }, (_, i) => t(`set.sec.${si}.link.${i}`));
+      return `<ds-container class="set-card" variant="ghost" padding="none" stack gap="md"><ds-container class="set-card__head" row gap="sm" radius="md" style="--ds-container-pad: var(--spacing-8) var(--spacing-12); --ds-container-bg: linear-gradient(90deg, var(--uems-bg-accent-primary, #eaf0fc) 0%, var(--uems-bg-secondary, #f0f2f5) 35%, transparent 100%); --ds-container-border-width: 0;"><ds-icon name="${s.icon}" size="20"></ds-icon><h2>${title}</h2></ds-container><nav class="set-card__links">${links.map((l, i) => `<ds-text-link class="${i === links.length - 1 ? 'is-last' : ''}" variant="secondary" size="medium" underline="hover" href="#">${l}</ds-text-link>`).join('')}${foot ? `<div class="set-card__more"><ds-text-link variant="secondary" size="medium" underline="hover" href="#">${foot}</ds-text-link></div>` : ''}</nav></ds-container>`;
+    }).join('');
+    wireSettingsSearch(grid);
+  }
+  function wireSettingsSearch(grid) {
+    const searchEl = document.getElementById('set-search');
+    if (!searchEl || !grid || searchEl._wired) return;
+    searchEl._wired = true;
+    let emptyMsg = null;
+    function filter(raw) {
+      const q = (raw || '').trim().toLowerCase();
+      let anyCard = false;
+      grid.querySelectorAll('.set-card').forEach((card) => {
+        const title = card.querySelector('.set-card__head h2').textContent.toLowerCase();
+        const titleMatch = !!q && title.includes(q);
+        let visible = false;
+        card.querySelectorAll('.set-card__links ds-text-link').forEach((l) => {
+          const m = !q || titleMatch || l.textContent.toLowerCase().includes(q);
+          l.style.display = m ? '' : 'none';
+          if (m) visible = true;
+        });
+        let lastShown = null;
+        card.querySelectorAll('.set-card__links > ds-text-link').forEach((l) => {
+          l.classList.remove('is-last');
+          if (l.style.display !== 'none') lastShown = l;
+        });
+        if (lastShown) lastShown.classList.add('is-last');
+        const show = !q || visible;
+        card.style.display = show ? '' : 'none';
+        if (show) anyCard = true;
+      });
+      if (q && !anyCard) {
+        if (!emptyMsg) { emptyMsg = document.createElement('div'); emptyMsg.className = 'set-grid__empty'; grid.appendChild(emptyMsg); }
+        emptyMsg.textContent = t('set.noMatch') + ' “' + raw.trim() + '”';
+        emptyMsg.style.display = '';
+      } else if (emptyMsg) { emptyMsg.style.display = 'none'; }
+    }
+    searchEl.addEventListener('ds-search-field-input', (e) => filter(e.detail && e.detail.value));
+    searchEl.addEventListener('ds-search-field-clear', () => filter(''));
+    filter('');
+  }
+  function show() {
+    const sa = shellArea(); if (!sa) return;
+    sa.classList.remove('zia-open'); sa.classList.add('set-open');
+    buildSettings();
+    window.ShellCtx.setActiveIcon('settings');
+  }
+  function hide() {
+    const sa = shellArea(); if (sa) sa.classList.remove('set-open');
+    window.ShellCtx.setActiveIcon(null);
+  }
+  function onLang() {
+    const grid = document.getElementById('set-grid');
+    const sa = shellArea();
+    if (grid) grid.innerHTML = '';
+    if (sa && sa.classList.contains('set-open')) buildSettings(); else applyHeaderStrings();
+  }
+  document.addEventListener('shell:langchange', onLang);
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers.settings = { show, hide, build: buildSettings, onLang };
+})();
+</script>
+</template>
+
+<script>
+/* ── STANDALONE HARNESS — runs ONLY when this file is opened directly.
+   Shell never executes this (it extracts only #drawer-fragment). ── */
+(function () {
+  const KEY = 'settings';
+  const host = document.createElement('div'); host.className = 'shell-area sa-host'; document.body.appendChild(host);
+  let lang = 'en';
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellCtx = window.ShellCtx || { get shellArea() { return host; }, get lang() { return lang; }, setActiveIcon() {} };
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers[KEY] && window.ShellDrawers[KEY].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

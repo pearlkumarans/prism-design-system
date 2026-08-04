@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Toggle ↔ Figma compare</title>
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/toggle/toggle.css">
+<style>
+  body { font-family: sans-serif; padding: 24px; background:#fff; }
+  .row { display:flex; gap:24px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+  pre { background:#0b1020; color:#cfe; padding:16px; border-radius:8px; white-space:pre-wrap; font-size:12px; }
+  .ok { color:#3fb950; } .bad { color:#f85149; }
+</style>
+</head>
+<body>
+<div class="row">
+  <ds-toggle id="s-off" size="small"></ds-toggle>
+  <ds-toggle id="s-on" size="small" checked></ds-toggle>
+  <ds-toggle id="m-off" size="medium"></ds-toggle>
+  <ds-toggle id="m-on" size="medium" checked></ds-toggle>
+  <ds-toggle id="l-off" size="large"></ds-toggle>
+  <ds-toggle id="l-on" size="large" checked></ds-toggle>
+</div>
+<div class="row">
+  <ds-toggle id="m-dis-on" size="medium" checked disabled></ds-toggle>
+  <ds-toggle id="m-dis-off" size="medium" show-text text="Enable" disabled></ds-toggle>
+  <ds-toggle id="lbl-s" size="small" show-text text="Enable" checked></ds-toggle>
+  <ds-toggle id="lbl-m" size="medium" show-text text="Enable" checked></ds-toggle>
+  <ds-toggle id="lbl-l" size="large" show-text text="Enable"></ds-toggle>
+</div>
+<pre id="out">running…</pre>
+<script type="module" src="../design-system-library/src/components/index.js"></script>
+<script type="module">
+const hex = (c) => {
+  const m = c.match(/\d+(\.\d+)?/g); if(!m) return c;
+  if (m.length>=3 && c.startsWith('rgb')) return '#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join('');
+  return c;
+};
+function probe(id){
+  const host=document.getElementById(id), btn=host.querySelector('button'), thumb=host.querySelector('.ds-toggle__thumb'), txt=host.querySelector('.ds-toggle__text');
+  const b=btn.getBoundingClientRect(), t=thumb.getBoundingClientRect();
+  const cs=getComputedStyle(btn), cst=getComputedStyle(thumb);
+  return {
+    track: `${Math.round(b.width)}×${Math.round(b.height)}`,
+    thumb: `${Math.round(t.width)}×${Math.round(t.height)}`,
+    trackBg: hex(cs.backgroundColor),
+    thumbBg: hex(cst.backgroundColor),
+    thumbShadow: cst.boxShadow==='none'?'none':'shadow',
+    vGap: +(Math.min(t.top-b.top, b.bottom-t.bottom)).toFixed(1),
+    edgeGap: +(host.id.includes('on')||host.id==='lbl-s'||host.id==='lbl-m' ? (b.right-t.right) : (t.left-b.left)).toFixed(1),
+    label: txt? hex(getComputedStyle(txt).color):'—',
+    fontH: cs.height,
+  };
+}
+await customElements.whenDefined('ds-toggle');
+await new Promise(r=>setTimeout(r,150));
+const EXP = {
+  's-off':{track:'28×16',thumb:'12×12',trackBg:'#d2d7e0',edgeGap:2},
+  's-on':{track:'28×16',thumb:'12×12',trackBg:'#006aff'},
+  'm-off':{track:'44×20',thumb:'16×16',trackBg:'#d2d7e0',vGap:2,edgeGap:2},
+  'm-on':{track:'44×20',thumb:'16×16',trackBg:'#006aff',vGap:2,edgeGap:2},
+  'l-off':{track:'60×28',thumb:'20×20',trackBg:'#d2d7e0',edgeGap:4},
+  'l-on':{track:'60×28',thumb:'20×20',trackBg:'#006aff',edgeGap:4},
+  'm-dis-on':{trackBg:'#abc2f1',thumbBg:'#f9fafb',thumbShadow:'none'},
+  'm-dis-off':{trackBg:'#e1e4eb',thumbBg:'#f9fafb',label:'#8893ad'},
+  'lbl-s':{thumb:'12×12',fontH:'20px'},
+  'lbl-m':{thumb:'16×16',fontH:'24px',label:'#ffffff'},
+  'lbl-l':{thumb:'24×24',fontH:'32px',label:'#2a303d'},
+};
+let report='', fails=0;
+for(const id of Object.keys(EXP)){
+  const got=probe(id), exp=EXP[id];
+  report+=`\n[${id}]  `;
+  for(const k in exp){
+    const g=String(got[k]).toLowerCase(), e=String(exp[k]).toLowerCase();
+    const ok = (k==='vGap'||k==='edgeGap') ? Math.abs(got[k]-exp[k])<=0.6 : g===e;
+    if(!ok) fails++;
+    report+=`${k}=${got[k]}${ok?'✓':' ✗(want '+exp[k]+')'}  `;
+  }
+}
+document.getElementById('out').textContent = (fails?`✗ ${fails} MISMATCH`:'✓ ALL PASS')+report;
+document.title = fails? `FAIL ${fails}` : 'PASS';
+</script>
+</body>
+</html>

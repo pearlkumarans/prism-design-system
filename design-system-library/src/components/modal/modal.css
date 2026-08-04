@@ -1,0 +1,146 @@
+/* =============================================================================
+   ds-modal / .ds-modal
+   General-purpose modal — LEFT-aligned dialog (header + body + footer) centered
+   on a scrim. Three sizes (SM 480 / MD 640 / LG 880). Body scrolls; header +
+   footer stay pinned. Distinct from ds-confirmation-modal (centered, compact).
+   ============================================================================= */
+
+:host { display: block; }
+
+.ds-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 1000);
+  display: none;
+  align-items: flex-start;            /* pin to the top … */
+  justify-content: center;            /* … horizontally centered */
+  padding: 80px var(--spacing-16) var(--spacing-16);   /* 80px from the top */
+  overflow-y: auto;                   /* tall dialogs scroll instead of clipping above the fold */
+  font-family: var(--font-family-sans);
+}
+.ds-modal[open] { display: flex; }
+
+/* ---- Overlay (scrim) ---------------------------------------------------- */
+.ds-modal__overlay {
+  position: absolute;
+  inset: 0;
+  /* --uems-bg-overlay is a SOLID colour; drive the dim via background alpha so
+     the fade animates opacity 0→1 without dimming the dialog. */
+  background: rgba(10, 11, 15, 0.7);
+  animation: ds-modal-fade 150ms var(--ease-standard, ease-out);
+}
+
+/* ---- Dialog ------------------------------------------------------------- */
+.ds-modal__dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 640px;                                  /* MD default */
+  max-width: calc(100vw - 32px);                 /* mobile: full-width − 16px margins */
+  max-height: calc(100vh - 96px);                /* fit below the 80px top inset + 16px bottom */
+  background: var(--uems-bg-primary-alt);
+  border-radius: var(--radius-lg);               /* 12px */
+  box-shadow: 0 16px 32px rgba(13, 18, 31, 0.18);
+  animation: ds-modal-pop 180ms var(--ease-standard, ease-out);
+  outline: none;
+  overflow: hidden;                              /* clip children to the radius */
+}
+.ds-modal[data-size="sm"] .ds-modal__dialog { width: 480px; }
+.ds-modal[data-size="lg"] .ds-modal__dialog { width: 880px; }
+
+/* ---- Header (left-aligned) --------------------------------------------- */
+.ds-modal__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-12);
+  padding: var(--spacing-16) var(--spacing-24);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+  cursor: move;                 /* drag handle — move the dialog */
+}
+.ds-modal__header.is-dragging { cursor: grabbing; }
+/* Title & description are not drag handles — keep them selectable. */
+.ds-modal__title, .ds-modal__desc { cursor: text; user-select: text; }
+.ds-modal__header[hidden] { display: none; }
+
+.ds-modal__leading {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--uems-bg-info-primary);
+  color: var(--uems-icon-info);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ds-modal__leading[hidden] { display: none; }
+
+.ds-modal__titles { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-4); }
+
+.ds-modal__title {
+  margin: 0;
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug, 1.35);
+  color: var(--uems-text-primary);
+}
+.ds-modal__desc {
+  margin: 0;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal, 1.5);
+  color: var(--uems-text-secondary);
+}
+.ds-modal__desc[hidden] { display: none; }
+
+.ds-modal__header-actions { flex: 0 0 auto; display: inline-flex; align-items: center; gap: var(--spacing-8); }
+.ds-modal__header-action[hidden] { display: none; }
+
+/* Close — ds-icon-button; tint the glyph subtle */
+.ds-modal__close { flex: 0 0 auto; }
+.ds-modal__close .ds-icon-button,
+.ds-modal__close .ds-icon-button:hover { color: var(--uems-icon-subtle); }
+.ds-modal__close[hidden] { display: none; }
+
+/* ---- Body (slot, scrollable) ------------------------------------------ */
+.ds-modal__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--spacing-20) var(--spacing-24) var(--spacing-24);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal, 1.5);
+  color: var(--uems-text-secondary);
+}
+.ds-modal[data-size="sm"] .ds-modal__body { padding-bottom: var(--spacing-20); }
+.ds-modal__body :first-child { margin-top: 0; }
+.ds-modal__body :last-child { margin-bottom: 0; }
+
+/* ---- Footer ------------------------------------------------------------ */
+.ds-modal__footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  padding: var(--spacing-16) var(--spacing-24);
+  border-top: 1px solid var(--uems-border-tertiary);
+}
+.ds-modal__footer[hidden] { display: none; }
+.ds-modal__footer-start { flex: 0 0 auto; display: inline-flex; align-items: center; }
+.ds-modal__spacer { flex: 1 1 auto; }
+.ds-modal__footer-actions { flex: 0 0 auto; display: inline-flex; align-items: center; gap: var(--spacing-8); }
+
+/* ---- RTL --------------------------------------------------------------- */
+[dir="rtl"] .ds-modal__title,
+[dir="rtl"] .ds-modal__desc,
+[dir="rtl"] .ds-modal__body { text-align: right; }
+
+/* ---- Motion ------------------------------------------------------------ */
+@keyframes ds-modal-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ds-modal-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-modal__overlay, .ds-modal__dialog { animation: none; }
+}

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  {
+    "imports": {
+      "@uems/design-system": "../src/index.js"
+    }
+  }
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UEMS App Shell — Preview</title>
+
+  <!-- Standalone preview. Imports the design system but nothing else
+       imports this file, so deleting it is a no-op for the rest of the repo. -->
+  <script type="module">import '@uems/design-system';</script>
+  <script>
+  (function () {
+    var t = localStorage.getItem('uems-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', t);
+    document.addEventListener('ds-right-pane-theme', function (e) {
+      document.documentElement.setAttribute('data-theme', e.detail.theme);
+      try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+    });
+    window.addEventListener('DOMContentLoaded', function () {
+      customElements.whenDefined('ds-right-pane').then(function () {
+        document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+          rp.setAttribute('theme', t);
+        });
+      });
+    });
+  })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../src/icons/illustrations.svg';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body { background: var(--cobalt-15); }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    /* ---- Outer shell wrapping everything ---------------------------- */
+    .shell {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* ---- Body row: L1 + L2 + content + Right Pane ------------------- */
+    .body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      padding: 0 0 var(--spacing-12) var(--spacing-12);
+      gap: 0;
+    }
+
+    .content {
+      flex: 1;
+      background: var(--uems-bg-base);
+      /* Left-side framing: rounded top-left + bottom-left corners + a soft left
+         drop shadow, so the content reads as a panel tucked beside the sidebar
+         (same chrome the L2 panel carries). */
+      border-radius: 16px 0 0 16px;
+      box-shadow: -8px 0 24px rgba(15, 23, 42, 0.08);
+      margin-inline-start: -1px;
+      padding: var(--spacing-32);
+      overflow-y: auto;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="shell">
+
+    <!-- Top bar — real <ds-header-nav> -->
+    <ds-header-nav variant="patch-manager-plus" user-initials="AM"
+      show-customer-selector="false"></ds-header-nav>
+
+    <!-- Body: L1 + L2 + content + Right Pane -->
+    <div class="body">
+      <ds-sidebar-l1 id="shell-l1" style="height: 100%;"></ds-sidebar-l1>
+      <ds-sidebar-l2 id="shell-l2" title="Settings Home" show-back style="height: 100%; margin-left: -10px;"></ds-sidebar-l2>
+      <ds-content class="content" role="main">
+        <ds-empty-state
+          size="lg"
+          illustration="file-search"
+          title="Explore a diverse array of configurations"
+          primary-label="Create configuration"
+          secondary-label="Learn more"
+          supported="windows,macos,linux">
+          <span slot="description">
+            Configurations help you manage applications, system settings, and security
+            policies across your network. Pick a setting from the sidebar to view its
+            details, or create a new configuration to get started.
+          </span>
+        </ds-empty-state>
+      </ds-content>
+      <ds-right-pane id="shell-rp" style="height: 100%;"></ds-right-pane>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import '@uems/design-system';
+
+    // L1
+    document.getElementById('shell-l1').items = [
+      { id: 'home',     label: 'Home',        icon: 'home',                active: true },
+      { id: 'devices',  label: 'Devices',     icon: 'laptop' },
+      { id: 'insights', label: 'Insights',    icon: 'lightbulb-energy' },
+      { id: 'alerts',   label: 'Alerts',      icon: 'exclamation-circle' },
+      { id: 'sensors',  label: 'Sensors',     icon: 'wifi' },
+      { id: 'flows',    label: 'Workflows',   icon: 'data-flow-01' },
+      { id: 'deploy',   label: 'Deployments', icon: 'puzzle' },
+      { id: 'dash',     label: 'Dashboards',  icon: 'add-widget' },
+      { id: 'ext',      label: 'Extensions',  icon: 'file-extension' },
+      { id: 'set',      label: 'Settings',    icon: 'file-setting' },
+    ];
+
+    // L2 — Settings Home
+    document.getElementById('shell-l2').groups = [
+      { id: 'global', label: 'Global Settings', expanded: true, items: [
+        { id: 'cg',  label: 'Custom Group' },
+        { id: 'rb',  label: 'Rebranding' },
+        { id: 'ssp', label: 'Self Service Portal Settin…' },
+        { id: 'cm',  label: 'Credential Manager' },
+        { id: 'cf',  label: 'Custom Field' },
+        { id: 'cd',  label: 'Add Custom Data for Co…' },
+        { id: 'dex', label: 'DEX Manager' },
+      ] },
+      { id: 'admin', label: 'User Administration', expanded: true, items: [
+        { id: 'usr', label: 'Users' },
+        { id: 'rol', label: 'Role' },
+        { id: 'mob', label: 'Mobile App' },
+        { id: 'sml', label: 'SAML Authentication' },
+      ] },
+      { id: 'agent', label: 'Agent', expanded: true, items: [
+        { id: 'as',   label: 'Agent Settings' },
+        { id: 'som',  label: 'SoM Settings' },
+        { id: 'aap',  label: 'Azure Autopilot' },
+        { id: 'ape',  label: 'Apple Enrollment (ABM)' },
+        { id: 'apns', label: 'APNS Certificate' },
+      ] },
+      { id: 'srv', label: 'Server Settings', expanded: true, items: [
+        { id: 'nat',  label: 'NAT Settings' },
+        { id: 'pxy',  label: 'Proxy Server' },
+        { id: 'mail', label: 'Mail Server' },
+      ] },
+    ];
+  </script>
+</body>
+</html>

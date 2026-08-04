@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ds-overlay — examples</title>
+  <script type="module">import '../../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 24px; background: var(--uems-background); color: var(--uems-text-primary); }
+    section { margin-bottom: 32px; }
+    h2 { font-size: var(--font-size-14); color: var(--uems-text-tertiary); margin: 0 0 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .surface {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: calc(var(--z-overlay, 1300) + 10);
+      display: none; width: 320px; padding: var(--spacing-24);
+      background: var(--uems-bg-primary); color: var(--uems-text-primary);
+      border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+    }
+    .surface[data-open] { display: block; }
+    .surface h3 { margin: 0 0 8px; font-size: var(--font-size-16); }
+    .surface p { margin: 0 0 16px; font-size: var(--font-size-14); color: var(--uems-text-tertiary); }
+  </style>
+</head>
+<body>
+  <section>
+    <h2>Types — click a button, click the scrim to dismiss</h2>
+    <div class="row">
+      <ds-button variant="secondary" data-type="dim">Dim (default)</ds-button>
+      <ds-button variant="secondary" data-type="light">Light</ds-button>
+      <ds-button variant="secondary" data-type="transparent">Transparent</ds-button>
+      <ds-button variant="secondary" data-type="blur">Blur</ds-button>
+      <ds-button variant="secondary" data-type="dim-blur">Dim Blur</ds-button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Static (blocking) — scrim click does nothing, use the button</h2>
+    <div class="row">
+      <ds-button variant="secondary" data-type="dim" data-static>Dim + static</ds-button>
+    </div>
+  </section>
+
+  <p>Background text to demonstrate the scrim. Lorem ipsum dolor sit amet,
+  consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et
+  dolore magna aliqua.</p>
+
+  <ds-overlay id="demo-overlay"></ds-overlay>
+  <div class="surface" id="demo-surface" role="dialog" aria-modal="true" aria-labelledby="demo-surface-title">
+    <h3 id="demo-surface-title">Dialog surface</h3>
+    <p>The overlay sits behind this card. Click the scrim (or press the button) to close.</p>
+    <ds-button variant="primary" id="demo-close">Close</ds-button>
+  </div>
+
+  <script type="module">
+    const overlay = document.getElementById('demo-overlay');
+    const surface = document.getElementById('demo-surface');
+
+    const close = () => { overlay.open = false; surface.removeAttribute('data-open'); };
+
+    document.querySelectorAll('ds-button[data-type]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        overlay.setAttribute('type', btn.dataset.type);
+        if ('static' in btn.dataset) overlay.setAttribute('static', '');
+        else overlay.removeAttribute('static');
+        overlay.open = true;
+        surface.setAttribute('data-open', '');
+      });
+    });
+
+    overlay.addEventListener('ds-dismiss', close);
+    document.getElementById('demo-close').addEventListener('click', close);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  </script>
+</body>
+</html>

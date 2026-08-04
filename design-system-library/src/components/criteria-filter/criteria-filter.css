@@ -1,0 +1,290 @@
+/* =============================================================================
+   <ds-criteria-filter> — Phase 1 (flat core). Tokens only; scoped to the root.
+   ============================================================================= */
+/* Host is a flex/height context so a bounded height cascades to the card and the
+   body scrolls internally instead of overflowing past the box. */
+ds-criteria-filter { display: flex; min-width: 0; min-height: 0; }
+
+.ds-criteria-filter {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--uems-bg-base);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-md, 12px);
+  font-family: var(--font-family-sans);
+  color: var(--uems-text-primary);
+  overflow: hidden;
+}
+
+/* ---- Header --------------------------------------------------------------- */
+.ds-criteria-filter__header {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-8);
+  padding: var(--spacing-12) var(--spacing-16);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+}
+.ds-criteria-filter__title {
+  font-size: var(--font-size-14); font-weight: var(--font-weight-bold);
+  color: var(--uems-text-primary);
+}
+.ds-cf-header-start { display: inline-flex; align-items: center; gap: var(--spacing-12); min-width: 0; }
+.ds-cf-header-end { display: inline-flex; align-items: center; gap: var(--spacing-8); }
+/* "Clear all" is a ds-text-link (styling/hover/focus come from the component). */
+.ds-cf-clear { display: inline-flex; }
+.ds-cf-clear[hidden] { display: none; }
+.ds-cf-close {
+  display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+  border: 0; background: transparent; border-radius: var(--radius-sm, 6px); cursor: pointer;
+  color: var(--uems-icon-secondary); transition: background-color 140ms var(--easing-standard, ease);
+}
+.ds-cf-close:hover { background: var(--uems-bg-secondary-hover); }
+.ds-cf-close:focus-visible { outline: 2px solid var(--uems-border-accent); outline-offset: 1px; }
+
+/* Saved-preset controls in the header. */
+.ds-cf-presets { display: inline-flex; align-items: center; gap: var(--spacing-8); }
+.ds-cf-presets:empty { display: none; }
+.ds-cf-preset-pick { width: 180px; display: block; }
+.ds-cf-presets .ds-input-select__trigger { min-width: 0; }
+
+/* Inline "name this filter" bar (opens under the header on Save). */
+.ds-criteria-filter__presetbar {
+  display: flex; align-items: center; gap: var(--spacing-8);
+  padding: var(--spacing-12) var(--spacing-16);
+  border-top: 1px solid var(--uems-border-tertiary);
+  background: var(--uems-bg-secondary-subtle, var(--uems-bg-secondary));
+}
+.ds-criteria-filter__presetbar[hidden] { display: none; }
+/* Fills the bar: host grows (flex); the `full-width` attribute releases the
+   ds-text-input small-size body width cap. */
+.ds-cf-preset-name { flex: 1 1 auto; min-width: 0; display: block; }
+
+/* ---- Body ----------------------------------------------------------------- */
+.ds-criteria-filter__body {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  padding: var(--spacing-16);
+  display: flex; flex-direction: column; gap: var(--spacing-12);
+}
+.ds-cf-empty-text {
+  padding: var(--spacing-32) var(--spacing-16);
+  text-align: center; color: var(--uems-text-tertiary); font-size: var(--font-size-13);
+}
+
+/* ---- Groups (recursive) --------------------------------------------------- */
+.ds-cf-group { display: flex; flex-direction: column; gap: var(--spacing-8); }
+/* Nested groups get a tinted left connector + subtle surface so depth reads at
+   a glance (not indentation alone). Root has no chrome. */
+.ds-cf-group:not(.ds-cf-group--root) {
+  padding: var(--spacing-8) var(--spacing-8) var(--spacing-8) var(--spacing-12);
+  border: 1px solid var(--uems-border-tertiary);
+  border-inline-start: 3px solid var(--uems-border-accent);
+  border-radius: var(--radius-md, 8px);
+  background: var(--uems-bg-secondary-subtle, var(--uems-bg-secondary));
+}
+.ds-cf-group.is-negated { border-inline-start-color: var(--uems-border-warning, var(--uems-border-error)); }
+
+/* Group header: combinator on the leading edge, controls (NOT · delete) trailing. */
+.ds-cf-grouphead { display: flex; align-items: center; gap: var(--spacing-8); flex-wrap: wrap; }
+.ds-cf-combi { display: inline-flex; align-items: center; gap: var(--spacing-8); flex-wrap: wrap; }
+.ds-cf-groupctl { display: inline-flex; align-items: center; gap: var(--spacing-4); margin-inline-start: auto; }
+.ds-cf-bar__label { font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+
+/* ---- Advanced variant (structure="advanced") ------------------------------ */
+/* Leading cell: the lead word (When/Where) on row 1, an AND/OR joiner select on
+   later rows. Fixed width — wide enough to show And/Or/When/Where in full — and
+   consistent so the field columns line up down the list. */
+.ds-cf-rule__lead { flex: 0 0 92px; min-width: 92px; }
+span.ds-cf-lead-word {
+  display: inline-flex; align-items: center; height: 36px; padding-inline-start: var(--spacing-4);
+  font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary);
+}
+/* Column sizing (small equal field/operator + medium value) is shared by all
+   variants — see the base .ds-cf-rule__field/operator/value rules below. */
+/* Criteria pattern line at the bottom of the advanced builder. */
+.ds-cf-pattern {
+  display: flex; align-items: center; gap: var(--spacing-8); flex-wrap: wrap;
+  margin-top: var(--spacing-4); padding: var(--spacing-12) var(--spacing-12);
+  border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md, 8px);
+  background: var(--uems-bg-secondary-subtle, var(--uems-bg-secondary));
+}
+.ds-cf-pattern.is-editing { flex-direction: column; align-items: stretch; gap: var(--spacing-8); }
+/* Edit row mirrors the save-filter bar: full-width field + buttons on one line. */
+.ds-cf-pattern__editrow { display: flex; align-items: center; gap: var(--spacing-8); flex-wrap: nowrap; }
+.ds-cf-pattern__label { font-size: var(--font-size-12); font-weight: var(--font-weight-semibold); color: var(--uems-text-tertiary); flex: 0 0 auto; }
+.ds-cf-pattern__value {
+  font-family: var(--font-family-mono, ui-monospace, monospace); font-size: var(--font-size-13);
+  color: var(--uems-text-primary); letter-spacing: .02em; flex: 1 1 auto; min-width: 0;
+}
+.ds-cf-pattern__value.is-invalid { color: var(--uems-text-error); }
+/* Edit / Reset — text-link affordances. */
+.ds-cf-pattern__edit, .ds-cf-pattern__reset {
+  flex: 0 0 auto; border: 0; background: transparent; cursor: pointer; font: inherit;
+  font-size: var(--font-size-13); font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-accent-link); padding: 2px 4px; border-radius: var(--radius-sm, 6px);
+}
+.ds-cf-pattern__reset { color: var(--uems-text-secondary); }
+.ds-cf-pattern__edit:hover, .ds-cf-pattern__reset:hover { text-decoration: underline; }
+.ds-cf-pattern__edit:focus-visible, .ds-cf-pattern__reset:focus-visible { outline: 2px solid var(--uems-border-accent); outline-offset: 2px; }
+/* Inline pattern editor — the `full-width` attribute fills the row; nowrap keeps
+   the buttons beside it (as in the save-filter bar). */
+.ds-cf-pattern__input { flex: 1 1 auto; min-width: 0; display: block; }
+.ds-cf-pattern__err { flex: 0 0 auto; }
+.ds-cf-pattern__err[hidden] { display: none; }
+/* Numbered lead (shown when a custom pattern is active) — narrow (just the digit),
+   not the wide joiner-select width, so it doesn't leave a gap before the field. */
+.ds-cf-rule__lead.ds-cf-lead-num { flex: 0 0 28px; min-width: 28px; }
+span.ds-cf-lead-num {
+  display: inline-flex; align-items: center; justify-content: flex-start; height: 36px;
+  font-size: var(--font-size-13); font-weight: var(--font-weight-bold); color: var(--uems-text-secondary);
+}
+
+/* ---- Rules ---------------------------------------------------------------- */
+.ds-cf-rules { display: flex; flex-direction: column;}
+/* Separate stacked nested groups (and a group adjacent to a row) so consecutive
+   groups don't touch. Rows already carry their own vertical padding, so only the
+   group boxes need the margin. */
+.ds-cf-rules > .ds-cf-group { margin-block: var(--spacing-8); }
+
+/* A rule row: a control line (field · operator · value · actions) that never
+   wraps, with the validation helper on its own line below it. */
+.ds-cf-rule {
+  position: relative;
+  display: flex; flex-direction: column; gap: var(--spacing-4);
+  padding: var(--spacing-8) 0;
+  border-radius: var(--radius-md, 8px);
+}
+/* Invalid row → a DASHED error outline that wraps the row with a small gap on
+   every side — it must NOT sit on top of the fields. Rows have no horizontal
+   padding (fields reach the row edge), so the outline is inset OUTWARD
+   horizontally into the surrounding group/body padding (never over the fields)
+   and a touch inward vertically. A pseudo-element (not box-shadow) so it can be
+   dashed, and (not a real border) so it adds no layout shift. */
+.ds-cf-rule.is-invalid::after {
+  content: "";
+  position: absolute;
+  inset: var(--spacing-4) calc(-1 * var(--spacing-4));   /* ~4px clear of the fields all round */
+  border: 1px dashed var(--uems-border-error);
+  border-radius: var(--radius-md, 8px);
+  pointer-events: none;
+}
+
+/* Control line — nowrap: the value editor shrinks (min-width:0) so field /
+   operator / value / actions stay on one line in web view. */
+.ds-cf-rule__main { display: flex; align-items: center; gap: var(--spacing-8); flex-wrap: nowrap; min-width: 0; }
+
+/* Field + operator share one small, equal width (they prefer 132px and only
+   shrink together when the row is cramped, so they stay equal); the value editor
+   (text / select / token field, whichever renders) is the medium column — a
+   larger basis + real min-width so it stays the widest and only it grows to fill. */
+.ds-cf-rule__field,
+.ds-cf-rule__operator { flex: 0 1 132px; min-width: 96px; }
+.ds-cf-rule__source   { flex: 0 1 96px;  min-width: 84px; }
+.ds-cf-rule__value    { flex: 1 1 200px; min-width: 140px; }
+/* Unary operators (is empty …) render no editor — keep an empty growing spacer so
+   the actions stay pinned to the trailing edge. */
+.ds-cf-rule__value.is-empty { flex: 1 1 auto; min-width: 0; }
+
+/* Row action cluster — trailing edge. The value's flex-grow (not an auto margin)
+   pushes it here, so the value never collapses. */
+.ds-cf-rule__actions { flex: 0 0 auto; display: inline-flex; gap: var(--spacing-2); }
+
+/* The composed inputs fill their column; input-select's default min-width is
+   released so it shrinks into the row. */
+.ds-cf-rule ds-input-select,
+.ds-cf-rule ds-text-input,
+.ds-cf-rule ds-date-picker,
+.ds-cf-rule ds-token-field { width: 100%; display: block; }
+.ds-cf-rule .ds-input-select__trigger { min-width: 0; }
+
+/* Number range: [ input ] and [ input ] */
+.ds-cf-range { display: flex; align-items: center; gap: var(--spacing-8); }
+.ds-cf-range ds-text-input { flex: 1 1 0; min-width: 0; }
+.ds-cf-range__sep { font-size: var(--font-size-13); color: var(--uems-text-tertiary); flex: 0 0 auto; }
+
+/* Inline validation helper — its own line under the control row. */
+.ds-cf-rule__error { padding-inline-start: var(--spacing-2); }
+.ds-cf-rule__error[hidden] { display: none; }
+
+/* ---- Add row (Add condition · Add group) ---------------------------------- */
+.ds-cf-addrow { display: flex; align-items: center; gap: var(--spacing-8); flex-wrap: wrap; }
+
+/* ---- Query preview (show-preview) ----------------------------------------- */
+.ds-criteria-filter__preview {
+  display: flex; flex-direction: column; gap: var(--spacing-8);
+  padding: var(--spacing-12) var(--spacing-16);
+  border-top: 1px solid var(--uems-border-tertiary);
+  background: var(--uems-bg-secondary-subtle, var(--uems-bg-secondary));
+}
+.ds-criteria-filter__preview[hidden] { display: none; }
+.ds-cf-preview__summary {
+  font-size: var(--font-size-13); line-height: 1.5; color: var(--uems-text-secondary);
+}
+.ds-cf-preview__chips { display: flex; flex-wrap: wrap; gap: var(--spacing-8); }
+.ds-cf-preview__chip { max-width: 100%; min-width: 0; }
+.ds-cf-preview__chip .ds-tag__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---- Footer (apply mode) -------------------------------------------------- */
+.ds-criteria-filter__footer {
+  display: flex; align-items: center; justify-content: flex-end; gap: var(--spacing-8);
+  padding: var(--spacing-12) var(--spacing-16);
+  border-top: 1px solid var(--uems-border-tertiary);
+}
+.ds-criteria-filter__footer[hidden] { display: none; }
+
+/* ---- Loading skeleton ----------------------------------------------------- */
+.ds-cf-skel-row { display: flex; gap: var(--spacing-8); padding: var(--spacing-8); }
+.ds-cf-skel {
+  height: 36px; border-radius: var(--radius-md, 8px); position: relative; overflow: hidden;
+  background: var(--uems-bg-secondary);
+}
+.ds-cf-skel--field { flex: 0 1 170px; } .ds-cf-skel--op { flex: 0 1 160px; } .ds-cf-skel--val { flex: 1 1 160px; }
+.ds-cf-skel::after {
+  content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--uems-bg-secondary-hover), transparent);
+  animation: ds-cf-shimmer 1.2s infinite;
+}
+@keyframes ds-cf-shimmer { 100% { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .ds-cf-skel::after { animation: none; } }
+
+/* =============================================================================
+   Presentation modes (Phase 3): drawer (off-canvas) · popover (anchored flyout).
+   Inline is the default (in-flow). Overlay modes fix the root over the viewport;
+   visibility is gated by `.is-open`.
+   ============================================================================= */
+.ds-cf-host--drawer, .ds-cf-host--popover { position: fixed; inset: 0; z-index: 1500; pointer-events: none; }
+
+/* Drawer: scrim + end-docked sliding sheet. */
+.ds-cf-host--drawer .ds-cf-backdrop {
+  position: absolute; inset: 0; background: rgba(15, 23, 42, 0.40);
+  opacity: 0; transition: opacity 200ms var(--easing-standard, ease);
+}
+.ds-cf-host--drawer.is-open { pointer-events: auto; }
+.ds-cf-host--drawer.is-open .ds-cf-backdrop { opacity: 1; }
+.ds-cf-host--drawer .ds-criteria-filter {
+  position: absolute; top: 0; bottom: 0; inset-inline-end: 0;
+  width: min(560px, 96vw); height: 100%;
+  border-radius: 0; border: 0; border-inline-start: 1px solid var(--uems-border-tertiary);
+  box-shadow: -8px 0 32px rgba(15, 23, 42, 0.12);
+  transform: translateX(100%); transition: transform 250ms var(--easing-standard, ease);
+}
+[dir="rtl"].ds-cf-host--drawer .ds-criteria-filter { transform: translateX(-100%); }
+.ds-cf-host--drawer.is-open .ds-criteria-filter { transform: none; }
+
+/* Popover: light-dismiss anchored card (position set by JS). */
+.ds-cf-host--popover .ds-cf-backdrop { display: none; }
+.ds-cf-host--popover .ds-criteria-filter {
+  position: fixed; width: min(640px, 94vw); max-height: min(76vh, 620px);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.16);
+  opacity: 0; transform: translateY(-4px) scale(0.99);
+  transition: opacity 150ms var(--easing-standard, ease), transform 150ms var(--easing-standard, ease);
+}
+.ds-cf-host--popover.is-open { pointer-events: auto; }
+.ds-cf-host--popover.is-open .ds-criteria-filter { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-cf-host--drawer .ds-criteria-filter, .ds-cf-host--popover .ds-criteria-filter, .ds-cf-host .ds-cf-backdrop { transition: none; }
+}
+
+/* ---- RTL ------------------------------------------------------------------ */
+.ds-criteria-filter[dir="rtl"] .ds-cf-rule__actions,
+.ds-cf-host[dir="rtl"] .ds-cf-rule__actions { margin-inline-start: auto; }

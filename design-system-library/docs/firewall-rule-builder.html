@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script type="importmap">
+  {
+    "imports": {
+      "@uems/design-system": "../src/index.js"
+    }
+  }
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Malware Protection — Firewall Rule Group</title>
+
+  <script type="module">import '@uems/design-system';</script>
+  <script>
+  (function () {
+    var t = localStorage.getItem('uems-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', t);
+    document.addEventListener('ds-right-pane-theme', function (e) {
+      document.documentElement.setAttribute('data-theme', e.detail.theme);
+      try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+    });
+    window.addEventListener('DOMContentLoaded', function () {
+      customElements.whenDefined('ds-right-pane').then(function () {
+        document.querySelectorAll('ds-right-pane').forEach(function (rp) {
+          rp.setAttribute('theme', t);
+        });
+      });
+    });
+  })();
+  </script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../src/icons/illustrations.svg';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body { background: var(--cobalt-15); }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+    .body {
+      display: flex; flex: 1; min-height: 0;
+      padding: 0 0 var(--spacing-12) var(--spacing-12);
+      gap: 0;
+    }
+    /* L1-only page: .content adopts L2's role. */
+    .content {
+      flex: 1;
+      background: var(--uems-bg-base);
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: 16px 16px 16px 0;
+      margin-left: -10px;
+      overflow-y: auto; min-width: 0;
+      display: flex; flex-direction: column;
+      position: relative;
+      z-index: 2;
+      box-shadow: -4px 0 12px rgba(0, 0, 0, 0.04);
+    }
+
+    /* ---- Top bar: back link + breadcrumb --------------------------------- */
+    .topbar {
+      display: flex; align-items: center; gap: var(--spacing-12);
+      padding: var(--spacing-16) var(--spacing-32);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+      font-size: var(--font-size-14);
+    }
+    .topbar a {
+      color: var(--uems-text-accent-link);
+      text-decoration: none;
+      font-weight: var(--font-weight-medium);
+    }
+    .topbar a:hover { /* no underline on hover in the top navigation */ }
+    .topbar .crumb-sep { color: var(--uems-text-tertiary); }
+    .topbar .crumb-current { color: var(--uems-text-primary); font-weight: var(--font-weight-medium); }
+
+    /* ---- Page body --------------------------------------------------------- */
+    .page-body {
+      padding: var(--spacing-24) var(--spacing-32);
+      display: flex; flex-direction: column; gap: var(--spacing-20);
+      flex: 1;
+    }
+
+    /* ---- Card --------------------------------------------------------------- */
+    .card {
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-md, 12px);
+      background: var(--uems-bg-base);
+      overflow: hidden;
+    }
+    .card__head {
+      padding: var(--spacing-16) var(--spacing-24);
+      background: var(--uems-bg-secondary, rgba(15, 23, 42, 0.03));
+      border-bottom: 1px solid var(--uems-border-tertiary);
+      font-size: var(--font-size-16);
+      font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+    }
+    .card__body {
+      padding: var(--spacing-24);
+      display: flex; flex-direction: column; gap: var(--spacing-20);
+    }
+
+    /* ---- Form fields -------------------------------------------------------- */
+    .field { display: flex; flex-direction: column; gap: var(--spacing-8); }
+    .field--row {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      align-items: start;
+      gap: var(--spacing-32);
+    }
+    .field-label {
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+    }
+    .field-label .req { color: var(--uems-text-error, #c62828); margin-inline-start: 2px; }
+    .field-help {
+      font-size: var(--font-size-12); color: var(--uems-text-secondary);
+      margin-top: 2px;
+    }
+    .field-optional { color: var(--uems-text-tertiary); font-weight: var(--font-weight-regular); margin-inline-start: 4px; }
+
+    /* ---- Rules section ------------------------------------------------------ */
+    .rules-frame {
+      border: 1px dashed var(--uems-border-tertiary);
+      border-radius: var(--radius-md, 12px);
+      padding: var(--spacing-20);
+      display: flex; flex-direction: column; gap: var(--spacing-12);
+    }
+    .rules-helper {
+      background: var(--bg-info-subtle, rgba(59, 130, 246, 0.06));
+      border: 1px solid var(--border-info-subtle, rgba(59, 130, 246, 0.18));
+      color: var(--uems-text-accent-primary);
+      border-radius: var(--radius-sm, 8px);
+      padding: var(--spacing-12) var(--spacing-16);
+      font-size: var(--font-size-12);
+      display: flex; align-items: center; gap: var(--spacing-8);
+    }
+
+    /* ---- Rule row ----------------------------------------------------------- */
+    .rule-row {
+      display: grid;
+      grid-template-columns: 24px repeat(5, 1fr) auto;
+      gap: var(--spacing-16);
+      align-items: center;
+      padding: var(--spacing-16) var(--spacing-20);
+      background: var(--uems-bg-base);
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-sm, 8px);
+      transition: box-shadow 120ms ease, transform 120ms ease;
+    }
+    .rule-row:hover {
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+    }
+    .rule-row.is-dragging { opacity: 0.5; }
+    .rule-row.is-drop-target { box-shadow: inset 0 -2px 0 var(--uems-text-accent-primary); }
+
+    .drag-handle {
+      cursor: grab;
+      width: 18px; height: 18px;
+      background-image:
+        radial-gradient(circle, var(--uems-text-tertiary) 1.5px, transparent 1.5px);
+      background-size: 6px 6px;
+      background-position: 0 0;
+      background-repeat: repeat;
+      mask-image: linear-gradient(to bottom, black 0, black 100%);
+      opacity: 0.7;
+    }
+    .drag-handle:active { cursor: grabbing; }
+
+    .rule-cell {
+      display: flex; flex-direction: column; gap: 2px; min-width: 0;
+    }
+    .rule-cell__label {
+      font-size: var(--font-size-12); color: var(--uems-text-secondary);
+      text-transform: uppercase; letter-spacing: 0.04em;
+      font-weight: var(--font-weight-medium);
+    }
+    .rule-cell__value {
+      font-size: var(--font-size-14); color: var(--uems-text-primary);
+      font-weight: var(--font-weight-semibold);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .rule-row__actions {
+      display: flex; align-items: center; gap: var(--spacing-8);
+    }
+
+    /* ---- Empty state -------------------------------------------------------- */
+    .rules-empty {
+      display: flex; flex-direction: column; align-items: center;
+      gap: var(--spacing-12);
+      padding: var(--spacing-32) var(--spacing-24);
+    }
+    .rules-empty__title {
+      font-size: var(--font-size-16); font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+    }
+    .rules-empty__sub {
+      font-size: var(--font-size-14); color: var(--uems-text-secondary);
+    }
+
+    .add-rule-row { display: flex; justify-content: center; padding: var(--spacing-8) 0 0; }
+
+    /* ---- Footer action bar ------------------------------------------------- */
+    .actions-bar {
+      display: flex; justify-content: center; gap: var(--spacing-12);
+      padding: var(--spacing-12) 0 var(--spacing-24);
+    }
+
+    /* ---- Drawer (Set Rule) ------------------------------------------------- */
+    dialog.drawer {
+      position: fixed;
+      inset: 0 0 0 auto;
+      margin: 0; height: 100vh; max-height: 100vh;
+      width: min(560px, 96vw);
+      border: none; padding: 0;
+      background: var(--uems-bg-base);
+      box-shadow: -16px 0 40px rgba(15, 23, 42, 0.16);
+      color: var(--uems-text-primary);
+      display: flex; flex-direction: column;
+    }
+    dialog.drawer::backdrop {
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(2px);
+    }
+    .drawer__head {
+      padding: var(--spacing-20) var(--spacing-24) var(--spacing-12);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+    }
+    .drawer__title-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--spacing-12);
+    }
+    .drawer__title {
+      display: flex; align-items: center; gap: var(--spacing-8);
+      font-size: var(--font-size-18);
+      font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+    }
+    .drawer__title ds-icon { color: var(--uems-text-accent-primary); }
+    .drawer__sub {
+      margin-top: var(--spacing-8);
+      font-size: var(--font-size-12); color: var(--uems-text-secondary);
+      line-height: 1.5;
+    }
+    .drawer__body {
+      flex: 1; overflow-y: auto;
+      padding: var(--spacing-20) var(--spacing-24);
+      display: flex; flex-direction: column; gap: var(--spacing-20);
+    }
+    .drawer__foot {
+      padding: var(--spacing-16) var(--spacing-24);
+      border-top: 1px solid var(--uems-border-tertiary);
+      background: var(--uems-bg-secondary, rgba(15, 23, 42, 0.02));
+      display: flex; justify-content: flex-end; gap: var(--spacing-8);
+    }
+
+    /* ---- Drawer field shell ----------------------------------------------- */
+    .d-field { display: flex; flex-direction: column; gap: var(--spacing-8); }
+    .d-field__label {
+      font-size: var(--font-size-14); font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+      display: flex; align-items: center; gap: var(--spacing-8);
+    }
+    .d-field__label .req { color: var(--uems-text-error, #c62828); }
+    .d-field__sub {
+      font-size: var(--font-size-12); color: var(--uems-text-secondary);
+    }
+    .d-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-16);
+    }
+
+    /* ---- Status pill row -------------------------------------------------- */
+    .status-pill {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--spacing-12) var(--spacing-16);
+      border: 1px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-sm, 8px);
+      background: var(--uems-bg-base);
+    }
+    .status-pill__main {
+      display: flex; align-items: center; gap: var(--spacing-12);
+    }
+    .status-pill__text-block {
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .status-pill__title {
+      font-size: var(--font-size-14); font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+    }
+    .status-pill__hint {
+      font-size: var(--font-size-12); color: var(--uems-text-secondary);
+    }
+    .status-pill__chip {
+      display: inline-flex; align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: var(--font-size-12); font-weight: var(--font-weight-semibold);
+      background: var(--uems-text-primary); color: var(--uems-bg-base);
+    }
+    .status-pill__chip[data-on="false"] {
+      background: var(--uems-bg-secondary, #e5e7eb); color: var(--uems-text-secondary);
+    }
+
+    /* ---- Segmented card group (Direction, Action) ------------------------- */
+    .seg-cards {
+      display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-12);
+    }
+    .seg-card {
+      display: flex; flex-direction: column; align-items: flex-start;
+      gap: var(--spacing-4);
+      padding: var(--spacing-12) var(--spacing-16);
+      border: 1.5px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-sm, 8px);
+      background: var(--uems-bg-base);
+      cursor: pointer;
+      transition: border-color 120ms ease, background-color 120ms ease,
+                  transform 120ms ease, box-shadow 120ms ease;
+    }
+    .seg-card:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(15,23,42,0.06); }
+    .seg-card__icon {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      background: var(--uems-bg-secondary, rgba(15,23,42,0.05));
+      margin-bottom: var(--spacing-4);
+    }
+    .seg-card__title {
+      font-size: var(--font-size-14); font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+    }
+    .seg-card__sub {
+      font-size: var(--font-size-12); color: var(--uems-text-secondary);
+    }
+    .seg-card[aria-pressed="true"] {
+      border-color: var(--uems-text-accent-primary);
+      background: rgba(34, 76, 220, 0.04);
+    }
+    .seg-card[aria-pressed="true"] .seg-card__icon {
+      background: var(--uems-text-accent-primary);
+      color: #fff;
+    }
+    /* Allow variant — green */
+    .seg-card[data-variant="success"][aria-pressed="true"] {
+      border-color: var(--uems-text-success, #137a3d);
+      background: rgba(19, 122, 61, 0.05);
+    }
+    .seg-card[data-variant="success"][aria-pressed="true"] .seg-card__icon {
+      background: var(--uems-text-success, #137a3d);
+    }
+    /* Block variant — red */
+    .seg-card[data-variant="error"][aria-pressed="true"] {
+      border-color: var(--uems-text-error, #c62828);
+      background: rgba(198, 40, 40, 0.05);
+    }
+    .seg-card[data-variant="error"][aria-pressed="true"] .seg-card__icon {
+      background: var(--uems-text-error, #c62828);
+    }
+
+    /* ---- Segmented chip group (Protocol) ---------------------------------- */
+    .seg-chips {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--spacing-12);
+    }
+    .seg-chip {
+      padding: var(--spacing-12) var(--spacing-16);
+      border: 1.5px solid var(--uems-border-tertiary);
+      border-radius: var(--radius-sm, 8px);
+      background: var(--uems-bg-base);
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 120ms ease, background-color 120ms ease,
+                  transform 120ms ease, box-shadow 120ms ease;
+    }
+    .seg-chip:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(15,23,42,0.06); }
+    .seg-chip[aria-pressed="true"] {
+      border-color: var(--uems-text-accent-primary);
+      color: var(--uems-text-accent-primary);
+      background: rgba(34, 76, 220, 0.05);
+    }
+
+    /* ---- Section divider w/ icon ----------------------------------------- */
+    .section-head {
+      display: flex; align-items: center; gap: var(--spacing-8);
+      padding-top: var(--spacing-8);
+      border-top: 1px solid var(--uems-border-tertiary);
+      margin-top: var(--spacing-4);
+    }
+    .section-head ds-icon { color: var(--uems-text-accent-primary); }
+    .section-head__title {
+      font-size: var(--font-size-14); font-weight: var(--font-weight-semibold);
+      color: var(--uems-text-primary);
+    }
+    .section-head__sub {
+      margin-left: auto;
+      font-size: var(--font-size-12); color: var(--uems-text-secondary);
+    }
+    .section-block { display: flex; flex-direction: column; gap: var(--spacing-12); }
+
+    .subhead {
+      font-size: var(--font-size-12);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--uems-text-tertiary);
+      font-weight: var(--font-weight-medium);
+    }
+
+    /* ---- Quick-select chips ---------------------------------------------- */
+    .quick-row {
+      display: flex; flex-wrap: wrap; gap: var(--spacing-8);
+    }
+
+    /* ---- Toast host ------------------------------------------------------ */
+    .toast-host {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: var(--spacing-8);
+      z-index: 1000; pointer-events: none;
+    }
+    .toast-host > * { pointer-events: auto; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+
+    <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+    <div class="body">
+      <ds-sidebar-l1 id="shell-l1" style="height: 100%;"></ds-sidebar-l1>
+
+      <ds-content class="content" role="main">
+
+        <!-- Top bar: back + breadcrumb -->
+        <div class="topbar">
+          <ds-icon-button id="btn-back" shape="square" type="tertiary-grey" size="small" icon="arrow-narrow-left" label="Back"></ds-icon-button>
+          <a href="firewall-rule-groups.html">Rule Groups</a>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">New</span>
+        </div>
+
+        <div class="page-body">
+
+          <!-- Card 1: Create New Rule Group -->
+          <section class="card">
+            <div class="card__head">Create New Rule Group</div>
+            <div class="card__body">
+              <div class="field field--row">
+                <label class="field-label" for="rg-name">Name<span class="req">*</span></label>
+                <div>
+                  <ds-text-input id="rg-name" placeholder="e.g., Office Network Rules" max-length="80"></ds-text-input>
+                </div>
+              </div>
+              <div class="field field--row">
+                <label class="field-label" for="rg-desc">Description<span class="field-optional">(Optional)</span></label>
+                <div>
+                  <ds-text-area id="rg-desc" placeholder="Describe the purpose of this rule group…" max-lines="4" max-length="250" show-counter></ds-text-area>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Card 2: Rule Configurations -->
+          <section class="card">
+            <div class="card__head">Rule Configurations</div>
+            <div class="card__body">
+              <div class="field">
+                <span class="field-label">Rules</span>
+                <span class="field-help">Drag rules to reorder priority. Top rule has highest priority.</span>
+              </div>
+
+              <div id="rules-frame" class="rules-frame">
+                <!-- Helper banner -->
+                <div id="rules-helper" class="rules-helper" hidden>
+                  <ds-icon name="info-circle" size="14"></ds-icon>
+                  Rules are evaluated from top to bottom. The first matching rule will be applied. Drag and drop to change the priority order.
+                </div>
+
+                <!-- Rules render target -->
+                <div id="rules-list" style="display: flex; flex-direction: column; gap: var(--spacing-12);"></div>
+
+                <!-- Empty state -->
+                <div id="rules-empty" class="rules-empty">
+                  <ds-illustration name="chart-emptystate" size="80"></ds-illustration>
+                  <div class="rules-empty__title">No rules yet</div>
+                  <div class="rules-empty__sub">Rules define what network traffic is allowed or blocked</div>
+                  <ds-button id="btn-add-first" variant="secondary" size="medium" prefix-icon="add">Add Your First Rule</ds-button>
+                </div>
+
+                <!-- Add another rule -->
+                <div id="add-rule-wrap" class="add-rule-row" hidden>
+                  <ds-button id="btn-add-another" variant="secondary" size="small" prefix-icon="add">Add Another Rule</ds-button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Footer actions -->
+          <div class="actions-bar">
+            <ds-button id="btn-cancel" variant="tertiary" size="medium">Cancel</ds-button>
+            <ds-button id="btn-save"   variant="primary"  size="medium">Create Rule Group</ds-button>
+          </div>
+        </div>
+      </ds-content>
+
+      <ds-right-pane id="shell-rp" style="height: 100%;"></ds-right-pane>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Set Rule drawer
+       ============================================================ -->
+  <dialog id="rule-drawer" class="drawer" aria-labelledby="rd-title">
+    <div class="drawer__head">
+      <div class="drawer__title-row">
+        <div id="rd-title" class="drawer__title">
+          <ds-icon name="file-shield" size="18"></ds-icon>
+          Set Rule
+        </div>
+        <ds-icon-button id="rd-close" shape="square" type="tertiary-grey" size="small" icon="close" label="Close"></ds-icon-button>
+      </div>
+      <div class="drawer__sub">Configure firewall rule settings. Final priority can be adjusted using drag-and-drop in the main list.</div>
+    </div>
+
+    <div class="drawer__body">
+
+      <!-- Rule Name -->
+      <div class="d-field">
+        <label class="d-field__label" for="rd-name">Rule Name<span class="req">*</span></label>
+        <ds-text-input id="rd-name" placeholder="e.g., Allow Web Traffic" max-length="100"></ds-text-input>
+      </div>
+
+      <!-- Status -->
+      <div class="d-field">
+        <span class="d-field__label">Status</span>
+        <span class="d-field__sub">Toggle rule On/Off</span>
+        <div class="status-pill">
+          <div class="status-pill__main">
+            <ds-toggle id="rd-status" checked size="medium"></ds-toggle>
+            <div class="status-pill__text-block">
+              <span class="status-pill__title" id="rd-status-title">Enabled</span>
+              <span class="status-pill__hint" id="rd-status-hint">Rule is active</span>
+            </div>
+          </div>
+          <span class="status-pill__chip" id="rd-status-chip" data-on="true">On</span>
+        </div>
+      </div>
+
+      <!-- Precedence -->
+      <div class="d-field">
+        <span class="d-field__label">Precedence</span>
+        <span class="d-field__sub">Drag-and-drop to change order after adding the rule</span>
+        <ds-text-input id="rd-precedence" type="number" value="1" min="1"></ds-text-input>
+      </div>
+
+      <!-- Direction + Action (inline) -->
+      <div class="section-head">
+        <span class="section-head__title" style="display: flex; align-items: center; gap: var(--spacing-8); border: 0; padding: 0;">
+          <ds-icon name="arrow-horizontal" size="14"></ds-icon>
+          Traffic flow
+        </span>
+        <span class="section-head__sub">How the rule applies</span>
+      </div>
+      <div class="section-block" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-16);">
+        <div class="d-field">
+          <span class="d-field__label">Direction<span class="req">*</span></span>
+          <span class="d-field__sub">Inbound / Outbound</span>
+          <div class="seg-cards" id="rd-direction">
+            <button type="button" class="seg-card" data-value="Inbound" aria-pressed="true">
+              <span class="seg-card__icon"><ds-icon name="arrow-narrow-down" size="14"></ds-icon></span>
+              <span class="seg-card__title">Inbound</span>
+              <span class="seg-card__sub">Incoming traffic</span>
+            </button>
+            <button type="button" class="seg-card" data-value="Outbound" aria-pressed="false">
+              <span class="seg-card__icon"><ds-icon name="arrow-narrow-up" size="14"></ds-icon></span>
+              <span class="seg-card__title">Outbound</span>
+              <span class="seg-card__sub">Outgoing traffic</span>
+            </button>
+          </div>
+        </div>
+        <div class="d-field">
+          <span class="d-field__label">Action<span class="req">*</span></span>
+          <span class="d-field__sub">Allow / Block</span>
+          <div class="seg-cards" id="rd-action">
+            <button type="button" class="seg-card" data-variant="success" data-value="Allow" aria-pressed="true">
+              <span class="seg-card__icon"><ds-icon name="circle-tick" size="14"></ds-icon></span>
+              <span class="seg-card__title">Allow</span>
+            </button>
+            <button type="button" class="seg-card" data-variant="error" data-value="Block" aria-pressed="false">
+              <span class="seg-card__icon"><ds-icon name="cancel-circle" size="14"></ds-icon></span>
+              <span class="seg-card__title">Block</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Protocol -->
+      <div class="d-field">
+        <span class="d-field__label">Protocol<span class="req">*</span></span>
+        <span class="d-field__sub">Any, TCP, UDP, ICMP</span>
+        <div class="seg-chips" id="rd-protocol">
+          <button type="button" class="seg-chip" data-value="Any"  aria-pressed="true">ANY</button>
+          <button type="button" class="seg-chip" data-value="TCP"  aria-pressed="false">TCP</button>
+          <button type="button" class="seg-chip" data-value="UDP"  aria-pressed="false">UDP</button>
+          <button type="button" class="seg-chip" data-value="ICMP" aria-pressed="false">ICMP</button>
+        </div>
+      </div>
+
+      <!-- Port & Address -->
+      <div class="section-head">
+        <ds-icon name="data-flow-settings" size="14"></ds-icon>
+        <span class="section-head__title">Port &amp; Address</span>
+        <span class="section-head__sub">Local and Remote Port/IP details</span>
+      </div>
+      <div class="section-block">
+        <div class="subhead">Ports</div>
+        <div class="d-row">
+          <div class="d-field">
+            <label class="d-field__label" for="rd-local-port" style="font-weight: var(--font-weight-medium);">Local Port</label>
+            <ds-text-input id="rd-local-port" placeholder="e.g., 80, 443, 8080"></ds-text-input>
+          </div>
+          <div class="d-field">
+            <label class="d-field__label" for="rd-remote-port" style="font-weight: var(--font-weight-medium);">Remote Port</label>
+            <ds-text-input id="rd-remote-port" placeholder="e.g., 80, 443, 8080"></ds-text-input>
+          </div>
+        </div>
+        <div class="subhead">IP addresses</div>
+        <div class="d-row">
+          <div class="d-field">
+            <label class="d-field__label" for="rd-local-ip" style="font-weight: var(--font-weight-medium);">Local IP</label>
+            <ds-text-input id="rd-local-ip" placeholder="e.g., 192.168.1.0/24"></ds-text-input>
+          </div>
+          <div class="d-field">
+            <label class="d-field__label" for="rd-remote-ip" style="font-weight: var(--font-weight-medium);">Remote IP</label>
+            <ds-text-input id="rd-remote-ip" placeholder="e.g., 0.0.0.0/0"></ds-text-input>
+          </div>
+        </div>
+      </div>
+
+      <!-- Executable File Path -->
+      <div class="section-head">
+        <ds-icon name="code" size="14"></ds-icon>
+        <span class="section-head__title">Executable file path</span>
+        <span class="section-head__sub">Filter by specific application (e.g., chrome.exe)</span>
+      </div>
+      <div class="section-block">
+        <ds-text-input id="rd-app" placeholder="e.g., C:\Program Files\Chrome\chrome.exe" suffix-icon="code-square"></ds-text-input>
+        <div class="d-field">
+          <span class="subhead">Quick select</span>
+          <div class="quick-row">
+            <ds-button class="quick" data-path="C:\Program Files\Google\Chrome\Application\chrome.exe"      variant="secondary" size="small" prefix-icon="terminal-browser">Chrome</ds-button>
+            <ds-button class="quick" data-path="C:\Program Files\Mozilla Firefox\firefox.exe"               variant="secondary" size="small" prefix-icon="terminal-browser">Firefox</ds-button>
+            <ds-button class="quick" data-path="C:\Program Files\nodejs\node.exe"                           variant="secondary" size="small" prefix-icon="code-square">Node.js</ds-button>
+            <ds-button class="quick" data-path="C:\Python311\python.exe"                                    variant="secondary" size="small" prefix-icon="code">Python</ds-button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile -->
+      <div class="d-field">
+        <span class="d-field__label">Network profile</span>
+        <span class="d-field__sub">Domain / Private / Public</span>
+        <div class="seg-chips" id="rd-profile" style="grid-template-columns: repeat(3, 1fr);">
+          <button type="button" class="seg-chip" data-value="Domain"  aria-pressed="true">Domain</button>
+          <button type="button" class="seg-chip" data-value="Private" aria-pressed="false">Private</button>
+          <button type="button" class="seg-chip" data-value="Public"  aria-pressed="false">Public</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="drawer__foot">
+      <ds-button id="rd-cancel" variant="tertiary" size="small">Cancel</ds-button>
+      <ds-button id="rd-save"   variant="primary"  size="small" prefix-icon="check">Save Rule</ds-button>
+    </div>
+  </dialog>
+
+  <!-- Toast host -->
+  <div id="toast-host" class="toast-host" aria-live="polite" aria-atomic="true"></div>
+
+  <script type="module">
+    import '@uems/design-system';
+
+    /* ---- Header ------------------------------------------------------- */
+    document.getElementById('ec-header').tabs = [
+      { id: 'home',     label: 'Home' },
+      { id: 'configs',  label: 'Configurations', href: 'configurations-all.html' },
+      { id: 'mp',       label: 'Malware Protection', active: true, href: 'firewall-policies.html' },
+      { id: 'inv',      label: 'Inventory' },
+      { id: 'admin',    label: 'Admin' },
+      { id: 'app',      label: 'App Ctrl' },
+      { id: 'bl',       label: 'BitLocker', href: 'bitlocker-dashboard.html' },
+      { id: 'tools',    label: 'Tools' },
+      { id: 'agent',    label: 'Agent' },
+    ];
+
+    /* ---- L1 (EDR-style modules) ---------------------------------------- */
+    document.getElementById('shell-l1').items = [
+      { id: 'home',     label: 'Home',              icon: 'home' },
+      { id: 'incident', label: 'Incidents',         icon: 'exclamation-triangle' },
+      { id: 'devices',  label: 'Devices',           icon: 'device-manager' },
+      { id: 'settings', label: 'Settings',          icon: 'settings' },
+      { id: 'hunting',  label: 'Hunting',           icon: 'bug' },
+      { id: 'ransom',   label: 'Anti Ransomware',   icon: 'encryption-lock' },
+      { id: 'intel',    label: 'Intelligent',       icon: 'light-bulb' },
+      { id: 'ngav',     label: 'Next-gen Antivirus',icon: 'file-shield' },
+      { id: 'fw',       label: 'Firewall',          icon: 'firewall', active: true, href: 'firewall-policies.html' },
+      { id: 'reports',  label: 'Reports',           icon: 'file-report' },
+    ];
+
+    /* ---- Toast utility ------------------------------------------------ */
+    function showToast(status, title, description, opts = {}) {
+      const host = document.getElementById('toast-host');
+      const t = document.createElement('ds-toast');
+      t.setAttribute('status', status);
+      t.setAttribute('title',  title || '');
+      if (description) t.setAttribute('description', description);
+      t.setAttribute('duration', String(opts.duration ?? 3500));
+      if (opts.cta) {
+        t.setAttribute('cta-text', opts.cta);
+        t.setAttribute('show-cta', '');
+      }
+      host.appendChild(t);
+    }
+
+    /* ============================================================
+       Rules state + render
+       ============================================================ */
+    const rulesList    = document.getElementById('rules-list');
+    const rulesEmpty   = document.getElementById('rules-empty');
+    const rulesHelper  = document.getElementById('rules-helper');
+    const addRuleWrap  = document.getElementById('add-rule-wrap');
+
+    let RULES = [
+      { id: 'r1', name: 'Allow Web Traffic',  direction: 'Inbound',  action: 'Allow', protocol: 'TCP', profile: 'Domain', enabled: true,  localPort: '80, 443', remotePort: '', localIp: '', remoteIp: '', app: '' },
+      { id: 'r2', name: 'Block P2P Outbound', direction: 'Outbound', action: 'Block', protocol: 'Any', profile: 'Public', enabled: true,  localPort: '', remotePort: '6881-6889', localIp: '', remoteIp: '', app: '' },
+      { id: 'r3', name: 'Allow Office 365',   direction: 'Outbound', action: 'Allow', protocol: 'TCP', profile: 'Domain', enabled: false, localPort: '', remotePort: '443', localIp: '', remoteIp: '', app: '' },
+    ];
+
+    const renderRules = () => {
+      const has = RULES.length > 0;
+      rulesEmpty.hidden  = has;
+      rulesHelper.hidden = !has;
+      addRuleWrap.hidden = !has;
+
+      rulesList.innerHTML = RULES.map((r, i) => `
+        <div class="rule-row" data-id="${r.id}" draggable="true">
+          <span class="drag-handle" aria-label="Drag to reorder"></span>
+
+          <div class="rule-cell">
+            <span class="rule-cell__label">Rule Name</span>
+            <span class="rule-cell__value">${r.name}</span>
+          </div>
+          <div class="rule-cell">
+            <span class="rule-cell__label">Direction</span>
+            <span class="rule-cell__value">${r.direction}</span>
+          </div>
+          <div class="rule-cell">
+            <span class="rule-cell__label">Action</span>
+            <span class="rule-cell__value">${r.action}</span>
+          </div>
+          <div class="rule-cell">
+            <span class="rule-cell__label">Protocol</span>
+            <span class="rule-cell__value">${r.protocol}</span>
+          </div>
+          <div class="rule-cell">
+            <span class="rule-cell__label">Network</span>
+            <span class="rule-cell__value">${r.profile}</span>
+          </div>
+          <div class="rule-row__actions">
+            <ds-toggle data-row="${r.id}" data-action="toggle" ${r.enabled ? 'checked' : ''} size="small"></ds-toggle>
+            <ds-icon-button data-row="${r.id}" data-action="edit"   shape="square" type="tertiary-grey" size="small" icon="edit"   label="Edit"></ds-icon-button>
+            <ds-icon-button data-row="${r.id}" data-action="delete" shape="square" type="tertiary-grey" size="small" icon="delete" label="Delete"></ds-icon-button>
+          </div>
+        </div>
+      `).join('');
+
+      attachDnd();
+    };
+
+    /* ---- Drag & drop reordering -------------------------------------- */
+    let draggingId = null;
+    const attachDnd = () => {
+      [...rulesList.querySelectorAll('.rule-row')].forEach((row) => {
+        row.addEventListener('dragstart', (e) => {
+          draggingId = row.dataset.id;
+          row.classList.add('is-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', draggingId);
+        });
+        row.addEventListener('dragend', () => {
+          row.classList.remove('is-dragging');
+          [...rulesList.querySelectorAll('.rule-row')].forEach(r => r.classList.remove('is-drop-target'));
+          draggingId = null;
+        });
+        row.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          if (row.dataset.id !== draggingId) row.classList.add('is-drop-target');
+        });
+        row.addEventListener('dragleave', () => row.classList.remove('is-drop-target'));
+        row.addEventListener('drop', (e) => {
+          e.preventDefault();
+          row.classList.remove('is-drop-target');
+          if (!draggingId || row.dataset.id === draggingId) return;
+          const fromIdx = RULES.findIndex(r => r.id === draggingId);
+          const toIdx   = RULES.findIndex(r => r.id === row.dataset.id);
+          if (fromIdx < 0 || toIdx < 0) return;
+          const [moved] = RULES.splice(fromIdx, 1);
+          RULES.splice(toIdx, 0, moved);
+          renderRules();
+          showToast('info', 'Rule order updated', `"${moved.name}" moved to priority ${toIdx + 1}.`);
+        });
+      });
+    };
+
+    /* ---- Row interactions: toggle, edit, delete ---------------------- */
+    rulesList.addEventListener('ds-toggle-change', (e) => {
+      const id = e.target?.dataset?.row;
+      const r  = RULES.find(x => x.id === id);
+      if (!r) return;
+      r.enabled = e.detail.checked;
+      showToast(
+        r.enabled ? 'success' : 'info',
+        `${r.name} ${r.enabled ? 'enabled' : 'disabled'}`
+      );
+    });
+
+    rulesList.addEventListener('click', (e) => {
+      const t = e.target.closest('ds-icon-button[data-action]');
+      if (!t) return;
+      const id = t.dataset.row;
+      const action = t.dataset.action;
+      const r = RULES.find(x => x.id === id);
+      if (!r) return;
+      if (action === 'edit') {
+        openDrawer(r);
+      } else if (action === 'delete') {
+        RULES = RULES.filter(x => x.id !== id);
+        renderRules();
+        showToast('warning', `${r.name} removed`, 'Rule was deleted from this group.', { cta: 'Undo' });
+      }
+    });
+
+    /* ============================================================
+       Drawer logic
+       ============================================================ */
+    const drawer = document.getElementById('rule-drawer');
+    let editingId = null;
+    let drawerEnabled = true;
+
+    const openDrawer = (rule) => {
+      editingId = rule?.id || null;
+      const data = rule || {
+        name: '', enabled: true, direction: 'Inbound', action: 'Allow', protocol: 'Any', profile: 'Domain',
+        localPort: '', remotePort: '', localIp: '', remoteIp: '', app: '',
+      };
+
+      document.getElementById('rd-title').lastChild.textContent = ` ${editingId ? 'Edit Rule' : 'Set Rule'}`;
+      document.getElementById('rd-name').value = data.name;
+      document.getElementById('rd-precedence').value = String(
+        editingId ? (RULES.findIndex(r => r.id === editingId) + 1) : (RULES.length + 1)
+      );
+      const status = document.getElementById('rd-status');
+      drawerEnabled = !!data.enabled;
+      status.toggleAttribute('checked', drawerEnabled);
+      updateStatusVisual(drawerEnabled);
+
+      setSeg('rd-direction', data.direction);
+      setSeg('rd-action',    data.action);
+      setSeg('rd-protocol',  data.protocol);
+      setSeg('rd-profile',   data.profile);
+
+      document.getElementById('rd-local-port').value  = data.localPort  || '';
+      document.getElementById('rd-remote-port').value = data.remotePort || '';
+      document.getElementById('rd-local-ip').value    = data.localIp    || '';
+      document.getElementById('rd-remote-ip').value   = data.remoteIp   || '';
+      document.getElementById('rd-app').value         = data.app        || '';
+
+      drawer.showModal();
+    };
+
+    const closeDrawer = () => drawer.close();
+
+    const setSeg = (groupId, value) => {
+      const root = document.getElementById(groupId);
+      [...root.querySelectorAll('[data-value]')].forEach((b) => {
+        b.setAttribute('aria-pressed', String(b.dataset.value === value));
+      });
+    };
+
+    const getSeg = (groupId) => {
+      const pressed = document.getElementById(groupId).querySelector('[aria-pressed="true"]');
+      return pressed ? pressed.dataset.value : null;
+    };
+
+    /* Wire seg-card / seg-chip toggling */
+    ['rd-direction','rd-action','rd-protocol','rd-profile'].forEach((groupId) => {
+      const root = document.getElementById(groupId);
+      root.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-value]');
+        if (!btn) return;
+        setSeg(groupId, btn.dataset.value);
+      });
+    });
+
+    /* Status pill visual */
+    const updateStatusVisual = (on) => {
+      document.getElementById('rd-status-title').textContent = on ? 'Enabled' : 'Disabled';
+      document.getElementById('rd-status-hint').textContent  = on ? 'Rule is active' : 'Rule is paused';
+      const chip = document.getElementById('rd-status-chip');
+      chip.textContent = on ? 'On' : 'Off';
+      chip.dataset.on  = String(on);
+    };
+    document.getElementById('rd-status').addEventListener('ds-toggle-change', (e) => {
+      drawerEnabled = !!e.detail.checked;
+      updateStatusVisual(drawerEnabled);
+    });
+
+    /* Quick-select chip → fills the app input */
+    document.querySelectorAll('ds-button.quick').forEach((b) => {
+      b.addEventListener('click', () => {
+        const path = b.getAttribute('data-path') || '';
+        document.getElementById('rd-app').value = path;
+      });
+    });
+
+    /* Drawer close handlers */
+    document.getElementById('rd-close').addEventListener('click',  closeDrawer);
+    document.getElementById('rd-cancel').addEventListener('click', closeDrawer);
+    drawer.addEventListener('click', (e) => { if (e.target === drawer) closeDrawer(); });
+
+    /* Save rule */
+    document.getElementById('rd-save').addEventListener('click', () => {
+      const name = (document.getElementById('rd-name').value || '').trim();
+      if (!name) {
+        showToast('error', 'Rule name is required');
+        document.getElementById('rd-name').focus?.();
+        return;
+      }
+      if (name.length > 100) {
+        showToast('error', 'Rule name too long', 'Maximum 100 characters.');
+        return;
+      }
+
+      const rule = {
+        id: editingId || ('r' + Date.now()),
+        name,
+        enabled: drawerEnabled,
+        direction: getSeg('rd-direction'),
+        action:    getSeg('rd-action'),
+        protocol:  getSeg('rd-protocol'),
+        profile:   getSeg('rd-profile'),
+        localPort:  document.getElementById('rd-local-port').value.trim(),
+        remotePort: document.getElementById('rd-remote-port').value.trim(),
+        localIp:    document.getElementById('rd-local-ip').value.trim(),
+        remoteIp:   document.getElementById('rd-remote-ip').value.trim(),
+        app:        document.getElementById('rd-app').value.trim(),
+      };
+
+      if (editingId) {
+        const idx = RULES.findIndex(r => r.id === editingId);
+        if (idx >= 0) RULES[idx] = rule;
+      } else {
+        // Insert at user-specified precedence (1-based).
+        const want = Math.max(1, parseInt(document.getElementById('rd-precedence').value, 10) || (RULES.length + 1));
+        const idx  = Math.min(RULES.length, want - 1);
+        RULES.splice(idx, 0, rule);
+      }
+      renderRules();
+      closeDrawer();
+      showToast(
+        'success',
+        `${rule.name} ${editingId ? 'updated' : 'added'}`,
+        `${rule.direction} · ${rule.action} · ${rule.protocol} · ${rule.profile}`
+      );
+    });
+
+    /* ============================================================
+       Page actions
+       ============================================================ */
+    document.getElementById('btn-add-first').addEventListener('click',   () => openDrawer(null));
+    document.getElementById('btn-add-another').addEventListener('click', () => openDrawer(null));
+
+    document.getElementById('btn-back').addEventListener('click',   () => { window.location.href = 'firewall-rule-groups.html'; });
+    document.getElementById('btn-cancel').addEventListener('click', () => { window.location.href = 'firewall-rule-groups.html'; });
+
+    document.getElementById('btn-save').addEventListener('click', () => {
+      const name = (document.getElementById('rg-name').value || '').trim();
+      if (!name) {
+        showToast('error', 'Rule group name is required');
+        document.getElementById('rg-name').focus?.();
+        return;
+      }
+      if (RULES.length === 0) {
+        showToast('warning', 'Empty rule group', 'Add at least one rule before saving.');
+        return;
+      }
+      showToast(
+        'success',
+        `${name} created`,
+        `${RULES.length} rule${RULES.length === 1 ? '' : 's'} ready to assign.`,
+        { cta: 'View groups' }
+      );
+      setTimeout(() => { window.location.href = 'firewall-rule-groups.html'; }, 1200);
+    });
+
+    /* Initial render */
+    renderRules();
+  </script>
+</body>
+</html>

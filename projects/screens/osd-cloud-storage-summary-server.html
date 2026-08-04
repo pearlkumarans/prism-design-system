@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cloud Storage (Summary Server) — OS Deployment · Prism</title>
+
+  <link rel="stylesheet" href="../../design-system-library/src/styles/index.css" />
+  <script type="module">import '../../design-system-library/src/components/index.js';</script>
+
+  <script>
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+    window.UEMS_ICON_SPRITE = '../../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; }
+    body { margin: 0; font-family: var(--font-family-sans); background: var(--cobalt-15); }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+    .body { display: flex; flex: 1; min-height: 0; padding: 0 0 var(--spacing-12) var(--spacing-12); gap: 0; }
+    .shell-area { flex: 1; display: flex; min-width: 0; min-height: 0;
+      border: 1px solid var(--uems-border-accent-subtle); border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle); overflow: hidden; }
+    ds-sidebar-l1, ds-sidebar-l2 { max-width: 400px; overflow: hidden; }
+    ds-sidebar-l1.is-hidden, ds-sidebar-l2.is-hidden { max-width: 0 !important; opacity: 0 !important; pointer-events: none; }
+    .shell-area .ds-sidebar-l1 { border: 0 !important; border-radius: 0 !important; padding-top: 4px !important; }
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+
+    .page { display: flex; flex-direction: column; min-width: 0; height: 100%; }
+    .wrap { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column;
+      gap: var(--spacing-16); padding: 0 var(--spacing-20) var(--spacing-20); }
+
+    .panel { border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md, 10px);
+      background: var(--uems-bg-base); padding: var(--spacing-16); display: flex; flex-direction: column; gap: var(--spacing-16); }
+    .panel ds-section-header { margin-bottom: calc(-1 * var(--spacing-4)); }
+
+    .top { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: var(--spacing-16); }
+    @media (max-width: 1040px) { .top { grid-template-columns: 1fr; } }
+    .meter__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-12); flex-wrap: wrap; }
+    .meter__big { font-size: 26px; font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+    .meter__big span { font-size: var(--font-size-14); font-weight: var(--font-weight-regular); color: var(--uems-text-secondary); }
+    .meter__free { font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+    .meter__free strong { color: var(--uems-text-primary); }
+
+    .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-12); align-content: start; }
+
+    .table-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .table-wrap ds-data-table { flex: 0 1 auto; min-height: 0; display: flex; }
+    .probe { display: inline-flex; align-items: center; gap: var(--spacing-8); }
+    .probe ds-icon { color: var(--uems-icon-tertiary); }
+    .probe b { color: var(--uems-text-primary); font-weight: var(--font-weight-medium); }
+    .cell-muted { color: var(--uems-text-secondary); }
+    .share { display: flex; align-items: center; gap: var(--spacing-8); min-width: 160px; }
+    .share ds-progress-bar { flex: 1; }
+    .share span { font-size: var(--font-size-12); color: var(--uems-text-secondary); width: 34px; text-align: right; }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM"></ds-header-nav>
+
+  <div class="body">
+    <div class="shell-area">
+      <ds-sidebar-l1 id="shell-l1" class="is-hidden" style="height:100%;"></ds-sidebar-l1>
+      <ds-sidebar-l2 id="shell-l2" class="is-hidden" style="height:100%;"></ds-sidebar-l2>
+
+      <ds-content role="main">
+        <div class="page">
+
+          <ds-page-header id="ph"
+            structure="default"
+            title="Cloud Storage (Summary Server)"
+            description="One storage add-on is purchased for the organization and shared by every probe server. Track the combined usage against the purchased limit."
+            show-description show-breadcrumbs show-overflow="false">
+            <ds-button slot="actions" id="buy-btn" variant="primary" size="small" prefix-icon="cart">Buy storage add-on</ds-button>
+          </ds-page-header>
+
+          <div class="wrap">
+
+            <ds-inline-alert type="warning" style-variant="subtle" accent-bar show-icon
+              title="Storage is moving to a single org-wide pool"
+              description="Today each probe server is entitled to the full purchased storage separately, so combined usage can exceed what you bought. The planned behaviour restricts uploads once the total across all probe servers exceeds the purchased limit — the same way MSP works. Per-probe allocations may return later on request."></ds-inline-alert>
+
+            <div class="top">
+              <section class="panel">
+                <ds-section-header size="medium" title="Combined usage across probe servers"></ds-section-header>
+                <div class="meter__head">
+                  <div class="meter__big">78 GB <span>of 100 GB purchased</span></div>
+                  <div class="meter__free"><strong>22 GB</strong> remaining for the org</div>
+                </div>
+                <ds-progress-bar variant="default" size="large" value="78" max="100"
+                  label="Combined probe-server usage" value-label="78%"></ds-progress-bar>
+              </section>
+
+              <div class="kpis">
+                <ds-kpi-card type="default" icon="cart-purchased" title="Purchased" value="100 GB"></ds-kpi-card>
+                <ds-kpi-card type="default" icon="upload-cloud" title="Combined used" value="78 GB"></ds-kpi-card>
+                <ds-kpi-card type="default" icon="server-01" title="Probe servers" value="5"></ds-kpi-card>
+                <ds-kpi-card type="default" icon="image" title="Images stored" value="33"></ds-kpi-card>
+              </div>
+            </div>
+
+            <section class="panel table-wrap">
+              <ds-section-header size="medium" title="Usage by probe server"
+                description="Combined usage is measured against the single purchased limit. Uploads are blocked for all probe servers once the total is exceeded."></ds-section-header>
+              <ds-data-table id="probe-table" row-height="default" sticky-header
+                show-footer rows-per-page="10" page="1"></ds-data-table>
+            </section>
+
+          </div>
+        </div>
+      </ds-content>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import '../../design-system-library/src/components/index.js';
+
+  /* ── Header tabs — OS Deployment active ── */
+  document.getElementById('ec-header').tabs = [
+    { id: 'home', label: 'Home' }, { id: 'configs', label: 'Configurations' },
+    { id: 'tp', label: 'Threats & Patches' }, { id: 'sd', label: 'Software Deployment' },
+    { id: 'inv', label: 'Inventory' }, { id: 'osd', label: 'OS Deployment', active: true },
+    { id: 'mdm', label: 'MDM' }, { id: 'tools', label: 'Tools' }, { id: 'reports', label: 'Reports' },
+  ];
+
+  /* ── L1 rail — Settings active ── */
+  const l1El = document.getElementById('shell-l1');
+  l1El.items = [
+    { id: 'dash',      label: 'Dashboard',            icon: 'add-widget' },
+    { id: 'images',    label: 'Image Repository',     icon: 'image' },
+    { id: 'drivers',   label: 'Driver Repository',    icon: 'hard-disk' },
+    { id: 'templates', label: 'Deployment Templates', icon: 'layers' },
+    { id: 'tasks',     label: 'Deployment Tasks',     icon: 'settings-deploy' },
+    { id: 'media',     label: 'Boot Media (WinPE)',   icon: 'usb-drive' },
+    { id: 'set',       label: 'Settings',             icon: 'settings', active: true },
+  ];
+  l1El.bottomItems = [{ id: 'update', label: 'Update Now', icon: 'refresh-time' }];
+  l1El.classList.remove('is-hidden');
+
+  /* ── L2 — Cloud Storage active ── */
+  const l2El = document.getElementById('shell-l2');
+  l2El.groups = [
+    { id: 'settings', label: 'Settings', expanded: true, items: [
+      { id: 'general',    label: 'General Settings' },
+      { id: 'cloud',      label: 'Cloud Storage', active: true },
+      { id: 'replication',label: 'Image Replication' },
+      { id: 'remote',     label: 'Remote Office Settings' },
+      { id: 'notif',      label: 'Notifications' },
+    ] },
+  ];
+  l2El.classList.remove('is-hidden');
+
+  /* ── Breadcrumbs ── */
+  const ph = document.getElementById('ph');
+  customElements.whenDefined('ds-page-header').then(() => {
+    ph.breadcrumbs = [
+      { id: 'osd',   label: 'OS Deployment' },
+      { id: 'set',   label: 'Settings' },
+      { id: 'cloud', label: 'Cloud Storage' },
+      { id: 'ss',    label: 'Summary Server' },
+    ];
+  });
+
+  /* ── Per-probe-server usage table ── */
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const LIMIT = 100;
+  const PROBES = [
+    { id: 'p1', name: 'PROBE-BLR-01', loc: 'Bengaluru, IN',   images: 11, used: 24.8, status: 'Online' },
+    { id: 'p2', name: 'PROBE-LON-01', loc: 'London, UK',      images: 8,  used: 18.6, status: 'Online' },
+    { id: 'p3', name: 'PROBE-NYC-01', loc: 'New York, US',    images: 7,  used: 16.2, status: 'Online' },
+    { id: 'p4', name: 'PROBE-SYD-01', loc: 'Sydney, AU',      images: 4,  used: 11.9, status: 'Syncing' },
+    { id: 'p5', name: 'PROBE-FRA-01', loc: 'Frankfurt, DE',   images: 3,  used: 6.5,  status: 'Offline' },
+  ];
+  const STATUS_STATE = { Online: 'success', Syncing: 'moderate', Offline: 'default' };
+  const tbl = document.getElementById('probe-table');
+  tbl.columns = [
+    { id: 'name', header: 'Probe server',
+      render: (r) => `<span class="probe"><ds-icon name="server-01" size="16"></ds-icon><b>${esc(r.name)}</b></span>` },
+    { id: 'loc', header: 'Location', render: (r) => `<span class="cell-muted">${esc(r.loc)}</span>` },
+    { id: 'images', header: 'Images', align: 'center', render: (r) => String(r.images) },
+    { id: 'used', header: 'Used', align: 'end', render: (r) => `${r.used.toFixed(1)} GB` },
+    { id: 'share', header: 'Share of limit', align: 'start',
+      render: (r) => {
+        const pct = (r.used / LIMIT * 100);
+        return `<span class="share"><ds-progress-bar variant="default" size="small" value="${pct.toFixed(1)}" max="100" show-label="false"></ds-progress-bar><span>${pct.toFixed(0)}%</span></span>`;
+      } },
+    { id: 'status', header: 'Status', align: 'start',
+      render: (r) => `<ds-badge variant="subtle" state="${STATUS_STATE[r.status] || 'default'}" shape="rounded" size="medium">${r.status}</ds-badge>` },
+  ];
+  tbl.rows = PROBES;
+
+  document.getElementById('buy-btn').addEventListener('click', () => { window.location.href = 'osd-cloud-storage-buy.html'; });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ds-dual-list — examples</title>
+  <script>window.UEMS_ICON_SPRITE = '../../icons/icons.svg';</script>
+  <script type="module">import '../../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 24px; background: var(--uems-background); color: var(--uems-text-primary); }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px 24px; max-width: 1500px; }
+    section { margin: 0; }
+    h2 { font-size: var(--font-size-14); color: var(--uems-text-primary); font-weight: 600; margin: 0 0 2px; }
+    p.desc { font-size: var(--font-size-12); color: var(--uems-text-tertiary); margin: 0 0 12px; }
+    ds-dual-list { --ds-dl-height: 300px; }
+  </style>
+</head>
+<body>
+  <div class="grid">
+    <section><h2>1 · Basic assignment</h2><p class="desc">Move selected only · no search · pick report columns.</p>
+      <ds-dual-list id="uc1"></ds-dual-list></section>
+
+    <section><h2>2 · Searchable large set</h2><p class="desc">Filter both panels + move-all.</p>
+      <ds-dual-list id="uc2" searchable move-all></ds-dual-list></section>
+
+    <section><h2>3 · Ordered target</h2><p class="desc">Reorder selected items — dashboard widget order.</p>
+      <ds-dual-list id="uc3" searchable reorderable></ds-dual-list></section>
+
+    <section><h2>4 · Bulk move-all</h2><p class="desc">» « present · migrate every item in one action.</p>
+      <ds-dual-list id="uc4" searchable move-all></ds-dual-list></section>
+
+    <section><h2>5 · Grouped / categorised</h2><p class="desc">Source grouped by module.</p>
+      <ds-dual-list id="uc5" searchable grouped move-all></ds-dual-list></section>
+
+    <section><h2>6 · Empty target</h2><p class="desc">Nothing selected yet — target list empty.</p>
+      <ds-dual-list id="uc6" searchable move-all></ds-dual-list></section>
+
+    <section><h2>7 · Constrained (locked)</h2><p class="desc">Mandatory items stay in Selected — excluded from move-all.</p>
+      <ds-dual-list id="uc7" searchable></ds-dual-list></section>
+
+    <section><h2>8 · Loading</h2><p class="desc">Async fetch of the source pool — controls disabled.</p>
+      <ds-dual-list id="uc8" searchable move-all loading></ds-dual-list></section>
+
+    <section><h2>9 · Read-only summary</h2><p class="desc">View-only assignment — no editing.</p>
+      <ds-dual-list id="uc9" readonly></ds-dual-list></section>
+
+    <section><h2>10 · Error state</h2><p class="desc">Selection failed validation — panels flag the error border.</p>
+      <ds-dual-list id="uc10" searchable move-all error error-message="Select at least one agent to continue."></ds-dual-list></section>
+  </div>
+
+  <script type="module">
+    const people = (names) => names.map((n) => ({ id: n.toLowerCase().replace(/\s+/g, '-'), label: n }));
+    const AVAIL = ['Ben Ortiz','Chloe Kim','Emma Novak','Farah Ali','Gus Park','Hana Sato','Ivan Petrov'];
+    const SEL   = ['Ava Chen','Diego Ruiz'];
+    const base = () => ({ available: people(AVAIL), selected: people(SEL) });
+
+    customElements.whenDefined('ds-dual-list').then(() => {
+      for (const id of ['uc1','uc2','uc3','uc4','uc8','uc9','uc10']) {
+        document.getElementById(id).items = base();
+      }
+      // Empty target — nothing selected yet
+      document.getElementById('uc6').items = { available: people(AVAIL), selected: [] };
+      // Grouped
+      document.getElementById('uc5').items = {
+        available: [
+          { id: 'patch', label: 'Patch management', group: 'Security' },
+          { id: 'threats', label: 'Threats', group: 'Security' },
+          { id: 'deploy', label: 'Software deployment', group: 'Operations' },
+          { id: 'inventory', label: 'Inventory', group: 'Operations' },
+          { id: 'remote', label: 'Remote control', group: 'Operations' },
+        ],
+        selected: [{ id: 'dashboards', label: 'Dashboards', group: 'Reporting' }],
+      };
+      // Locked
+      document.getElementById('uc7').items = {
+        available: people(AVAIL),
+        selected: [
+          { id: 'ava-chen', label: 'Ava Chen', locked: true },
+          { id: 'diego-ruiz', label: 'Diego Ruiz' },
+        ],
+      };
+    });
+  </script>
+</body>
+</html>

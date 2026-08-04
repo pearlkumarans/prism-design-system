@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<!--
+  Ask Zia — DUAL-MODE partial. Uses the ds-drawer COMPONENT (built-in header +
+  close), but laid out as an in-flow PANE at the .body level (a sibling of
+  .shell-area) rather than an overlay — the module content stays visible beside
+  it with a 10px gap. Toggled by the header Zia icon.
+  • Open directly → standalone harness mounts a .body-like host + auto-opens.
+  • Fetched by Shell → injectDrawer('ask-zia','body'); the shell relocates
+    #askzia-pop into .body before the right-pane, then calls .open().
+  Registers window.ShellDrawers['askzia'].
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../" />
+  <title>Ask Zia — Prism (standalone)</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="../design-system-library/src/components/drawer/drawer.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-base); }
+    /* Standalone host mimics the shell .body flex row so the drawer-pane sits to the right. */
+    .az-standalone { display: flex; height: 100vh; padding: 12px; box-sizing: border-box; }
+    .az-standalone .az-filler { flex: 1; border: 1px solid var(--uems-border-accent-subtle); border-radius: 16px; background: var(--uems-bg-accent-primary-subtle); }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  /* ── Ask Zia is a ds-container PANE (in-flow, 400px column beside the content,
+     10px gap). The host carries the border/radius; we lay out a gradient header +
+     scrolling body + pinned footer inside it. ─────────────────────────────────── */
+  /* Closed state = a 0-width footprint (NOT display:none) so opening can ANIMATE
+     the width the panel occupies — the content pane reflows in lockstep with the
+     panel instead of snapping open. Canonical slide-in pattern; see
+     Layout/layouts.md → "Panel slide-in animation". */
+  #askzia-pop { position: relative; flex: 0 0 auto; box-sizing: border-box;
+    width: 0; min-width: 0; margin-inline-start: 0;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    display: flex; flex-direction: column; overflow: hidden;
+    --ds-container-pad: 0; --ds-container-border: var(--uems-border-accent-subtle);
+    transition: width 300ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+                margin-inline-start 300ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+                opacity 200ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+                visibility 0s linear 300ms; }
+  #askzia-pop[open] { width: 400px; margin-inline-start: var(--spacing-12, 12px);
+    opacity: 1; visibility: visible; pointer-events: auto;
+    transition: width 300ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+                margin-inline-start 300ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+                opacity 200ms var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+                visibility 0s; }
+  /* Pin the panel's own sections to the full 400px so they DON'T re-wrap/reflow while
+     the panel width animates 0→400 — overflow:hidden clips them for a clean reveal. */
+  #askzia-pop > * { width: 400px; flex-shrink: 0; box-sizing: border-box; }
+  /* On open, a quick Zia-AI gradient shimmer sweeps around the border once, then
+     fades away — leaving the pane's normal subtle border underneath. A masked
+     pseudo-ring paints the gradient on the 2px border band only; the centre is
+     masked out so content stays visible + clickable (pointer-events:none). Red +
+     amber join the purple/blue/teal for a fuller AI shimmer. */
+  #askzia-pop[open]::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 2px;
+    background: linear-gradient(115deg, #6B4FD8, #2C66DD, #0EA5A0, #F4B400, #EA4335, #7A5AF8, #6B4FD8);
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: az-zia-border 1.6s linear 160ms forwards;   /* lag the slide so the shimmer reads after the panel settles */
+    pointer-events: none; z-index: 3;
+  }
+  @keyframes az-zia-border {
+    0%   { background-position: 0% 50%;   opacity: 1; }
+    80%  { background-position: 260% 50%; opacity: 1; }
+    100% { background-position: 320% 50%; opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { #askzia-pop[open]::after { animation: none; opacity: 0; } }
+  /* Slide-in is driven by the width/opacity transition above (logical margin, so it
+     mirrors correctly in RTL with no separate keyframes). Reduced motion → snap. */
+  @media (prefers-reduced-motion: reduce) {
+    #askzia-pop, #askzia-pop[open] { transition: none; }
+  }
+  /* Gradient header (matches the other surfaces) + close button. */
+  .az-hdr { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: var(--spacing-12) var(--spacing-16);
+    background: linear-gradient(135deg, var(--uems-bg-accent-primary) 0%, var(--uems-bg-primary) 55%, var(--uems-bg-warning-primary) 100%);
+    border-bottom: 1px solid var(--uems-border-tertiary); }
+  .az-hdr__close { flex: 0 0 auto; margin-inline-start: auto; }
+  /* Body scrolls; footer (composer) pinned below it. */
+  .az-body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--spacing-12); display: flex; flex-direction: column; }
+  .az-foot { flex: 0 0 auto; padding: var(--spacing-12); border-top: 1px solid var(--uems-border-tertiary); }
+  .az-hdr__logo { width: 28px; height: 28px; flex: 0 0 auto; }
+  .az-hdr__title { font-size: var(--font-size-16); font-weight: var(--font-weight-bold);
+    background: linear-gradient(90deg, #6B4FD8, #2C66DD); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  .az-greet { font-size: var(--font-size-20, 20px); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); margin: 0 0 2px; }
+  .az-greet__sub { font-size: var(--font-size-13); line-height: 18px; color: var(--uems-text-secondary); margin: 0 0 10px; }
+
+  /* Suggestion pills — tinted icon badge + text + chevron on hover. */
+  .az-suggest { display: flex; flex-direction: column; gap: var(--spacing-6, 6px); margin-bottom: var(--spacing-12); }
+  .az-pill { display: flex; align-items: center; gap: var(--spacing-8); width: 100%; font-size: var(--font-size-13);
+    color: var(--uems-text-primary); --ds-container-pad: 4px 10px;
+    transition: border-color 140ms var(--ease-standard), box-shadow 140ms var(--ease-standard), transform 140ms var(--ease-standard); }
+  .az-pill:hover { transform: translateY(-1px); border-color: var(--uems-border-accent-subtle, var(--uems-text-accent-link)); box-shadow: 0 2px 8px rgba(16, 24, 40, .06); }
+  .az-pill__ic { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: var(--uems-bg-accent-primary); color: var(--uems-text-accent-link); }
+  .az-pill__txt { flex: 1; min-width: 0; }
+  .az-pill__go { flex: 0 0 auto; margin-inline-start: auto; color: var(--uems-text-tertiary, var(--uems-text-secondary));
+    opacity: 0; transform: translateX(-4px); transition: opacity 140ms var(--ease-standard), transform 140ms var(--ease-standard); }
+  .az-pill:hover .az-pill__go { opacity: 1; transform: none; color: var(--uems-text-accent-link); }
+
+  /* Agents — pushed to the bottom of the body so it sits just above the composer
+     (search bar). Full-width rows: icon badge + name/description + chevron. */
+  /* Compact md padding for ds-containers inside Zia (scoped — not global). */
+  #askzia-pop .ds-container[data-pad="md"] { --ds-container-pad: var(--spacing-8); }
+  .az-agents { margin-top: auto; --ds-container-bg: var(--uems-bg-accent-primary-subtle, var(--uems-bg-secondary-subtle)); }
+  .az-agents__label { font-size: var(--font-size-12, 12px); font-weight: var(--font-weight-bold); letter-spacing: .06em;
+    text-transform: uppercase; color: var(--uems-text-secondary); margin-bottom: var(--spacing-6, 6px); }
+  .az-agents__grid { display: flex; flex-direction: column; gap: var(--spacing-6, 6px); }
+  /* Each agent owns a colour (--ag, a gradient). Vibrant gradient icon tile,
+     and on hover the whole card lifts + the launch pill fills with that gradient. */
+  /* Plain rows (no per-agent box) inside the single AGENTS container — on hover a
+     subtle solid highlight + the launch pill fills. Avoids boxes-within-boxes. */
+  .az-agent { position: relative; display: flex; flex-direction: row; align-items: center; gap: var(--spacing-12, 12px);
+    --ds-container-bg: transparent; --ds-container-border-width: 0; --ds-container-pad: 8px 8px;
+    transition: background-color 160ms var(--ease-standard); }
+  .az-agent:hover { --ds-container-bg: var(--uems-bg-primary); }
+  .az-agent__ic { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    background: var(--ag, var(--uems-bg-button-primary, var(--uems-text-accent-link))); color: #fff;
+    box-shadow: 0 3px 10px rgba(44, 102, 221, .28); transition: transform 160ms var(--ease-standard); }
+  .az-agent:hover .az-agent__ic { transform: scale(1.06) rotate(-3deg); }
+  .az-agent__body { flex: 1; min-width: 0; }
+  .az-agent__name { font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+  .az-agent__desc { font-size: var(--font-size-12, 12px); line-height: 16px; color: var(--uems-text-secondary); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .az-agent__go { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: var(--uems-bg-accent-primary); color: var(--uems-text-accent-link); opacity: .55;
+    transition: opacity 160ms var(--ease-standard), background 160ms var(--ease-standard), color 160ms var(--ease-standard), transform 160ms var(--ease-standard); }
+  .az-agent:hover .az-agent__go { opacity: 1; background: var(--ag); color: #fff; transform: translateX(3px); }
+
+  /* ── Conversation (mock AI search → ~5s load → sample device results) ──────── */
+  /* Explicit — a `display:flex` rule otherwise beats the [hidden] UA display:none. */
+  .az-welcome[hidden], .az-convo[hidden] { display: none !important; }
+  .az-welcome { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  .az-convo { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--spacing-16, 16px); padding-bottom: 4px; }
+  .az-msg--user { align-self: flex-end; max-width: 85%; background: var(--uems-bg-accent-primary); color: var(--uems-text-primary);
+    font-size: var(--font-size-13); line-height: 18px; padding: 8px 12px; border-radius: 14px 14px 4px 14px; }
+  .az-msg--ai { align-self: stretch; display: flex; gap: 8px; }
+  .az-ai__avatar { flex: 0 0 24px; width: 24px; height: 24px; margin-top: 1px; }
+  .az-ai__content { flex: 1; min-width: 0; }
+  /* Thinking steps — each pending (dim dot) → active (spinner) → done (green check). */
+  .az-think { display: flex; flex-direction: column; gap: 8px; padding: 2px 0; }
+  .az-step { display: flex; align-items: center; gap: 8px; font-size: var(--font-size-13); color: var(--uems-text-tertiary, var(--uems-text-secondary)); opacity: .45; transition: opacity .25s var(--ease-standard), color .25s var(--ease-standard); }
+  .az-step.is-active { opacity: 1; color: var(--uems-text-primary); }
+  .az-step.is-done { opacity: 1; color: var(--uems-text-secondary); }
+  .az-step__ic { flex: 0 0 16px; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; color: var(--uems-text-success, #1E8E3E); }
+  .az-step__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--uems-border-secondary); }
+  .az-spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--uems-border-tertiary); border-top-color: var(--uems-text-accent-link); animation: az-spin .7s linear infinite; }
+  @keyframes az-spin { to { transform: rotate(360deg); } }
+  /* Result */
+  .az-ai__summary { font-size: var(--font-size-13); line-height: 19px; color: var(--uems-text-primary); margin: 0 0 10px; }
+  .az-ai__summary b { font-weight: var(--font-weight-semibold); }
+  .az-result { --ds-container-bg: transparent; --ds-container-border-width: 0; --ds-container-pad: 0; }
+  .az-dev { display: flex; align-items: center; gap: 10px; padding: 6px 2px; }
+  .az-dev + .az-dev { border-top: 1px solid var(--uems-border-tertiary); }
+  .az-dev__ic { flex: 0 0 30px; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--uems-bg-accent-primary); color: var(--uems-text-accent-link); }
+  .az-dev__body { flex: 1; min-width: 0; }
+  .az-dev__name { font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+  .az-dev__meta { font-size: var(--font-size-12, 12px); color: var(--uems-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .az-dev__count { flex: 0 0 auto; font-size: var(--font-size-12, 12px); font-weight: var(--font-weight-semibold); color: var(--uems-text-error, #D5304A); }
+  .az-dev__count--err  { color: var(--uems-text-error, #D5304A); }
+  .az-dev__count--warn { color: var(--uems-text-warning, #B07D0A); }
+  .az-dev__count--ok   { color: var(--uems-text-success, #1E8E3E); }
+  .az-ai__actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .az-fade-in { animation: az-fade .3s var(--ease-standard) both; }
+  @keyframes az-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* Composer (lives in the drawer footer). */
+  .az-foot { width: 100%; }
+  .az-input { border: 1px solid transparent; border-radius: 16px;
+    background: linear-gradient(var(--uems-bg-primary), var(--uems-bg-primary)) padding-box, linear-gradient(90deg, #d138c4, #2C66DD) border-box; padding: 12px 14px; }
+  .az-input__field { width: 100%; border: 0; outline: 0; resize: none; background: transparent; font-family: inherit; font-size: var(--font-size-13); color: var(--uems-text-primary); min-height: 40px; }
+  .az-input__field::placeholder { color: var(--uems-text-secondary); }
+  .az-input__bar { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .az-tools { display: flex; align-items: center; gap: 8px; }
+  .az-tool-ib .ds-icon-button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--uems-border-tertiary); background: var(--uems-bg-primary); color: var(--uems-text-secondary); }
+  .az-tool-ib .ds-icon-button:hover { background: var(--uems-bg-secondary); }
+  .az-tool-ib .ds-icon-button ds-icon, .az-tool-ib .ds-icon-button svg { width: 18px !important; height: 18px !important; }
+  .az-send-ib .ds-icon-button { width: 32px; height: 32px; border-radius: 50%; border: 0; background: linear-gradient(135deg, #7A5AF8, #2C66DD); color: #fff; }
+  .az-send-ib .ds-icon-button:hover { background: linear-gradient(135deg, #6B4FD8, #2057c9); }
+  .az-send-ib .ds-icon-button ds-icon, .az-send-ib .ds-icon-button svg { width: 18px !important; height: 18px !important; }
+  /* While Zia is processing a query, the send control is disabled (no spam sends). */
+  .az-input.is-busy .az-send-ib { opacity: .45; pointer-events: none; }
+  .az-disclaimer { text-align: center; font-size: var(--font-size-12, 12px); color: var(--uems-text-tertiary); padding: 8px 8px 0; margin: 0; }
+  html.a11y-kbd-nav .az-input__field:focus-visible { outline: none !important; }
+</style>
+
+<ds-container id="askzia-pop" class="askzia-pane" variant="outline" radius="lg" padding="none">
+  <!-- Gradient header — Zia logo + title + close. -->
+  <div class="az-hdr">
+    <img class="az-hdr__logo" src="../design-system-library/src/icons/logos/Zia-logo.svg" alt="" />
+    <span class="az-hdr__title" data-az-title>Ask Zia</span>
+    <ds-icon-button class="az-hdr__close" data-az-close icon="close" label="Close" no-tooltip type="tertiary-grey" size="small"></ds-icon-button>
+  </div>
+
+  <!-- Body (scrolls). -->
+  <div class="az-body">
+    <div class="az-welcome" id="az-welcome">
+      <h1 class="az-greet" data-az-greet>Hello there, Kumaran! 👋</h1>
+      <p class="az-greet__sub" data-az-sub>How can I help you manage your endpoints today?</p>
+      <div class="az-suggest" id="az-suggest"></div>
+      <ds-container class="az-agents" variant="outline" radius="lg" padding="md">
+        <div class="az-agents__label" data-az-agents>AGENTS</div>
+        <div class="az-agents__grid" id="az-agents"></div>
+      </ds-container>
+    </div>
+    <!-- Conversation (shown after the first query). aria-live so screen readers
+         announce the loading steps + results as they stream in. -->
+    <div class="az-convo" id="az-convo" role="log" aria-live="polite" aria-relevant="additions" hidden></div>
+  </div>
+
+  <!-- Footer — the composer. -->
+  <div class="az-foot">
+    <div class="az-input">
+      <textarea class="az-input__field" id="az-input" rows="1" placeholder="Ask Zia assist" data-az-ph></textarea>
+      <div class="az-input__bar">
+        <div class="az-tools">
+          <ds-icon-button class="az-tool-ib" icon="command" label="Commands" no-tooltip type="tertiary-grey" size="xl"></ds-icon-button>
+          <ds-icon-button class="az-tool-ib" icon="paperclip" label="Attach" no-tooltip type="tertiary-grey" size="xl"></ds-icon-button>
+        </div>
+        <ds-icon-button class="az-send-ib" icon="arrow-narrow-up" label="Send" no-tooltip type="primary" size="xl"></ds-icon-button>
+      </div>
+    </div>
+    <p class="az-disclaimer" data-az-note>Ask Zia is powered by AI. It might make mistakes, re-check the answer</p>
+  </div>
+</ds-container>
+
+<script>
+(function () {
+  const USER = 'Kumaran';
+  /* Central i18n catalog — all displayed strings live here (namespaced `askzia.`)
+     and resolve via t()/ShellCtx.t(). The greeting keeps its ${USER} interpolation
+     in JS by splitting into greetHi + greetTail around the name. */
+  const MSGS = {
+    en: {
+      'askzia.greetHi': 'Hello there, ', 'askzia.greetTail': '! 👋',
+      'askzia.sub': 'How can I help you manage your endpoints today?',
+      'askzia.agents': 'Agents', 'askzia.title': 'Ask Zia', 'askzia.ph': 'Ask Zia assist',
+      'askzia.note': 'Ask Zia is powered by AI. It might make mistakes, re-check the answer',
+      'askzia.sug.0': 'Show devices with critical missing patches',
+      'askzia.sug.1': 'What needs my attention today?',
+      'askzia.sug.2': "Show this week's scheduled deployments",
+      'askzia.sug.3': 'How do I deploy a configuration?',
+      'askzia.agent.0.name': 'Patch Assistant', 'askzia.agent.0.desc': 'Auto-detect & deploy missing patches',
+      'askzia.agent.1.name': 'Deployment Assistant', 'askzia.agent.1.desc': 'Schedule & track software rollouts',
+    },
+    ar: {
+      'askzia.greetHi': 'مرحبًا، ', 'askzia.greetTail': '! 👋',
+      'askzia.sub': 'كيف يمكنني مساعدتك في إدارة أجهزتك اليوم؟',
+      'askzia.agents': 'الوكلاء', 'askzia.title': 'اسأل Zia', 'askzia.ph': 'اطلب مساعدة Zia',
+      'askzia.note': 'يعمل Ask Zia بالذكاء الاصطناعي. قد يرتكب أخطاء، تحقّق من الإجابة',
+      'askzia.sug.0': 'عرض الأجهزة التي تنقصها التصحيحات الحرجة',
+      'askzia.sug.1': 'ما الذي يحتاج إلى انتباهي اليوم؟',
+      'askzia.sug.2': 'عرض عمليات النشر المجدولة لهذا الأسبوع',
+      'askzia.sug.3': 'كيف أنشر تهيئة؟',
+      'askzia.agent.0.name': 'مساعد التصحيح', 'askzia.agent.0.desc': 'اكتشاف ونشر التصحيحات الناقصة تلقائيًا',
+      'askzia.agent.1.name': 'مساعد النشر', 'askzia.agent.1.desc': 'جدولة وتتبع عمليات نشر البرامج',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+  /* Non-string metadata only — display strings resolve via t() by index key. */
+  const SUGGEST = [
+    { icon: 'search' },
+    { icon: 'shield' },
+    { icon: 'calendar' },
+    { icon: 'help-circle' },
+  ];
+  const AGENTS = [
+    { icon: 'patch-block', grad: 'linear-gradient(135deg, #7A5AF8, #2C66DD)' },
+    { icon: 'rocket', grad: 'linear-gradient(135deg, #0EA5A0, #2C66DD)' },
+  ];
+  const pane = () => document.getElementById('askzia-pop');
+  const esc = (s) => String(s).replace(/"/g, '&quot;');
+
+  function applyStrings() {
+    const set = (sel, v) => { const el = document.querySelector(sel); if (el) el.textContent = v; };
+    set('[data-az-title]', t('askzia.title')); set('[data-az-greet]', t('askzia.greetHi') + USER + t('askzia.greetTail')); set('[data-az-sub]', t('askzia.sub')); set('[data-az-agents]', t('askzia.agents')); set('[data-az-note]', t('askzia.note'));
+    const ta = document.getElementById('az-input'); if (ta) ta.setAttribute('placeholder', t('askzia.ph'));
+  }
+  function buildCards() {
+    const sug = document.getElementById('az-suggest'); const agents = document.getElementById('az-agents');
+    const input = document.getElementById('az-input');
+    if (sug) {
+      sug.innerHTML = SUGGEST.map((p, i) => { const label = t(`askzia.sug.${i}`); return `<ds-container class="az-pill" variant="outline" radius="full" interactive role="button" tabindex="0" data-prompt="${esc(label)}"><span class="az-pill__ic"><ds-icon name="${p.icon}" size="16"></ds-icon></span><span class="az-pill__txt">${label}</span><ds-icon class="az-pill__go" name="chevron-right" size="16"></ds-icon></ds-container>`; }).join('');
+      sug.querySelectorAll('[data-prompt]').forEach((b) => {
+        b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.click(); } });
+        b.addEventListener('click', () => sendQuery(b.dataset.prompt));
+      });
+    }
+    if (agents) {
+      agents.innerHTML = AGENTS.map((a, i) => { const name = t(`askzia.agent.${i}.name`); const d = t(`askzia.agent.${i}.desc`); return `<ds-container class="az-agent" variant="outline" radius="lg" interactive role="button" tabindex="0" data-prompt="${esc(name)}" style="--ag: ${a.grad};"><span class="az-agent__ic"><ds-icon name="${a.icon}" size="18"></ds-icon></span><div class="az-agent__body"><div class="az-agent__name">${name}</div><div class="az-agent__desc">${d}</div></div><span class="az-agent__go"><ds-icon name="arrow-narrow-right" size="16"></ds-icon></span></ds-container>`; }).join('');
+      agents.querySelectorAll('[data-prompt]').forEach((b) => {
+        b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.click(); } });
+        b.addEventListener('click', () => sendQuery(b.dataset.prompt));
+      });
+    }
+  }
+  /* ── Mock AI search flow: user query → ~5s step-by-step load → sample results ── */
+  const STEPS = ['Understanding your request', 'Searching across 1,248 endpoints', 'Analyzing the latest data', 'Preparing results'];
+  /* Mock results ROTATE per query (1 device-related + 2 others) so the answer varies
+     instead of always returning the same device list. */
+  const RESULTS = [
+    { summary: 'Found <b>3 devices</b> with critical missing patches. Here are the most at-risk endpoints:',
+      rows: [
+        { icon: 'computer', title: 'DESKTOP-IT-014', meta: 'Windows 11 Pro · 192.168.1.24 · Online', trail: '8 critical', tone: 'err' },
+        { icon: 'internet-server', title: 'SRV-DB-02', meta: 'Windows Server 2022 · 10.0.0.12 · Online', trail: '5 critical', tone: 'err' },
+        { icon: 'laptop', title: 'LT-FIN-233', meta: 'Windows 10 Pro · 192.168.1.88 · Offline', trail: '3 critical', tone: 'err' },
+      ],
+      actions: [{ label: 'Deploy patches', icon: 'install-patch', primary: true }, { label: 'View all devices' }] },
+    { summary: 'You have <b>3 deployments</b> scheduled this week:',
+      rows: [
+        { icon: 'install-patch', title: 'April Security Rollup', meta: '128 devices · Tue 2:00 AM', trail: 'Scheduled', tone: 'ok' },
+        { icon: 'software', title: 'Chrome 124 update', meta: '342 devices · Wed 1:00 AM', trail: 'Scheduled', tone: 'ok' },
+        { icon: 'shield', title: 'Firewall policy push', meta: '88 devices · Fri 3:00 AM', trail: 'Pending', tone: 'warn' },
+      ],
+      actions: [{ label: 'View schedule', icon: 'calendar', primary: true }, { label: 'New deployment' }] },
+    { summary: 'Here’s what needs your <b>attention</b> today:',
+      rows: [
+        { icon: 'computer-offline', title: '2 agents offline', meta: 'Last seen over 7 days ago', trail: 'Critical', tone: 'err' },
+        { icon: 'patch', title: '12 patches pending approval', meta: 'Across 3 patch groups', trail: 'Review', tone: 'warn' },
+        { icon: 'shield', title: 'Endpoint Security licence expiring', meta: 'Renews in 5 days', trail: 'Soon', tone: 'warn' },
+      ],
+      actions: [{ label: 'Review all', icon: 'checklist-01', primary: true }] },
+  ];
+  let _resultIdx = 0;
+  const STEP_MS = 1150;
+  let busy = false;   /* a query is mid-flight — block new sends until it resolves */
+
+  const composerEl = () => document.querySelector('.az-input');
+  function setBusy(on) { busy = on; const c = composerEl(); if (c) c.classList.toggle('is-busy', on); }
+
+  function scrollDown() { const c = document.getElementById('az-convo'); if (c) c.scrollTop = c.scrollHeight; }
+
+  function showResult(contentEl) {
+    const r = RESULTS[_resultIdx % RESULTS.length];
+    _resultIdx += 1;
+    const rowsHtml = r.rows.map((row) => `<div class="az-dev"><span class="az-dev__ic"><ds-icon name="${row.icon}" size="16"></ds-icon></span><div class="az-dev__body"><div class="az-dev__name">${row.title}</div><div class="az-dev__meta">${row.meta}</div></div><span class="az-dev__count az-dev__count--${row.tone || 'err'}">${row.trail}</span></div>`).join('');
+    const actsHtml = r.actions.map((a) => `<ds-button variant="${a.primary ? 'primary' : 'secondary'}" size="small"${a.icon ? ` prefix-icon="${a.icon}"` : ''}>${a.label}</ds-button>`).join('');
+    contentEl.innerHTML =
+      `<p class="az-ai__summary az-fade-in">${r.summary}</p>` +
+      `<ds-container class="az-result az-fade-in" variant="ghost" radius="lg" padding="none">${rowsHtml}</ds-container>` +
+      `<div class="az-ai__actions az-fade-in">${actsHtml}</div>`;
+    setBusy(false);
+    scrollDown();
+  }
+
+  function sendQuery(text) {
+    text = String(text || '').trim();
+    if (!text || busy) return;
+    const welcome = document.getElementById('az-welcome');
+    const convo = document.getElementById('az-convo');
+    const input = document.getElementById('az-input');
+    if (!convo) return;
+    setBusy(true);
+    if (welcome) welcome.hidden = true;
+    convo.hidden = false;
+    if (input) { input.value = ''; }
+
+    const u = document.createElement('div'); u.className = 'az-msg--user az-fade-in'; u.textContent = text; convo.appendChild(u);
+
+    const ai = document.createElement('div'); ai.className = 'az-msg--ai az-fade-in';
+    ai.innerHTML = `<img class="az-ai__avatar" src="../design-system-library/src/icons/logos/Zia-logo.svg" alt="" />` +
+      `<div class="az-ai__content"><div class="az-think">` +
+      STEPS.map((s) => `<div class="az-step"><span class="az-step__ic"><span class="az-step__dot"></span></span><span>${s}</span></div>`).join('') +
+      `</div></div>`;
+    convo.appendChild(ai);
+    scrollDown();
+
+    const steps = ai.querySelectorAll('.az-step');
+    const activate = (i) => { const st = steps[i]; if (!st) return; st.classList.add('is-active'); st.querySelector('.az-step__ic').innerHTML = '<span class="az-spinner"></span>'; };
+    const complete = (i) => { const st = steps[i]; if (!st) return; st.classList.remove('is-active'); st.classList.add('is-done'); st.querySelector('.az-step__ic').innerHTML = '<ds-icon name="check" size="14"></ds-icon>'; };
+    let i = 0;
+    activate(0);
+    const tick = () => {
+      complete(i); i += 1;
+      if (i < steps.length) { activate(i); scrollDown(); setTimeout(tick, STEP_MS); }
+      else { showResult(ai.querySelector('.az-ai__content')); }
+    };
+    setTimeout(tick, STEP_MS);
+  }
+
+  let composerWired = false;
+  function wireComposer() {
+    if (composerWired) return; composerWired = true;
+    const input = document.getElementById('az-input');
+    const sendBtn = document.querySelector('.az-send-ib');
+    const doSend = () => sendQuery(input ? input.value : '');
+    if (sendBtn) sendBtn.addEventListener('click', doSend);
+    if (input) input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSend(); } });
+    const closeBtn = document.querySelector('[data-az-close]');
+    if (closeBtn) closeBtn.addEventListener('click', () => hide());
+  }
+
+  function build() { applyStrings(); buildCards(); wireComposer(); }
+
+  /* Fresh start every time Zia opens — clear any prior conversation, show greeting. */
+  function resetConvo() {
+    const welcome = document.getElementById('az-welcome');
+    const convo = document.getElementById('az-convo');
+    if (convo) { convo.innerHTML = ''; convo.hidden = true; }
+    if (welcome) welcome.hidden = false;
+    const input = document.getElementById('az-input'); if (input) input.value = '';
+    setBusy(false);
+  }
+  function show() { const p = pane(); if (!p) return; build(); resetConvo(); p.open ? p.open() : p.setAttribute('open', ''); }
+  function hide() { const p = pane(); if (!p) return; p.close ? p.close() : p.removeAttribute('open'); }
+  function isOpen() { const p = pane(); return !!(p && p.hasAttribute('open')); }
+
+  document.addEventListener('shell:langchange', () => { if (isOpen()) build(); else applyStrings(); });
+
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers.askzia = { show, hide, build, isOpen };
+})();
+</script>
+</template>
+
+<script>
+/* ── STANDALONE HARNESS — runs ONLY when opened directly. ── */
+(function () {
+  const KEY = 'askzia';
+  const host = document.createElement('div'); host.className = 'az-standalone';
+  const filler = document.createElement('div'); filler.className = 'az-filler';
+  host.appendChild(filler);
+  document.body.appendChild(host);
+  let lang = 'en';
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellCtx = window.ShellCtx || { get shellArea() { return host; }, get lang() { return lang; }, setActiveIcon() {} };
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);   /* drawer-pane sits to the right of the filler */
+  scripts.forEach((o) => { const s = document.createElement('script'); s.textContent = o.textContent; document.body.appendChild(s); });
+  customElements.whenDefined('ds-container').then(() => requestAnimationFrame(() => window.ShellDrawers[KEY] && window.ShellDrawers[KEY].show()));
+})();
+</script>
+</body>
+</html>

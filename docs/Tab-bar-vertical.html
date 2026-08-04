@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tab Bar Vertical — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/tab-bar-vertical/tab-bar-vertical.css">
+<link rel="stylesheet" href="../design-system-library/src/components/badge/badge.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/badge/badge.js"></script>
+<script type="module" src="../design-system-library/src/components/tab-bar-vertical/tab-bar-vertical.js"></script>
+<style>
+  .page-snackbar .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-snackbar .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .page-snackbar .demo-container .demo-canvas {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    padding: 32px !important;
+    gap: 32px !important;
+  }
+  .page-snackbar .demo-tbv-section { display: flex; flex-direction: column; gap: 14px; }
+  .page-snackbar .demo-tbv-section > .demo-group-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+    margin: 0; text-align: left; width: auto;
+  }
+  .page-snackbar .demo-tbv-section > .demo-tbv-desc {
+    font-size: 12px; color: var(--prism-text-muted); line-height: 1.5;
+  }
+  .page-snackbar .demo-tbv-card {
+    display: flex; flex-direction: column; gap: 14px;
+    padding: 18px;
+    border: 1px solid var(--prism-border);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+  }
+  [data-theme="light"] .page-snackbar .demo-tbv-card {
+    background: rgba(255,255,255,0.55);
+    border-color: rgba(37,99,235,0.1);
+  }
+  .page-snackbar .demo-tbv-card .card-cap {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--prism-text-muted); text-transform: uppercase;
+  }
+  .page-snackbar .demo-tbv-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+  .page-snackbar .demo-tbv-live {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+  @media (max-width: 720px) {
+    .page-snackbar .demo-tbv-live { grid-template-columns: 1fr; }
+  }
+  .page-snackbar .demo-tbv-panel {
+    padding: 20px;
+    background: rgba(37,99,235,0.05);
+    border: 1px dashed rgba(37,99,235,0.2);
+    border-radius: 10px;
+    font-size: 13px; color: var(--prism-text); line-height: 1.6;
+    min-height: 200px;
+  }
+  .anat-marker-inline {
+    background: #2563eb; color: #fff; font-size: 11px; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body class="page-snackbar">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources</a></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav" id="sidebar-nav-list">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link active">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Tab Bar Vertical</h1>
+        <p class="page-desc">A vertical tab bar stacks the same kind of choices down the side of the screen &mdash; settings sections, profile pages, steps in a flow. Use it when labels are long, there are more than five options, or the content area to the right is wide enough to deserve a fixed left rail. Pick <strong>Underline</strong> for sidebar-style nav, <strong>Fill</strong> for a compact picker inside a panel.</p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ═══════════════ OVERVIEW ═══════════════ -->
+        <div class="tab-content" id="tab-overview">
+
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <div class="anatomy-diagram" style="overflow:visible;">
+            <div style="display:flex;gap:40px;justify-content:center;flex-wrap:wrap;margin:24px 0;padding:32px;">
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <span style="font-size:10px;font-weight:700;letter-spacing:0.06em;color:var(--prism-text-muted);text-transform:uppercase;">Type = Fill</span>
+                <div style="width:200px;padding:4px;display:flex;flex-direction:column;gap:4px;">
+                  <div style="display:flex;align-items:center;gap:8px;height:36px;padding:0 8px;border-radius:4px;background:#EAF0FC;color:#006AFF;font-weight:500;font-size:14px;justify-content:space-between;">Account <span style="background:#fff;color:#006AFF;font-size:10px;font-weight:600;padding:2px 6px;border-radius:999px;">3</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;height:36px;padding:0 8px;color:#2A303D;font-size:14px;justify-content:space-between;">Notifications <span style="background:#F0F2F5;color:#404968;font-size:10px;font-weight:600;padding:2px 6px;border-radius:999px;">12</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;height:36px;padding:0 8px;color:#2A303D;font-size:14px;">Billing</div>
+                  <div style="display:flex;align-items:center;gap:8px;height:36px;padding:0 8px;color:#2A303D;font-size:14px;">Security</div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <span style="font-size:10px;font-weight:700;letter-spacing:0.06em;color:var(--prism-text-muted);text-transform:uppercase;">Type = Underline</span>
+                <div style="width:200px;display:flex;flex-direction:column;">
+                  <div style="position:relative;display:flex;align-items:center;gap:8px;height:36px;padding:0 8px 0 12px;color:#006AFF;font-size:14px;font-weight:500;justify-content:space-between;"><div style="position:absolute;left:0;top:6px;bottom:6px;width:2px;background:#006AFF;border-radius:2px;"></div>Account <span style="background:#fff;border:1px solid #E1E4EB;color:#006AFF;font-size:10px;font-weight:600;padding:2px 6px;border-radius:999px;">3</span></div>
+                  <div style="display:flex;align-items:center;height:36px;padding:0 8px 0 12px;color:#2A303D;font-size:14px;">Notifications</div>
+                  <div style="display:flex;align-items:center;height:36px;padding:0 8px 0 12px;color:#2A303D;font-size:14px;">Billing</div>
+                  <div style="display:flex;align-items:center;height:36px;padding:0 8px 0 12px;color:#2A303D;font-size:14px;">Security</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Every <code>type</code> &times; <code>count</code> from <code>tab-bar-vertical.css</code>, plus a real-world side nav + panel layout where the panel content swaps on every <code>ds-tab-change</code>.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Tab Bar Vertical &middot; Fill / Underline + live side-nav + panel</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <div class="demo-tbv-section">
+                  <div class="demo-group-label">Type = Fill &mdash; grouped vertical picker</div>
+                  <div class="demo-tbv-desc">Use Fill for menu pickers and embedded sub-navigation where the bar reads as a single unit.</div>
+                  <div class="demo-tbv-row">
+                    <div class="demo-tbv-card">
+                      <span class="card-cap">Settings sub-nav (with badges)</span>
+                      <ds-tab-bar-vertical id="tbv-fill" type="fill" aria-label="Settings sub-navigation"></ds-tab-bar-vertical>
+                    </div>
+                    <div class="demo-tbv-card">
+                      <span class="card-cap">Workspace picker (with icons)</span>
+                      <ds-tab-bar-vertical id="tbv-fill-icons" type="fill" aria-label="Workspace picker"></ds-tab-bar-vertical>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="demo-tbv-section">
+                  <div class="demo-group-label">Type = Underline &mdash; sidebar navigation list</div>
+                  <div class="demo-tbv-desc">Use Underline when the bar reads as a list of destinations. The active row gets a 2&thinsp;px blue leading-edge bar.</div>
+                  <div class="demo-tbv-card">
+                    <span class="card-cap">Documentation nav (6 sections)</span>
+                    <ds-tab-bar-vertical id="tbv-underline" type="underline" aria-label="Documentation"></ds-tab-bar-vertical>
+                  </div>
+                </div>
+
+                <div class="demo-tbv-section">
+                  <div class="demo-group-label">Real-world &mdash; vertical nav + content panel (live swap)</div>
+                  <div class="demo-tbv-desc">Click any row to see the panel on the right swap. The <code>ds-tab-change</code> event drives the panel content update.</div>
+                  <div class="demo-tbv-card">
+                    <span class="card-cap">Account settings page</span>
+                    <div class="demo-tbv-live">
+                      <ds-tab-bar-vertical id="tbv-live" type="underline" aria-label="Account settings"></ds-tab-bar-vertical>
+                      <div class="demo-tbv-panel" id="tbv-live-panel" role="tabpanel">Click a row to swap the panel body.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="demo-tbv-section">
+                  <div class="demo-group-label">RTL &mdash; Arabic labels, leading bar flips to the right</div>
+                  <div class="demo-tbv-card">
+                    <ds-tab-bar-vertical id="tbv-rtl" type="underline" rtl aria-label="Arabic sections"></ds-tab-bar-vertical>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">Two visual types of Tab Bar Vertical, each suited to a different navigation density.</p>
+
+            <table style="width:100%;border-collapse:collapse;margin-top:24px;text-align:left;font-size:14.5px;color:var(--prism-text);">
+              <thead>
+                <tr style="border-bottom:1px solid var(--prism-border);">
+                  <th style="padding:16px 8px;font-weight:600;color:var(--prism-text-muted);">Type</th>
+                  <th style="padding:16px 8px;font-weight:600;color:var(--prism-text-muted);">Active treatment</th>
+                  <th style="padding:16px 8px;font-weight:600;color:var(--prism-text-muted);">Best for</th>
+                  <th style="padding:16px 8px;font-weight:600;color:var(--prism-text-muted);">Examples</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                  <td style="padding:16px 8px;font-weight:600;">Underline</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">2px left-border on active row.</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">Sidebar nav &mdash; reads as a list of destinations. Quietest visual weight.</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">Profile &middot; Security &middot; Notifications &middot; Billing</td>
+                </tr>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                  <td style="padding:16px 8px;font-weight:600;">Fill</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">Soft-blue pill behind active row.</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">Embedded picker inside a card or panel; works when surrounding chrome is neutral.</td>
+                  <td style="padding:16px 8px;color:var(--prism-text-muted);">Inbox &middot; Drafts &middot; Sent &middot; Archive</td>
+                </tr>
+              </tbody>
+            </table>
+            <p style="margin-top:16px;font-size:13.5px;color:var(--prism-text-muted);"><strong>Rule of thumb:</strong> if the parent surface is tinted, use Underline. If it's plain, either works &mdash; pick Fill when you want stronger active feedback.</p>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Use Underline for sidebar nav &mdash; it reads as a list of destinations.</li>
+                <li>Use Fill for grouped pickers and embedded navigation.</li>
+                <li>Keep labels short &mdash; 1&ndash;3 words, sentence case, &le; 18 chars.</li>
+                <li>Use icons consistently &mdash; every row or no row.</li>
+                <li>Persist the selected tab in the URL or query string.</li>
+                <li>Reserve 160&ndash;240px for the rail; anything narrower truncates labels.</li>
+                <li>Show numeric badges for inbox / queue rows (Inbox &middot; 4).</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Use Tab Bar Vertical for &gt; 10 destinations &mdash; switch to a scrollable side nav.</li>
+                <li>Use Underline as a menu picker &mdash; the lack of grouping makes the bar feel loose.</li>
+                <li>Use Fill on a tinted parent surface &mdash; its container relies on a neutral backdrop.</li>
+                <li>Truncate labels mid-word.</li>
+                <li>Reset the active tab when the user navigates back.</li>
+                <li>Stack two Tab Bar Verticals in the same panel &mdash; group instead with a section header.</li>
+                <li>Use a textual badge (New!) &mdash; the slot is for numeric counts only.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <div class="doc-section">
+            <h2 id="responsive" class="doc-section-title">Responsive behavior</h2>
+            <p class="doc-section-subtitle">How Tab Bar Vertical adapts across breakpoints.</p>
+            <table class="size-table">
+              <thead><tr><th>Breakpoint</th><th>Behavior</th><th>Fallback</th></tr></thead>
+              <tbody>
+                <tr><td>&ge; 1024px (desktop)</td><td>Renders inline, full rail visible. Recommended width: 200&ndash;240px.</td><td>&mdash;</td></tr>
+                <tr><td>768&ndash;1023px (tablet)</td><td>Renders inline at minimum 160px width; row padding compresses.</td><td>Hide non-essential rows behind an overflow menu.</td></tr>
+                <tr><td>&lt; 768px (mobile)</td><td>Collapse to a horizontal Tab Bar Horizontal at the top, or a sheet that slides in from the side.</td><td>Use <a href="Tab-bar-horizontal.html">Tab Bar Horizontal</a> as the responsive fallback.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ STYLE ═══════════════ -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style" class="doc-section-title">Style</h2>
+          <div class="doc-section">
+            <h3 class="doc-h3">Wrapper</h3>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td>Width</td><td><code>200px</code> (fixed)</td></tr>
+                <tr><td>Padding (Fill)</td><td><code>4px</code> all sides</td></tr>
+                <tr><td>Padding (Underline)</td><td><code>0</code></td></tr>
+                <tr><td>Item gap (Fill)</td><td><code>4px</code></td></tr>
+                <tr><td>Item gap (Underline)</td><td><code>0</code></td></tr>
+                <tr><td>Item height</td><td><code>36px</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Active state per type</h3>
+            <table class="size-table">
+              <thead><tr><th>Type</th><th>Background</th><th>Label</th><th>Indicator</th></tr></thead>
+              <tbody>
+                <tr><td>Fill</td><td><code>--bg-accent-subtlest</code></td><td><code>--uems-text-accent-link</code> medium</td><td>full row fill</td></tr>
+                <tr><td>Underline</td><td>transparent</td><td><code>--uems-text-accent-link</code> medium</td><td><code>2px</code> leading-edge bar</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══════════════ USAGE ═══════════════ -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <h2 id="when-to-use" class="doc-section-title">When to use</h2>
+          <ul class="doc-list">
+            <li><strong>Settings or profile screens</strong> &mdash; Account, Notifications, Billing, Security.</li>
+            <li><strong>Vertical menu pickers</strong> &mdash; Type=Fill works for compact pickers.</li>
+            <li><strong>Step lists or progress trackers</strong> with &le; 10 steps.</li>
+            <li><strong>Documentation or admin panels</strong> where the navigation is content-adjacent.</li>
+          </ul>
+          <hr class="doc-divider"/>
+          <h2 id="when-not-to-use" class="doc-section-title">When not to use</h2>
+          <table class="size-table">
+            <thead><tr><th>Situation</th><th>Use instead</th></tr></thead>
+            <tbody>
+              <tr><td>More than 10 destinations or unknown count</td><td>Scrollable side navigation</td></tr>
+              <tr><td>Top-level product navigation</td><td>App shell / global side nav</td></tr>
+              <tr><td>Inline switching of content layouts</td><td><a href="Tab-bar-horizontal.html">Tab Bar Horizontal</a></td></tr>
+              <tr><td>Hierarchical (parent &rarr; child) navigation</td><td>Tree / nav with disclosure</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ═══════════════ CODE ═══════════════ -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+
+          <!-- ───── Live demo (Code playground) ───── -->
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Configure the vertical Tab Bar below and copy the generated HTML &amp; JS.</p>
+
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group">
+                <label class="cp-label">Type</label>
+                <select class="cp-select" id="pg-tbv-type">
+                  <option value="fill" selected>Fill</option>
+                  <option value="underline">Underline</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Count</label>
+                <select class="cp-select" id="pg-tbv-count">
+                  <option value="3">3</option>
+                  <option value="4" selected>4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="8">8</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Show icons</label>
+                <select class="cp-select" id="pg-tbv-icons">
+                  <option value="false" selected>No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Show badges</label>
+                <select class="cp-select" id="pg-tbv-badges">
+                  <option value="true" selected>Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">RTL</label>
+                <select class="cp-select" id="pg-tbv-rtl">
+                  <option value="false" selected>LTR</option>
+                  <option value="true">RTL (Arabic)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="cp-preview" id="pg-tbv-preview-area" style="padding:36px 32px;display:flex;justify-content:center;">
+              <ds-tab-bar-vertical id="pg-tbv-element" type="fill" aria-label="Playground tabs"></ds-tab-bar-vertical>
+            </div>
+
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML + JS</div>
+              <button class="cp-action-btn" id="pg-tbv-copy-btn">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                Copy code
+              </button>
+            </div>
+            <div style="background:#0a0a0c;">
+              <div class="cp-code-area" id="pg-tbv-code-output"></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <h2 id="api" class="doc-section-title">Component API</h2>
+          <p class="doc-section-subtitle">Attributes, property, and event for <code>&lt;ds-tab-bar-vertical&gt;</code>. Source: <code>design-system-library/src/components/tab-bar-vertical/tab-bar-vertical.js</code>.</p>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Attributes</h3>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Values</th><th>Default</th></tr></thead>
+              <tbody>
+                <tr><td><code>type</code></td><td><code>fill</code> &middot; <code>underline</code></td><td><code>fill</code></td></tr>
+                <tr><td><code>active-id</code></td><td>string</td><td>first item's id</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td>unset</td></tr>
+                <tr><td><code>aria-label</code></td><td>string</td><td>&mdash;</td></tr>
+                <tr><td><code>aria-labelledby</code></td><td>id ref</td><td>&mdash;</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Properties</h3>
+            <pre style="background:#0a0a0c;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;padding:20px;border-radius:12px;overflow:auto;">el.items = [
+  { id: 'account',  label: 'Account',           panelId: 'p-account' },
+  { id: 'notify',   label: 'Notifications', badge: 12, panelId: 'p-notify' },
+  { id: 'billing',  label: 'Billing',           panelId: 'p-billing' },
+];
+el.setAttribute('active-id', 'account');</pre>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Event</h3>
+            <pre style="background:#0a0a0c;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;padding:20px;border-radius:12px;overflow:auto;">el.addEventListener('ds-tab-change', (e) =&gt; {
+  console.log(e.detail.id);    // 'notify'
+  console.log(e.detail.item);  // { id, label, &hellip; }
+});</pre>
+          </div>
+        </div>
+
+        <!-- ═══════════════ ACCESSIBILITY ═══════════════ -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <div class="doc-section">
+            <h3 class="doc-h3">Roles &amp; ARIA</h3>
+            <table class="size-table">
+              <thead><tr><th>Concern</th><th>Implementation</th></tr></thead>
+              <tbody>
+                <tr><td>Wrapper role</td><td><code>role="tablist"</code> with <code>aria-orientation="vertical"</code>.</td></tr>
+                <tr><td>Row role</td><td>Each row is <code>role="tab"</code> with <code>aria-selected</code> and <code>aria-controls</code>.</td></tr>
+                <tr><td>Roving tabindex</td><td>Active row has <code>tabindex="0"</code>, all others have <code>tabindex="-1"</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 class="doc-h3">Keyboard</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td><kbd>Tab</kbd></td><td>Moves focus into / out as a single stop.</td></tr>
+                <tr><td><kbd>&uarr;</kbd> / <kbd>&darr;</kbd></td><td>Moves the active selection between rows.</td></tr>
+                <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>Jumps to first / last row.</td></tr>
+                <tr><td><kbd>Enter</kbd> / <kbd>Space</kbd></td><td>Activates the focused row.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0" target="_blank" rel="noopener" class="action-link">
+              <img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;">
+              Figma Design
+            </a>
+          </div>
+        </aside>
+
+      </div><!-- main-content-area -->
+    </main>
+  </div>
+
+  <script type="module">
+    customElements.whenDefined('ds-tab-bar-vertical').then(() => {
+      const wireSimple = (id, items, activeId) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.items = items;
+        if (activeId) el.setAttribute('active-id', activeId);
+      };
+
+      wireSimple('tbv-fill', [
+        { id: 'account',  label: 'Account',           panelId: 'p1' },
+        { id: 'notify',   label: 'Notifications', badge: 12, panelId: 'p2' },
+        { id: 'billing',  label: 'Billing',           panelId: 'p3' },
+        { id: 'security', label: 'Security',          panelId: 'p4' },
+      ], 'account');
+
+      wireSimple('tbv-fill-icons', [
+        { id: 'ws1', label: 'Engineering', icon: 'code', panelId: 'p1' },
+        { id: 'ws2', label: 'Design',      icon: 'edit', panelId: 'p2' },
+        { id: 'ws3', label: 'Marketing',   icon: 'star', panelId: 'p3' },
+      ], 'ws1');
+
+      wireSimple('tbv-underline', [
+        { id: 'intro',    label: 'Introduction', panelId: 'p1' },
+        { id: 'install',  label: 'Installation', panelId: 'p2' },
+        { id: 'tokens',   label: 'Tokens',       panelId: 'p3' },
+        { id: 'comps',    label: 'Components',   badge: 38, panelId: 'p4' },
+        { id: 'patterns', label: 'Patterns',     panelId: 'p5' },
+        { id: 'changelog', label: 'Changelog',   panelId: 'p6' },
+      ], 'intro');
+
+      wireSimple('tbv-rtl', [
+        { id: 'a', label: 'الحساب',     labelRtl: 'الحساب', panelId: 'p1' },
+        { id: 'b', label: 'الإشعارات', labelRtl: 'الإشعارات', panelId: 'p2' },
+        { id: 'c', label: 'الفوترة',     labelRtl: 'الفوترة',     panelId: 'p3' },
+      ], 'a');
+
+      // Live side-nav + panel demo
+      const live = document.getElementById('tbv-live');
+      const panel = document.getElementById('tbv-live-panel');
+      if (live && panel) {
+        const PANELS = {
+          account:  '<strong>Account</strong><br/>Update your name, email, and profile photo. Changes apply across all devices.',
+          notify:   '<strong>Notifications</strong><br/>Choose how and when you receive activity updates &mdash; comments, mentions, reminders, direct messages.',
+          billing:  '<strong>Billing</strong><br/>Pro plan, billed annually. Next renewal: 2026-08-15. View invoices, update payment method, or change plan.',
+          security: '<strong>Security</strong><br/>Two-factor authentication, active sessions, recovery codes, and audit log.',
+          audit:    '<strong>Audit logs</strong><br/>The last 90 days of admin actions. Filter by user, type, or date range.',
+        };
+        live.items = [
+          { id: 'account',  label: 'Account',                  panelId: 'tbv-live-panel' },
+          { id: 'notify',   label: 'Notifications', badge: 12, panelId: 'tbv-live-panel' },
+          { id: 'billing',  label: 'Billing',                  panelId: 'tbv-live-panel' },
+          { id: 'security', label: 'Security',                 panelId: 'tbv-live-panel' },
+          { id: 'audit',    label: 'Audit logs',               panelId: 'tbv-live-panel' },
+        ];
+        live.setAttribute('active-id', 'account');
+        panel.innerHTML = PANELS.account;
+        live.addEventListener('ds-tab-change', (e) => {
+          panel.innerHTML = PANELS[e.detail.id] || '';
+        });
+      }
+
+      // ── Code playground (controls → live preview + generated HTML/JS) ──
+      const pgEl       = document.getElementById('pg-tbv-element');
+      const pgType     = document.getElementById('pg-tbv-type');
+      const pgCount    = document.getElementById('pg-tbv-count');
+      const pgIcons    = document.getElementById('pg-tbv-icons');
+      const pgBadges   = document.getElementById('pg-tbv-badges');
+      const pgRtl      = document.getElementById('pg-tbv-rtl');
+      const pgCode     = document.getElementById('pg-tbv-code-output');
+      const pgCopyBtn  = document.getElementById('pg-tbv-copy-btn');
+      if (!pgEl) return;
+
+      const LABELS  = ['Account', 'Notifications', 'Billing', 'Security', 'Audit logs', 'API keys', 'Team', 'Plan'];
+      const ICONS   = ['user', 'notification', 'card', 'shield', 'file', 'code', 'team', 'star'];
+      const BADGES  = [null, 12, null, 3, null, null, 7, null];
+      const RTL_LBL = ['الحساب', 'الإشعارات', 'الفوترة', 'الأمان', 'سجل التدقيق', 'مفاتيح API', 'الفريق', 'الخطة'];
+      const escAttr = (s) => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      let pgRaw = '';
+
+      function updatePg() {
+        const type  = pgType.value;
+        const count = parseInt(pgCount.value, 10);
+        const wIcon = pgIcons.value === 'true';
+        const wBdg  = pgBadges.value === 'true';
+        const rtl   = pgRtl.value === 'true';
+
+        const items = [];
+        for (let i = 0; i < count; i++) {
+          const it = { id: `t${i}`, label: LABELS[i] || `Item ${i+1}`, panelId: `panel-${i}` };
+          if (rtl) it.labelRtl = RTL_LBL[i] || it.label;
+          if (wIcon) it.icon = ICONS[i] || 'circle';
+          if (wBdg && BADGES[i] != null) it.badge = BADGES[i];
+          items.push(it);
+        }
+        pgEl.setAttribute('type', type);
+        if (rtl) pgEl.setAttribute('rtl', '');
+        else pgEl.removeAttribute('rtl');
+        pgEl.items = items;
+        pgEl.setAttribute('active-id', 't0');
+
+        const attrs = [`type="${type}"`];
+        if (rtl) attrs.push('rtl');
+        attrs.push('aria-label="Settings sections"');
+        const itemsJSON = items.map((it) => {
+          const parts = [`id: '${it.id}'`, `label: '${escAttr(it.label).replace(/&quot;/g, "\\'")}'`];
+          if (it.labelRtl) parts.push(`labelRtl: '${it.labelRtl}'`);
+          if (it.icon)     parts.push(`icon: '${it.icon}'`);
+          if (it.badge != null) parts.push(`badge: ${typeof it.badge === 'string' ? `'${it.badge}'` : it.badge}`);
+          parts.push(`panelId: '${it.panelId}'`);
+          return `  { ${parts.join(', ')} }`;
+        }).join(',\n');
+        pgRaw = `<ds-tab-bar-vertical ${attrs.join(' ')}></ds-tab-bar-vertical>\n\n<script>\n  const tabs = document.querySelector('ds-tab-bar-vertical');\n  tabs.items = [\n${itemsJSON}\n  ];\n  tabs.setAttribute('active-id', 't0');\n  tabs.addEventListener('ds-tab-change', (e) => console.log(e.detail.id));\n<\/script>`;
+
+        const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        pgCode.innerHTML = esc(pgRaw)
+          .replace(/&lt;(\/?)(ds-tab-bar-vertical|script)/g, '&lt;$1<span style="color:#a78bfa;">$2</span>')
+          .replace(/([a-z-]+)=&quot;([^&]*)&quot;/g, '<span style="color:#38bdf8;">$1</span>=<span style="color:#34d399;">"$2"</span>')
+          .replace(/\b(const|let|new|true|false|null)\b/g, '<span style="color:#c792ea;">$1</span>')
+          .replace(/'([^']+)'/g, "<span style=\"color:#34d399;\">'$1'</span>")
+          .replace(/\b(addEventListener|setAttribute|querySelector|console|log)\b/g, '<span style="color:#82aaff;">$1</span>')
+          .replace(/\n/g, '<br/>')
+          .replace(/  /g, '&nbsp;&nbsp;');
+      }
+
+      [pgType, pgCount, pgIcons, pgBadges, pgRtl].forEach((el) => el.addEventListener('change', updatePg));
+      pgCopyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(pgRaw);
+          const o = pgCopyBtn.innerHTML;
+          pgCopyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+          setTimeout(() => { pgCopyBtn.innerHTML = o; }, 2000);
+        } catch {}
+      });
+      updatePg();
+    });
+  </script>
+
+  <script src="js/components/toc.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

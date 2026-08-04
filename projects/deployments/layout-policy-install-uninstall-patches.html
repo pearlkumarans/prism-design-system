@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<!-- Deployments · Policy · Install/Uninstall Patches — sectioned form. -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <title>Install/Uninstall Patches — Prism (standalone)</title>
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); } .sa-host { display: flex; flex-direction: column; height: 100vh; }</style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+#pol-p-pop .lay__section { padding: 20px 0 4px; }
+#pol-p-pop .lay__fields { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; }
+#pol-p-pop .lay__field { max-width: 900px; padding-bottom: 20px; }
+#pol-p-pop .lay__field:has(ds-field-helper) { padding-bottom: 0; }
+#pol-p-pop .lay__control-only { padding-inline-start: 288px; }
+#pol-p-pop #p-optype .ds-radio-group__items,
+#pol-p-pop #p-reboot .ds-radio-group__items { display: flex; flex-direction: row; gap: 32px; flex-wrap: wrap; }
+#pol-p-pop .p-list-wrap { padding-top: 12px; }
+#pol-p-pop .p-list-wrap ds-data-table { width: 100%; max-width: 1100px; }
+#pol-p-pop .p-add-more { padding: 20px 0 40px; text-align: center; }
+</style>
+
+<div id="pol-p-pop" class="lay-root" hidden>
+  <div class="lay">
+
+    <ds-page-header id="p-ph" icon="patch" structure="default"
+      title="Install/Uninstall Patches"
+      description="Install missing patches or roll back existing ones on managed computers."
+      show-description show-breadcrumbs>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large"
+          title="Name and description"
+          description="Name this policy and add an optional description."></ds-section-header>
+        <div class="lay__fields">
+          <div class="lay__field">
+            <ds-text-input id="p-name" size="medium" required
+              label="Name" label-position="left"
+              placeholder="MyConfiguration51830"
+              value="MyConfiguration51830"
+              show-counter counter="20/100"></ds-text-input>
+          </div>
+          <div class="lay__field">
+            <div class="lay__control-only">
+              <ds-text-link href="#" size="medium" prefix-icon="plus">Add description</ds-text-link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lay__section">
+        <ds-section-header style-variant="with-border" size="large"
+          title="Configure patch deployment"
+          description="Select the patches to install or roll back, and pick reboot / retry behaviour."></ds-section-header>
+
+        <div class="p-list-wrap">
+          <ds-section-header size="medium" title="Patches"></ds-section-header>
+          <ds-data-table id="p-list" selection-mode="multi" row-height="comfortable" show-footer="false" sticky-header></ds-data-table>
+        </div>
+
+        <div class="lay__fields" style="padding-top: 20px;">
+          <div class="lay__field">
+            <ds-radio-group id="p-optype"
+              label="Operation type" label-position="left"
+              value="install"></ds-radio-group>
+          </div>
+          <div class="lay__field">
+            <ds-input-select id="p-severity" size="medium"
+              label="Severity filter" label-position="left"
+              placeholder="All severities"></ds-input-select>
+          </div>
+          <div class="lay__field">
+            <ds-radio-group id="p-reboot"
+              label="Reboot behaviour" label-position="left"
+              value="no-reboot"></ds-radio-group>
+          </div>
+          <div class="lay__field">
+            <div class="lay__control-only">
+              <ds-checkbox id="p-force" size="medium" label="Force deploy after deferral"></ds-checkbox>
+              <p style="margin: 6px 0 0; color: var(--uems-text-secondary); font-size: var(--font-size-12); max-width: 620px;">
+                Installs the patch even if the user defers past the deadline.
+              </p>
+            </div>
+          </div>
+          <div class="lay__field">
+            <div class="lay__control-only">
+              <ds-checkbox id="p-continue-partial" size="medium" checked
+                label="Continue even if some patches cannot be downloaded"></ds-checkbox>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-add-more">
+          <ds-button variant="secondary" prefix-icon="plus">Add more patches</ds-button>
+        </div>
+      </div>
+
+    </div>
+
+    <ds-form-footer id="p-footer" show-left="false">
+      <ds-button data-act="cancel"     variant="outline">Cancel</ds-button>
+      <ds-button data-act="save-draft" variant="secondary">Save as Draft</ds-button>
+      <ds-button data-act="add"        variant="primary">Add Policy</ds-button>
+    </ds-form-footer>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('pol-p-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const ph = $('p-ph');
+  ph.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    const label = (a.textContent || '').trim();
+    if (label === 'Policies'   && window.openContentView) { e.preventDefault(); window.openContentView('deployments-policy-list'); }
+    else if (label === 'Add Policy' && window.openContentView) { e.preventDefault(); window.openContentView('deployments-policy'); }
+  });
+  ph.breadcrumbs = [
+    { label: 'Policies',   href: '#' },
+    { label: 'Add Policy', href: '#' },
+    { label: 'Install/Uninstall Patches' },
+  ];
+
+  $('p-optype').options = [
+    { value: 'install',   label: 'Install', selected: true },
+    { value: 'uninstall', label: 'Uninstall' },
+  ];
+  $('p-reboot').options = [
+    { value: 'no-reboot',    label: 'Do not reboot', selected: true },
+    { value: 'reboot',       label: 'Reboot immediately' },
+    { value: 'prompt',       label: 'Prompt the user' },
+    { value: 'scheduled',    label: 'Reboot at scheduled time' },
+  ];
+  $('p-severity').options = [
+    { value: 'all',       label: 'All severities' },
+    { value: 'critical',  label: 'Critical' },
+    { value: 'important', label: 'Important' },
+    { value: 'moderate',  label: 'Moderate' },
+    { value: 'low',       label: 'Low' },
+  ];
+
+  const SEV = { Critical: 'critical', Important: 'warning', Moderate: 'moderate', Low: 'default' };
+  const tbl = $('p-list');
+  tbl.columns = [
+    { id: 'bulletin', header: 'Bulletin ID', accessor: 'bulletin' },
+    { id: 'severity', header: 'Severity',    align: 'start', render: (r) =>
+      `<ds-badge variant="subtle" state="${SEV[r.severity] || 'default'}" shape="rounded" size="medium">${esc(r.severity)}</ds-badge>` },
+    { id: 'title',    header: 'Title',       accessor: 'title' },
+    { id: 'products', header: 'Products',    accessor: 'products' },
+    { id: 'reboot',   header: 'Reboot',      render: (r) => r.reboot ? 'Required' : '—' },
+    { id: 'actions',  header: '',            align: 'end', render: () =>
+      `<button type="button" aria-label="Row actions"
+        style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;background:transparent;border-radius:var(--radius-sm);cursor:pointer;color:var(--uems-icon-secondary)">
+        <ds-icon name="more-vertical" size="16"></ds-icon>
+      </button>` },
+  ];
+  tbl.rows = [
+    { id: 1, bulletin: 'MS-2026-07-A', severity: 'Critical',  title: 'Cumulative Update for Windows 11 (23H2)',    products: 'Windows 11 Pro',    reboot: true },
+    { id: 2, bulletin: 'MS-2026-07-B', severity: 'Important', title: 'Security Update for .NET Framework 4.8',      products: 'Windows, .NET',     reboot: false },
+    { id: 3, bulletin: 'MS-2026-07-C', severity: 'Moderate',  title: 'Servicing stack update — 22631',              products: 'Windows 11',        reboot: true },
+  ];
+
+  $('p-footer').addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('[data-act]');
+    if (!btn) return;
+    const id = btn.dataset.act;
+    if (id === 'cancel') { if (window.openContentView) window.openContentView('deployments-policy'); return; }
+    const name = ($('p-name').value || '').trim() || 'Untitled policy';
+    if (window.savePolicyAndOpen) window.savePolicyAndOpen({
+      name,
+      type: 'Install/Uninstall Patch',
+      platform: 'Windows',
+      scope: 'computer',
+      status: id === 'save-draft' ? 'Draft' : 'Ready to Execute',
+    });
+  });
+
+  function show() { root.hidden = false; }
+  function hide() { root.hidden = true; }
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['deployments-policy-install-uninstall-patches'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  requestAnimationFrame(() => requestAnimationFrame(() => window.ShellDrawers['deployments-policy-install-uninstall-patches'].show()));
+})();
+</script>
+</body>
+</html>

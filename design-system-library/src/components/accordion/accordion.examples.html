@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Accordion · UEMS Design System</title>
+  <link rel="stylesheet" href="../../styles/index.css">
+  <script type="module" src="../../index.js"></script>
+  <style>
+    body { padding: var(--spacing-32); background: var(--uems-background); }
+    h1 { font: var(--text-title-weight) var(--text-title-size)/var(--text-title-line) var(--font-family-sans); margin-bottom: var(--spacing-24); }
+    h2 { font: var(--text-heading-weight) var(--text-heading-size)/var(--text-heading-line) var(--font-family-sans); margin: var(--spacing-32) 0 var(--spacing-12); }
+    .stack > * + * { margin-top: var(--spacing-16); }
+    .row { display: flex; gap: var(--spacing-24); }
+    .row > * { flex: 1; }
+  </style>
+</head>
+<body>
+  <h1>Accordion</h1>
+
+  <h2>Filled (default) — collapsed & expanded</h2>
+  <div class="stack">
+    <ds-accordion>
+      <span slot="title">Account settings</span>
+      <div slot="body">Body content for the collapsed-by-default accordion.</div>
+    </ds-accordion>
+
+    <ds-accordion expanded>
+      <span slot="title">Notifications</span>
+      <div slot="body">Body content for the expanded accordion.</div>
+      <div slot="body">Multiple body slots stack vertically.</div>
+    </ds-accordion>
+  </div>
+
+  <h2>Outlined</h2>
+  <div class="stack">
+    <ds-accordion variant="outlined">
+      <span slot="title">Privacy</span>
+      <div slot="body">Outlined variant uses a 1px border on bg-base.</div>
+    </ds-accordion>
+
+    <ds-accordion variant="outlined" expanded>
+      <span slot="title">Security</span>
+      <div slot="body">Expanded outlined accordion.</div>
+    </ds-accordion>
+  </div>
+
+  <h2>With Checkbox</h2>
+  <div class="stack">
+    <ds-accordion type="checkbox">
+      <span slot="title">Selectable item</span>
+      <div slot="body">Leading element is a checkbox instead of a chevron.</div>
+    </ds-accordion>
+  </div>
+
+  <h2>Disabled</h2>
+  <div class="stack">
+    <ds-accordion disabled>
+      <span slot="title">Disabled accordion</span>
+      <div slot="body">This body is unreachable.</div>
+    </ds-accordion>
+  </div>
+
+  <h2>RTL</h2>
+  <div class="stack">
+    <ds-accordion rtl variant="outlined" expanded>
+      <span slot="title">عنوان الأكورديون</span>
+      <div slot="body">المحتوى الموسع.</div>
+    </ds-accordion>
+  </div>
+
+  <h2>Pure CSS / no JS</h2>
+  <div class="stack">
+    <details class="ds-accordion ds-accordion--filled">
+      <summary class="ds-accordion__header">
+        <span class="ds-accordion__leading ds-accordion__leading--chevron">
+          <svg width="20" height="20"><use href="../../icons/icons.svg#icon-chevron-down"/></svg>
+        </span>
+        <span class="ds-accordion__title">Plain HTML accordion</span>
+      </summary>
+      <div class="ds-accordion__body">Body using only the BEM classes.</div>
+    </details>
+  </div>
+</body>
+</html>

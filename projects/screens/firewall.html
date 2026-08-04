@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scan Settings — Malware Protection · Endpoint Central</title>
+
+  <link rel="stylesheet" href="../../design-system-library/src/styles/index.css" />
+  <script type="module">import '../../design-system-library/src/components/index.js';</script>
+  <script>
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
+      document.documentElement.setAttribute('data-theme', t);
+      document.addEventListener('ds-right-pane-theme', function (e) {
+        document.documentElement.setAttribute('data-theme', e.detail.theme);
+        try { localStorage.setItem('uems-theme', e.detail.theme); } catch (_) {}
+      });
+      window.addEventListener('DOMContentLoaded', function () {
+        customElements.whenDefined('ds-right-pane').then(function () {
+          document.querySelectorAll('ds-right-pane').forEach(function (rp) { rp.setAttribute('theme', t); });
+        });
+      });
+    })();
+    window.UEMS_ICON_SPRITE = '../../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../../design-system-library/src/icons/logos';
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100vh; overflow: hidden; margin: 0; }
+    body { font-family: var(--font-family-sans); background: var(--cobalt-15); }
+    [data-theme="dark"] body { background: var(--uems-bg-base); }
+
+    .shell { display: flex; flex-direction: column; height: 100vh; }
+    .body  { display: flex; flex: 1; min-height: 0; padding: 0 0 var(--spacing-12) var(--spacing-12); gap: 0; }
+    .shell-area {
+      flex: 1; display: flex; min-width: 0; min-height: 0;
+      border: 1px solid var(--uems-border-accent-subtle); border-radius: 16px;
+      background: var(--uems-bg-accent-primary-subtle); overflow: hidden;
+    }
+    .shell-area ds-sidebar-l1 { border: 0 !important; }
+    .shell-area .ds-sidebar-l2 { border-right: 1px solid var(--uems-border-tertiary) !important; }
+    .shell-area .ds-sidebar-l1 { border: 0 !important; border-radius: 0 !important; padding-top: 4px !important; }
+    ds-sidebar-l1, ds-sidebar-l2 { max-width: 400px; opacity: 1; overflow: hidden; }
+
+    /* ── Scan Settings page ── */
+    .scan { display: flex; flex-direction: column; height: 100%; min-width: 0; }
+    .scan__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--spacing-20) var(--spacing-24); display: flex; flex-direction: column; gap: var(--spacing-24); }
+    .scan__body > ds-inline-alert { display: block; }
+    /* "Learn more" — move the arrow AFTER the label (trailing) */
+    .scan ds-inline-alert .ds-inline-alert__action a { flex-direction: row-reverse; }
+
+    .scan-sec__label { font-size: var(--font-size-12); font-weight: var(--font-weight-semibold); letter-spacing: .06em; text-transform: uppercase; color: var(--uems-text-tertiary); margin-bottom: var(--spacing-10); }
+
+    /* Detection triggers — toggle rows in a bordered card */
+    .trigger-list { border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md); background: var(--uems-bg-base); overflow: hidden; }
+    .trigger { display: flex; align-items: center; gap: var(--spacing-12); padding: var(--spacing-10) var(--spacing-16); }
+    .trigger + .trigger { border-top: 1px solid var(--uems-border-tertiary); }
+    .trigger__label { font-size: var(--font-size-14); color: var(--uems-text-primary); }
+
+    /* Scheduled scanning card */
+    .sched { border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md); background: var(--uems-bg-base); overflow: hidden; }
+    .sched__head { display: flex; align-items: flex-start; gap: var(--spacing-12); padding: var(--spacing-16); background: var(--uems-bg-secondary-subtle); border-bottom: 1px solid var(--uems-border-tertiary); }
+    .sched__head-body { flex: 1; min-width: 0; }
+    .sched__title { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+    .sched__sub { font-size: var(--font-size-12); color: var(--uems-text-secondary); margin-top: 2px; }
+    .sched__count { flex-shrink: 0; font-size: var(--font-size-12); color: var(--uems-text-secondary); background: var(--uems-bg-secondary); border-radius: 999px; padding: 3px var(--spacing-10); }
+    .sched__warn { font-size: var(--font-size-13); color: var(--uems-text-warning); background: var(--uems-bg-warning-primary); padding: var(--spacing-10) var(--spacing-16); border-bottom: 1px solid var(--uems-border-tertiary); }
+
+    .sched__list.is-off { opacity: .55; pointer-events: none; }
+
+    .policy { display: flex; align-items: center; gap: var(--spacing-12); padding: var(--spacing-14) var(--spacing-16); }
+    .policy + .policy { border-top: 1px solid var(--uems-border-tertiary); }
+    .policy__body { flex: 1; min-width: 0; }
+    .policy__name { font-size: var(--font-size-14); font-weight: var(--font-weight-medium); color: var(--uems-text-primary); }
+    .policy--off .policy__name { color: var(--uems-text-tertiary); }
+    .policy__meta { display: flex; align-items: center; gap: var(--spacing-8); flex-wrap: wrap; margin-top: var(--spacing-6); }
+    .policy__chip { display: inline-flex; align-items: center; font-size: var(--font-size-12); line-height: 16px; color: var(--uems-text-secondary); background: var(--uems-bg-secondary); border-radius: var(--radius-sm); padding: 2px var(--spacing-8); }
+    .policy__lastrun { font-size: var(--font-size-12); color: var(--uems-text-tertiary); }
+    .policy__actions { display: inline-flex; gap: 2px; flex-shrink: 0; }
+    .policy__actions ds-icon-button { color: var(--uems-text-accent-link); }
+
+    .sched__add { display: flex; align-items: center; gap: var(--spacing-12); padding: var(--spacing-16); border-top: 1px solid var(--uems-border-tertiary); }
+    .sched__max { font-size: var(--font-size-12); color: var(--uems-text-warning); }
+
+    /* Sticky footer */
+    .scan-footer { flex-shrink: 0; display: flex; align-items: center; gap: var(--spacing-12); padding: var(--spacing-16) var(--spacing-24); border-top: 1px solid var(--uems-border-tertiary); background: var(--uems-bg-base); }
+    .scan-footer__dirty { display: none; align-items: center; gap: var(--spacing-6); font-size: var(--font-size-13); color: var(--uems-text-warning); }
+    .scan-footer__dirty.show { display: inline-flex; }
+    .scan-footer__dirty::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--uems-text-warning); }
+
+    /* ── Right-side slider / drawer (Add & Edit scheduled scan) ── */
+    #drawer-overlay { z-index: 1290; }
+    /* Confirm modal uses the ds-overlay component for its dim-blur backdrop;
+       the modal's own scrim stays transparent (still captures outside-click). */
+    #confirm-overlay { z-index: 990; }
+    #del-confirm .ds-confirmation-modal__overlay { background: transparent !important; }
+    .drawer {
+      position: fixed; top: 0; right: 0; height: 100vh; width: 480px; max-width: 94vw; z-index: 1300;
+      background: var(--uems-bg-base); box-shadow: -8px 0 32px rgba(10,11,15,.16);
+      display: flex; flex-direction: column;
+      transform: translateX(100%); visibility: hidden;
+      transition: transform 260ms cubic-bezier(.16,1,.3,1), visibility 260ms;
+    }
+    .drawer.open { transform: translateX(0); visibility: visible; }
+    @media (prefers-reduced-motion: reduce) { .drawer { transition: visibility 0s; } }
+    .drawer__head { display: flex; align-items: center; justify-content: space-between; padding: var(--spacing-16) var(--spacing-24); border-bottom: 1px solid var(--uems-border-tertiary); }
+    .drawer__title { font-size: var(--font-size-18); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+    .drawer__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--spacing-20) var(--spacing-24); display: flex; flex-direction: column; gap: var(--spacing-20); }
+    .drawer__foot { display: flex; justify-content: flex-end; gap: var(--spacing-12); padding: var(--spacing-16) var(--spacing-24); border-top: 1px solid var(--uems-border-tertiary); background: var(--uems-bg-secondary-subtle); }
+    .drawer ds-text-input, .drawer ds-tab-filter, .drawer ds-input-select { display: block; width: 100%; }
+    .drawer ds-input-select .ds-input-select__trigger { min-width: 0; }
+
+    /* Vertical field: label on top, full-width control below */
+    .field { display: flex; flex-direction: column; gap: var(--spacing-8); }
+    .field__label { font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+    .field__label .req { color: var(--uems-text-error); margin-inline-start: 2px; }
+    .field__label .opt { color: var(--uems-text-tertiary); font-weight: var(--font-weight-regular); margin-inline-start: 4px; }
+    .field--inline { flex-direction: row; align-items: center; justify-content: space-between; }
+
+    /* Segmented button group — Scan Mode / Scan performance (full-width, not tabs) */
+    .seg { display: flex; gap: var(--spacing-8); }
+    .seg__btn { flex: 1; min-width: 0; padding: var(--spacing-10) var(--spacing-12); font-size: var(--font-size-14); font-weight: var(--font-weight-medium); font-family: inherit; text-align: center; border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md); background: var(--uems-bg-secondary-subtle); color: var(--uems-text-secondary); cursor: pointer; transition: background .12s, border-color .12s, color .12s; }
+    .seg__btn:hover:not(.is-active) { background: var(--uems-bg-secondary); }
+    .seg__btn.is-active { background: var(--uems-bg-button-primary); border-color: var(--uems-bg-button-primary); color: var(--uems-text-white); }
+
+    .day-chips { display: flex; gap: var(--spacing-6); }
+    .day-chip { flex: 1; min-width: 0; padding: var(--spacing-8) 0; text-align: center; font-size: var(--font-size-13); font-weight: var(--font-weight-medium); font-family: inherit; border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md); background: var(--uems-bg-base); color: var(--uems-text-secondary); cursor: pointer; transition: background .12s, border-color .12s, color .12s; }
+    .day-chip.sel { background: var(--uems-bg-button-primary); border-color: var(--uems-bg-button-primary); color: var(--uems-text-white); }
+    .excl-tags { display: flex; flex-wrap: wrap; gap: var(--spacing-6); margin-top: var(--spacing-8); }
+    .excl-tags:empty { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+  <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="A"></ds-header-nav>
+
+  <div class="body">
+    <div class="shell-area">
+      <ds-sidebar-l1 id="shell-l1" style="height:100%;"></ds-sidebar-l1>
+      <ds-sidebar-l2 id="shell-l2" style="height:100%;"></ds-sidebar-l2>
+
+      <ds-content role="main">
+        <div class="scan">
+          <div class="scan__body">
+
+            <ds-inline-alert
+              type="info" style-variant="subtle" show-icon
+              description="Scan-based detection identifies known and emerging threats by analyzing files, scripts, and system artifacts against continuously updated threat intelligence."
+              action="Learn more"></ds-inline-alert>
+
+            <!-- DETECTION TRIGGERS -->
+            <section class="scan-sec">
+              <div class="scan-sec__label">Detection Triggers</div>
+              <div class="trigger-list" id="triggers"></div>
+            </section>
+
+            <!-- SCHEDULED SCANNING -->
+            <section class="scan-sec">
+              <div class="scan-sec__label">Scheduled Scanning</div>
+              <div class="sched">
+                <div class="sched__head">
+                  <ds-toggle id="sched-master" checked size="medium"></ds-toggle>
+                  <div class="sched__head-body">
+                    <div class="sched__title">Scheduled Scan</div>
+                    <div class="sched__sub">Runs the policies below at their set times. Turning this off pauses every scheduled scan.</div>
+                  </div>
+                  <span class="sched__count" id="sched-count">0 of 5</span>
+                </div>
+                <div class="sched__warn" id="sched-warn" hidden>Scheduled scanning is off — none of the policies below will run until you turn it on.</div>
+                <div class="sched__list" id="policies"></div>
+                <div class="sched__add">
+                  <ds-button id="add-scan" variant="outline" size="small" prefix-icon="add">Add Scheduled Scan</ds-button>
+                  <span class="sched__max" id="sched-max" hidden>Maximum 5 reached — delete one to add another</span>
+                </div>
+              </div>
+            </section>
+
+          </div>
+
+          <div class="scan-footer">
+            <ds-button id="save-btn" variant="primary" size="medium">Save Settings</ds-button>
+            <ds-button id="cancel-btn" variant="secondary" size="medium">Cancel</ds-button>
+            <span class="scan-footer__dirty" id="dirty">Unsaved changes</span>
+          </div>
+        </div>
+      </ds-content>
+
+    </div><!-- /.shell-area -->
+
+    <ds-right-pane id="shell-rp" show-accessibility style="height:100%;"></ds-right-pane>
+  </div>
+</div>
+
+<!-- ── Add / Edit scheduled scan — right slide-over drawer ── -->
+<ds-overlay id="drawer-overlay" type="dim-blur"></ds-overlay>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+  <div class="drawer__head">
+    <span class="drawer__title" id="drawer-title">Add scheduled scan</span>
+    <ds-icon-button id="drawer-close" icon="close" label="Close" type="tertiary-grey" size="small"></ds-icon-button>
+  </div>
+  <div class="drawer__body">
+    <div class="field">
+      <label class="field__label">Policy name <span class="req">*</span></label>
+      <ds-text-input id="f-name" placeholder="e.g. Nightly Quick Scan" label-position="top" show-label="false" show-helper-row="false"></ds-text-input>
+    </div>
+    <div class="field">
+      <label class="field__label">Scan Mode <span class="req">*</span></label>
+      <div class="seg" id="f-mode" data-value="Quick Scan">
+        <button type="button" class="seg__btn is-active" data-val="Quick Scan">Quick Scan</button>
+        <button type="button" class="seg__btn" data-val="Full Scan">Full Scan</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field__label">Scheduled Scan Time <span class="req">*</span></label>
+      <ds-input-select id="f-time" placeholder="Select time" show-label="false" show-helper-row="false"></ds-input-select>
+    </div>
+    <div class="field">
+      <label class="field__label">Run on days <span class="req">*</span></label>
+      <div class="day-chips" id="f-days"></div>
+    </div>
+    <div class="field field--inline">
+      <label class="field__label">Scan mapped network drives</label>
+      <ds-toggle id="f-net" size="medium"></ds-toggle>
+    </div>
+    <div class="field">
+      <label class="field__label">Missed scan threshold <span class="req">*</span></label>
+      <ds-text-input id="f-missed" type="number" value="3" placeholder="e.g. 3" suffix-text="missed scans" label-position="top" show-label="false" show-helper-row="false" style="max-width:260px;"></ds-text-input>
+    </div>
+    <div class="field">
+      <label class="field__label">Exclusion paths <span class="opt">(optional)</span></label>
+      <ds-text-input id="f-excl" placeholder="e.g. C:\Windows\Temp — press Enter to add" label-position="top" show-label="false" show-helper-row="false"></ds-text-input>
+      <div class="excl-tags" id="f-excl-tags"></div>
+    </div>
+    <div class="field">
+      <label class="field__label">Scan performance <span class="req">*</span></label>
+      <div class="seg" id="f-perf" data-value="Low">
+        <button type="button" class="seg__btn is-active" data-val="Low">Low</button>
+        <button type="button" class="seg__btn" data-val="Medium">Medium</button>
+        <button type="button" class="seg__btn" data-val="High">High</button>
+      </div>
+    </div>
+  </div>
+  <div class="drawer__foot">
+    <ds-button id="drawer-cancel" variant="secondary" size="medium">Cancel</ds-button>
+    <ds-button id="drawer-save" variant="primary" size="medium">Save</ds-button>
+  </div>
+</aside>
+
+<!-- Delete confirmation — ds-overlay component as the dim-blur backdrop -->
+<ds-overlay id="confirm-overlay" type="dim-blur"></ds-overlay>
+<ds-confirmation-modal id="del-confirm" variant="destructive"
+  title="Delete this scheduled scan?"
+  description="This scan policy will be removed and will no longer run. This can't be undone."
+  primary-label="Delete" secondary-label="Cancel"></ds-confirmation-modal>
+
+<!-- Toast host -->
+<div id="toast-host" style="position:fixed; top:24px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; z-index:1400; pointer-events:none;"></div>
+
+<script type="module">
+  import '../../design-system-library/src/components/index.js';
+  await customElements.whenDefined('ds-toggle');
+  await customElements.whenDefined('ds-sidebar-l1');
+
+  /* ── Header tabs — Malware Protection active ── */
+  document.getElementById('ec-header').tabs = [
+    { id:'home', label:'Home' }, { id:'configs', label:'Configurations' },
+    { id:'tp', label:'Threats & Patches' }, { id:'sd', label:'Software Deployment' },
+    { id:'inv', label:'Inventory' }, { id:'osd', label:'OS Deployment' },
+    { id:'mdm', label:'MDM' }, { id:'tools', label:'Tools' }, { id:'agent', label:'Agent' },
+    { id:'mp', label:'Malware Protection', active:true },
+    { id:'browsers', label:'Browsers' }, { id:'appctrl', label:'Application Control' },
+    { id:'dlp', label:'Endpoint DLP' }, { id:'bitlocker', label:'BitLocker Management' },
+    { id:'devctrl', label:'Device Control' }, { id:'reports', label:'Reports' },
+    { id:'support', label:'Support' }, { id:'dex', label:'DEX' },
+  ];
+
+  /* ── L1 — Malware Protection module rail ── */
+  const l1 = document.getElementById('shell-l1');
+  l1.items = [
+    { id:'dash',   label:'Dashboard',        icon:'add-widget' },
+    { id:'inc',    label:'Incidents',        icon:'bug' },
+    { id:'dev',    label:'Devices',          icon:'computer' },
+    { id:'ransom', label:'Anti-Ransomware',  icon:'lock' },
+    { id:'ngav',   label:'Next-Gen Antivirus', icon:'file-shield' },
+    { id:'set',    label:'Settings',         icon:'settings', active:true },
+  ];
+
+  /* ── L2 — Settings sub-nav, Scan Settings active ── */
+  const l2 = document.getElementById('shell-l2');
+  l2.setAttribute('title', 'Settings');
+  l2.groups = [
+    { id:'settings', label:'Settings', expanded:true, items:[
+      { id:'exclusion',    label:'Exclusion' },
+      { id:'cleanup',      label:'Cleanup Settings' },
+      { id:'notify',       label:'Notification Settings' },
+      { id:'scan',         label:'Scan Settings', active:true },
+      { id:'addon',        label:'Add-on Configurations' },
+    ] },
+  ];
+
+  /* ─────────────────────────────────────────────────────────────
+     Scan Settings — state + rendering (vanilla JS)
+     ───────────────────────────────────────────────────────────── */
+  const MAX = 5;
+  let dirty = false;
+  const markDirty = () => { dirty = true; document.getElementById('dirty').classList.add('show'); };
+
+  /* Detection triggers */
+  const TRIGGERS = [
+    { id:'usb',    label:'USB Scan', on:true },
+    { id:'agent',  label:'On-Demand Agent Scan', on:true },
+    { id:'eject',  label:'Eject USB on Malware Detection', on:true },
+    { id:'toast',  label:'Scanning Toast UI', on:false },
+    { id:'reg',    label:'Initiate Scan on Endpoint Registration', on:true },
+  ];
+  const triggersEl = document.getElementById('triggers');
+  TRIGGERS.forEach(t => {
+    const row = document.createElement('div'); row.className = 'trigger';
+    row.innerHTML = `<ds-toggle size="medium" ${t.on?'checked':''}></ds-toggle><span class="trigger__label">${t.label}</span>`;
+    row.querySelector('ds-toggle').addEventListener('ds-toggle-change', (e)=>{ t.on=e.detail.checked; markDirty(); });
+    triggersEl.appendChild(row);
+  });
+
+  /* Scheduled scans */
+  const TYPE_STATE = { 'Quick Scan':'active', 'Full Scan':'acknowledge' };
+  let POLICIES = [
+    { id:'p1', name:'Nightly Quick Scan',  type:'Quick Scan', sched:'Daily · 12:00 AM',   perf:'Low',    lastRun:'Last run Jun 14, 12:00 AM', on:false },
+    { id:'p2', name:'Weekend Full Scan',   type:'Full Scan',  sched:'Sat–Sun · 02:00 AM', perf:'Medium', lastRun:'Last run Jun 14, 02:00 AM', on:true },
+    { id:'p3', name:'Self',                type:'Quick Scan', sched:'Daily · 12:00 AM',   perf:'Low',    lastRun:'',                          on:true },
+  ];
+  let _uid = 3;
+
+  const policiesEl = document.getElementById('policies');
+  const countEl    = document.getElementById('sched-count');
+  const maxMsg     = document.getElementById('sched-max');
+  const addBtn     = document.getElementById('add-scan');
+  const master     = document.getElementById('sched-master');
+  const warnEl     = document.getElementById('sched-warn');
+
+  function renderPolicies(){
+    policiesEl.innerHTML = '';
+    POLICIES.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'policy' + (p.on ? '' : ' policy--off');
+      row.innerHTML =
+        `<ds-toggle size="medium" ${p.on?'checked':''}></ds-toggle>`+
+        `<div class="policy__body"><div class="policy__name">${p.name}</div>`+
+          `<div class="policy__meta">`+
+            `<ds-badge variant="subtle" state="${TYPE_STATE[p.type]||'default'}" size="medium" shape="rounded">${p.type}</ds-badge>`+
+            `<span class="policy__chip">${p.sched}</span>`+
+            `<span class="policy__chip">Perf: ${p.perf}</span>`+
+            (p.lastRun?`<span class="policy__lastrun">${p.lastRun}</span>`:'')+
+          `</div></div>`+
+        `<div class="policy__actions">`+
+          `<ds-icon-button icon="edit" label="Edit ${p.name}" type="tertiary-grey" size="large" data-edit></ds-icon-button>`+
+          `<ds-icon-button icon="delete" label="Delete ${p.name}" type="tertiary-grey" size="large" data-del></ds-icon-button>`+
+        `</div>`;
+      row.querySelector('ds-toggle').addEventListener('ds-toggle-change', (e)=>{ p.on=e.detail.checked; row.classList.toggle('policy--off', !p.on); markDirty(); });
+      row.querySelector('[data-edit]').addEventListener('click', ()=>openDrawer(p));
+      row.querySelector('[data-del]').addEventListener('click', ()=>requestDelete(p));
+      policiesEl.appendChild(row);
+    });
+  }
+  function updateAddBtn(){
+    const full = POLICIES.length >= MAX;
+    /* disabled when max reached OR scheduled scanning is turned off */
+    addBtn.toggleAttribute('disabled', full || !master.checked);
+    maxMsg.hidden = !full;
+  }
+  function refresh(){
+    renderPolicies();
+    countEl.textContent = `${POLICIES.length} of ${MAX}`;
+    updateAddBtn();
+  }
+
+  /* Master toggle → off state dims the list + shows the warning */
+  function applyMaster(){
+    const on = master.checked;
+    policiesEl.classList.toggle('is-off', !on);
+    warnEl.hidden = on;
+    updateAddBtn();
+  }
+  master.addEventListener('ds-toggle-change', ()=>{ applyMaster(); markDirty(); });
+
+  addBtn.addEventListener('click', ()=>{ if (POLICIES.length >= MAX) return; openDrawer(null); });
+
+  document.getElementById('save-btn').addEventListener('click', ()=>{
+    dirty = false; document.getElementById('dirty').classList.remove('show');
+    showToast('success', 'Settings saved', 'Your scan settings have been updated.');
+  });
+  document.getElementById('cancel-btn').addEventListener('click', ()=>{
+    dirty = false; document.getElementById('dirty').classList.remove('show');
+  });
+
+  /* ── Toast ── */
+  function showToast(status, title, description){
+    const host = document.getElementById('toast-host');
+    const t = document.createElement('ds-toast');
+    t.setAttribute('status', status);
+    t.setAttribute('title', title);
+    if (description) t.setAttribute('description', description);
+    t.setAttribute('duration', '3500');
+    t.style.pointerEvents = 'auto';
+    host.appendChild(t);
+  }
+
+  /* ── Delete confirmation (ds-confirmation-modal) ── */
+  const delModal = document.getElementById('del-confirm');
+  const confirmOverlay = document.getElementById('confirm-overlay');
+  let pendingDelete = null;
+  function requestDelete(p){ pendingDelete = p; confirmOverlay.setAttribute('open',''); delModal.open(); }
+  const closeConfirm = ()=>{ delModal.close(); confirmOverlay.removeAttribute('open'); };
+  delModal.addEventListener('ds-confirmation-primary', ()=>{
+    if (pendingDelete){ const n = pendingDelete.name; POLICIES = POLICIES.filter(x=>x.id!==pendingDelete.id); pendingDelete=null; markDirty(); refresh(); showToast('warning','Scan deleted', `“${n}” was removed.`); }
+    closeConfirm();
+  });
+  delModal.addEventListener('ds-confirmation-secondary', ()=>{ pendingDelete=null; closeConfirm(); });
+  delModal.addEventListener('ds-confirmation-close', ()=>{ pendingDelete=null; confirmOverlay.removeAttribute('open'); });
+  confirmOverlay.addEventListener('ds-dismiss', ()=>{ pendingDelete=null; closeConfirm(); });
+
+  /* ── Add / Edit drawer (right slide-over) ── */
+  const drawer   = document.getElementById('drawer');
+  const drawerOv = document.getElementById('drawer-overlay');
+  const fMode = document.getElementById('f-mode');
+  const fPerf = document.getElementById('f-perf');
+  const fDays = document.getElementById('f-days');
+  const fExcl = document.getElementById('f-excl');
+  const fExclTags = document.getElementById('f-excl-tags');
+  let editingId = null, exclPaths = [], selDays = new Set();
+  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  const setSeg = (el,val)=>{ el.dataset.value = val; el.querySelectorAll('.seg__btn').forEach(b=>b.classList.toggle('is-active', b.dataset.val===val)); };
+  const getSeg = (el)=> el.dataset.value;
+  [fMode, fPerf].forEach(el=>el.querySelectorAll('.seg__btn').forEach(b=>b.addEventListener('click', ()=>setSeg(el, b.dataset.val))));
+
+  /* Scheduled Scan Time — 30-min time slots in our select component */
+  const TIMES = [];
+  for (let h=0; h<24; h++) for (const m of [0,30]) { let hh=h%12; if(hh===0) hh=12; const ap=h<12?'AM':'PM'; const lbl=`${hh}:${String(m).padStart(2,'0')} ${ap}`; TIMES.push({ value:lbl, label:lbl }); }
+  document.getElementById('f-time').options = TIMES;
+
+  const tiSet = (id,v)=>{ const el=document.getElementById(id); el.setAttribute('value', v==null?'':String(v)); const inp=el.querySelector('input'); if(inp) inp.value = v==null?'':v; };
+  const tiGet = (id)=>{ const el=document.getElementById(id); return (el.querySelector('input,textarea')?.value ?? el.getAttribute('value') ?? '').trim(); };
+
+  function renderDays(){
+    fDays.innerHTML = '';
+    DAYS.forEach(d=>{ const b=document.createElement('button'); b.type='button'; b.className='day-chip'+(selDays.has(d)?' sel':''); b.textContent=d;
+      b.addEventListener('click', ()=>{ selDays.has(d)?selDays.delete(d):selDays.add(d); b.classList.toggle('sel'); }); fDays.appendChild(b); });
+  }
+  function renderExcl(){
+    fExclTags.innerHTML = '';
+    exclPaths.forEach((p,i)=>{ const t=document.createElement('ds-tag'); t.setAttribute('variant','neutral'); t.setAttribute('size','small'); t.setAttribute('label',p);
+      t.addEventListener('ds-tag-close', ()=>{ exclPaths.splice(i,1); renderExcl(); }); fExclTags.appendChild(t); });
+  }
+  fExcl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); const inp=fExcl.querySelector('input'); const v=(inp?inp.value:'').trim(); if(v){ exclPaths.push(v); if(inp) inp.value=''; renderExcl(); } } });
+
+  function openDrawer(policy){
+    editingId = policy ? policy.id : null;
+    document.getElementById('drawer-title').textContent = policy ? 'Edit scheduled scan' : 'Add scheduled scan';
+    tiSet('f-name', policy ? policy.name : '');
+    setSeg(fMode, policy ? policy.type : 'Quick Scan');
+    document.getElementById('f-time').value = (policy && policy.timeRaw) ? policy.timeRaw : '12:00 AM';
+    selDays = new Set(policy && policy.days ? policy.days : []); renderDays(); /* default: no days selected (white) */
+    document.getElementById('f-net').checked = policy ? !!policy.net : false;
+    tiSet('f-missed', policy ? (policy.missed || 3) : 3);
+    exclPaths = policy ? (policy.excl || []).slice() : []; renderExcl();
+    setSeg(fPerf, policy ? policy.perf : 'Low');
+    drawerOv.setAttribute('open',''); drawer.classList.add('open');
+  }
+  function closeDrawer(){ drawerOv.removeAttribute('open'); drawer.classList.remove('open'); }
+  drawerOv.addEventListener('ds-dismiss', closeDrawer);
+  document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+  document.getElementById('drawer-cancel').addEventListener('click', closeDrawer);
+
+  document.getElementById('drawer-save').addEventListener('click', ()=>{
+    const name = tiGet('f-name') || 'New Scheduled Scan';
+    const type = getSeg(fMode) || 'Quick Scan';
+    const perf = getSeg(fPerf) || 'Low';
+    const days = DAYS.filter(d=>selDays.has(d));
+    const isWeekend = days.length===2 && selDays.has('Sat') && selDays.has('Sun');
+    const schedLabel = days.length===7 ? 'Daily' : isWeekend ? 'Sat–Sun' : (days.join(', ') || '—');
+    const time = document.getElementById('f-time').value || '12:00 AM';
+    const data = { type, sched:`${schedLabel} · ${time}`, perf, days, net:document.getElementById('f-net').checked, missed:tiGet('f-missed')||3, excl:exclPaths.slice(), timeRaw:time };
+    if (editingId){ const p=POLICIES.find(x=>x.id===editingId); if(p) Object.assign(p, data, { name }); showToast('success','Scan updated', `“${name}” was saved.`); }
+    else { if(POLICIES.length>=MAX){ closeDrawer(); return; } POLICIES.push({ id:'p'+(++_uid), name, on:true, lastRun:'', ...data }); showToast('success','Scan scheduled', `“${name}” was added.`); }
+    markDirty(); refresh(); closeDrawer();
+  });
+  renderDays();
+
+  refresh();
+  applyMaster();
+</script>
+
+</body>
+</html>

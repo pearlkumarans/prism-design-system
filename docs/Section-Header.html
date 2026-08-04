@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section Header — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<!-- Live web component: ds-section-header + its dependencies (ds-text-link, ds-icon) -->
+<link rel="stylesheet" href="../design-system-library/src/components/text-link/text-link.css">
+<link rel="stylesheet" href="../design-system-library/src/components/section-header/section-header.css">
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/text-link/text-link.js"></script>
+<script type="module" src="../design-system-library/src/components/section-header/section-header.js"></script>
+<style>
+  /* ============================================================
+     Section Header — previews are driven by the LIVE web component
+     <ds-section-header> (design-system-library/src/components/section-header). Its
+     styles are loaded via the linked component stylesheet in <head>;
+     this page only defines doc-scaffolding below.
+     ============================================================ */
+
+  /* Demo scaffolding for this page */
+  .page-section-header .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .page-section-header .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .page-section-header .demo-container .demo-canvas {
+    align-items: stretch !important; justify-content: flex-start !important; min-height: 0 !important;
+    flex-direction: column !important; padding: 32px !important; gap: 28px !important;
+  }
+  .demo-sh-section { display: flex; flex-direction: column; gap: 10px; }
+  .demo-sh-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--prism-text-muted); text-transform: uppercase; margin: 0; text-align: left; }
+  .demo-sh-desc { font-size: 12px; color: var(--prism-text-muted); line-height: 1.5; margin: 0; }
+  .demo-sh-frame { background: var(--uems-bg-base); border: 1px solid var(--uems-border-tertiary); border-radius: 12px; overflow: hidden; padding: 0 16px; }
+  .demo-sh-grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 20px; }
+
+  /* Anatomy */
+  .sh-anat-wrap { background: var(--uems-bg-base); border: 1px solid var(--uems-border-tertiary); border-radius: 12px; padding: 28px 24px; }
+  .sh-marker { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#2563eb; color:#fff; font-size:12px; font-weight:700; flex:0 0 auto; }
+  .anat-legend { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; margin-top:28px; }
+  .anat-legend-item { display:flex; gap:12px; align-items:flex-start; }
+  .anat-legend-item strong { display:block; font-size:14.5px; color:var(--prism-text); margin-bottom:2px; }
+  .anat-legend-item span { font-size:13px; color:var(--prism-text-muted); line-height:1.5; }
+
+  /* Style tab live cells */
+  .sh-variant-cell { background: var(--uems-bg-base); border:1px solid var(--uems-border-tertiary); border-radius:10px; padding:4px 16px; min-width:280px; }
+  .state-card { background: var(--prism-surface); border:1px solid var(--prism-border); border-radius:12px; padding:18px; }
+  .state-card .sc-title { font-size:13px; font-weight:700; color:var(--prism-text); margin-bottom:4px; }
+  .state-card .sc-desc { font-size:12.5px; color:var(--prism-text-muted); line-height:1.5; }
+
+  /* Typography Aa block */
+  .sh-aa { display:flex; align-items:center; gap:24px; padding:28px; background:var(--prism-surface); border:1px solid var(--prism-border); border-radius:16px; margin-bottom:24px; }
+  .sh-aa-glyph { font-family:"Zoho Puvi",system-ui,sans-serif; font-size:72px; font-weight:600; color:var(--prism-text); line-height:1; }
+  .sh-weight-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:24px; }
+  .sh-weight-cell { border:1px solid var(--prism-border); border-radius:10px; padding:14px 16px; }
+  .sh-weight-cell .wc-sample { font-family:"Zoho Puvi",system-ui,sans-serif; font-size:20px; color:var(--prism-text); }
+  .sh-weight-cell .wc-name { font-size:12px; color:var(--prism-text-muted); margin-top:6px; }
+  .sh-weight-cell.is-used { border-color:rgba(37,99,235,0.5); background:rgba(37,99,235,0.06); }
+  .sh-weight-cell.is-used .wc-name { color:var(--prism-violet); font-weight:700; }
+
+  /* Contrast cards */
+  .sh-contrast-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; }
+  .contrast-card { border:1px solid var(--prism-border); border-radius:14px; overflow:hidden; }
+  .contrast-swatch { padding:28px 18px; font-size:18px; font-weight:600; }
+  .contrast-meta { padding:14px 16px; background:var(--prism-surface); }
+  .contrast-meta .cc-name { font-size:13.5px; font-weight:700; color:var(--prism-text); }
+  .contrast-meta .cc-val { font-size:12.5px; color:var(--prism-text-muted); margin:4px 0 8px; font-family:monospace; }
+  .pass-chip { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; background:rgba(34,197,94,0.15); color:#16a34a; }
+  .ratio-chip { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; background:rgba(37,99,235,0.12); color:var(--prism-violet); margin-right:6px; }
+
+  .info-callout { margin-top:16px; padding:16px 20px; background:rgba(37,99,235,0.05); border:1px solid rgba(37,99,235,0.15); border-radius:12px; }
+  .info-callout p { font-size:14px; color:var(--prism-text); line-height:1.6; margin:0; }
+  .touch-box { width:48px; height:48px; border:2px dashed var(--prism-violet); border-radius:8px; flex:0 0 auto; }
+  .inline-code { font-family:monospace; font-size:13px; padding:2px 8px; border-radius:6px; background:rgba(37,99,235,0.06); color:var(--prism-violet); }
+</style>
+</head>
+<body class="page-section-header">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link active">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Section Header</h1>
+        <p class="page-desc">The Section Header is a compact heading that labels a section or sub-region inside a page &mdash; a card region, a settings block, a list group, a modal body section. It carries a title with an optional description, an optional trailing &ldquo;View All&rdquo; action link, optional full-width top/bottom dividers, and a &ldquo;With Border&rdquo; trailing rule whose description now drops to a full-width second row. Three sizes (Small / Medium / Large), RTL-aware &mdash; 42 Figma variants.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <p class="doc-section-subtitle">A Section Header is a vertical column: an optional full-width divider, a content row (title text group that fills the row, an optional trailing rule, an optional trailing action), and &mdash; in the &ldquo;With Border&rdquo; style &mdash; the description on its own full-width second row.</p>
+
+          <div class="sh-anat-wrap">
+            <!-- Live <ds-section-header> · With Border: title + rule + action on row 1, description on row 2 -->
+            <ds-section-header size="large" style-variant="with-border" heading-level="3"
+              title="Connected Devices"
+              description="All registered endpoints across your organisation"
+              action-label="View All"></ds-section-header>
+            <!-- numbered callouts -->
+            <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:18px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="sh-marker">1</span> Title</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="sh-marker">2</span> Description</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="sh-marker">3</span> Trailing Action (Text Link)</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="sh-marker">4</span> Trailing Rule (&ldquo;With Border&rdquo;)</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;"><span class="sh-marker">5</span> Full-width Divider</span>
+            </div>
+          </div>
+
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="sh-marker">1</span><div><strong>Title</strong><span>The section label. A real heading element (<code>&lt;h2&gt;</code>&ndash;<code>&lt;h6&gt;</code>), Semibold, Text-Primary. Always shown.</span></div></div>
+            <div class="anat-legend-item"><span class="sh-marker">2</span><div><strong>Description</strong><span>Optional supporting line, Regular, Text-Secondary. Inside the text group in &ldquo;With Description&rdquo;; on a full-width second row in &ldquo;With Border&rdquo;.</span></div></div>
+            <div class="anat-legend-item"><span class="sh-marker">3</span><div><strong>Trailing Action</strong><span>Optional Text Link (Primary, Medium &mdash; e.g. &ldquo;View All&rdquo;) pinned to the trailing edge of the content row.</span></div></div>
+            <div class="anat-legend-item"><span class="sh-marker">4</span><div><strong>Trailing Rule</strong><span>The &ldquo;With Border&rdquo; style: a 1px Border-Tertiary rule that fills the width between title and action, centred on the title row.</span></div></div>
+            <div class="anat-legend-item"><span class="sh-marker">5</span><div><strong>Full-width Divider</strong><span>Optional 1px Border-Secondary rule above and/or below the whole header (Divider = Bottom or Top and Bottom). Decorative.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Live Demo</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Real rendered <code>.ds-section-header</code> instances &mdash; the three styles (Default, With Description, With Border), a divider, and the three sizes. Note how <strong>With Border</strong> keeps the title, rule, and action on row 1 and drops the description to a full-width second row.</p>
+
+            <div class="demo-container">
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Section Header &middot; styles, divider &amp; sizes</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- Default — title only -->
+                <div class="demo-sh-section">
+                  <p class="demo-sh-label">Default &mdash; title only</p>
+                  <p class="demo-sh-desc">The simplest form. A single Semibold line labelling the region below it.</p>
+                  <div class="demo-sh-frame">
+                    <ds-section-header size="medium" title="Recent Activity"></ds-section-header>
+                  </div>
+                </div>
+
+                <!-- With Description -->
+                <div class="demo-sh-section">
+                  <p class="demo-sh-label">With Description &mdash; title + description stacked, action centred against the block</p>
+                  <p class="demo-sh-desc">The description sits inside the text group; the action vertically centres against the two-line block. No trailing rule.</p>
+                  <div class="demo-sh-frame">
+                    <ds-section-header size="medium" style-variant="with-description"
+                      title="Team Members"
+                      description="People with access to this workspace"
+                      action-label="View All"></ds-section-header>
+                  </div>
+                </div>
+
+                <!-- With Border — KEY new behaviour -->
+                <div class="demo-sh-section">
+                  <p class="demo-sh-label">With Border &mdash; title + rule + action on row 1, description on a full-width row 2</p>
+                  <p class="demo-sh-desc">The new behaviour: a 1px trailing rule fills the gap on the title row; the description spans the full width <strong>below</strong> the whole content row.</p>
+                  <div class="demo-sh-frame">
+                    <ds-section-header size="medium" style-variant="with-border"
+                      title="Connected Devices"
+                      description="All registered endpoints across your organisation"
+                      action-label="View All"></ds-section-header>
+                  </div>
+                </div>
+
+                <!-- Bottom divider -->
+                <div class="demo-sh-section">
+                  <p class="demo-sh-label">With a bottom divider</p>
+                  <p class="demo-sh-desc">A full-width 1px Border-Secondary rule beneath the header separates it from the content that follows.</p>
+                  <div class="demo-sh-frame">
+                    <ds-section-header size="medium" divider="bottom"
+                      title="Notifications" action-label="View All"></ds-section-header>
+                  </div>
+                </div>
+
+                <!-- Three sizes -->
+                <div class="demo-sh-section">
+                  <p class="demo-sh-label">The three sizes (Small / Medium / Large)</p>
+                  <p class="demo-sh-desc">Type scale and vertical padding step up with size; horizontal padding is always 0 (the header fills its container).</p>
+                  <div class="demo-sh-grid3">
+                    <div class="demo-sh-frame">
+                      <ds-section-header size="small" title="Small (12/16)" action-label="View All"></ds-section-header>
+                    </div>
+                    <div class="demo-sh-frame">
+                      <ds-section-header size="medium" title="Medium (14/20)" action-label="View All"></ds-section-header>
+                    </div>
+                    <div class="demo-sh-frame">
+                      <ds-section-header size="large" title="Large (16/24)" action-label="View All"></ds-section-header>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Use a short, descriptive noun phrase for the title (1&ndash;3 words).</li>
+                <li>Render the title as a real heading at the correct outline level for the page.</li>
+                <li>Pair the &ldquo;View All&rdquo; action with the section in its accessible name (e.g. &ldquo;View all devices&rdquo;).</li>
+                <li>Reach for the smaller sizes in dense lists, larger sizes for prominent page sub-regions.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Use the Section Header as the page-level title &mdash; use the Page Header instead.</li>
+                <li>Rely on the trailing rule or divider as the only signal of grouping; they are decorative.</li>
+                <li>Stuff a full sentence into the title; move detail into the description.</li>
+              </ul></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Variants, states, sizes, colour and spacing tokens, corner radius, and typography that define the Section Header's visual language.</p>
+
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants (Style)</h2>
+            <p class="doc-section-subtitle">Three Style presets control which extras appear. With Border only exists with Divider = None.</p>
+            <table class="size-table">
+              <thead><tr><th>Variant</th><th>Usage</th><th>Example</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><code>Default</code></td>
+                  <td>Title only (description hidden unless explicitly shown). The baseline label for a region.</td>
+                  <td><div class="sh-variant-cell"><ds-section-header size="medium" title="Overview"></ds-section-header></div></td>
+                </tr>
+                <tr>
+                  <td><code>With Description</code></td>
+                  <td>Title + description stacked in one text group; the action centres against the two-line block. No trailing rule.</td>
+                  <td><div class="sh-variant-cell"><ds-section-header size="medium" style-variant="with-description" title="Billing" description="Invoices and payment methods" action-label="View All"></ds-section-header></div></td>
+                </tr>
+                <tr>
+                  <td><code>With Border</code></td>
+                  <td>Title + a trailing 1px rule that fills the width beside the title + action on row 1, <strong>and the description on a full-width second row below</strong>.</td>
+                  <td><div class="sh-variant-cell"><ds-section-header size="medium" style-variant="with-border" title="Integrations" description="Apps connected to this account — shown on its own full-width row" action-label="View All"></ds-section-header></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="states" class="doc-section-title">States</h2>
+            <p class="doc-section-subtitle">The Section Header itself is <strong>static structure</strong> &mdash; it has no hover/focus/disabled state of its own. Only the trailing action link is interactive; it inherits Text Link states.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+              <div class="state-card"><div class="sc-title">Header (Default)</div><div class="sc-desc">Plain text and decorative rules. No interaction, no state change. Title and description are not focusable.</div></div>
+              <div class="state-card"><div class="sc-title">Action &mdash; Default</div><div class="sc-desc">Accent-link colour <code>#006AFF</code>, no underline. Hugs the trailing edge.</div></div>
+              <div class="state-card"><div class="sc-title">Action &mdash; Hover</div><div class="sc-desc">Underline appears (never colour-only). Colour transitions ~110ms ease.</div></div>
+              <div class="state-card"><div class="sc-title">Action &mdash; Focus</div><div class="sc-desc">2px accent focus ring with 2px offset on <code>:focus-visible</code>.</div></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="sizes" class="doc-section-title">Sizes</h2>
+            <p class="doc-section-subtitle">Type scale and vertical padding scale per size. Horizontal padding is always 0. The title-only base height is Small 32 / Medium 44 / Large 56; the With Border heights (rule row + full-width description) are 52 / 64 / 82.</p>
+            <table class="size-table">
+              <thead><tr><th>Size</th><th>Title</th><th>Description</th><th>V-Padding</th><th>Title&harr;Desc gap</th><th>Content gap</th><th>With Border height</th><th>Preview</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><code>Small</code></td><td>12 / 16 Semibold</td><td>10 / 14</td><td>8px</td><td>2px</td><td>8px</td><td>52px</td>
+                  <td><div class="sh-variant-cell" style="min-width:200px;"><ds-section-header size="small" title="Section" action-label="View All"></ds-section-header></div></td>
+                </tr>
+                <tr>
+                  <td><code>Medium</code></td><td>14 / 20 Semibold</td><td>12 / 16</td><td>12px</td><td>4px</td><td>8px</td><td>64px</td>
+                  <td><div class="sh-variant-cell" style="min-width:200px;"><ds-section-header size="medium" title="Section" action-label="View All"></ds-section-header></div></td>
+                </tr>
+                <tr>
+                  <td><code>Large</code></td><td>16 / 24 Semibold</td><td>14 / 20</td><td>16px</td><td>2px</td><td>12px</td><td>82px</td>
+                  <td><div class="sh-variant-cell" style="min-width:200px;"><ds-section-header size="large" title="Section" action-label="View All"></ds-section-header></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="color-tokens" class="doc-section-title">Color Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Token</th><th>Light hex</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>Title</td><td><code>--uems-text-primary</code></td><td><code>#15181E</code></td><td>Semibold at every size.</td></tr>
+                <tr><td>Description</td><td><code>--uems-text-secondary</code></td><td><code>#2A303D</code></td><td>Regular (Small renders Medium weight).</td></tr>
+                <tr><td>Action link label</td><td><code>--uems-text-accent-link</code></td><td><code>#006AFF</code></td><td>Text Link Medium · 14/20.</td></tr>
+                <tr><td>Full-width divider (Top/Bottom)</td><td><code>--uems-border-secondary</code></td><td><code>#C3C9D6</code></td><td>1px rule, full width.</td></tr>
+                <tr><td>Trailing rule (With Border)</td><td><code>--uems-border-tertiary</code></td><td><code>#E1E4EB</code></td><td>1px rule, fills remaining width.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="spacing-tokens" class="doc-section-title">Spacing Tokens</h2>
+            <table class="size-table">
+              <thead><tr><th>Size</th><th>H-Padding</th><th>V-Padding</th><th>Title&harr;Desc gap</th><th>Content gap</th><th>With Border 2nd-row gap</th><th>Divider&harr;content gap</th><th>Token</th></tr></thead>
+              <tbody>
+                <tr><td><code>Small</code></td><td>0</td><td>8px</td><td>2px</td><td>8px</td><td>2px</td><td>8px</td><td><code>spacing-8 / -2</code></td></tr>
+                <tr><td><code>Medium</code></td><td>0</td><td>12px</td><td>4px</td><td>8px</td><td>4px</td><td>8px</td><td><code>spacing-12 / -4 / -8</code></td></tr>
+                <tr><td><code>Large</code></td><td>0</td><td>16px</td><td>2px</td><td>12px</td><td>6px</td><td>12px</td><td><code>spacing-16 / -12</code></td></tr>
+              </tbody>
+            </table>
+            <div class="info-callout"><p>Horizontal padding is <strong>0</strong> &mdash; the header aligns to its container's edges. The 360px in Figma is just the artboard; in code the header is fluid (<code>width: 100%</code>).</p></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="corner-radius" class="doc-section-title">Corner Radius</h2>
+            <p class="doc-section-subtitle">The Section Header is a flat content header &mdash; the header, dividers, and trailing rule have <strong>no corner radius (radius 0 / not applicable)</strong>. The only rounded element is the trailing action link's focus target.</p>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Radius</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>Header container</td><td>0 (n/a)</td><td>No background, no border-box; nothing to round.</td></tr>
+                <tr><td>Full-width divider / trailing rule</td><td>0 (n/a)</td><td>1px straight rules.</td></tr>
+                <tr><td>Action link focus target</td><td>4px</td><td>Small radius on the link's padding box so the focus ring reads cleanly.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="typography" class="doc-section-title">Typography</h2>
+            <p class="doc-section-subtitle">All Section Header text uses <strong>Zoho Puvi</strong>. The title is <strong>Semibold</strong> at every size; the description is Regular (Small renders Medium weight).</p>
+            <div class="sh-aa">
+              <div class="sh-aa-glyph">Aa</div>
+              <div>
+                <div style="font-size:18px;font-weight:700;color:var(--prism-text);">Zoho Puvi</div>
+                <div style="font-size:13px;color:var(--prism-text-muted);margin-top:4px;">Primary System Font</div>
+              </div>
+            </div>
+            <div class="sh-weight-grid">
+              <div class="sh-weight-cell"><div class="wc-sample" style="font-weight:400;">Section</div><div class="wc-name">Regular (400) &mdash; description</div></div>
+              <div class="sh-weight-cell"><div class="wc-sample" style="font-weight:500;">Section</div><div class="wc-name">Medium (500) &mdash; action / Small desc</div></div>
+              <div class="sh-weight-cell is-used"><div class="wc-sample" style="font-weight:600;">Section</div><div class="wc-name">Semibold (600) &mdash; title</div></div>
+            </div>
+            <table class="size-table">
+              <thead><tr><th>Element / Size</th><th>Font Size</th><th>Line Height</th><th>Weight</th><th>Token</th></tr></thead>
+              <tbody>
+                <tr><td>Title &mdash; Small</td><td>12px</td><td>16px</td><td>Semibold (600)</td><td><code>body/Small/SemiBold</code></td></tr>
+                <tr><td>Title &mdash; Medium</td><td>14px</td><td>20px</td><td>Semibold (600)</td><td><code>body/Default/SemiBold</code></td></tr>
+                <tr><td>Title &mdash; Large</td><td>16px</td><td>24px</td><td>Semibold (600)</td><td><code>body/Large/SemiBold</code></td></tr>
+                <tr><td>Description &mdash; Small</td><td>10px</td><td>14px</td><td>Medium (500)</td><td><code>body/Xsmall/Medium</code></td></tr>
+                <tr><td>Description &mdash; Medium</td><td>12px</td><td>16px</td><td>Regular (400)</td><td><code>body/Small/Default</code></td></tr>
+                <tr><td>Description &mdash; Large</td><td>14px</td><td>20px</td><td>Regular (400)</td><td><code>body/Default/Default</code></td></tr>
+                <tr><td>Action link</td><td>14px</td><td>20px</td><td>Medium (500)</td><td><code>body/Default/Medium</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">Use a Section Header to label a sub-region inside a page. Reserve the Page Header for the page-level title.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">To label a <strong>group of content inside a card or panel</strong>.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">To head a <strong>settings block</strong> or a cluster of related fields.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">To introduce a <strong>list group</strong> with an optional &ldquo;View All&rdquo; affordance.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">To divide a <strong>modal body</strong> into labelled sections.</li>
+                  <li style="border:none;background:transparent;">To title a <strong>page sub-region</strong> without competing with the page title.</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#e42527" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">As the <strong>page-level title</strong> &mdash; use <a href="Page-header.html">Page Header</a> instead.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">As a <strong>standalone separator</strong> &mdash; use a <a href="Divider.html">Divider</a>.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">As a <strong>collapsible heading</strong> &mdash; use an <a href="Accordion.html">Accordion</a> header.</li>
+                  <li style="border:none;background:transparent;">As an <strong>inline link</strong> on its own &mdash; use a <a href="Link.html">Link / Text Link</a>.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="alignment-placement" class="doc-section-title">Alignment &amp; Placement</h2>
+            <p class="doc-section-subtitle">The header fills the width of its container; only vertical padding scales with size.</p>
+            <ul class="doc-list">
+              <li><strong>Inside cards / panels:</strong> sit the header flush to the card's inner padding so the title aligns with the content edge.</li>
+              <li><strong>Settings blocks:</strong> use Medium or Large to group related fields; pair the description with the block's purpose.</li>
+              <li><strong>List groups:</strong> use Small or Medium with a trailing &ldquo;View All&rdquo; action; add a bottom divider to separate from the list.</li>
+              <li><strong>Modal body sections:</strong> use With Border to give a clear titled rule between sections without a heavy divider.</li>
+              <li><strong>Page sub-regions:</strong> keep the size below the page title's so hierarchy stays clear.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do's and Don'ts</h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li><strong>Real heading:</strong> render the title as a real heading element at the right outline level.</li>
+                <li><strong>Descriptive action:</strong> give &ldquo;View All&rdquo; an accessible name tied to the section.</li>
+                <li><strong>Match size to density:</strong> Small in tight lists, Large for prominent sub-regions.</li>
+                <li><strong>Use With Border for titled rules:</strong> when you want a rule that reads as &ldquo;Title ───── Action&rdquo; with the description below.</li>
+                <li><strong>Keep it fluid:</strong> let the header fill its container; never hard-code 360px.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li><strong>Don't overload the title:</strong> avoid full sentences; move detail to the description.</li>
+                <li><strong>Don't rely on rules for meaning:</strong> dividers and the trailing rule are decorative only.</li>
+                <li><strong>Don't mix With Border + dividers:</strong> With Border replaces stacked dividers (Divider = None).</li>
+                <li><strong>Don't squeeze the action:</strong> keep the title group flexible so the title wraps before the action.</li>
+                <li><strong>Don't use it as a page title:</strong> that's the Page Header's job.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Components that complement or are commonly confused with the Section Header.</p>
+            <div class="related-grid">
+              <a href="Page-header.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="6" rx="1"/></svg> Page Header</a>
+              <a href="Divider.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg> Divider</a>
+              <a href="Link.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg> Link / Text Link</a>
+              <a href="List.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> List</a>
+              <a href="Accordion.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="6" rx="1"/><path d="M7 14l5 5 5-5"/></svg> Accordion</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <ul class="doc-list">
+              <li><strong>Figma Node:</strong> <code class="inline-code">17392:399995</code> &mdash; Component Set: Section Header</li>
+              <li><strong>Typography:</strong> Zoho Puvi Semibold (600) for title; Regular / Medium for description &amp; action</li>
+              <li><strong>Border Radius:</strong> n/a (flat content header; 4px on the action link's focus target only)</li>
+              <li><strong>Total Variants:</strong> 42 = Size(3) &times; Style(3) &times; Divider(3) &times; RTL(2), minus pruned combos (With Border only exists with Divider = None)</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div id="feedback-inline" class="feedback-banner">
+            <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+            <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+          </div>
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live Playground</h2>
+          <p class="doc-section-subtitle">Configure the Section Header and copy the generated HTML + CSS. When Style = With Border, the description drops to a full-width second row with the trailing rule on the title row.</p>
+
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group">
+                <label class="cp-label">Theme</label>
+                <select class="cp-select" id="sh-theme"><option value="light" selected>Light</option><option value="dark">Dark</option></select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Size</label>
+                <select class="cp-select" id="sh-size"><option value="small">Small</option><option value="medium" selected>Medium</option><option value="large">Large</option></select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Style</label>
+                <select class="cp-select" id="sh-style"><option value="default">Default</option><option value="with-description">With Description</option><option value="with-border" selected>With Border</option></select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Divider</label>
+                <select class="cp-select" id="sh-divider"><option value="none" selected>None</option><option value="bottom">Bottom</option><option value="top-bottom">Top and Bottom</option></select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Show Action</label>
+                <select class="cp-select" id="sh-action"><option value="true" selected>Yes</option><option value="false">No</option></select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Direction</label>
+                <select class="cp-select" id="sh-dir"><option value="ltr" selected>LTR</option><option value="rtl">RTL</option></select>
+              </div>
+            </div>
+
+            <div class="cp-preview" id="sh-preview-area" style="padding:32px;flex-direction:column;align-items:stretch;">
+              <div id="sh-preview-frame" style="background:var(--uems-bg-base);border:1px solid var(--uems-border-tertiary);border-radius:12px;overflow:hidden;padding:0 16px;">
+                <!-- preview injected by JS -->
+              </div>
+            </div>
+
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML &amp; CSS</div>
+              <button class="cp-action-btn" id="sh-copy-btn">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                Copy code
+              </button>
+            </div>
+            <div style="background:#0a0a0c;">
+              <div class="cp-code-area" id="sh-code-output" style="white-space:pre;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;padding:20px;color:#e2e8f0;max-height:280px;overflow:auto;"></div>
+            </div>
+            <div style="background:#0a0a0c;padding:0 20px 16px;">
+              <button class="cp-action-btn" id="sh-more-btn" style="font-size:12.5px;">Show more</button>
+            </div>
+          </div>
+
+          <script>
+          (function(){
+            var size = document.getElementById('sh-size');
+            var styl = document.getElementById('sh-style');
+            var divider = document.getElementById('sh-divider');
+            var action = document.getElementById('sh-action');
+            var dir = document.getElementById('sh-dir');
+            var theme = document.getElementById('sh-theme');
+            var frame = document.getElementById('sh-preview-frame');
+            var codeOut = document.getElementById('sh-code-output');
+            var copyBtn = document.getElementById('sh-copy-btn');
+            var moreBtn = document.getElementById('sh-more-btn');
+            if (!frame) return;
+
+            function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+            var TITLE = 'Connected Devices', DESC = 'All registered endpoints across your organisation', LABEL = 'View All';
+            var TITLE_RTL = 'الأجهزة المتصلة', DESC_RTL = 'جميع النقاط الطرفية المسجلة في مؤسستك', LABEL_RTL = 'عرض الكل';
+
+            function render(){
+              var isRtl = dir.value === 'rtl';
+              var isBorder = styl.value === 'with-border';
+              var hasDesc = (styl.value === 'with-description' || isBorder);
+              var hasAction = action.value === 'true';
+              // With Border has no full-width divider combos (pruned in Figma) — force none.
+              if (isBorder && divider.value !== 'none') { divider.value = 'none'; }
+              divider.disabled = isBorder;
+
+              var title = isRtl ? TITLE_RTL : TITLE;
+              var desc  = isRtl ? DESC_RTL  : DESC;
+              var label = isRtl ? LABEL_RTL : LABEL;
+              // doc control uses "top-bottom"; the component attribute is "both".
+              var divVal = divider.value === 'top-bottom' ? 'both' : divider.value;
+
+              // ---- live <ds-section-header> element (the real web component) ----
+              var el = document.createElement('ds-section-header');
+              el.setAttribute('size', size.value);
+              if (styl.value !== 'default') el.setAttribute('style-variant', styl.value);
+              if (divVal !== 'none') el.setAttribute('divider', divVal);
+              el.setAttribute('title', title);
+              if (hasDesc) el.setAttribute('description', desc);
+              if (hasAction) el.setAttribute('action-label', label);
+              if (isRtl) el.setAttribute('rtl', '');
+              frame.replaceChildren(el);
+              frame.closest('.cp-preview').setAttribute('data-theme-preview', theme.value);
+
+              // ---- generated markup (mirrors the attributes above) ----
+              var attrs = ['size="' + size.value + '"'];
+              if (styl.value !== 'default') attrs.push('style-variant="' + styl.value + '"');
+              if (divVal !== 'none') attrs.push('divider="' + divVal + '"');
+              attrs.push('title="' + title + '"');
+              if (hasDesc) attrs.push('description="' + desc + '"');
+              if (hasAction) attrs.push('action-label="' + label + '"');
+              if (isRtl) attrs.push('rtl');
+              var code = '<ds-section-header\n  ' + attrs.join('\n  ') + '></ds-section-header>';
+
+              codeOut.dataset.raw = code;
+              codeOut.innerHTML = highlight(code);
+            }
+
+            function highlight(code){
+              // Order matters: attr names FIRST. .replace() never re-scans its own
+              // injected text, and the later tag/string passes only match &lt; / &quot;
+              // (never the real span markup these inject) — so nothing collides.
+              return esc(code)
+                .replace(/([a-z][a-z-]*)=/g, '<span style="color:#38bdf8;">$1</span>=')
+                .replace(/&lt;(\/?)(ds-section-header)/g, '&lt;$1<span style="color:#a78bfa;">$2</span>')
+                .replace(/&quot;(.*?)&quot;/g, '<span style="color:#34d399;">&quot;$1&quot;</span>');
+            }
+
+            [size, styl, divider, action, dir, theme].forEach(function(el){ if (el) el.addEventListener('change', render); });
+
+            copyBtn.addEventListener('click', function(){
+              var raw = codeOut.dataset.raw || '';
+              navigator.clipboard.writeText(raw).then(function(){
+                var o = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+                setTimeout(function(){ copyBtn.innerHTML = o; }, 2000);
+              });
+            });
+
+            moreBtn.addEventListener('click', function(){
+              var expanded = codeOut.style.maxHeight === 'none';
+              codeOut.style.maxHeight = expanded ? '280px' : 'none';
+              moreBtn.textContent = expanded ? 'Show more' : 'Show less';
+            });
+
+            render();
+          })();
+          </script>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="component-api" class="doc-section-title">Component API &amp; Properties</h2>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>title</code></td><td>string</td><td><code>"Section Title"</code></td><td>The section label. Always shown. Required.</td></tr>
+                <tr><td><code>headingLevel</code></td><td><code>2 | 3 | 4 | 5 | 6</code></td><td><code>3</code></td><td>Which heading element renders (<code>&lt;h{n}&gt;</code>) for the document outline.</td></tr>
+                <tr><td><code>size</code></td><td><code>'small' | 'medium' | 'large'</code></td><td><code>'small'</code></td><td>Drives title/description type scale and vertical padding.</td></tr>
+                <tr><td><code>description</code></td><td>string</td><td><code>"Optional description text…"</code></td><td>Supporting line, shown when <code>showDescription</code> or <code>border</code> is true.</td></tr>
+                <tr><td><code>showDescription</code></td><td>boolean</td><td><code>false</code></td><td>Toggles the description line (inside the text group).</td></tr>
+                <tr><td><code>border</code></td><td>boolean</td><td><code>false</code></td><td>&ldquo;With Border&rdquo;: trailing rule beside the title + the description on a full-width second row.</td></tr>
+                <tr><td><code>divider</code></td><td><code>'none' | 'bottom' | 'top-bottom'</code></td><td><code>'none'</code></td><td>Full-width 1px rules above/below the header.</td></tr>
+                <tr><td><code>showAction</code></td><td>boolean</td><td><code>false</code></td><td>Toggles the trailing action link.</td></tr>
+                <tr><td><code>actionLabel</code></td><td>string</td><td><code>"View All"</code></td><td>Text of the action link.</td></tr>
+                <tr><td><code>actionHref</code></td><td>string</td><td>&mdash;</td><td>Link target for the action (or use <code>onAction</code>).</td></tr>
+                <tr><td><code>onAction</code></td><td><code>() =&gt; void</code></td><td>&mdash;</td><td>Handler fired when the action is activated.</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td><code>false</code></td><td>Mirrors the layout (sets <code>dir="rtl"</code>).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="implementation-example" class="doc-section-title">Implementation Example</h2>
+            <p class="doc-section-subtitle">Ember / Handlebars usage &mdash; a &ldquo;With Border&rdquo; section heading a device list.</p>
+            <div class="cp-code-area" style="border-radius:12px;margin-top:16px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.7;">
+                <span style="color:#94a3b8;">{{!-- MyApp/templates/components/devices-section.hbs --}}</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#a78bfa;">UemsSectionHeader</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@title</span>=<span style="color:#34d399;">"Connected Devices"</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@headingLevel</span>=<span style="color:#E5C07B;">{{2}}</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@size</span>=<span style="color:#34d399;">"medium"</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@description</span>=<span style="color:#34d399;">"All registered endpoints across your organisation"</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@border</span>=<span style="color:#C678DD;">{{true}}</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@divider</span>=<span style="color:#34d399;">"none"</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@showAction</span>=<span style="color:#C678DD;">{{true}}</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@actionLabel</span>=<span style="color:#34d399;">"View All"</span><br>
+                &nbsp;&nbsp;<span style="color:#38bdf8;">@onAction</span>=<span style="color:#E5C07B;">{{this.viewAllDevices}}</span><br>
+                <span style="color:#ABB2BF;">/&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="rtl-support" class="doc-section-title">RTL Support</h2>
+            <ul class="doc-list">
+              <li>The title and description <strong>lead from the right</strong>; the action and trailing rule move to the <strong>left</strong>.</li>
+              <li>Title and description <strong>text right-aligns</strong> to the trailing (right) side.</li>
+              <li>Use <strong>logical properties</strong> (<code>padding-inline</code>, <code>margin-inline-start</code>) so most mirroring is automatic.</li>
+              <li>Set <code class="inline-code">dir="rtl"</code> on the header or an ancestor; the action chevron is mirrored via <code>transform: scaleX(-1)</code>.</li>
+              <li>Localize all strings (title, description, action label and its accessible name).</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">The header is static structure; the only interactive part is the trailing action link.</p>
+
+          <div class="doc-section">
+            <h3 id="keyboard-interaction" class="doc-h3">Keyboard Interaction</h3>
+            <table class="size-table">
+              <thead><tr><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><code>Tab</code></td><td>Moves focus to the trailing action link (the only focusable element). The title and description are not focusable.</td></tr>
+                <tr><td><code>Shift + Tab</code></td><td>Moves focus back to the previous focusable element.</td></tr>
+                <tr><td><code>Enter</code></td><td>Activates the action link (navigates / fires the handler).</td></tr>
+                <tr><td><code>Space</code></td><td>Activates the action when it is rendered as a <code>&lt;button&gt;</code>.</td></tr>
+              </tbody>
+            </table>
+            <div class="info-callout"><p>The header text itself is never focusable. Nothing auto-focuses. Focus order is: surrounding content &rarr; action link &rarr; next content.</p></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="aria-screen-reader" class="doc-h3">ARIA Attributes &amp; Screen Reader Guidance</h3>
+            <ul class="doc-list">
+              <li><strong>Real heading:</strong> render the title as a real heading element (<code>&lt;h2&gt;</code>&ndash;<code>&lt;h6&gt;</code>) via <code>heading-level</code>, never a styled <code>&lt;span&gt;</code> &mdash; it joins the document outline.</li>
+              <li><strong>Descriptive action name:</strong> a bare &ldquo;View All&rdquo; is ambiguous; pair it with the section, e.g. <code>aria-label="View all devices"</code>.</li>
+              <li><strong>Decorative rules:</strong> mark full-width dividers and the trailing rule <code>aria-hidden="true"</code> / <code>role="presentation"</code>; never the only signal of grouping.</li>
+              <li><strong>Real link / button:</strong> render the action as an <code>&lt;a&gt;</code> or <code>&lt;button&gt;</code> so it is reachable and operable by assistive tech.</li>
+              <li><strong>Description association:</strong> place the description immediately after the heading; if used as help text, associate via <code>aria-describedby</code>.</li>
+              <li><strong>Don't rely on colour alone:</strong> the action shows an underline on hover/focus in addition to the accent colour.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="focus-state" class="doc-h3">Focus State Design</h3>
+            <ul class="doc-list">
+              <li><strong>Focus ring:</strong> 2px solid using <code>--uems-text-accent-link</code> (#006AFF).</li>
+              <li><strong>Offset:</strong> 2px from the action link's edge.</li>
+              <li><strong>Border radius:</strong> 4px on the link's focus target (slightly larger than its text box).</li>
+              <li><strong>Trigger:</strong> shown on <code>:focus-visible</code> so mouse clicks don't leave a lingering ring.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="color-contrast" class="doc-h3">Color Contrast<span class="h3-badge" style="background:rgba(34,197,94,0.15);color:#16a34a;">WCAG AA</span></h3>
+            <p class="doc-section-subtitle">All Section Header text meets WCAG 2.1 AA on white.</p>
+            <div class="sh-contrast-grid">
+              <div class="contrast-card">
+                <div class="contrast-swatch" style="background:#FFFFFF;color:#15181E;">Title text</div>
+                <div class="contrast-meta"><div class="cc-name">Title</div><div class="cc-val">#15181E on #FFFFFF</div><span class="ratio-chip">16.1:1</span><span class="pass-chip">WCAG AA Pass</span></div>
+              </div>
+              <div class="contrast-card">
+                <div class="contrast-swatch" style="background:#FFFFFF;color:#2A303D;">Description text</div>
+                <div class="contrast-meta"><div class="cc-name">Description</div><div class="cc-val">#2A303D on #FFFFFF</div><span class="ratio-chip">12.6:1</span><span class="pass-chip">WCAG AA Pass</span></div>
+              </div>
+              <div class="contrast-card">
+                <div class="contrast-swatch" style="background:#FFFFFF;color:#006AFF;">View All</div>
+                <div class="contrast-meta"><div class="cc-name">Action link</div><div class="cc-val">#006AFF on #FFFFFF</div><span class="ratio-chip">4.6:1</span><span class="pass-chip">WCAG AA Pass</span></div>
+              </div>
+            </div>
+            <div class="info-callout"><p><strong>WCAG 2.1 Level AA Requires:</strong> a contrast ratio of at least <strong>4.5:1</strong> for normal text (like most component labels) and <strong>3.0:1</strong> for large text and UI components (like icons and focus rings).</p></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="touch-target" class="doc-h3">Touch Target Size</h3>
+            <div style="display:flex;align-items:center;gap:20px;padding:20px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:14px;">
+              <div class="touch-box"></div>
+              <div style="font-size:14px;color:var(--prism-text);line-height:1.6;">
+                <strong>Minimum target: 48&times;48px.</strong> The trailing action link is visually compact (14/20 text), so give it transparent padding and surrounding spacing so its hit area reaches at least 48&times;48px &mdash; especially in Small/Medium dense lists where the link's text height is well under 48px.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/section-header.md" download="section-header.md" class="action-link"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0?node-id=17392-399995" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/components/toc.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<title>icon-button ↔ figma compare</title>
+<link rel="icon" type="image/png" href="assets/prism-logo.png">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/icon-button/icon-button.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/icon-button/icon-button.js"></script>
+<style>body{background:#fff;padding:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;} pre{width:100%;font-size:11px;}</style>
+</head>
+<body>
+  <ds-icon-button id="dflt" icon="add" label="Add"></ds-icon-button>
+  <ds-icon-button id="xl"     size="xl"     icon="add" label="Add"></ds-icon-button>
+  <ds-icon-button id="large"  size="large"  icon="add" label="Add"></ds-icon-button>
+  <ds-icon-button id="small"  size="small"  icon="add" label="Add"></ds-icon-button>
+  <ds-icon-button id="xsmall" size="xsmall" icon="add" label="Add"></ds-icon-button>
+  <ds-icon-button id="circ" shape="circle" size="xl" icon="add" label="Add"></ds-icon-button>
+  <ds-icon-button id="t-pri" type="primary"       size="xl" icon="add" label="Add"></ds-icon-button>
+  <ds-icon-button id="t-sec" type="secondary"     size="xl" icon="add" label="Add"></ds-icon-button>
+  <ds-icon-button id="t-ter" type="tertiary"      size="xl" icon="add" label="Add"></ds-icon-button>
+  <ds-icon-button id="t-out" type="outline"       size="xl" icon="add" label="Add"></ds-icon-button>
+  <ds-icon-button id="t-dan" type="danger"        size="xl" icon="add" label="Add"></ds-icon-button>
+  <ds-icon-button id="t-tg"  type="tertiary-grey" size="xl" icon="add" label="Add"></ds-icon-button>
+  <ds-icon-button id="d-pri" type="primary"       size="xl" icon="add" label="Add" disabled></ds-icon-button>
+  <ds-icon-button id="d-ter" type="tertiary"      size="xl" icon="add" label="Add" disabled></ds-icon-button>
+  <ds-icon-button id="d-tg"  type="tertiary-grey" size="xl" icon="add" label="Add" disabled></ds-icon-button>
+  <ds-icon-button id="d-out" type="outline"       size="xl" icon="add" label="Add" disabled></ds-icon-button>
+  <pre id="report">measuring…</pre>
+<script type="module">
+const hex = (rgb) => { const m = rgb.match(/\d+/g); return m ? '#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join('').toUpperCase() : rgb; };
+await customElements.whenDefined('ds-icon-button');
+await new Promise(r => setTimeout(r, 600));
+const lines = []; let pass=0, fail=0;
+const check = (id, what, got, want) => { const ok = String(got)===String(want); ok?pass++:fail++; lines.push(`${ok?'PASS':'FAIL'} ${id} ${what}: got=${got} want=${want}`); };
+const btn = id => document.getElementById(id).querySelector('button');
+// default = xl primary square
+check('dflt','default-size',Math.round(btn('dflt').getBoundingClientRect().width),28);
+check('dflt','default-type-bg',hex(getComputedStyle(btn('dflt')).backgroundColor),'#006AFF');
+// sizes + icon px
+for (const [id,dim,icon] of [['xl',28,20],['large',24,16],['small',20,12],['xsmall',16,8]]) {
+  const b=btn(id), r=b.getBoundingClientRect();
+  check(id,'button',Math.round(r.width)+'x'+Math.round(r.height),`${dim}x${dim}`);
+  const ic=b.querySelector('ds-icon svg, ds-icon');
+  if (ic) check(id,'icon',Math.round(ic.getBoundingClientRect().width),icon);
+  check(id,'radius',getComputedStyle(b).borderRadius,'4px');
+}
+check('circ','circle-radius',getComputedStyle(btn('circ')).borderRadius,'9999px');
+// type default colors (light)
+for (const [id,bg,fg] of [['t-pri','#006AFF','#FFFFFF'],['t-sec','#EAF0FC','#1E52BB'],['t-dan','#E42527','#FFFFFF']]) {
+  const cs=getComputedStyle(btn(id));
+  check(id,'bg',hex(cs.backgroundColor),bg);
+  check(id,'icon-color',hex(cs.color),fg);
+}
+{ const cs=getComputedStyle(btn('t-ter'));
+  check('t-ter','bg-transparent',cs.backgroundColor==='rgba(0, 0, 0, 0)',true);
+  check('t-ter','icon(accent)',hex(cs.color),'#1E52BB'); }
+{ const cs=getComputedStyle(btn('t-out'));
+  check('t-out','bg(primary-alt)',hex(cs.backgroundColor),'#FFFFFF');
+  check('t-out','border',hex(cs.borderTopColor)+'/'+cs.borderTopWidth,'#C3C9D6/1px');
+  check('t-out','icon(secondary)',hex(cs.color),'#2A303D'); }
+{ const cs=getComputedStyle(btn('t-tg'));
+  check('t-tg','bg-transparent',cs.backgroundColor==='rgba(0, 0, 0, 0)',true);
+  check('t-tg','icon(secondary)',hex(cs.color),'#2A303D'); }
+// disabled
+for (const [id,bgWant] of [['d-pri','#E1E4EB'],['d-out','#E1E4EB']]) {
+  const cs=getComputedStyle(btn(id));
+  check(id,'disabled-bg',hex(cs.backgroundColor),bgWant);
+  check(id,'disabled-icon',hex(cs.color),'#8893AD');
+}
+check('d-out','disabled-border-dropped',getComputedStyle(btn('d-out')).borderTopColor==='rgba(0, 0, 0, 0)',true);
+for (const id of ['d-ter','d-tg']) {
+  check(id,'disabled-bg-transparent',getComputedStyle(btn(id)).backgroundColor==='rgba(0, 0, 0, 0)',true);
+  check(id,'disabled-icon',hex(getComputedStyle(btn(id)).color),'#8893AD');
+}
+// hover/active/focus rules present in CSS text (can't trigger in headless)
+const css = await (await fetch('../design-system-library/src/components/icon-button/icon-button.css')).text();
+check('css','primary-hover-rule',css.includes('--primary:hover:not(:disabled) { background: var(--uems-bg-button-primary-hover)'),true);
+check('css','tg-active-accent-button',css.includes('icon-accent-button'),true);
+check('css','focus-ring',css.includes('outline: 2px solid var(--uems-border-accent-focus);') && css.includes('outline-offset: 2px;'),true);
+check('css','no-icon-tertiary-drift',!css.includes('icon-tertiary'),true);
+// a11y: native button + aria-label
+check('xl','native-button',btn('xl').tagName,'BUTTON');
+check('xl','aria-label',btn('xl').getAttribute('aria-label'),'Add');
+check('d-pri','native-disabled',btn('d-pri').disabled,true);
+lines.unshift(`RESULT: ${pass} pass / ${fail} fail`);
+document.getElementById('report').textContent = lines.join('\n');
+</script>
+</body>
+</html>

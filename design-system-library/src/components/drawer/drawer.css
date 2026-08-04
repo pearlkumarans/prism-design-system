@@ -1,0 +1,167 @@
+/* =============================================================================
+   ds-drawer / .ds-drawer
+   Side sheet — a panel that slides in from the left or right edge over an
+   optional scrim. Header (back? + title + subtitle + close) · body (scrolls) ·
+   footer (leading text-link + right-aligned button group). Modal by default
+   (scrim, focus trap, Esc); set modal="false" for a non-modal panel.
+   Sizes: S 320 / M 480 / L 640 / Full. Distinct from ds-modal (centered) and
+   ds-right-pane (persistent 32px utility rail).
+   ============================================================================= */
+
+:host { display: block; }
+
+.ds-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 1000);
+  display: none;
+  font-family: var(--font-family-sans);
+}
+.ds-drawer[open] { display: block; }
+
+/* ---- Overlay (scrim) — modal only -------------------------------------- */
+.ds-drawer__overlay {
+  position: absolute;
+  inset: 0;
+  /* --uems-bg-overlay is a SOLID colour; drive the dim via alpha so the fade
+     animates opacity 0→1 without dimming the panel. */
+  background: rgba(10, 11, 15, 0.5);
+  animation: ds-drawer-fade 150ms var(--ease-standard, ease-out);
+}
+.ds-drawer[data-modal="false"] .ds-drawer__overlay { display: none; }
+
+/* ---- Panel (the sheet) ------------------------------------------------- */
+.ds-drawer__panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;                                       /* side=right (default) */
+  display: flex;
+  flex-direction: column;
+  width: 480px;                                   /* M default */
+  max-width: 100vw;
+  background: var(--uems-bg-primary-alt);
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);   /* inner edge only */
+  /* Edge-anchored overlay → DIRECTIONAL shadow (0 vertical offset → never pools at
+     the bottom). Standard token COLOR; ambient --shadow-* tokens stay for floating
+     surfaces (the floating profile/apps drawers override this with their own). */
+  box-shadow: -4px 0 20px rgba(15, 19, 31, 0.12);
+  outline: none;
+  overflow: hidden;                               /* clip children to the radius */
+  animation: ds-drawer-slide-right 250ms var(--ease-standard, ease-out);
+}
+
+/* side = left → anchor + mirror radius / shadow / slide direction */
+.ds-drawer[data-side="left"] .ds-drawer__panel {
+  right: auto;
+  left: 0;
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  box-shadow: 4px 0 20px rgba(15, 19, 31, 0.12);
+  animation-name: ds-drawer-slide-left;
+}
+
+/* ---- RTL: the anchored side is logical (end/start), so mirror it ---- */
+/* default (right) drawer → opens from the LEFT in RTL */
+[dir="rtl"] .ds-drawer__panel {
+  right: auto;
+  left: 0;
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  box-shadow: 4px 0 20px rgba(15, 19, 31, 0.12);
+  animation-name: ds-drawer-slide-left;
+}
+/* explicit side=left drawer → opens from the RIGHT in RTL */
+[dir="rtl"] .ds-drawer[data-side="left"] .ds-drawer__panel {
+  left: auto;
+  right: 0;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  box-shadow: -4px 0 20px rgba(15, 19, 31, 0.12);
+  animation-name: ds-drawer-slide-right;
+}
+
+/* sizes */
+.ds-drawer[data-size="s"] .ds-drawer__panel { width: 320px; }
+.ds-drawer[data-size="m"] .ds-drawer__panel { width: 480px; }
+.ds-drawer[data-size="l"] .ds-drawer__panel { width: 640px; }
+.ds-drawer[data-size="full"] .ds-drawer__panel { width: 100%; border-radius: 0; }
+
+/* ---- Header ------------------------------------------------------------ */
+.ds-drawer__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-8);
+  padding: var(--spacing-16) var(--spacing-20);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+  /* Header wash — Figma "Gradients/slider-header-bg" token (re-themes per mode).
+     Override per instance via --ds-drawer-header-bg. */
+  background: var(--ds-drawer-header-bg, var(--gradient-slider-header-bg));
+}
+.ds-drawer__header[hidden] { display: none; }
+
+.ds-drawer__back, .ds-drawer__close { flex: 0 0 auto; }
+.ds-drawer__back[hidden] { display: none; }
+.ds-drawer__close[hidden] { display: none; }
+.ds-drawer__back .ds-icon-button,
+.ds-drawer__close .ds-icon-button { color: var(--uems-icon-subtle); }
+
+.ds-drawer__titles { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-4); padding-top: 2px; }
+.ds-drawer__title {
+  margin: 0;
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug, 1.35);
+  color: var(--uems-text-primary);
+  /* truncate to a single line */
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ds-drawer__subtitle {
+  margin: 0;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal, 1.5);
+  color: var(--uems-text-secondary);
+}
+.ds-drawer__subtitle[hidden] { display: none; }
+
+/* ---- Body (slot, scrollable) ------------------------------------------ */
+.ds-drawer__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--spacing-20);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal, 1.5);
+  color: var(--uems-text-secondary);
+}
+.ds-drawer__body :first-child { margin-top: 0; }
+.ds-drawer__body :last-child { margin-bottom: 0; }
+
+/* ---- Footer ------------------------------------------------------------ */
+.ds-drawer__footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  padding: var(--spacing-16) var(--spacing-20);
+  border-top: 1px solid var(--uems-border-tertiary);
+}
+.ds-drawer__footer[hidden] { display: none; }
+.ds-drawer__footer-start { flex: 0 0 auto; display: inline-flex; align-items: center; }
+.ds-drawer__spacer { flex: 1 1 auto; }
+.ds-drawer__footer-actions { flex: 0 0 auto; display: inline-flex; align-items: center; gap: var(--spacing-8); }
+.ds-drawer__footer[data-align="centered"] { justify-content: center; }
+.ds-drawer__footer[data-align="centered"] .ds-drawer__spacer,
+.ds-drawer__footer[data-align="centered"] .ds-drawer__footer-start { display: none; }
+
+/* ---- RTL --------------------------------------------------------------- */
+[dir="rtl"] .ds-drawer__header { flex-direction: row-reverse; }
+[dir="rtl"] .ds-drawer__title,
+[dir="rtl"] .ds-drawer__subtitle,
+[dir="rtl"] .ds-drawer__body { text-align: right; }
+
+/* ---- Motion ------------------------------------------------------------ */
+@keyframes ds-drawer-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ds-drawer-slide-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes ds-drawer-slide-left  { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .ds-drawer__overlay, .ds-drawer__panel { animation: none; }
+}
