@@ -30,6 +30,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 /* Centre search uses the shared search-field component. */
 import '../search-field/search-field.js';
 
@@ -305,7 +306,7 @@ export class DsHeaderNav extends HTMLElement {
        data-action) so the kebab stays out of the utility-icon logic. */
     const activeTab = (this._tabs || []).find((t) => t.active);
     const compactNavHTML = isTopNav ? `
-      <span class="ds-header-nav__current" aria-hidden="true">${activeTab ? activeTab.label : ''}</span>
+      <span class="ds-header-nav__current" aria-hidden="true">${activeTab ? escapeHtml(activeTab.label) : ''}</span>
       <button type="button" class="ds-header-nav__menu-kebab" aria-label="Open navigation menu"
               aria-haspopup="true" aria-expanded="false">
         <ds-icon name="more-vertical" size="20"></ds-icon>
@@ -448,10 +449,10 @@ export class DsHeaderNav extends HTMLElement {
 
   _renderTabs() {
     const tabsHTML = this._tabs.map((t) => `
-      <a href="${t.href || '#'}"
+      <a href="${escapeHtml(t.href || '#')}"
          class="ds-header-nav__tab${t.active ? ' ds-header-nav__tab--active' : ''}"
-         data-tab-id="${t.id}"
-         ${t.active ? 'aria-current="page"' : ''}>${t.label}</a>
+         data-tab-id="${escapeHtml(t.id)}"
+         ${t.active ? 'aria-current="page"' : ''}>${escapeHtml(t.label)}</a>
     `).join('');
     /* The tabs list is wrapped in its own scrollable/clipped track so that the
        trailing overflow button lives as a sibling — always visible, never

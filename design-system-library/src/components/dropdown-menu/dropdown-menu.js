@@ -51,6 +51,13 @@ _injectCss('ds-dropdown-checkbox-css', '../checkbox/checkbox.css');
 _injectCss('ds-dropdown-radio-css', '../radio/radio.css');
 _injectCss('ds-dropdown-textlink-css', '../text-link/text-link.css');
 
+/* Escape consumer-provided strings before they go into the menu's innerHTML.
+   Labels/descriptions/badges are frequently data-derived (customer names, saved
+   filters, dynamic options), so they must never be injected as raw HTML. */
+const esc = (s) => String(s ?? '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
 const TYPES = ['default', 'select', 'multi-select', 'action', 'select-tick'];
 const LEGACY_TYPE_MAP = {
   single: 'default',
@@ -356,7 +363,7 @@ export class DsDropdownMenu extends HTMLElement {
     else this._panel.removeAttribute('aria-multiselectable');
 
     const titleHTML = showTitle
-      ? `<div class="ds-dropdown-menu__title">${title}</div>
+      ? `<div class="ds-dropdown-menu__title">${esc(title)}</div>
          <hr class="ds-dropdown-menu__divider" />`
       : '';
 
@@ -365,7 +372,7 @@ export class DsDropdownMenu extends HTMLElement {
     const renderable = this._items.filter((it) => it && !['heading', 'divider', 'selection-bar'].includes(it.type));
     const emptyText = this.getAttribute('empty-text') || 'No options';
     const itemsHTML = renderable.length === 0
-      ? `<ul class="ds-dropdown-menu__list"><li class="ds-dropdown-menu__empty" role="presentation">${emptyText}</li></ul>`
+      ? `<ul class="ds-dropdown-menu__list"><li class="ds-dropdown-menu__empty" role="presentation">${esc(emptyText)}</li></ul>`
       : `<ul class="ds-dropdown-menu__list">${this._items.map((it, idx) => this._renderItem(it, idx, type)).join('')}</ul>`;
 
     let footerHTML = '';
@@ -384,13 +391,13 @@ export class DsDropdownMenu extends HTMLElement {
         const clearAllHidden  = noneSelected ? 'hidden' : '';
         const rtlAttr = rtl ? 'rtl' : '';
         const links = [
-          showSelectAll ? `<ds-text-link variant="primary" size="small" ${rtlAttr} data-select-all ${selectAllHidden}>${selectAllText}</ds-text-link>` : '',
-          showClearAll  ? `<ds-text-link variant="primary" size="small" ${rtlAttr} data-clear-all ${clearAllHidden}>${clearAllText}</ds-text-link>`  : '',
-          showReset     ? `<ds-text-link variant="subtle" size="small" ${rtlAttr} data-reset>${resetText}</ds-text-link>` : '',
+          showSelectAll ? `<ds-text-link variant="primary" size="small" ${rtlAttr} data-select-all ${selectAllHidden}>${esc(selectAllText)}</ds-text-link>` : '',
+          showClearAll  ? `<ds-text-link variant="primary" size="small" ${rtlAttr} data-clear-all ${clearAllHidden}>${esc(clearAllText)}</ds-text-link>`  : '',
+          showReset     ? `<ds-text-link variant="subtle" size="small" ${rtlAttr} data-reset>${esc(resetText)}</ds-text-link>` : '',
         ].filter(Boolean).join('');
         const actions = [
-          showCancel ? `<ds-button variant="tertiary" size="small" ${rtlAttr} data-cancel>${cancelLabel}</ds-button>` : '',
-          showApply  ? `<ds-button variant="primary"  size="small" ${rtlAttr} data-apply>${applyLabel}</ds-button>`  : '',
+          showCancel ? `<ds-button variant="tertiary" size="small" ${rtlAttr} data-cancel>${esc(cancelLabel)}</ds-button>` : '',
+          showApply  ? `<ds-button variant="primary"  size="small" ${rtlAttr} data-apply>${esc(applyLabel)}</ds-button>`  : '',
         ].filter(Boolean).join('');
         footerHTML = `
           <hr class="ds-dropdown-menu__divider" />
@@ -411,8 +418,8 @@ export class DsDropdownMenu extends HTMLElement {
                 variant="tertiary"
                 size="medium"
                 ${rtl ? 'rtl' : ''}
-                ${footerIcon ? `prefix-icon="${footerIcon}"` : ''}
-                data-footer>${footerText}</ds-button>
+                ${footerIcon ? `prefix-icon="${esc(footerIcon)}"` : ''}
+                data-footer>${esc(footerText)}</ds-button>
             </div>`;
         }
       }
@@ -429,10 +436,10 @@ export class DsDropdownMenu extends HTMLElement {
       /* Optional trailing action rendered as a text link on the heading's right
          (e.g. "Clear all" beside a "Saved filters" title). Emits ds-dropdown-action. */
       const headAction = item.action
-        ? `<ds-text-link class="ds-dropdown-menu__section-heading-action" size="small" variant="primary" underline="hover" href="#" data-heading-action="${item.action.id}">${item.action.label}</ds-text-link>`
+        ? `<ds-text-link class="ds-dropdown-menu__section-heading-action" size="small" variant="primary" underline="hover" href="#" data-heading-action="${esc(item.action.id)}">${esc(item.action.label)}</ds-text-link>`
         : '';
       return `<li class="ds-dropdown-menu__section-heading${item.action ? ' ds-dropdown-menu__section-heading--with-action' : ''}" role="presentation">
-                <span class="ds-dropdown-menu__section-heading-label">${item.label}</span>${headAction}
+                <span class="ds-dropdown-menu__section-heading-label">${esc(item.label)}</span>${headAction}
               </li>`;
     }
     if (item.type === 'divider') {
@@ -450,10 +457,10 @@ export class DsDropdownMenu extends HTMLElement {
       const selectable = this._selectable();
       const allSelected = selectable.length > 0 && selectable.every((it) => it.selected);
       return `<li class="ds-dropdown-menu__selection-bar" role="presentation">
-          <span class="ds-dropdown-menu__selection-count" aria-live="polite">${countText}</span>
+          <span class="ds-dropdown-menu__selection-count" aria-live="polite">${esc(countText)}</span>
           <span class="ds-dropdown-menu__selection-actions">
-            <ds-text-link variant="primary" size="small" ${rtlAttr} data-select-all ${allSelected ? 'hidden' : ''}>${item.selectAllText || 'Select all'}</ds-text-link>
-            <ds-text-link variant="primary" size="small" ${rtlAttr} data-deselect-all ${allSelected ? '' : 'hidden'}>${item.deselectAllText || 'Deselect all'}</ds-text-link>
+            <ds-text-link variant="primary" size="small" ${rtlAttr} data-select-all ${allSelected ? 'hidden' : ''}>${esc(item.selectAllText || 'Select all')}</ds-text-link>
+            <ds-text-link variant="primary" size="small" ${rtlAttr} data-deselect-all ${allSelected ? '' : 'hidden'}>${esc(item.deselectAllText || 'Deselect all')}</ds-text-link>
           </span>
         </li>`;
     }
@@ -488,7 +495,7 @@ export class DsDropdownMenu extends HTMLElement {
       ? `<ds-checkbox class="ds-dropdown-menu__checkbox" size="small" inert aria-hidden="true"${rtl ? ' rtl' : ''}${item.selected ? ' checked' : ''}${item.disabled ? ' disabled' : ''}></ds-checkbox>`
       : '';
     const iconHTML = item.icon
-      ? `<span class="ds-dropdown-menu__item-icon"><ds-icon name="${item.icon}" size="16"></ds-icon></span>`
+      ? `<span class="ds-dropdown-menu__item-icon"><ds-icon name="${esc(item.icon)}" size="16"></ds-icon></span>`
       : '';
     const tickHTML = (isTick && item.selected)
       ? `<span class="ds-dropdown-menu__tick" aria-hidden="true"><ds-icon name="check" size="14"></ds-icon></span>`
@@ -498,16 +505,16 @@ export class DsDropdownMenu extends HTMLElement {
       ? `<span class="ds-dropdown-menu__item-chevron" aria-hidden="true"><ds-icon name="chevron-right" size="14"></ds-icon></span>`
       : '';
     const badgeHTML = item.badge
-      ? `<span class="ds-dropdown-menu__item-badge">${item.badge}</span>`
+      ? `<span class="ds-dropdown-menu__item-badge">${esc(item.badge)}</span>`
       : '';
     const newTagHTML = item.newTag
       ? `<span class="ds-dropdown-menu__item-new">New</span>`
       : '';
     const shortcutHTML = item.shortcut
-      ? `<span class="ds-dropdown-menu__item-shortcut">${item.shortcut}</span>`
+      ? `<span class="ds-dropdown-menu__item-shortcut">${esc(item.shortcut)}</span>`
       : '';
     const descriptionHTML = item.description
-      ? `<span class="ds-dropdown-menu__item-description">${item.description}</span>`
+      ? `<span class="ds-dropdown-menu__item-description">${esc(item.description)}</span>`
       : '';
     /* Per-row hover actions (e.g. share / edit / delete on a saved item). Hidden
        until the row is hovered/focused; each button emits `ds-dropdown-action`
@@ -515,8 +522,8 @@ export class DsDropdownMenu extends HTMLElement {
     const actionsHTML = Array.isArray(item.actions) && item.actions.length
       ? `<span class="ds-dropdown-menu__item-actions" role="presentation">${item.actions.map((a) =>
           `<button type="button" class="ds-dropdown-menu__item-action${a.danger ? ' ds-dropdown-menu__item-action--danger' : ''}"
-                   data-action-id="${a.id}" aria-label="${a.label || a.id}" title="${a.label || a.id}" tabindex="-1">
-             <ds-icon name="${a.icon}" size="14"></ds-icon>
+                   data-action-id="${esc(a.id)}" aria-label="${esc(a.label || a.id)}" title="${esc(a.label || a.id)}" tabindex="-1">
+             <ds-icon name="${esc(a.icon)}" size="14"></ds-icon>
            </button>`).join('')}</span>`
       : '';
 
@@ -526,7 +533,7 @@ export class DsDropdownMenu extends HTMLElement {
                 tabindex="${tabindex}" data-index="${idx}">
               ${radioHTML}${checkboxHTML}${iconHTML}
               <span class="ds-dropdown-menu__item-content">
-                <span class="ds-dropdown-menu__item-label">${item.label ?? ''}</span>
+                <span class="ds-dropdown-menu__item-label">${esc(item.label)}</span>
                 ${descriptionHTML}
               </span>
               ${actionsHTML}${newTagHTML}${badgeHTML}${shortcutHTML}${tickHTML}${chevronHTML}

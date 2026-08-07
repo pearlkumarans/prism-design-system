@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ds-data-table — performance harness</title>
+<base href="../">
+<link rel="stylesheet" href="src/styles/index.css">
+<script>
+  window.UEMS_ICON_SPRITE = 'src/icons/icons.svg';
+  window.UEMS_ILLUSTRATION_SPRITE = 'src/icons/illustrations.svg';
+  window.UEMS_LOGO_BASE = 'src/icons/logos';
+</script>
+<style>
+  body { font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 28px; color: #10151c; background: #f7f9fb; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .meta { color: #6b7684; font-size: 13px; margin-bottom: 20px; }
+  .meta code { background: #eef2f7; padding: 1px 6px; border-radius: 5px; }
+  table.results { border-collapse: collapse; width: 100%; max-width: 780px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
+  table.results th, table.results td { text-align: right; padding: 9px 14px; border-bottom: 1px solid #eef2f7; font-variant-numeric: tabular-nums; }
+  table.results th:first-child, table.results td:first-child { text-align: left; }
+  table.results thead th { background: #f1f4f8; color: #6b7684; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
+  table.results tbody tr:last-child td { border-bottom: 0; }
+  .verdict { max-width: 780px; padding: 12px 16px; border-radius: 10px; font-size: 13.5px; }
+  .verdict.good { background: #e2f3ec; color: #12855c; }
+  .verdict.warn { background: #f6ecda; color: #a9691a; }
+  .good-cell { color: #12855c; } .warn-cell { color: #a9691a; } .crit-cell { color: #c23c2c; }
+  #stage { margin-top: 26px; border: 1px dashed #cdd6e2; border-radius: 10px; padding: 12px; background: #fff; }
+  .muted { color: #8893ad; }
+</style>
+</head>
+<body>
+  <h1>ds-data-table — performance harness</h1>
+  <div class="meta" id="meta">Running…</div>
+  <div id="results"></div>
+  <div id="stage" aria-hidden="true"><span class="muted">live table mounts here</span></div>
+
+<script type="module">
+  import './src/components/data-table/data-table.js';
+
+  const params  = new URLSearchParams(location.search);
+  const ROWS    = Number(params.get('rows') || 100);
+  const ITER    = Number(params.get('iter') || 30);
+  const WARMUP  = 6;
+  const FRAME   = 16.7;   // one 60fps frame, for context
+
+  /* ---- realistic data ------------------------------------------------------ */
+  const TYPES = ['Laptop', 'Desktop', 'Mobile', 'Server', 'Tablet'];
+  const OSES  = ['Windows 11', 'macOS 14', 'Ubuntu 22.04', 'iOS 17', 'Android 14'];
+  const STAT  = ['online', 'offline', 'idle'];
+  const seed = (i) => ({
+    id: String(i),
+    name: `Endpoint-${String(i).padStart(4, '0')}`,
+    type: TYPES[i % TYPES.length],
+    os: OSES[i % OSES.length],
+    status: STAT[i % STAT.length],
+    ip: `10.${i % 255}.${(i * 7) % 255}.${(i * 13) % 255}`,
+    risk: (i * 37) % 100,
+  });
+  const rowsA = Array.from({ length: ROWS }, (_, i) => seed(i));
+  const rowsB = Array.from({ length: ROWS }, (_, i) => seed(i + 1)); // a different set for re-render
+
+  const columns = [
+    { id: 'name',   header: 'Endpoint',  accessor: 'name',   sortable: true, rowHeader: true },
+    { id: 'type',   header: 'Type',      accessor: 'type',   sortable: true },
+    { id: 'os',     header: 'OS',        accessor: 'os',     sortable: true },
+    { id: 'ip',     header: 'IP',        accessor: 'ip' },
+    { id: 'risk',   header: 'Risk',      accessor: 'risk',   sortable: true },
+    { id: 'status', header: 'Status',    accessor: 'status', sortable: true,
+      render: (r) => { const b = document.createElement('ds-badge'); b.textContent = r.status; return b; } },
+  ];
+
+  /* ---- micro-benchmark helper --------------------------------------------- */
+  function bench(label, { setup, op }) {
+    for (let i = 0; i < WARMUP; i++) { setup && setup(); op(); }
+    const t = [];
+    for (let i = 0; i < ITER; i++) {
+      setup && setup();
+      const s = performance.now();
+      op();
+      t.push(performance.now() - s);
+    }
+    t.sort((a, b) => a - b);
+    const mean = t.reduce((a, b) => a + b, 0) / t.length;
+    return { label, median: t[Math.floor(t.length / 2)], mean, min: t[0], max: t[t.length - 1], p95: t[Math.floor(t.length * 0.95)] };
+  }
+
+  /* ---- the table under test (all rows rendered — no pagination slicing) ---- */
+  const stage = document.getElementById('stage');
+  stage.textContent = '';
+  const table = document.createElement('ds-data-table');
+  table.setAttribute('selection-mode', 'none');
+  table.setAttribute('rows-per-page', String(ROWS + 1)); // render every row
+  stage.appendChild(table);
+  table.columns = columns;
+  table.rows = rowsA;
+
+  const sortBtn = () => [...table.querySelectorAll('.ds-data-table__sort')].find((b) => b.textContent.trim().startsWith('Risk'));
+  let flip = false;
+
+  const results = [
+    bench('Cold mount + full render', {
+      setup: () => { stage.innerHTML = ''; },
+      op: () => {
+        const t = document.createElement('ds-data-table');
+        t.setAttribute('selection-mode', 'none');
+        t.setAttribute('rows-per-page', String(ROWS + 1));
+        stage.appendChild(t);
+        t.columns = columns;
+        t.rows = rowsA;
+        void t.offsetHeight; // force layout so we measure to a laid-out table
+      },
+    }),
+    bench('Row re-render (set .rows)', {
+      op: () => { table.rows = (flip = !flip) ? rowsB : rowsA; },
+    }),
+    bench('Sort (client-side + full render)', {
+      setup: () => { table.setAttribute('page', '1'); if (sortBtn()) table.__resetSort && table.__resetSort(); },
+      op: () => { sortBtn() && sortBtn().click(); },
+    }),
+    bench('Search filter (~half match)', {
+      setup: () => table.removeAttribute('search-value'),
+      op: () => table.setAttribute('search-value', 'laptop'),
+    }),
+    bench('Paginate (page change)', {
+      setup: () => { table.setAttribute('rows-per-page', '20'); table.setAttribute('page', '1'); },
+      op: () => table.setAttribute('page', '3'),
+    }),
+  ];
+  // restore the display table
+  table.setAttribute('rows-per-page', String(ROWS + 1));
+  table.removeAttribute('search-value');
+  table.rows = rowsA;
+
+  /* ---- render results ------------------------------------------------------ */
+  const ms = (n) => n.toFixed(3);
+  const cls = (n) => n < 4 ? 'good-cell' : n < FRAME ? '' : n < FRAME * 2 ? 'warn-cell' : 'crit-cell';
+  document.getElementById('meta').innerHTML =
+    `<code>${ROWS}</code> rows · <code>${ITER}</code> iterations (+${WARMUP} warmup) · all rows in the DOM · times are the <b>synchronous JS cost</b> per operation (layout/paint is extra, browser-driven). Frame budget @60fps = <code>16.7ms</code>.`;
+
+  const rowsHtml = results.map((r) => `
+    <tr>
+      <td>${r.label}</td>
+      <td class="${cls(r.median)}"><b>${ms(r.median)}</b></td>
+      <td>${ms(r.mean)}</td>
+      <td>${ms(r.min)}</td>
+      <td>${ms(r.p95)}</td>
+      <td>${ms(r.max)}</td>
+    </tr>`).join('');
+  document.getElementById('results').innerHTML = `
+    <table class="results">
+      <thead><tr><th>Operation</th><th>Median</th><th>Mean</th><th>Min</th><th>p95</th><th>Max</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>`;
+
+  const worst = Math.max(...results.map((r) => r.median));
+  const verdict = document.createElement('div');
+  verdict.className = 'verdict ' + (worst < FRAME ? 'good' : 'warn');
+  verdict.innerHTML = worst < FRAME
+    ? `✓ Every operation on ${ROWS} rows completes in under one 60fps frame (worst median ${ms(worst)}ms). No virtualization needed at this size.`
+    : `⚠ Worst median ${ms(worst)}ms exceeds a 16.7ms frame — investigate before scaling row count.`;
+  document.getElementById('results').appendChild(verdict);
+
+  // machine-readable for capture
+  console.log('[bench] ds-data-table @', ROWS, 'rows:', JSON.stringify(results.map((r) => ({ op: r.label, medianMs: +r.median.toFixed(3), p95Ms: +r.p95.toFixed(3) }))));
+  window.__benchResults = results;
+</script>
+</body>
+</html>

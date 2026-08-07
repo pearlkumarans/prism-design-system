@@ -12,6 +12,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 const POSITIONS = ['up-center', 'up-left', 'up-right', 'down-center', 'down-left', 'down-right', 'left', 'right', 'without-arrow'];
 const THEMES = ['dark', 'light', 'red'];
@@ -191,8 +192,8 @@ export class DsTooltip extends HTMLElement {
     else this._tip.removeAttribute('dir');
 
     this._tip.innerHTML = `
-      ${showIcon ? `<span class="ds-tooltip__icon" aria-hidden="true"><ds-icon name="${icon}" size="20"></ds-icon></span>` : ''}
-      <span class="ds-tooltip__text">${text}</span>
+      ${showIcon ? `<span class="ds-tooltip__icon" aria-hidden="true"><ds-icon name="${escapeHtml(icon)}" size="20"></ds-icon></span>` : ''}
+      <span class="ds-tooltip__text">${escapeHtml(text)}</span>
     `;
     if (this._open) this._position();
   }

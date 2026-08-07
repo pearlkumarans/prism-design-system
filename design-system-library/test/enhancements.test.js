@@ -69,3 +69,25 @@ describe('ds-slider — degenerate range guard', () => {
     expect(input.style.getPropertyValue('--_s-pct')).to.equal('25%');
   });
 });
+
+describe('ds-slider — range thumbs cannot cross', () => {
+  // The `input` handler runs synchronously on dispatch, so el.value reflects
+  // the clamp immediately — no waiting.
+  it('clamps the low thumb up to the high thumb', async () => {
+    const el = await fixture(html`<ds-slider type="range" min="0" max="100" value="20,80"></ds-slider>`);
+    await nextFrame();
+    const low = el.querySelector('[data-which="low"]');
+    low.value = '90';                                  // dragged past the high thumb
+    low.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(el.value).to.deep.equal([80, 80]);
+  });
+
+  it('clamps the high thumb down to the low thumb', async () => {
+    const el = await fixture(html`<ds-slider type="range" min="0" max="100" value="20,80"></ds-slider>`);
+    await nextFrame();
+    const high = el.querySelector('[data-which="high"]');
+    high.value = '10';                                 // dragged below the low thumb
+    high.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(el.value).to.deep.equal([20, 20]);
+  });
+});

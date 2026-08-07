@@ -166,10 +166,10 @@
 
 <ds-drawer id="profile-pop" class="profile-drawer" side="right" size="m" show-footer="false" show-close="false">
   <div slot="header" class="pf-id">
-    <ds-avatar size="large" name="Felix John"></ds-avatar>
+    <ds-avatar size="large" name="Felix John" data-pf-avatar></ds-avatar>
     <div class="pf-id__info">
-      <div class="pf-id__name">Felix John <ds-badge variant="subtle" state="acknowledge" size="medium" shape="rounded" data-i18n="pf.role">Administrator</ds-badge></div>
-      <div class="pf-id__email">felix.John@zylker.com</div>
+      <div class="pf-id__name"><span data-pf-name>Felix John</span> <ds-badge variant="subtle" state="acknowledge" size="medium" shape="rounded" data-pf-role data-i18n="pf.role">Administrator</ds-badge></div>
+      <div class="pf-id__email" data-pf-email>felix.John@zylker.com</div>
       <div class="pf-id__meta"><span data-i18n="pf.sessions">Sessions</span> <b>22</b><span class="pf-dot">·</span><span data-i18n="pf.userid">User ID</span> <b>754955171</b></div>
       <div class="pf-id__meta"><span data-i18n="pf.superadmin">Super Admin :</span> Roy@zohomail.com</div>
     </div>
@@ -180,7 +180,7 @@
     <div class="pf-actions">
       <ds-button class="pf-act" variant="tertiary" size="medium" prefix-icon="user-setting" data-pf-nav="personalize" data-i18n="pf.personalize">Personalize</ds-button>
       <ds-button class="pf-act" variant="tertiary" size="medium" prefix-icon="user" data-i18n="pf.myAccount">My Account</ds-button>
-      <ds-button class="pf-act pf-act--danger" variant="tertiary" size="medium" prefix-icon="logout-01" data-i18n="pf.signout">SignOut</ds-button>
+      <ds-button class="pf-act pf-act--danger" variant="tertiary" size="medium" prefix-icon="logout-01" data-pf-signout data-i18n="pf.signout">SignOut</ds-button>
     </div>
     <ds-container class="pf-card pf-trial" tone="alert" radius="lg">
       <span class="pf-trial__ic"><ds-icon name="clock" size="20"></ds-icon></span>
@@ -294,10 +294,10 @@
     const appr = ctx().appr || 'light';
     if (_pfTab === 'general') {
       box.innerHTML =
-        `<div class="pf-field"><span class="pf-field__label">${tr('Session Expiration')}</span><ds-input-select id="pf-sess" label-position="top" show-label="false" show-helper-row="false"></ds-input-select></div>` +
-        `<div class="pf-field"><span class="pf-field__label">${tr('Choose Time Zone')}</span><ds-input-select id="pf-tz" label-position="top" show-label="false" show-helper-row="false"></ds-input-select></div>` +
-        `<div class="pf-field"><span class="pf-field__label">${tr('Choose Time Format')}</span><ds-input-select id="pf-fmt" label-position="top" show-label="false" show-helper-row="false"></ds-input-select></div>` +
-        `<div class="pf-field"><span class="pf-field__label">${tr('Display Language')}</span><ds-input-select id="pf-lang" label-position="top" show-label="false" show-helper-row="false"></ds-input-select></div>` +
+        `<div class="pf-field"><span class="pf-field__label">${tr('Session Expiration')}</span><ds-input-select id="pf-sess" full-width label-position="top" show-label="false" show-helper-row="false"></ds-input-select></div>` +
+        `<div class="pf-field"><span class="pf-field__label">${tr('Choose Time Zone')}</span><ds-input-select id="pf-tz" full-width label-position="top" show-label="false" show-helper-row="false"></ds-input-select></div>` +
+        `<div class="pf-field"><span class="pf-field__label">${tr('Choose Time Format')}</span><ds-input-select id="pf-fmt" full-width label-position="top" show-label="false" show-helper-row="false"></ds-input-select></div>` +
+        `<div class="pf-field"><span class="pf-field__label">${tr('Display Language')}</span><ds-input-select id="pf-lang" full-width label-position="top" show-label="false" show-helper-row="false"></ds-input-select></div>` +
         `<div class="pf-foot-actions"><ds-button variant="secondary" size="medium" data-pf-back>${tr('Close')}</ds-button><ds-button variant="primary" size="medium">${tr('Save')}</ds-button></div>`;
       const set = (id, arr, val) => { const el = box.querySelector(id); el.options = opts(arr); el.value = val; };
       set('#pf-sess', ['15 Minutes', '30 Minutes', '1 Hour', '4 Hours', '8 Hours'], '15 Minutes');
@@ -311,7 +311,7 @@
       seg.options = [{ value: 'pwd', label: tr('Change Password') }, { value: 'code', label: tr('Backup Code') }];
       seg.value = _authSeg;
       const ab = box.querySelector('#pf-auth-body');
-      const pwdField = (label, ph) => `<div class="pf-field"><span class="pf-field__label">${tr(label)} <span class="pf-req">*</span></span><ds-text-input type="password" placeholder="${tr(ph)}" suffix-icon="eye" label-position="top" show-label="false" show-helper-row="false" data-pwd></ds-text-input></div>`;
+      const pwdField = (label, ph) => `<div class="pf-field"><span class="pf-field__label">${tr(label)} <span class="pf-req">*</span></span><ds-text-input type="password" placeholder="${tr(ph)}" full-width suffix-icon="eye" label-position="top" show-label="false" show-helper-row="false" data-pwd></ds-text-input></div>`;
       const renderAuthSeg = () => {
         if (_authSeg === 'pwd') {
           ab.innerHTML = pwdField('Old Password', 'Enter old password') + pwdField('New Password', 'Set a new password') + pwdField('Confirm New Password', 'Re-enter a new password') + `<div class="pf-foot-actions"><ds-button variant="secondary" size="medium" data-pf-back>${tr('Close')}</ds-button><ds-button variant="primary" size="medium">${tr('Save')}</ds-button></div>`;
@@ -414,6 +414,13 @@
 
   /* Main-view nav buttons (Personalize / Talk) + appearance theme picker */
   panel().querySelectorAll('[data-pf-nav]').forEach((b) => b.addEventListener('click', () => { _pfTab = 'general'; openPfSub(b.dataset.pfNav); }));
+  /* Sign out — clear the auth token and return to the sign-in page. (The .env/proxy
+     key path authenticates server-side, so there it just returns you to login.) */
+  panel().querySelector('[data-pf-signout]')?.addEventListener('click', () => {
+    try { if (window.PrismAPI && PrismAPI.auth) PrismAPI.auth.logout(); } catch (_) {}
+    try { hide(); } catch (_) {}
+    location.href = 'login.html';   /* relative to the Shell at /Layout/ → /Layout/login.html */
+  });
   /* Appearance → "Advanced" jumps straight to Personalize ▸ Preferences */
   panel().querySelector('[data-pf-advanced]')?.addEventListener('click', (e) => { e.preventDefault(); _pfTab = 'prefs'; openPfSub('personalize'); });
   panel().querySelectorAll('#pf-main [data-pf-theme]').forEach((b) => b.addEventListener('click', () => {
@@ -427,7 +434,22 @@
     panel().querySelectorAll('#pf-main [data-pfcolor]').forEach((x) => x.classList.toggle('is-active', x === b));
   }));
 
-  function show() { closePfSub(); const p = panel(); if (p) p.open(); }
+  /* Populate the header from the live session (userMeta via PrismAPI.auth.whoami).
+     Falls back silently to the static demo identity if there's no backend/session. */
+  async function populateUser() {
+    if (!(window.PrismAPI && PrismAPI.auth && PrismAPI.auth.whoami)) return;
+    let u; try { u = await PrismAPI.auth.whoami(); } catch (_) { return; }
+    if (!u) return;
+    const p = panel(); if (!p) return;
+    const set = (sel, txt) => { const el = p.querySelector(sel); if (el && txt) el.textContent = txt; };
+    set('[data-pf-name]', u.name);
+    set('[data-pf-role]', u.role);
+    set('[data-pf-email]', u.email || '');
+    const av = p.querySelector('[data-pf-avatar]'); if (av && u.name) av.setAttribute('name', u.name);
+    const em = p.querySelector('[data-pf-email]'); if (em && !u.email) em.hidden = true;
+  }
+
+  function show() { closePfSub(); const p = panel(); if (p) p.open(); populateUser(); }
   function hide() { const p = panel(); if (p) p.close(); }
   /* Custom header close (matches the help/apps drawers' small tertiary-grey X). */
   panel().querySelector('[data-pf-close]')?.addEventListener('click', hide);

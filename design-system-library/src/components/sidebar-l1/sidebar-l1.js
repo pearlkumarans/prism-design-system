@@ -21,6 +21,7 @@
    ============================================================================= */
 
 import { boolAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 /* Collapsed (icon-only) items reveal their label via the shared <ds-tooltip>. */
 import '../tooltip/tooltip.js';
 
@@ -87,22 +88,22 @@ export class DsSidebarL1 extends HTMLElement {
       const stateClass = it.active ? ' ds-sidebar-l1__item--active' : (it.state === 'add' ? ' ds-sidebar-l1__item--add' : '');
       const ariaDisabled = it.disabled ? 'aria-disabled="true" tabindex="-1"' : '';
       const ariaCurrent = it.active ? 'aria-current="page"' : '';
-      const href = it.href ? `href="${it.href}"` : '';
-      const ariaLabel = `aria-label="${it.label || ''}"`;
-      const iconHTML = it.icon ? `<ds-icon name="${it.icon}" size="20"></ds-icon>` : '';
+      const href = it.href ? `href="${escapeHtml(it.href)}"` : '';
+      const ariaLabel = `aria-label="${escapeHtml(it.label || '')}"`;
+      const iconHTML = it.icon ? `<ds-icon name="${escapeHtml(it.icon)}" size="20"></ds-icon>` : '';
       const labelStr = it.label || '';
       /* Single word → stays on one line and truncates with an ellipsis (never
          splits a word); multi-word wraps to 2 lines (see CSS). */
       const singleWord = labelStr.trim() !== '' && !/\s/.test(labelStr.trim());
       const labelCls = `ds-sidebar-l1__label${singleWord ? ' ds-sidebar-l1__label--single' : ''}`;
-      const itemHTML = `<${tag} class="ds-sidebar-l1__item${stateClass}" data-id="${it.id ?? ''}" ${href} ${ariaDisabled} ${ariaCurrent} ${ariaLabel}>
+      const itemHTML = `<${tag} class="ds-sidebar-l1__item${stateClass}" data-id="${escapeHtml(it.id ?? '')}" ${href} ${ariaDisabled} ${ariaCurrent} ${ariaLabel}>
           <span class="ds-sidebar-l1__icon-wrap" aria-hidden="true">${iconHTML}</span>
-          <span class="${labelCls}" data-label="${labelStr.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}"><span class="ds-sidebar-l1__label-text">${labelStr}</span></span>
+          <span class="${labelCls}" data-label="${escapeHtml(labelStr)}"><span class="ds-sidebar-l1__label-text">${escapeHtml(labelStr)}</span></span>
         </${tag}>`;
       /* Collapsed = icon only → wrap in a ds-tooltip so the menu name shows on
          hover/focus (to the right of the rail). Expanded shows the label, no tip. */
       const body = collapsed
-        ? `<ds-tooltip class="ds-sidebar-l1__tip" text="${(it.label || '').replace(/"/g, '&quot;')}" show-icon="false" position="right">${itemHTML}</ds-tooltip>`
+        ? `<ds-tooltip class="ds-sidebar-l1__tip" text="${escapeHtml(it.label || '')}" show-icon="false" position="right">${itemHTML}</ds-tooltip>`
         : itemHTML;
       return `<li>${body}</li>`;
     };

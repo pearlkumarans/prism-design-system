@@ -3,6 +3,7 @@
    also emits events so server-side consumers can re-supply rows). */
 import { fixture, html, expect, oneEvent, nextFrame } from '@open-wc/testing';
 import '../src/components/data-table/data-table.js';
+import { safeHtml } from '../src/utils/escape.js';
 
 const cols = () => ([
   { id: 'name', header: 'Name', accessor: 'name', sortable: true },
@@ -94,5 +95,40 @@ describe('ds-data-table — search + pagination', () => {
     el.setAttribute('page', '2');
     await nextFrame();
     expect(el.querySelectorAll('tbody tr').length).to.equal(1); // 3 rows, last page holds 1
+  });
+});
+
+describe('ds-data-table — safe cell rendering', () => {
+  const withRender = async (render, rows) => {
+    const el = await fixture(html`<ds-data-table selection-mode="none"></ds-data-table>`);
+    el.columns = [{ id: 'n', header: 'N', render }];
+    el.rows = rows;
+    await nextFrame();
+    return el;
+  };
+
+  it('safeHtml renderer keeps static markup but escapes interpolated data', async () => {
+    const el = await withRender(
+      (r) => safeHtml`<b class="tag">${r.name}</b>`,
+      [{ id: '1', name: '<img src=x onerror=alert(1)>' }],
+    );
+    expect(el.querySelector('tbody td b.tag'), 'static <b> should render').to.exist;
+    expect(el.querySelector('tbody td img'), 'data must not inject an <img>').to.not.exist;
+    expect(el.querySelector('tbody td b.tag').textContent).to.contain('<img');
+  });
+
+  it('Node renderer is injection-safe', async () => {
+    const el = await withRender((r) => {
+      const s = document.createElement('span');
+      s.textContent = r.name;
+      return s;
+    }, [{ id: '1', name: '<img src=x>' }]);
+    expect(el.querySelector('tbody td img')).to.not.exist;
+    expect(el.querySelector('tbody td span').textContent).to.contain('<img');
+  });
+
+  it('plain-string renderer still injects HTML (backward compatible)', async () => {
+    const el = await withRender(() => '<b class="legacy">ok</b>', [{ id: '1', name: 'x' }]);
+    expect(el.querySelector('tbody td b.legacy'), 'legacy trusted-HTML string should still render').to.exist;
   });
 });

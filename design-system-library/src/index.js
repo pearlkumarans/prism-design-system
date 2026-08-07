@@ -19,3 +19,9 @@ if (typeof document !== 'undefined' && !document.querySelector(`link[href="${css
 import './components/index.js';
 
 export * from './components/index.js';
+
+/* Public helpers for building safe cell/label content from server or user data.
+   `safeHtml` is the safe way to return rich HTML from a data-table cell renderer:
+     import { safeHtml } from '@uems/design-system';
+     render: (row) => safeHtml`<a href="${row.url}">${row.name}</a>`  // values escaped */
+export { escapeHtml, safeHtml, SafeHtml, isSafeHtml } from './utils/escape.js';

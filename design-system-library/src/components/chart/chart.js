@@ -114,7 +114,9 @@ export class DsChart extends HTMLElement {
     /* SVG text rides the viewBox scale; counter-scale it back to a fixed
        point size whenever the chart's rendered width changes. */
     if (!this._ro && typeof ResizeObserver !== 'undefined') {
-      this._ro = new ResizeObserver(() => this._reflow());
+      /* Coalesce resize bursts to one reflow per frame (see _scheduleReflow) —
+         a responsive chart otherwise rebuilds its SVG on every resize tick. */
+      this._ro = new ResizeObserver(() => this._scheduleReflow());
       this._ro.observe(this);
     }
     /* A chart rendered while hidden (tab / drawer / below-fold) has no layout,
@@ -131,6 +133,7 @@ export class DsChart extends HTMLElement {
 
   disconnectedCallback() {
     if (this._tip) this._tip.hidden = true;
+    if (this._reflowRaf) { cancelAnimationFrame(this._reflowRaf); this._reflowRaf = 0; }
     if (this._ro) { this._ro.disconnect(); this._ro = null; }
     if (this._io) { this._io.disconnect(); this._io = null; }
   }
@@ -155,6 +158,13 @@ export class DsChart extends HTMLElement {
     this._reflowing = true;
     try { if (this._fitResponsive) this._render(); else this._fitFonts(); }
     finally { this._reflowing = false; }
+  }
+
+  /* Coalesce a burst of ResizeObserver callbacks into a single reflow on the next
+     frame, so a resize drag triggers one render per frame, not one per tick. */
+  _scheduleReflow() {
+    if (this._reflowRaf) return;
+    this._reflowRaf = requestAnimationFrame(() => { this._reflowRaf = 0; this._reflow(); });
   }
 
   _defaultData() {

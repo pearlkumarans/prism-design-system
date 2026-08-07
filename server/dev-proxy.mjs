@@ -18,14 +18,38 @@
    ============================================================================= */
 import http from 'node:http';
 import https from 'node:https';
-import { createReadStream, promises as fsp } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, promises as fsp } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'); // repo root
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(HERE, '..'); // repo root
+
+/* Load server/.env (KEY=VALUE lines) into process.env so credentials are set ONCE,
+   not on every command. Explicit shell env still wins. This file is git-ignored —
+   put EMS_TARGET / EMS_COOKIE / EMS_CSRF / PORT there. See server/.env.example. */
+(function loadDotEnv() {
+  const envPath = path.join(HERE, '.env');
+  if (!existsSync(envPath)) return;
+  for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+    const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+    if (!m || line.trim().startsWith('#')) continue;
+    let v = m[2].trim();
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
+    if (process.env[m[1]] === undefined) process.env[m[1]] = v;
+  }
+  console.log('  (loaded server/.env)');
+})();
 const PORT = Number(process.env.PORT || 8090);
 const TARGET = new URL(process.env.EMS_TARGET || 'http://ems-ds:8020');
 const PREFIX = process.env.PROXY_PREFIX || '/proxy';
+/* Auth injection (cookie/CSRF-based backends like EC). Supply via ENV at runtime —
+   NEVER commit these; they're session secrets that expire. Example:
+     EMS_COOKIE='UEMJSESSIONID=…; Authorization=…' EMS_CSRF='dcparamcsr=…' \
+     node server/dev-proxy.mjs
+   The proxy attaches them to every forwarded request so live calls authenticate. */
+const EMS_COOKIE = process.env.EMS_COOKIE || '';
+const EMS_CSRF = process.env.EMS_CSRF || '';
 const AGENT = TARGET.protocol === 'https:' ? https : http;
 /* Internal EC servers usually run a self-signed cert — don't reject it (dev only). */
 const TLS = TARGET.protocol === 'https:' ? { rejectUnauthorized: false } : {};
@@ -44,6 +68,9 @@ function proxy(req, res) {
   const rest = req.url.slice(PREFIX.length) || '/';          // strip /proxy → real backend path
   const headers = { ...req.headers, host: TARGET.host };      // rewrite Host for the backend
   delete headers['accept-encoding'];                          // avoid re-encoding surprises
+  /* Inject session auth from env (secrets never live in the repo). */
+  if (EMS_COOKIE) headers['cookie'] = EMS_COOKIE;
+  if (EMS_CSRF) { headers['x-zcsrf-token'] = EMS_CSRF; headers['referer'] = TARGET.origin + '/webclient'; }
   const opts = {
     protocol: TARGET.protocol, hostname: TARGET.hostname,
     port: TARGET.port || (TARGET.protocol === 'https:' ? 443 : 80),
@@ -85,5 +112,6 @@ http.createServer((req, res) => {
   console.log(`\n  Prism dev proxy`);
   console.log(`  ├─ serving   ${ROOT}`);
   console.log(`  ├─ ${PREFIX}/*  →  ${TARGET.origin}/*`);
+  console.log(`  ├─ auth      ${EMS_COOKIE ? 'cookie injected from EMS_COOKIE' + (EMS_CSRF ? ' + CSRF' : '') : 'none (set EMS_COOKIE / EMS_CSRF for authed calls)'}`);
   console.log(`  └─ open       http://localhost:${PORT}/Layout/Shell.html?view=list-view\n`);
 });

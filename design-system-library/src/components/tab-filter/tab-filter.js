@@ -19,6 +19,7 @@
    ============================================================================= */
 
 import { boolAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 let _uid = 0;
 
@@ -184,7 +185,7 @@ export class DsTabFilter extends HTMLElement {
     const iconSize = this._size === 'small' ? 16 : 20;
     const iconHTML = opt.icon
       ? `<span class="ds-tab-filter__option-icon" aria-hidden="true">
-           <ds-icon name="${opt.icon}" size="${iconSize}"></ds-icon>
+           <ds-icon name="${escapeHtml(opt.icon)}" size="${iconSize}"></ds-icon>
          </span>`
       : '';
 
@@ -211,10 +212,10 @@ export class DsTabFilter extends HTMLElement {
               aria-checked="${isActive ? 'true' : 'false'}"
               ${isDisabled ? 'aria-disabled="true" disabled' : ''}
               tabindex="${isActive && !isDisabled ? 0 : -1}"
-              data-value="${opt.value}"
+              data-value="${escapeHtml(opt.value)}"
               data-index="${idx}">
               ${iconHTML}
-              <span class="ds-tab-filter__option-label">${label}</span>
+              <span class="ds-tab-filter__option-label">${escapeHtml(label)}</span>
               ${badgeHTML}
             </button>`;
   }

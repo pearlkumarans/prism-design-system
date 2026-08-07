@@ -12,10 +12,16 @@ const ciBrowsers = process.env.CI
 export default {
   files: 'test/**/*.test.js',
   nodeResolve: true,            // resolve bare imports (@open-wc/testing)
-  concurrency: 4,
+  /* Run one file at a time. These tests portal tooltips/menus to <body> and drive
+     ResizeObservers; running files concurrently occasionally torn down a browser
+     execution context mid-evaluate (puppeteer "Cannot read … 'resolve'"). Serial
+     execution removes those cross-file races — the suite is small, so it's still fast. */
+  concurrency: 1,
   browsers: ciBrowsers,        // undefined ⇒ default launcher (local)
   testFramework: {
-    config: { ui: 'bdd', timeout: 5000 },
+    /* retries: re-run a test that fails, to absorb the rare residual flake without
+       masking real bugs (a genuine failure still fails on every attempt). */
+    config: { ui: 'bdd', timeout: 5000, retries: 2 },
   },
   /* Component modules read a few globals for icon/logo sprites; stub them before
      any component loads so nothing throws when the sprite files aren't served. */

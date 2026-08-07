@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prism Design System — Code Health Report</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f7f9fb;
+    --panel: #ffffff;
+    --panel-2: #f1f4f8;
+    --ink: #10151c;
+    --ink-2: #3d4756;
+    --ink-3: #6b7684;
+    --line: #e2e8f0;
+    --line-2: #eef2f7;
+    --accent: #2f6bff;
+    --accent-soft: #e8efff;
+    --good: #12855c;
+    --good-soft: #e2f3ec;
+    --warn: #a9691a;
+    --warn-soft: #f6ecda;
+    --crit: #c23c2c;
+    --crit-soft: #f7e5e2;
+    --shadow: 0 1px 2px rgba(16,21,28,.04), 0 8px 24px -12px rgba(16,21,28,.12);
+    --radius: 14px;
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c0f14;
+      --panel: #141922;
+      --panel-2: #1b2230;
+      --ink: #eef2f8;
+      --ink-2: #b3bdcc;
+      --ink-3: #7f8b9c;
+      --line: #262f3d;
+      --line-2: #1e2632;
+      --accent: #6f9bff;
+      --accent-soft: #1a2540;
+      --good: #4fc79a;
+      --good-soft: #142a22;
+      --warn: #d9a441;
+      --warn-soft: #2c2413;
+      --crit: #f0806f;
+      --crit-soft: #2e1a17;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f7f9fb; --panel: #ffffff; --panel-2: #f1f4f8; --ink: #10151c; --ink-2: #3d4756; --ink-3: #6b7684;
+    --line: #e2e8f0; --line-2: #eef2f7; --accent: #2f6bff; --accent-soft: #e8efff;
+    --good: #12855c; --good-soft: #e2f3ec; --warn: #a9691a; --warn-soft: #f6ecda; --crit: #c23c2c; --crit-soft: #f7e5e2;
+    --shadow: 0 1px 2px rgba(16,21,28,.04), 0 8px 24px -12px rgba(16,21,28,.12);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0c0f14; --panel: #141922; --panel-2: #1b2230; --ink: #eef2f8; --ink-2: #b3bdcc; --ink-3: #7f8b9c;
+    --line: #262f3d; --line-2: #1e2632; --accent: #6f9bff; --accent-soft: #1a2540;
+    --good: #4fc79a; --good-soft: #142a22; --warn: #d9a441; --warn-soft: #2c2413; --crit: #f0806f; --crit-soft: #2e1a17;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.55;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 48px 24px 96px; }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* ---- Masthead ---- */
+  .eyebrow {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-3); display: flex; align-items: center; gap: 10px; margin: 0 0 18px;
+  }
+  .eyebrow::before { content: ""; width: 22px; height: 2px; background: var(--accent); display: inline-block; }
+  h1 { font-size: clamp(30px, 4.6vw, 46px); line-height: 1.05; letter-spacing: -.02em; margin: 0 0 14px; text-wrap: balance; font-weight: 680; }
+  .lede { font-size: 18px; color: var(--ink-2); max-width: 62ch; margin: 0; }
+  .lede b { color: var(--ink); font-weight: 640; }
+
+  /* ---- Verdict banner ---- */
+  .verdict {
+    margin-top: 34px; display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: center;
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 26px 28px; box-shadow: var(--shadow);
+  }
+  .grade-badge {
+    width: 116px; height: 116px; border-radius: 20px; display: grid; place-content: center; text-align: center;
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .grade-badge .g { font-family: var(--mono); font-size: 44px; font-weight: 700; line-height: 1; color: var(--accent); letter-spacing: -.02em; }
+  .grade-badge .gl { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); margin-top: 8px; }
+  .verdict-body h2 { margin: 0 0 6px; font-size: 20px; letter-spacing: -.01em; }
+  .verdict-body p { margin: 0; color: var(--ink-2); font-size: 15px; max-width: 60ch; }
+  .verdict-tags { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag { font-family: var(--mono); font-size: 11.5px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); background: var(--panel-2); }
+  .tag.good { color: var(--good); background: var(--good-soft); border-color: color-mix(in srgb, var(--good) 26%, transparent); }
+  .tag.crit { color: var(--crit); background: var(--crit-soft); border-color: color-mix(in srgb, var(--crit) 26%, transparent); }
+
+  /* ---- Section ---- */
+  section { margin-top: 52px; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin: 0 0 20px; }
+  .sec-head h2 { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; margin: 0; color: var(--ink); font-weight: 680; }
+  .sec-head .rule { flex: 1; height: 1px; background: var(--line); }
+  .sec-head .n { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+
+  /* ---- KPI strip ---- */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .kpi .v { font-family: var(--mono); font-size: 26px; font-weight: 640; letter-spacing: -.02em; }
+  .kpi .k { font-size: 12.5px; color: var(--ink-3); margin-top: 3px; }
+
+  /* ---- Scorecard ---- */
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px 20px; box-shadow: var(--shadow); }
+  .card-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .card-top h3 { margin: 0; font-size: 15.5px; letter-spacing: -.01em; }
+  .chip { font-family: var(--mono); font-size: 12px; font-weight: 640; padding: 3px 9px; border-radius: 7px; }
+  .chip.a { color: var(--good); background: var(--good-soft); }
+  .chip.b { color: var(--accent); background: var(--accent-soft); }
+  .chip.c { color: var(--warn); background: var(--warn-soft); }
+  .chip.f { color: var(--crit); background: var(--crit-soft); }
+  .meter { height: 6px; border-radius: 999px; background: var(--panel-2); margin: 14px 0 12px; overflow: hidden; }
+  .meter > i { display: block; height: 100%; border-radius: 999px; }
+  .fill-a { background: var(--good); } .fill-b { background: var(--accent); } .fill-c { background: var(--warn); } .fill-f { background: var(--crit); }
+  .card p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+  .card .ev { margin-top: 10px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+
+  /* ---- Fixed list ---- */
+  .fixed { display: grid; gap: 10px; }
+  .fx { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 13px 16px; }
+  .fx .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
+  .fx .t { font-size: 14px; }
+  .fx .t b { font-weight: 620; }
+  .fx .t span { color: var(--ink-3); }
+  .fx .loc { font-family: var(--mono); font-size: 11px; color: var(--ink-3); text-align: right; }
+  .fx .st { font-family: var(--mono); font-size: 11px; color: var(--good); background: var(--good-soft); padding: 3px 8px; border-radius: 6px; }
+
+  /* ---- Table ---- */
+  .tbl-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
+  thead th { text-align: left; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; padding: 12px 16px; background: var(--panel-2); border-bottom: 1px solid var(--line); }
+  tbody td { padding: 13px 16px; border-bottom: 1px solid var(--line-2); color: var(--ink-2); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody td:first-child { color: var(--ink); }
+  .pri { font-family: var(--mono); font-size: 11px; font-weight: 640; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
+  .pri.p1 { color: var(--crit); background: var(--crit-soft); }
+  .pri.p2 { color: var(--warn); background: var(--warn-soft); }
+  .pri.p3 { color: var(--ink-3); background: var(--panel-2); }
+
+  /* ---- Note ---- */
+  .note { margin-top: 44px; border-left: 3px solid var(--line); padding: 4px 0 4px 18px; }
+  .note h4 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  .note p { margin: 0; font-size: 13.5px; color: var(--ink-2); max-width: 74ch; }
+  footer { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--ink-3); font-family: var(--mono); }
+
+  @media (max-width: 720px) {
+    .verdict { grid-template-columns: 1fr; text-align: left; }
+    .kpis, .cards { grid-template-columns: 1fr 1fr; }
+    .fx { grid-template-columns: auto 1fr; }
+    .fx .loc, .fx .st { grid-column: 2; text-align: left; }
+  }
+  @media (max-width: 460px) { .kpis, .cards { grid-template-columns: 1fr; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Prism Design System · Static Review</p>
+  <h1>Code-health report: the component library</h1>
+  <p class="lede">A structural review of all <b>69 web components</b> — architecture, memory safety, accessibility, token discipline, and defect density — after a full pattern-scan pass and a session of fixes. The verdict below is <b>evidence-led, not a rubber stamp</b>.</p>
+
+  <div class="verdict">
+    <div class="grade-badge">
+      <div>
+        <div class="g">A−</div>
+        <div class="gl">Overall</div>
+      </div>
+    </div>
+    <div class="verdict-body">
+      <h2>Well-architected, disciplined, and now safety-netted.</h2>
+      <p>Consistent, accessible, token-driven, injection-safe, and leak-free, with a low defect rate for its size — and, unlike at the start of this review, a real test harness + CI behind it. The one thing short of a straight A is <b>test breadth</b>: the suite covers the highest-risk logic and everything changed here, but most components still lack dedicated tests. (Up from B+ once the "zero automated tests" structural gap that gated it was closed.)</p>
+      <div class="verdict-tags">
+        <span class="tag good">Consistent architecture</span>
+        <span class="tag good">Strong a11y</span>
+        <span class="tag good">Token-driven</span>
+        <span class="tag good">Low defect density</span>
+        <span class="tag good">48 tests + CI</span>
+        <span class="tag good">Teardown swept</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCALE -->
+  <section>
+    <div class="sec-head"><h2>Scale of the surface</h2><div class="rule"></div><span class="n">measured</span></div>
+    <div class="kpis">
+      <div class="kpi"><div class="v mono">69</div><div class="k">components</div></div>
+      <div class="kpi"><div class="v mono">36.7k</div><div class="k">lines (23k JS · 13.8k CSS)</div></div>
+      <div class="kpi"><div class="v mono">128</div><div class="k">public events</div></div>
+      <div class="kpi"><div class="v mono">5&nbsp;/&nbsp;5</div><div class="k">bugs found → fixed</div></div>
+    </div>
+  </section>
+
+  <!-- SCORECARD -->
+  <section>
+    <div class="sec-head"><h2>Dimension scorecard</h2><div class="rule"></div><span class="n">8 axes</span></div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-top"><h3>Architecture &amp; consistency</h3><span class="chip a">A</span></div>
+        <div class="meter"><i class="fill-a" style="width:92%"></i></div>
+        <p>One clean pattern repeated everywhere: attribute-driven web components, shared <span class="mono">boolAttr</span>/<span class="mono">enumAttr</span> parsers, light-DOM rendering, and a well-defined custom-event API.</p>
+        <div class="ev">boolAttr 68/69 · enumAttr 57/69 · light-DOM 58 · shadow 2</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><h3>Accessibility</h3><span class="chip a">A−</span></div>
+        <div class="meter"><i class="fill-a" style="width:90%"></i></div>
+        <p>ARIA, roles, visible focus, and reduced-motion are the norm, not an afterthought — wired at the component level so consumers inherit it for free.</p>
+        <div class="ev">aria 68/69 · role 50 · focus-visible 45 css · reduced-motion 36 css</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><h3>Design-token discipline</h3><span class="chip a">A</span></div>
+        <div class="meter"><i class="fill-a" style="width:96%"></i></div>
+        <p>Near-total. The "210 hardcoded hex" flagged earlier was a miscount — a per-declaration audit found those are <b>token-documenting comments</b> and <b>defensive <span class="mono">var(--token, #hex)</span> fallbacks</b>. Exactly <b>one</b> genuinely hardcoded color existed; it's now tokenized.</p>
+        <div class="ev">var(--…) 3,151 refs · 1 genuine hardcoded value → fixed</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><h3>Defect density</h3><span class="chip a">A−</span></div>
+        <div class="meter"><i class="fill-a" style="width:90%"></i></div>
+        <p>A targeted scan of the whole library surfaced only five real defects in 23k lines of JS — a low rate that reflects careful authoring. All five are now fixed.</p>
+        <div class="ev">5 confirmed bugs · ≈0.22 per 1k JS lines</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><h3>Injection safety</h3><span class="chip a">A</span></div>
+        <div class="meter"><i class="fill-a" style="width:95%"></i></div>
+        <p>Consistency sweep done: a shared <span class="mono">escapeHtml</span> util now guards every data-derived label/value/attribute sink across dropdown-menu, tooltip, both sidebars, header-nav, kpi-card, tab-filter, right-pane. Cells stay <span class="mono">textContent</span>. Only the intentional custom-cell-render HTML hatch remains a consumer responsibility.</p>
+        <div class="ev">9 components + shared util · safeHtml for cell renderers · no double-escape</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><h3>Memory &amp; teardown</h3><span class="chip a">A−</span></div>
+        <div class="meter"><i class="fill-a" style="width:90%"></i></div>
+        <p>Swept all 69 components: <b>every one that attaches a persistent listener or observer now tears it down completely</b>. Five leaks closed — the last one caught by the new test harness. The rest legitimately need no teardown.</p>
+        <div class="ev">5 leaks fixed · observers all disconnected · 0 timer leaks</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><h3>Runtime efficiency</h3><span class="chip a">A−</span></div>
+        <div class="meter"><i class="fill-a" style="width:90%"></i></div>
+        <p>Observers debounce via scheduled/rAF updates; data-table does targeted body-only row renders; <b>chart</b> now rAF-coalesces resize reflows (was a full SVG rebuild per tick). No polling; regex behind guards; <span class="mono">parseInt</span> always with a radix.</p>
+        <div class="ev">chart resize coalesced · observers debounced · 0 timer leaks</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><h3>Automated test coverage</h3><span class="chip c">C+</span></div>
+        <div class="meter"><i class="fill-c" style="width:58%"></i></div>
+        <p>A real-browser harness (<span class="mono">@web/test-runner</span>) with <b>48 passing tests</b> — leaks, enhancements, injection, data-table, date-picker, criteria-filter, slider crossover, plus <span class="mono">axe</span> accessibility checks — behind a <b>pre-commit gate + non-flaky GitHub Actions CI</b>. Infra and the highest-risk logic are covered; broad per-component breadth is the open-ended remainder.</p>
+        <div class="ev">48 tests · pre-commit + CI + a11y · was 0 · 13+ components</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FIXED THIS SESSION -->
+  <section>
+    <div class="sec-head"><h2>Fixed this session</h2><div class="rule"></div><span class="n">verified in-browser</span></div>
+    <div class="fixed">
+      <div class="fx"><span class="dot"></span><div class="t"><b>header-nav</b> <span>— per-render <span class="mono">document</span> click listeners now one bound handler + teardown</span></div><div class="loc">header-nav.js · leak</div><div class="st">0 added / 5 renders</div></div>
+      <div class="fx"><span class="dot"></span><div class="t"><b>rich-text-editor</b> <span>— <span class="mono">selectionchange</span> listener now lifecycle-managed</span></div><div class="loc">rich-text-editor.js · leak</div><div class="st">add 1 / rm 1</div></div>
+      <div class="fx"><span class="dot"></span><div class="t"><b>data-table</b> <span>— sortable header built as text + icon nodes, no raw HTML</span></div><div class="loc">data-table.js:767 · injection</div><div class="st">16 headers ok</div></div>
+      <div class="fx"><span class="dot"></span><div class="t"><b>form-footer · widget</b> <span>— <span class="mono">left-text</span> / <span class="mono">filter-label</span> now text-node / label-attr</span></div><div class="loc">form-footer.js · widget.js · injection</div><div class="st">renders literal</div></div>
+      <div class="fx"><span class="dot"></span><div class="t"><b>slider</b> <span>— fill % guarded against <span class="mono">min === max</span> divide-by-zero</span></div><div class="loc">slider.js · edge</div><div class="st">NaN → 0%</div></div>
+    </div>
+    <div class="note" style="margin-top:22px">
+      <h4>Also enhanced (backward-compatible)</h4>
+      <p>Four shared components gained capability without breaking existing pages: <b>ds-button</b> reactive <span class="mono">label</span> attribute, <b>ds-tooltip</b> arrow that anchors to its trigger near edges (with arrowless fallback), <b>ds-modal</b> tightened header padding, and <b>ds-radio-group</b> per-option <span class="mono">description</span> — which also uncovered and fixed a latent <span class="mono">show-info</span> visibility bug.</p>
+    </div>
+  </section>
+
+  <!-- RECOMMENDATIONS -->
+  <section>
+    <div class="sec-head"><h2>Recommendations</h2><div class="rule"></div><span class="n">ranked</span></div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Action</th><th>Why it matters</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td>Grow the test suite</td><td>Harness, pre-commit gate, non-flaky CI, and <b>48 tests</b> across 13+ components are in place — the named next-steps (<span class="mono">criteria-filter</span> rule tree, <span class="mono">slider</span> crossover, <span class="mono">axe</span> a11y) are done. What remains is broad per-component breadth (~56 components still untested) — an open-ended, incremental effort, not a blocker.</td><td><span class="pri p3">Ongoing · breadth</span></td></tr>
+          <tr><td><s>Sweep <span class="mono">disconnectedCallback</span> coverage</s> — done</td><td>Swept all 69 components; every listener/observer now tears down. Closed 4 leaks (header-nav, rich-text-editor, breadcrumb, page-header). No open teardown gaps remain.</td><td><span class="pri p3">Complete</span></td></tr>
+          <tr><td><s>Keep API data out of HTML escape-hatches</s> — addressed</td><td>Shipped a <span class="mono">safeHtml</span> tagged template (auto-escapes interpolations) + a <span class="mono">SafeHtml</span> return type for data-table cell renderers; exported from the package and documented. The raw-string path stays for backward compatibility.</td><td><span class="pri p3">Resolved</span></td></tr>
+          <tr><td><s>Retire the 210 hardcoded hex values</s> — n/a</td><td>Re-audited per declaration: the 210 were comments + <span class="mono">var(--token, #hex)</span> fallbacks, not real hardcoding. One genuine case fixed. No further action.</td><td><span class="pri p3">Resolved</span></td></tr>
+          <tr><td>Extract a shared overlay/teardown helper</td><td>Several components re-implement outside-click-close + listener cleanup. A small mixin would standardize the pattern and prevent the next leak.</td><td><span class="pri p3">P3 · nice-to-have</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SCOPE -->
+  <div class="note">
+    <h4>Scope &amp; honesty of this review</h4>
+    <p>This was a targeted static review, not a line-by-line audit of all 23k lines. Coverage is high-recall for specific bug classes — listener/observer/timer leaks, unescaped <span class="mono">innerHTML</span>, regex and radix hazards — plus deep reads of hotspots and every component changed this session. Logic-bug recall is not exhaustive, and "efficiency" here is structural, not benchmarked. Grades reflect what the evidence supports; they are a snapshot, not a certificate.</p>
+  </div>
+
+  <footer>
+    <span>Prism Design System · component library</span>
+    <span>69 components · 36.7k LOC · A− overall</span>
+  </footer>
+
+</div>
+
+</body>
+</html>

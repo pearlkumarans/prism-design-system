@@ -23,6 +23,7 @@
    ============================================================================= */
 
 import { boolAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 /* Truncated item labels reveal their full text via the shared <ds-tooltip>;
    the back/collapse control reuses the shared <ds-icon-button>. */
 import '../tooltip/tooltip.js';
@@ -146,25 +147,25 @@ export class DsSidebarL2 extends HTMLElement {
       if (!matches) return '';
       const disabled = !!it.disabled;
       const tag = (it.href && !disabled) ? 'a' : 'button';
-      const href = (it.href && !disabled) ? `href="${it.href}"` : '';
+      const href = (it.href && !disabled) ? `href="${escapeHtml(it.href)}"` : '';
       const cls = 'ds-sidebar-l2__item' + (it.active ? ' ds-sidebar-l2__item--active' : '');
       const ariaCurrent = it.active ? 'aria-current="page"' : '';
       const ariaDisabled = disabled ? 'aria-disabled="true" tabindex="-1"' : '';
       /* Optional leading icon (16×16, off by default — Figma: Leading Icon). */
       const leading = it.icon
-        ? `<span class="ds-sidebar-l2__item-icon" aria-hidden="true"><ds-icon name="${it.icon}" size="16"></ds-icon></span>`
+        ? `<span class="ds-sidebar-l2__item-icon" aria-hidden="true"><ds-icon name="${escapeHtml(it.icon)}" size="16"></ds-icon></span>`
         : '';
       const right = it.newTag
         ? `<span class="ds-sidebar-l2__item-new" aria-label="New" title="New"><ds-icon name="sparkles" size="12"></ds-icon></span>`
         : it.count != null
-          ? `<span class="ds-sidebar-l2__item-badge" aria-label="${it.count} ${it.label}">${this._fmtCount(it.count)}</span>`
+          ? `<span class="ds-sidebar-l2__item-badge" aria-label="${it.count} ${escapeHtml(it.label)}">${this._fmtCount(it.count)}</span>`
           : (it.sub || it.hasChildren)
             ? `<span class="ds-sidebar-l2__item-chevron" aria-hidden="true"><ds-icon name="chevron-right" size="12"></ds-icon></span>`
             : '';
       return `<li>
-        <${tag} class="${cls}" ${href} ${ariaCurrent} ${ariaDisabled} data-group="${groupId}" data-item="${it.id ?? ''}">
+        <${tag} class="${cls}" ${href} ${ariaCurrent} ${ariaDisabled} data-group="${escapeHtml(groupId)}" data-item="${escapeHtml(it.id ?? '')}">
           ${leading}
-          <span class="ds-sidebar-l2__item-label">${it.label || ''}</span>
+          <span class="ds-sidebar-l2__item-label">${escapeHtml(it.label || '')}</span>
           ${right}
         </${tag}>
       </li>`;
@@ -184,9 +185,9 @@ export class DsSidebarL2 extends HTMLElement {
         if (q && !visibleItems) return '';
         return `<li class="ds-sidebar-l2__group${expanded ? '' : ' ds-sidebar-l2__group--collapsed'}">
           <button class="ds-sidebar-l2__group-header" type="button"
-                  aria-expanded="${expanded}" data-group-toggle="${g.id}">
+                  aria-expanded="${expanded}" data-group-toggle="${escapeHtml(g.id)}">
             <ds-icon name="chevron-down" size="10"></ds-icon>
-            <span>${g.label || ''}</span>
+            <span>${escapeHtml(g.label || '')}</span>
           </button>
           <ul class="ds-sidebar-l2__items" role="list">${visibleItems}</ul>
         </li>`;

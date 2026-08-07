@@ -20,6 +20,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 /* The rail is icon-only, so each item reveals its label as a hover/focus
    tooltip — the component depends on <ds-tooltip>. Register it and auto-load its
    CSS so tooltips work on any page that uses ds-right-pane, not just full-bundle
@@ -175,8 +176,8 @@ export class DsRightPane extends HTMLElement {
         ? (this.getAttribute('product-logo') || it.logo)
         : it.logo;
       const content = logoName
-        ? `<img class="ds-right-pane__logo" src="${logoBase}/${logoName}.svg" alt="" />`
-        : `<ds-icon name="${it.icon}" size="20"></ds-icon>`;
+        ? `<img class="ds-right-pane__logo" src="${logoBase}/${escapeHtml(logoName)}.svg" alt="" />`
+        : `<ds-icon name="${escapeHtml(it.icon)}" size="20"></ds-icon>`;
       const cls = [
         'ds-right-pane__btn',
         it.logo ? 'ds-right-pane__btn--logo' : '',
@@ -184,10 +185,10 @@ export class DsRightPane extends HTMLElement {
       ].filter(Boolean).join(' ');
       return `<li>
         <button type="button" class="${cls}"
-                data-id="${it.id}"
-                ${it.tooltip ? `data-tooltip="${it.tooltip}"` : ''}
+                data-id="${escapeHtml(it.id)}"
+                ${it.tooltip ? `data-tooltip="${escapeHtml(it.tooltip)}"` : ''}
                 ${it.active ? 'aria-pressed="true"' : ''}
-                aria-label="${it.label || it.id}">
+                aria-label="${escapeHtml(it.label || it.id)}">
           ${content}
         </button>
       </li>`;

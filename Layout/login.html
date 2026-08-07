@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<!-- Sign-in page. Posts credentials to EC's auth API via the proxy (PrismAPI.auth.login),
+     stores the token, then redirects into the app. Open: /Layout/login.html -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in · Endpoint Central</title>
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css" />
+  <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <script src="data/prism-api.js"></script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = '../design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = '../design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-secondary); }
+    .lg-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--spacing-24); }
+    .lg-card {
+      width: 100%; max-width: 380px; background: var(--uems-bg-base);
+      border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-xl, 16px);
+      box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
+      padding: var(--spacing-32); display: flex; flex-direction: column; gap: var(--spacing-16);
+    }
+    .lg-title { margin: var(--spacing-8) 0 0; font-size: var(--font-size-20, 20px); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+    .lg-sub { margin: 0 0 var(--spacing-8); font-size: var(--font-size-14); color: var(--uems-text-secondary); }
+    .lg-error {
+      font-size: var(--font-size-13); color: var(--uems-text-error);
+      background: var(--uems-bg-error-primary, rgba(228,37,39,0.08)); border-radius: var(--radius-sm, 6px);
+      padding: var(--spacing-8) var(--spacing-12);
+    }
+    .lg-error[hidden] { display: none; }
+    #lg-submit { width: 100%; }
+    .lg-foot { font-size: var(--font-size-12); color: var(--uems-text-tertiary); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="lg-wrap">
+    <div class="lg-card">
+      <div class="ds-header-nav__brand"><img id="lg-logo" class="ds-header-nav__logo" alt="" aria-hidden="true" /> <span id="lg-name" class="ds-header-nav__product">Endpoint Central</span></div>
+      <div>
+        <h1 class="lg-title">Sign in</h1>
+        <p class="lg-sub" id="lg-sub">Use your Endpoint Central account.</p>
+      </div>
+      <ds-text-input id="lg-user" label="Username" placeholder="Username or email" autocomplete="username"></ds-text-input>
+      <ds-text-input id="lg-pass" label="Password" type="password" placeholder="••••••••" autocomplete="current-password"></ds-text-input>
+      <div id="lg-error" class="lg-error" role="alert" hidden></div>
+      <ds-button id="lg-submit" variant="primary" size="large" label="Sign in"></ds-button>
+      <div class="lg-foot" id="lg-mode"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const $ = (id) => document.getElementById(id);
+      const errEl = $('lg-error'), btn = $('lg-submit');
+      const valOf = (id) => { const el = $(id); const inp = el && el.querySelector('input'); return inp ? inp.value : ''; };
+      const showError = (msg) => { errEl.textContent = msg || ''; errEl.hidden = !msg; };
+
+      /* Rebrand the logo + name from ?product=<id> — mirrors the header nav. */
+      if (window.PrismAPI && window.PrismAPI.branding) {
+        const b = window.PrismAPI.branding, nm = b.name();
+        const logo = $('lg-logo'); if (logo) { logo.src = b.logoSrc(); logo.alt = nm; }
+        const nmEl = $('lg-name'); if (nmEl) nmEl.textContent = nm;
+        const subEl = $('lg-sub'); if (subEl) subEl.textContent = 'Use your ' + nm + ' account.';
+        document.title = 'Sign in · ' + nm;
+      }
+
+      /* Show which mode we're in (mock vs live via proxy) so it's obvious. */
+      if (window.PrismAPI) $('lg-mode').textContent = window.PrismAPI.isMock
+        ? 'Demo mode — any credentials sign you in.'
+        : 'Connecting via the proxy to the backend.';
+
+      async function submit() {
+        showError('');
+        const u = valOf('lg-user').trim(), p = valOf('lg-pass');
+        if (!u || !p) { showError('Enter your username and password.'); return; }
+        if (!window.PrismAPI || !window.PrismAPI.auth) { showError('Data layer not loaded (Layout/data/prism-api.js).'); return; }
+        btn.setAttribute('disabled', ''); btn.setAttribute('label', 'Signing in…');
+        try {
+          await window.PrismAPI.auth.login(u, p);
+          const next = new URLSearchParams(location.search).get('next') || 'Shell.html?view=list-view';
+          location.href = next;
+        } catch (e) {
+          showError(e && e.message ? e.message : 'Sign in failed. Check your credentials and the API connection.');
+          btn.removeAttribute('disabled'); btn.setAttribute('label', 'Sign in');
+        }
+      }
+      btn.addEventListener('click', submit);
+      document.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+    })();
+  </script>
+</body>
+</html>

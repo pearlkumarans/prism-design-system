@@ -30,10 +30,16 @@
     proxyPrefix: (function () { try { return localStorage.getItem('uems-api-proxy') ?? '/proxy'; } catch (_) { return '/proxy'; } })(),
     baseUrl:     (function () { try { return localStorage.getItem('uems-api-base')  || ''; } catch (_) { return ''; } })(),
 
-    /* While wiring: if a live call fails (wrong path / proxy down / auth), fall back
-       to mock data + a console warning so the page still renders. Set false once the
-       live endpoint is confirmed so real errors surface. */
-    fallbackToMock: true,
+    /* Login gate. OFF by default so the .env/proxy-key path (auth injected at the
+       proxy, no browser token) is never bounced to a login screen. Turn ON for the
+       interactive login flow: localStorage['uems-require-login'] = 'true'. */
+    requireLogin: (function () { try { return localStorage.getItem('uems-require-login') === 'true'; } catch (_) { return false; } })(),
+
+    /* When a live call fails, DON'T silently show mock data (that's the "still loads
+       static data" trap) — let the failure surface so the UI shows its empty/error
+       state. Opt back into mock-on-failure for offline demos with
+       localStorage['uems-mock-fallback'] = 'true'. */
+    fallbackToMock: (function () { try { return localStorage.getItem('uems-mock-fallback') === 'true'; } catch (_) { return false; } })(),
 
     /* 2 ─ Auth / headers sent on every request. Return your real token. */
     headers() {
@@ -80,6 +86,36 @@
       const rows = body.rows || body.data || body.items || body.devices || [];
       const total = body.total ?? body.totalCount ?? body.count ?? rows.length;
       return { rows, total };
+    },
+
+    /* 7 ─ Interactive login. EC is a TWO-STEP flow (confirmed from loginMeta):
+         (1) GET metaEndpoint → RSA publicKey,
+         (2) RSA-encrypt the password with it, then POST to `endpoint`.
+       metaEndpoint is known; the POST endpoint/body + the encryption scheme are
+       PENDING the actual Sign-in network request (loginPost below is a guess). */
+    auth: {
+      metaEndpoint: '/emsapi/login/loginMeta',
+      metaAccept:   'application/loginMeta.v1+json',
+      readPublicKey: (meta) => meta && meta.publicKey,
+      readProduct:   (meta) => (meta && meta.productDetails) || null,
+      /* "Who am I" — a POST-login call that requires a valid session. 200 + a
+         name ⇒ authenticated; 401 ⇒ not. Also the source of real profile data. */
+      whoamiEndpoint: '/emsapi/uac/userMeta',
+      whoamiAccept:   'application/userMeta.v1+json',
+      readUser: (u) => (u && (u.name || u.displayName || u.loginID)) ? {
+        name: u.displayName || u.name || u.loginID,
+        login: u.loginID || u.name || '',
+        role: u.roleName || '',
+        email: u.email || '',
+        timeZone: u.userTimeZone || '',
+        locale: u.userLocale || '',
+        isAdmin: !!u.adminUser,
+      } : null,
+      /* ↓↓ TODO: replace once we see the real Sign-in POST ↓↓ */
+      endpoint: '',                                   // e.g. '/emsapi/login/authenticate' (unknown)
+      method: 'POST',
+      form: (username, encryptedPassword) => ({ LOGIN_ID: username, PASSWORD: encryptedPassword }),
+      readToken: (body) => (body?.auth_token || body?.token || ''),
     },
   };
 
@@ -150,6 +186,114 @@
         const all = await this.listDevices({ pageSize: 100000 });
         return deriveStats(all.rows);
       }
+    },
+
+    /* BitLocker report availability gate. true → the report has data (show the
+       table); false → show the empty state. No backend (mock) → true so the demo
+       still renders. On a transient error, fall back to true (+ warn) so an auth
+       hiccup doesn't blank the page. */
+    bitlocker: {
+      async resourceAvailable(viewName = 'BitLockerManagedSystemReportView') {
+        if (useMock()) return true;
+        try {
+          const body = await httpGet('/bitlocker/api/resourceAvailable', { viewName });
+          return !!(body && body.resourceAvailable);
+        } catch (err) {
+          if (CONFIG.fallbackToMock) { console.warn('[PrismAPI] bitlocker.resourceAvailable failed → assuming available (mock). Reason:', err.message); return true; }
+          throw err;
+        }
+      },
+    },
+
+    /* Interactive auth — used by the login page. Token stored in localStorage
+       ('uems-token') and sent as `Authorization: Bearer <token>` by CONFIG.headers().
+       (If your EC expects a cookie/other header instead, adjust CONFIG.headers().) */
+    auth: {
+      getToken() { try { return localStorage.getItem('uems-token') || ''; } catch (_) { return ''; } },
+      /* Synchronous, best-effort check (token present). For a real check use
+         verify()/whoami(), which actually asks the backend. */
+      isAuthenticated() { return !!this.getToken(); },
+      logout() { try { localStorage.removeItem('uems-token'); } catch (_) {} },
+
+      /* Who am I — resolves the current session to a user (or null). In mock mode
+         returns a demo user. Live: GET userMeta; 401/any error ⇒ null (not signed in). */
+      async whoami() {
+        if (useMock()) return { name: 'Demo admin', login: 'admin', role: 'Administrator', email: '', isAdmin: true };
+        const A = CONFIG.auth;
+        try {
+          const res = await fetch(buildUrl(A.whoamiEndpoint, {}), {
+            headers: { ...CONFIG.headers(), 'Accept': A.whoamiAccept }, credentials: CONFIG.credentials,
+          });
+          if (!res.ok) return null;
+          return A.readUser(await res.json());
+        } catch (_) { return null; }
+      },
+      /* True iff the backend confirms a live session (via whoami). */
+      async verify() { return !!(await this.whoami()); },
+
+      /* Step 1: fetch the login metadata (RSA publicKey + product details). */
+      async fetchLoginMeta() {
+        const A = CONFIG.auth;
+        const res = await fetch(buildUrl(A.metaEndpoint, {}), {
+          headers: { ...CONFIG.headers(), 'Accept': A.metaAccept }, credentials: CONFIG.credentials,
+        });
+        if (!res.ok) throw new Error('loginMeta failed (' + res.status + ' ' + res.statusText + ')');
+        return res.json();
+      },
+      async login(username, password) {
+        if (useMock()) { try { localStorage.setItem('uems-token', 'mock-token'); } catch (_) {} return 'mock-token'; }
+        const A = CONFIG.auth;
+        const meta = await this.fetchLoginMeta();            // step 1 — publicKey
+        const publicKey = A.readPublicKey(meta);
+        if (!A.endpoint) {
+          throw new Error('Login endpoint not wired yet. EC uses loginMeta → RSA-encrypt password (publicKey ' +
+            (publicKey ? 'received' : 'MISSING') + ') → POST. Share the Sign-in network request to finish this.');
+        }
+        /* TODO (pending the real request shape + encryption scheme): RSA-encrypt
+           `password` with `publicKey`, then POST A.form(username, encrypted). */
+        const res = await fetch(buildUrl(A.endpoint, {}), {
+          method: A.method || 'POST',
+          headers: { ...CONFIG.headers(), 'Content-Type': 'application/x-www-form-urlencoded' },
+          credentials: CONFIG.credentials,
+          body: new URLSearchParams(A.form(username, password)),
+        });
+        if (!res.ok) throw new Error('Login failed (' + res.status + ' ' + res.statusText + ')');
+        let body = {}; try { body = await res.json(); } catch (_) {}
+        const token = A.readToken(body);
+        if (!token) throw new Error('Authenticated, but no token found in the response — check CONFIG.auth.readToken.');
+        try { localStorage.setItem('uems-token', token); } catch (_) {}
+        return token;
+      },
+    },
+
+    /* Product branding — resolves the logo + name from ?product=<id> (the same ids
+       the shell uses), so the login page rebrands like the header nav. Logo files
+       match header-nav's variant→logo mapping under window.UEMS_LOGO_BASE. */
+    branding: {
+      _map: {
+        ec:  { logo: 'endpoint-central',           name: 'Endpoint Central' },
+        pmp: { logo: 'patch-manager-plus',         name: 'Patch Manager Plus' },
+        vmp: { logo: 'vulnerability-manager-plus', name: 'Vulnerability Manager Plus' },
+        mdm: { logo: 'mdm',                        name: 'Mobile Device Manager Plus' },
+        bsp: { logo: 'browser-security-plus',      name: 'Browser Security Plus' },
+        acp: { logo: 'application-control-plus',   name: 'Application Control Plus' },
+        dcp: { logo: 'device-control-plus',        name: 'Device Control Plus' },
+        dxm: { logo: 'dex-manager-plus',           name: 'DEX Manager Plus' },
+        dlp: { logo: 'endpoint-dlp-plus',          name: 'Endpoint DLP Plus' },
+        mpp: { logo: 'malware-protection-plus',    name: 'Malware Protection Plus' },
+        osd: { logo: 'os-deployer',                name: 'OS Deployer' },
+        pcp: { logo: 'patch-connect-plus',         name: 'Patch Connect Plus' },
+        rpp: { logo: 'ransomware-protection-plus', name: 'Ransomware Protection Plus' },
+        rap: { logo: 'remote-access-plus',         name: 'Remote Access Plus' },
+        ad360:  { logo: 'ad360',  name: 'AD360' },
+        log360: { logo: 'log360', name: 'Log360' },
+        pam360: { logo: 'pam360', name: 'PAM360' },
+        sdp:    { logo: 'sdp',    name: 'ServiceDesk Plus' },
+      },
+      product() { try { return new URLSearchParams(location.search).get('product') || 'ec'; } catch (_) { return 'ec'; } },
+      info(id)  { return this._map[id || this.product()] || this._map.ec; },
+      logoSrc(id) { const base = (typeof window !== 'undefined' && window.UEMS_LOGO_BASE) || '/logos'; return base + '/' + this.info(id).logo + '.svg'; },
+      name(id)  { return this.info(id).name; },
     },
   };
 

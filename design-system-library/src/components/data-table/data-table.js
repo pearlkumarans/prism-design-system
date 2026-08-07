@@ -6,6 +6,17 @@
      el.rows    = [{ id, ...rowData }, ...]
      el.bulkActions = [{ id, label, icon?, destructive? }, ...]
 
+   Cell content, safest first:
+     · no render          → the accessor value is set with textContent (always safe)
+     · render → Node      → appended as-is (nothing is parsed as HTML)
+     · render → SafeHtml  → innerHTML with escaped interpolations; build it with the
+                            `safeHtml` tagged template (exported from the package):
+                              render: (row) => safeHtml`<a href="${row.url}">${row.name}</a>`
+     · render → string    → injected as raw innerHTML (a trusted-HTML escape hatch,
+                            kept for backward compatibility). NEVER build this string
+                            from unescaped server/user data — return a Node or use
+                            safeHtml`…` instead, or you create an XSS hole.
+
    Visibility / behavior via attributes:
      show-toolbar, show-footer, sticky-header, loading, rtl,
      selection-mode="multi|single|none",
@@ -49,6 +60,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { isSafeHtml } from '../../utils/escape.js';
 /* The toolbar search is a ds-search-field — register it so the table renders
    the search everywhere it's used, not just on pages that bundle all components.
    Built-in bulk actions also use ds-dropdown-menu (export format) + ds-toast. */
@@ -905,7 +917,15 @@ export class DsDataTable extends HTMLElement {
           if (col.align) cell.dataset.align = col.align;
           if (typeof col.render === 'function') {
             const out = col.render(row);
+            /* Safe cell content, in order of preference:
+                 · a DOM Node          → appended (nothing parsed as HTML)
+                 · a SafeHtml value    → innerHTML with its already-escaped markup
+                                         (build via the `safeHtml` tagged template)
+               A plain string is still injected as trusted HTML for backward
+               compatibility — do NOT pass unescaped server/user data that way;
+               return a Node or use safeHtml`…` instead. */
             if (out instanceof Node) cell.appendChild(out);
+            else if (isSafeHtml(out)) cell.innerHTML = out.html;
             else cell.innerHTML = String(out ?? '');
           } else {
             cell.textContent = String(row[col.accessor] ?? '');

@@ -20,6 +20,22 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;700&family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600&display=swap" />
   <script type="module">import '../design-system-library/src/components/index.js';</script>
   <script src="data/prism-api.js"></script>   <!-- app data layer (front-end ⇄ backend API); views read data via window.PrismAPI -->
+  <script>
+    /* Login gate (opt-in, loop-safe): if requireLogin is on and there's no auth
+       token, redirect to the sign-in page before the app renders. Only checks token
+       presence on load — never redirects on an API 401 — so it can't loop. Off by
+       default (localStorage['uems-require-login']='true' to enable). */
+    (function () {
+      try {
+        if (window.PrismAPI && PrismAPI.config && PrismAPI.config.requireLogin && !PrismAPI.auth.isAuthenticated()) {
+          var url = 'login.html?next=' + encodeURIComponent(location.pathname + location.search);
+          var product = new URLSearchParams(location.search).get('product');
+          if (product) url += '&product=' + encodeURIComponent(product);   /* keep the brand on the login page */
+          location.replace(url);
+        }
+      } catch (_) {}
+    })();
+  </script>
 
   <script>
     /* Theme persistence — sync with ds-right-pane toggle */
@@ -505,6 +521,16 @@
     /* Tabs relocated to the left rail → hide the header's tab band so the centre
        is empty (brand left, utility cluster + Search icon right). */
     html.nav-left #ec-header .ds-header-nav__tabs { display: none; }
+    /* Responsive: on mobile the left module rail is redundant — top-level module
+       navigation is handled at the TOP (header compact menu → the shell-responsive
+       bottom-sheet nav, built from the same module tabs). So drop the left rail on
+       mobile regardless of the Top/Left preference; the content reclaims the width.
+       (body.is-mobile is set by shell-responsive.js at ≤640px.) */
+    body.is-mobile #shell-modrail { display: none !important; }
+    /* …and since the rail sat flush at the start edge (left-nav zeroes the body's
+       start padding), restore that gap on mobile so content isn't flush to the
+       viewport edge — mirror the base .body start padding. */
+    html.nav-left body.is-mobile .body { padding-inline-start: var(--spacing-12); }
 
     /* Content area styling now lives in the ds-content component
        (design-system-library/src/components/content/content.css). The component auto-toggles

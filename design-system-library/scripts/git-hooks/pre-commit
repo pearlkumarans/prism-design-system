@@ -23,6 +23,10 @@ if [ ! -d "$LIB_DIR/node_modules" ]; then
   exit 0   # don't block a commit just because the dev setup isn't installed yet
 fi
 
-echo "▶  design-system: running component tests before commit…"
 cd "$LIB_DIR"
+
+echo "▶  design-system: token lint…"
+npm run --silent lint:tokens
+
+echo "▶  design-system: running component tests before commit…"
 npm test --silent

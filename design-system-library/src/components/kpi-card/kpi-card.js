@@ -40,6 +40,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 /* Trend badge + icon slot render <ds-icon> (up-trend / down-trend sprites). */
 import '../../icons/icon.js';
 /* Trend indicator = the shared Badge component (token-driven state colors),
@@ -230,8 +231,8 @@ export class DsKpiCard extends HTMLElement {
   _renderLink(linkLabel, linkHref) {
     if (!linkLabel) return '';
     return `
-      <a class="ds-kpi-card__link" href="${linkHref || '#'}" data-link>
-        <span>${linkLabel}</span>
+      <a class="ds-kpi-card__link" href="${escapeHtml(linkHref || '#')}" data-link>
+        <span>${escapeHtml(linkLabel)}</span>
         <svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l6-6 M5 3h4v4"/></svg>
       </a>`;
   }
@@ -241,13 +242,13 @@ export class DsKpiCard extends HTMLElement {
     const tone = ['critical', 'warning', 'info', 'neutral', 'success'].includes(c.tone) ? c.tone : 'neutral';
     const linkLabel = c.linkLabel || (variant === 'single' || variant === 'two' ? 'Across all locations' : '');
     const link = (c.href || linkLabel)
-      ? `<a class="ds-kpi-card__chip-link" href="${c.href || '#'}"><span>${linkLabel}</span>
+      ? `<a class="ds-kpi-card__chip-link" href="${escapeHtml(c.href || '#')}"><span>${escapeHtml(linkLabel)}</span>
            <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l6-6 M5 3h4v4"/></svg></a>`
       : '';
     return `
       <div class="ds-kpi-card__chip ds-kpi-card__chip--${tone}">
-        <span class="ds-kpi-card__chip-value">${c.value ?? ''}</span>
-        <span class="ds-kpi-card__chip-label">${c.label ?? ''}</span>
+        <span class="ds-kpi-card__chip-value">${escapeHtml(c.value ?? '')}</span>
+        <span class="ds-kpi-card__chip-label">${escapeHtml(c.label ?? '')}</span>
         ${link}
       </div>`;
   }
@@ -256,9 +257,9 @@ export class DsKpiCard extends HTMLElement {
     return `
       <div class="ds-kpi-card__group-header">
         <div class="ds-kpi-card__group-text">
-          <div class="ds-kpi-card__group-value${isLarge ? ' ds-kpi-card__group-value--large' : ''}">${value || ''}</div>
-          ${label ? `<div class="ds-kpi-card__group-label">${label}</div>` : ''}
-          ${description ? `<div class="ds-kpi-card__group-description">${description}</div>` : ''}
+          <div class="ds-kpi-card__group-value${isLarge ? ' ds-kpi-card__group-value--large' : ''}">${escapeHtml(value || '')}</div>
+          ${label ? `<div class="ds-kpi-card__group-label">${escapeHtml(label)}</div>` : ''}
+          ${description ? `<div class="ds-kpi-card__group-description">${escapeHtml(description)}</div>` : ''}
         </div>
         ${this._renderTrendPill(trendPill)}
       </div>`;
@@ -356,12 +357,12 @@ export class DsKpiCard extends HTMLElement {
           <div class="ds-kpi-card__wide ds-kpi-card__wide--desc-link">
             ${showIcon ? this._renderIconBadge(icon, state) : ''}
             <div class="ds-kpi-card__wide-body">
-              ${label ? `<h3 class="ds-kpi-card__label">${label}</h3>` : ''}
+              ${label ? `<h3 class="ds-kpi-card__label">${escapeHtml(label)}</h3>` : ''}
               ${subHTML}
               ${this._renderLink(linkLabel, linkHref)}
             </div>
             <div class="ds-kpi-card__wide-end">
-              <div class="ds-kpi-card__value ds-kpi-card__value--display-sm">${loading ? ' ' : value}</div>
+              <div class="ds-kpi-card__value ds-kpi-card__value--display-sm">${loading ? ' ' : escapeHtml(value)}</div>
             </div>
           </div>`;
       } else if (showGauge && gaugeBelow) {
@@ -371,9 +372,9 @@ export class DsKpiCard extends HTMLElement {
           <div class="ds-kpi-card__wide ds-kpi-card__wide--gauge-bottom">
             <div class="ds-kpi-card__wide-body">
               <div class="ds-kpi-card__value-row">
-                <div class="ds-kpi-card__value">${loading ? ' ' : value}</div>${delta}
+                <div class="ds-kpi-card__value">${loading ? ' ' : escapeHtml(value)}</div>${delta}
               </div>
-              ${label ? `<h3 class="ds-kpi-card__label">${label}</h3>` : ''}
+              ${label ? `<h3 class="ds-kpi-card__label">${escapeHtml(label)}</h3>` : ''}
               ${subHTML}
             </div>
             <div class="ds-kpi-card__wide-end ds-kpi-card__wide-end--bottom">${this._renderChart(chartType, sparkline)}</div>
@@ -383,9 +384,9 @@ export class DsKpiCard extends HTMLElement {
           <div class="ds-kpi-card__wide">
             <div class="ds-kpi-card__wide-body">
               <div class="ds-kpi-card__value-row">
-                <div class="ds-kpi-card__value">${loading ? ' ' : value}</div>${delta}
+                <div class="ds-kpi-card__value">${loading ? ' ' : escapeHtml(value)}</div>${delta}
               </div>
-              ${label ? `<h3 class="ds-kpi-card__label">${label}</h3>` : ''}
+              ${label ? `<h3 class="ds-kpi-card__label">${escapeHtml(label)}</h3>` : ''}
               ${subHTML}
             </div>
             <div class="ds-kpi-card__wide-end">
@@ -411,9 +412,9 @@ export class DsKpiCard extends HTMLElement {
           <div class="ds-kpi-card__default ds-kpi-card__default--gauge-bottom">
             <div class="ds-kpi-card__default-body">
               <div class="ds-kpi-card__value-row">
-                <div class="ds-kpi-card__value">${loading ? ' ' : value}</div>${delta}
+                <div class="ds-kpi-card__value">${loading ? ' ' : escapeHtml(value)}</div>${delta}
               </div>
-              ${label ? `<h3 class="ds-kpi-card__label">${label}</h3>` : ''}
+              ${label ? `<h3 class="ds-kpi-card__label">${escapeHtml(label)}</h3>` : ''}
               ${period ? `<div class="ds-kpi-card__date">${period}</div>` : ''}
               ${subHTML}
             </div>
@@ -423,10 +424,10 @@ export class DsKpiCard extends HTMLElement {
         this.innerHTML = `
           <div class="ds-kpi-card__default ds-kpi-card__default--date-gauge">
             <div class="ds-kpi-card__default-body">
-              ${label ? `<h3 class="ds-kpi-card__label">${label}</h3>` : ''}
+              ${label ? `<h3 class="ds-kpi-card__label">${escapeHtml(label)}</h3>` : ''}
               <div class="ds-kpi-card__date">${period}</div>
               <div class="ds-kpi-card__value-row">
-                <div class="ds-kpi-card__value ds-kpi-card__value--display-sm">${loading ? ' ' : value}</div>${delta}
+                <div class="ds-kpi-card__value ds-kpi-card__value--display-sm">${loading ? ' ' : escapeHtml(value)}</div>${delta}
               </div>
               ${subHTML}
             </div>
@@ -436,9 +437,9 @@ export class DsKpiCard extends HTMLElement {
         const left = `
           <div class="ds-kpi-card__default-body">
             <div class="ds-kpi-card__value-row">
-              <div class="ds-kpi-card__value">${loading ? ' ' : value}</div>${delta}
+              <div class="ds-kpi-card__value">${loading ? ' ' : escapeHtml(value)}</div>${delta}
             </div>
-            ${label ? `<h3 class="ds-kpi-card__label">${label}</h3>` : ''}
+            ${label ? `<h3 class="ds-kpi-card__label">${escapeHtml(label)}</h3>` : ''}
             ${subHTML}
           </div>`;
         const right = `

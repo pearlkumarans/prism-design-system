@@ -40,6 +40,10 @@ jobs:
       - name: Install dependencies
         run: npm ci || (rm -rf node_modules package-lock.json && npm install)
 
+      # Fail fast on hardcoded colors before spinning up a browser for the tests.
+      - name: Token lint (no hardcoded colors)
+        run: npm run lint:tokens
+
       # @web/test-runner launches a headless Chrome; GitHub's ubuntu-latest ships
       # Google Chrome, which the runner auto-detects. The CI env var makes the
       # config add --no-sandbox / --disable-dev-shm-usage (see web-test-runner.config.js).

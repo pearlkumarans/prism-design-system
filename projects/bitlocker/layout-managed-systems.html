@@ -15,6 +15,8 @@
   <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
   <link rel="stylesheet" href="Layout/layout-base.css" />
   <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script src="Layout/data/prism-api.js"></script>   <!-- app data layer (front-end ⇄ backend API) -->
+
   <script>
     window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
     window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
@@ -35,6 +37,9 @@
 
 #bllist-pop .bl-kpis { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 16px; }
 #bllist-pop .bl-kpis ds-kpi-card { flex: 1 1 200px; min-width: 180px; }
+/* The availability gate toggles the `hidden` attr on these; their display:flex/grid
+   would otherwise beat the UA [hidden] rule, so force it. */
+#bllist-pop .bl-kpis[hidden], #bllist-pop .bl-grid[hidden] { display: none !important; }
 
 #bllist-pop .bl-grid {
   display: grid;
@@ -108,6 +113,13 @@
           </div>
         </section>
       </div>
+
+      <!-- Shown when the BitLocker report has no data on this server
+           (resourceAvailable:false). Hides the KPIs + grid above. -->
+      <ds-empty-state id="bl-empty" hidden type="centered" illustration="device-protected"
+        title="No BitLocker data yet"
+        description="No managed computers are reporting BitLocker status on this server. Deploy a BitLocker policy to start encrypting devices and tracking their compliance."
+        primary-label="Deploy policy" show-secondary="false"></ds-empty-state>
 
     </div>
   </div>
@@ -311,11 +323,31 @@
   const deployBtn = $('bl-deploy');
   if (deployBtn) deployBtn.addEventListener('click', () => { if (window.openContentView) window.openContentView('bitlocker-policy-creation'); });
 
-  /* Initial render + re-localize on language flip. */
+  /* ---- Availability gate ------------------------------------------------
+     PrismAPI.bitlocker.resourceAvailable() hits /bitlocker/api/resourceAvailable
+     (via the proxy). false → show the empty state (hide KPIs + grid);
+     true (or mock/no-backend) → show the KPIs + table. */
+  const emptyEl = $('bl-empty');
+  const kpisEl = root.querySelector('.bl-kpis');
+  function setAvailable(avail) {
+    if (kpisEl) kpisEl.hidden = !avail;
+    grid.hidden = !avail;
+    if (emptyEl) emptyEl.hidden = !!avail;
+  }
+  async function gate() {
+    if (!(window.PrismAPI && window.PrismAPI.bitlocker)) { setAvailable(true); return; }
+    try { setAvailable(await window.PrismAPI.bitlocker.resourceAvailable()); }
+    catch (e) { console.error('[bitlocker] availability check failed → showing empty state:', e); setAvailable(false); }
+  }
+  if (emptyEl) emptyEl.addEventListener('ds-empty-state-primary', () => { if (window.openContentView) window.openContentView('bitlocker-policy-creation'); });
+
+  /* Initial render + re-localize on language flip. (Availability is checked in
+     show() below — which both the Shell router and the standalone harness call —
+     so we don't also call gate() here, to avoid a duplicate request.) */
   applyStrings();
   if (window.ShellCtx && window.ShellCtx.onLangChange) window.ShellCtx.onLangChange(applyStrings);
 
-  function show() { root.hidden = false; }
+  function show() { root.hidden = false; gate(); }   /* checks availability on each open */
   function hide() { root.hidden = true; }
   window.ShellDrawers = window.ShellDrawers || {};
   window.ShellDrawers['bitlocker-managed-systems'] = { show, hide };

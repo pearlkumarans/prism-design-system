@@ -60,6 +60,21 @@ npm run hooks:install     # one-time, per clone (sets core.hooksPath)
 - If `node_modules` isn't installed yet, the hook warns and lets the commit
   through rather than blocking a fresh checkout.
 
+## Token lint (no hardcoded colors)
+
+`npm run lint:tokens` enforces the CLAUDE.md rule *"no hardcoded values where a
+token exists"* for component CSS. It fails on a hex color in a color-role
+declaration (`color` / `background` / `border*` / `outline` / `fill` / `stroke`)
+that isn't routed through `var(--…)`.
+
+Deliberately **not** flagged (all token-first or intentional):
+- hexes inside CSS comments (they just document a token's value),
+- `var(--token, #hex)` fallbacks,
+- gradients, `box-shadow`, `rgba()`, `url()`.
+
+It runs in **both** the pre-commit hook (fast, before the tests) and CI. Adding a
+hardcoded color now fails the commit/build with the exact `file:line`.
+
 ## Continuous integration
 
 GitHub Actions runs the same suite on every push / PR that touches
@@ -73,6 +88,16 @@ headless Chromium.
   with `CI=1 npm test`.
 - The pre-commit hook is the fast local gate; CI is the authoritative gate that
   also catches commits made with `--no-verify`.
+
+### Flake hardening (don't revert without reading)
+
+`web-test-runner.config.js` runs **one test file at a time** (`concurrency: 1`)
+and sets Mocha **`retries: 2`**. These tests portal tooltips/menus to `<body>`
+and drive `ResizeObserver`s; running files concurrently occasionally tore down a
+browser execution context mid-evaluate (puppeteer *"Cannot read … 'resolve'"*),
+failing an unrelated test ~1 run in 4. Serial execution removes that race and
+retries absorb any residual flake — a genuine bug still fails on every attempt.
+The suite is small, so serial is still ~10–16s.
 
 ## What to add next
 
