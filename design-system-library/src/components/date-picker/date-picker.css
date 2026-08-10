@@ -76,6 +76,18 @@
   /* Range form needs more width for "DD/MM/YYYY → DD/MM/YYYY". */
   width: 320px;
 }
+/* Size scale — mirrors ds-text-input (small 36 / medium 40 / large 44px). The
+   inner field's height + font are forwarded via the `size` attribute; here we
+   only nudge the outer width so the field stays proportionate at each size.
+   Medium keeps the base 240 / 320. */
+.ds-date-picker--size-small  .ds-date-picker__input        { width: 210px; }
+.ds-date-picker--size-small  .ds-date-picker__input--range { width: 288px; }
+.ds-date-picker--size-large  .ds-date-picker__input        { width: 268px; }
+.ds-date-picker--size-large  .ds-date-picker__input--range { width: 352px; }
+/* Datetime mode shows "DD/MM/YYYY HH:MM AM/PM" in one field — needs more room. */
+.ds-date-picker--datetime .ds-date-picker__input { width: 300px; }
+.ds-date-picker--datetime.ds-date-picker--size-small .ds-date-picker__input { width: 270px; }
+.ds-date-picker--datetime.ds-date-picker--size-large .ds-date-picker__input { width: 330px; }
 /* Full-width: field stretches to fill the container, overriding the fixed width. */
 ds-date-picker[full-width] .ds-date-picker__input,
 ds-date-picker[full-width] .ds-date-picker__input--range { width: 100%; }
@@ -169,6 +181,22 @@ ds-date-picker[full-width] .ds-date-picker__input--range { width: 100%; }
   padding: 0;
   background: transparent;
   color: var(--uems-text-primary);
+}
+
+/* ---- Time row (datetime mode: enable-time) ------------------------- */
+.ds-date-picker__time {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  padding: var(--spacing-12) var(--spacing-16);
+  border-top: 1px solid var(--uems-border-tertiary);
+}
+.ds-date-picker__time[hidden] { display: none !important; }
+.ds-date-picker__time-label {
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-secondary);
 }
 
 /* ---- Footer (Clear / Cancel / Apply) ------------------------------- */

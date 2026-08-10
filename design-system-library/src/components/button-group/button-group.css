@@ -1,0 +1,114 @@
+/* =============================================================================
+   ds-button-group — light-DOM component (`:host` never applies; style the
+   element + its BEM children). Token-driven; re-themes across all modes.
+   ============================================================================= */
+
+ds-button-group,
+.ds-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-6, 6px);
+  font-family: var(--font-family-sans);
+  align-items: stretch;
+  /* Hug content by default (no forced full-width — important for the `attached`
+     variant, whose seam background would otherwise show in the empty space). Opt
+     into stretching with `full-width`; never exceed the container. */
+  width: max-content;
+  max-width: 100%;
+}
+.ds-button-group--full-width { width: 100%; }
+
+/* ---- Layouts ------------------------------------------------------------- */
+.ds-button-group--row    { flex-direction: row; }
+.ds-button-group--column { flex-direction: column; align-items: stretch; }
+.ds-button-group--grid   {
+  display: grid;
+  grid-template-columns: repeat(var(--ds-bg-cols, 4), minmax(0, 1fr));
+}
+/* Equal-width items (row) — fill the track. `full-width` implies `equal` (a bar
+   stretched to its container should split into even segments, not hug left). */
+.ds-button-group--equal.ds-button-group--row .ds-button-group__item,
+.ds-button-group--full-width.ds-button-group--row .ds-button-group__item { flex: 1 1 0; }
+
+/* ---- Item (button) ------------------------------------------------------- */
+.ds-button-group__item {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-6, 6px);
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--uems-radius-default, 6px);
+  background: var(--uems-bg-primary);
+  color: var(--uems-text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-13, 13px);
+  font-weight: var(--font-weight-medium, 500);
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+  transition: background-color 140ms var(--ease-standard, ease),
+              color 140ms var(--ease-standard, ease),
+              border-color 140ms var(--ease-standard, ease);
+}
+.ds-button-group__label { overflow: hidden; text-overflow: ellipsis; }
+.ds-button-group__icon { flex-shrink: 0; line-height: 0; }
+
+.ds-button-group__item:hover:not([disabled]):not(.is-selected) {
+  background: var(--uems-bg-primary-hover);
+  border-color: var(--uems-border-accent);
+}
+/* Selected (aria-checked / aria-pressed) — filled accent. State is carried by
+   fill + text, never colour alone. */
+.ds-button-group__item.is-selected {
+  background: var(--uems-bg-button-primary);
+  border-color: var(--uems-bg-button-primary);
+  color: var(--uems-icon-white);
+}
+.ds-button-group__item:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+  z-index: 2;
+}
+.ds-button-group__item[disabled] {
+  background: var(--uems-bg-disabled);
+  color: var(--uems-text-disabled);
+  border-color: var(--uems-border-tertiary);
+  cursor: not-allowed;
+}
+
+/* ---- Sizes --------------------------------------------------------------- */
+.ds-button-group--size-small  .ds-button-group__item { padding: 6px 10px;  font-size: var(--font-size-12, 12px); }
+.ds-button-group--size-medium .ds-button-group__item { padding: 9px 12px;  font-size: var(--font-size-13, 13px); }
+.ds-button-group--size-large  .ds-button-group__item { padding: 11px 15px; font-size: var(--font-size-14, 14px); }
+
+/* ---- Variant: attached (connected segmented control) --------------------- */
+/* No gap; the group paints a 1px background that shows through hairline gaps as
+   collapsed 1px seams, and its own border + radius (clipped) form the outer edge.
+   Works uniformly for a row AND a multi-row grid (no negative-margin misalignment). */
+.ds-button-group--attached {
+  gap: 1px;
+  background: var(--uems-border-tertiary);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--uems-radius-default, 6px);
+  overflow: hidden;
+}
+.ds-button-group--attached .ds-button-group__item { border: 0; border-radius: 0; }
+/* Hover = background change only. An inset ring would be clipped by the group's
+   rounded overflow on a corner cell (the "edge breaks" artifact); the background
+   shift is enough affordance and never clips. Selected keeps the accent fill. */
+.ds-button-group--attached .ds-button-group__item:hover:not([disabled]):not(.is-selected) {
+  background: var(--uems-bg-primary-hover);
+}
+/* Focus uses an inset ring (an outer outline would be clipped by the overflow). */
+.ds-button-group--attached .ds-button-group__item:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--uems-border-accent-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-button-group__item { transition: none; }
+}

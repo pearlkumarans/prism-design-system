@@ -4,8 +4,11 @@ const STYLES = ['primary', 'secondary', 'subtle', 'danger'];
 const SIZES = ['small', 'medium', 'large'];
 const UNDERLINES = ['always', 'hover', 'none'];
 
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 export class DsTextLink extends HTMLElement {
-  static get observedAttributes() { return ['variant', 'size', 'underline', 'href', 'leading-icon', 'trailing-icon', 'disabled', 'rtl', 'target']; }
+  static get observedAttributes() { return ['variant', 'size', 'underline', 'href', 'leading-icon', 'trailing-icon', 'disabled', 'rtl', 'target', 'label']; }
 
   connectedCallback() {
     if (!this._anchor) {
@@ -44,11 +47,17 @@ export class DsTextLink extends HTMLElement {
     if (rtl) this._anchor.setAttribute('dir', 'rtl');
     else this._anchor.removeAttribute('dir');
 
+    /* Label precedence: the reactive `label` attribute wins over slotted text, so
+       consumers can update the label at runtime (e.g. i18n) without wiping the anchor
+       via textContent. Mirrors <ds-button>'s `label` attribute. */
+    const labelAttr = this.getAttribute('label');
+    const label = labelAttr != null ? labelAttr : this._slottedText;
+
     const iconPx = size === 'small' ? 12 : size === 'medium' ? 14 : 16;
     this._anchor.innerHTML = `
-      ${leadingIcon ? `<span class="ds-text-link__icon"><ds-icon name="${leadingIcon}" size="${iconPx}"></ds-icon></span>` : ''}
-      <span>${this._slottedText}</span>
-      ${trailingIcon ? `<span class="ds-text-link__icon"><ds-icon name="${trailingIcon}" size="${iconPx}"></ds-icon></span>` : ''}
+      ${leadingIcon ? `<span class="ds-text-link__icon"><ds-icon name="${esc(leadingIcon)}" size="${iconPx}"></ds-icon></span>` : ''}
+      <span>${esc(label)}</span>
+      ${trailingIcon ? `<span class="ds-text-link__icon"><ds-icon name="${esc(trailingIcon)}" size="${iconPx}"></ds-icon></span>` : ''}
     `;
   }
 }

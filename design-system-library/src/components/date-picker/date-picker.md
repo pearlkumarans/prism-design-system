@@ -8,15 +8,28 @@ Trigger input(s) plus a rich popover combining preset shortcuts, calendar, time 
 
 **Figma source:** UEMS Design System 3.0 · Node `17195:1122073`
 
+## Anatomy
+
+The trigger field is composed of three regions (delegated to `<ds-text-input>`, so it stays in lock-step with the text field's styling and sizes):
+
+1. **Input container** — wrapper with border, radius, and focus ring. Holds the icon and input; reacts to hover, focus, error, and disabled states. Width is driven by `size` (single 210 / 240 / 268, range 288 / 320 / 352) and stretches with `full-width`.
+2. **Calendar icon** — leading affordance signalling the field opens a picker. Clicking it (or the field) toggles the popover.
+3. **Input** — read-only text input displaying the selected date in `DD/MM/YYYY` format; falls back to the placeholder when empty.
+
 ## API
 
 | Attribute | Values | Default | Description |
 |-----------|--------|---------|-------------|
-| `value` | ISO date or `start/end` | — | `2026-04-15` (single) or `2026-04-09/2026-04-22` (range) |
+| `value` | ISO date, `start/end`, or `YYYY-MM-DDThh:mm` | — | `2026-04-15` (single), `2026-04-09/2026-04-22` (range), or `2026-04-15T14:30` (datetime, when `enable-time`) |
+| `enable-time` | boolean | unset | **Datetime mode** (single type): embeds an inline `ds-time-picker` below the calendar. Value gains a `T HH:mm` suffix; the field shows `DD/MM/YYYY HH:MM AM/PM`. The popover stays open after a date pick so the time can be set. |
+| `hour-cycle` | `12` \| `24` | `12` | Time display format for datetime mode. |
+| `time-step` | minutes (int) | `30` | Minute interval for the embedded time picker. |
+| `time-label` | string | `"Time"` | Label shown beside the embedded time picker. |
 | `start-time`, `end-time` | `"HH:MM AM/PM"` | — | Time picker values |
 | `active-preset` | preset id | `specific` | Which preset is active in the popover |
 | `label` | string | `"Select Date"` | Field label |
 | `label-position` | `none` \| `top` \| `left` | `left` | Label inline in a 280px column (left), stacked above (top), or hidden with the text kept as `aria-label` (none). A left label auto-stacks below 640px. |
+| `size` | `small` \| `medium` \| `large` | `medium` | Field size — mirrors `ds-text-input` (36 / 40 / 44px height; large bumps font to 16px). Trigger width scales too: single 210 / 240 / 268, range 288 / 320 / 352. `full-width` overrides the width at any size. |
 | `full-width` | boolean | unset | Stretches the input(s) to fill the container, overriding the fixed trigger width (single 240 / range 320). |
 | `required` | boolean | unset | Adds red `*` to label |
 | `disabled` | boolean | unset | Disables inputs |
@@ -46,7 +59,7 @@ Trigger input(s) plus a rich popover combining preset shortcuts, calendar, time 
 
 | Event | detail | When |
 |---|---|---|
-| `ds-date-picker-change` | `{ preset, value?, start?, end?, startTime, endTime }` | User clicks Done |
+| `ds-date-picker-change` | single: `{ type, value }` · range: `{ type, value, start, end }` · datetime: `{ type, value, date, time }` | Selection committed |
 | `ds-date-picker-open`  | — | Popover opens |
 | `ds-date-picker-close` | — | Popover closes (Escape, outside click, Done) |
 

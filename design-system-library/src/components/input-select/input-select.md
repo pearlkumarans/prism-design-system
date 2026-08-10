@@ -56,7 +56,7 @@ The Input Select is a form control component that lets users choose one or many 
 
 | Property | Type | Notes |
 |----------|------|-------|
-| `options` | `Array<{ label, value, disabled?, icon? }>` | Option list for the dropdown surface. |
+| `options` | `Array<{ label, value, disabled?, icon? }>` | Option list for the dropdown surface. An item may instead be a structural row — `{ type: 'heading', label }` renders a non-selectable section title, `{ type: 'divider' }` a separator — to group options (e.g. "Standard", "EUS", "E4S"). |
 | `value` | `string` | Current single-select value. Reflected to the `value` attribute. |
 | `values` | `string[]` | Current multi-select values. |
 

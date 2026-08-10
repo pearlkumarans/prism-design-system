@@ -34,7 +34,7 @@ function _injectCss(id, rel) {
 /* `structure` is kept only as a backward-compatible shorthand; the real model is
    the independent booleans (matches the refactored Figma component). */
 const STRUCTURES = ['default', 'with-summary', 'with-tabs', 'full'];
-const SLOT_NAMES = ['badge', 'actions'];
+const SLOT_NAMES = ['badge', 'actions', 'description'];
 
 export class DsPageHeader extends HTMLElement {
   static get observedAttributes() {
@@ -55,7 +55,7 @@ export class DsPageHeader extends HTMLElement {
     if (Object.prototype.hasOwnProperty.call(this, 'tabs'))        { this._pendingTabs = this.tabs; delete this.tabs; }
     if (Object.prototype.hasOwnProperty.call(this, 'titleMenu'))   { this._pendingTitleMenu = this.titleMenu; delete this.titleMenu; }
     this._breadcrumbs = []; this._summary = []; this._tabs = []; this._titleMenu = [];
-    this._slots = { badge: [], actions: [] };
+    this._slots = { badge: [], actions: [], description: [] };
     this._title = '';
     this._actionOverflow = null;   /* the ⋮ + dropdown built on demand */
     this._hiddenActions = [];      /* actions currently folded into the ⋮ menu */
@@ -286,7 +286,13 @@ export class DsPageHeader extends HTMLElement {
     /* Leading title icon — shown whenever `icon` is set (opt out with show-icon="false"). */
     const icon = this.getAttribute('icon') || '';
     const showIcon = !!icon && this.getAttribute('show-icon') !== 'false';
-    const showDescription = optIn('show-description') && !!description;
+    /* Description may be a plain-text attribute OR slotted rich content
+       (`<span slot="description">… <ds-text-link>…</ds-text-link></span>`) for an
+       inline link at the end of the sentence. Slotted content wins when present. */
+    const hasSlotDescription = this._slots.description.length > 0;
+    const showDescription = hasSlotDescription
+      ? this.getAttribute('show-description') !== 'false'
+      : (optIn('show-description') && !!description);
     const showActions = !this.hasAttribute('show-actions') || this.getAttribute('show-actions') !== 'false';
     /* Overflow ⋮ is OFF by default — opt in with the `show-overflow` attribute
        (a page/consumer that wants a header overflow menu adds it explicitly). */
@@ -362,7 +368,11 @@ export class DsPageHeader extends HTMLElement {
             </div>
             ${/* Subtitle row: summary items OR description — one at a time. Summary
                 wins when it has content; otherwise fall back to the description. */''}
-            ${summaryHTML || (showDescription ? `<p class="ds-page-header__description">${this._esc(description)}</p>` : '')}
+            ${summaryHTML || (showDescription
+              ? (hasSlotDescription
+                  ? `<p class="ds-page-header__description" data-slot="description"></p>`
+                  : `<p class="ds-page-header__description">${this._esc(description)}</p>`)
+              : '')}
           </div>
         </div>
         ${(showActions || showOverflow) ? `<div class="ds-page-header__actions">
@@ -377,6 +387,7 @@ export class DsPageHeader extends HTMLElement {
     /* Re-home captured light-DOM slot content. */
     if (showBadge)   { const h = this._root.querySelector('[data-slot="badge"]');   this._slots.badge.forEach((n) => h && h.appendChild(n)); }
     if (showActions) { const h = this._root.querySelector('[data-slot="actions"]'); this._slots.actions.forEach((n) => h && h.appendChild(n)); }
+    if (showDescription && hasSlotDescription) { const h = this._root.querySelector('[data-slot="description"]'); this._slots.description.forEach((n) => h && h.appendChild(n)); }
 
     this._root.querySelector('[data-back]')?.addEventListener('click', () => this.dispatchEvent(new CustomEvent('ds-page-header-back', { bubbles: true })));
     this._root.querySelector('[data-overflow]')?.addEventListener('click', () => this.dispatchEvent(new CustomEvent('ds-page-header-overflow', { bubbles: true })));

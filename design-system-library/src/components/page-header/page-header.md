@@ -19,7 +19,11 @@ header.titleMenu   = [{ label, value, icon }, ...];  // items for the title chev
 ```
 
 Slots: `actions` (button row — right-aligned on desktop, left-aligned with the
-title when it wraps on narrow), `badge` (status badge after the title).
+title when it wraps on narrow), `badge` (status badge after the title),
+`description` (rich subtitle — use instead of the plain-text `description` attribute
+when you need inline content such as a trailing `<ds-text-link>` "Learn more" at the
+end of the sentence; slotted content wins over the attribute, and collapses on scroll
+like the plain description).
 
 Title chevron (`show-chevron`): rendered as a `ds-icon-button`. With `titleMenu`
 items set, clicking the chevron opens a `ds-dropdown-menu` of those items; without

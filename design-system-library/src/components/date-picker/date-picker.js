@@ -52,19 +52,50 @@ if (typeof document !== 'undefined') {
 
 /* Helper/note row = the shared "Form Field Helper Row" sub-component. */
 import '../field-helper/field-helper.js';
+/* Embedded time picker (inline variant) for the datetime mode (`enable-time`). */
+import '../time-picker/time-picker.js';
 if (typeof document !== 'undefined') {
-  const id = 'ds-date-picker-fh-css';
-  if (!document.getElementById(id)) {
+  [['ds-date-picker-fh-css', '../field-helper/field-helper.css'],
+   ['ds-date-picker-tp-css', '../time-picker/time-picker.css']].forEach(([id, rel]) => {
+    if (document.getElementById(id)) return;
     const link = document.createElement('link');
-    link.id = id;
-    link.rel = 'stylesheet';
-    link.href = new URL('../field-helper/field-helper.css', import.meta.url).href;
+    link.id = id; link.rel = 'stylesheet';
+    link.href = new URL(rel, import.meta.url).href;
     document.head.appendChild(link);
-  }
+  });
 }
 
 const TYPES = ['single', 'range'];
 const VALIDATIONS = ['none', 'success', 'error'];
+const CYCLES = ['12', '24'];
+
+/* Datetime value helpers — value is "YYYY-MM-DD" (date) or "YYYY-MM-DDTHH:mm". */
+const dateOf = (v) => (v || '').split('T')[0];
+const timeOf = (v) => { const i = (v || '').indexOf('T'); return i >= 0 ? v.slice(i + 1) : ''; };
+const fmtTime = (hhmm, cycle) => {
+  if (!/^\d{1,2}:\d{2}$/.test(hhmm || '')) return '';
+  let [h, m] = hhmm.split(':').map(Number);
+  if (cycle === '24') return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  const ap = h < 12 ? 'AM' : 'PM'; let hr = h % 12; if (hr === 0) hr = 12;
+  return `${hr}:${String(m).padStart(2, '0')} ${ap}`;
+};
+/* Lenient "9:30 pm" / "21:30" / "930" → "HH:mm" (24h), or null. */
+const parseTimeStr = (raw, cycle) => {
+  if (!raw) return null;
+  let s = String(raw).trim().toLowerCase(); let ap = null;
+  const m = /([ap])\.?m?\.?$/.exec(s);
+  if (m) { ap = m[1]; s = s.slice(0, m.index).trim(); }
+  s = s.replace(/[^\d:]/g, ''); if (!s) return null;
+  let h, mm;
+  if (s.includes(':')) { const [hs, ms = ''] = s.split(':'); h = parseInt(hs, 10); mm = ms === '' ? 0 : parseInt(ms, 10); }
+  else if (s.length <= 2) { h = parseInt(s, 10); mm = 0; }
+  else { h = parseInt(s.slice(0, -2), 10); mm = parseInt(s.slice(-2), 10); }
+  if (isNaN(h)) return null; if (isNaN(mm)) mm = 0;
+  if (ap) { if (h === 12) h = 0; if (ap === 'p') h += 12; }
+  if (h > 23 || mm > 59 || h < 0 || mm < 0) return null;
+  return `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+};
+const SIZES = ['small', 'medium', 'large'];
 
 const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const addDays = (d, n) => {
@@ -136,7 +167,8 @@ export class DsDatePicker extends HTMLElement {
       'helper-text', 'validation-state',
       'show-presets', 'show-footer',
       'apply-label', 'cancel-label', 'clear-label',
-      'label-position', 'rtl', 'open',
+      'label-position', 'size', 'rtl', 'open',
+      'enable-time', 'hour-cycle', 'time-step', 'time-label',
     ];
   }
 
@@ -220,6 +252,10 @@ export class DsDatePicker extends HTMLElement {
           <div class="ds-date-picker__presets" role="tablist" hidden></div>
           <div class="ds-date-picker__pane"></div>
         </div>
+        <div class="ds-date-picker__time" hidden>
+          <span class="ds-date-picker__time-label">Time</span>
+          <ds-time-picker class="ds-date-picker__time-picker" variant="inline" label-position="none" label="Time"></ds-time-picker>
+        </div>
         <div class="ds-date-picker__footer" hidden>
           <ds-button variant="tertiary" size="small" data-act="clear">Clear</ds-button>
           <span class="ds-date-picker__footer-spacer"></span>
@@ -233,7 +269,20 @@ export class DsDatePicker extends HTMLElement {
     this._popover   = this.querySelector('.ds-date-picker__popover');
     this._presetsEl = this.querySelector('.ds-date-picker__presets');
     this._paneEl    = this.querySelector('.ds-date-picker__pane');
+    this._timeRow   = this.querySelector('.ds-date-picker__time');
+    this._timePicker = this.querySelector('.ds-date-picker__time-picker');
     this._footerEl  = this.querySelector('.ds-date-picker__footer');
+    this._timeVal   = '';   // "HH:mm" held while datetime mode is active
+
+    /* Time picker (datetime mode) → recompose the value with the new time. */
+    this._timePicker.addEventListener('ds-time-picker-change', (e) => {
+      this._timeVal = e.detail.value || '';
+      this._onTimeChange();
+    });
+    /* Keep clicks inside the embedded time picker from bubbling to the date
+       popover's outside-click handler (it lives in the same portaled popover,
+       so composedPath already covers it — but the inline field's own focus
+       shouldn't re-trigger date logic). */
 
     this._inputWrap = this.querySelector('.ds-date-picker__input');
     /* ds-text-input re-renders its inner <input> on every attribute change.
@@ -273,6 +322,21 @@ export class DsDatePicker extends HTMLElement {
     });
   }
 
+  /* Datetime mode is single-type only (range datetime is out of scope for now). */
+  get _enableTime() { return boolAttr(this, 'enable-time') && enumAttr(this, 'type', TYPES, 'single') === 'single'; }
+  get _cycle() { return enumAttr(this, 'hour-cycle', CYCLES, '12'); }
+
+  /* Called when the embedded time picker changes. Recompose value = date + time.
+     If no date is chosen yet, just hold the time (_timeVal) until one is. */
+  _onTimeChange() {
+    if (!this._enableTime) return;
+    const showFooter = boolAttr(this, 'show-footer');
+    const cur = showFooter ? (this._staged || this.getAttribute('value') || '') : (this.getAttribute('value') || '');
+    const d = dateOf(cur);
+    if (!d) return;                                  // no date yet — keep the time staged
+    this._writeValue(`${d}T${this._timeVal || '00:00'}`);
+  }
+
   _sync() {
     const type = enumAttr(this, 'type', TYPES, 'single');
     const validation = enumAttr(this, 'validation-state', VALIDATIONS, 'none');
@@ -288,6 +352,14 @@ export class DsDatePicker extends HTMLElement {
     this.classList.toggle('ds-date-picker--left', labelPos === 'left');
     this.classList.toggle('ds-date-picker--top', labelPos === 'top');
     this.classList.toggle('ds-date-picker--none', labelPos === 'none');
+    /* Field size — mirrors ds-text-input's small/medium/large scale (36/40/44px).
+       We toggle a host class for per-size widths and forward `size` to the inner
+       text field so its height + font track the same tokens. */
+    const size = enumAttr(this, 'size', SIZES, 'medium');
+    this.classList.toggle('ds-date-picker--size-small',  size === 'small');
+    this.classList.toggle('ds-date-picker--size-medium', size === 'medium');
+    this.classList.toggle('ds-date-picker--size-large',  size === 'large');
+    this._inputWrap.setAttribute('size', size);
     const labelText = this.getAttribute('label') ?? 'Select Date';
     if (labelPos === 'none' && labelText) {
       this._inputWrap.setAttribute('label', labelText);
@@ -317,7 +389,8 @@ export class DsDatePicker extends HTMLElement {
 
     // Single input for both single + range types.
     const isRange = type === 'range';
-    const displayPh = isRange ? `${placeholder} → ${placeholder}` : placeholder;
+    let displayPh = isRange ? `${placeholder} → ${placeholder}` : placeholder;
+    if (this._enableTime) displayPh = `${placeholder} ${this._cycle === '24' ? 'HH:MM' : 'HH:MM AM/PM'}`;
     /* Sync state to the <ds-text-input> wrapper — it re-renders its inner
        <input> when attributes change. */
     this._inputWrap.setAttribute('placeholder', displayPh);
@@ -359,6 +432,25 @@ export class DsDatePicker extends HTMLElement {
 
     // Calendar pane
     this._renderPane(type);
+
+    // Datetime mode — show + configure the embedded inline time picker.
+    const enableTime = this._enableTime;
+    this._timeRow.hidden = !enableTime;
+    this.classList.toggle('ds-date-picker--datetime', enableTime);
+    if (enableTime) {
+      this._timeRow.querySelector('.ds-date-picker__time-label').textContent =
+        this.getAttribute('time-label') || 'Time';
+      const tp = this._timePicker;
+      tp.setAttribute('hour-cycle', this._cycle);
+      const tStep = this.getAttribute('time-step');
+      if (tStep) tp.setAttribute('step', tStep); else tp.removeAttribute('step');
+      if (disabled) tp.setAttribute('disabled', ''); else tp.removeAttribute('disabled');
+      if (rtl) tp.setAttribute('rtl', ''); else tp.removeAttribute('rtl');
+      // Seed the time from the current value (or keep the held time).
+      const t = timeOf(value) || this._timeVal;
+      this._timeVal = t;
+      if (t) tp.setAttribute('value', t); else tp.removeAttribute('value');
+    }
   }
 
   /* Update <ds-button> text without clobbering its upgraded inner structure
@@ -390,6 +482,7 @@ export class DsDatePicker extends HTMLElement {
      value matches a preset, return its id. If a value is set but matches no
      preset, return 'custom' (user-picked). If no value, return null. */
   _findActivePresetId(value) {
+    value = dateOf(value);   // presets are date-only; ignore any time suffix
     if (!value) return null;
     const type = enumAttr(this, 'type', TYPES, 'single');
     for (const preset of DEFAULT_PRESETS) {
@@ -433,7 +526,7 @@ export class DsDatePicker extends HTMLElement {
     const min = this.getAttribute('min') || '';
     const max = this.getAttribute('max') || '';
     const rtl = boolAttr(this, 'rtl');
-    const value = this._currentDisplayValue();
+    const value = dateOf(this._currentDisplayValue());   // calendar works on the date part only
     const calType = type === 'range' ? 'range' : 'single';
 
     /* Reuse the existing calendar when only the value/min/max/rtl changed —
@@ -475,6 +568,12 @@ export class DsDatePicker extends HTMLElement {
 
   /* When show-footer is on, edits are staged; otherwise they commit immediately. */
   _writeValue(v) {
+    /* Datetime mode: a bare date from the calendar/preset is combined with the
+       held time. (_onTimeChange passes an already-composed "…T…" string.) */
+    if (this._enableTime && v && !v.includes('T') && !v.includes('/')) {
+      if (!this._timeVal) this._timeVal = '00:00';
+      v = `${v}T${this._timeVal}`;
+    }
     const showFooter = boolAttr(this, 'show-footer');
     if (showFooter) {
       this._staged = v;
@@ -483,7 +582,7 @@ export class DsDatePicker extends HTMLElement {
          preset — otherwise picking a preset (or a day) updates only the input
          text while the calendar and preset row stay on the old selection. */
       if (this._cal) {
-        if (this._staged) this._cal.setAttribute('value', this._staged);
+        if (this._staged) this._cal.setAttribute('value', dateOf(this._staged));
         else this._cal.removeAttribute('value');
       }
       if (boolAttr(this, 'show-presets')) this._renderPresets();
@@ -491,9 +590,10 @@ export class DsDatePicker extends HTMLElement {
       this._setValueAttr(v);
       this._emitChange();
       // Commit-on-pick closes the popover for single picks; range stays open
-      // until both endpoints are set.
+      // until both endpoints are set. In datetime mode the popover stays open so
+      // the user can also set the time (closes on outside-click / Escape / Apply).
       const type = enumAttr(this, 'type', TYPES, 'single');
-      if (type === 'single' || (type === 'range' && v.includes('/'))) this._close();
+      if (!this._enableTime && (type === 'single' || (type === 'range' && v.includes('/')))) this._close();
     }
   }
 
@@ -516,8 +616,12 @@ export class DsDatePicker extends HTMLElement {
       if (sd)       return fmtInput(sd, format);
       return '';
     }
-    const d = fromISO(value);
-    return d ? fmtInput(d, format) : '';
+    const d = fromISO(dateOf(value));
+    if (!d) return '';
+    let out = fmtInput(d, format);
+    const t = timeOf(value);               // datetime mode → append the time
+    if (t) out += ` ${fmtTime(t, this._cycle)}`;
+    return out;
   }
 
   _currentDisplayValue() {
@@ -573,6 +677,15 @@ export class DsDatePicker extends HTMLElement {
       if (!startD) return;
       if (endD) this._writeValue(`${toISO(startD)}/${toISO(endD)}`);
       else      this._writeValue(toISO(startD));
+    } else if (this._enableTime) {
+      // Datetime: split a trailing time ("15/04/2026 9:30 AM") from the date.
+      const m = raw.match(/^(.*?)[\s,]+(\d{1,2}:\d{2}(?:\s*[ap]\.?m?\.?)?)$/i);
+      const dateStr = m ? m[1].trim() : raw;
+      const timeStr = m ? m[2].trim() : null;
+      const d = parseInputStr(dateStr, format);
+      if (!d) return;
+      if (timeStr) { const t = parseTimeStr(timeStr, this._cycle); if (t) this._timeVal = t; }
+      this._writeValue(toISO(d));       // composes with _timeVal
     } else {
       const d = parseInputStr(raw, format);
       if (!d) return;
@@ -657,6 +770,8 @@ export class DsDatePicker extends HTMLElement {
     if (type === 'range') {
       const [s, e] = value.split('/');
       detail = { type, value, start: s || null, end: e || null };
+    } else if (this._enableTime) {
+      detail = { type, value, date: dateOf(value) || null, time: timeOf(value) || null };
     } else {
       detail = { type, value };
     }

@@ -656,15 +656,20 @@ export class DsInputSelect extends HTMLElement {
 
     const menu = (this._dropdownEl || this._root).querySelector('[data-menu]');
     if (menu) {
-      menu.items = this._options.map((o) => ({
-        label: o.label,
-        value: o.value,
-        selected: multi
-          ? this._values.includes(o.value)
-          : String(this.getAttribute('value') ?? '') === String(o.value),
-        disabled: !!o.disabled,
-        icon: o.icon,
-      }));
+      menu.items = this._options.map((o) => {
+        /* Structural items (section headings / dividers) pass straight through so
+           the menu renders them as non-selectable group titles rather than options. */
+        if (o.type === 'heading' || o.type === 'divider') return { type: o.type, label: o.label };
+        return {
+          label: o.label,
+          value: o.value,
+          selected: multi
+            ? this._values.includes(o.value)
+            : String(this.getAttribute('value') ?? '') === String(o.value),
+          disabled: !!o.disabled,
+          icon: o.icon,
+        };
+      });
 
       menu.addEventListener('ds-dropdown-select', (e) => {
         const v = e.detail?.value;

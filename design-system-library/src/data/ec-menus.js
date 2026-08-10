@@ -145,7 +145,7 @@ export const EC_TAB_L2_MENUS = {
           { id: 'proxy',        label: 'Proxy Settings' },
           { id: 'patch-db',     label: 'Patch Database Settings' },
           { id: 'bios',         label: 'BIOS Credential Settings' },
-          { id: 'n1',           label: 'N-1 Patch Settings' },
+          { id: 'n1',           label: 'N-1 Patch Settings', view: 'threats-patches-n1-patch-settings' },
           { id: 'redhat',       label: 'Red Hat Linux Settings' },
           { id: 'suse',         label: 'SUSE Linux Settings' },
           { id: 'linux-repo',   label: 'Linux Repository Settings', view: 'threats-patches-linux-repository-settings' },

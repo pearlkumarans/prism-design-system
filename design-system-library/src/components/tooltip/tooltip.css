@@ -4,7 +4,7 @@
    icon + directional arrow. 3 themes × 9 positions × RTL.
    Spec: docs/MD/tooltip.md · Figma node 18063:833552 (54 variants).
 
-   Body HUGS content (min-width 72px); the 240px cap lives on the TEXT node,
+   Body HUGS content (no min-width floor); the 280px cap lives on the TEXT node,
    so body ≤ 288px with icon / ≤ 264px without. Padding 8/12, radius 6, gap 4,
    icon 20×20, text 13/20. Arrow = 12×6 triangle (6×12 on the side edges), fill
    matches the body; corner positions inset the triangle 12px from the corner
@@ -19,9 +19,11 @@ ds-tooltip { display: inline-block; position: relative; font-family: var(--font-
 .ds-tooltip__tip {
   position: absolute;
   z-index: 9999;
-  /* Body hugs content; the cap is on the text node below. */
+  /* Body hugs content (no min-width floor, so short labels like "Edit" stay
+     centered under the arrow instead of sitting left in an over-wide bubble);
+     the max-width cap is on the text node below. */
   width: max-content;
-  min-width: 72px;
+  min-width: 0;
   box-sizing: border-box;
   padding: var(--uems-spacing-8, 8px) var(--uems-spacing-12, 12px);
   border-radius: var(--uems-radius-default, 6px);

@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Picker — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/time-picker/time-picker.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/time-picker/time-picker.js"></script>
+<style>
+  .demo-dp-section { margin-bottom: 28px; }
+  .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+</style>
+</head>
+<body class="page-date-picker">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+<img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+<span class="nav-logo-text">
+  <span class="nav-logo-mark">Prism</span>
+  <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+</span>
+    </a>
+    <div class="nav-links">
+      <a href="Foundation.html">Foundation</a>
+      <a href="Components.html" class="active">Components</a>
+      <a href="zia-experience.html">Zia Experience</a><a href="llm-reference.html">LLM Reference</a>
+      <div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      <div style="width:16px;"></div>
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search..."><span class="search-shortcut">&#8984;K</span>
+      </div>
+      <h3 class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Button-Group.html" class="sidebar-link">Button Group</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Time-picker.html" class="sidebar-link active">Time picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Time Picker</h1>
+        <p class="page-desc">A time picker lets people set a time of day &mdash; type it directly (9:30 pm, 930, 14:00) or pick from a stepped list. Use the list variant for scheduling and forms; the inline segmented variant for dense, keyboard-first entry. Values are stored locale-independent as 24-hour HH:mm.</p>
+        </div>
+        <nav class="content-tabs">
+          <button class="tab-item active">Overview</button>
+          <button class="tab-item">Style</button>
+          <button class="tab-item">Usage</button>
+          <button class="tab-item">Code</button>
+          <button class="tab-item">Accessibility</button>
+        </nav>
+
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <!-- ========== OVERVIEW ========== -->
+        <div class="tab-content" id="tab-overview">
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <p class="doc-section-subtitle" style="margin-bottom:28px;">The time picker input is composed of three numbered regions. Each label is anchored to the live preview with a connector line.</p>
+          <div style="padding:40px 0;overflow:visible;">
+            <div id="anatomy-tp-wrap" style="position:relative;display:inline-block;padding:32px 80px;">
+              <ds-time-picker id="anatomy-tp" label="Select time" label-position="none" style="width:200px;"></ds-time-picker>
+              <div class="anat-mk anat-mk-left"  data-target="container" style="top:0;"><span class="anat-marker-inline">1</span><div class="anat-mk-line"></div></div>
+              <div class="anat-mk-top" data-target="icon" style="left:0;"><span class="anat-marker-inline">2</span><div class="anat-mk-vline"></div></div>
+              <div class="anat-mk anat-mk-right" data-target="input" style="top:0;"><div class="anat-mk-line"></div><span class="anat-marker-inline">3</span></div>
+            </div>
+          </div>
+          <style>
+            .anat-mk { position: absolute; display: flex; align-items: center; gap: 8px; white-space: nowrap; transform: translateY(-50%); z-index: 20; }
+            .anat-mk-left  { right: calc(100% - 80px); }
+            .anat-mk-right { left:  calc(100% - 80px); }
+            .anat-mk-line  { width: 40px; height: 2px; background: #2563eb; }
+            .anat-mk-top { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; transform: translate(-50%, -100%); padding-bottom: 4px; z-index: 20; }
+            .anat-mk-vline { width: 2px; height: 14px; background: #2563eb; }
+          </style>
+
+          <script type="module">
+            customElements.whenDefined('ds-time-picker').then(() => {
+              const host = document.getElementById('anatomy-tp');
+              const wrap = document.getElementById('anatomy-tp-wrap');
+              if (!host || !wrap) return;
+              const place = () => {
+                const wrapRect = wrap.getBoundingClientRect();
+                const targets = {
+                  container: host.querySelector('.ds-time-picker__input'),
+                  icon:      host.querySelector('.ds-time-picker__input ds-icon'),
+                  input:     host.querySelector('.ds-time-picker__input input'),
+                };
+                wrap.querySelectorAll('.anat-mk').forEach((mk) => {
+                  const t = targets[mk.dataset.target];
+                  if (!t) { mk.style.display = 'none'; return; }
+                  const r = t.getBoundingClientRect();
+                  mk.style.top = (r.top + r.height / 2 - wrapRect.top) + 'px';
+                });
+                wrap.querySelectorAll('.anat-mk-top').forEach((mk) => {
+                  const t = targets[mk.dataset.target];
+                  if (!t) { mk.style.display = 'none'; return; }
+                  const r = t.getBoundingClientRect();
+                  mk.style.left = (r.left + r.width / 2 - wrapRect.left) + 'px';
+                  mk.style.top  = (r.top - wrapRect.top) + 'px';
+                });
+              };
+              requestAnimationFrame(() => requestAnimationFrame(place));
+              window.addEventListener('load', place, { once: true });
+              if (document.fonts?.ready) document.fonts.ready.then(place);
+              new ResizeObserver(place).observe(host);
+            });
+          </script>
+          <div class="anat-legend">
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Input container</strong><span>Wrapper with border, radius, and focus ring. Holds the icon and input; its width scales with <code style="font-family:monospace;font-size:13px;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,0.06);">size</code>. Reacts to hover, focus, error, and disabled states.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Clock icon</strong><span>Leading affordance indicating the field is a time picker. Clicking the field opens the list of times.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Input</strong><span>Editable &mdash; type a time (<code style="font-family:monospace;font-size:13px;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,0.06);">9:30 pm</code>, <code style="font-family:monospace;font-size:13px;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,0.06);">930</code>, <code style="font-family:monospace;font-size:13px;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,0.06);">14:00</code>) or pick from the list. Shows the selected time; falls back to placeholder when empty.</span></div></div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div style="margin-bottom:64px;">
+            <h2 id="live-demo" class="doc-section-title" style="margin-bottom:8px;">Preview</h2>
+            <p class="doc-section-subtitle" style="margin-bottom:28px;">Both panel variants (<code>list</code> and <code>inline</code>) across <code>hour-cycle</code>, <code>step</code>, <code>size</code>, bounds, and validation-state &mdash; rendered with the live <code>&lt;ds-time-picker&gt;</code> web component.</p>
+
+            <style>
+              .page-date-picker .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
+              .page-date-picker .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; }
+              .page-date-picker .demo-container .demo-canvas {
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+                min-height: 0 !important;
+                flex-direction: column !important;
+                padding: 32px !important;
+                gap: 32px !important;
+              }
+              .page-date-picker .demo-dp-section { display: flex; flex-direction: column; gap: 14px; }
+              .page-date-picker .demo-dp-section > .demo-group-label {
+                font-size: 11px !important; font-weight: 700 !important; letter-spacing: 0.08em !important;
+                color: var(--prism-text-muted) !important; text-transform: uppercase !important;
+                margin: 0 !important; text-align: left !important; width: auto !important;
+              }
+              .page-date-picker .demo-dp-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px 24px;
+              }
+              @media (max-width: 880px) {
+                .page-date-picker .demo-dp-grid { grid-template-columns: 1fr; }
+              }
+              .page-date-picker .demo-dp-card {
+                display: flex; flex-direction: column; gap: 10px;
+                padding: 16px;
+                border: 1px solid var(--prism-border);
+                border-radius: 12px;
+                background: rgba(255,255,255,0.02);
+              }
+              [data-theme="light"] .page-date-picker .demo-dp-card {
+                background: rgba(255,255,255,0.55);
+                border-color: rgba(37,99,235,0.1);
+              }
+              .page-date-picker .demo-dp-card .mini-label {
+                font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+                color: var(--prism-text-muted); text-transform: uppercase;
+              }
+              .page-date-picker .demo-dp-card .mini-desc {
+                font-size: 12px; color: var(--prism-text-muted); line-height: 1.5;
+              }
+              .page-date-picker .demo-realworld-card {
+                display: flex; flex-direction: column; gap: 14px;
+                padding: 20px;
+                border: 1px solid var(--prism-border);
+                border-radius: 12px;
+                background: rgba(255,255,255,0.02);
+              }
+              [data-theme="light"] .page-date-picker .demo-realworld-card {
+                background: rgba(255,255,255,0.55);
+                border-color: rgba(37,99,235,0.1);
+              }
+              .page-date-picker .demo-realworld-card-label {
+                font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+                color: var(--prism-text-muted); text-transform: uppercase;
+              }
+              .page-date-picker .demo-filter-bar {
+                display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;
+              }
+              .page-date-picker .demo-filter-bar > ds-time-picker { flex: 1 1 200px; min-width: 200px; }
+            </style>
+
+            <div class="demo-container">
+              <!-- Mac-window toolbar -->
+              <div class="demo-toolbar">
+                <div class="demo-toolbar-left">
+                  <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
+                  <div class="demo-toolbar-dot" style="background:#eab308;"></div>
+                  <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Time Picker &middot; list &amp; inline variants, sizes, and states</span>
+                </div>
+              </div>
+
+              <div class="demo-canvas">
+
+                <!-- List variant -->
+                <div class="demo-dp-section">
+                  <div class="demo-group-label">List variant &mdash; trigger + popover listbox</div>
+                  <div class="demo-dp-grid">
+                    <div class="demo-dp-card">
+                      <span class="mini-label">12-hour &mdash; 30-min step</span>
+                      <span class="mini-desc">Default cycle and step. Type or pick; value stored as 24h HH:mm.</span>
+                      <ds-time-picker label-position="none" value="09:30" style="width:200px;"></ds-time-picker>
+                    </div>
+                    <div class="demo-dp-card">
+                      <span class="mini-label">24-hour &mdash; <code>step="15"</code></span>
+                      <span class="mini-desc">Infra / logs style. Quarter-hour options in HH:mm.</span>
+                      <ds-time-picker label-position="none" hour-cycle="24" step="15" style="width:200px;"></ds-time-picker>
+                    </div>
+                    <div class="demo-dp-card">
+                      <span class="mini-label">With now row &mdash; <code>show-now</code></span>
+                      <span class="mini-desc">Pins a "Now · &lt;time&gt;" row at the top of the list.</span>
+                      <ds-time-picker label-position="none" show-now style="width:200px;"></ds-time-picker>
+                    </div>
+                    <div class="demo-dp-card">
+                      <span class="mini-label">Business hours &mdash; <code>min</code> / <code>max</code></span>
+                      <span class="mini-desc">Bounds reject options and typed entry outside 09:00&ndash;17:00.</span>
+                      <ds-time-picker label-position="none" min="09:00" max="17:00" style="width:200px;"></ds-time-picker>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Inline variant -->
+                <div class="demo-dp-section">
+                  <div class="demo-group-label">Inline variant &mdash; segmented HH : MM field with steppers</div>
+                  <div class="demo-dp-grid">
+                    <div class="demo-dp-card">
+                      <span class="mini-label">12-hour</span>
+                      <span class="mini-desc">Per-key spin editing + ▲▼ steppers. No popover.</span>
+                      <ds-time-picker variant="inline" label-position="none" value="14:05" style="width:200px;"></ds-time-picker>
+                    </div>
+                    <div class="demo-dp-card">
+                      <span class="mini-label">24-hour &mdash; <code>hour-cycle="24"</code></span>
+                      <span class="mini-desc">Two segments (HH : MM), no AM/PM. Keyboard-first entry.</span>
+                      <ds-time-picker variant="inline" hour-cycle="24" label-position="none" value="23:45" style="width:200px;"></ds-time-picker>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sizes -->
+                <div class="demo-dp-section">
+                  <div class="demo-group-label">Sizes &mdash; small / medium / large</div>
+                  <div class="demo-dp-grid">
+                    <div class="demo-dp-card">
+                      <span class="mini-label">Small &mdash; 36px</span>
+                      <ds-time-picker size="small" label-position="none" value="08:00" style="width:160px;"></ds-time-picker>
+                    </div>
+                    <div class="demo-dp-card">
+                      <span class="mini-label">Medium &mdash; 40px (default)</span>
+                      <ds-time-picker size="medium" label-position="none" value="08:00" style="width:180px;"></ds-time-picker>
+                    </div>
+                    <div class="demo-dp-card">
+                      <span class="mini-label">Large &mdash; 44px, 16px font</span>
+                      <ds-time-picker size="large" label-position="none" value="08:00" style="width:200px;"></ds-time-picker>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- States -->
+                <div class="demo-dp-section">
+                  <div class="demo-group-label">States &mdash; default, error &amp; disabled</div>
+                  <div class="demo-dp-grid">
+                    <div class="demo-dp-card">
+                      <span class="mini-label">Default</span>
+                      <span class="mini-desc">Empty, ready for input.</span>
+                      <ds-time-picker label-position="none" style="width:200px;"></ds-time-picker>
+                    </div>
+                    <div class="demo-dp-card">
+                      <span class="mini-label">Error &mdash; <code>validation-state="error"</code></span>
+                      <span class="mini-desc">Red border + helper text. Pair with a clear message.</span>
+                      <ds-time-picker label-position="none" validation-state="error" helper-text="Enter a valid time" style="width:200px;"></ds-time-picker>
+                    </div>
+                    <div class="demo-dp-card">
+                      <span class="mini-label">Disabled &mdash; <code>disabled</code></span>
+                      <span class="mini-desc">Greyed field, non-interactive. Use for read-only records.</span>
+                      <ds-time-picker label-position="none" value="10:00" disabled style="width:200px;"></ds-time-picker>
+                    </div>
+                    <div class="demo-dp-card">
+                      <span class="mini-label">Inline error</span>
+                      <span class="mini-desc">Segmented field in error state.</span>
+                      <ds-time-picker variant="inline" label-position="none" validation-state="error" helper-text="Enter a valid time" style="width:200px;"></ds-time-picker>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <h2 id="content-guidelines" class="doc-section-title">Content Guidelines<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Recommended</span></h2>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li>Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">step</code> to the scheduling granularity (5, 15, 30, 60 min) so the list matches the task.</li>
+                <li>Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">hour-cycle="24"</code> for infra, logs, and cron-style entry.</li>
+                <li>Give <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">min</code> / <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">max</code> bounds for constrained windows (business hours, maintenance slots).</li>
+                <li>Let people type &mdash; the list field parses "9:30 pm", "930", "14:00" forgivingly.</li>
+                <li>Reach for the inline variant when entry is dense and keyboard-first.</li>
+                <li>Announce the selected time via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-live</code> on change.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li>Use it for durations (e.g. "45 minutes") &mdash; that's a number field, not a time of day.</li>
+                <li>Hand-roll AM/PM toggles beside a plain text input &mdash; use the built-in <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">hour-cycle</code>.</li>
+                <li>Store display strings &mdash; the value is always locale-independent 24h HH:mm.</li>
+                <li>Set a tiny <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">step</code> (e.g. 1 min) when the list would scroll endlessly &mdash; let users type instead.</li>
+                <li>Reject a typed time silently &mdash; surface an error with a clear message.</li>
+                <li>Leave the popover open after a selection &mdash; the user has moved on.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <!-- Icon usage -->
+          <div class="doc-section">
+            <h2 id="icon-usage" class="doc-section-title">Icon Usage</h2>
+            <p class="doc-section-subtitle">The Time Picker composes an editable text input with a leading clock icon and a popover listbox (list variant), or a segmented field with a stepper column (inline variant). Use the right icon for each surface.</p>
+
+            <h3 class="doc-h4" style="margin-top:24px;">Trigger input icons (list variant)</h3>
+            <table class="size-table" style="margin-top:16px;">
+              <thead><tr><th>Slot</th><th>Icon</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td>Prefix (default)</td><td><code>clock</code></td><td>Identifies the field as a time picker. Clicking the field opens the list popover. 16px, scales with <code>size</code>.</td></tr>
+                <tr><td>Now row</td><td><code>clock</code></td><td>Optional leading icon on the "Now · &lt;time&gt;" row when <code>show-now</code> is set.</td></tr>
+                <tr><td>Selected option</td><td><code>check</code></td><td>Marks the currently selected time in the listbox (<code>aria-selected</code>).</td></tr>
+                <tr><td>Error state</td><td><code>exclamation-circle</code></td><td>Sits next to the clock icon in error state. Critical-default color.</td></tr>
+              </tbody>
+            </table>
+
+            <h3 class="doc-h4" style="margin-top:32px;">Stepper icons (inline variant)</h3>
+            <table class="size-table" style="margin-top:16px;">
+              <thead><tr><th>Element</th><th>Icon</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>Increment</td><td><code>chevron-up</code></td><td>Steps the active segment up by one (with wrap). Mirrors the ↑ key.</td></tr>
+                <tr><td>Decrement</td><td><code>chevron-down</code></td><td>Steps the active segment down by one (with wrap). Mirrors the ↓ key.</td></tr>
+              </tbody>
+            </table>
+
+            <h3 class="doc-h4" style="margin-top:32px;">Popover list icons</h3>
+            <p style="color:var(--prism-text-muted);font-size:14px;line-height:1.7;margin-top:8px;">
+              The listbox is text-first &mdash; each row is a formatted time. Keep icons minimal so scanning stays fast:
+            </p>
+            <ul class="doc-list" style="margin-top:8px;">
+              <li><strong><code>clock</code></strong> &mdash; optional marker on the pinned "Now" row (<code>show-now</code>).</li>
+              <li><strong><code>check</code></strong> &mdash; the selected row; everything else is unadorned.</li>
+            </ul>
+
+            <p style="margin-top:16px;font-size:13.5px;color:var(--prism-text-muted);">
+              <strong>Rule of thumb:</strong> the clock icon identifies the picker. Inside the list, only the selected row and the Now row carry an icon &mdash; every other row is plain text. In the inline variant, the chevron steppers are the only icons.
+            </p>
+          </div>
+        </div>
+
+        <!-- ========== STYLE ========== -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+          <h2 id="style-overview" class="doc-section-title">Style</h2>
+          <p class="doc-section-subtitle">Design tokens, variants, and visual specifications that define the Time Picker's appearance.</p>
+
+          <div class="doc-section">
+            <h2 id="variants" class="doc-section-title">Variants</h2>
+            <p class="doc-section-subtitle">2 panel variants (list, inline) &times; hour-cycle &times; validation state. The variant sets the interaction model; the other axes are runtime toggles.</p>
+            <table class="size-table">
+              <thead><tr><th>Axis</th><th>Values</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Variant</strong></td><td><code>list</code> (default), <code>inline</code></td><td>List = editable trigger + popover listbox. Inline = segmented HH:MM field with steppers, no popover.</td></tr>
+                <tr><td><strong>Hour cycle</strong></td><td><code>12</code> (default), <code>24</code></td><td>Display format. 12 shows "2:30 PM"; 24 shows "14:30". Value is always stored 24h.</td></tr>
+                <tr><td><strong>Step</strong></td><td><code>5</code> &hellip; <code>60</code> min (default <code>30</code>)</td><td>Interval between list options (list variant).</td></tr>
+                <tr><td><strong>State</strong></td><td><code>none</code>, <code>success</code>, <code>error</code></td><td>Drives border colour and helper-row icon/text.</td></tr>
+                <tr><td><strong>Label Position</strong></td><td><code>none</code>, <code>left</code> (default), <code>top</code></td><td>Left puts the label in a 220px column beside the field (auto-stacks when narrow); Top stacks it above; None hides it (text kept as <code>aria-label</code>).</td></tr>
+                <tr><td><strong>Size</strong></td><td><code>small</code>, <code>medium</code> (default), <code>large</code></td><td>Field height 36 / 40 / 44px; large bumps the font to 16px. List width scales 160 / 180 / 200.</td></tr>
+              </tbody>
+            </table>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:14px;">
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-bottom:12px;">List</div>
+                <ds-time-picker label-position="none" value="09:30" style="width:200px;"></ds-time-picker>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:10px;">Editable trigger + popover listbox of stepped times.</div>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:14px;">
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-bottom:12px;">Inline</div>
+                <ds-time-picker variant="inline" label-position="none" value="14:05" style="width:200px;"></ds-time-picker>
+                <div style="font-size:12px;color:var(--prism-text-muted);margin-top:10px;">Segmented HH : MM (AM/PM) field with ▲▼ steppers.</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="input-states" class="doc-section-title">Field States</h2>
+            <p class="doc-section-subtitle">Five validation and interaction states driving border, shadow, and opacity. The <code>validation-state</code> attribute accepts <code>none</code> | <code>success</code> | <code>error</code>.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:24px;">
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-time-picker label-position="none" style="width:180px;margin:0 auto;"></ds-time-picker>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">Default</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:2px;">Empty, ready for input</div>
+              </div>
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-time-picker label-position="none" value="09:30" style="width:180px;margin:0 auto;"></ds-time-picker>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">Filled</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:2px;">Value committed</div>
+              </div>
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-time-picker label-position="none" validation-state="success" value="09:30" helper-text="Time confirmed" style="width:180px;margin:0 auto;"></ds-time-picker>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">Success</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:2px;"><code>validation-state="success"</code></div>
+              </div>
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-time-picker label-position="none" validation-state="error" helper-text="Enter a valid time" style="width:180px;margin:0 auto;"></ds-time-picker>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">Error</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:2px;"><code>validation-state="error"</code></div>
+              </div>
+              <div style="padding:20px;border-radius:14px;background:var(--prism-surface);border:1px solid var(--prism-border);text-align:center;">
+                <ds-time-picker label-position="none" value="10:00" disabled style="width:180px;margin:0 auto;"></ds-time-picker>
+                <div style="font-size:13px;font-weight:600;color:var(--prism-text);margin-top:12px;">Disabled</div>
+                <div style="font-size:11px;color:var(--prism-text-muted);margin-top:2px;">Read-only, skip in tab order</div>
+              </div>
+            </div>
+            <p class="doc-section-subtitle" style="margin-top:20px;font-size:13.5px;"><strong>Hover and Focus</strong> are inherited from the underlying text input &mdash; hover deepens the border, keyboard focus draws a 2&nbsp;px <code>--uems-border-accent-focus</code> ring. Try tabbing into the Default card or hovering its border.</p>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="popover-list" class="doc-section-title">Popover / List</h2>
+            <p class="doc-section-subtitle">The listbox surface (list variant) anchors just below the trigger. It holds one row per stepped time, an optional pinned "Now" row, and scrolls when the options exceed the max height. Background <code>--uems-bg-primary</code>, radius <code>--uems-radius-default</code>, 1px border, medium shadow.</p>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Value</th></tr></thead>
+              <tbody>
+                <tr><td><strong>List width</strong></td><td>160 / 180 / 200 px (scales with <code>size</code>)</td></tr>
+                <tr><td><strong>List max-height</strong></td><td>~264 px (scrolls beyond)</td></tr>
+                <tr><td><strong>List corner radius</strong></td><td><code>--uems-radius-default</code></td></tr>
+                <tr><td><strong>List offset from input</strong></td><td>4 px (below)</td></tr>
+                <tr><td><strong>Option row height</strong></td><td>32 px</td></tr>
+                <tr><td><strong>Option hover / active background</strong></td><td><code>--uems-bg-primary-hover</code></td></tr>
+                <tr><td><strong>Selected option</strong></td><td><code>--uems-text-accent</code> text on <code>--uems-bg-button-primary</code></td></tr>
+                <tr><td><strong>Now row</strong></td><td>Pinned at top when <code>show-now</code> is set</td></tr>
+                <tr><td><strong>Field width</strong></td><td>160 / 180 / 200 px (list); segmented field auto-fits (inline)</td></tr>
+                <tr><td><strong>Field height</strong></td><td>36 / 40 / 44 px (small / medium / large)</td></tr>
+                <tr><td><strong>Field corner radius</strong></td><td><code>--uems-radius-default</code></td></tr>
+                <tr><td><strong>Default border stroke</strong></td><td>1 px</td></tr>
+                <tr><td><strong>Focus border stroke</strong></td><td>2 px (<code>--uems-border-accent-focus</code>)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="color-tokens" class="doc-section-title">Colour Tokens<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">Tokens</span></h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Role</th></tr></thead>
+              <tbody>
+                <tr><td><code>--uems-bg-primary</code></td><td>Field background; popover / listbox background</td></tr>
+                <tr><td><code>--uems-bg-primary-hover</code></td><td>Option hover and active (roving) background</td></tr>
+                <tr><td><code>--uems-bg-button-primary</code></td><td>Selected option fill</td></tr>
+                <tr><td><code>--uems-text-accent</code></td><td>Selected option text; required <code>*</code></td></tr>
+                <tr><td><code>--uems-bg-disabled</code></td><td>Disabled field background</td></tr>
+                <tr><td><code>--uems-border-tertiary</code></td><td>Field default border; popover border</td></tr>
+                <tr><td><code>--uems-border-accent-focus</code></td><td>Focused field border / ring (2 px)</td></tr>
+                <tr><td><code>--uems-text-primary</code></td><td>Field value; option text; segment digits</td></tr>
+                <tr><td><code>--uems-text-placeholder</code></td><td>Field placeholder (HH:MM AM/PM or HH:MM)</td></tr>
+                <tr><td><code>--uems-text-tertiary</code></td><td>Colon / AM-PM separators; helper text</td></tr>
+                <tr><td><code>--uems-text-disabled</code></td><td>Disabled field text; out-of-bounds options</td></tr>
+                <tr><td><code>--uems-text-error</code></td><td>Error helper text and border</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="spacing-tokens" class="doc-section-title">Spacing Tokens</h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>spacing/4</code></td><td>4 px</td><td>Field &harr; list gap; segment inner gap</td></tr>
+                <tr><td><code>spacing/8</code></td><td>8 px</td><td>Field horizontal padding; option row padding</td></tr>
+                <tr><td><code>spacing/12</code></td><td>12 px</td><td>Listbox internal padding</td></tr>
+                <tr><td><code>spacing/16</code></td><td>16 px</td><td>Label column gap (left position)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="border-radius" class="doc-section-title">Border Radius</h2>
+            <table class="size-table">
+              <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+              <tbody>
+                <tr><td><code>--uems-radius-default</code></td><td>6 px</td><td>Field box; listbox outer corners; option rows</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="typography" class="doc-section-title">Typography</h2>
+            <p class="doc-section-subtitle">All Time Picker text uses <strong>Zoho Puvi</strong>.</p>
+            <table class="size-table">
+              <thead><tr><th>Element</th><th>Size</th><th>Weight</th><th>Line Height</th></tr></thead>
+              <tbody>
+                <tr><td>Label</td><td>13 px</td><td><code>600 Semibold</code></td><td>20 px</td></tr>
+                <tr><td>Field value / placeholder</td><td>14 px (16 px at <code>large</code>)</td><td><code>400 Regular</code></td><td>20 px</td></tr>
+                <tr><td>Segment digits (inline)</td><td>14 px</td><td><code>500 Medium</code></td><td>20 px</td></tr>
+                <tr><td>Option row</td><td>14 px</td><td><code>400 Regular</code></td><td>20 px</td></tr>
+                <tr><td>Option row (selected)</td><td>14 px</td><td><code>500 Medium</code></td><td>20 px</td></tr>
+                <tr><td>Now row</td><td>13 px</td><td><code>500 Medium</code></td><td>20 px</td></tr>
+                <tr><td>Helper text</td><td>12 px</td><td><code>400 Regular</code></td><td>16 px</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ========== USAGE ========== -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+          <div class="doc-section">
+            <h2 id="when-to-use" class="doc-section-title">When and Where to Use</h2>
+            <p class="doc-section-subtitle">Time Picker is designed for choosing a time of day &mdash; typed directly or picked from a stepped list.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;">
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#2563eb" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>When to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When users must set a specific time of day (appointment, reminder, deploy window start).</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When times fall on a regular grid &rarr; set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">step</code> to the scheduling granularity.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">When entry is dense and keyboard-first &rarr; use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">variant="inline"</code>.</li>
+                  <li style="border:none;background:transparent;">When infra / logs need 24-hour times &rarr; set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">hour-cycle="24"</code>.</li>
+                </ul>
+              </div>
+              <div style="padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+                <h3 class="doc-h4"><svg width="20" height="20" fill="none" stroke="#e42527" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>When NOT to use</h3>
+                <ul class="doc-list" style="border:none;background:transparent;padding-left:20px;font-size:14.5px;">
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For a duration ("45 minutes", "2 hours") &mdash; use a number field, not a time of day.</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For a calendar date &mdash; use the Date Picker (pair the two for date + time).</li>
+                  <li style="border:none;background:transparent;margin-bottom:8px;">For free-form text times in prose &mdash; use a plain Text Input.</li>
+                  <li style="border:none;background:transparent;">For picking multiple discrete times at once &mdash; use a repeatable field group.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="single-vs-range" class="doc-section-title">List vs Inline</h2>
+            <p class="doc-section-subtitle">Pick the variant based on how people will enter the time.</p>
+            <table class="size-table">
+              <thead><tr><th>Variant</th><th>Behaviour</th><th>When to pick</th></tr></thead>
+              <tbody>
+                <tr><td><code>list</code></td><td>Editable trigger + popover listbox of stepped times. Discoverable options; the field still accepts free typing.</td><td>Scheduling and forms; when a set of preset times covers most cases.</td></tr>
+                <tr><td><code>inline</code></td><td>Segmented HH : MM (AM/PM) field with per-key spin editing and ▲▼ steppers. No popover.</td><td>Dense, keyboard-first entry where the user already knows the exact time.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="presets-vs-manual" class="doc-section-title">Typing vs Picking</h2>
+            <p class="doc-section-subtitle">The list field is a real editable combobox &mdash; the popover is a shortcut, not the only path in.</p>
+            <ul class="doc-list">
+              <li><strong>Typing is first-class</strong> &mdash; the field parses forgivingly: "9:30 pm", "930", "14:00" all resolve to the same 24h value.</li>
+              <li><strong>The list is for discovery</strong> &mdash; it surfaces the common stepped times so people don't have to type when a preset fits.</li>
+              <li><strong>Keep the step sensible</strong> &mdash; a very small <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">step</code> makes a long, slow-to-scan list; let people type instead.</li>
+              <li><strong>Bounds apply to both paths</strong> &mdash; <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">min</code> / <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">max</code> reject both out-of-range options and out-of-range typed entry.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="detailed-guidelines" class="doc-section-title">Complete Do's and Don'ts</h2>
+            <p class="doc-section-subtitle">Guidelines for effective Time Picker usage.</p>
+            <div class="do-dont-grid">
+              <div class="do-card"><span class="card-label">Do</span><ul>
+                <li><strong>Match the step:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">step</code> to the scheduling granularity (5, 15, 30, 60 min).</li>
+                <li><strong>24h for infra:</strong> Use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">hour-cycle="24"</code> for logs, cron, and maintenance windows.</li>
+                <li><strong>Bound the window:</strong> Give <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">min</code> / <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">max</code> for constrained windows (business hours).</li>
+                <li><strong>Let people type:</strong> The list field parses "930", "9:30 pm", "14:00" &mdash; don't force the popover.</li>
+                <li><strong>Store canonical:</strong> Keep the value as locale-independent 24h <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">HH:mm</code>; format only on display.</li>
+                <li><strong>Announce selection:</strong> Read the chosen time via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-live</code> for screen readers.</li>
+              </ul></div>
+              <div class="dont-card"><span class="card-label">Don't</span><ul>
+                <li><strong>Durations:</strong> Don't use it for "45 minutes" &mdash; that's a number field, not a time of day.</li>
+                <li><strong>Hand-rolled AM/PM:</strong> Don't build a separate AM/PM toggle beside a text input &mdash; use <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">hour-cycle</code>.</li>
+                <li><strong>Tiny step:</strong> Don't set a 1-minute <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">step</code> that makes an endless list &mdash; let users type.</li>
+                <li><strong>Silent rejection:</strong> Don't drop an out-of-bounds typed time without surfacing an error.</li>
+                <li><strong>Display strings:</strong> Don't store "2:30 PM" &mdash; the canonical value is always 24h HH:mm.</li>
+                <li><strong>Leave list open:</strong> Don't keep the popover open after a selection &mdash; the user has moved on.</li>
+              </ul></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="related" class="doc-section-title">Related</h2>
+            <p class="doc-section-subtitle">Components that complement or can be used instead of Time Picker.</p>
+            <div class="related-grid">
+              <a href="Date-picker.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Date picker</a>
+              <a href="Text-field.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg> Text field</a>
+              <a href="OTP-input.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/></svg> OTP input</a>
+              <a href="Dropdown.html" class="related-chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg> Dropdown</a>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="references" class="doc-section-title">References</h2>
+            <p class="doc-section-subtitle">Design tokens and resources for implementing the Time Picker component.</p>
+            <ul class="doc-list">
+              <li><strong>Component source:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">design-system-library/src/components/time-picker/</code></li>
+              <li><strong>Variants:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">list</code> (trigger + popover listbox) and <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">inline</code> (segmented field with steppers).</li>
+              <li><strong>Canonical value:</strong> locale-independent 24-hour <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">HH:mm</code>; display formatted per <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">hour-cycle</code>.</li>
+              <li><strong>Typography:</strong> Zoho Puvi Regular (400), Medium (500), Semibold (600)</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- ========== CODE ========== -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Use the controls below to configure the Time Picker component and view the generated HTML code.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Variant</label><select class="cp-select" id="pg-variant"><option value="list" selected>list</option><option value="inline">inline</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Type</label><select class="cp-select" id="pg-type"><option value="single" selected>single</option><option value="range">range</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Hour cycle</label><select class="cp-select" id="pg-cycle"><option value="12" selected>12</option><option value="24">24</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Step</label><select class="cp-select" id="pg-step"><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="30" selected>30</option><option value="60">60</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Size</label><select class="cp-select" id="pg-size"><option value="small">small</option><option value="medium" selected>medium</option><option value="large">large</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Label position</label><select class="cp-select" id="pg-labelpos"><option value="none">none</option><option value="left" selected>left</option><option value="top">top</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Show now</label><select class="cp-select" id="pg-shownow"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">State</label><select class="cp-select" id="pg-state"><option value="default" selected>Default</option><option value="error">Error</option><option value="disabled">Disabled</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="pg-rtl"><option value="false" selected>No</option><option value="true">Yes</option></select></div>
+            </div>
+            <div class="cp-preview" id="pg-preview-area" style="padding:32px;justify-content:center;">
+              <!-- The host is a container-query container (container-type: inline-size); in a
+                   shrink-to-fit centered flex it would collapse to 0 width (icon-only) and trip
+                   the stacked-layout query. A defined width gives the query something to measure. -->
+              <ds-time-picker id="pg-tp-element" label="Select time" style="width: min(560px, 100%);"></ds-time-picker>
+            </div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <button class="cp-action-btn" id="pg-copy-btn"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg> Copy code</button>
+            </div>
+            <div style="background:#0a0a0c;">
+              <div class="cp-code-area" id="pg-code-output"></div>
+            </div>
+          </div>
+
+          <script type="module">
+            customElements.whenDefined('ds-time-picker').then(() => {
+              const variantEl  = document.getElementById('pg-variant');
+              const typeEl     = document.getElementById('pg-type');
+              const cycleEl    = document.getElementById('pg-cycle');
+              const stepEl     = document.getElementById('pg-step');
+              const sizeEl     = document.getElementById('pg-size');
+              const labelPosEl = document.getElementById('pg-labelpos');
+              const showNowEl  = document.getElementById('pg-shownow');
+              const stateEl    = document.getElementById('pg-state');
+              const rtlEl      = document.getElementById('pg-rtl');
+              const tp         = document.getElementById('pg-tp-element');
+              const codeOut    = document.getElementById('pg-code-output');
+              const copyBtn    = document.getElementById('pg-copy-btn');
+
+              const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+              const COPY_LTR = { label: 'Select time', errHelper: 'Enter a valid time' };
+              const COPY_RTL = { label: 'اختر الوقت', errHelper: 'يرجى إدخال وقت صالح' };
+
+              function update() {
+                const isRtl   = rtlEl.value === 'true';
+                const copy    = isRtl ? COPY_RTL : COPY_LTR;
+                const isInline = variantEl.value === 'inline';
+                const isRange = typeEl.value === 'range';   // supported in both list and inline
+                tp.setAttribute('label', copy.label);
+                if (variantEl.value !== 'list') tp.setAttribute('variant', variantEl.value);
+                else tp.removeAttribute('variant');
+                if (isRange) tp.setAttribute('type', 'range');
+                else tp.removeAttribute('type');
+                if (cycleEl.value !== '12') tp.setAttribute('hour-cycle', cycleEl.value);
+                else tp.removeAttribute('hour-cycle');
+                // step only applies to the list variant; drop it from inline
+                if (!isInline && stepEl.value !== '30') tp.setAttribute('step', stepEl.value);
+                else tp.removeAttribute('step');
+                if (sizeEl.value !== 'medium') tp.setAttribute('size', sizeEl.value);
+                else tp.removeAttribute('size');
+                if (labelPosEl.value !== 'left') tp.setAttribute('label-position', labelPosEl.value);
+                else tp.removeAttribute('label-position');
+                // show-now only applies to the list variant
+                if (!isInline && showNowEl.value === 'true') tp.setAttribute('show-now', '');
+                else tp.removeAttribute('show-now');
+                if (stateEl.value === 'error') {
+                  tp.setAttribute('validation-state', 'error');
+                  tp.setAttribute('helper-text', copy.errHelper);
+                } else {
+                  tp.removeAttribute('validation-state');
+                  tp.removeAttribute('helper-text');
+                }
+                if (stateEl.value === 'disabled') tp.setAttribute('disabled', '');
+                else tp.removeAttribute('disabled');
+                if (isRtl) tp.setAttribute('rtl', '');
+                else tp.removeAttribute('rtl');
+
+                const attrs = [];
+                if (variantEl.value !== 'list') attrs.push(`variant="${variantEl.value}"`);
+                if (isRange) attrs.push('type="range"');
+                attrs.push(`label="${copy.label}"`);
+                if (cycleEl.value !== '12') attrs.push(`hour-cycle="${cycleEl.value}"`);
+                if (!isInline && stepEl.value !== '30') attrs.push(`step="${stepEl.value}"`);
+                if (sizeEl.value !== 'medium') attrs.push(`size="${sizeEl.value}"`);
+                if (labelPosEl.value !== 'left') attrs.push(`label-position="${labelPosEl.value}"`);
+                if (!isInline && showNowEl.value === 'true') attrs.push('show-now');
+                if (stateEl.value === 'error') {
+                  attrs.push('validation-state="error"');
+                  attrs.push(`helper-text="${copy.errHelper}"`);
+                }
+                if (stateEl.value === 'disabled') attrs.push('disabled');
+                if (isRtl) attrs.push('rtl');
+                const raw = `<ds-time-picker\n  ${attrs.join('\n  ')}\n></ds-time-picker>`;
+                codeOut.innerHTML = esc(raw)
+                  .replace(/&lt;(\/?)(ds-time-picker)/g, '&lt;$1<span style="color:#a78bfa;">$2</span>')
+                  .replace(/(variant|type|value|hour-cycle|step|min|max|size|label|label-position|show-now|clearable|state|validation-state|helper-text|disabled|rtl)(=|&gt;)/g, '<span style="color:#38bdf8;">$1</span>$2')
+                  .replace(/&quot;(.*?)&quot;/g, '<span style="color:#34d399;">"$1"</span>');
+                codeOut.dataset.raw = raw;
+              }
+
+              [variantEl, typeEl, cycleEl, stepEl, sizeEl, labelPosEl, showNowEl, stateEl, rtlEl].forEach((el) => el.addEventListener('change', update));
+              copyBtn.addEventListener('click', () => {
+                const raw = codeOut.dataset.raw || '';
+                navigator.clipboard.writeText(raw).then(() => {
+                  const o = copyBtn.innerHTML;
+                  copyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+                  setTimeout(() => { copyBtn.innerHTML = o; }, 2000);
+                });
+              });
+
+              update();
+            });
+          </script>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="component-api-properties" class="doc-section-title">Component API &amp; Properties</h2>
+            <table class="size-table">
+              <thead><tr><th>Attribute</th><th>Values</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>variant</code></td><td><code>list</code> | <code>inline</code></td><td><code>list</code></td><td>list = trigger + popover listbox; inline = segmented HH:MM field with steppers (no popover).</td></tr>
+                <tr><td><code>value</code></td><td><code>"HH:mm"</code> (24h)</td><td>&mdash;</td><td>e.g. <code>"09:30"</code>, <code>"14:00"</code>. Locale-independent canonical value.</td></tr>
+                <tr><td><code>hour-cycle</code></td><td><code>12</code> | <code>24</code></td><td><code>12</code></td><td>Display format. Value is always stored 24h.</td></tr>
+                <tr><td><code>step</code></td><td>minutes (int)</td><td><code>30</code></td><td>Interval between list options (list variant). Common: 5, 10, 15, 30, 60.</td></tr>
+                <tr><td><code>min</code>, <code>max</code></td><td><code>"HH:mm"</code></td><td>&mdash;</td><td>Inclusive bounds. Options / typed entry outside are rejected.</td></tr>
+                <tr><td><code>size</code></td><td><code>small</code> | <code>medium</code> | <code>large</code></td><td><code>medium</code></td><td>Field size — mirrors ds-text-input (36 / 40 / 44px height; large bumps font to 16px). List width scales 160 / 180 / 200.</td></tr>
+                <tr><td><code>label</code></td><td>string</td><td><code>"Select time"</code></td><td>Field label.</td></tr>
+                <tr><td><code>label-position</code></td><td><code>none</code> | <code>top</code> | <code>left</code></td><td><code>left</code></td><td>Label hidden (kept as aria-label) / stacked above / inline 220px column. Left auto-stacks when narrow.</td></tr>
+                <tr><td><code>placeholder</code></td><td>string</td><td>derived</td><td>Defaults to <code>HH:MM AM/PM</code> (12h) or <code>HH:MM</code> (24h).</td></tr>
+                <tr><td><code>show-now</code></td><td>boolean</td><td>off</td><td>Pins a "Now · &lt;time&gt;" row at the top of the list.</td></tr>
+                <tr><td><code>clearable</code></td><td>boolean</td><td>off</td><td>(reserved)</td></tr>
+                <tr><td><code>required</code></td><td>boolean</td><td>off</td><td>Adds red <code>*</code> to label.</td></tr>
+                <tr><td><code>disabled</code></td><td>boolean</td><td>off</td><td>Disables the field.</td></tr>
+                <tr><td><code>helper-text</code></td><td>string</td><td>&mdash;</td><td>Helper row below field.</td></tr>
+                <tr><td><code>validation-state</code></td><td><code>none</code> | <code>success</code> | <code>error</code></td><td><code>none</code></td><td>Drives border + helper colour.</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td>off</td><td>Mirrors layout.</td></tr>
+                <tr><td><code>open</code></td><td>boolean</td><td>off</td><td>Controlled open state (list variant).</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin:24px 0 12px;">Properties</h4>
+            <table class="size-table">
+              <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>value</code></td><td><code>string</code> ("HH:mm")</td><td>The canonical 24-hour value.</td></tr>
+                <tr><td><code>disabledTimes</code></td><td><code>Array&lt;"HH:mm"&gt;</code> or <code>(mins: number) =&gt; boolean</code></td><td>Times to disable — either an explicit list or a predicate over minutes-since-midnight.</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin:24px 0 12px;">Events</h4>
+            <table class="size-table">
+              <thead><tr><th>Event</th><th>Detail</th><th>Fires when</th></tr></thead>
+              <tbody>
+                <tr><td><code>ds-time-picker-change</code></td><td><code>{ value, hours, minutes }</code></td><td>The committed time changes.</td></tr>
+                <tr><td><code>ds-time-picker-open</code></td><td>&mdash;</td><td>The list popover opens (list variant).</td></tr>
+                <tr><td><code>ds-time-picker-close</code></td><td>&mdash;</td><td>The list popover closes (list variant).</td></tr>
+                <tr><td><code>ds-time-picker-input</code></td><td><code>{ raw }</code></td><td>Live typing in the field (list variant).</td></tr>
+              </tbody>
+            </table>
+
+            <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin:24px 0 12px;">Keyboard</h4>
+            <table class="size-table">
+              <thead><tr><th>Variant</th><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td rowspan="6"><strong>List</strong></td><td><code>Down Arrow</code></td><td>Opens the list.</td></tr>
+                <tr><td><code>Up</code> / <code>Down</code></td><td>Move the active option.</td></tr>
+                <tr><td><code>Enter</code></td><td>Selects the active option.</td></tr>
+                <tr><td><code>Home</code> / <code>End</code></td><td>Jump to first / last option.</td></tr>
+                <tr><td><code>Esc</code></td><td>Closes the list.</td></tr>
+                <tr><td><code>Tab</code></td><td>Closes the list and moves on. The field is an editable combobox (<code>role="combobox"</code>; options <code>role="option"</code>).</td></tr>
+                <tr><td rowspan="4"><strong>Inline</strong></td><td><code>Up</code> / <code>Down</code></td><td>Increment / decrement the active segment (with wrap).</td></tr>
+                <tr><td><code>Left</code> / <code>Right</code></td><td>Move between segments.</td></tr>
+                <tr><td>Digits</td><td>Type into the active segment (auto-advance &amp; clamp).</td></tr>
+                <tr><td><code>A</code> / <code>P</code></td><td>On the AM/PM segment, toggle (or <code>Up</code>/<code>Down</code>). Each segment is <code>role="spinbutton"</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="html-example" class="doc-section-title">HTML Example</h2>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#7f848e;">&lt;!-- List variant (default): editable trigger + popover listbox --&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">ds-time-picker</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Reminder time"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"09:30"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">step</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"15"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">show-now</span><br>
+                <span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#E06C75;">ds-time-picker</span><span style="color:#ABB2BF;">&gt;</span><br><br>
+                <span style="color:#7f848e;">&lt;!-- Inline variant: segmented HH : MM field, 24-hour --&gt;</span><br>
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">ds-time-picker</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">variant</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"inline"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">hour-cycle</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"24"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Deploy time"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">value</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"23:45"</span><br>
+                <span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#E06C75;">ds-time-picker</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="react-examples" class="doc-section-title">JavaScript Examples</h2>
+
+            <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin:16px 0 10px;">Basic &mdash; list variant</h4>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#C678DD;">const</span> <span style="color:#E5C07B;">tp</span> = <span style="color:#E5C07B;">document</span>.<span style="color:#61AFEF;">querySelector</span>(<span style="color:#98C379;">'ds-time-picker'</span>);<br>
+                <span style="color:#E5C07B;">tp</span>.<span style="color:#61AFEF;">addEventListener</span>(<span style="color:#98C379;">'ds-time-picker-change'</span>, (<span style="color:#E5C07B;">e</span>) =&gt; {<br>
+                &nbsp;&nbsp;<span style="color:#7f848e;">// { value: "14:30", hours: 14, minutes: 30 }</span><br>
+                &nbsp;&nbsp;<span style="color:#E5C07B;">console</span>.<span style="color:#61AFEF;">log</span>(<span style="color:#E5C07B;">e</span>.<span style="color:#E5C07B;">detail</span>.<span style="color:#E5C07B;">value</span>);<br>
+                });
+              </div>
+            </div>
+
+            <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin:24px 0 10px;">24-hour, quarter-hour step</h4>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">ds-time-picker</span> <span style="color:#D19A66;">hour-cycle</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"24"</span> <span style="color:#D19A66;">step</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"15"</span> <span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Log window"</span><span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#E06C75;">ds-time-picker</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin:24px 0 10px;">Business-hours bounds</h4>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">ds-time-picker</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Appointment time"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">min</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"09:00"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">max</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"17:00"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">step</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"30"</span><br>
+                <span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#E06C75;">ds-time-picker</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+
+            <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin:24px 0 10px;">Disabled times (predicate)</h4>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#7f848e;">// disable the lunch hour (mins = minutes since midnight)</span><br>
+                <span style="color:#E5C07B;">tp</span>.<span style="color:#E5C07B;">disabledTimes</span> = (<span style="color:#E5C07B;">mins</span>) =&gt; <span style="color:#E5C07B;">mins</span> &gt;= <span style="color:#D19A66;">12</span>*<span style="color:#D19A66;">60</span> &amp;&amp; <span style="color:#E5C07B;">mins</span> &lt; <span style="color:#D19A66;">13</span>*<span style="color:#D19A66;">60</span>;
+              </div>
+            </div>
+
+            <h4 style="font-size:15px;font-weight:600;color:var(--prism-text);margin:24px 0 10px;">Error state</h4>
+            <div class="cp-code-area" style="border-radius:12px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;">
+                <span style="color:#ABB2BF;">&lt;</span><span style="color:#E06C75;">ds-time-picker</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">label</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Reminder time"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">validation-state</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"error"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">helper-text</span><span style="color:#56B6C2;">=</span><span style="color:#98C379;">"Enter a valid time"</span><br>
+                &nbsp;&nbsp;<span style="color:#D19A66;">required</span><br>
+                <span style="color:#ABB2BF;">&gt;&lt;/</span><span style="color:#E06C75;">ds-time-picker</span><span style="color:#ABB2BF;">&gt;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== ACCESSIBILITY ========== -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+          <h2 id="accessibility" class="doc-section-title">Accessibility</h2>
+          <p class="doc-section-subtitle">Guidelines for ensuring Time Picker is accessible across assistive technologies and input methods.</p>
+
+          <div class="doc-section">
+            <h3 id="keyboard-navigation" class="doc-h3">Keyboard Navigation</h3>
+            <p class="doc-section-subtitle" style="margin-bottom:18px;">The list field is an editable combobox; the inline field is a row of spinbuttons.</p>
+            <table class="size-table">
+              <thead><tr><th>Variant</th><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td rowspan="6"><strong>List</strong></td><td><code>Down Arrow</code></td><td>Opens the list popover.</td></tr>
+                <tr><td><code>Arrow Up</code> / <code>Arrow Down</code></td><td>Moves the active option.</td></tr>
+                <tr><td><code>Home</code> / <code>End</code></td><td>Jumps to the first / last option.</td></tr>
+                <tr><td><code>Enter</code></td><td>Selects the active option.</td></tr>
+                <tr><td><code>Esc</code></td><td>Closes the list; returns focus to the field.</td></tr>
+                <tr><td>Direct typing</td><td>Type a time (<code>9:30 pm</code>, <code>930</code>, <code>14:00</code>) &mdash; parsed forgivingly.</td></tr>
+                <tr><td rowspan="4"><strong>Inline</strong></td><td><code>Arrow Up</code> / <code>Arrow Down</code></td><td>Increments / decrements the active segment (with wrap).</td></tr>
+                <tr><td><code>Arrow Left</code> / <code>Arrow Right</code></td><td>Moves between HH, MM, and AM/PM segments.</td></tr>
+                <tr><td>Digits</td><td>Type into the active segment; auto-advances and clamps.</td></tr>
+                <tr><td><code>A</code> / <code>P</code></td><td>On the AM/PM segment, sets AM / PM (or <code>Up</code>/<code>Down</code> toggles).</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:16px;padding:16px 20px;background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.15);border-radius:12px;">
+              <p style="font-size:14px;color:var(--prism-text);line-height:1.6;margin:0;">In the list variant, <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Tab</code> closes the popover and moves focus on &mdash; the field is a combobox, not a modal, so focus is never trapped.</p>
+            </div>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="aria-attributes" class="doc-h3">ARIA Attributes</h3>
+            <ul class="doc-list">
+              <li><strong>List field:</strong> The editable input carries <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="combobox"</code> with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-expanded</code>, <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-controls</code>, and <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-activedescendant</code>.</li>
+              <li><strong>Listbox:</strong> <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="listbox"</code> anchored to the field; each row is <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="option"</code> with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-selected</code>.</li>
+              <li><strong>Inline segments:</strong> Each segment is <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">role="spinbutton"</code> with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-valuemin</code> / <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-valuemax</code> / <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-valuenow</code> / <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-valuetext</code>.</li>
+              <li><strong>Label association:</strong> The label is linked to the field; when <code>label-position="none"</code> the text is kept as <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-label</code>.</li>
+              <li><strong>Validation:</strong> Set <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-invalid="true"</code> in Error state; link the helper via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-describedby</code>.</li>
+              <li><strong>Now row:</strong> When <code>show-now</code> is set, expose the pinned row as a selectable option with an accessible name that includes the current time.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="screen-reader-guidance" class="doc-h3">Screen Reader Guidance</h3>
+            <ul class="doc-list">
+              <li><strong>Selection announcement:</strong> After the user picks or types a time, announce the formatted value (e.g. "2:30 PM selected") via <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-live</code>.</li>
+              <li><strong>Segment feedback:</strong> In the inline variant, <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-valuetext</code> should read the human value ("30 minutes", "PM"), not the raw number.</li>
+              <li><strong>Visual-only highlight:</strong> Never rely on colour alone &mdash; always pair the selected option with <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">aria-selected</code>.</li>
+              <li><strong>Contrast:</strong> Selected-option text on the accent fill must meet WCAG AA 4.5:1. Out-of-bounds options use disabled text &mdash; verify against the list background.</li>
+              <li><strong>RTL:</strong> Mirror the field layout and stepper column; the segment order (HH : MM) stays left-to-right as a numeric sequence.</li>
+              <li><strong>Canonical value:</strong> The value is always 24-hour <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">HH:mm</code> &mdash; display formatting must not change what is stored or submitted.</li>
+            </ul>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h3 id="focus-management" class="doc-h3">Focus Management</h3>
+            <ul class="doc-list">
+              <li><strong>On open (list):</strong> The active option is the current value, or the nearest in-bounds option when empty; focus stays on the field (combobox pattern).</li>
+              <li><strong>On close (list):</strong> Focus stays on / returns to the field that owns the list.</li>
+              <li><strong>Inline entry:</strong> Focus lands on the first segment; typing and arrows move it across segments without leaving the field.</li>
+              <li><strong>No focus trap:</strong> The list is a non-modal combobox &mdash; <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">Tab</code> closes it and moves focus to the next control.</li>
+              <li><strong>Visible focus indicator:</strong> The field shows a 2px accent ring; the active option shows a hover/active background. This must not be overridden.</li>
+              <li><strong>Clicking outside:</strong> Dismisses the list and leaves the committed value untouched.</li>
+            </ul>
+            <div style="margin-top:24px;padding:24px;background:var(--prism-surface);border:1px solid var(--prism-border);border-radius:12px;">
+              <div style="font-weight:600;font-size:15px;color:var(--prism-text);margin-bottom:8px;">Focus ring spec</div>
+              <div style="font-size:14px;color:var(--prism-text-muted);line-height:1.6;">Focused field: 2px <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">--uems-border-accent-focus</code> ring. Active option: <code style="font-family:monospace;font-size:13px;padding:2px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:var(--prism-violet);">--uems-bg-primary-hover</code> background.</div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- main-content-inner -->
+
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav"></ul>
+          <div class="quick-actions-card">
+            <div class="quick-actions-title">Resources</div>
+            <a href="MD/time-picker.md" download="time-picker.md" class="action-link"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Download MD</a>
+            <a href="https://www.figma.com/design/DahIgbIJrSkzyP3OoHaDaG/UEMS---Design-System-3.0" target="_blank" class="action-link"><img src="assets/figma-icon.svg" alt="Figma" width="15" height="15" style="vertical-align:middle;"> Figma Design</a>
+          </div>
+        </aside>
+      </div><!-- main-content-area -->
+
+    <div id="feedback" class="feedback-banner" style="display: none;">
+    <div><div class="fb-text">Was this page helpful?</div><div class="fb-sub">Help us improve by sharing your feedback on this component's documentation.</div></div>
+    <div style="display:flex;gap:10px;"><button class="feedback-btn">Not helpful</button><button class="feedback-btn primary">Yes, helpful</button></div>
+    </div>
+
+    </main>
+  </div>
+
+  <script>
+    let _tocObserver = null;
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav'); if (!tocList) return; tocList.innerHTML = '';
+      const activePanel = document.getElementById(targetId); if (!activePanel) return;
+      activePanel.querySelectorAll('h2[id], h3[id]').forEach(h => {
+        if (h.style.display === 'none') return;
+        const li = document.createElement('li'), a = document.createElement('a');
+        a.href = '#' + h.id; a.className = 'toc-link';
+        let text = Array.from(h.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+        if (!text) text = h.innerText; a.textContent = text;
+        a.addEventListener('click', e => { e.preventDefault(); document.getElementById(h.id).scrollIntoView({behavior:'smooth',block:'start'}); });
+        li.appendChild(a); tocList.appendChild(li);
+      });
+      initScrollSpy();
+    }
+    function initScrollSpy() {
+      if (_tocObserver) _tocObserver.disconnect();
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sections = Array.from(tocLinks).map(l => document.getElementById(l.getAttribute('href').slice(1))).filter(Boolean);
+      if (!sections.length) return;
+      _tocObserver = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) { const id = e.target.getAttribute('id'); tocLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+id)); } }); }, {rootMargin:'-80px 0px -60% 0px',threshold:0});
+      sections.forEach(s => _tocObserver.observe(s));
+    }
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active')); tab.classList.add('active');
+        const tabMap = {'Overview':'tab-overview','Usage':'tab-usage','Style':'tab-style','Code':'tab-code','Accessibility':'tab-accessibility'};
+        document.querySelectorAll('.tab-content').forEach(p => p.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) { document.getElementById(target).style.display = 'block'; updateTOC(target); }
+        window.scrollTo({top:0,behavior:'smooth'});
+      });
+    });
+    updateTOC('tab-overview');
+
+    // Sidebar search filter
+    (function(){
+      var searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      var items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function(){
+        var q = this.value.toLowerCase().trim();
+        items.forEach(function(li){
+          var link = li.querySelector('a');
+          if (!link) return;
+          var text = link.textContent.toLowerCase();
+          li.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+      });
+      document.addEventListener('keydown', function(e){
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      });
+    })();
+
+    // Scroll sidebar to active link on page load
+    (function(){
+      var active = document.querySelector('.sidebar-link.active');
+      if (active) {
+        var sidebar = active.closest('.sidebar');
+        if (sidebar) {
+          var top = active.offsetTop - sidebar.offsetTop - (sidebar.clientHeight / 3);
+          sidebar.scrollTop = Math.max(0, top);
+        }
+      }
+    })();
+  </script>
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/main.js"></script>
+
+</body>
+</html>

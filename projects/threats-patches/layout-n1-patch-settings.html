@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<!-- N-1 Patch Settings · DUAL-MODE file (projects/threats-patches/).
+     Archetype: list view with OS tab switcher (Windows / Debian / Red Hat) + a
+     vertical sub-nav that drives one shared data table. Only the Red Hat flow is
+     built out (Schedules → Snapshots → Map snapshot → Mapped systems report,
+     entitlement-aware); Windows & Debian are empty-state placeholders.
+     Open directly -> standalone harness (bottom) mounts it.
+     Fetched by Shell.html -> injectDrawer('../projects/threats-patches/layout-n1-patch-settings','content'). -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    .sa-host { display: flex; flex-direction: column; height: 100vh; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+  /* View-specific styles — every selector scoped to #n1-pop so it can't leak. */
+  #n1-pop .lay__scroll { display: flex; flex-direction: column; gap: var(--spacing-16, 16px); }
+
+  /* Only the active OS panel shows. Red Hat fills; placeholders center. */
+  #n1-pop .n1-panel { display: none; min-height: 0; }
+  #n1-pop .n1-panel.is-active { display: flex; flex-direction: column; gap: var(--spacing-12, 12px); flex: 1 1 auto; }
+  #n1-pop .n1-placeholder { align-items: center; justify-content: center; }
+
+  /* Red Hat: vertical section nav (fixed 200px) beside the content column. */
+  #n1-pop .n1-rh-grid { display: flex; align-items: stretch; flex: 1 1 auto; min-height: 0; }
+  /* Left rail with a trailing divider + fill tabs — matches the L06 tabbed-form
+     vertical sub-nav pattern (Layout/views/layout-tabbed-form.html → .lay__nav). */
+  #n1-pop .n1-rh-rail {
+    flex: none;
+    width: 220px;
+    padding: var(--spacing-4, 4px) var(--spacing-8, 8px) var(--spacing-12, 12px);
+    overflow: auto;
+    border-inline-end: 1px solid var(--uems-border-tertiary);
+  }
+  #n1-pop .n1-rh-content { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: var(--spacing-12, 12px); padding-inline-start: var(--spacing-20, 20px); }
+  @media (max-width: 900px) {
+    #n1-pop .n1-rh-grid { flex-direction: column; }
+    #n1-pop .n1-rh-rail { width: 100%; border-inline-end: none; border-block-end: 1px solid var(--uems-border-tertiary); }
+    #n1-pop .n1-rh-content { padding-inline-start: 0; padding-block-start: var(--spacing-12, 12px); }
+  }
+
+  /* ---- Create-schedule modal (scoped to the modal id, since ds-modal portals to <body>) ---- */
+  #n1-sched-modal .n1-fld { display: grid; grid-template-columns: 160px minmax(0, 1fr); column-gap: var(--spacing-20, 20px); align-items: start; }
+  #n1-sched-modal .n1-fld + .n1-fld { margin-top: var(--spacing-16, 16px); }
+  #n1-sched-modal .n1-fld[hidden] { display: none; }
+  #n1-sched-modal .n1-fld__label { font-size: var(--font-size-13); font-weight: var(--font-weight-semibold, 600); color: var(--uems-text-primary); padding-top: 7px; }
+  #n1-sched-modal .n1-fld__label .req { color: var(--uems-text-error); }
+  #n1-sched-modal .n1-fld__hint { margin-top: var(--spacing-4, 4px); font-size: var(--font-size-13); color: var(--uems-text-tertiary); }
+  #n1-sched-modal .n1-fld__control { min-width: 0; }
+  /* Inline radio rows (Frequency, Perform this on). */
+  #n1-sched-modal ds-radio-group .ds-radio-group__items { display: flex; flex-direction: row; flex-wrap: wrap; gap: var(--spacing-20, 20px); align-items: center; }
+  /* Start-at: time input + trailing format hint. */
+  #n1-sched-modal .n1-startat { display: flex; align-items: center; gap: var(--spacing-12, 12px); }
+  #n1-sched-modal .n1-startat ds-text-input { width: 200px; }
+  #n1-sched-modal .n1-startat__suffix { font-size: var(--font-size-13); color: var(--uems-text-tertiary); white-space: nowrap; }
+  /* Monthly week/day selects under the radio. */
+  #n1-sched-modal .n1-week-selects { display: flex; gap: var(--spacing-12, 12px); margin-top: var(--spacing-8, 8px); max-width: 460px; }
+  #n1-sched-modal .n1-week-selects[hidden] { display: none; }
+  #n1-sched-modal .n1-week-selects ds-input-select { flex: 1; }
+  #n1-sched-modal .n1-selectall { margin-top: var(--spacing-8, 8px); }
+
+  /* Action bar above the table — carries the contextual note only; the primary
+     actions (Create schedule / Map snapshot) live in the page-header split button. */
+  #n1-pop .n1-actionbar { display: flex; align-items: center; gap: var(--spacing-12, 12px); flex-shrink: 0; min-height: 32px; }
+  #n1-pop .n1-actionbar[hidden] { display: none; }
+  #n1-pop .n1-actionbar__note { color: var(--uems-text-tertiary); font-size: var(--font-size-13); }
+
+  /* Inline chips inside cells (version, mapped groups). */
+  #n1-pop .n1-chips { display: inline-flex; gap: var(--spacing-4, 4px); align-items: center; flex-wrap: nowrap; overflow: hidden; }
+  #n1-pop .n1-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #n1-pop .n1-name__sub { color: var(--uems-text-tertiary); }
+  #n1-pop .n1-cell-actions { display: inline-flex; gap: var(--spacing-4, 4px); align-items: center; justify-content: flex-end; }
+
+</style>
+
+<div id="n1-pop" class="lay-root" hidden>
+  <div class="lay">
+    <ds-page-header id="n1-ph" structure="with-tabs" icon="layers"
+      title="N-1 patch settings"
+      show-description show-actions
+      collapse-on-scroll scroll-target=".lay__scroll">
+      <!-- Rich description: sentence + inline "Learn more" link at the end. -->
+      <span slot="description"><span id="n1-desc-text">Stage patch deployments on a pinned N-1 repository snapshot instead of always-latest.</span> <ds-text-link id="n1-learn-more" size="medium" label="Learn more"
+        href="https://www.manageengine.com/products/desktop-central/how-to/patch-management/n-1-patching-in-redhat-linux.html"
+        target="_blank"></ds-text-link></span>
+      <!-- Primary actions: main = Create schedule, menu option = Map snapshot. -->
+      <ds-split-button slot="actions" id="n1-actions" variant="primary" size="medium" icon="add" label="Create schedule"></ds-split-button>
+    </ds-page-header>
+
+    <div class="lay__scroll">
+      <!-- Windows placeholder -->
+      <section id="n1-panel-windows" class="n1-panel n1-placeholder">
+        <ds-empty-state id="n1-empty-windows" type="centered" size="md"
+          illustration="add-patch"></ds-empty-state>
+      </section>
+
+      <!-- Debian placeholder -->
+      <section id="n1-panel-debian" class="n1-panel n1-placeholder">
+        <ds-empty-state id="n1-empty-debian" type="centered" size="md"
+          illustration="add-patch"></ds-empty-state>
+      </section>
+
+      <!-- Red Hat — full N-1 flow -->
+      <section id="n1-panel-redhat" class="n1-panel is-active">
+        <ds-inline-alert id="n1-entitlement-alert" type="critical" show-icon hidden></ds-inline-alert>
+
+        <div class="n1-rh-grid">
+          <nav class="n1-rh-rail">
+            <ds-tab-bar-vertical id="n1-rh-nav" type="fill"
+              active-id="schedules" aria-label="Red Hat N-1 sections"></ds-tab-bar-vertical>
+          </nav>
+
+          <div class="n1-rh-content">
+            <div class="n1-actionbar" id="n1-actionbar" hidden>
+              <span class="n1-actionbar__note" id="n1-actionbar-note"></span>
+            </div>
+            <ds-data-table id="n1-rh-table" fit-viewport sticky-header show-toolbar="false"
+              selection-mode="none" show-footer rows-per-page="25"></ds-data-table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Create schedule — full scheduler (frequency-driven, progressive disclosure).
+           Styles are scoped to #n1-sched-modal (NOT #n1-pop) because ds-modal portals
+           its content to <body> on open. -->
+      <ds-modal id="n1-sched-modal" size="lg" title="Create snapshot schedule"
+        description="Capture a repository snapshot on a schedule so groups can be pinned to a stable N-1 state.">
+        <div slot="body">
+          <div class="n1-fld">
+            <span class="n1-fld__label"><span id="n1-lbl-name"></span> <span class="req">*</span></span>
+            <div class="n1-fld__control">
+              <ds-text-input id="n1-sched-name" label-position="none" placeholder=""></ds-text-input>
+            </div>
+          </div>
+          <div class="n1-fld">
+            <span class="n1-fld__label"><span id="n1-lbl-version"></span> <span class="req">*</span></span>
+            <div class="n1-fld__control">
+              <ds-input-select id="n1-sched-version" label-position="none" placeholder=""></ds-input-select>
+            </div>
+          </div>
+          <div class="n1-fld">
+            <span class="n1-fld__label"><span id="n1-lbl-freq"></span> <span class="req">*</span></span>
+            <div class="n1-fld__control">
+              <ds-radio-group id="n1-sched-freq" name="n1-freq" label-position="none"></ds-radio-group>
+            </div>
+          </div>
+          <!-- Start date (Once only) -->
+          <div class="n1-fld" id="n1-fld-date" hidden>
+            <span class="n1-fld__label"><span id="n1-lbl-date"></span> <span class="req">*</span></span>
+            <div class="n1-fld__control">
+              <ds-text-input id="n1-sched-date" label-position="none" placeholder="YYYY-MM-DD"></ds-text-input>
+            </div>
+          </div>
+          <!-- Start at (time) — all frequencies except Execute Now -->
+          <div class="n1-fld" id="n1-fld-startat">
+            <span class="n1-fld__label"><span id="n1-lbl-startat"></span> <span class="req">*</span></span>
+            <div class="n1-fld__control">
+              <div class="n1-startat">
+                <ds-text-input id="n1-sched-time" label-position="none" placeholder="HH:mm"></ds-text-input>
+                <span class="n1-startat__suffix" id="n1-startat-suffix"></span>
+              </div>
+              <div class="n1-fld__hint" id="n1-startat-hint"></div>
+            </div>
+          </div>
+          <!-- On these days (Weekly only) -->
+          <div class="n1-fld" id="n1-fld-weekdays" hidden>
+            <span class="n1-fld__label"><span id="n1-lbl-weekdays"></span> <span class="req">*</span></span>
+            <div class="n1-fld__control">
+              <ds-button-group id="n1-weekday-grid" selection-mode="multi" variant="attached" layout="grid" columns="7" size="small"></ds-button-group>
+            </div>
+          </div>
+          <!-- Perform this on (Monthly only) -->
+          <div class="n1-fld" id="n1-fld-performon" hidden>
+            <span class="n1-fld__label"><span id="n1-lbl-performon"></span></span>
+            <div class="n1-fld__control">
+              <ds-radio-group id="n1-sched-performon" name="n1-performon" label-position="none"></ds-radio-group>
+              <div class="n1-week-selects" id="n1-week-selects">
+                <ds-input-select id="n1-sched-ordinal" label-position="none"></ds-input-select>
+                <ds-input-select id="n1-sched-weekday" label-position="none"></ds-input-select>
+              </div>
+              <div class="n1-week-selects" id="n1-day-select" hidden>
+                <ds-input-select id="n1-sched-dom" label-position="none"></ds-input-select>
+              </div>
+            </div>
+          </div>
+          <!-- Repeat (months, Monthly only) -->
+          <div class="n1-fld" id="n1-fld-repeat" hidden>
+            <span class="n1-fld__label"><span id="n1-lbl-repeat"></span> <span class="req">*</span></span>
+            <div class="n1-fld__control">
+              <ds-button-group id="n1-month-grid" selection-mode="multi" variant="attached" layout="grid" columns="6" size="small"></ds-button-group>
+              <div class="n1-selectall"><ds-text-link id="n1-months-selectall" href="#" size="small"></ds-text-link></div>
+            </div>
+          </div>
+          <ds-inline-alert id="n1-sched-hint" type="info" show-icon style="margin-top:var(--spacing-16,16px)"></ds-inline-alert>
+        </div>
+        <ds-button slot="footer" variant="outline" data-cancel></ds-button>
+        <ds-button slot="footer" variant="primary" data-save></ds-button>
+      </ds-modal>
+
+      <!-- Map snapshot -->
+      <ds-modal id="n1-map-modal" size="md" title="Map snapshot to group"
+        description="Pin a custom group to a snapshot. Each agent validates applicability locally before it applies.">
+        <div slot="body">
+          <ds-input-select id="n1-map-group" label="Custom group" full-width
+            placeholder="Select group"></ds-input-select>
+          <ds-input-select id="n1-map-snapshot" label="Snapshot" full-width
+            placeholder="Select snapshot" style="margin-top:var(--spacing-14,14px)"></ds-input-select>
+          <ds-inline-alert id="n1-map-hint" type="info" show-icon
+            style="margin-top:var(--spacing-14,14px)"></ds-inline-alert>
+        </div>
+        <ds-button slot="footer" variant="outline" data-cancel>Cancel</ds-button>
+        <ds-button slot="footer" variant="primary" data-save>Map snapshot</ds-button>
+      </ds-modal>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('n1-pop');
+  if (!root || root.__init) return; root.__init = true;
+  const $ = (id) => root.querySelector('#' + id);
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  /* ---- i18n (chrome strings; data values stay canonical English) ----------- */
+  const MSGS = {
+    en: {
+      'title': 'N-1 patch settings',
+      'desc': 'Stage patch deployments on a pinned N-1 repository snapshot instead of always-latest.',
+      'learn': 'Learn more',
+      'crumb.tp': 'Threats & Patches', 'crumb.settings': 'Settings', 'crumb.self': 'N-1 patch settings',
+      'os.windows': 'Windows', 'os.debian': 'Debian', 'os.redhat': 'Red Hat',
+      /* Red Hat sub-nav */
+      'nav.schedules': 'Schedules', 'nav.snapshots': 'Snapshots', 'nav.map': 'Map snapshot', 'nav.report': 'Mapped systems report',
+      /* action bar */
+      'act.createSchedule': 'Create schedule', 'act.mapSnapshot': 'Map snapshot',
+      'note.snapshots': 'Snapshots are generated automatically by schedules — pin one to a group under Map snapshot.',
+      'note.report': 'Mappings target custom groups. Each agent validates applicability locally (stream minor, entitlement, OS) and reports its verdict here at its next refresh.',
+      /* columns — schedules */
+      'col.schedName': 'Schedule name', 'col.version': 'Version', 'col.freq': 'Frequency',
+      'col.next': 'Next run', 'col.last': 'Last run', 'col.snaps': 'Snaps', 'col.status': 'Status', 'col.actions': 'Actions',
+      /* columns — snapshots */
+      'col.snapName': 'Snapshot name', 'col.created': 'Created', 'col.groups': 'Mapped groups', 'col.tag': 'Tag',
+      /* columns — map */
+      'col.group': 'Group', 'col.target': 'Snapshot', 'col.mapped': 'Mapped time', 'col.machines': 'Machines',
+      /* columns — report */
+      'col.computer': 'Computer', 'col.verdict': 'Agent validation',
+      /* statuses / tags */
+      'st.active': 'Active', 'st.blocked': 'Blocked',
+      'st.mapped': 'Mapped', 'st.pending': 'Yet to map',
+      'tag.latest': 'Latest', 'tag.n1': 'N-1', 'tag.archive': 'Archive',
+      'vd.applied': 'Applied by agent', 'vd.skipMinor': 'Skipped — minor mismatch', 'vd.skipEnt': 'Skipped — ELS entitlement invalid',
+      /* row actions */
+      'a.edit': 'Edit', 'a.delete': 'Delete', 'a.map': 'Map', 'a.remove': 'Remove',
+      /* empty */
+      'empty.schedules': 'No schedules yet. Create one to auto-generate snapshots.',
+      'empty.snapshots': 'No snapshots yet. Create a schedule to generate them.',
+      'empty.map': 'No groups mapped yet.',
+      'empty.report': 'No mapped systems found.',
+      /* entitlement alert */
+      'ent.title': 'Red Hat ELS entitlement expired',
+      'ent.desc': '1 schedule is blocked and mapped RHEL 7 systems skip N-1 patching until a valid entitlement certificate is collected. Certificates are managed in Red Hat Linux settings.',
+      /* placeholders */
+      'ph.win.title': 'Windows N-1 patch settings', 'ph.win.desc': 'N-1 staging for Windows patches isn’t configured yet. This milestone ships the Red Hat flow first.',
+      'ph.deb.title': 'Debian N-1 patch settings', 'ph.deb.desc': 'N-1 staging for Debian / apt repositories isn’t configured yet. This milestone ships the Red Hat flow first.',
+      /* create-schedule modal */
+      'm.sched.title': 'Create snapshot schedule',
+      'm.sched.desc': 'Capture a repository snapshot on a schedule so groups can be pinned to a stable N-1 state.',
+      'm.sched.name': 'Schedule name', 'm.sched.namePh': 'e.g. Monthly RHEL 9 snapshot',
+      'm.sched.version': 'Repository version', 'm.sched.versionPh': 'Select version', 'm.sched.freq': 'Frequency',
+      'm.sched.hint': 'EUS, E4S and ELS streams require a valid Red Hat entitlement certificate. Metadata downloads on first use; agents validate the pinned minor per machine.',
+      'm.sched.create': 'Create',
+      'm.sched.startat': 'Start at', 'm.sched.startatHint': 'Date and time is based on server timezone', 'm.sched.timeFmt': '[24-hour format]',
+      'm.sched.date': 'Start date', 'm.sched.weekdays': 'On these days', 'm.sched.performon': 'Perform this on',
+      'm.sched.repeat': 'Repeat', 'm.sched.selectAll': 'Select all', 'm.sched.deselectAll': 'Deselect all',
+      'freq.now': 'Execute Now', 'freq.once': 'Once', 'freq.daily': 'Daily', 'freq.weekly': 'Weekly', 'freq.monthly': 'Monthly',
+      'po.week': 'Preferred week(s) of the month', 'po.day': 'Preferred day of the month',
+      'ord.first': 'First', 'ord.second': 'Second', 'ord.third': 'Third', 'ord.fourth': 'Fourth', 'ord.last': 'Last',
+      'wd.sun': 'Sun', 'wd.mon': 'Mon', 'wd.tue': 'Tue', 'wd.wed': 'Wed', 'wd.thu': 'Thu', 'wd.fri': 'Fri', 'wd.sat': 'Sat',
+      'dom.day': 'Day', 'dom.last': 'Last day',
+      /* map modal */
+      'm.map.title': 'Map snapshot to group',
+      'm.map.desc': 'Pin a custom group to a snapshot. Each agent validates applicability locally before it applies.',
+      'm.map.group': 'Custom group', 'm.map.snapshot': 'Snapshot',
+      'm.map.hint': 'Agents on a different minor (for EUS / E4S streams) or without a valid entitlement will skip and report the reason.',
+      'm.map.map': 'Map snapshot',
+      'm.cancel': 'Cancel',
+      /* version optgroup headers */
+      'vg.std': 'Standard — freezes current content', 'vg.eus': 'EUS — errata for a pinned minor',
+      'vg.e4s': 'E4S (SAP) — 4-year stream', 'vg.els': 'ELS — security-only, EOL major',
+      'v.current': 'Current release',
+      /* frequency options */
+      'fq.daily': 'Daily', 'fq.weekly': 'Weekly', 'fq.monthly': 'Monthly', 'fq.quarterly': 'Quarterly',
+      /* toasts */
+      't.created': 'Schedule created', 't.createdD': 'The first snapshot runs at the next scheduled time.',
+      't.mapped': 'Snapshot mapped', 't.mappedD': 'Agents apply it at their next refresh cycle.',
+      't.deleted': 'Deleted', 't.removed': 'Mapping removed', 't.edit': 'Edit schedule',
+    },
+    ar: {  /* machine-translated — flag for native review */
+      'title': 'إعدادات ترقيع N-1',
+      'desc': 'رحّل عمليات نشر التصحيحات على لقطة مستودع N-1 مثبّتة بدلاً من الأحدث دائمًا.',
+      'learn': 'اعرف المزيد',
+      'crumb.tp': 'التهديدات والتصحيحات', 'crumb.settings': 'الإعدادات', 'crumb.self': 'إعدادات ترقيع N-1',
+      'os.windows': 'Windows', 'os.debian': 'Debian', 'os.redhat': 'Red Hat',
+      'nav.schedules': 'الجداول', 'nav.snapshots': 'اللقطات', 'nav.map': 'ربط لقطة', 'nav.report': 'تقرير الأنظمة المربوطة',
+      'act.createSchedule': 'إنشاء جدول', 'act.mapSnapshot': 'ربط لقطة',
+      'note.snapshots': 'يتم إنشاء اللقطات تلقائيًا بواسطة الجداول — ثبّت واحدة لمجموعة ضمن "ربط لقطة".',
+      'note.report': 'تستهدف الروابط المجموعات المخصّصة. يتحقق كل وكيل محليًا من قابلية التطبيق (الإصدار الفرعي، الاستحقاق، نظام التشغيل) ويبلّغ عن نتيجته هنا عند التحديث التالي.',
+      'col.schedName': 'اسم الجدول', 'col.version': 'الإصدار', 'col.freq': 'التكرار',
+      'col.next': 'التشغيل التالي', 'col.last': 'آخر تشغيل', 'col.snaps': 'اللقطات', 'col.status': 'الحالة', 'col.actions': 'الإجراءات',
+      'col.snapName': 'اسم اللقطة', 'col.created': 'أُنشئت', 'col.groups': 'المجموعات المربوطة', 'col.tag': 'الوسم',
+      'col.group': 'المجموعة', 'col.target': 'اللقطة', 'col.mapped': 'وقت الربط', 'col.machines': 'الأجهزة',
+      'col.computer': 'الجهاز', 'col.verdict': 'تحقّق الوكيل',
+      'st.active': 'نشط', 'st.blocked': 'محظور',
+      'st.mapped': 'مربوط', 'st.pending': 'لم يُربط بعد',
+      'tag.latest': 'الأحدث', 'tag.n1': 'N-1', 'tag.archive': 'أرشيف',
+      'vd.applied': 'طبّقه الوكيل', 'vd.skipMinor': 'تخطّي — عدم تطابق الإصدار الفرعي', 'vd.skipEnt': 'تخطّي — استحقاق ELS غير صالح',
+      'a.edit': 'تعديل', 'a.delete': 'حذف', 'a.map': 'ربط', 'a.remove': 'إزالة',
+      'empty.schedules': 'لا توجد جداول بعد. أنشئ واحدًا لتوليد اللقطات تلقائيًا.',
+      'empty.snapshots': 'لا توجد لقطات بعد. أنشئ جدولاً لتوليدها.',
+      'empty.map': 'لم تُربط أي مجموعة بعد.',
+      'empty.report': 'لا توجد أنظمة مربوطة.',
+      'ent.title': 'انتهت صلاحية استحقاق Red Hat ELS',
+      'ent.desc': 'جدول واحد محظور وستتخطّى أنظمة RHEL 7 المربوطة ترقيع N-1 حتى يتم جمع شهادة استحقاق صالحة. تُدار الشهادات في إعدادات Red Hat Linux.',
+      'ph.win.title': 'إعدادات ترقيع N-1 لـ Windows', 'ph.win.desc': 'لم تُهيّأ مرحلة N-1 لتصحيحات Windows بعد. تُطلق هذه المرحلة تدفّق Red Hat أولاً.',
+      'ph.deb.title': 'إعدادات ترقيع N-1 لـ Debian', 'ph.deb.desc': 'لم تُهيّأ مرحلة N-1 لمستودعات Debian / apt بعد. تُطلق هذه المرحلة تدفّق Red Hat أولاً.',
+      'm.sched.title': 'إنشاء جدول لقطات',
+      'm.sched.desc': 'التقط لقطة مستودع وفق جدول ليتم تثبيت المجموعات على حالة N-1 مستقرة.',
+      'm.sched.name': 'اسم الجدول', 'm.sched.namePh': 'مثال: لقطة RHEL 9 الشهرية',
+      'm.sched.version': 'إصدار المستودع', 'm.sched.versionPh': 'اختر الإصدار', 'm.sched.freq': 'التكرار',
+      'm.sched.hint': 'تتطلّب تدفّقات EUS و E4S و ELS شهادة استحقاق Red Hat صالحة. تُنزَّل البيانات الوصفية عند أول استخدام، ويتحقق الوكلاء من الإصدار الفرعي المثبّت لكل جهاز.',
+      'm.sched.create': 'إنشاء',
+      'm.sched.startat': 'يبدأ في', 'm.sched.startatHint': 'التاريخ والوقت مبنيّان على المنطقة الزمنية للخادم', 'm.sched.timeFmt': '[تنسيق 24 ساعة]',
+      'm.sched.date': 'تاريخ البدء', 'm.sched.weekdays': 'في هذه الأيام', 'm.sched.performon': 'نفّذ هذا في',
+      'm.sched.repeat': 'التكرار', 'm.sched.selectAll': 'تحديد الكل', 'm.sched.deselectAll': 'إلغاء تحديد الكل',
+      'freq.now': 'التنفيذ الآن', 'freq.once': 'مرة واحدة', 'freq.daily': 'يومي', 'freq.weekly': 'أسبوعي', 'freq.monthly': 'شهري',
+      'po.week': 'الأسبوع (الأسابيع) المفضّل من الشهر', 'po.day': 'اليوم المفضّل من الشهر',
+      'ord.first': 'الأول', 'ord.second': 'الثاني', 'ord.third': 'الثالث', 'ord.fourth': 'الرابع', 'ord.last': 'الأخير',
+      'wd.sun': 'الأحد', 'wd.mon': 'الإثنين', 'wd.tue': 'الثلاثاء', 'wd.wed': 'الأربعاء', 'wd.thu': 'الخميس', 'wd.fri': 'الجمعة', 'wd.sat': 'السبت',
+      'dom.day': 'يوم', 'dom.last': 'اليوم الأخير',
+      'm.map.title': 'ربط لقطة بمجموعة',
+      'm.map.desc': 'ثبّت مجموعة مخصّصة على لقطة. يتحقق كل وكيل من قابلية التطبيق محليًا قبل التطبيق.',
+      'm.map.group': 'مجموعة مخصّصة', 'm.map.snapshot': 'اللقطة',
+      'm.map.hint': 'الوكلاء على إصدار فرعي مختلف (لتدفّقات EUS / E4S) أو بدون استحقاق صالح سيتخطّون ويبلّغون عن السبب.',
+      'm.map.map': 'ربط اللقطة',
+      'm.cancel': 'إلغاء',
+      'vg.std': 'قياسي — يجمّد المحتوى الحالي', 'vg.eus': 'EUS — تصحيحات لإصدار فرعي مثبّت',
+      'vg.e4s': 'E4S (SAP) — تدفّق 4 سنوات', 'vg.els': 'ELS — أمني فقط، إصدار رئيسي منتهٍ',
+      'v.current': 'الإصدار الحالي',
+      'fq.daily': 'يومي', 'fq.weekly': 'أسبوعي', 'fq.monthly': 'شهري', 'fq.quarterly': 'ربع سنوي',
+      't.created': 'تم إنشاء الجدول', 't.createdD': 'تُشغَّل أول لقطة في الموعد المجدول التالي.',
+      't.mapped': 'تم ربط اللقطة', 't.mappedD': 'يطبّقها الوكلاء في دورة التحديث التالية.',
+      't.deleted': 'تم الحذف', 't.removed': 'تمت إزالة الربط', 't.edit': 'تعديل الجدول',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+
+  /* ---- Data (canonical English; entitlement-aware) ------------------------- */
+  // ELS entitlement is expired → schedule blocked + RHEL 7 mappings skip.
+  const SCHEDULES = [
+    { id: 'sch-1', name: 'Monthly RHEL 9 snapshot', version: '9', stream: 'std',  freq: 'monthly',   next: 'Aug 01, 2026 02:00', last: 'Jul 01, 2026 02:15', snaps: 3, blocked: false },
+    { id: 'sch-2', name: 'RHEL 9 SAP quarterly',    version: '9.2 (E4S)', stream: 'e4s', freq: 'quarterly', next: 'Oct 01, 2026 02:00', last: 'Jul 01, 2026 02:30', snaps: 1, blocked: false },
+    { id: 'sch-3', name: 'RHEL 8.8 EUS monthly',    version: '8.8 (EUS)', stream: 'eus', freq: 'monthly', next: 'Aug 01, 2026 02:00', last: 'Jul 01, 2026 02:20', snaps: 2, blocked: false },
+    { id: 'sch-4', name: 'RHEL 7 ELS monthly',      version: '7 (ELS)',  stream: 'els', freq: 'monthly',   next: 'Aug 01, 2026 02:00', last: 'Jul 01, 2026 02:40', snaps: 1, blocked: true },
+  ];
+  const SNAPSHOTS = [
+    { id: 'snp-1', name: 'RHEL-9-2026-07-01',       version: '9',         created: 'Jul 01, 2026 02:15', groups: ['HA-cluster-prod', 'staging-pool'], tag: 'latest' },
+    { id: 'snp-2', name: 'RHEL-9-2026-06-01',       version: '9',         created: 'Jun 01, 2026 02:10', groups: [], tag: 'n1' },
+    { id: 'snp-3', name: 'RHEL-9-2026-05-01',       version: '9',         created: 'May 01, 2026 02:05', groups: [], tag: 'archive' },
+    { id: 'snp-4', name: 'RHEL-9-SAP-2026-07-01',   version: '9.2 (E4S)', created: 'Jul 01, 2026 02:30', groups: ['SAP-servers'], tag: 'latest' },
+    { id: 'snp-5', name: 'RHEL-8.8-EUS-2026-07-01', version: '8.8 (EUS)', created: 'Jul 01, 2026 02:20', groups: ['EUS-pinned-8.8'], tag: 'latest' },
+    { id: 'snp-6', name: 'RHEL-7-ELS-2026-07-01',   version: '7 (ELS)',   created: 'Jul 01, 2026 02:40', groups: ['legacy-rhel7'], tag: 'latest' },
+  ];
+  const MAPPINGS = [
+    { id: 'map-1', group: 'HA-cluster-prod', target: 'RHEL-9-2026-07-01',       mapped: 'Jul 01, 2026 08:00', status: 'mapped', machines: 12 },
+    { id: 'map-2', group: 'staging-pool',    target: 'RHEL-9-2026-07-01',       mapped: 'Jul 01, 2026 08:05', status: 'mapped', machines: 4 },
+    { id: 'map-3', group: 'SAP-servers',     target: 'RHEL-9-SAP-2026-07-01',   mapped: 'Jul 01, 2026 08:15', status: 'mapped', machines: 8 },
+    { id: 'map-4', group: 'EUS-pinned-8.8',  target: 'RHEL-8.8-EUS-2026-07-01', mapped: 'Jul 01, 2026 08:10', status: 'mapped', machines: 34 },
+    { id: 'map-5', group: 'legacy-rhel7',    target: 'RHEL-7-ELS-2026-07-01',   mapped: 'Jul 01, 2026 08:20', status: 'mapped', machines: 5 },
+  ];
+  // Per-machine agent verdicts → demonstrates Applied / minor-mismatch / entitlement-invalid.
+  const REPORT = [
+    { id: 'r1', computer: 'rhel9-ha-01',     os: 'RHEL', ver: '9.4', target: 'RHEL-9-2026-07-01',       mapped: 'Jul 01, 2026 08:00', group: 'HA-cluster-prod', verdict: 'applied' },
+    { id: 'r2', computer: 'rhel9-ha-02',     os: 'RHEL', ver: '9.4', target: 'RHEL-9-2026-07-01',       mapped: 'Jul 01, 2026 08:00', group: 'HA-cluster-prod', verdict: 'applied' },
+    { id: 'r3', computer: 'rhel9-stg-01',    os: 'RHEL', ver: '9.5', target: 'RHEL-9-2026-07-01',       mapped: 'Jul 01, 2026 08:05', group: 'staging-pool',    verdict: 'applied' },
+    { id: 'r4', computer: 'sap-node-01',     os: 'RHEL', ver: '9.2', target: 'RHEL-9-SAP-2026-07-01',   mapped: 'Jul 01, 2026 08:15', group: 'SAP-servers',     verdict: 'applied' },
+    { id: 'r5', computer: 'sap-node-02',     os: 'RHEL', ver: '9.1', target: 'RHEL-9-SAP-2026-07-01',   mapped: 'Jul 01, 2026 08:15', group: 'SAP-servers',     verdict: 'skipMinor' },
+    { id: 'r6', computer: 'rhel8-eus-01',    os: 'RHEL', ver: '8.8', target: 'RHEL-8.8-EUS-2026-07-01', mapped: 'Jul 01, 2026 08:10', group: 'EUS-pinned-8.8',   verdict: 'applied' },
+    { id: 'r7', computer: 'rhel8-eus-02',    os: 'RHEL', ver: '8.6', target: 'RHEL-8.8-EUS-2026-07-01', mapped: 'Jul 01, 2026 08:10', group: 'EUS-pinned-8.8',   verdict: 'skipMinor' },
+    { id: 'r8', computer: 'rhel7-legacy-01', os: 'RHEL', ver: '7.9', target: 'RHEL-7-ELS-2026-07-01',   mapped: 'Jul 01, 2026 08:20', group: 'legacy-rhel7',     verdict: 'skipEnt' },
+  ];
+  const GROUPS = ['HA-cluster-prod', 'EUS-pinned-8.8', 'SAP-servers', 'legacy-rhel7', 'staging-pool', 'k8s-nodes'];
+
+  const state = { os: 'redhat', sub: 'schedules' };
+
+  /* ---- Render helpers ------------------------------------------------------ */
+  const statusInd = (status, label) => `<ds-status-indicator status="${status}" size="medium" label="${esc(label)}"></ds-status-indicator>`;
+  const verChip = (v) => `<span class="n1-chips"><ds-badge variant="subtle" state="default" size="medium">${esc(v)}</ds-badge></span>`;
+  // Compact for the narrow vertical-nav layout: first group + "+N" overflow badge.
+  const groupPills = (arr) => {
+    if (!arr || !arr.length) return `<span class="n1-name__sub">—</span>`;
+    const first = `<ds-badge variant="subtle" state="active" size="medium">${esc(arr[0])}</ds-badge>`;
+    const more = arr.length > 1 ? `<ds-badge variant="subtle" state="default" size="medium">+${arr.length - 1}</ds-badge>` : '';
+    return `<span class="n1-chips">${first}${more}</span>`;
+  };
+  const iconBtn = (act, id, icon, key) => `<ds-icon-button data-act="${act}" data-id="${esc(id)}" shape="square" type="tertiary-grey" size="medium" icon="${icon}" label="${esc(t(key))}"></ds-icon-button>`;
+  const textBtn = (act, id, key) => `<ds-button data-act="${act}" data-id="${esc(id)}" variant="secondary-color" size="small" label="${esc(t(key))}"></ds-button>`;
+  const TAG = { latest: { st: 'success', k: 'tag.latest' }, n1: { st: 'active', k: 'tag.n1' }, archive: { st: 'default', k: 'tag.archive' } };
+  const VERDICT = { applied: { st: 'success', k: 'vd.applied' }, skipMinor: { st: 'alert', k: 'vd.skipMinor' }, skipEnt: { st: 'critical', k: 'vd.skipEnt' } };
+
+  /* ---- Column sets per sub-tab --------------------------------------------- */
+  function columnsFor(sub) {
+    if (sub === 'schedules') return [
+      { id: 'name', header: t('col.schedName'), render: (r) => `<span class="n1-name">${esc(r.name)}</span>` },
+      { id: 'version', header: t('col.version'), render: (r) => verChip(r.version) },
+      { id: 'freq', header: t('col.freq'), render: (r) => esc(t('fq.' + r.freq)) },
+      { id: 'next', header: t('col.next'), render: (r) => esc(r.next) },
+      { id: 'status', header: t('col.status'), render: (r) => r.blocked ? statusInd('critical', t('st.blocked')) : statusInd('success', t('st.active')) },
+      { id: 'actions', header: t('col.actions'), align: 'right', render: (r) => `<span class="n1-cell-actions">${iconBtn('edit', r.id, 'edit', 'a.edit')}${iconBtn('delete', r.id, 'delete', 'a.delete')}</span>` },
+    ];
+    if (sub === 'snapshots') return [
+      { id: 'name', header: t('col.snapName'), render: (r) => `<span class="n1-name">${esc(r.name)}</span>` },
+      { id: 'version', header: t('col.version'), render: (r) => verChip(r.version) },
+      { id: 'created', header: t('col.created'), render: (r) => esc(r.created) },
+      { id: 'groups', header: t('col.groups'), render: (r) => groupPills(r.groups) },
+      { id: 'tag', header: t('col.tag'), render: (r) => { const g = TAG[r.tag] || TAG.archive; return `<ds-badge variant="subtle" state="${g.st}" size="medium">${esc(t(g.k))}</ds-badge>`; } },
+      { id: 'actions', header: t('col.actions'), align: 'right', render: (r) => `<span class="n1-cell-actions">${textBtn('map', r.id, 'a.map')}${iconBtn('delete', r.id, 'delete', 'a.delete')}</span>` },
+    ];
+    if (sub === 'map') return [
+      { id: 'group', header: t('col.group'), render: (r) => `<span class="n1-name">${esc(r.group)}</span>` },
+      { id: 'target', header: t('col.target'), render: (r) => esc(r.target) },
+      { id: 'mapped', header: t('col.mapped'), render: (r) => esc(r.mapped) },
+      { id: 'status', header: t('col.status'), render: (r) => r.status === 'mapped' ? statusInd('success', t('st.mapped')) : statusInd('warning', t('st.pending')) },
+      { id: 'machines', header: t('col.machines'), align: 'center', render: (r) => `<ds-badge variant="subtle" state="active" size="medium">${r.machines}</ds-badge>` },
+      { id: 'actions', header: t('col.actions'), align: 'right', render: (r) => `<span class="n1-cell-actions">${iconBtn('remove', r.id, 'delete', 'a.remove')}</span>` },
+    ];
+    /* report */
+    return [
+      { id: 'computer', header: t('col.computer'), render: (r) => `<span class="n1-name">${esc(r.computer)} <span class="n1-name__sub">· ${esc(r.os)} ${esc(r.ver)}</span></span>` },
+      { id: 'target', header: t('col.target'), render: (r) => esc(r.target) },
+      { id: 'mapped', header: t('col.mapped'), render: (r) => esc(r.mapped) },
+      { id: 'verdict', header: t('col.verdict'), render: (r) => { const v = VERDICT[r.verdict] || VERDICT.applied; return statusInd(v.st, t(v.k)); } },
+      { id: 'group', header: t('col.group'), render: (r) => `<ds-badge variant="subtle" state="active" size="medium">${esc(r.group)}</ds-badge>` },
+    ];
+  }
+  const rowsFor = (sub) => sub === 'schedules' ? SCHEDULES : sub === 'snapshots' ? SNAPSHOTS : sub === 'map' ? MAPPINGS : REPORT;
+  const emptyFor = (sub) => t('empty.' + sub);
+
+  /* ---- Render the Red Hat sub-tab ------------------------------------------ */
+  function renderSubTab() {
+    const table = $('n1-rh-table'); if (!table) return;
+    const sub = state.sub;
+    const note = $('n1-actionbar-note'), actionbar = $('n1-actionbar');
+    // Action bar carries the contextual note only (Snapshots + Mapped systems report);
+    // primary actions live in the header split button. Hide it when there's no note.
+    const noteText = sub === 'snapshots' ? t('note.snapshots') : sub === 'report' ? t('note.report') : '';
+    if (note) note.textContent = noteText;
+    if (actionbar) actionbar.hidden = !noteText;
+    // Clear rows BEFORE swapping columns: setting `columns` re-renders against the
+    // current rows, and the new column set's renderers would run on stale row shapes
+    // (e.g. a snapshot `groups` renderer on a schedule row) and throw. Empty first.
+    table.rows = [];
+    table.setAttribute('empty-text', emptyFor(sub));
+    table.columns = columnsFor(sub);
+    table.rows = rowsFor(sub).map((r) => ({ ...r }));
+    table.setAttribute('total-rows', String(rowsFor(sub).length));
+  }
+
+  /* ---- OS panel switching -------------------------------------------------- */
+  function showOs(os) {
+    state.os = os;
+    ['windows', 'debian', 'redhat'].forEach((k) => {
+      const p = $('n1-panel-' + k); if (p) p.classList.toggle('is-active', k === os);
+    });
+    // Primary actions apply only to the built-out Red Hat flow.
+    const actions = $('n1-actions'); if (actions) actions.hidden = os !== 'redhat';
+    if (os === 'redhat') renderSubTab();
+  }
+
+  /* ---- Version / group option builders ------------------------------------- */
+  function versionOptions() {
+    const hdr = (k) => ({ type: 'heading', label: t(k) });
+    return [
+      hdr('vg.std'),
+      { label: t('v.current'), value: 'current' },
+      { label: '9.6', value: '9.6' }, { label: '9.5', value: '9.5' }, { label: '9.4', value: '9.4' }, { label: '9.2', value: '9.2' },
+      { label: '8.10', value: '8.10' }, { label: '8.8', value: '8.8' },
+      hdr('vg.eus'),
+      { label: '9.2 (EUS)', value: 'eus-9.2' }, { label: '8.8 (EUS)', value: 'eus-8.8' },
+      hdr('vg.e4s'),
+      { label: '9.2 (E4S)', value: 'e4s-9.2' }, { label: '8.8 (E4S)', value: 'e4s-8.8' },
+      hdr('vg.els'),
+      { label: '7 (ELS)', value: 'els-7' },
+    ];
+  }
+  /* ---- Scheduler (Create-schedule modal) data + builders ------------------- */
+  const FREQS = ['now', 'once', 'monthly'];
+  const ORDINALS = ['first', 'second', 'third', 'fourth', 'last'];
+  const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const schedState = { freq: 'monthly', performOn: 'week', months: new Set(MONTHS), weekdays: new Set(['sun']) };
+  const freqOptions = () => FREQS.map((f) => ({ value: f, label: t('freq.' + f), selected: f === schedState.freq }));
+  const performOnOptions = () => [
+    { value: 'week', label: t('po.week'), selected: schedState.performOn === 'week' },
+    { value: 'day', label: t('po.day'), selected: schedState.performOn === 'day' },
+  ];
+  const ordinalOptions = () => ORDINALS.map((o) => ({ value: o, label: t('ord.' + o) }));
+  const weekdaySelOptions = () => WEEKDAYS.map((w) => ({ value: w, label: t('wd.' + w) }));
+  const domOptions = () => {
+    const out = [];
+    for (let n = 1; n <= 31; n++) out.push({ value: String(n), label: t('dom.day') + ' ' + n });
+    out.push({ value: 'last', label: t('dom.last') });
+    return out;
+  };
+
+  /* Progressive disclosure: show only the fields relevant to the chosen frequency. */
+  function applyFreqVisibility(sm) {
+    const f = schedState.freq;
+    const set = (id, show) => { const el = sm.querySelector('#' + id); if (el) el.hidden = !show; };
+    set('n1-fld-date', f === 'once');
+    set('n1-fld-startat', f !== 'now');
+    set('n1-fld-weekdays', f === 'weekly');
+    set('n1-fld-performon', f === 'monthly');
+    set('n1-fld-repeat', f === 'monthly');
+  }
+  function applyPerformOn(sm) {
+    const wk = schedState.performOn === 'week';
+    const ws = sm.querySelector('#n1-week-selects'); if (ws) ws.hidden = !wk;
+    const ds = sm.querySelector('#n1-day-select'); if (ds) ds.hidden = wk;
+  }
+  function updateSelectAll(sm) {
+    const allOn = schedState.months.size === MONTHS.length;
+    const link = sm.querySelector('#n1-months-selectall');
+    if (link) link.setAttribute('label', allOn ? t('m.sched.deselectAll') : t('m.sched.selectAll'));
+  }
+
+  /* One-time build of the chip grids + interaction wiring (labels come from
+     applySchedStrings, which re-runs on language change). */
+  function setupSchedForm(sm) {
+    if (!sm || sm.__schedSetup) return; sm.__schedSetup = true;
+    const freq = sm.querySelector('#n1-sched-freq');
+    freq && freq.addEventListener('ds-radio-group-change', (e) => { schedState.freq = (e.detail && e.detail.value) || 'monthly'; applyFreqVisibility(sm); });
+    const po = sm.querySelector('#n1-sched-performon');
+    po && po.addEventListener('ds-radio-group-change', (e) => { schedState.performOn = (e.detail && e.detail.value) || 'week'; applyPerformOn(sm); });
+    // Months + weekdays are ds-button-group (multi). Items/labels are set in
+    // applySchedStrings; here we just track selection.
+    const mg = sm.querySelector('#n1-month-grid');
+    mg && mg.addEventListener('ds-button-group-change', (e) => {
+      schedState.months = new Set(e.detail.values); updateSelectAll(sm);
+    });
+    const wg = sm.querySelector('#n1-weekday-grid');
+    wg && wg.addEventListener('ds-button-group-change', (e) => { schedState.weekdays = new Set(e.detail.values); });
+    // Select all / Deselect all months.
+    const sa = sm.querySelector('#n1-months-selectall');
+    sa && sa.addEventListener('click', (e) => {
+      e.preventDefault();
+      const allOn = schedState.months.size === MONTHS.length;
+      schedState.months = allOn ? new Set() : new Set(MONTHS);
+      if (mg) mg.values = [...schedState.months];
+      updateSelectAll(sm);
+    });
+  }
+
+  /* Set every label/option in the schedule modal (re-run on language change). */
+  function applySchedStrings(sm) {
+    sm.setAttribute('title', t('m.sched.title'));
+    sm.setAttribute('description', t('m.sched.desc'));
+    const setTxt = (id, k) => { const el = sm.querySelector('#' + id); if (el) el.textContent = t(k); };
+    setTxt('n1-lbl-name', 'm.sched.name'); setTxt('n1-lbl-version', 'm.sched.version');
+    setTxt('n1-lbl-freq', 'm.sched.freq'); setTxt('n1-lbl-date', 'm.sched.date');
+    setTxt('n1-lbl-startat', 'm.sched.startat'); setTxt('n1-lbl-weekdays', 'm.sched.weekdays');
+    setTxt('n1-lbl-performon', 'm.sched.performon'); setTxt('n1-lbl-repeat', 'm.sched.repeat');
+    setTxt('n1-startat-suffix', 'm.sched.timeFmt'); setTxt('n1-startat-hint', 'm.sched.startatHint');
+    const nm = sm.querySelector('#n1-sched-name'); if (nm) nm.setAttribute('placeholder', t('m.sched.namePh'));
+    const vs = sm.querySelector('#n1-sched-version'); if (vs) { vs.setAttribute('placeholder', t('m.sched.versionPh')); vs.options = versionOptions(); }
+    const fq = sm.querySelector('#n1-sched-freq'); if (fq) fq.options = freqOptions();
+    const po = sm.querySelector('#n1-sched-performon'); if (po) po.options = performOnOptions();
+    const ord = sm.querySelector('#n1-sched-ordinal'); if (ord) { ord.options = ordinalOptions(); ord.value = ord.value || 'first'; }
+    const wsel = sm.querySelector('#n1-sched-weekday'); if (wsel) { wsel.options = weekdaySelOptions(); wsel.value = wsel.value || 'sun'; }
+    const dom = sm.querySelector('#n1-sched-dom'); if (dom) { dom.options = domOptions(); dom.value = dom.value || '1'; }
+    // Month grid (fixed Jan–Dec) + weekday grid (translatable) via ds-button-group.
+    const mg = sm.querySelector('#n1-month-grid');
+    if (mg) { mg.items = MONTHS.map((m) => ({ value: m, label: m })); mg.values = [...schedState.months]; }
+    const wg = sm.querySelector('#n1-weekday-grid');
+    if (wg) { wg.items = WEEKDAYS.map((w) => ({ value: w, label: t('wd.' + w) })); wg.values = [...schedState.weekdays]; }
+    updateSelectAll(sm);
+    const hn = sm.querySelector('#n1-sched-hint'); if (hn) hn.setAttribute('description', t('m.sched.hint'));
+    const bc = sm.querySelector('[data-cancel]'); if (bc) bc.setAttribute('label', t('m.cancel'));
+    const bs = sm.querySelector('[data-save]'); if (bs) bs.setAttribute('label', t('m.sched.create'));
+    applyFreqVisibility(sm); applyPerformOn(sm);
+  }
+
+  /* ---- Strings (re-run on lang change) ------------------------------------- */
+  function applyStrings() {
+    const ph = $('n1-ph');
+    if (ph) {
+      ph.setAttribute('title', t('title'));
+      // OS switcher lives in the page-header tabs (Windows / Debian / Red Hat).
+      // Keep the current selection active across language changes.
+      ph.tabs = [
+        { id: 'windows', label: t('os.windows'), active: state.os === 'windows' },
+        { id: 'debian', label: t('os.debian'), active: state.os === 'debian' },
+        { id: 'redhat', label: t('os.redhat'), active: state.os === 'redhat' },
+      ];
+    }
+    // Rich description lives in the header's `description` slot: sentence + inline link.
+    const dtxt = $('n1-desc-text'); if (dtxt) dtxt.textContent = t('desc');
+    const lm = $('n1-learn-more'); if (lm) lm.setAttribute('label', t('learn'));
+    // Header split button: main = Create schedule, menu option = Map snapshot.
+    const sb = $('n1-actions');
+    if (sb) {
+      sb.setAttribute('label', t('act.createSchedule'));
+      sb.menuItems = [{ label: t('act.mapSnapshot'), value: 'map', icon: 'link' }];
+    }
+    const nav = $('n1-rh-nav');
+    if (nav) nav.items = [
+      { id: 'schedules', label: t('nav.schedules'), icon: 'calendar' },
+      { id: 'snapshots', label: t('nav.snapshots'), icon: 'camera' },
+      { id: 'map', label: t('nav.map'), icon: 'link' },
+      { id: 'report', label: t('nav.report'), icon: 'layers' },
+    ];
+    // Entitlement alert (ELS expired in this dataset).
+    const ent = $('n1-entitlement-alert');
+    if (ent) { ent.setAttribute('title', t('ent.title')); ent.setAttribute('description', t('ent.desc')); ent.hidden = false; }
+    // Placeholders.
+    const ew = $('n1-empty-windows'); if (ew) { ew.setAttribute('title', t('ph.win.title')); ew.setAttribute('description', t('ph.win.desc')); }
+    const ed = $('n1-empty-debian'); if (ed) { ed.setAttribute('title', t('ph.deb.title')); ed.setAttribute('description', t('ph.deb.desc')); }
+    // Modals (portal to <body> once opened; set titles/labels on the cached hosts).
+    const sm = $('n1-sched-modal');
+    if (sm) applySchedStrings(sm);
+    const mm = $('n1-map-modal');
+    if (mm) {
+      mm.setAttribute('title', t('m.map.title')); mm.setAttribute('description', t('m.map.desc'));
+      const gp = mm.querySelector('#n1-map-group'); if (gp) { gp.setAttribute('label', t('m.map.group')); gp.options = GROUPS.map((g) => ({ label: g, value: g })); }
+      const sp = mm.querySelector('#n1-map-snapshot'); if (sp) { sp.setAttribute('label', t('m.map.snapshot')); sp.options = SNAPSHOTS.map((s) => ({ label: s.name, value: s.id })); }
+      const hn = mm.querySelector('#n1-map-hint'); if (hn) hn.setAttribute('description', t('m.map.hint'));
+      const bc = mm.querySelector('[data-cancel]'); if (bc) bc.setAttribute('label', t('m.cancel'));
+      const bs = mm.querySelector('[data-save]'); if (bs) bs.setAttribute('label', t('m.map.map'));
+    }
+    if (state.os === 'redhat') renderSubTab();
+  }
+
+  /* ---- Wiring -------------------------------------------------------------- */
+  let _wired = false;
+  function wire() {
+    if (_wired) return; _wired = true;
+    const ph = $('n1-ph'), nav = $('n1-rh-nav'), table = $('n1-rh-table');
+    ph && ph.addEventListener('ds-page-header-tab', (e) => showOs(e.detail && e.detail.tab && e.detail.tab.id));
+    nav && nav.addEventListener('ds-tab-change', (e) => { state.sub = (e.detail && e.detail.id) || 'schedules'; renderSubTab(); });
+
+    // Header split button → Create schedule (main) / Map snapshot (menu option).
+    const sb = $('n1-actions');
+    if (sb) {
+      sb.addEventListener('ds-split-button-main', () => openSchedModal());
+      sb.addEventListener('ds-split-button-menu-select', () => openMapModal());
+    }
+
+    // Row actions (delegated).
+    table && table.addEventListener('click', (e) => {
+      const el = e.target.closest && e.target.closest('[data-act]');
+      if (!el) return;
+      const act = el.getAttribute('data-act');
+      if (act === 'delete') globalThis.dsToast?.error?.({ title: t('t.deleted'), style: 'subtle' });
+      else if (act === 'remove') globalThis.dsToast?.error?.({ title: t('t.removed'), style: 'subtle' });
+      else if (act === 'edit') { openSchedModal(); }
+      else if (act === 'map') { openMapModal(el.getAttribute('data-id')); }
+    });
+
+    // Create-schedule modal — build the frequency form + wire the buttons.
+    const sm = $('n1-sched-modal');
+    if (sm) {
+      setupSchedForm(sm);
+      sm.querySelector('[data-cancel]').addEventListener('click', () => sm.close());
+      sm.querySelector('[data-save]').addEventListener('click', () => { sm.close(); globalThis.dsToast?.success?.({ title: t('t.created'), description: t('t.createdD'), style: 'subtle' }); });
+    }
+    // Map modal.
+    const mm = $('n1-map-modal');
+    if (mm) {
+      mm.querySelector('[data-cancel]').addEventListener('click', () => mm.close());
+      mm.querySelector('[data-save]').addEventListener('click', () => { mm.close(); globalThis.dsToast?.success?.({ title: t('t.mapped'), description: t('t.mappedD'), style: 'subtle' }); });
+    }
+  }
+  function openSchedModal() { const m = $('n1-sched-modal'); if (m) m.open(); }
+  function openMapModal(snapId) {
+    const m = $('n1-map-modal'); if (!m) return;
+    if (snapId) { const sp = m.querySelector('#n1-map-snapshot'); if (sp) sp.value = snapId; }
+    m.open();
+  }
+
+  function show() { root.hidden = false; applyStrings(); wire(); showOs(state.os); }
+  function hide() { root.hidden = true; }
+  if (window.ShellCtx && window.ShellCtx.onLangChange) window.ShellCtx.onLangChange(() => { if (!root.hidden) applyStrings(); });
+  window.ShellDrawers = window.ShellDrawers || {};
+  window.ShellDrawers['threats-patches-n1-patch-settings'] = { show, hide };
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS — runs ONLY when opened directly. == */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  window.ShellDrawers = window.ShellDrawers || {};
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  const open = () => window.ShellDrawers['threats-patches-n1-patch-settings'] && window.ShellDrawers['threats-patches-n1-patch-settings'].show();
+  requestAnimationFrame(() => requestAnimationFrame(open));
+})();
+</script>
+</body>
+</html>

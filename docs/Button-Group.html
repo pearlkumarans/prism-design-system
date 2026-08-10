@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="dark"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","light");}})();</script>
+<meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="assets/prism-logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Button Group — UEMS Design System</title>
+<link rel="stylesheet" href="css/common/globals.css">
+<link rel="stylesheet" href="css/common/components.css">
+<!-- Demo button: single source of truth -->
+<link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
+<link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
+<script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
+<script type="module" src="../design-system-library/src/icons/icon.js"></script>
+<script type="module" src="../design-system-library/src/components/button/button.js"></script>
+<link rel="stylesheet" href="../design-system-library/src/components/button-group/button-group.css">
+<script type="module" src="../design-system-library/src/components/button-group/button-group.js"></script>
+<style>
+  /* Force hover / focus visuals for the State grid demos. The inner .ds-button is rendered by the web component. */
+  ds-button.is-hover-demo .ds-button { background: var(--_btn-bg-hover) !important; filter: brightness(1.02); }
+  ds-button.is-focus-demo .ds-button { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; }
+  ds-button.is-active-demo .ds-button { filter: brightness(0.92); }
+  .demo-btn-section { margin-bottom: 28px; }
+  .page-button .demo-group-label { font-size: 13px; color: var(--prism-text-muted); margin-bottom: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; text-align: left; }
+  /* Override page-button's `justify-content: center` so button rows align
+     left, matching their section header. */
+  .page-button .demo-btn-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: flex-start; }
+  /* Override page-button's `align-items: center; justify-content: center; min-height: 280px`
+     so sections stack from top, full width, no vertical centering. */
+  .page-button .demo-container .demo-canvas { align-items: stretch !important; justify-content: flex-start !important; min-height: 0 !important; }
+  .demo-btn-stack { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
+  .demo-btn-cap { font-size: 11.5px; color: var(--prism-text-muted); }
+</style>
+</head>
+<body class="page-button">
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <nav class="nav">
+    <button class="nav-hamburger" aria-label="Open sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <a class="nav-logo" href="index.html">
+      <img src="assets/prism-logo.png" alt="" class="nav-logo-img" width="40" height="40">
+      <span class="nav-logo-text">
+        <span class="nav-logo-mark">Prism</span>
+        <span class="nav-logo-sub">Built by <span class="caps">UEMS</span></span>
+      </span>
+    </a>
+    <div class="nav-links">      <a href="Foundation.html" >Foundation</a>
+      <a href="Components.html" class="active">Components</a>      <a href="zia-experience.html" >Zia Experience</a><a href="llm-reference.html">LLM Reference</a><div class="nav-dropdown"><a href="Icons.html">Resources <svg class="nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a><div class="nav-dropdown-menu"><a href="Icons.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Icons</a><a href="Logos.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>Product Logo</a><a href="Illustrations.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>Illustrations</a><a href="Generating-pages.html"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Generating Pages</a></div></div>
+      
+      <div style="width: 16px;"></div> <!-- Spacer -->
+      
+
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+        <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="components-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search...">
+        <span class="search-shortcut">⌘K</span>
+      </div>
+      <h3 id="components" class="sidebar-heading">Components</h3>
+      <ul class="sidebar-nav">
+        <li><a href="Accordion.html" class="sidebar-link">Accordion</a></li>
+        <li><a href="Avatar.html" class="sidebar-link">Avatar</a></li>
+        <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
+        <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
+        <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Button-Group.html" class="sidebar-link active">Button Group</a></li>
+        <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
+        <li><a href="Card.html" class="sidebar-link">Cards</a></li>
+        <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
+        <li><a href="Counter.html" class="sidebar-link">Counter</a></li>
+        <li><a href="Criteria-filter.html" class="sidebar-link">Criteria filter</a></li>
+        <li><a href="Data-table.html" class="sidebar-link">Data table</a></li>
+        <li><a href="Description-List.html" class="sidebar-link">Description List</a></li>
+        <li><a href="Divider.html" class="sidebar-link">Divider</a></li>
+        <li><a href="Drawer.html" class="sidebar-link">Drawer</a></li>
+        <li><a href="Dropdown.html" class="sidebar-link">Dropdown</a></li>
+        <li><a href="Empty-state.html" class="sidebar-link">Empty state</a></li>
+        <li><a href="File-Upload.html" class="sidebar-link">File Upload</a></li>
+        <li><a href="Filter-panel.html" class="sidebar-link">Filter panel</a></li>
+        <li><a href="Form-footer.html" class="sidebar-link">Form footer</a></li>
+        <li><a href="Header-navigation.html" class="sidebar-link">Header navigation</a></li>
+        <li><a href="Icon.html" class="sidebar-link">Icon</a></li>
+        <li><a href="Inline-message.html" class="sidebar-link">Inline message</a></li>
+        <!-- input-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Input Fields</span></li>
+        <li><a href="Text-field.html" class="sidebar-link">Text field</a></li>
+        <li><a href="Text-area.html" class="sidebar-link">Text area</a></li>
+        <li><a href="Input-Select.html" class="sidebar-link">Input select</a></li>
+        <li><a href="Search-field.html" class="sidebar-link">Search Field</a></li>
+        <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
+        <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
+        <li><a href="Date-picker.html" class="sidebar-link">Date picker</a></li>
+        <li><a href="Time-picker.html" class="sidebar-link">Time picker</a></li>
+        <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
+        <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
+        <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
+        <li><a href="Switch.html" class="sidebar-link">Toggle</a></li>
+        <li><a href="Slider.html" class="sidebar-link">Slider</a></li>
+        <!-- input-group:end -->
+        <li><a href="Kpi-card.html" class="sidebar-link">KPI Cards</a></li>
+        <li><a href="Left-sidebar-navigation-level-1.html" class="sidebar-link">Sidebar Nav L1</a></li>
+        <li><a href="Left-sidebar-navigation-level-2.html" class="sidebar-link">Sidebar Nav L2</a></li>
+        <li><a href="Link.html" class="sidebar-link">Link</a></li>
+        <li><a href="List.html" class="sidebar-link">List</a></li>
+        <li><a href="Message-box.html" class="sidebar-link">Message box</a></li>
+        <!-- modal-group:start -->
+        <li style="padding:16px 12px 6px;"><span style="font-size:10px;font-weight:700;color:var(--prism-text-muted);text-transform:uppercase;letter-spacing:0.1em;opacity:0.6;">Modals</span></li>
+        <li><a href="Modal.html" class="sidebar-link">Modal</a></li>
+        <li><a href="Confirmation-modal.html" class="sidebar-link">Confirmation Modal</a></li>
+        <li><a href="Fullscreen-modal.html" class="sidebar-link">Fullscreen Modal</a></li>
+        <!-- modal-group:end -->
+        <li><a href="Overlay.html" class="sidebar-link">Overlay</a></li>
+        <li><a href="Page-header.html" class="sidebar-link">Page header</a></li>
+        <li><a href="Popover.html" class="sidebar-link">Popover</a></li>
+        <li><a href="Progress-bar.html" class="sidebar-link">Progress bar</a></li>
+        <li><a href="Rich-text-editor.html" class="sidebar-link">Rich text editor</a></li>
+        <li><a href="Right-pane.html" class="sidebar-link">Right pane</a></li>
+        <li><a href="Script-editor.html" class="sidebar-link">Script editor</a></li>
+        <li><a href="Scrollbar.html" class="sidebar-link">Scrollbar</a></li>
+        <li><a href="Section-Header.html" class="sidebar-link">Section Header</a></li>
+        <li><a href="Snackbar.html" class="sidebar-link">Toast Message</a></li>
+        <li><a href="Split-button.html" class="sidebar-link">Split button</a></li>
+        <li><a href="Status-indicator.html" class="sidebar-link">Status indicator</a></li>
+        <li><a href="Stepper.html" class="sidebar-link">Stepper</a></li>
+        <li><a href="Tab-bar-horizontal.html" class="sidebar-link">Tab Bar Horizontal</a></li>
+        <li><a href="Tab-bar-vertical.html" class="sidebar-link">Tab Bar Vertical</a></li>
+        <li><a href="Tab-filter.html" class="sidebar-link">Tab Filter</a></li>
+        <li><a href="Tag.html" class="sidebar-link">Tag</a></li>
+        <li><a href="Tooltip.html" class="sidebar-link">Tooltip</a></li>
+        <li><a href="Widget.html" class="sidebar-link">Widgets</a></li>
+      </ul>
+    </aside>
+    <main class="main-panel">
+      <div class="page-header-area">
+        <h1 class="page-title">Button Group</h1>
+        <p class="page-desc">
+          A group of value-bearing buttons &mdash; a <strong>segmented picker</strong>, a <strong>multi-select toggle grid</strong> (months, weekdays), or an <strong>action toolbar</strong>. One primitive, three selection modes, each wired to the correct WAI&ndash;ARIA pattern. Reach for it when you have a compact set (~2&ndash;12) of short options meant to be seen at once.
+        </p>
+      </div>
+      <nav class="content-tabs">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Style</button>
+        <button class="tab-item">Usage</button>
+        <button class="tab-item">Code</button>
+        <button class="tab-item">Accessibility</button>
+      </nav>
+      <div class="main-content-area">
+        <div class="main-content-inner">
+
+        <style>
+          .bg-doc-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 4px 0 8px; }
+          .bg-doc-table th, .bg-doc-table td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--prism-border); vertical-align: top; }
+          .bg-doc-table thead th { font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--prism-text-muted); font-weight: 700; }
+          .bg-doc-table tbody tr:last-child td { border-bottom: 0; }
+          .bg-doc-table code { font-family: var(--font-mono, ui-monospace, monospace); font-size: 12.5px; background: var(--prism-surface-2, rgba(127,127,127,.10)); padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+          .bg-doc-table-wrap { overflow-x: auto; border: 1px solid var(--prism-border); border-radius: 10px; margin: 14px 0 26px; }
+          .bg-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 100px; }
+          .bg-pill--single, .bg-pill--multi { color: var(--prism-violet, #2563eb); background: rgba(37,99,235,.12); }
+          .bg-pill--none { color: var(--prism-text-muted); background: rgba(127,127,127,.14); }
+          .bg-out { font-family: var(--font-mono, ui-monospace, monospace); font-size: 12px; color: var(--prism-text-muted); margin-top: 12px; min-height: 16px; }
+          .bg-code { background: var(--prism-surface-2, rgba(127,127,127,.08)); border: 1px solid var(--prism-border); border-radius: 10px; padding: 16px 18px; overflow-x: auto; font-size: 13px; line-height: 1.6; margin: 8px 0 24px; font-family: var(--font-mono, ui-monospace, monospace); }
+          .dd-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+          @media (max-width: 900px){ .dd-cols { grid-template-columns: 1fr; } }
+          .dd-card { border: 1px solid var(--prism-border); border-radius: 12px; padding: 18px 20px; }
+          .dd-card h4 { margin: 0 0 10px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+          .dd-card--do h4 { color: #1f9d57; } .dd-card--dont h4 { color: #d8434c; }
+          .dd-card ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; color: var(--prism-text-muted); font-size: 14px; }
+          .bg-gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+          @media (max-width: 820px){ .bg-gallery { grid-template-columns: 1fr; } }
+          .bg-case { border: 1px solid var(--prism-border); border-radius: 12px; padding: 18px 20px; }
+          .bg-case .cap { font-size: 12px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--prism-text-muted); margin-bottom: 14px; }
+          .bg-anat-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; margin-top: 22px; }
+          @media (max-width: 720px){ .bg-anat-legend { grid-template-columns: 1fr; } }
+          .bg-anat-item { display: flex; gap: 10px; }
+          .bg-anat-num { flex: none; width: 22px; height: 22px; border-radius: 100px; background: var(--prism-violet, #2563eb); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+          .bg-anat-item strong { display: block; font-size: 14px; } .bg-anat-item span { font-size: 13px; color: var(--prism-text-muted); }
+          .demo-section-lead { color: var(--prism-text-muted); font-size: 14px; margin: 0 0 18px; }
+        </style>
+
+        <!-- ============================ OVERVIEW ============================ -->
+        <div class="tab-content" id="tab-overview">
+
+          <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <p class="demo-section-lead">A group container holds a row/grid of item buttons; the selected item(s) fill with the accent. One label names the whole group.</p>
+          <div class="demo-container">
+            <div class="demo-canvas" style="justify-content:center;align-items:center;min-height:180px;padding:40px;">
+              <ds-button-group id="a-anat" selection-mode="single" variant="attached"></ds-button-group>
+            </div>
+          </div>
+          <div class="bg-anat-legend">
+            <div class="bg-anat-item"><span class="bg-anat-num">1</span><div><strong>Group container</strong><span><code>role="radiogroup"</code> (single) or <code>group</code> (multi / none), with an accessible <code>label</code>.</span></div></div>
+            <div class="bg-anat-item"><span class="bg-anat-num">2</span><div><strong>Item</strong><span>A <code>&lt;button&gt;</code>; optional leading icon + label. Icon-only needs an <code>ariaLabel</code>.</span></div></div>
+            <div class="bg-anat-item"><span class="bg-anat-num">3</span><div><strong>Selected item</strong><span>Filled accent + <code>aria-checked</code> (single) / <code>aria-pressed</code> (multi).</span></div></div>
+            <div class="bg-anat-item"><span class="bg-anat-num">4</span><div><strong>Roving focus</strong><span>One Tab stop; arrow keys move focus (and select, in single mode) between items.</span></div></div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <h2 id="selection-modes" class="doc-section-title">Selection modes</h2>
+          <p class="demo-section-lead">Selection is the axis. Interact with any group &mdash; toggle, tab in, arrow-key around.</p>
+          <div class="demo-container">
+            <div class="demo-canvas" style="flex-direction:column;align-items:stretch;gap:28px;padding:32px;">
+              <div class="demo-btn-section">
+                <div class="demo-group-label"><span class="bg-pill bg-pill--single">single</span> &nbsp;exclusive &mdash; segmented control</div>
+                <ds-button-group id="d-single" selection-mode="single" variant="attached" label="Preferred week"></ds-button-group>
+                <div class="bg-out" id="o-single"></div>
+              </div>
+              <div class="demo-btn-section">
+                <div class="demo-group-label"><span class="bg-pill bg-pill--multi">multi</span> &nbsp;months (grid, columns=6)</div>
+                <ds-button-group id="d-months" selection-mode="multi" variant="attached" layout="grid" columns="6" size="small" label="Repeat in months"></ds-button-group>
+                <div class="bg-out" id="o-months"></div>
+              </div>
+              <div class="demo-btn-section">
+                <div class="demo-group-label"><span class="bg-pill bg-pill--multi">multi</span> &nbsp;weekdays (grid, columns=7)</div>
+                <ds-button-group id="d-days" selection-mode="multi" variant="attached" layout="grid" columns="7" size="small" label="On these days"></ds-button-group>
+              </div>
+              <div class="demo-btn-section">
+                <div class="demo-group-label"><span class="bg-pill bg-pill--none">none</span> &nbsp;action toolbar &mdash; icon-only</div>
+                <ds-button-group id="d-act" selection-mode="none" variant="attached" size="small" label="Text format"></ds-button-group>
+                <div class="bg-out" id="o-act"></div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <h2 id="when-to-use" class="doc-section-title">When to use</h2>
+          <p class="demo-section-lead">Only where the alternatives don&rsquo;t fit.</p>
+          <div class="bg-doc-table-wrap">
+            <table class="bg-doc-table">
+              <thead><tr><th>If you need&hellip;</th><th>Use</th><th>Not this because&hellip;</th></tr></thead>
+              <tbody>
+                <tr><td>Pick one/many from a compact set of buttons (months, weekdays, ordinals, view switch)</td><td><code>ds-button-group</code></td><td>&mdash;</td></tr>
+                <tr><td>Switch between views / panels</td><td><code>ds-tab-bar-*</code></td><td>Navigation, not a value</td></tr>
+                <tr><td>One choice from a vertical form list with descriptions</td><td><code>ds-radio-group</code></td><td>Long labels + helper text; not compact</td></tr>
+                <tr><td>Many choices from a vertical form list</td><td><code>ds-checkbox-group</code></td><td>List layout, not a chip grid</td></tr>
+                <tr><td>Choose one value from a long list</td><td><code>ds-input-select</code></td><td>Overflows to a menu; groups are for short sets</td></tr>
+                <tr><td>A single on/off</td><td><code>ds-toggle</code></td><td>Binary, one control</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ============================ STYLE ============================ -->
+        <div class="tab-content" id="tab-style" style="display:none;padding-top:32px;">
+
+          <h2 id="variants" class="doc-section-title">Variants</h2>
+          <p class="demo-section-lead"><code>separated</code> = bordered chips with a gap. <code>attached</code> = no gap; items collapse into a connected control with hairline 1px seams and rounded outer corners &mdash; works for a single row <strong>and</strong> a multi-row grid.</p>
+          <div class="demo-container">
+            <div class="demo-canvas" style="flex-direction:column;align-items:stretch;gap:28px;padding:32px;">
+              <div class="demo-btn-section"><div class="demo-group-label">separated (default)</div><ds-button-group id="d-sep" selection-mode="single" label="View"></ds-button-group></div>
+              <div class="demo-btn-section"><div class="demo-group-label">attached</div><ds-button-group id="d-att" selection-mode="single" variant="attached" label="View"></ds-button-group></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <h2 id="sizes" class="doc-section-title">Sizes</h2>
+          <p class="demo-section-lead">Small · Medium (default) · Large &mdash; padding + font from size tokens.</p>
+          <div class="demo-container">
+            <div class="demo-canvas" style="flex-direction:column;align-items:flex-start;gap:20px;padding:32px;">
+              <ds-button-group id="d-sm" selection-mode="single" size="small" variant="attached" label="Small"></ds-button-group>
+              <ds-button-group id="d-md" selection-mode="single" size="medium" variant="attached" label="Medium"></ds-button-group>
+              <ds-button-group id="d-lg" selection-mode="single" size="large" variant="attached" label="Large"></ds-button-group>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <h2 id="layouts" class="doc-section-title">Layouts</h2>
+          <p class="demo-section-lead">Row (wraps) · grid (fixed <code>columns</code>) · column. The group <strong>hugs its content</strong> by default; <code>equal</code> equalises items, and <code>full-width</code> stretches to the container (implying <code>equal</code> on a row).</p>
+          <div class="demo-container">
+            <div class="demo-canvas" style="flex-direction:column;align-items:stretch;gap:28px;padding:32px;">
+              <div class="demo-btn-section"><div class="demo-group-label">row (default)</div><ds-button-group id="d-row" selection-mode="single" label="Density"></ds-button-group></div>
+              <div class="demo-btn-section"><div class="demo-group-label">grid · columns=4</div><ds-button-group id="d-grid" selection-mode="multi" variant="attached" layout="grid" columns="4" size="small" label="Quarters"></ds-button-group></div>
+              <div class="demo-btn-section"><div class="demo-group-label">column</div><ds-button-group id="d-col" selection-mode="single" layout="column" style="max-width:200px;" label="Priority"></ds-button-group></div>
+              <div class="demo-btn-section"><div class="demo-group-label">equal + full-width</div><ds-button-group id="d-equal" selection-mode="single" variant="attached" equal full-width label="Range"></ds-button-group></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <h2 id="states" class="doc-section-title">States</h2>
+          <p class="demo-section-lead">Default · hover · selected · focus (Tab in and arrow) · disabled item · disabled group.</p>
+          <div class="demo-container">
+            <div class="demo-canvas" style="flex-direction:column;align-items:flex-start;gap:20px;padding:32px;">
+              <div class="demo-btn-section"><div class="demo-group-label">one selected · one disabled item</div><ds-button-group id="d-state" selection-mode="single" label="States"></ds-button-group></div>
+              <div class="demo-btn-section"><div class="demo-group-label">whole group disabled</div><ds-button-group id="d-disabled" selection-mode="single" disabled label="Disabled group"></ds-button-group></div>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <h2 id="tokens" class="doc-section-title">Tokens</h2>
+          <div class="bg-doc-table-wrap">
+            <table class="bg-doc-table">
+              <thead><tr><th>Part</th><th>Token</th></tr></thead>
+              <tbody>
+                <tr><td>Item border</td><td><code>--uems-border-tertiary</code></td></tr>
+                <tr><td>Selected fill / text</td><td><code>--uems-bg-button-primary</code> / <code>--uems-icon-white</code></td></tr>
+                <tr><td>Hover</td><td><code>--uems-bg-primary-hover</code> · border <code>--uems-border-accent</code></td></tr>
+                <tr><td>Focus ring</td><td><code>--uems-border-accent-focus</code></td></tr>
+                <tr><td>Radius</td><td><code>--uems-radius-default</code></td></tr>
+                <tr><td>Disabled</td><td><code>--uems-bg-disabled</code> / <code>--uems-text-disabled</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ============================ USAGE ============================ -->
+        <div class="tab-content" id="tab-usage" style="display:none;padding-top:32px;">
+
+          <h2 id="cases" class="doc-section-title">Common cases</h2>
+          <p class="demo-section-lead">Real-world configurations across the product. Each is one <code>ds-button-group</code> with different <code>selection-mode</code>, <code>layout</code>, and <code>variant</code>.</p>
+          <div class="bg-gallery">
+            <div class="bg-case"><div class="cap">View switcher · single · attached</div><ds-button-group id="c-view" selection-mode="single" variant="attached" size="small" label="View"></ds-button-group></div>
+            <div class="bg-case"><div class="cap">Time range · single · equal</div><ds-button-group id="c-range" selection-mode="single" variant="attached" size="small" equal label="Range"></ds-button-group></div>
+            <div class="bg-case"><div class="cap">Text align · none · icon toolbar</div><ds-button-group id="c-align" selection-mode="none" variant="attached" size="small" label="Align"></ds-button-group></div>
+            <div class="bg-case"><div class="cap">Yes / No / N-A · single</div><ds-button-group id="c-yesno" selection-mode="single" size="small" label="Answer"></ds-button-group></div>
+            <div class="bg-case"><div class="cap">Severity filter · multi</div><ds-button-group id="c-sev" selection-mode="multi" variant="attached" size="small" label="Severity"></ds-button-group></div>
+            <div class="bg-case"><div class="cap">Rows per page · single · attached</div><ds-button-group id="c-page" selection-mode="single" variant="attached" size="small" label="Rows per page"></ds-button-group></div>
+            <div class="bg-case"><div class="cap">Weekday repeat · multi · grid=7</div><ds-button-group id="c-wd" selection-mode="multi" variant="attached" layout="grid" columns="7" size="small" label="Days"></ds-button-group></div>
+            <div class="bg-case"><div class="cap">Ordinal (nth week) · single</div><ds-button-group id="c-ord" selection-mode="single" size="small" label="Week"></ds-button-group></div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <h2 id="guidelines" class="doc-section-title">Do &amp; Don&rsquo;t</h2>
+          <div class="dd-cols" style="margin-top:18px;">
+            <div class="dd-card dd-card--do">
+              <h4>Do</h4>
+              <ul>
+                <li>Give icon-only items an <code>ariaLabel</code>.</li>
+                <li>Use <code>single</code> for mutually-exclusive picks; <code>multi</code> for independent toggles.</li>
+                <li>Keep labels short (1&ndash;2 words) so items stay compact.</li>
+                <li>Use <code>attached</code> for a tight segmented control, <code>separated</code> for a chip grid.</li>
+                <li>Keep to ~2&ndash;12 options meant to be seen at once.</li>
+              </ul>
+            </div>
+            <div class="dd-card dd-card--dont">
+              <h4>Don&rsquo;t</h4>
+              <ul>
+                <li>Use it for view navigation &mdash; that&rsquo;s <code>ds-tab-bar-*</code>.</li>
+                <li>Use it for a long option list &mdash; that&rsquo;s <code>ds-input-select</code>.</li>
+                <li>Hand-roll <code>aria-pressed</code> button grids &mdash; this owns state, keyboard &amp; ARIA.</li>
+                <li>Rely on colour alone to signal selection.</li>
+                <li>Mix wildly different label lengths in one <code>attached</code> group.</li>
+              </ul>
+            </div>
+          </div>
+
+          <hr class="doc-divider" />
+
+          <h2 id="content" class="doc-section-title">Content guidelines</h2>
+          <ul style="color:var(--prism-text-muted);font-size:14px;line-height:1.7;margin:0;padding-left:20px;">
+            <li>Write items as <strong>values</strong>, not actions &mdash; &ldquo;List / Grid&rdquo;, not &ldquo;Show list&rdquo;. (Action mode is the exception.)</li>
+            <li>Order items logically: chronological (Jan&hellip;Dec), by magnitude (Low&hellip;Critical), or by frequency of use.</li>
+            <li>Prefer text labels; use icon-only in dense toolbars where the glyph is unambiguous (B / I / U).</li>
+          </ul>
+        </div>
+
+        <!-- ============================ CODE ============================ -->
+        <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+
+          <style>
+            .bg-pg { border: 1px solid var(--prism-border); border-radius: 12px; overflow: hidden; margin: 12px 0 26px; }
+            .bg-pg-controls { display: flex; flex-wrap: wrap; gap: 14px 20px; padding: 16px 20px; background: var(--prism-surface-2, rgba(127,127,127,.05)); border-bottom: 1px solid var(--prism-border); }
+            .bg-pg-controls label { display: flex; flex-direction: column; gap: 5px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--prism-text-muted); }
+            .bg-pg-controls label.inline { flex-direction: row; align-items: center; gap: 7px; text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 500; color: var(--prism-text, inherit); align-self: end; }
+            .bg-pg-controls select, .bg-pg-controls input[type=number] { font-size: 13px; padding: 6px 8px; border: 1px solid var(--prism-border); border-radius: 6px; background: var(--prism-surface-2, #f3f4f6); color: inherit; font-family: inherit; }
+            .bg-pg-preview { padding: 44px 24px; display: flex; justify-content: center; align-items: center; min-height: 120px; }
+            .bg-pg pre { margin: 0; border: 0; border-top: 1px solid var(--prism-border); border-radius: 0; }
+          </style>
+          <h2 id="playground" class="doc-section-title">Live playground</h2>
+          <p class="demo-section-lead">Change the props &mdash; the preview and the code update live.</p>
+          <div class="bg-pg">
+            <div class="bg-pg-controls">
+              <label>Selection mode<select id="pg-mode"><option value="single">single</option><option value="multi">multi</option><option value="none">none</option></select></label>
+              <label>Variant<select id="pg-variant"><option value="separated">separated</option><option value="attached">attached</option></select></label>
+              <label>Layout<select id="pg-layout"><option value="row">row</option><option value="grid">grid</option><option value="column">column</option></select></label>
+              <label>Size<select id="pg-size"><option value="small">small</option><option value="medium" selected>medium</option><option value="large">large</option></select></label>
+              <label id="pg-cols-wrap">Columns<input id="pg-cols" type="number" min="2" max="12" value="4"></label>
+              <label class="inline"><input id="pg-equal" type="checkbox"> equal</label>
+              <label class="inline"><input id="pg-full" type="checkbox"> full-width</label>
+            </div>
+            <div class="bg-pg-preview"><ds-button-group id="pg-group" label="Playground"></ds-button-group></div>
+            <pre class="bg-code" id="pg-code"></pre>
+          </div>
+          <script>
+          (function () {
+            const $ = (id) => document.getElementById(id);
+            const ITEMS = [{value:'one',label:'One'},{value:'two',label:'Two'},{value:'three',label:'Three'},{value:'four',label:'Four'},{value:'five',label:'Five'},{value:'six',label:'Six'}];
+            function apply() {
+              const g = $('pg-group'); if (!g) return;
+              const mode = $('pg-mode').value, variant = $('pg-variant').value, layout = $('pg-layout').value,
+                    size = $('pg-size').value, cols = $('pg-cols').value, equal = $('pg-equal').checked, full = $('pg-full').checked;
+              g.setAttribute('selection-mode', mode);
+              variant === 'attached' ? g.setAttribute('variant', 'attached') : g.removeAttribute('variant');
+              g.setAttribute('layout', layout);
+              if (layout === 'grid') g.setAttribute('columns', cols); else g.removeAttribute('columns');
+              g.setAttribute('size', size);
+              equal ? g.setAttribute('equal', '') : g.removeAttribute('equal');
+              full ? g.setAttribute('full-width', '') : g.removeAttribute('full-width');
+              $('pg-cols-wrap').style.display = (layout === 'grid') ? '' : 'none';
+              g.items = ITEMS;
+              if (mode !== 'none' && !g.value) g.value = (mode === 'multi') ? 'one,three' : 'one';
+              const attrs = ['selection-mode="' + mode + '"'];
+              if (variant === 'attached') attrs.push('variant="attached"');
+              if (layout !== 'row') attrs.push('layout="' + layout + '"');
+              if (layout === 'grid') attrs.push('columns="' + cols + '"');
+              if (size !== 'medium') attrs.push('size="' + size + '"');
+              if (equal) attrs.push('equal');
+              if (full) attrs.push('full-width');
+              $('pg-code').textContent = '<ds-button-group ' + attrs.join(' ') + ' label="…"></ds-button-group>\n\nel.items = [{ value, label }, …];';
+            }
+            function init() {
+              ['pg-mode','pg-variant','pg-layout','pg-size','pg-cols','pg-equal','pg-full'].forEach((id) => {
+                const e = $(id); if (!e) return; e.addEventListener('change', apply); e.addEventListener('input', apply);
+              });
+              apply();
+            }
+            if (window.customElements && customElements.whenDefined) customElements.whenDefined('ds-button-group').then(init);
+            else window.addEventListener('load', init);
+          })();
+          </script>
+
+          <hr class="doc-divider" />
+
+          <h2 id="api-attributes" class="doc-section-title">Attributes</h2>
+          <div class="bg-doc-table-wrap">
+            <table class="bg-doc-table">
+              <thead><tr><th>Attribute</th><th>Values</th><th>Default</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>selection-mode</code></td><td><code>single</code> &middot; <code>multi</code> &middot; <code>none</code></td><td><code>single</code></td><td>radiogroup / toggle group / action group</td></tr>
+                <tr><td><code>layout</code></td><td><code>row</code> &middot; <code>grid</code> &middot; <code>column</code></td><td><code>row</code></td><td><code>grid</code> pairs with <code>columns</code></td></tr>
+                <tr><td><code>columns</code></td><td>integer</td><td>&mdash;</td><td>Grid track count (6 = months, 7 = weekdays)</td></tr>
+                <tr><td><code>variant</code></td><td><code>separated</code> &middot; <code>attached</code></td><td><code>separated</code></td><td>Gapped chips vs. connected segmented control</td></tr>
+                <tr><td><code>size</code></td><td><code>small</code> &middot; <code>medium</code> &middot; <code>large</code></td><td><code>medium</code></td><td></td></tr>
+                <tr><td><code>value</code></td><td>string / comma list</td><td>&mdash;</td><td>Reflected selection</td></tr>
+                <tr><td><code>equal</code></td><td>boolean</td><td>off</td><td>Items share equal width (row)</td></tr>
+                <tr><td><code>full-width</code></td><td>boolean</td><td>off</td><td>Group stretches to its container; implies <code>equal</code></td></tr>
+                <tr><td><code>disabled</code></td><td>boolean</td><td>off</td><td>Disables the whole group</td></tr>
+                <tr><td><code>label</code></td><td>string</td><td>&mdash;</td><td>Accessible name for the group</td></tr>
+                <tr><td><code>rtl</code></td><td>boolean</td><td>off</td><td>Mirrors layout + arrow-key direction</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 id="api-props" class="doc-section-title">Properties &amp; events</h2>
+          <div class="bg-doc-table-wrap">
+            <table class="bg-doc-table">
+              <thead><tr><th>Member</th><th>Type / detail</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>items</code></td><td><code>{ value, label?, icon?, disabled?, selected?, ariaLabel? }[]</code></td><td>Buffered if set before upgrade.</td></tr>
+                <tr><td><code>value</code></td><td><code>string</code></td><td>Single selection (or comma list for multi).</td></tr>
+                <tr><td><code>values</code></td><td><code>string[]</code></td><td>Array view (getter + setter).</td></tr>
+                <tr><td><code>ds-button-group-change</code></td><td><code>{ value }</code> / <code>{ values }</code></td><td>Selection changed; order follows <code>items</code>.</td></tr>
+                <tr><td><code>ds-button-group-item-click</code></td><td><code>{ value }</code></td><td>Activated in <code>none</code> mode.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 id="examples" class="doc-section-title">Examples</h2>
+          <p class="demo-section-lead">Multi (property-driven) &mdash; the months case:</p>
+          <pre class="bg-code"><code>&lt;ds-button-group id="repeat" selection-mode="multi" layout="grid" columns="6" label="Repeat"&gt;&lt;/ds-button-group&gt;
+
+repeat.items  = MONTHS.map(m =&gt; ({ value: m, label: m }));
+repeat.values = ['Jan', 'Feb', 'Apr'];
+repeat.addEventListener('ds-button-group-change', e =&gt; save(e.detail.values));</code></pre>
+          <p class="demo-section-lead">Single (segmented) &mdash; a view switcher:</p>
+          <pre class="bg-code"><code>&lt;ds-button-group selection-mode="single" variant="attached" value="list" label="View"&gt;&lt;/ds-button-group&gt;
+
+view.items = [{ value:'list', label:'List' }, { value:'grid', label:'Grid' }];
+view.addEventListener('ds-button-group-change', e =&gt; setView(e.detail.value));</code></pre>
+          <p class="demo-section-lead">Action toolbar (<code>none</code>) &mdash; icon-only:</p>
+          <pre class="bg-code"><code>&lt;ds-button-group selection-mode="none" variant="attached" label="Format"&gt;&lt;/ds-button-group&gt;
+
+fmt.items = [{ value:'bold', icon:'bold', ariaLabel:'Bold' }, /* … */];
+fmt.addEventListener('ds-button-group-item-click', e =&gt; exec(e.detail.value));</code></pre>
+        </div>
+
+        <!-- ======================= ACCESSIBILITY ======================= -->
+        <div class="tab-content" id="tab-accessibility" style="display:none;padding-top:32px;">
+
+          <h2 id="aria" class="doc-section-title">Roles per mode</h2>
+          <p class="demo-section-lead">The correct WAI&ndash;ARIA pattern is chosen from <code>selection-mode</code> &mdash; owned by the component so consumers can&rsquo;t drift.</p>
+          <div class="bg-doc-table-wrap">
+            <table class="bg-doc-table">
+              <thead><tr><th>Mode</th><th>Container role</th><th>Item</th></tr></thead>
+              <tbody>
+                <tr><td><span class="bg-pill bg-pill--single">single</span></td><td><code>radiogroup</code> + <code>aria-label</code></td><td><code>role="radio"</code> &middot; <code>aria-checked</code></td></tr>
+                <tr><td><span class="bg-pill bg-pill--multi">multi</span></td><td><code>group</code> + <code>aria-label</code></td><td><code>&lt;button&gt;</code> &middot; <code>aria-pressed</code></td></tr>
+                <tr><td><span class="bg-pill bg-pill--none">none</span></td><td><code>group</code></td><td><code>&lt;button&gt;</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 id="keyboard" class="doc-section-title">Keyboard</h2>
+          <div class="bg-doc-table-wrap">
+            <table class="bg-doc-table">
+              <thead><tr><th>Key</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><code>Tab</code></td><td>Move into / out of the group (one stop &mdash; roving tabindex).</td></tr>
+                <tr><td><code>&larr;</code> <code>&rarr;</code></td><td>Move within the row (RTL flips). In <code>single</code> mode also selects.</td></tr>
+                <tr><td><code>&uarr;</code> <code>&darr;</code></td><td>Grid: move to the row above/below (by <code>columns</code>). Row/column: previous/next.</td></tr>
+                <tr><td><code>Home</code> / <code>End</code></td><td>First / last enabled item.</td></tr>
+                <tr><td><code>Space</code> / <code>Enter</code></td><td>Toggle (multi) / select (single) / activate (none) the focused item.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 id="focus" class="doc-section-title">Focus &amp; behaviour</h2>
+          <ul style="color:var(--prism-text-muted);font-size:14px;line-height:1.7;margin:0;padding-left:20px;">
+            <li><strong>Roving tabindex</strong> &mdash; exactly one item is tabbable; focus stays in sync with mouse / SR / programmatic focus.</li>
+            <li><strong>Disabled</strong> items are skipped by keyboard nav and excluded from <code>value</code> / <code>values</code>.</li>
+            <li><strong>State</strong> is carried by fill <em>and</em> text colour, never colour alone; a visible focus ring is always shown.</li>
+            <li><strong>Icon-only</strong> items must set <code>ariaLabel</code> for a screen-reader name.</li>
+            <li>Transitions are gated on <code>prefers-reduced-motion</code>.</li>
+          </ul>
+        </div>
+
+        <script>
+        (function () {
+          const el = (id) => document.getElementById(id);
+          const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+          const VIEW = [{value:'list',label:'List'},{value:'grid',label:'Grid'},{value:'board',label:'Board'}];
+          const ORD = ['First','Second','Third','Fourth','Last'].map(l => ({value:l.toLowerCase(),label:l}));
+          const set = (id, items, val, multi) => { const e = el(id); if (!e) return; e.items = items; if (multi) e.values = val; else e.value = val; };
+          function init() {
+            // Overview
+            el('a-anat').items = ORD; el('a-anat').value = 'second';
+            set('d-single', ORD, 'second');
+            set('d-months', MONTHS.map(m=>({value:m,label:m})), ['Jan','Feb','Apr','Aug','Oct','Dec'], true);
+            set('d-days', DAYS.map(d=>({value:d,label:d})), ['Sun','Wed','Sat'], true);
+            el('d-act').items = [{value:'bold',label:'B',ariaLabel:'Bold'},{value:'italic',label:'I',ariaLabel:'Italic'},{value:'underline',label:'U',ariaLabel:'Underline'}];
+            // Style
+            set('d-sep', VIEW, 'list'); set('d-att', VIEW, 'grid');
+            set('d-sm', VIEW, 'list'); set('d-md', VIEW, 'list'); set('d-lg', VIEW, 'list');
+            set('d-row', [{value:'compact',label:'Compact'},{value:'cozy',label:'Cozy'},{value:'comfortable',label:'Comfortable'}], 'cozy');
+            set('d-grid', ['Q1','Q2','Q3','Q4'].map(q=>({value:q,label:q})), ['Q1','Q3'], true);
+            set('d-col', [{value:'low',label:'Low'},{value:'med',label:'Medium'},{value:'high',label:'High'}], 'med');
+            set('d-equal', [{value:'7',label:'7 days'},{value:'30',label:'30 days'},{value:'90',label:'90 days'}], '30');
+            set('d-state', [{value:'a',label:'Enabled'},{value:'b',label:'Disabled',disabled:true},{value:'c',label:'Selected'}], 'c');
+            set('d-disabled', VIEW, 'grid');
+            // Usage gallery
+            set('c-view', VIEW, 'grid'); set('c-range', [{value:'d',label:'Day'},{value:'w',label:'Week'},{value:'m',label:'Month'}], 'w');
+            el('c-align').items = [{value:'left',label:'L',ariaLabel:'Align left'},{value:'center',label:'C',ariaLabel:'Align center'},{value:'right',label:'R',ariaLabel:'Align right'}];
+            set('c-yesno', [{value:'yes',label:'Yes'},{value:'no',label:'No'},{value:'na',label:'N/A'}], 'yes');
+            set('c-sev', [{value:'low',label:'Low'},{value:'med',label:'Medium'},{value:'high',label:'High'},{value:'crit',label:'Critical'}], ['high','crit'], true);
+            set('c-page', ['10','25','50','100'].map(n=>({value:n,label:n})), '25');
+            set('c-wd', DAYS.map(d=>({value:d,label:d})), ['Mon','Tue','Wed','Thu','Fri'], true);
+            set('c-ord', ORD, 'first');
+            // Live output
+            const say = (id, out) => { const e = el(id); e && e.addEventListener('ds-button-group-change', (ev) => { const o = el(out); if (o) o.textContent = JSON.stringify(ev.detail); }); };
+            say('d-single','o-single'); say('d-months','o-months');
+            const a = el('d-act'); a && a.addEventListener('ds-button-group-item-click', (ev) => { const o = el('o-act'); if (o) o.textContent = 'clicked: ' + ev.detail.value; });
+          }
+          if (window.customElements && customElements.whenDefined) customElements.whenDefined('ds-button-group').then(init);
+          else window.addEventListener('load', init);
+        })();
+        </script>
+
+        </div>
+        <aside class="toc-sidebar">
+          <h4 class="toc-heading">On this page</h4>
+          <ul class="toc-nav" id="toc-nav">
+          </ul>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  
+  <script>
+    // ── Scroll-spy observer reference ──
+    let _tocObserver = null;
+
+    // ── Dynamic TOC ──
+    function updateTOC(targetId) {
+      const tocList = document.querySelector('.toc-nav');
+      if (!tocList) return;
+      tocList.innerHTML = '';
+      const activePanel = document.getElementById(targetId);
+      if (!activePanel) return;
+      
+      const headings = activePanel.querySelectorAll('h2[id], h3[id]');
+      headings.forEach(h => {
+        if (h.style.display === 'none') return;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.className = 'toc-link';
+        let text = Array.from(h.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+        if (!text) text = h.innerText;
+        a.textContent = text;
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById(h.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+
+      // Re-init scroll-spy
+      initScrollSpy();
+    }
+
+    function initScrollSpy() {
+      // Disconnect previous observer
+      if (_tocObserver) _tocObserver.disconnect();
+
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const sectionIds = Array.from(tocLinks).map(link => link.getAttribute('href').slice(1));
+      const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+      if (sections.length === 0) return;
+
+      _tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            tocLinks.forEach(link => {
+              link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+            });
+          }
+        });
+      }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+
+      sections.forEach(section => _tocObserver.observe(section));
+    }
+
+    // ── Tab switching ──
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabMap = { 'Overview': 'tab-overview', 'Usage': 'tab-usage', 'Style': 'tab-style', 'Code': 'tab-code', 'Accessibility': 'tab-accessibility' };
+        document.querySelectorAll('.tab-content').forEach(panel => panel.style.display = 'none');
+        const target = tabMap[tab.textContent.trim()];
+        if (target) {
+          document.getElementById(target).style.display = 'block';
+          updateTOC(target);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    // Initialize TOC
+    updateTOC('tab-overview');
+// Sidebar search filter
+    (function(){
+      var searchInput = document.querySelector('.sidebar-search input');
+      if (!searchInput) return;
+      var items = document.querySelectorAll('.sidebar-nav li');
+      searchInput.addEventListener('input', function(){
+        var q = this.value.toLowerCase().trim();
+        items.forEach(function(li){
+          var link = li.querySelector('a');
+          if (!link) return;
+          var text = link.textContent.toLowerCase();
+          li.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+      });
+      // Cmd+K / Ctrl+K shortcut to focus search
+      document.addEventListener('keydown', function(e){
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      });
+    })();
+
+    // Scroll sidebar to active link on page load
+    (function(){
+      var active = document.querySelector('.sidebar-link.active');
+      if (active) {
+        var sidebar = active.closest('.sidebar');
+        if (sidebar) {
+          var top = active.offsetTop - sidebar.offsetTop - (sidebar.clientHeight / 3);
+          sidebar.scrollTop = Math.max(0, top);
+        }
+      }
+    })();
+
+  </script>
+
+<!-- Floating Feedback Button -->
+
+<a href="https://cliq.zoho.in/company/60002085329/channels/prismdesignsystembyuemssupportfeedback" target="_blank" rel="noopener" class="float-cliq-btn" aria-label="Share feedback on Cliq">
+  <span class="float-cliq-label">Share feedback</span>
+  <span class="float-cliq-icon">
+    <svg width="28" height="28" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.4">
+      <path d="M2.49072 6.40039C2.49072 5.03513 2.49072 4.35249 2.75642 3.83103C2.99014 3.37234 3.36306 2.99941 3.82175 2.7657C4.34322 2.5 5.02585 2.5 6.39111 2.5H13.6085C14.9737 2.5 15.6564 2.5 16.1778 2.7657C16.6365 2.99941 17.0094 3.37234 17.2432 3.83103C17.5089 4.35249 17.5089 5.03513 17.5089 6.40039V10.7883C17.5089 12.1536 17.5089 12.8362 17.2432 13.3577C17.0094 13.8164 16.6365 14.1893 16.1778 14.423C15.6564 14.6887 14.9737 14.6887 13.6085 14.6887H11.1721C10.665 14.6887 10.4115 14.6887 10.169 14.7385C9.95382 14.7827 9.74561 14.8557 9.55001 14.9556C9.32955 15.0682 9.13156 15.2266 8.73558 15.5434L6.79721 17.0941C6.4591 17.3646 6.29005 17.4998 6.14778 17.5C6.02405 17.5001 5.907 17.4439 5.82981 17.3472C5.74105 17.236 5.74105 17.0195 5.74105 16.5865V14.6887C4.98537 14.6887 4.60753 14.6887 4.29753 14.6057C3.45629 14.3802 2.7992 13.7232 2.57379 12.8819C2.49072 12.5719 2.49072 12.1941 2.49072 11.4384V6.40039Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.80145 6.31852C9.07036 5.47437 7.85123 5.2473 6.93523 6.02029C6.01923 6.79328 5.89027 8.08568 6.60961 8.99989C7.05526 9.56628 8.17382 10.6007 8.96046 11.3059C9.24941 11.5649 9.39388 11.6944 9.56727 11.7466C9.71601 11.7914 9.88689 11.7914 10.0356 11.7466C10.209 11.6944 10.3535 11.5649 10.6424 11.3059C11.4291 10.6007 12.9393 9.56628 13.385 8.99989C14.1043 8.08568 13.9911 6.78515 13.0593 6.02029C12.1276 5.25543 10.5325 5.47437 9.80145 6.31852Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</a>
+<script src="js/main.js"></script>
+<!-- toc.js omitted: the inline TOC script above already builds the on-this-page nav;
+     including toc.js re-declares `let _tocObserver` and throws (same latent clash as
+     the other component pages). -->
+
+
+
+</body>
+</html>

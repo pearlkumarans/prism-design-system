@@ -73,16 +73,32 @@ ds-dropdown-menu[open] {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--spacing-8);
+  /* No top padding: sticky section headings must pin flush to the scrollport's
+     top edge, otherwise options scroll through the padding gap above them. The
+     top breathing room is restored on the first child (it scrolls away cleanly
+     under the sticky heading). */
+  padding: 0 var(--spacing-8) var(--spacing-8);
   max-height: 320px;
   overflow-y: auto;
 }
+.ds-dropdown-menu__list > :first-child { margin-top: var(--spacing-8); }
 
 .ds-dropdown-menu__section-heading {
+  /* Sticky within the scrolling list: each group title pins to the top while its
+     own options are in view, then the next heading pushes it up. Opaque surface
+     bg + z-index so options scroll cleanly underneath. */
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--uems-bg-primary-alt);
   padding: var(--spacing-8) var(--spacing-12) var(--spacing-4);
-  font-size: var(--font-size-12);
-  font-weight: var(--font-weight-semibold);
-  color: var(--uems-text-tertiary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-placeholder);
+}
+/* Separate groups — every heading except the first gets a little top space. */
+.ds-dropdown-menu__section-heading ~ .ds-dropdown-menu__section-heading {
+  margin-top: var(--spacing-4);
 }
 /* Heading with a trailing action (e.g. "Clear all"): title left, link right. */
 .ds-dropdown-menu__section-heading--with-action {

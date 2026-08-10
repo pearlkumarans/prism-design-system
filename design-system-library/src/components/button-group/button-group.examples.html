@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ds-button-group — examples</title>
+  <link rel="stylesheet" href="../../styles/index.css" />
+  <script type="module">import '../index.js';</script>
+  <script>
+    window.UEMS_ICON_SPRITE = '../../icons/icons.svg';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    body { font-family: var(--font-family-sans); background: var(--uems-bg-primary); color: var(--uems-text-primary); margin: 0; padding: 32px 40px 80px; }
+    h1 { font-size: 22px; } h2 { font-size: 15px; margin: 32px 0 10px; color: var(--uems-text-secondary); }
+    .row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; max-width: 520px; }
+    .lbl { font-size: 12px; font-weight: 600; }
+    .out { font-family: monospace; font-size: 12px; color: var(--uems-text-tertiary); min-height: 16px; }
+  </style>
+</head>
+<body>
+  <h1><code>ds-button-group</code></h1>
+
+  <h2>single · attached · row (segmented / ordinal)</h2>
+  <div class="row"><ds-button-group id="g-single" selection-mode="single" variant="attached" label="Preferred week"></ds-button-group><div class="out" id="o-single"></div></div>
+
+  <h2>multi · grid · columns=6 (months)</h2>
+  <div class="row"><ds-button-group id="g-months" selection-mode="multi" layout="grid" columns="6" label="Repeat"></ds-button-group><div class="out" id="o-months"></div></div>
+
+  <h2>multi · grid · columns=7 (weekdays)</h2>
+  <div class="row"><ds-button-group id="g-days" selection-mode="multi" layout="grid" columns="7" label="On these days"></ds-button-group><div class="out" id="o-days"></div></div>
+
+  <h2>single · row · equal (view switch)</h2>
+  <div class="row"><ds-button-group id="g-view" selection-mode="single" equal label="View"></ds-button-group><div class="out" id="o-view"></div></div>
+
+  <h2>none · attached (action toolbar, icon-only)</h2>
+  <div class="row"><ds-button-group id="g-act" selection-mode="none" variant="attached" size="small" label="Text format"></ds-button-group><div class="out" id="o-act"></div></div>
+
+  <h2>sizes + disabled item</h2>
+  <div class="row"><ds-button-group id="g-size" selection-mode="single" size="large" label="Size demo"></ds-button-group></div>
+
+  <script type="module">
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const el = (id) => document.getElementById(id);
+
+    el('g-single').items = ['First','Second','Third','Fourth','Last'].map((l) => ({ value: l.toLowerCase(), label: l }));
+    el('g-single').value = 'second';
+
+    el('g-months').items = MONTHS.map((m) => ({ value: m, label: m }));
+    el('g-months').values = ['Jan','Feb','Apr','Aug','Oct','Dec'];
+
+    el('g-days').items = DAYS.map((d) => ({ value: d, label: d }));
+    el('g-days').values = ['Sun','Wed','Sat'];
+
+    el('g-view').items = [{ value: 'list', label: 'List' }, { value: 'grid', label: 'Grid' }, { value: 'board', label: 'Board' }];
+    el('g-view').value = 'list';
+
+    el('g-act').items = [{ value: 'bold', label: 'B', ariaLabel: 'Bold' }, { value: 'italic', label: 'I', ariaLabel: 'Italic' }, { value: 'underline', label: 'U', ariaLabel: 'Underline' }];
+
+    el('g-size').items = [{ value: 'a', label: 'Option A' }, { value: 'b', label: 'Option B', disabled: true }, { value: 'c', label: 'Option C' }];
+    el('g-size').value = 'a';
+
+    const wire = (id, out) => el(id).addEventListener('ds-button-group-change', (e) => { el(out).textContent = JSON.stringify(e.detail); });
+    wire('g-single', 'o-single'); wire('g-months', 'o-months'); wire('g-days', 'o-days'); wire('g-view', 'o-view');
+    el('g-act').addEventListener('ds-button-group-item-click', (e) => { el('o-act').textContent = 'clicked: ' + e.detail.value; });
+  </script>
+</body>
+</html>

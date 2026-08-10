@@ -1,0 +1,265 @@
+/* =============================================================================
+   ds-time-picker / .ds-time-picker  — light-DOM component (:host never applies;
+   style the element + BEM children). Token-driven; re-themes across all modes.
+
+   variant="list"   → ds-text-input trigger + portaled popover listbox
+   variant="inline" → segmented HH:MM (AM/PM) field with a stepper column
+   ============================================================================= */
+
+.ds-time-picker {
+  display: block;
+  font-family: var(--font-family-sans);
+  position: relative;
+}
+/* Inline-size containment is only needed so a LEFT label can stack when the
+   field's own container is narrow. Scoping it to --left keeps the default
+   (top/none/inline) fields sizing to content — so they never collapse to 0 in a
+   shrink-to-fit flex/inline-flex parent. */
+.ds-time-picker--left { container-type: inline-size; }
+.ds-time-picker__frame,
+.ds-time-picker__field-col { min-width: 0; }
+.ds-time-picker__field-col { display: flex; flex-direction: column; gap: var(--spacing-4); }
+
+/* ---- Label / frame layout (mirrors ds-date-picker) ------------------- */
+.ds-time-picker__frame { display: flex; flex-direction: column; }
+.ds-time-picker--none .ds-time-picker__label-col { display: none; }
+.ds-time-picker--top .ds-time-picker__frame,
+.ds-time-picker--top .ds-time-picker__field-col ~ *,
+.ds-time-picker--top > .ds-time-picker__label-col { }
+.ds-time-picker--top .ds-time-picker__label { margin-bottom: 0; }
+
+/* The inline variant has no __frame wrapper — label-col + field-col are direct
+   children of the host. Give the host the same flex behaviour. */
+.ds-time-picker--inline { display: flex; flex-direction: column; gap: var(--spacing-8); }
+.ds-time-picker.ds-time-picker--left:not(.ds-time-picker--inline) .ds-time-picker__frame,
+.ds-time-picker--left.ds-time-picker--inline {
+  flex-direction: row; align-items: flex-start; gap: var(--spacing-8);
+}
+.ds-time-picker--left .ds-time-picker__label-col { width: 220px; flex-shrink: 0; padding-top: 8px; }
+.ds-time-picker--left .ds-time-picker__field-col { flex: 1; }
+@container (max-width: 460px) {
+  .ds-time-picker--left:not(.ds-time-picker--inline) .ds-time-picker__frame,
+  .ds-time-picker--left.ds-time-picker--inline {
+    flex-direction: column; align-items: stretch; gap: var(--spacing-8);
+  }
+  .ds-time-picker--left .ds-time-picker__label-col { width: auto; flex-shrink: 1; padding-top: 0; }
+}
+
+.ds-time-picker__label {
+  display: block;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+  color: var(--uems-text-tertiary);
+  margin-bottom: var(--spacing-6);
+}
+.ds-time-picker__required { color: var(--uems-text-error); margin-inline-start: 2px; }
+
+/* ---- List trigger (delegated to ds-text-input) ----------------------- */
+.ds-time-picker__input { width: 180px; display: inline-block; }
+.ds-time-picker--size-small .ds-time-picker__input { width: 160px; }
+.ds-time-picker--size-large .ds-time-picker__input { width: 200px; }
+/* Range shows "start – end" in one field, so it needs more room. */
+.ds-time-picker--range .ds-time-picker__input { width: 260px; }
+.ds-time-picker--range.ds-time-picker--size-small .ds-time-picker__input { width: 236px; }
+.ds-time-picker--range.ds-time-picker--size-large .ds-time-picker__input { width: 288px; }
+
+/* ---- Popover + listbox ----------------------------------------------- */
+.ds-time-picker__popover {
+  background: var(--uems-bg-primary);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--uems-radius-default, 8px);
+  box-shadow: var(--uems-shadow-lg, 0 8px 24px rgba(16, 24, 40, 0.12));
+  padding: var(--spacing-4);
+  overflow: hidden;
+}
+.ds-time-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 264px;              /* ~7 rows before scroll */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.ds-time-picker__option {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-8) var(--spacing-12);
+  font-size: var(--font-size-14);
+  color: var(--uems-text-primary);
+  border-radius: var(--uems-radius-sm, 6px);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+.ds-time-picker__option.is-active { background: var(--uems-bg-primary-hover); }
+.ds-time-picker__option.is-selected {
+  color: var(--uems-text-accent, var(--uems-bg-button-primary));
+  font-weight: var(--font-weight-semibold);
+}
+.ds-time-picker__option.is-selected.is-active { background: var(--uems-bg-primary-hover); }
+.ds-time-picker__option[aria-disabled="true"] {
+  color: var(--uems-text-disabled);
+  cursor: not-allowed;
+  background: transparent;
+}
+.ds-time-picker__option--now {
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-accent, var(--uems-bg-button-primary));
+  border-bottom: 1px solid var(--uems-border-tertiary);
+  border-radius: 0;
+  margin-bottom: var(--spacing-4);
+}
+.ds-time-picker__empty {
+  padding: var(--spacing-12);
+  font-size: var(--font-size-13);
+  color: var(--uems-text-placeholder);
+  text-align: center;
+}
+/* Custom presets — pinned rows; a divider separates them from the times. */
+.ds-time-picker__option--preset { font-weight: var(--font-weight-medium); }
+.ds-time-picker__option--preset + .ds-time-picker__option:not(.ds-time-picker__option--preset),
+.ds-time-picker__option--preset + .ds-time-picker__rhead {
+  border-top: 1px solid var(--uems-border-tertiary);
+  margin-top: var(--spacing-4);
+}
+
+/* ---- Range: two-step header + back link ------------------------------ */
+.ds-time-picker__rhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+  padding: var(--spacing-6) var(--spacing-12);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-placeholder);
+  position: sticky;
+  top: 0;
+  background: var(--uems-bg-primary);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+}
+.ds-time-picker__rback {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-accent, var(--uems-bg-button-primary));
+  cursor: pointer;
+}
+.ds-time-picker__rback:hover { text-decoration: underline; }
+
+/* ---- Inline segmented field ------------------------------------------ */
+.ds-time-picker__inline-field {
+  display: inline-flex;
+  align-items: stretch;
+  width: max-content;
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--uems-radius-default, 6px);
+  background: var(--uems-bg-primary);
+  overflow: hidden;
+  transition: border-color 140ms var(--ease-standard, ease), box-shadow 140ms var(--ease-standard, ease);
+}
+.ds-time-picker__inline-field:focus-within {
+  border-color: var(--uems-border-accent-focus);
+  box-shadow: 0 0 0 3px var(--uems-border-accent-focus-ring, rgba(37, 99, 235, 0.18));
+}
+.ds-time-picker__inline-field.is-error { border-color: var(--uems-border-error, var(--uems-text-error)); }
+.ds-time-picker__inline-field.is-success { border-color: var(--uems-border-success, var(--uems-text-success)); }
+
+.ds-time-picker__segments {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: 0 var(--spacing-8);   /* symmetric — no extra space before the hour */
+}
+/* Range: dash between the start and end segment groups. */
+.ds-time-picker__range-dash {
+  color: var(--uems-text-secondary);
+  padding: 0 var(--spacing-4);
+  user-select: none;
+}
+.ds-time-picker__seg {
+  /* content-box so the 2ch width is the TEXT box — with the app's global
+     border-box, side padding would shrink it below two characters and the
+     digits would overflow into the colon (the "text overlapping" bug). */
+  box-sizing: content-box;
+  width: 2ch;
+  min-width: 2ch;
+  flex: 0 0 auto;
+  border: 0;
+  padding: var(--spacing-8) 2px;
+  background: transparent;
+  color: var(--uems-text-primary);
+  font-family: var(--font-family-mono, ui-monospace, monospace);
+  font-size: var(--font-size-14);
+  line-height: 1;   /* predictable segment height so the field's min-height governs */
+  text-align: center;
+  outline: none;
+  -moz-appearance: textfield;
+  font-variant-numeric: tabular-nums;
+}
+.ds-time-picker__seg::placeholder { color: var(--uems-text-placeholder); }
+.ds-time-picker__seg:focus { background: var(--uems-bg-primary-hover); border-radius: 4px; }
+.ds-time-picker__colon { color: var(--uems-text-secondary); font-size: var(--font-size-14); }
+.ds-time-picker__ampm {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--uems-text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-medium);
+  padding: var(--spacing-4) var(--spacing-6);
+  margin-inline-start: var(--spacing-6);   /* separate the meridiem from the minutes */
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ds-time-picker__ampm:hover { background: var(--uems-bg-primary-hover); }
+.ds-time-picker__ampm:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 1px; }
+
+/* Stepper column — two <ds-icon-button> chevrons, centred, with a hairline
+   divider from the segments. The icon buttons carry their own hover/focus. */
+.ds-time-picker__steppers {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 var(--spacing-4);
+  border-inline-start: 1px solid var(--uems-border-tertiary);
+}
+.ds-time-picker__step { display: block; line-height: 0; }
+
+/* Inline clear affordance (`clearable`) — sits between the segments and the
+   stepper column; hidden until there is a value. */
+.ds-time-picker__clear { align-self: center; margin-inline: 2px var(--spacing-4); line-height: 0; }
+.ds-time-picker__clear[hidden] { display: none; }
+
+/* Inline size scale — the field HEIGHT is fixed per size to exactly match the
+   ds-text-input sizes (36 / 40 / 44). Content is vertically centered (the field
+   is a stretch row; the segments row centres its inputs), so the segments' own
+   vertical padding no longer drives height — avoiding the earlier collapse when
+   a padding token (--spacing-10, which doesn't exist) resolved to 0. */
+.ds-time-picker__inline-field { min-height: 40px; }
+.ds-time-picker--size-small .ds-time-picker__inline-field { min-height: 36px; }
+.ds-time-picker--size-large .ds-time-picker__inline-field { min-height: 44px; }
+.ds-time-picker--size-large .ds-time-picker__seg  { font-size: var(--font-size-16); }
+.ds-time-picker--size-large .ds-time-picker__ampm { font-size: var(--font-size-14); }
+
+/* ---- Disabled -------------------------------------------------------- */
+.ds-time-picker--disabled .ds-time-picker__inline-field {
+  background: var(--uems-bg-disabled);
+  border-color: var(--uems-border-tertiary);
+}
+.ds-time-picker--disabled .ds-time-picker__seg,
+.ds-time-picker--disabled .ds-time-picker__ampm { color: var(--uems-text-disabled); cursor: not-allowed; }
+
+.ds-time-picker__helper { margin-top: var(--spacing-6); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-time-picker__inline-field { transition: none; }
+}

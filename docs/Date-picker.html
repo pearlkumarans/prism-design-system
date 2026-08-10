@@ -65,6 +65,7 @@
         <li><a href="Badges.html" class="sidebar-link">Badges</a></li>
         <li><a href="Breadcrumbs.html" class="sidebar-link">Breadcrumbs</a></li>
         <li><a href="Button.html" class="sidebar-link">Button</a></li>
+        <li><a href="Button-Group.html" class="sidebar-link">Button Group</a></li>
         <li><a href="Calendar.html" class="sidebar-link">Calendar</a></li>
         <li><a href="Card.html" class="sidebar-link">Cards</a></li>
         <li><a href="Charts.html" class="sidebar-link">Charts</a></li>
@@ -91,6 +92,7 @@
         <li><a href="Token-field.html" class="sidebar-link">Token Field</a></li>
         <li><a href="OTP-input.html" class="sidebar-link">OTP input</a></li>
         <li><a href="Date-picker.html" class="sidebar-link active">Date picker</a></li>
+        <li><a href="Time-picker.html" class="sidebar-link">Time picker</a></li>
         <li><a href="Checkbox.html" class="sidebar-link">Checkbox</a></li>
         <li><a href="Dual-list.html" class="sidebar-link">Dual list</a></li>
         <li><a href="Radio-button.html" class="sidebar-link">Radio button</a></li>
@@ -153,7 +155,7 @@
           <p class="doc-section-subtitle" style="margin-bottom:28px;">The date picker input is composed of three numbered regions. Each label is anchored to the live preview with a connector line.</p>
           <div style="padding:40px 0;overflow:visible;">
             <div id="anatomy-dp-wrap" style="position:relative;display:inline-block;padding:32px 80px;">
-              <ds-date-picker id="anatomy-dp" label="" type="single" show-helper-row="false"></ds-date-picker>
+              <ds-date-picker id="anatomy-dp" label="Select date" label-position="none" type="single" style="width:240px;"></ds-date-picker>
               <div class="anat-mk anat-mk-left"  data-target="container" style="top:0;"><span class="anat-marker-inline">1</span><div class="anat-mk-line"></div></div>
               <div class="anat-mk-top" data-target="icon" style="left:0;"><span class="anat-marker-inline">2</span><div class="anat-mk-vline"></div></div>
               <div class="anat-mk anat-mk-right" data-target="input" style="top:0;"><div class="anat-mk-line"></div><span class="anat-marker-inline">3</span></div>
@@ -749,11 +751,16 @@
               <div class="cp-control-group"><label class="cp-label">Show Footer</label><select class="cp-select" id="pg-footer"><option value="no" selected>No</option><option value="yes">Yes</option></select></div>
               <div class="cp-control-group"><label class="cp-label">State</label><select class="cp-select" id="pg-state"><option value="default" selected>Default</option><option value="error">Error</option><option value="disabled">Disabled</option></select></div>
               <div class="cp-control-group"><label class="cp-label">Label position</label><select class="cp-select" id="pg-labelpos"><option value="none">none</option><option value="left" selected>left</option><option value="top">top</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Size</label><select class="cp-select" id="pg-size"><option value="small">small</option><option value="medium" selected>medium</option><option value="large">large</option></select></div>
               <div class="cp-control-group"><label class="cp-label">Full width</label><select class="cp-select" id="pg-fullwidth"><option value="false" selected>false</option><option value="true">true</option></select></div>
+              <div class="cp-control-group"><label class="cp-label">Enable time</label><select class="cp-select" id="pg-enabletime"><option value="false" selected>No</option><option value="true">Yes</option></select></div>
               <div class="cp-control-group"><label class="cp-label">RTL</label><select class="cp-select" id="pg-rtl"><option value="false" selected>No</option><option value="true">Yes</option></select></div>
             </div>
             <div class="cp-preview" id="pg-preview-area" style="padding:32px;justify-content:center;">
-              <ds-date-picker id="pg-dp-element" label="Select date" type="single"></ds-date-picker>
+              <!-- The host is a container-query container (container-type: inline-size); in a
+                   shrink-to-fit centered flex it would collapse to 0 width (icon-only) and trip
+                   the stacked-layout query. A defined width gives the query something to measure. -->
+              <ds-date-picker id="pg-dp-element" label="Select date" type="single" style="width: min(560px, 100%);"></ds-date-picker>
             </div>
             <div class="cp-code-header">
               <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
@@ -771,7 +778,9 @@
               const footerEl  = document.getElementById('pg-footer');
               const stateEl   = document.getElementById('pg-state');
               const labelPosEl = document.getElementById('pg-labelpos');
+              const sizeEl    = document.getElementById('pg-size');
               const fullWidthEl = document.getElementById('pg-fullwidth');
+              const enableTimeEl = document.getElementById('pg-enabletime');
               const rtlEl     = document.getElementById('pg-rtl');
               const dp        = document.getElementById('pg-dp-element');
               const codeOut   = document.getElementById('pg-code-output');
@@ -802,8 +811,12 @@
                 else dp.removeAttribute('disabled');
                 if (labelPosEl.value !== 'left') dp.setAttribute('label-position', labelPosEl.value);
                 else dp.removeAttribute('label-position');
+                if (sizeEl.value !== 'medium') dp.setAttribute('size', sizeEl.value);
+                else dp.removeAttribute('size');
                 if (fullWidthEl.value === 'true') dp.setAttribute('full-width', '');
                 else dp.removeAttribute('full-width');
+                if (enableTimeEl.value === 'true') dp.setAttribute('enable-time', '');
+                else dp.removeAttribute('enable-time');
                 if (isRtl) dp.setAttribute('rtl', '');
                 else dp.removeAttribute('rtl');
 
@@ -818,17 +831,19 @@
                 }
                 if (stateEl.value === 'disabled') attrs.push('disabled');
                 if (labelPosEl.value !== 'left') attrs.push(`label-position="${labelPosEl.value}"`);
+                if (sizeEl.value !== 'medium') attrs.push(`size="${sizeEl.value}"`);
                 if (fullWidthEl.value === 'true') attrs.push('full-width');
+                if (enableTimeEl.value === 'true') attrs.push('enable-time');
                 if (isRtl) attrs.push('rtl');
                 const raw = `<ds-date-picker\n  ${attrs.join('\n  ')}\n></ds-date-picker>`;
                 codeOut.innerHTML = esc(raw)
                   .replace(/&lt;(\/?)(ds-date-picker)/g, '&lt;$1<span style="color:#a78bfa;">$2</span>')
-                  .replace(/(type|label|label-position|full-width|show-presets|show-footer|validation-state|helper-text|disabled|rtl)(=|&gt;)/g, '<span style="color:#38bdf8;">$1</span>$2')
+                  .replace(/(type|label|label-position|size|full-width|enable-time|hour-cycle|time-step|time-label|show-presets|show-footer|validation-state|helper-text|disabled|rtl)(=|&gt;)/g, '<span style="color:#38bdf8;">$1</span>$2')
                   .replace(/&quot;(.*?)&quot;/g, '<span style="color:#34d399;">"$1"</span>');
                 codeOut.dataset.raw = raw;
               }
 
-              [typeEl, presetsEl, footerEl, stateEl, labelPosEl, fullWidthEl, rtlEl].forEach((el) => el.addEventListener('change', update));
+              [typeEl, presetsEl, footerEl, stateEl, labelPosEl, sizeEl, fullWidthEl, enableTimeEl, rtlEl].forEach((el) => el.addEventListener('change', update));
               copyBtn.addEventListener('click', () => {
                 const raw = codeOut.dataset.raw || '';
                 navigator.clipboard.writeText(raw).then(() => {
@@ -855,6 +870,7 @@
                 <tr><td><code>label</code></td><td><code>string</code></td><td><code>"Select Date"</code></td><td>Field label text.</td></tr>
                 <tr><td><code>required</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Appends a red <code>*</code> to the label.</td></tr>
                 <tr><td><code>label-position</code></td><td><code>'none' | 'left' | 'top'</code></td><td><code>'left'</code></td><td>Label inline in a 280px column (left), stacked above (top), or hidden with the text kept as <code>aria-label</code> (none). A left label auto-stacks below 640px.</td></tr>
+                <tr><td><code>size</code></td><td><code>'small' | 'medium' | 'large'</code></td><td><code>'medium'</code></td><td>Field size — mirrors <code>ds-text-input</code> (36 / 40 / 44px height; large bumps font to 16px). Trigger width scales too: single 210 / 240 / 268, range 288 / 320 / 352. <code>full-width</code> overrides the width at any size.</td></tr>
                 <tr><td><code>full-width</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Stretches the input(s) to fill the container, overriding the fixed trigger width (single 240 / range 320).</td></tr>
                 <tr><td><code>isDisabled</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Disables the inputs and prevents the popover from opening.</td></tr>
                 <tr><td><code>validationState</code></td><td><code>'none' | 'success' | 'error'</code></td><td><code>'none'</code></td><td>Drives border colour and helper-row icon/text.</td></tr>
