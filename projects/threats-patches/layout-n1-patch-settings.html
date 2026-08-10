@@ -56,24 +56,30 @@
   }
 
   /* ---- Create-schedule modal (scoped to the modal id, since ds-modal portals to <body>) ---- */
-  #n1-sched-modal .n1-fld { display: grid; grid-template-columns: 160px minmax(0, 1fr); column-gap: var(--spacing-20, 20px); align-items: start; }
-  #n1-sched-modal .n1-fld + .n1-fld { margin-top: var(--spacing-16, 16px); }
+  /* Consistent field rhythm. Empty helper rows collapse (handled globally by
+     ds-field-helper), so no field reserves blank space; a uniform 20px gap sits
+     AFTER each field's real content — a field WITH a note ("Start at") gets the
+     same spacing to the next field as one without. */
+  #n1-sched-modal .n1-fld + .n1-fld { margin-top: 20px; }
   #n1-sched-modal .n1-fld[hidden] { display: none; }
-  #n1-sched-modal .n1-fld__label { font-size: var(--font-size-13); font-weight: var(--font-weight-semibold, 600); color: var(--uems-text-primary); padding-top: 7px; }
-  #n1-sched-modal .n1-fld__label .req { color: var(--uems-text-error); }
-  #n1-sched-modal .n1-fld__hint { margin-top: var(--spacing-4, 4px); font-size: var(--font-size-13); color: var(--uems-text-tertiary); }
-  #n1-sched-modal .n1-fld__control { min-width: 0; }
   /* Inline radio rows (Frequency, Perform this on). */
   #n1-sched-modal ds-radio-group .ds-radio-group__items { display: flex; flex-direction: row; flex-wrap: wrap; gap: var(--spacing-20, 20px); align-items: center; }
-  /* Start-at: time input + trailing format hint. */
-  #n1-sched-modal .n1-startat { display: flex; align-items: center; gap: var(--spacing-12, 12px); }
-  #n1-sched-modal .n1-startat ds-text-input { width: 200px; }
-  #n1-sched-modal .n1-startat__suffix { font-size: var(--font-size-13); color: var(--uems-text-tertiary); white-space: nowrap; }
-  /* Monthly week/day selects under the radio. */
-  #n1-sched-modal .n1-week-selects { display: flex; gap: var(--spacing-12, 12px); margin-top: var(--spacing-8, 8px); max-width: 460px; }
+  /* Monthly week/day selects — indent under the radio field column (280px left
+     label + 12px gap) so they line up with the "Perform this on" radios. */
+  #n1-sched-modal .n1-week-selects { display: flex; gap: var(--spacing-12, 12px); margin-top: var(--spacing-8, 8px); margin-inline-start: calc(280px + var(--spacing-12, 12px)); max-width: 400px; }
   #n1-sched-modal .n1-week-selects[hidden] { display: none; }
   #n1-sched-modal .n1-week-selects ds-input-select { flex: 1; }
-  #n1-sched-modal .n1-selectall { margin-top: var(--spacing-8, 8px); }
+
+  /* Mirror URL inputs — shown only for selected mirror-method products. Indented
+     to line up under the token field's input box (280px label + 8px gap). The
+     wrapper is a query container so the indent drops in lockstep with the token
+     field's own label-stacking (≤520px). */
+  #n1-sched-modal #n1-fld-thirdparty { container-type: inline-size; }
+  #n1-sched-modal .n1-tp-mirrors { display: flex; flex-direction: column; gap: var(--spacing-12, 12px); margin-top: var(--spacing-12, 12px); margin-inline-start: calc(280px + var(--spacing-8, 8px)); }
+  #n1-sched-modal .n1-tp-mirrors[hidden] { display: none; }
+  @container (max-width: 520px) {
+    #n1-sched-modal .n1-tp-mirrors { margin-inline-start: 0; }
+  }
 
   /* Action bar above the table — carries the contextual note only; the primary
      actions (Create schedule / Map snapshot) live in the page-header split button. */
@@ -142,70 +148,51 @@
       <ds-modal id="n1-sched-modal" size="lg" title="Create snapshot schedule"
         description="Capture a repository snapshot on a schedule so groups can be pinned to a stable N-1 state.">
         <div slot="body">
+          <!-- Each field uses its component's OWN built-in label (top) + required,
+               not a hand-rolled caption. -->
           <div class="n1-fld">
-            <span class="n1-fld__label"><span id="n1-lbl-name"></span> <span class="req">*</span></span>
-            <div class="n1-fld__control">
-              <ds-text-input id="n1-sched-name" label-position="none" placeholder=""></ds-text-input>
-            </div>
-          </div>
-          <div class="n1-fld">
-            <span class="n1-fld__label"><span id="n1-lbl-version"></span> <span class="req">*</span></span>
-            <div class="n1-fld__control">
-              <ds-input-select id="n1-sched-version" label-position="none" placeholder=""></ds-input-select>
-            </div>
+            <ds-text-input id="n1-sched-name" required placeholder=""></ds-text-input>
           </div>
           <div class="n1-fld">
-            <span class="n1-fld__label"><span id="n1-lbl-freq"></span> <span class="req">*</span></span>
-            <div class="n1-fld__control">
-              <ds-radio-group id="n1-sched-freq" name="n1-freq" label-position="none"></ds-radio-group>
-            </div>
+            <ds-input-select id="n1-sched-version" required placeholder=""></ds-input-select>
           </div>
-          <!-- Start date (Once only) -->
-          <div class="n1-fld" id="n1-fld-date" hidden>
-            <span class="n1-fld__label"><span id="n1-lbl-date"></span> <span class="req">*</span></span>
-            <div class="n1-fld__control">
-              <ds-text-input id="n1-sched-date" label-position="none" placeholder="YYYY-MM-DD"></ds-text-input>
-            </div>
+          <!-- Third-party products to freeze (optional) — searchable multi-select;
+               chosen products render as removable tags (catalog-only). -->
+          <div class="n1-fld" id="n1-fld-thirdparty">
+            <ds-token-field id="n1-sched-tp" label-position="left" required="false"
+              creatable="false" show-clear></ds-token-field>
+            <!-- Mirror URLs — one input per selected mirror-method product; built in JS. -->
+            <div class="n1-tp-mirrors" id="n1-tp-mirrors" hidden></div>
           </div>
-          <!-- Start at (time) — all frequencies except Execute Now -->
+          <div class="n1-fld">
+            <ds-radio-group id="n1-sched-freq" name="n1-freq"></ds-radio-group>
+          </div>
+          <!-- Start at (Once) — combined date + time via the date-picker datetime variant -->
+          <div class="n1-fld" id="n1-fld-datetime" hidden>
+            <ds-date-picker id="n1-sched-datetime" enable-time hour-cycle="24" time-step="5" required></ds-date-picker>
+          </div>
+          <!-- Start at (time only) — recurring (Monthly): time picker (24-hour) -->
           <div class="n1-fld" id="n1-fld-startat">
-            <span class="n1-fld__label"><span id="n1-lbl-startat"></span> <span class="req">*</span></span>
-            <div class="n1-fld__control">
-              <div class="n1-startat">
-                <ds-text-input id="n1-sched-time" label-position="none" placeholder="HH:mm"></ds-text-input>
-                <span class="n1-startat__suffix" id="n1-startat-suffix"></span>
-              </div>
-              <div class="n1-fld__hint" id="n1-startat-hint"></div>
-            </div>
+            <ds-time-picker id="n1-sched-time" required hour-cycle="24" step="5"></ds-time-picker>
           </div>
-          <!-- On these days (Weekly only) -->
+          <!-- On these days (Weekly only) — grid label + select-all via show-select-all -->
           <div class="n1-fld" id="n1-fld-weekdays" hidden>
-            <span class="n1-fld__label"><span id="n1-lbl-weekdays"></span> <span class="req">*</span></span>
-            <div class="n1-fld__control">
-              <ds-button-group id="n1-weekday-grid" selection-mode="multi" variant="attached" layout="grid" columns="7" size="small"></ds-button-group>
-            </div>
+            <ds-button-group id="n1-weekday-grid" selection-mode="multi" variant="attached" layout="grid" columns="7" label-position="left" show-select-all></ds-button-group>
           </div>
           <!-- Perform this on (Monthly only) -->
           <div class="n1-fld" id="n1-fld-performon" hidden>
-            <span class="n1-fld__label"><span id="n1-lbl-performon"></span></span>
-            <div class="n1-fld__control">
-              <ds-radio-group id="n1-sched-performon" name="n1-performon" label-position="none"></ds-radio-group>
-              <div class="n1-week-selects" id="n1-week-selects">
-                <ds-input-select id="n1-sched-ordinal" label-position="none"></ds-input-select>
-                <ds-input-select id="n1-sched-weekday" label-position="none"></ds-input-select>
-              </div>
-              <div class="n1-week-selects" id="n1-day-select" hidden>
-                <ds-input-select id="n1-sched-dom" label-position="none"></ds-input-select>
-              </div>
+            <ds-radio-group id="n1-sched-performon" name="n1-performon"></ds-radio-group>
+            <div class="n1-week-selects" id="n1-week-selects">
+              <ds-input-select id="n1-sched-ordinal" label-position="none"></ds-input-select>
+              <ds-input-select id="n1-sched-weekday" label-position="none"></ds-input-select>
+            </div>
+            <div class="n1-week-selects" id="n1-day-select" hidden>
+              <ds-input-select id="n1-sched-dom" label-position="none"></ds-input-select>
             </div>
           </div>
-          <!-- Repeat (months, Monthly only) -->
+          <!-- Repeat (months, Monthly only) — grid label + built-in select-all -->
           <div class="n1-fld" id="n1-fld-repeat" hidden>
-            <span class="n1-fld__label"><span id="n1-lbl-repeat"></span> <span class="req">*</span></span>
-            <div class="n1-fld__control">
-              <ds-button-group id="n1-month-grid" selection-mode="multi" variant="attached" layout="grid" columns="6" size="small"></ds-button-group>
-              <div class="n1-selectall"><ds-text-link id="n1-months-selectall" href="#" size="small"></ds-text-link></div>
-            </div>
+            <ds-button-group id="n1-month-grid" selection-mode="multi" variant="attached" layout="grid" columns="6" label-position="left" show-select-all></ds-button-group>
           </div>
           <ds-inline-alert id="n1-sched-hint" type="info" show-icon style="margin-top:var(--spacing-16,16px)"></ds-inline-alert>
         </div>
@@ -286,9 +273,15 @@
       'm.sched.version': 'Repository version', 'm.sched.versionPh': 'Select version', 'm.sched.freq': 'Frequency',
       'm.sched.hint': 'EUS, E4S and ELS streams require a valid Red Hat entitlement certificate. Metadata downloads on first use; agents validate the pinned minor per machine.',
       'm.sched.create': 'Create',
-      'm.sched.startat': 'Start at', 'm.sched.startatHint': 'Date and time is based on server timezone', 'm.sched.timeFmt': '[24-hour format]',
+      'm.sched.startat': 'Start at', 'm.sched.startatHint': 'Date and time is based on server timezone', 'm.sched.timeFmt': '[24-hour format]', 'm.sched.timeLabel': 'Time',
       'm.sched.date': 'Start date', 'm.sched.weekdays': 'On these days', 'm.sched.performon': 'Perform this on',
       'm.sched.repeat': 'Repeat', 'm.sched.selectAll': 'Select all', 'm.sched.deselectAll': 'Deselect all',
+      /* third-party products to freeze */
+      'm.sched.tp': 'Third-party products to freeze', 'm.sched.tpOptional': '(optional)',
+      'm.sched.tpPlaceholder': 'Search and add products…',
+      'm.sched.tpHint': 'Chosen products are frozen together with the vendor stream at each run — all fleet versions captured automatically. Leave empty to keep third-party repos at latest.',
+      'm.sched.tpMirrorLabel': '{p} mirror URL',
+      'm.sched.tpUrlPh': 'https://mirror.corp/path/to/repo/  (serves repodata/repomd.xml)',
       'freq.now': 'Execute Now', 'freq.once': 'Once', 'freq.daily': 'Daily', 'freq.weekly': 'Weekly', 'freq.monthly': 'Monthly',
       'po.week': 'Preferred week(s) of the month', 'po.day': 'Preferred day of the month',
       'ord.first': 'First', 'ord.second': 'Second', 'ord.third': 'Third', 'ord.fourth': 'Fourth', 'ord.last': 'Last',
@@ -346,9 +339,15 @@
       'm.sched.version': 'إصدار المستودع', 'm.sched.versionPh': 'اختر الإصدار', 'm.sched.freq': 'التكرار',
       'm.sched.hint': 'تتطلّب تدفّقات EUS و E4S و ELS شهادة استحقاق Red Hat صالحة. تُنزَّل البيانات الوصفية عند أول استخدام، ويتحقق الوكلاء من الإصدار الفرعي المثبّت لكل جهاز.',
       'm.sched.create': 'إنشاء',
-      'm.sched.startat': 'يبدأ في', 'm.sched.startatHint': 'التاريخ والوقت مبنيّان على المنطقة الزمنية للخادم', 'm.sched.timeFmt': '[تنسيق 24 ساعة]',
+      'm.sched.startat': 'يبدأ في', 'm.sched.startatHint': 'التاريخ والوقت مبنيّان على المنطقة الزمنية للخادم', 'm.sched.timeFmt': '[تنسيق 24 ساعة]', 'm.sched.timeLabel': 'الوقت',
       'm.sched.date': 'تاريخ البدء', 'm.sched.weekdays': 'في هذه الأيام', 'm.sched.performon': 'نفّذ هذا في',
       'm.sched.repeat': 'التكرار', 'm.sched.selectAll': 'تحديد الكل', 'm.sched.deselectAll': 'إلغاء تحديد الكل',
+      /* third-party products to freeze */
+      'm.sched.tp': 'منتجات الطرف الثالث المراد تجميدها', 'm.sched.tpOptional': '(اختياري)',
+      'm.sched.tpPlaceholder': 'ابحث وأضف المنتجات…',
+      'm.sched.tpHint': 'تُجمَّد المنتجات المختارة مع تدفّق المورّد في كل تشغيل — وتُلتقط جميع إصدارات الأسطول تلقائيًا. اتركه فارغًا لإبقاء مستودعات الطرف الثالث على الأحدث.',
+      'm.sched.tpMirrorLabel': 'عنوان مرآة {p}',
+      'm.sched.tpUrlPh': 'https://mirror.corp/path/to/repo/  (يخدم repodata/repomd.xml)',
       'freq.now': 'التنفيذ الآن', 'freq.once': 'مرة واحدة', 'freq.daily': 'يومي', 'freq.weekly': 'أسبوعي', 'freq.monthly': 'شهري',
       'po.week': 'الأسبوع (الأسابيع) المفضّل من الشهر', 'po.day': 'اليوم المفضّل من الشهر',
       'ord.first': 'الأول', 'ord.second': 'الثاني', 'ord.third': 'الثالث', 'ord.fourth': 'الرابع', 'ord.last': 'الأخير',
@@ -510,12 +509,44 @@
       { label: '7 (ELS)', value: 'els-7' },
     ];
   }
+  /* ---- Third-party products to freeze (optional) --------------------------- */
+  /* Catalog (subset of the crawler-fed product feed). Chosen products are frozen
+     together with the vendor stream at each run; they render as removable tags in
+     the token field. Product names are brand names — not translated. */
+  const TP_PRODUCTS = ['Zabbix', 'EPEL (Fedora)', 'Docker CE', 'Google Cloud SDK', 'ELRepo', 'Azul Zulu OpenJDK', 'CrowdStrike Falcon'];
+  /* Mirror-method products have no public repo — they need a mirror URL, so a URL
+     input surfaces below the token field only when one of these is selected. */
+  const TP_MIRROR = new Set(['CrowdStrike Falcon']);
+  const tpSuggestions = () => TP_PRODUCTS.map((p) => ({ label: p, value: p }));
+
+  /* Reconcile the mirror-URL inputs to the selected mirror-method products —
+     add an input per selected mirror product, drop deselected ones, and preserve
+     any URL already typed. Runs on token change + language change. */
+  function tpRenderMirrors(sm) {
+    const cont = sm.querySelector('#n1-tp-mirrors'); if (!cont) return;
+    const mirrors = (schedState.tpProducts || []).filter((v) => TP_MIRROR.has(v));
+    const prev = {};
+    cont.querySelectorAll('.n1-tp-mirror').forEach((row) => { prev[row.dataset.product] = row.querySelector('ds-text-input')?.value || ''; });
+    cont.innerHTML = '';
+    mirrors.forEach((p) => {
+      const row = document.createElement('div'); row.className = 'n1-tp-mirror'; row.dataset.product = p;
+      const inp = document.createElement('ds-text-input');
+      inp.setAttribute('label', t('m.sched.tpMirrorLabel').replace('{p}', p));
+      inp.setAttribute('label-position', 'top');
+      inp.setAttribute('placeholder', t('m.sched.tpUrlPh'));
+      if (prev[p]) inp.setAttribute('value', prev[p]);
+      row.appendChild(inp);
+      cont.appendChild(row);
+    });
+    cont.hidden = mirrors.length === 0;
+  }
+
   /* ---- Scheduler (Create-schedule modal) data + builders ------------------- */
   const FREQS = ['now', 'once', 'monthly'];
   const ORDINALS = ['first', 'second', 'third', 'fourth', 'last'];
   const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const schedState = { freq: 'monthly', performOn: 'week', months: new Set(MONTHS), weekdays: new Set(['sun']) };
+  const schedState = { freq: 'now', performOn: 'week', months: new Set(MONTHS), weekdays: new Set(['sun']), tpProducts: [] };
   const freqOptions = () => FREQS.map((f) => ({ value: f, label: t('freq.' + f), selected: f === schedState.freq }));
   const performOnOptions = () => [
     { value: 'week', label: t('po.week'), selected: schedState.performOn === 'week' },
@@ -534,8 +565,8 @@
   function applyFreqVisibility(sm) {
     const f = schedState.freq;
     const set = (id, show) => { const el = sm.querySelector('#' + id); if (el) el.hidden = !show; };
-    set('n1-fld-date', f === 'once');
-    set('n1-fld-startat', f !== 'now');
+    set('n1-fld-datetime', f === 'once');       // Once → combined date+time
+    set('n1-fld-startat', f === 'monthly');     // Monthly → time only (date comes from the recurrence)
     set('n1-fld-weekdays', f === 'weekly');
     set('n1-fld-performon', f === 'monthly');
     set('n1-fld-repeat', f === 'monthly');
@@ -545,12 +576,6 @@
     const ws = sm.querySelector('#n1-week-selects'); if (ws) ws.hidden = !wk;
     const ds = sm.querySelector('#n1-day-select'); if (ds) ds.hidden = wk;
   }
-  function updateSelectAll(sm) {
-    const allOn = schedState.months.size === MONTHS.length;
-    const link = sm.querySelector('#n1-months-selectall');
-    if (link) link.setAttribute('label', allOn ? t('m.sched.deselectAll') : t('m.sched.selectAll'));
-  }
-
   /* One-time build of the chip grids + interaction wiring (labels come from
      applySchedStrings, which re-runs on language change). */
   function setupSchedForm(sm) {
@@ -561,20 +586,18 @@
     po && po.addEventListener('ds-radio-group-change', (e) => { schedState.performOn = (e.detail && e.detail.value) || 'week'; applyPerformOn(sm); });
     // Months + weekdays are ds-button-group (multi). Items/labels are set in
     // applySchedStrings; here we just track selection.
+    // Months + weekdays track selection; the built-in show-select-all toggle
+    // fires the same ds-button-group-change (with all/none values).
     const mg = sm.querySelector('#n1-month-grid');
-    mg && mg.addEventListener('ds-button-group-change', (e) => {
-      schedState.months = new Set(e.detail.values); updateSelectAll(sm);
-    });
+    mg && mg.addEventListener('ds-button-group-change', (e) => { schedState.months = new Set(e.detail.values); });
     const wg = sm.querySelector('#n1-weekday-grid');
     wg && wg.addEventListener('ds-button-group-change', (e) => { schedState.weekdays = new Set(e.detail.values); });
-    // Select all / Deselect all months.
-    const sa = sm.querySelector('#n1-months-selectall');
-    sa && sa.addEventListener('click', (e) => {
-      e.preventDefault();
-      const allOn = schedState.months.size === MONTHS.length;
-      schedState.months = allOn ? new Set() : new Set(MONTHS);
-      if (mg) mg.values = [...schedState.months];
-      updateSelectAll(sm);
+    // Third-party products: ds-token-field is self-contained (search, tags,
+    // dedup, remove) — track the chosen set for the create summary.
+    const tp = sm.querySelector('#n1-sched-tp');
+    tp && tp.addEventListener('ds-tokens-change', (e) => {
+      schedState.tpProducts = (e.detail.tokens || []).map((k) => k.value);
+      tpRenderMirrors(sm);
     });
   }
 
@@ -582,12 +605,20 @@
   function applySchedStrings(sm) {
     sm.setAttribute('title', t('m.sched.title'));
     sm.setAttribute('description', t('m.sched.desc'));
-    const setTxt = (id, k) => { const el = sm.querySelector('#' + id); if (el) el.textContent = t(k); };
-    setTxt('n1-lbl-name', 'm.sched.name'); setTxt('n1-lbl-version', 'm.sched.version');
-    setTxt('n1-lbl-freq', 'm.sched.freq'); setTxt('n1-lbl-date', 'm.sched.date');
-    setTxt('n1-lbl-startat', 'm.sched.startat'); setTxt('n1-lbl-weekdays', 'm.sched.weekdays');
-    setTxt('n1-lbl-performon', 'm.sched.performon'); setTxt('n1-lbl-repeat', 'm.sched.repeat');
-    setTxt('n1-startat-suffix', 'm.sched.timeFmt'); setTxt('n1-startat-hint', 'm.sched.startatHint');
+    /* Labels come from each component's own `label` attribute (built-in), not a
+       hand-rolled caption. */
+    const setLbl = (id, k) => { const el = sm.querySelector('#' + id); if (el) el.setAttribute('label', t(k)); };
+    setLbl('n1-sched-name', 'm.sched.name'); setLbl('n1-sched-version', 'm.sched.version');
+    setLbl('n1-sched-freq', 'm.sched.freq'); setLbl('n1-sched-datetime', 'm.sched.startat');
+    setLbl('n1-sched-time', 'm.sched.startat'); setLbl('n1-weekday-grid', 'm.sched.weekdays');
+    setLbl('n1-sched-performon', 'm.sched.performon'); setLbl('n1-month-grid', 'm.sched.repeat');
+    // Server-timezone note as built-in helper text on both Start-at variants (24-hour via hour-cycle).
+    const tmH = sm.querySelector('#n1-sched-time'); if (tmH) tmH.setAttribute('helper-text', t('m.sched.startatHint'));
+    const dtH = sm.querySelector('#n1-sched-datetime'); if (dtH) { dtH.setAttribute('helper-text', t('m.sched.startatHint')); dtH.setAttribute('time-label', t('m.sched.timeLabel')); }
+    // Grid select-all / deselect-all toggle text (i18n).
+    [sm.querySelector('#n1-month-grid'), sm.querySelector('#n1-weekday-grid')].forEach((g) => {
+      if (g) { g.setAttribute('select-all-label', t('m.sched.selectAll')); g.setAttribute('deselect-all-label', t('m.sched.deselectAll')); }
+    });
     const nm = sm.querySelector('#n1-sched-name'); if (nm) nm.setAttribute('placeholder', t('m.sched.namePh'));
     const vs = sm.querySelector('#n1-sched-version'); if (vs) { vs.setAttribute('placeholder', t('m.sched.versionPh')); vs.options = versionOptions(); }
     const fq = sm.querySelector('#n1-sched-freq'); if (fq) fq.options = freqOptions();
@@ -600,7 +631,15 @@
     if (mg) { mg.items = MONTHS.map((m) => ({ value: m, label: m })); mg.values = [...schedState.months]; }
     const wg = sm.querySelector('#n1-weekday-grid');
     if (wg) { wg.items = WEEKDAYS.map((w) => ({ value: w, label: t('wd.' + w) })); wg.values = [...schedState.weekdays]; }
-    updateSelectAll(sm);
+    // Third-party products field (searchable multi-select tokens).
+    const tp = sm.querySelector('#n1-sched-tp');
+    if (tp) {
+      tp.setAttribute('label', t('m.sched.tp') + ' ' + t('m.sched.tpOptional'));
+      tp.setAttribute('placeholder', t('m.sched.tpPlaceholder'));
+      tp.setAttribute('helper', t('m.sched.tpHint'));
+      tp.suggestions = tpSuggestions();
+    }
+    tpRenderMirrors(sm);
     const hn = sm.querySelector('#n1-sched-hint'); if (hn) hn.setAttribute('description', t('m.sched.hint'));
     const bc = sm.querySelector('[data-cancel]'); if (bc) bc.setAttribute('label', t('m.cancel'));
     const bs = sm.querySelector('[data-save]'); if (bs) bs.setAttribute('label', t('m.sched.create'));

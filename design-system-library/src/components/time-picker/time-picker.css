@@ -23,9 +23,10 @@
 /* ---- Label / frame layout (mirrors ds-date-picker) ------------------- */
 .ds-time-picker__frame { display: flex; flex-direction: column; }
 .ds-time-picker--none .ds-time-picker__label-col { display: none; }
-.ds-time-picker--top .ds-time-picker__frame,
-.ds-time-picker--top .ds-time-picker__field-col ~ *,
-.ds-time-picker--top > .ds-time-picker__label-col { }
+/* Top label: 8px label→field gap via the frame, matching ds-text-input /
+   ds-input-select / ds-date-picker (the label's own margin-bottom is zeroed so
+   the frame gap is the single, consistent spacer). */
+.ds-time-picker--top .ds-time-picker__frame { gap: var(--spacing-8); }
 .ds-time-picker--top .ds-time-picker__label { margin-bottom: 0; }
 
 /* The inline variant has no __frame wrapper — label-col + field-col are direct
@@ -35,10 +36,17 @@
 .ds-time-picker--left.ds-time-picker--inline {
   flex-direction: row; align-items: flex-start; gap: var(--spacing-8);
 }
-.ds-time-picker--left .ds-time-picker__label-col { width: 220px; flex-shrink: 0; padding-top: 8px; }
+/* 280px left-label column + 520px stack breakpoint — matches ds-text-input /
+   ds-input-select / ds-radio-group / ds-date-picker so left labels line up in a
+   mixed form (the DS default for form fields). */
+.ds-time-picker--left .ds-time-picker__label-col { width: 280px; flex-shrink: 0; padding-top: 8px; }
 .ds-time-picker--left .ds-time-picker__field-col { flex: 1; }
-@container (max-width: 460px) {
-  .ds-time-picker--left:not(.ds-time-picker--inline) .ds-time-picker__frame,
+@container (max-width: 520px) {
+  /* Selectors must match the base "row" rule's specificity (it prefixes both
+     .ds-time-picker AND .ds-time-picker--left) — container queries add no
+     specificity, so a lower-specificity override here would lose and the label
+     would never stack. */
+  .ds-time-picker.ds-time-picker--left:not(.ds-time-picker--inline) .ds-time-picker__frame,
   .ds-time-picker--left.ds-time-picker--inline {
     flex-direction: column; align-items: stretch; gap: var(--spacing-8);
   }
@@ -56,13 +64,17 @@
 .ds-time-picker__required { color: var(--uems-text-error); margin-inline-start: 2px; }
 
 /* ---- List trigger (delegated to ds-text-input) ----------------------- */
-.ds-time-picker__input { width: 180px; display: inline-block; }
+/* Single time field shares ds-text-input's per-size width scale
+   (small 160 / medium 320 / large 400) so it lines up with the other form
+   fields in a shared form. */
+.ds-time-picker__input { width: 320px; display: inline-block; }
 .ds-time-picker--size-small .ds-time-picker__input { width: 160px; }
-.ds-time-picker--size-large .ds-time-picker__input { width: 200px; }
-/* Range shows "start – end" in one field, so it needs more room. */
-.ds-time-picker--range .ds-time-picker__input { width: 260px; }
-.ds-time-picker--range.ds-time-picker--size-small .ds-time-picker__input { width: 236px; }
-.ds-time-picker--range.ds-time-picker--size-large .ds-time-picker__input { width: 288px; }
+.ds-time-picker--size-large .ds-time-picker__input { width: 400px; }
+/* Range shows "start – end" in one field, so it stays wider than the single
+   field at every size (range > single, scale never inverts). */
+.ds-time-picker--range .ds-time-picker__input { width: 440px; }
+.ds-time-picker--range.ds-time-picker--size-small .ds-time-picker__input { width: 280px; }
+.ds-time-picker--range.ds-time-picker--size-large .ds-time-picker__input { width: 520px; }
 
 /* ---- Popover + listbox ----------------------------------------------- */
 .ds-time-picker__popover {
@@ -259,6 +271,8 @@
 .ds-time-picker--disabled .ds-time-picker__ampm { color: var(--uems-text-disabled); cursor: not-allowed; }
 
 .ds-time-picker__helper { margin-top: var(--spacing-6); }
+/* Empty/hidden collapse is owned globally by ds-field-helper[hidden] (see
+   field-helper.css) — no per-component rule needed. */
 
 @media (prefers-reduced-motion: reduce) {
   .ds-time-picker__inline-field { transition: none; }

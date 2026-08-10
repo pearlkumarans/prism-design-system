@@ -39,22 +39,28 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import '../../icons/icon.js';
+/* Select-all / deselect-all uses the real <ds-text-link> component. */
+import '../text-link/text-link.js';
 
 const MODES   = ['single', 'multi', 'none'];
 const LAYOUTS = ['row', 'grid', 'column'];
 const VARIANTS = ['separated', 'attached'];
 const SIZES   = ['small', 'medium', 'large'];
+const LABEL_POSITIONS = ['none', 'left', 'top'];
+let bgUid = 0;
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 export class DsButtonGroup extends HTMLElement {
   static get observedAttributes() {
-    return ['selection-mode', 'layout', 'columns', 'variant', 'size', 'value', 'equal', 'full-width', 'disabled', 'rtl', 'label'];
+    return ['selection-mode', 'layout', 'columns', 'variant', 'size', 'value', 'equal', 'full-width', 'disabled', 'rtl', 'label',
+      'label-position', 'show-select-all', 'select-all-label', 'deselect-all-label'];
   }
 
   constructor() {
     super();
+    this._uid = ++bgUid;
     /* Allow `el.items = [...]` set before the element upgrades. */
     if (Object.prototype.hasOwnProperty.call(this, 'items')) {
       const v = this.items; delete this.items; this._pending = v;
@@ -101,6 +107,27 @@ export class DsButtonGroup extends HTMLElement {
   get values() { return (this.getAttribute('value') || '').split(',').map((s) => s.trim()).filter(Boolean); }
   set values(arr) { this.setAttribute('value', (Array.isArray(arr) ? arr : []).join(',')); }
 
+  /* Bulk selection (multi mode). No-ops in single/none. Enabled items only —
+     disabled items are never selectable and are excluded from `value`. */
+  selectAll()   { if (this._mode() === 'multi') this._setValues(this._enabledValues()); }
+  deselectAll() { if (this._mode() === 'multi') this._setValues([]); }
+  toggleAll()   { if (this._mode() === 'multi') (this._allSelected() ? this.deselectAll() : this.selectAll()); }
+
+  _enabledValues() { return this._items.filter((o, i) => !this._isDisabled(i)).map((o) => o.value); }
+  _allSelected() {
+    const enabled = this._enabledValues();
+    if (!enabled.length) return false;
+    const sel = this._selectedSet();
+    return enabled.every((v) => sel.has(v));
+  }
+  /* Reflect a new multi-selection (item order preserved) + emit change. */
+  _setValues(arr) {
+    const ordered = this._items.filter((it) => arr.includes(it.value)).map((it) => it.value);
+    if (ordered.join(',') === this.value) return;         // no-op if unchanged
+    this.setAttribute('value', ordered.join(','));
+    this.dispatchEvent(new CustomEvent('ds-button-group-change', { bubbles: true, composed: true, detail: { values: ordered } }));
+  }
+
   /* ---- Internals ---------------------------------------------------------- */
   _mode()   { return enumAttr(this, 'selection-mode', MODES, 'single'); }
   _layout() { return enumAttr(this, 'layout', LAYOUTS, 'row'); }
@@ -122,25 +149,33 @@ export class DsButtonGroup extends HTMLElement {
     const rtl = boolAttr(this, 'rtl');
     const groupDisabled = boolAttr(this, 'disabled');
 
-    this.classList.add('ds-button-group');
-    LAYOUTS.forEach((l) => this.classList.toggle(`ds-button-group--${l}`, layout === l));
-    SIZES.forEach((s) => this.classList.toggle(`ds-button-group--size-${s}`, size === s));
-    this.classList.toggle('ds-button-group--attached', variant === 'attached');
-    this.classList.toggle('ds-button-group--equal', boolAttr(this, 'equal'));
-    this.classList.toggle('ds-button-group--full-width', boolAttr(this, 'full-width'));
-    this.classList.toggle('ds-button-group--disabled', groupDisabled);
-    if (rtl) this.setAttribute('dir', 'rtl'); else this.removeAttribute('dir');
-    if (layout === 'grid' && cols) this.style.setProperty('--ds-bg-cols', String(cols));
-    else this.style.removeProperty('--ds-bg-cols');
+    /* A group can render as a bare set of buttons (host IS the group — the
+       default for standalone segmented controls) OR as a form field with a
+       visible label and/or a Select-all action. In the latter "wrap" mode the
+       buttons move into an inner __track (which carries the group role + layout)
+       and the host becomes a wrapper: [label-col?] [field-col: (select-all) + track].
+       Label sits in a 280px left column (label-position="left") — inline with
+       every other Prism form field — or above the group (label-position="top"). */
+    const labelPos = enumAttr(this, 'label-position', LABEL_POSITIONS, 'none');
+    const label = this.getAttribute('label') || '';
+    const hasLabel = !!label && labelPos !== 'none';
+    const showSelectAll = boolAttr(this, 'show-select-all') && mode === 'multi';
+    const wrap = hasLabel || showSelectAll;
 
-    /* Group role + accessible name. */
-    this.setAttribute('role', mode === 'single' ? 'radiogroup' : 'group');
-    const label = this.getAttribute('label');
-    if (label) this.setAttribute('aria-label', label);
-    if (groupDisabled) this.setAttribute('aria-disabled', 'true'); else this.removeAttribute('aria-disabled');
+    this.classList.add('ds-button-group');
+    this.classList.toggle('ds-button-group--wrap', wrap);
+    this.classList.toggle('ds-button-group--label-left', wrap && hasLabel && labelPos === 'left');
+    this.classList.toggle('ds-button-group--label-top', wrap && hasLabel && labelPos === 'top');
+    if (rtl) this.setAttribute('dir', 'rtl'); else this.removeAttribute('dir');
+    /* Layout / variant / size / state classes belong on the element that holds
+       the buttons — clear them off the host so they only ever live on the track. */
+    [...LAYOUTS.map((l) => `ds-button-group--${l}`), ...SIZES.map((s) => `ds-button-group--size-${s}`),
+      'ds-button-group--attached', 'ds-button-group--equal', 'ds-button-group--full-width', 'ds-button-group--disabled']
+      .forEach((c) => this.classList.remove(c));
+    if (!wrap) { this.removeAttribute('role'); this.removeAttribute('aria-label'); this.removeAttribute('aria-disabled'); this.removeAttribute('aria-labelledby'); this.style.removeProperty('--ds-bg-cols'); }
 
     const iconPx = size === 'small' ? 14 : size === 'large' ? 18 : 16;
-    this.innerHTML = this._items.map((o, i) => {
+    const buttonsHtml = this._items.map((o, i) => {
       const disabled = groupDisabled || !!o.disabled;
       const roleAttr = mode === 'single' ? ' role="radio"' : '';
       const icon = o.icon ? `<ds-icon class="ds-button-group__icon" name="${esc(o.icon)}" size="${iconPx}"></ds-icon>` : '';
@@ -149,6 +184,48 @@ export class DsButtonGroup extends HTMLElement {
       return `<button type="button" class="ds-button-group__item"${roleAttr}${aria}`
         + ` data-index="${i}"${disabled ? ' disabled' : ''}>${icon}${text}</button>`;
     }).join('');
+
+    const lblId = `ds-bg-${this._uid}-lbl`;
+    if (wrap) {
+      const labelHtml = hasLabel
+        ? `<div class="ds-button-group__label-col"><label class="ds-button-group__grp-label" id="${lblId}">${esc(label)}</label></div>`
+        : '';
+      /* Select-all row. When there's no positioned label but a `label` is set
+         (legacy header usage), the label rides at the start of this row and the
+         link at the end (space-between); otherwise the link right-aligns. */
+      const inlineLabel = (!hasLabel && label) ? esc(label) : '';
+      const selectAllHtml = showSelectAll
+        ? `<div class="ds-button-group__actions"><span class="ds-button-group__actions-label">${inlineLabel}</span>`
+          + `<ds-text-link class="ds-button-group__select-all" href="#" size="small"></ds-text-link></div>`
+        : '';
+      this.innerHTML = labelHtml
+        + `<div class="ds-button-group__field-col">${selectAllHtml}<div class="ds-button-group__track">${buttonsHtml}</div></div>`;
+      this._track = this.querySelector('.ds-button-group__track');
+      this._selectAllBtn = this.querySelector('.ds-button-group__select-all');
+    } else {
+      this.innerHTML = buttonsHtml;
+      this._track = this;
+      this._selectAllBtn = null;
+    }
+
+    /* Apply the group's layout + role to the track (host itself in the bare case). */
+    const track = this._track;
+    if (track !== this) track.classList.add('ds-button-group');
+    LAYOUTS.forEach((l) => track.classList.toggle(`ds-button-group--${l}`, layout === l));
+    SIZES.forEach((s) => track.classList.toggle(`ds-button-group--size-${s}`, size === s));
+    track.classList.toggle('ds-button-group--attached', variant === 'attached');
+    track.classList.toggle('ds-button-group--equal', boolAttr(this, 'equal'));
+    track.classList.toggle('ds-button-group--full-width', boolAttr(this, 'full-width'));
+    track.classList.toggle('ds-button-group--disabled', groupDisabled);
+    if (layout === 'grid' && cols) track.style.setProperty('--ds-bg-cols', String(cols));
+    else track.style.removeProperty('--ds-bg-cols');
+    track.setAttribute('role', mode === 'single' ? 'radiogroup' : 'group');
+    /* Accessible name: point at the visible label when there is one, else fall
+       back to `aria-label`. */
+    if (hasLabel) { track.setAttribute('aria-labelledby', lblId); track.removeAttribute('aria-label'); }
+    else if (label) { track.setAttribute('aria-label', label); track.removeAttribute('aria-labelledby'); }
+    else { track.removeAttribute('aria-label'); track.removeAttribute('aria-labelledby'); }
+    if (groupDisabled) track.setAttribute('aria-disabled', 'true'); else track.removeAttribute('aria-disabled');
 
     this._btns = Array.from(this.querySelectorAll('.ds-button-group__item'));
     this._paint();
@@ -178,6 +255,16 @@ export class DsButtonGroup extends HTMLElement {
       const stop = i === this._focusIdx && !this._isDisabled(i);
       btn.tabIndex = stop ? 0 : -1;
     });
+
+    /* Select-all <ds-text-link> — its label reflects whether all is selected. */
+    if (this._selectAllBtn) {
+      const all = this._allSelected();
+      this._selectAllBtn.setAttribute('label', all
+        ? (this.getAttribute('deselect-all-label') || 'Deselect all')
+        : (this.getAttribute('select-all-label') || 'Select all'));
+      const off = boolAttr(this, 'disabled') || !this._enabledValues().length;
+      if (off) this._selectAllBtn.setAttribute('disabled', ''); else this._selectAllBtn.removeAttribute('disabled');
+    }
   }
 
   _activate(idx) {
@@ -211,6 +298,7 @@ export class DsButtonGroup extends HTMLElement {
   };
 
   _onClick = (e) => {
+    if (this._selectAllBtn && e.target.closest('.ds-button-group__select-all')) { e.preventDefault(); this.toggleAll(); return; }
     const btn = e.target.closest('.ds-button-group__item');
     if (!btn || !this.contains(btn)) return;
     const idx = this._btns.indexOf(btn);
@@ -222,6 +310,9 @@ export class DsButtonGroup extends HTMLElement {
 
   _onKeydown = (e) => {
     if (boolAttr(this, 'disabled')) return;
+    /* Only handle keys aimed at a group item — leave the select-all link (and any
+       other header control) to its own native button behaviour. */
+    if (!(e.target.closest && e.target.closest('.ds-button-group__item'))) return;
     const layout = this._layout();
     const cols = layout === 'grid' ? (this._cols() || 1) : 1;
     const rtl = boolAttr(this, 'rtl');

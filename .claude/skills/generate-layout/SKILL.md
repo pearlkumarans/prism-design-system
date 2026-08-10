@@ -362,6 +362,17 @@ Omit `?product=` for plain Endpoint Central pages — nothing changes for the EC
   `text-transform: uppercase` in a view's CSS, and author labels in their final casing rather than
   transforming them. Title Case only for proper nouns / product-module names. (Full rule:
   `Layout/layouts.md` → "Casing".)
+- **Form fields — built-in label, left + medium defaults, uniform 20px spacing.** Give every field
+  its label via the component's own `label` attribute; never hand-roll a caption beside a field set
+  to `label-position="none"`. Do **not** set `label-position` or `size` at all — the native defaults
+  (`left`, `medium`) are what you want, and every Prism form field (incl. `ds-button-group` via
+  `label-position="left"`) shares a 280px left-label column (stacks < 520px) so labels align across a
+  mixed form. Use `required` for the `*`. Dates/times use `ds-date-picker` / `ds-time-picker` — never
+  a text field with a date/time placeholder. **Spacing:** lay fields in a flex column with a single
+  uniform `gap: 20px` — never reserve an empty helper-row slot (no `padding-bottom`/`:has` trick);
+  empty `ds-field-helper`s self-collapse, so a field with a note keeps it inside its box and still
+  gets the same 20px gap to the next field. Applies to every form page and modal form. (Full rule:
+  `Layout/layouts.md` → "Form fields" / "Field spacing".)
 - **No breadcrumb on dashboards or first-level nav pages.** A page that is a module dashboard,
   or the landing view opened directly by a primary nav tab (its `TAB_DEFAULT_VIEW` in `Shell.html`),
   is top-level — omit `show-breadcrumbs` on its `ds-page-header` and don't set `.breadcrumbs`. Add

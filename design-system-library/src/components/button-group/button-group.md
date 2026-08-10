@@ -30,7 +30,9 @@ lists or long labels use `ds-input-select`; for a vertical form list with descri
 | `equal` | boolean | off | Items share equal width (row) |
 | `full-width` | boolean | off | Group stretches to its container; implies `equal` (row segments split evenly) |
 | `disabled` | boolean | off | Disables the whole group |
-| `label` | string | — | Accessible name for the group |
+| `label` | string | — | Accessible name for the group (shown as a visible header caption when `show-select-all` is on) |
+| `show-select-all` | boolean | off | **Multi only.** Renders a header row above the group with a Select all / Deselect all toggle. Buttons move into an inner `__track`; the header shows the `label` and the toggle. |
+| `select-all-label` / `deselect-all-label` | string | `Select all` / `Deselect all` | Override the toggle text (i18n). |
 | `rtl` | boolean | off | Mirrors layout + arrow-key direction |
 
 ## Properties
@@ -40,6 +42,14 @@ lists or long labels use `ds-input-select`; for a vertical form list with descri
 | `items` | `Array<{ value, label?, icon?, disabled?, selected?, ariaLabel? }>` | Buffered if set before upgrade. `ariaLabel` is required for icon-only items. |
 | `value` | `string` | Single selection (or comma list for multi). |
 | `values` | `string[]` | Array view of the selection (getter + setter). |
+
+### Methods
+
+| Method | Notes |
+|---|---|
+| `selectAll()` | Multi only — selects every enabled item and emits `ds-button-group-change`. |
+| `deselectAll()` | Multi only — clears the selection and emits change. |
+| `toggleAll()` | Selects all if any enabled item is unselected, else deselects all. Backs the `show-select-all` toggle. |
 
 ## Events
 

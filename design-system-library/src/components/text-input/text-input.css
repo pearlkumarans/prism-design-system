@@ -157,6 +157,11 @@ ds-text-input { display: block; width: 100%; font-family: var(--font-family-sans
 /* Counter shows only while the field is active (focused) — like the clear icon.
    Helper text stays visible always; only the counter hides when inactive. */
 .ds-text-input:not(:focus-within) .ds-field-helper__counter { display: none; }
+/* When the helper row is counter-ONLY (no persistent helper text), collapse the
+   WHOLE row while inactive — otherwise hiding just the counter span leaves a
+   blank 16px band that reads as an empty helper and breaks the uniform field
+   rhythm. A row that also carries helper text always stays (text is shown). */
+.ds-text-input:not(:focus-within) .ds-text-input__helper-row:not(:has(.ds-field-helper__text)) { display: none; }
 
 /* ---- Sizes (heights from Figma handoff) ----------------------------- */
 /* Radius is uniform (var(--radius-md)) across all sizes — the base

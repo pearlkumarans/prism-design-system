@@ -253,8 +253,7 @@ export class DsDatePicker extends HTMLElement {
           <div class="ds-date-picker__pane"></div>
         </div>
         <div class="ds-date-picker__time" hidden>
-          <span class="ds-date-picker__time-label">Time</span>
-          <ds-time-picker class="ds-date-picker__time-picker" variant="inline" label-position="none" label="Time"></ds-time-picker>
+          <ds-time-picker class="ds-date-picker__time-picker" variant="inline"></ds-time-picker>
         </div>
         <div class="ds-date-picker__footer" hidden>
           <ds-button variant="tertiary" size="small" data-act="clear">Clear</ds-button>
@@ -438,9 +437,10 @@ export class DsDatePicker extends HTMLElement {
     this._timeRow.hidden = !enableTime;
     this.classList.toggle('ds-date-picker--datetime', enableTime);
     if (enableTime) {
-      this._timeRow.querySelector('.ds-date-picker__time-label').textContent =
-        this.getAttribute('time-label') || 'Time';
       const tp = this._timePicker;
+      // Use the time picker's OWN built-in label (left) — no hand-rolled caption.
+      tp.setAttribute('label', this.getAttribute('time-label') || 'Time');
+      tp.setAttribute('label-position', 'left');
       tp.setAttribute('hour-cycle', this._cycle);
       const tStep = this.getAttribute('time-step');
       if (tStep) tp.setAttribute('step', tStep); else tp.removeAttribute('step');

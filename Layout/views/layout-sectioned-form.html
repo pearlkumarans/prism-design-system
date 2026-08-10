@@ -42,16 +42,13 @@
 .lay__section { padding: 20px 0 4px; }
 
 /* Field stack — each field is a component that owns its own left label
-   (label-position="left" → 280px label col + 8px gap). Cap the field so the
-   control lands ~572px like the Figma (280 + 8 + 532 = 820). */
-.lay__fields { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; }
+   (label-position="left" → 280px label col). Cap the field so the control lands
+   ~572px like the Figma (280 + 8 + 532 = 820).
+   Uniform 20px gap AFTER each field's real content: empty helper rows collapse
+   (ds-field-helper self-collapses), a field WITH a note keeps the note inside
+   its box, so every field is spaced identically to the next. */
+.lay__fields { display: flex; flex-direction: column; gap: 20px; padding-top: 12px; }
 .lay__field { max-width: 820px; }
-/* Reserve a consistent helper-row slot (field body's 4px gap + the 16px helper row)
-   under every field, so a field with a counter/helper (e.g. a "0/100" counter) and
-   one without sit on the same vertical rhythm. Fields already rendering a helper
-   don't double it. */
-.lay__field { padding-bottom: 20px; }
-.lay__field:has(ds-field-helper) { padding-bottom: 0; }
 /* Rows with no component label (a lone button / composite) align under the
    control column by offsetting the label-col width + gap. */
 .lay__control-only { padding-inline-start: 288px; }

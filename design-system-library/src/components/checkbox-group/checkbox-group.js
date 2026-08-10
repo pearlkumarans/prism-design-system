@@ -88,12 +88,12 @@ export class DsCheckboxGroup extends HTMLElement {
     items.setAttribute('role', 'group');
     this._items.forEach((it) => items.appendChild(it));
 
-    /* Helper/note row = the shared <ds-field-helper> sub-component — it owns the
-       leading info/error icon + text, the state-driven colour AND the trailing
-       character counter (a single Form Field Helper Row, per spec). */
-    const helper = document.createElement('div');
+    /* Helper/note row = the shared <ds-field-helper> directly (no wrapper div) so
+       it self-collapses to zero when empty and never leaves the body's gap
+       reserving blank space below the options — identical behaviour to
+       ds-text-input / ds-input-select. */
+    const helper = document.createElement('ds-field-helper');
     helper.className = 'ds-checkbox-group__helper';
-    helper.innerHTML = `<ds-field-helper class="ds-checkbox-group__help"></ds-field-helper>`;
 
     body.append(items, helper);
     /* header + body live in a __frame so the flex layout sits on the frame, not
@@ -109,8 +109,8 @@ export class DsCheckboxGroup extends HTMLElement {
     this._infoEl     = header.querySelector('.ds-checkbox-group__info');
     this._items      = [...items.children]; // preserved references after move
     this._itemsEl    = items;
-    this._helperEl   = helper;
-    this._helpEl     = helper.querySelector('.ds-checkbox-group__help'); // ds-field-helper
+    this._helperEl   = helper;   // the <ds-field-helper> itself
+    this._helpEl     = helper;   // same element (no wrapper)
   }
 
   _sync() {

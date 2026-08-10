@@ -69,25 +69,29 @@
    comes from text-input.css so the date-picker stays in lock-step with
    any future text-input updates. */
 .ds-date-picker__input {
-  width: 240px;
+  /* Single date field shares ds-text-input's per-size width scale
+     (small 160 / medium 320 / large 400) so it lines up with text-input,
+     input-select, etc. in a shared form. */
+  width: 320px;
   display: inline-block;
 }
 .ds-date-picker__input--range {
-  /* Range form needs more width for "DD/MM/YYYY → DD/MM/YYYY". */
-  width: 320px;
+  /* Range form holds two dates ("DD/MM/YYYY → DD/MM/YYYY"), so it stays wider
+     than the single field at every size. */
+  width: 440px;
 }
-/* Size scale — mirrors ds-text-input (small 36 / medium 40 / large 44px). The
-   inner field's height + font are forwarded via the `size` attribute; here we
-   only nudge the outer width so the field stays proportionate at each size.
-   Medium keeps the base 240 / 320. */
-.ds-date-picker--size-small  .ds-date-picker__input        { width: 210px; }
-.ds-date-picker--size-small  .ds-date-picker__input--range { width: 288px; }
-.ds-date-picker--size-large  .ds-date-picker__input        { width: 268px; }
-.ds-date-picker--size-large  .ds-date-picker__input--range { width: 352px; }
-/* Datetime mode shows "DD/MM/YYYY HH:MM AM/PM" in one field — needs more room. */
-.ds-date-picker--datetime .ds-date-picker__input { width: 300px; }
-.ds-date-picker--datetime.ds-date-picker--size-small .ds-date-picker__input { width: 270px; }
-.ds-date-picker--datetime.ds-date-picker--size-large .ds-date-picker__input { width: 330px; }
+/* Size scale — single mirrors ds-text-input's body max-width (160/320/400);
+   the inner field's height + font come from the `size` attribute. Range stays
+   proportionally wider so the scale never inverts (range > single at each size). */
+.ds-date-picker--size-small  .ds-date-picker__input        { width: 160px; }
+.ds-date-picker--size-small  .ds-date-picker__input--range { width: 280px; }
+.ds-date-picker--size-large  .ds-date-picker__input        { width: 400px; }
+.ds-date-picker--size-large  .ds-date-picker__input--range { width: 520px; }
+/* Datetime mode shows "DD/MM/YYYY HH:MM AM/PM" in one field — needs more room,
+   so it tracks the range widths. */
+.ds-date-picker--datetime .ds-date-picker__input { width: 440px; }
+.ds-date-picker--datetime.ds-date-picker--size-small .ds-date-picker__input { width: 320px; }
+.ds-date-picker--datetime.ds-date-picker--size-large .ds-date-picker__input { width: 520px; }
 /* Full-width: field stretches to fill the container, overriding the fixed width. */
 ds-date-picker[full-width] .ds-date-picker__input,
 ds-date-picker[full-width] .ds-date-picker__input--range { width: 100%; }
@@ -184,20 +188,26 @@ ds-date-picker[full-width] .ds-date-picker__input--range { width: 100%; }
 }
 
 /* ---- Time row (datetime mode: enable-time) ------------------------- */
+/* The row just hosts the embedded <ds-time-picker>, which supplies its OWN
+   left label ("Time"). We only compact that label here: drop its default 220px
+   column + top padding, centre it against the field, and disable its stacking
+   container-query so it never wraps in the narrow popover. */
 .ds-date-picker__time {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-12);
   padding: var(--spacing-12) var(--spacing-16);
   border-top: 1px solid var(--uems-border-tertiary);
 }
 .ds-date-picker__time[hidden] { display: none !important; }
-.ds-date-picker__time-label {
-  font-size: var(--font-size-13);
-  font-weight: var(--font-weight-medium);
-  color: var(--uems-text-secondary);
+.ds-date-picker__time .ds-time-picker { container-type: normal; }
+.ds-date-picker__time .ds-time-picker--left.ds-time-picker--inline {
+  align-items: center;
+  gap: var(--spacing-12);
 }
+.ds-date-picker__time .ds-time-picker--left .ds-time-picker__label-col {
+  width: auto;
+  flex-shrink: 0;
+  padding-top: 0;
+}
+.ds-date-picker__time .ds-time-picker__label { margin-bottom: 0; }
 
 /* ---- Footer (Clear / Cancel / Apply) ------------------------------- */
 .ds-date-picker__footer {

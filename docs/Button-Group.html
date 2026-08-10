@@ -232,6 +232,11 @@
                 <ds-button-group id="d-act" selection-mode="none" variant="attached" size="small" label="Text format"></ds-button-group>
                 <div class="bg-out" id="o-act"></div>
               </div>
+              <div class="demo-btn-section">
+                <div class="demo-group-label"><span class="bg-pill bg-pill--multi">multi</span> &nbsp;select all / deselect all &mdash; <code>show-select-all</code></div>
+                <ds-button-group id="d-selectall" selection-mode="multi" variant="attached" layout="grid" columns="6" size="small" show-select-all label="Repeat in months"></ds-button-group>
+                <div class="bg-out" id="o-selectall"></div>
+              </div>
             </div>
           </div>
 
@@ -547,6 +552,7 @@ fmt.addEventListener('ds-button-group-item-click', e =&gt; exec(e.detail.value))
             set('d-months', MONTHS.map(m=>({value:m,label:m})), ['Jan','Feb','Apr','Aug','Oct','Dec'], true);
             set('d-days', DAYS.map(d=>({value:d,label:d})), ['Sun','Wed','Sat'], true);
             el('d-act').items = [{value:'bold',label:'B',ariaLabel:'Bold'},{value:'italic',label:'I',ariaLabel:'Italic'},{value:'underline',label:'U',ariaLabel:'Underline'}];
+            set('d-selectall', MONTHS.map(m=>({value:m,label:m})), ['Jan','Feb','Mar'], true);
             // Style
             set('d-sep', VIEW, 'list'); set('d-att', VIEW, 'grid');
             set('d-sm', VIEW, 'list'); set('d-md', VIEW, 'list'); set('d-lg', VIEW, 'list');
@@ -566,7 +572,7 @@ fmt.addEventListener('ds-button-group-item-click', e =&gt; exec(e.detail.value))
             set('c-ord', ORD, 'first');
             // Live output
             const say = (id, out) => { const e = el(id); e && e.addEventListener('ds-button-group-change', (ev) => { const o = el(out); if (o) o.textContent = JSON.stringify(ev.detail); }); };
-            say('d-single','o-single'); say('d-months','o-months');
+            say('d-single','o-single'); say('d-months','o-months'); say('d-selectall','o-selectall');
             const a = el('d-act'); a && a.addEventListener('ds-button-group-item-click', (ev) => { const o = el('o-act'); if (o) o.textContent = 'clicked: ' + ev.detail.value; });
           }
           if (window.customElements && customElements.whenDefined) customElements.whenDefined('ds-button-group').then(init);

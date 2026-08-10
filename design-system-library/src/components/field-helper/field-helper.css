@@ -10,6 +10,13 @@
 /* Light-DOM host — block so the row stretches to the field width and the
    counter sits at the trailing edge (spec: stretch to 100% of the field). */
 ds-field-helper { display: block; }
+/* Collapse to zero when hidden — owned HERE, once, for every consumer (the
+   component sets [hidden] when empty / show-helper-row="false", and also self-
+   collapses via inline display:none once upgraded). The attribute selector
+   (0,1,1) outranks any consumer's `.ds-x__helper { display:block }` (0,1,0), so
+   callers that keep a persistent helper node don't re-declare this rule. Works
+   even before ds-field-helper's own JS upgrades (the "not available" window). */
+ds-field-helper[hidden] { display: none; }
 
 .ds-field-helper {
   display: flex;

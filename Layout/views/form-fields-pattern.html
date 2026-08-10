@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!-- Form-fields alignment pattern — every Prism form field in one left-label
+     stack, to verify uniform label column (280px), control start, and 20px field
+     rhythm regardless of helper/counter/required. Standalone (open directly). -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+  </script>
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <style>
+    body { margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); color: var(--uems-text-primary); }
+    .ffp { max-width: 960px; margin: 0 auto; padding: 40px 32px 120px; }
+    .ffp h1 { font-size: 20px; margin: 0 0 4px; }
+    .ffp p.sub { color: var(--uems-text-tertiary); margin: 0 0 28px; font-size: 14px; }
+    /* THE pattern: one flex column, uniform 20px gap, component-native left labels.
+       No reserved helper slots — empty ds-field-helpers self-collapse. */
+    .lay__fields { display: flex; flex-direction: column; gap: 20px; }
+    .lay__field { max-width: 860px; }
+    /* A faint guide line at the 280px label/field boundary to eyeball alignment.
+       Only the left-label stack carries it — the inline/top-label controls below
+       don't share the 280px column, so drawing the guide through them would lie. */
+    .ffp--guide .lay__fields--guide { position: relative; }
+    .ffp--guide .lay__fields--guide::before {
+      content: ""; position: absolute; top: 0; bottom: 0; left: 288px; width: 1px;
+      background: repeating-linear-gradient(to bottom, var(--uems-border-accent, #2563eb) 0 4px, transparent 4px 8px);
+      opacity: .35; pointer-events: none;
+    }
+    .ffp__seg { margin: 36px 0 4px; font-size: 13px; font-weight: 700; color: var(--uems-text-primary); }
+    .ffp__seg-note { margin: 0 0 16px; font-size: 13px; color: var(--uems-text-tertiary); }
+  </style>
+</head>
+<body>
+  <div class="ffp ffp--guide lay-root">
+    <h1>Form field alignment pattern</h1>
+    <p class="sub">Every Prism form field, left label (280px) + medium control, in a uniform 20px stack. Labels and controls should align to the dashed guide; spacing between fields should be identical whether or not a field shows a helper/counter.</p>
+
+    <div class="ffp__seg">Left-label form fields</div>
+    <p class="ffp__seg-note">Every field uses its built-in label at <code>label-position="left"</code> + <code>size="medium"</code>. Labels sit in a shared 280px column; controls all start at the dashed guide.</p>
+    <div class="lay__fields lay__fields--guide">
+      <ds-text-input class="lay__field" id="f-name" label="Full name" required placeholder="Jane Doe"></ds-text-input>
+      <ds-text-input class="lay__field" id="f-user" label="Username" show-counter counter="0/40" placeholder="jdoe"></ds-text-input>
+      <ds-text-input class="lay__field" id="f-email" label="Email" helper="We'll never share it." placeholder="jane@acme.com"></ds-text-input>
+      <ds-text-area class="lay__field" id="f-desc" label="Description" placeholder="What is this for?"></ds-text-area>
+      <ds-input-select class="lay__field" id="f-country" label="Country" required placeholder="Select country"></ds-input-select>
+      <ds-input-select class="lay__field" id="f-tz" label="Timezone" helper="Used for scheduled runs." placeholder="Select timezone"></ds-input-select>
+      <ds-token-field class="lay__field" id="f-skills" label="Skills" label-position="left" placeholder="Add a skill…" helper="Press Enter to add." creatable show-clear></ds-token-field>
+      <ds-radio-group class="lay__field" id="f-plan" label="Plan"></ds-radio-group>
+      <ds-radio-group class="lay__field" id="f-notify" label="Notifications"></ds-radio-group>
+      <ds-checkbox-group class="lay__field" id="f-opts" label="Options" value="a">
+        <ds-checkbox value="a" label="Email alerts"></ds-checkbox>
+        <ds-checkbox value="b" label="SMS alerts"></ds-checkbox>
+        <ds-checkbox value="c" label="Weekly digest"></ds-checkbox>
+      </ds-checkbox-group>
+      <ds-date-picker class="lay__field" id="f-date" label="Start date" required></ds-date-picker>
+      <ds-time-picker class="lay__field" id="f-time" label="Start time" helper-text="Server timezone."></ds-time-picker>
+      <ds-time-picker class="lay__field" id="f-time2" variant="inline" label="Reminder" hour-cycle="24"></ds-time-picker>
+      <ds-file-upload class="lay__field" id="f-file" variant="form" label="Attachment" label-position="left" placeholder="Choose a file or drop here" button-label="Browse" helper="CSV up to 5 MB." show-helper accept=".csv"></ds-file-upload>
+      <ds-button-group class="lay__field" id="f-repeat" selection-mode="multi" variant="attached" layout="grid" columns="6" size="small" label="Repeat" label-position="left" show-select-all></ds-button-group>
+    </div>
+
+    <div class="ffp__seg">Controls without a left-label layout</div>
+    <p class="ffp__seg-note">These are form controls too, but they don't expose <code>label-position="left"</code> — they render top-label or inline by design, so they don't join the 280px column above. (Giving them a left-label mode would be a component change.)</p>
+    <div class="lay__fields">
+      <ds-otp-input class="lay__field" id="f-otp" length="6" label="Verification code" helper="Sent to •••7890."></ds-otp-input>
+      <ds-slider class="lay__field" id="f-vol" label="Volume" show-label show-value value="60" min="0" max="100"></ds-slider>
+      <ds-toggle class="lay__field" id="f-beta" label="Enable beta features" show-text text="On" checked></ds-toggle>
+      <ds-rich-text-editor class="lay__field" id="f-notes" label="Notes" placeholder="Start typing…" helper="Type $ to add a variable."></ds-rich-text-editor>
+    </div>
+  </div>
+
+  <script type="module">
+    customElements.whenDefined('ds-input-select').then(() => {
+      const opt = (a) => a.map((v) => ({ label: v, value: v.toLowerCase().replace(/\s+/g, '-') }));
+      document.getElementById('f-country').options = opt(['United States', 'India', 'Germany', 'Japan']);
+      document.getElementById('f-tz').options = opt(['UTC', 'IST', 'PST', 'CET']);
+      document.getElementById('f-plan').options = [
+        { label: 'Free', value: 'free' },
+        { label: 'Pro', value: 'pro' },
+        { label: 'Enterprise', value: 'ent' },
+      ];
+      document.getElementById('f-plan').value = 'pro';
+      document.getElementById('f-notify').options = [
+        { label: 'All activity', value: 'all', description: 'Every event on this configuration.' },
+        { label: 'Mentions only', value: 'mentions', description: 'Only when you are mentioned.' },
+      ];
+      document.getElementById('f-notify').value = 'all';
+      const rp = document.getElementById('f-repeat');
+      rp.items = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m) => ({ value: m, label: m }));
+      rp.values = ['Jan', 'Feb', 'Mar'];
+    });
+    customElements.whenDefined('ds-token-field').then(() => {
+      const tf = document.getElementById('f-skills');
+      tf.suggestions = ['CSS', 'JavaScript', 'HTML', 'Accessibility', 'Figma'].map((v) => ({ value: v.toLowerCase(), label: v }));
+      tf.tokens = [{ value: 'css', label: 'CSS' }, { value: 'figma', label: 'Figma' }];
+    });
+  </script>
+</body>
+</html>

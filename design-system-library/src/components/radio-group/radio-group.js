@@ -134,9 +134,7 @@ export class DsRadioGroup extends HTMLElement {
         </div>
         <div class="ds-radio-group__body">
           <div class="ds-radio-group__items" role="radiogroup" aria-labelledby="${this._labelId}"></div>
-          <div class="ds-radio-group__helper">
-            <ds-field-helper class="ds-radio-group__help"></ds-field-helper>
-          </div>
+          <ds-field-helper class="ds-radio-group__helper"></ds-field-helper>
         </div>
       </div>`;
 
@@ -144,8 +142,10 @@ export class DsRadioGroup extends HTMLElement {
     this._labelEl = this.querySelector('.ds-radio-group__label');
     this._infoEl  = this.querySelector('.ds-radio-group__info');
     this._itemsEl = this.querySelector('.ds-radio-group__items');
+    /* Helper = the shared <ds-field-helper> directly (no wrapper), so it
+       self-collapses when empty and never reserves the body gap. */
     this._helperEl = this.querySelector('.ds-radio-group__helper');
-    this._helpEl  = this.querySelector('.ds-radio-group__help');
+    this._helpEl  = this._helperEl;
   }
 
   _sync() {

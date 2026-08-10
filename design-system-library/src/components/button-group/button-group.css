@@ -109,6 +109,72 @@ ds-button-group,
   box-shadow: inset 0 0 0 2px var(--uems-border-accent-focus);
 }
 
+/* ---- Form-field mode: visible label (left/top) and/or Select-all ---------- */
+/* In "wrap" mode the buttons live in __track; the host wraps [label-col?] +
+   [field-col: (select-all) + track]. */
+.ds-button-group--wrap { display: block; width: max-content; max-width: 100%; }
+.ds-button-group--wrap .ds-button-group__field-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8, 8px);
+  min-width: 0;
+}
+/* Label-left — 280px column, matching every other Prism form field so labels
+   line up across a mixed form. Stacks below 520px (container query). */
+.ds-button-group--label-left {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--spacing-8, 8px);
+  width: auto;
+  container-type: inline-size;
+}
+.ds-button-group--label-left > .ds-button-group__label-col { width: 280px; flex-shrink: 0; padding-top: 8px; }
+/* Field col hugs the group's content (not flex:1) so the Select-all row lines up
+   with the group's right edge instead of the far edge of the field column.
+   In the left-label variant the Select-all / Deselect-all link sits to the RIGHT
+   of the button grid and is vertically centred against it (row-reverse keeps the
+   grid on the left even though the link comes first in the DOM). */
+.ds-button-group--label-left > .ds-button-group__field-col {
+  flex: 0 1 auto; min-width: 0; max-width: 100%;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: var(--spacing-16, 16px);
+}
+/* The actions block holds only the link here (the inline label is empty), so drop
+   the space-between gap that would otherwise offset it. */
+.ds-button-group--label-left .ds-button-group__actions { gap: 0; flex-shrink: 0; }
+@container (max-width: 520px) {
+  .ds-button-group--label-left { flex-direction: column; align-items: stretch; }
+  .ds-button-group--label-left > .ds-button-group__label-col { width: auto; flex-shrink: 1; padding-top: 0; }
+  /* Stacked: link returns above the grid so it doesn't crowd it on narrow widths. */
+  .ds-button-group--label-left > .ds-button-group__field-col { flex-direction: column; align-items: stretch; gap: var(--spacing-8, 8px); }
+}
+/* Label text — matches the other form components' label (14px, semibold, tertiary). */
+.ds-button-group__grp-label {
+  display: block;
+  font-size: var(--font-size-14, 14px);
+  font-weight: var(--font-weight-semibold, 600);
+  line-height: var(--line-height-snug, 1.4);
+  color: var(--uems-text-tertiary);
+}
+.ds-button-group--label-top .ds-button-group__grp-label { margin-bottom: 0; }
+/* Select-all row at the top of the field column. The (optional) legacy inline
+   label sits at the start, the link at the end. With an empty label span, the
+   link right-aligns. */
+.ds-button-group__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12, 12px);
+}
+/* Kept even when empty (0-width) so space-between right-aligns a lone link. */
+.ds-button-group__actions-label {
+  font-size: var(--font-size-14, 14px);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--uems-text-tertiary);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ds-button-group__item { transition: none; }
 }

@@ -53,13 +53,18 @@ export class DsFieldHelper extends HTMLElement {
     const rtl = boolAttr(this, 'rtl');
     const counter = this.getAttribute('counter') || '';
 
-    /* Both clusters empty → render nothing, don't reserve the 16px row (spec). */
+    /* Both clusters empty → render nothing AND collapse the host so it reserves
+       no space (the host is display:block, so an empty inner row would otherwise
+       still occupy the component's margin — the "empty helper reserves ~16px"
+       inconsistency). Restored to block below when there's content. */
     if (!text && !counter) {
       this._root.className = 'ds-field-helper';
       this._root.removeAttribute('dir');
       this._root.innerHTML = '';
+      this.style.display = 'none';
       return;
     }
+    this.style.display = '';
 
     this._root.className = `ds-field-helper ds-field-helper--${state}`;
     if (rtl) this._root.setAttribute('dir', 'rtl');
