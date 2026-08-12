@@ -15,4 +15,5 @@ export const NATIVE_VIEWS = new Set([
   'deployments-workflow',
   'deployments-device-execution',
   'deployments-summary',
+  'tabbed-form',
 ]);
