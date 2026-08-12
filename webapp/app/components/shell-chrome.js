@@ -58,10 +58,15 @@ export default class ShellChrome extends Component {
     this._applyL2For = applyL2For;
     wireL1ToL2(l1, l2);
 
-    // Header module tab → module route.
+    // Header module tab → module route. `support` is not a module — it's a
+    // full-page swap (like Settings), so open it as a drawer instead of routing;
+    // leaving support closes it.
     header.addEventListener('ds-header-nav-tab-select', (e) => {
       const id = e.detail?.id;
-      if (id) this.router.transitionTo('product.module', this.shell.productId, id);
+      if (!id) return;
+      if (id === 'support') { this.drawers.open('support'); return; }
+      this.drawers.close('support');
+      this.router.transitionTo('product.module', this.shell.productId, id);
     });
 
     // Header utility icons → drawers (avatar/profile, gear/settings, bento/apps, search).
@@ -71,6 +76,7 @@ export default class ShellChrome extends Component {
       else if (action === 'settings') this.drawers.open('settings');
       else if (action === 'bento') this.drawers.open('apps');
       else if (action === 'search') this.drawers.open('search');
+      else if (action === 'zia') this.drawers.open('zia');
     });
     header.addEventListener('ds-header-nav-search', () => this.drawers.open('search'));
 

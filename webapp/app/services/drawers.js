@@ -18,9 +18,10 @@ import { injectViewInto } from 'prism-webapp/lib/inject-view';
 // Drawers that mount INSIDE the content region (.poc-area) rather than the body:
 //  • ds-drawer.ec-drawer slide-overs (help/accessibility/updates) — confined by
 //    `.poc-area ds-drawer.ec-drawer { inset:0 }`.
-//  • Settings — a full-page swap that toggles `.set-open` on .poc-area to replace
-//    the content; #set-pop must be a CHILD of .poc-area for its CSS to apply.
-const CONTENT_SCOPED = new Set(['help', 'accessibility', 'updates', 'settings']);
+//  • Full-page swaps that toggle `.<name>-open` on .poc-area to REPLACE the
+//    content with themselves — Settings, Ask Zia, Support. Their #…-pop must be a
+//    CHILD of .poc-area for the `.shell-area.<name>-open` CSS to apply.
+const CONTENT_SCOPED = new Set(['help', 'accessibility', 'updates', 'settings', 'zia', 'support']);
 
 // A few drawer FILES register their ShellDrawers handle under a different KEY than
 // their file name (a quirk carried over from the vanilla shell). Map name → key so
