@@ -310,6 +310,36 @@ body {
 .pol-actions button { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 0; background: transparent; border-radius: var(--radius-sm, 6px); cursor: pointer; color: var(--uems-icon-secondary); }
 .pol-actions button:hover { background: var(--uems-bg-secondary-alt, #eef1f6); }
 
+/* ── Right-rail notification popovers (Update / Review / Road map) — ported from
+   Shell.html's #upd-pop. Body-level, position:fixed, anchored by rail-popover.js. */
+.upd-pop { position: fixed; z-index: 1600; width: 456px; display: none; }
+.upd-pop--narrow { width: 300px; }
+.upd-pop.open { display: block; animation: updIn 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes updIn { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: none; } }
+.upd-card { position: relative; display: flex; gap: 12px; padding: 16px; background: var(--uems-bg-primary); border: 1px solid var(--uems-border-tertiary); border-radius: 12px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 6px 18px rgba(15, 23, 42, 0.08); }
+.upd-card__icon { flex: 0 0 40px; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.upd-card--rec .upd-card__icon { background: var(--uems-bg-warning-primary); color: var(--uems-text-warning); }
+.upd-card--norm .upd-card__icon { background: var(--uems-bg-info-secondary); color: var(--uems-icon-info); }
+.upd-card--review .upd-card__icon { background: var(--uems-bg-accent-secondary); color: var(--uems-icon-accent); }
+.upd-card__close { position: absolute; top: 8px; inset-inline-end: 8px; }
+.upd-card__body { flex: 1; min-width: 0; padding-inline-end: 16px; }
+.upd-card__badge { margin-bottom: 8px; }
+.upd-card__title { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); line-height: 20px; color: var(--uems-text-primary); margin: 2px 0 4px; }
+.upd-card__desc { font-size: var(--font-size-14); line-height: 20px; color: var(--uems-text-secondary); }
+.upd-card__actions { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: nowrap; }
+.upd-card__actions ds-text-link { white-space: nowrap; }
+.upd-card__foot { margin-top: 16px; }
+.upd-card--roadmap { flex-direction: column; gap: 0; padding: 0; }
+.rm-head { position: relative; display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--uems-border-tertiary); }
+.rm-head__icon { flex: 0 0 32px; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--uems-bg-accent-secondary); color: var(--uems-icon-accent); }
+.rm-head__title { font-size: var(--font-size-16); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+.rm-head__close { position: absolute; top: 9px; inset-inline-end: 9px; }
+.rm-list { padding: 2px 16px 8px; }
+.rm-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; text-decoration: none; }
+.rm-row .ds-text-link { font-weight: var(--font-weight-semibold); font-size: var(--font-size-14); }
+.rm-row__ext { color: #6B94E7; flex: 0 0 auto; }
+@media (prefers-reduced-motion: reduce) { .upd-pop.open { animation: none; } }
+
 /* Deployments summary — centered empty-state landing. */
 .dep-summary { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .dep-summary .dep-empty { flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--spacing-32, 32px); }

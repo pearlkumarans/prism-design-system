@@ -1,6 +1,7 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
 import { CONTENT_VIEWS } from 'prism-webapp/config/catalog';
+import { RailPopover } from 'prism-webapp/lib/rail-popover';
 
 // Framework-agnostic shell helpers, loaded from the repo through the dev proxy.
 // A runtime-constructed import keeps them native (ember-auto-import can't bundle a
@@ -73,14 +74,24 @@ export default class ShellChrome extends Component {
     });
     header.addEventListener('ds-header-nav-search', () => this.drawers.open('search'));
 
-    // Right utility rail → help + the RTL/language toggle + accessibility/updates.
+    // Right utility rail. Each id maps to a DISTINCT surface, matching Shell.html:
+    //  help/accessibility → confined drawers; announcement → Product Updates drawer;
+    //  update/review/roadmap → small anchored popover CARDS (not the updates drawer);
+    //  product → external SDP page; get-started → the sectioned-form view.
     const rp = element.querySelector('ds-right-pane');
+    const railPopover = new RailPopover(rp);
     rp?.addEventListener('ds-right-pane-select', (e) => {
       const id = e.detail?.id;
-      if (id === 'help') this.drawers.open('help');
-      else if (id === 'accessibility') this.drawers.open('accessibility');
-      // Announcement / update / review / roadmap all live in the updates panel.
-      else if (id === 'announcement' || id === 'update' || id === 'review' || id === 'roadmap') this.drawers.open('updates');
+      if (id === 'help') { railPopover.hide(); this.drawers.open('help'); }
+      else if (id === 'accessibility') { railPopover.hide(); this.drawers.open('accessibility'); }
+      // ONLY announcement opens the full Product Updates drawer.
+      else if (id === 'announcement') { railPopover.hide(); this.drawers.open('updates'); }
+      // Update / Review / Road map are their own anchored notification cards.
+      else if (id === 'update') railPopover.toggle('update');
+      else if (id === 'review') railPopover.toggle('review');
+      else if (id === 'roadmap') railPopover.toggle('roadmap');
+      // Product slot → ServiceDesk Plus product page.
+      else if (id === 'product') window.open('https://www.manageengine.com/products/service-desk/', '_blank', 'noopener');
       // Direction toggle flips the language (en ⇄ ar → LTR ⇄ RTL).
       else if (id === 'direction') this.i18n.setLang(this.i18n.lang === 'ar' ? 'en' : 'ar');
       // Get started → the sectioned-form pattern view (shell does this on Configurations).
