@@ -2,13 +2,13 @@
     The RecordHeader/scroll/overlay frame lives in the pattern; this view supplies
     the summary meta, the widget grid (:body), and the slide-in timeline (:overlay). }}
 {{#if this.error}}
-  <div class="ld-detail">
-    <div class="ld-detail__scroll">
-      <ds-empty-state type="centered" illustration="common-error"
-        title="Couldn't load device execution" description="The request failed. Is the BFF running (server/bff.mjs)?"
-        primary-label="Retry" show-secondary="false"></ds-empty-state>
-    </div>
-  </div>
+  <Patterns::EmptyState
+    @illustration="state-error"
+    @title="Couldn't load device execution"
+    @description="The request failed. Is the BFF running (server/bff.mjs)?"
+    @primaryLabel="Retry"
+    @onPrimary={{this.reload}}
+  />
 {{else if this.rec}}
   <Patterns::ListDetail
     @header={{this.header}}

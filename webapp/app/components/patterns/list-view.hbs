@@ -17,9 +17,13 @@
 
   <div class="bl-list__scroll">
     {{#if this.error}}
-      <ds-empty-state type="centered" illustration="common-error"
-        title="Couldn't load" description="The request failed. Is the BFF running (server/bff.mjs)?"
-        primary-label="Retry" show-secondary="false" {{on "ds-empty-state-primary" this.reload}}></ds-empty-state>
+      <Patterns::EmptyState
+        @illustration="state-error"
+        @title="Couldn't load"
+        @description="The request failed. Is the BFF running (server/bff.mjs)?"
+        @primaryLabel="Retry"
+        @onPrimary={{this.reload}}
+      />
     {{else if this.view}}
       {{#if this.kpis.length}}
         <div class="bl-kpis">
