@@ -175,8 +175,13 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ error: 'not_found', path: url.pathname }));
     return;
   }
-  res.writeHead(200, { ...cors, 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(body));
+  // Mock data is dynamic per query — never let the browser cache it (a stale cache
+  // also hides loading states on reload).
+  res.writeHead(200, { ...cors, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+  // Optional artificial latency for exercising loading/skeleton states: BFF_DELAY=ms.
+  const send = () => res.end(JSON.stringify(body));
+  const delay = Number(process.env.BFF_DELAY || 0);
+  if (delay > 0) setTimeout(send, delay); else send();
 });
 
 server.listen(PORT, () => console.log(`[bff] listening on http://localhost:${PORT} — /bitlocker/api/*, /deployments/api/list`));
