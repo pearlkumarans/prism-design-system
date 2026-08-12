@@ -1,85 +1,19 @@
-{{! Native managed-computers list with SERVER-SIDE filtering: the filter panel change
-    re-queries the BFF; KPIs + facet counts come from the server (full-dataset). }}
-<div class="bl-list">
-  <ds-page-header
-    icon="computer"
-    structure="default"
-    title={{t "ms.title"}}
-    description={{t "ms.desc"}}
-    show-description
-    show-breadcrumbs
-    collapse-on-scroll
-    scroll-target=".bl-list__scroll"
-    {{set-prop "breadcrumbs" this.breadcrumbs}}
-  >
+{{! BitLocker managed computers — a thin Patterns::ListView instance, fully localized
+    (i18n header/columns/KPIs/facets, breadcrumbs, localized facet option labels). }}
+<Patterns::ListView
+  @header={{this.header}}
+  @breadcrumbs={{this.breadcrumbs}}
+  @fetch={{this.fetch}}
+  @columns={{this.columns}}
+  @facets={{this.localizedFacets}}
+  @facetOptionLabel={{this.facetOptionLabel}}
+  @kpis={{this.kpis}}
+  @bulkActions={{this.bulkActions}}
+  @onBulkAction={{this.onBulkAction}}
+>
+  <:headerActions>
     <ds-button slot="actions" variant="primary" prefix-icon="settings-deploy" {{on "click" this.deploy}}>
       {{t "ms.deploy"}}
     </ds-button>
-  </ds-page-header>
-
-  <div class="bl-list__scroll">
-    {{#if this.error}}
-      <ds-empty-state type="centered" illustration="common-error"
-        title={{t "ms.err.title"}} description={{t "ms.err.desc"}}
-        primary-label="Retry" show-secondary="false"></ds-empty-state>
-    {{else if this.view}}
-      {{#if this.view.available}}
-        <div class="bl-kpis">
-          {{#each this.kpis as |k|}}
-            <ds-kpi-card label={{k.label}} value={{k.value}} state={{k.state}} icon={{k.icon}}></ds-kpi-card>
-          {{/each}}
-        </div>
-
-        <div class="bl-list__grid {{if this.filtering "is-filtering"}}">
-          <div class="bl-list__filtercol">
-            <ds-filter-panel
-              class="bl-list__filters"
-              title={{t "ms.filters"}}
-              aria-label="Filters"
-              fit-viewport
-              {{set-prop "groups" this.filterGroups}}
-              {{on "ds-filter-panel-change" this.onFilterChange}}
-            ></ds-filter-panel>
-          </div>
-
-          <div class="bl-list__tablewrap">
-            {{#if this.isLoading}}
-              <div class="bl-list__updating" role="status">
-                <ds-icon name="loading" size="14"></ds-icon>
-                <span>{{t "ms.updating"}}</span>
-              </div>
-            {{/if}}
-            <ds-data-table
-              class="bl-list__table"
-              selection-mode="multi"
-              row-height="comfortable"
-              show-footer
-              sticky-header
-              rows-per-page={{this.pageSize}}
-              page={{this.page}}
-              total-rows={{this.total}}
-              {{set-prop "columns" this.columns}}
-              {{set-prop "rows" this.rows}}
-              {{set-prop "bulkActions" this.bulkActions}}
-              {{on "ds-data-table-bulk-action" this.onBulkAction}}
-              {{on "ds-data-table-page" this.onPage}}
-              {{on "ds-data-table-rows-per-page" this.onPageSize}}
-              {{on "ds-data-table-search" this.onSearch}}
-              {{on "ds-data-table-sort" this.onSort}}
-              {{on "ds-data-table-filter" this.onToggleFilter}}
-            ></ds-data-table>
-          </div>
-        </div>
-      {{else}}
-        <ds-empty-state type="centered" illustration="device-protected"
-          title={{t "ms.empty.title"}} description={{t "ms.empty.desc"}}
-          primary-label={{t "ms.deploy"}} show-secondary="false"></ds-empty-state>
-      {{/if}}
-    {{else}}
-      <div class="bl-list__loading" role="status">
-        <ds-icon name="loading" size="20"></ds-icon>
-        <span>Loading managed computers…</span>
-      </div>
-    {{/if}}
-  </div>
-</div>
+  </:headerActions>
+</Patterns::ListView>

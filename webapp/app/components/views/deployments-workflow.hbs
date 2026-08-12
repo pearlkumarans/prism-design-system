@@ -1,80 +1,15 @@
-{{! Workflows — server-driven list bound to PrismAPI.deployments.workflows.
-    name / stages / status, no KPIs. Add Workflow + row Edit open the builder
-    (a legacy view via ContentOutlet). Reuses the generic .bl-list layout. }}
-<div class="bl-list">
-  <ds-page-header
-    icon="route"
-    structure="default"
-    title="Workflows"
-    description="Stack policies into stages — pre-deployment activities, notifications, retries — and run them in order."
-    show-description
-    collapse-on-scroll
-    scroll-target=".bl-list__scroll"
-  >
-    <ds-button
-      slot="actions"
-      variant="primary"
-      size="small"
-      prefix-icon="add"
-      {{on "click" this.onAddWorkflow}}
-    >Add workflow</ds-button>
-  </ds-page-header>
-
-  <div class="bl-list__scroll">
-    {{#if this.error}}
-      <ds-empty-state type="centered" illustration="common-error"
-        title="Couldn't load workflows" description="The request failed. Is the BFF running (server/bff.mjs)?"
-        primary-label="Retry" show-secondary="false"></ds-empty-state>
-    {{else if this.view}}
-      <div class="bl-list__grid {{if this.filtering "is-filtering"}}">
-        <div class="bl-list__filtercol">
-          <ds-filter-panel
-            class="bl-list__filters"
-            title="Filters"
-            aria-label="Filters"
-            fit-viewport
-            {{set-prop "groups" this.filterGroups}}
-            {{on "ds-filter-panel-change" this.onFilterChange}}
-          ></ds-filter-panel>
-        </div>
-
-        <div class="bl-list__tablewrap" {{on "click" this.onTableClick}}>
-          {{#if this.isLoading}}
-            <div class="bl-list__updating" role="status">
-              <ds-icon name="loading" size="14"></ds-icon>
-              <span>Updating…</span>
-            </div>
-          {{/if}}
-          <ds-data-table
-            class="bl-list__table"
-            selection-mode="multi"
-            row-height="comfortable"
-            show-footer
-            sticky-header
-            rows-per-page={{this.pageSize}}
-            page={{this.page}}
-            total-rows={{this.total}}
-            {{set-prop "columns" this.columns}}
-            {{set-prop "rows" this.rows}}
-            {{on "ds-data-table-page" this.onPage}}
-            {{on "ds-data-table-rows-per-page" this.onPageSize}}
-            {{on "ds-data-table-search" this.onSearch}}
-            {{on "ds-data-table-sort" this.onSort}}
-            {{on "ds-data-table-filter" this.onToggleFilter}}
-          ></ds-data-table>
-          <ds-dropdown-menu
-            class="pol-row-menu"
-            type="action"
-            {{set-prop "items" this.rowMenu}}
-            {{on "ds-dropdown-select" this.onRowMenuSelect}}
-          ></ds-dropdown-menu>
-        </div>
-      </div>
-    {{else}}
-      <div class="bl-list__loading" role="status">
-        <ds-icon name="loading" size="20"></ds-icon>
-        <span>Loading workflows…</span>
-      </div>
-    {{/if}}
-  </div>
-</div>
+{{! Workflows — a thin Patterns::ListView instance (no KPIs, row menu). }}
+<Patterns::ListView
+  @header={{this.header}}
+  @fetch={{this.fetch}}
+  @columns={{this.columns}}
+  @facets={{this.facets}}
+  @rowMenu={{this.rowMenu}}
+  @onRowMenu={{this.onRowMenu}}
+>
+  <:headerActions>
+    <ds-button slot="actions" variant="primary" size="small" prefix-icon="add" {{on "click" this.onAddWorkflow}}>
+      Add workflow
+    </ds-button>
+  </:headerActions>
+</Patterns::ListView>
