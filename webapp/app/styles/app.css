@@ -158,7 +158,9 @@ body {
   display: flex;
   flex: 1;
   min-height: 0;
-  padding: var(--spacing-12, 12px);
+  /* Match the vanilla shell: top 0 (framed area flush under the header),
+     end 0 (right rail flush to the window edge), bottom + start 12px. */
+  padding: 0 0 var(--spacing-12, 12px) var(--spacing-12, 12px);
   gap: 0;
 }
 /* shell-area = the framed region wrapping L1 + L2 + content */
@@ -167,7 +169,8 @@ body {
   min-width: 0;
   display: flex;
   border: 1px solid var(--uems-border-tertiary);
-  border-radius: var(--radius-lg, 16px);
+  /* 16px to match the vanilla shell's framed area (its --radius-lg resolves to 12). */
+  border-radius: 16px;
   background: var(--uems-bg-primary);
   overflow: hidden;
 }
@@ -193,8 +196,9 @@ body {
   flex-direction: column;
   overflow: auto;
 }
-/* Right utility rail — flush to the end edge, outside the framed area. */
-.poc-shellroot ds-right-pane { flex: 0 0 auto; height: 100%; margin-inline-start: var(--spacing-12, 12px); }
+/* Right utility rail — flush to the end edge, sitting just outside the framed
+   area (matches the vanilla shell: no 12px inset). */
+.poc-shellroot ds-right-pane { flex: 0 0 auto; height: 100%; margin-inline-start: 0; }
 /* Left-nav module rail — flush to the start edge, outside the framed area. */
 .poc-modrail { flex: 0 0 auto; height: 100%; }
 .poc-modrail[hidden] { display: none; }
