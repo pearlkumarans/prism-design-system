@@ -8,7 +8,7 @@ export function initialize(appInstance) {
   const i18n = appInstance.lookup('service:i18n');
   const theme = appInstance.lookup('service:theme');
   const nav = appInstance.lookup('service:nav');
-  appInstance.lookup('service:api'); // instantiate at boot (sets PrismAPI mock mode for the POC)
+  appInstance.lookup('service:api'); // instantiate at boot (sets PrismAPI mock mode — no backend wired here)
 
   window.ShellDrawers = window.ShellDrawers || {};
   window.ShellCtx = {
@@ -37,7 +37,7 @@ export function initialize(appInstance) {
     setNavMode: (m) => nav.setMode(m),
     setRailIcons: (on) => nav.setRailIcons(on),
 
-    // header icon highlight — no-op in the POC.
+    // header icon highlight — not wired here (no-op).
     setActiveIcon: () => {},
   };
 }
