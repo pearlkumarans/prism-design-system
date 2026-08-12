@@ -15,7 +15,12 @@ import { injectViewInto } from 'prism-webapp/lib/inject-view';
  *  • Everything else (profile / settings / apps / search) is a full-viewport overlay
  *    in a body-level host.
  */
-const CONTENT_SCOPED = new Set(['help', 'accessibility', 'updates']);
+// Drawers that mount INSIDE the content region (.poc-area) rather than the body:
+//  • ds-drawer.ec-drawer slide-overs (help/accessibility/updates) — confined by
+//    `.poc-area ds-drawer.ec-drawer { inset:0 }`.
+//  • Settings — a full-page swap that toggles `.set-open` on .poc-area to replace
+//    the content; #set-pop must be a CHILD of .poc-area for its CSS to apply.
+const CONTENT_SCOPED = new Set(['help', 'accessibility', 'updates', 'settings']);
 
 // A few drawer FILES register their ShellDrawers handle under a different KEY than
 // their file name (a quirk carried over from the vanilla shell). Map name → key so

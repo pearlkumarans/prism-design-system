@@ -12,8 +12,11 @@ export function initialize(appInstance) {
 
   window.ShellDrawers = window.ShellDrawers || {};
   window.ShellCtx = {
-    // DOM refs some views read (content host / shell area).
-    get shellArea() { return document.querySelector('ds-content'); },
+    // DOM refs some views read. shellArea = the framed region wrapping the sidebars
+    // + content (Shell.html's .shell-area; here .poc-area). Full-page overlays like
+    // Settings toggle `.set-open` on it to replace the content with themselves.
+    // content = the scrollable content host itself.
+    get shellArea() { return document.querySelector('.poc-area'); },
     get content() { return document.querySelector('ds-content'); },
 
     // i18n
