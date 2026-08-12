@@ -12,7 +12,7 @@ export default modifier(function mountViewModifier(element, [slug]) {
 
   const view = CONTENT_VIEWS[slug];
   if (!view) {
-    element.innerHTML = `<p class="poc-content-error">Unknown view slug: <code>${slug}</code></p>`;
+    element.innerHTML = `<p class="content-outlet-error">Unknown view slug: <code>${slug}</code></p>`;
     return () => { element.innerHTML = ''; };
   }
 
@@ -20,7 +20,7 @@ export default modifier(function mountViewModifier(element, [slug]) {
     .then(() => requestAnimationFrame(() => window.ShellDrawers?.[slug]?.show?.()))
     .catch((e) => {
       element.innerHTML =
-        `<p class="poc-content-error">Couldn't load <code>${view.file}.html</code> — ${e.message}.` +
+        `<p class="content-outlet-error">Couldn't load <code>${view.file}.html</code> — ${e.message}.` +
         ` Is the repo static server running and proxied? See README.</p>`;
     });
 

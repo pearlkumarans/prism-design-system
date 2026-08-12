@@ -7,7 +7,7 @@ import { injectViewInto } from 'prism-webapp/lib/inject-view';
  *
  * Two mount targets, matching the vanilla shell:
  *  • Content-scoped drawers (ds-drawer.ec-drawer — Help / Accessibility / Updates)
- *    inject straight into .poc-area, so `.poc-area ds-drawer.ec-drawer { inset:0 }`
+ *    inject straight into .shell-area, so `.shell-area ds-drawer.ec-drawer { inset:0 }`
  *    confines them to the content region (below the header, clear of the right rail).
  *    Injecting them here (rather than into the body host and relocating) is what
  *    keeps the slide-in smooth: the panel's one-shot slide keyframe runs on first
@@ -15,12 +15,12 @@ import { injectViewInto } from 'prism-webapp/lib/inject-view';
  *  • Everything else (profile / settings / apps / search) is a full-viewport overlay
  *    in a body-level host.
  */
-// Drawers that mount INSIDE the content region (.poc-area) rather than the body:
+// Drawers that mount INSIDE the content region (.shell-area) rather than the body:
 //  • ds-drawer.ec-drawer slide-overs (help/accessibility/updates) — confined by
-//    `.poc-area ds-drawer.ec-drawer { inset:0 }`.
-//  • Full-page swaps that toggle `.<name>-open` on .poc-area to REPLACE the
+//    `.shell-area ds-drawer.ec-drawer { inset:0 }`.
+//  • Full-page swaps that toggle `.<name>-open` on .shell-area to REPLACE the
 //    content with themselves — Settings, Ask Zia, Support. Their #…-pop must be a
-//    CHILD of .poc-area for the `.shell-area.<name>-open` CSS to apply.
+//    CHILD of .shell-area for the `.shell-area.<name>-open` CSS to apply.
 const CONTENT_SCOPED = new Set(['help', 'accessibility', 'updates', 'settings', 'zia', 'support']);
 
 // A few drawer FILES register their ShellDrawers handle under a different KEY than
@@ -48,7 +48,7 @@ export default class DrawersService extends Service {
   _bodyHostEl() {
     if (!this._bodyHost) {
       this._bodyHost = document.createElement('div');
-      this._bodyHost.id = 'poc-drawer-host';
+      this._bodyHost.id = 'shell-drawer-host';
       document.body.appendChild(this._bodyHost);
     }
     return this._bodyHost;
@@ -56,7 +56,7 @@ export default class DrawersService extends Service {
 
   _hostFor(name) {
     if (CONTENT_SCOPED.has(name)) {
-      const area = document.querySelector('.poc-area');
+      const area = document.querySelector('.shell-area');
       if (area) return area; // inject into the framed content region (like .shell-area)
     }
     return this._bodyHostEl();

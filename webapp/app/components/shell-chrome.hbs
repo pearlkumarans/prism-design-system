@@ -1,6 +1,6 @@
 {{! Full shell frame. The chrome modifier wires everything to routed + nav state.
     Layout mirrors Shell.html: header on top; body row of [module rail][shell area][right pane]. }}
-<div class="poc-shellroot" {{chrome this this.shell.tabId this.shell.viewSlug this.nav.mode this.nav.railIcons}}>
+<div class="shell-root" {{chrome this this.shell.tabId this.shell.viewSlug this.nav.mode this.nav.railIcons}}>
   <ds-header-nav
     variant={{this.shell.variant}}
     user-initials="AM"
@@ -8,13 +8,14 @@
     show-bookmark="false"
   ></ds-header-nav>
 
-  <div class="poc-body">
+  <div class="shell-body">
     {{! Left-nav mode only — module rail relocated to the side (hidden in top-nav). }}
-    <ds-module-rail class="poc-modrail" aria-label="Modules" hidden></ds-module-rail>
+    <ds-module-rail class="shell-modrail" aria-label="Modules" hidden></ds-module-rail>
 
-    {{! `shell-area` alias so injected legacy views that key off .shell-area
-        (e.g. Settings' `.shell-area.set-open` full-page swap) match this region. }}
-    <div class="poc-area shell-area">
+    {{! The framed content region (Shell.html calls it .shell-area). Injected legacy
+        views key off this class — Settings/Zia/Support toggle `.shell-area.<x>-open`
+        on it, confined ec-drawers use `.shell-area ds-drawer.ec-drawer`. }}
+    <div class="shell-area">
       <ds-sidebar-l1 hide-toggle></ds-sidebar-l1>
       <ds-sidebar-l2 collapse-toggle></ds-sidebar-l2>
       <ds-content role="main">

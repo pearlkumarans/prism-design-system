@@ -1,4 +1,4 @@
-/* POC page chrome only — uses design-system tokens, no hardcoded values. */
+/* App shell chrome — uses design-system tokens, no hardcoded values. */
 body {
   margin: 0;
   font-family: var(--font-family-sans);
@@ -6,147 +6,21 @@ body {
   color: var(--uems-text-primary);
 }
 
-.poc-shell {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: var(--spacing-32, 32px) var(--spacing-24, 24px);
-}
-
-.poc-head h1 {
-  font-size: var(--font-size-24, 24px);
-  font-weight: var(--font-weight-bold);
-  margin: 0 0 var(--spacing-8, 8px);
-}
-
-.poc-head p {
-  font-size: var(--font-size-14, 14px);
-  color: var(--uems-text-secondary);
-  max-width: 60ch;
-  margin: 0 0 var(--spacing-24, 24px);
-}
-
-.poc-card {
-  background: var(--uems-bg-primary);
-  border: 1px solid var(--uems-border-tertiary);
-  border-radius: var(--radius-lg, 12px);
-  padding: var(--spacing-16, 16px);
-}
-
-.poc-toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-12, 12px);
-  margin-bottom: var(--spacing-16, 16px);
-}
-
-.poc-event {
-  margin-top: var(--spacing-16, 16px);
-  font-size: var(--font-size-13, 13px);
-  color: var(--uems-text-secondary);
-}
-
-.poc-event code {
-  color: var(--uems-text-primary);
-}
-
-/* ── Routing-demo chrome ─────────────────────────────────────────────────── */
-.poc-appbar {
-  display: flex;
-  align-items: baseline;
-  gap: var(--spacing-12, 12px);
-  padding: var(--spacing-12, 12px) var(--spacing-24, 24px);
-  border-bottom: 1px solid var(--uems-border-tertiary);
-  background: var(--uems-bg-primary);
-}
-.poc-appbar strong {
-  font-size: var(--font-size-16, 16px);
-  color: var(--uems-text-primary);
-}
-.poc-variant {
-  font-size: var(--font-size-12, 12px);
-  color: var(--uems-text-secondary);
-}
-.poc-tabs {
-  display: flex;
-  gap: var(--spacing-4, 4px);
-  padding: var(--spacing-8, 8px) var(--spacing-24, 24px) 0;
-  border-bottom: 1px solid var(--uems-border-tertiary);
-  background: var(--uems-bg-primary);
-  overflow-x: auto;
-}
-.poc-tab {
-  padding: var(--spacing-8, 8px) var(--spacing-12, 12px);
-  border-bottom: 2px solid transparent;
-  font-size: var(--font-size-14, 14px);
-  color: var(--uems-text-secondary);
-  text-decoration: none;
-  white-space: nowrap;
-}
-.poc-tab:hover {
-  color: var(--uems-text-primary);
-}
-.poc-tab.active {
-  color: var(--uems-text-accent-link);
-  border-bottom-color: var(--uems-text-accent-link);
-  font-weight: var(--font-weight-semibold);
-}
-.poc-card + .poc-card {
-  margin-top: var(--spacing-16, 16px);
-}
-.poc-card h2 {
-  margin: 0 0 var(--spacing-12, 12px);
-  font-size: var(--font-size-15, 15px);
-  font-weight: var(--font-weight-semibold);
-  color: var(--uems-text-primary);
-}
-.poc-state {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: var(--spacing-4, 4px) var(--spacing-16, 16px);
-  margin: 0;
-  font-size: var(--font-size-13, 13px);
-}
-.poc-state dt {
-  color: var(--uems-text-secondary);
-}
-.poc-state dd {
-  margin: 0;
-  color: var(--uems-text-primary);
-}
-
-/* ── ContentOutlet ───────────────────────────────────────────────────────── */
-.poc-statebar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-4, 4px) var(--spacing-16, 16px);
-  padding: var(--spacing-8, 8px) var(--spacing-24, 24px);
-  background: var(--uems-bg-secondary, #f0f2f5);
-  border-bottom: 1px solid var(--uems-border-tertiary);
-  font-size: var(--font-size-12, 12px);
-  color: var(--uems-text-secondary);
-}
-.poc-statebar b {
-  color: var(--uems-text-secondary);
-  font-weight: var(--font-weight-semibold);
-}
-.poc-statebar code {
-  color: var(--uems-text-primary);
-}
 /* The real view mounts here; let it own its full height like <ds-content> does. */
-.poc-content {
+.content-outlet {
   display: flex;
   flex-direction: column;
   min-height: 0;
   flex: 1;
 }
-.poc-content-error {
+.content-outlet-error {
   padding: var(--spacing-24, 24px);
   color: var(--uems-text-error, #d5304a);
   font-size: var(--font-size-14, 14px);
 }
 
 /* ── ShellChrome (header · module-rail · L1/L2 · content · right-pane) ─────── */
-.poc-shellroot {
+.shell-root {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -154,7 +28,7 @@ body {
      light, etc.). NOT --uems-bg-base, which is plain white. */
   background: var(--uems-background);
 }
-.poc-body {
+.shell-body {
   display: flex;
   flex: 1;
   min-height: 0;
@@ -164,7 +38,7 @@ body {
   gap: 0;
 }
 /* shell-area = the framed region wrapping L1 + L2 + content */
-.poc-area {
+.shell-area {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -174,7 +48,7 @@ body {
   background: var(--uems-bg-primary);
   /* clip (NOT hidden): clips the confined drawer to the framed area but is NOT a
      scroll container — so the drawer's focus-on-open (close button, off-screen
-     mid-slide) can't scroll .poc-area sideways and jerk the nav/content. This is
+     mid-slide) can't scroll .shell-area sideways and jerk the nav/content. This is
      exactly why Shell.html's .shell-area uses `overflow: clip`. */
   overflow: clip;
   /* positioning context for content-confined drawers (help/accessibility/updates)
@@ -183,9 +57,9 @@ body {
 }
 /* Content-confined drawers (ds-drawer.ec-drawer) fill the framed content region —
    below the header, clear of the right rail — instead of the full viewport. */
-.poc-area ds-drawer.ec-drawer { position: absolute !important; inset: 0 !important; z-index: 30; }
-.poc-shellroot ds-sidebar-l1,
-.poc-shellroot ds-sidebar-l2 {
+.shell-area ds-drawer.ec-drawer { position: absolute !important; inset: 0 !important; z-index: 30; }
+.shell-root ds-sidebar-l1,
+.shell-root ds-sidebar-l2 {
   height: 100%;
   max-width: 400px;
   opacity: 1;
@@ -193,13 +67,13 @@ body {
 }
 /* The is-hidden collapse lives in Shell.html's own CSS (not the design system),
    so replicate it: applyL2For toggles is-hidden, this makes it actually collapse. */
-.poc-shellroot ds-sidebar-l1.is-hidden,
-.poc-shellroot ds-sidebar-l2.is-hidden {
+.shell-root ds-sidebar-l1.is-hidden,
+.shell-root ds-sidebar-l2.is-hidden {
   max-width: 0 !important;
   opacity: 0 !important;
   margin-inline-end: 0 !important;
 }
-.poc-shellroot ds-content {
+.shell-root ds-content {
   flex: 1;
   min-height: 0;
   display: flex;
@@ -208,10 +82,10 @@ body {
 }
 /* Right utility rail — flush to the end edge, sitting just outside the framed
    area (matches the vanilla shell: no 12px inset). */
-.poc-shellroot ds-right-pane { flex: 0 0 auto; height: 100%; margin-inline-start: 0; }
+.shell-root ds-right-pane { flex: 0 0 auto; height: 100%; margin-inline-start: 0; }
 /* Left-nav module rail — flush to the start edge, outside the framed area. */
-.poc-modrail { flex: 0 0 auto; height: 100%; }
-.poc-modrail[hidden] { display: none; }
+.shell-modrail { flex: 0 0 auto; height: 100%; }
+.shell-modrail[hidden] { display: none; }
 
 /* ── Native BitLocker dashboard (Phase E pilot) ──────────────────────────────
    Ported from the fragment's #bldash-pop scope to .bl-dash. Includes the layout
@@ -406,5 +280,5 @@ body {
 
 /* Top ⇄ Left navigation: in left mode the module tabs move to the rail, so hide
    the header's tab band (mirrors Shell.html's html.nav-left rule). */
-html.nav-left .poc-shellroot ds-header-nav .ds-header-nav__tabs { display: none; }
-html.nav-left .poc-body { padding-inline-start: var(--spacing-12, 12px); }
+html.nav-left .shell-root ds-header-nav .ds-header-nav__tabs { display: none; }
+html.nav-left .shell-body { padding-inline-start: var(--spacing-12, 12px); }

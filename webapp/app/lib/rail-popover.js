@@ -4,7 +4,7 @@
  * Shell.html (#upd-pop + toggleCard); ported here so those icons show the correct
  * card instead of wrongly opening the full Product Updates drawer.
  *
- * A single body-level, position:fixed popover (outside .poc-area, so no scroll
+ * A single body-level, position:fixed popover (outside .shell-area, so no scroll
  * container → no jerk). Built from Prism components + tokens. English content
  * (the app default); the vanilla Arabic variants can be layered on later.
  */
