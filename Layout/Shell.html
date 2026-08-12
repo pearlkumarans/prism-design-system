@@ -813,6 +813,9 @@
   import '../design-system-library/src/components/index.js';
   import { applyL2For, wireL1ToL2 } from '../design-system-library/src/data/ec-menus.js';
   import { initShellResponsive } from '../design-system-library/src/shell/shell-responsive.js';
+  /* Routing tables — single source of truth shared with the Ember app. See
+     Layout/shell-catalog.js. Edit the catalog there, not inline here. */
+  import { PRODUCTS, CONTENT_VIEWS, TAB_DEFAULT_VIEW } from './shell-catalog.js';
 
   const hEl  = document.getElementById('ec-header');
   const l1El = document.getElementById('shell-l1');
@@ -916,29 +919,7 @@
      rebrands the logo + product name automatically via ds-header-nav), filters
      the header/mod-rail tabs to its module subset, sets the landing view, and
      rebrands the loader + document title. Add a product by adding one row. */
-  const PRODUCTS = {
-    ec:  { variant: 'endpoint-central',         name: 'Endpoint Central',           tabs: null },
-    pmp: { variant: 'patch-manager-plus',       name: 'Patch Manager Plus',         tabs: ['home','tp','sd','inv','reports','support'], defaultView: 'threats-patches-highly-vulnerable-systems' },
-    vmp: { variant: 'vulnerability-manager-plus', name: 'Vulnerability Manager Plus', tabs: ['home','tp','inv','reports','support'],      defaultView: 'threats-patches-highly-vulnerable-systems' },
-    mdm: { variant: 'mdm',                      name: 'Mobile Device Manager Plus', tabs: ['home','mdm','inv','reports','support'] },
-    bsp: { variant: 'browser-security-plus',    name: 'Browser Security Plus',      tabs: ['home','browsers','inv','reports','support'] },
-    acp: { variant: 'application-control-plus', name: 'Application Control Plus',   tabs: ['home','app-ctrl','inv','reports','support'] },
-    dcp: { variant: 'device-control-plus',      name: 'Device Control Plus',        tabs: ['home','dev-ctrl','inv','reports','support'] },
-    dxm: { variant: 'dex-manager-plus',         name: 'DEX Manager Plus',           tabs: ['home','dex','inv','reports','support'] },
-    dlp: { variant: 'endpoint-dlp-plus',        name: 'Endpoint DLP Plus',          tabs: ['home','dlp','inv','reports','support'] },
-    mpp: { variant: 'malware-protection-plus',  name: 'Malware Protection Plus',    tabs: ['home','malware','inv','reports','support'] },
-    osd: { variant: 'os-deployer',              name: 'OS Deployer',                tabs: ['home','osd','inv','reports','support'] },
-    pcp: { variant: 'patch-connect-plus',       name: 'Patch Connect Plus',         tabs: ['home','tp','sd','inv','reports','support'] },
-    rpp: { variant: 'ransomware-protection-plus', name: 'Ransomware Protection Plus', tabs: ['home','malware','tp','inv','reports','support'] },
-    rap: { variant: 'remote-access-plus',       name: 'Remote Access Plus',         tabs: ['home','tools','inv','reports','support'] },
-    /* Adjacent ManageEngine suites (branding only — not Endpoint-Central modules,
-       so a neutral Home/Reports/Support nav until their real IA is modelled). */
-    ad360:    { variant: 'ad360',            name: 'AD360',            tabs: ['home','reports','support'] },
-    log360:   { variant: 'log360',           name: 'Log360',           tabs: ['home','reports','support'] },
-    pam360:   { variant: 'pam360',           name: 'PAM360',           tabs: ['home','reports','support'] },
-    sdp:      { variant: 'servicedesk-plus', name: 'ServiceDesk Plus', tabs: ['home','reports','support'] },
-    site24x7: { variant: 'site24x7',         name: 'Site24x7',         tabs: ['home','reports','support'] },
-  };
+  /* PRODUCTS — imported from ./shell-catalog.js (single source of truth). */
   const _product = (new URLSearchParams(location.search).get('product') || 'ec').toLowerCase();
   const _prod = PRODUCTS[_product] || PRODUCTS.ec;
   /* Header + mod-rail tabs, filtered to the active product's module subset. */
@@ -2059,63 +2040,8 @@
      injected into <ds-content> just like home-dashboard. `?view=<slug>` opens
      one: set the module context (tab), hide Home/empty-state, inject + show.
      Add a line here to register a new pattern. ───────────────────────────── */
-  const CONTENT_VIEWS = {
-    'sectioned-form': { file: 'layout-sectioned-form', tab: 'configs' },
-    'tabbed-form': { file: 'layout-tabbed-form', tab: 'configs' },
-    'list-view': { file: 'layout-list-view', tab: 'inv' },
-    'missing-patches': { file: 'missing-patches', tab: 'tp' },
-    'module-dashboard': { file: 'layout-module-dashboard', tab: 'tp' },
-    'list-detail': { file: 'layout-list-detail', tab: 'inv' },
-    /* project pages (projects/<project>/…) — grouped by project, shared shell.
-       Slugs describe the page's PURPOSE, not the archetype it was built from. */
-    'demo-create-deployment': { file: '../projects/demo/layout-create-deployment', tab: 'sd' },
-    'demo-deployments': { file: '../projects/demo/layout-deployments', tab: 'sd' },
-    'demo-deployment-detail': { file: '../projects/demo/layout-deployment-detail', tab: 'sd' },
-    'acme-inventory-overview': { file: '../projects/acme/layout-inventory-overview', tab: 'inv' },
-    'acme-patch-approvals': { file: '../projects/acme/layout-patch-approvals', tab: 'tp' },
-    'acme-patch-detail': { file: '../projects/acme/layout-patch-detail', tab: 'tp' },
-    'patch-management-deployment-schedule': { file: '../projects/patch-management/layout-deployment-schedule', tab: 'tp' },
-    'threats-patches-highly-vulnerable-systems': { file: '../projects/threats-patches/layout-highly-vulnerable-systems', tab: 'tp' },
-    'threats-patches-linux-repository-settings': { file: '../projects/threats-patches/layout-linux-repository-settings', tab: 'tp' },
-    'threats-patches-n1-patch-settings': { file: '../projects/threats-patches/layout-n1-patch-settings', tab: 'tp' },
-    'bitlocker-dashboard': { file: '../projects/bitlocker/layout-summary-dashboard', tab: 'bitlocker' },
-    'bitlocker-managed-systems': { file: '../projects/bitlocker/layout-managed-systems', tab: 'bitlocker' },
-    'bitlocker-device-detail': { file: '../projects/bitlocker/layout-device-detail', tab: 'bitlocker', nav: 'bitlocker-managed-systems' },   /* drill-down: highlight its list parent ("Managed Computers") in the sidebar */
-    'bitlocker-activity-report': { file: '../projects/bitlocker/layout-activity-report', tab: 'bitlocker' },
-    'bitlocker-policy-creation': { file: '../projects/bitlocker/layout-policy-creation', tab: 'bitlocker' },
-    'custom-groups-create-group': { file: '../projects/custom-groups/layout-create-group', tab: 'inv', nav: 'custom-groups' },   /* drill-down: highlight "Custom Groups" in the Inventory sidebar */
-    /* ── Deployments module (projects/deployments/) — merged from the deployments project.
-       Primary nav destinations have no `nav:`; drill-downs name their list parent via `nav:`. */
-    'deployments-summary':                          { file: '../projects/deployments/layout-summary',                          tab: 'deployments' },
-    'deployments-devices':                          { file: '../projects/deployments/layout-devices',                          tab: 'deployments' },
-    'deployments-policy':                           { file: '../projects/deployments/layout-policy',                           tab: 'deployments', nav: 'deployments-policy-list' },
-    'deployments-policy-list':                      { file: '../projects/deployments/layout-policy-list',                      tab: 'deployments' },
-    'deployments-policy-detail':                    { file: '../projects/deployments/layout-policy-detail',                    tab: 'deployments', nav: 'deployments-policy-list' },
-    'deployments-workflow':                         { file: '../projects/deployments/layout-workflow',                         tab: 'deployments' },
-    'deployments-workflow-builder':                 { file: '../projects/deployments/layout-workflow-builder',                 tab: 'deployments', nav: 'deployments-workflow' },
-    'deployments-schedule':                         { file: '../projects/deployments/layout-schedule',                         tab: 'deployments' },
-    'deployments-schedule-form':                    { file: '../projects/deployments/layout-schedule-form',                    tab: 'deployments', nav: 'deployments-schedule' },
-    'deployments-schedule-detail':                  { file: '../projects/deployments/layout-schedule-detail',                  tab: 'deployments', nav: 'deployments-schedule' },
-    'deployments-list':                             { file: '../projects/deployments/layout-list',                             tab: 'deployments' },
-    'deployments-create':                           { file: '../projects/deployments/layout-deployment-create',                tab: 'deployments', nav: 'deployments-list' },
-    'deployments-detail':                           { file: '../projects/deployments/layout-deployment-detail',                tab: 'deployments', nav: 'deployments-list' },
-    'deployments-device-execution':                 { file: '../projects/deployments/layout-deployment-device',                tab: 'deployments', nav: 'deployments-list' },
-    'deployments-reports':                          { file: '../projects/deployments/layout-reports',                          tab: 'deployments' },
-    'deployments-policy-install-uninstall-software':{ file: '../projects/deployments/layout-policy-install-uninstall-software',tab: 'deployments', nav: 'deployments-policy' },
-    'deployments-policy-file-folder-operation':     { file: '../projects/deployments/layout-policy-file-folder-operation',     tab: 'deployments', nav: 'deployments-policy' },
-    'deployments-policy-install-uninstall-patches': { file: '../projects/deployments/layout-policy-install-uninstall-patches', tab: 'deployments', nav: 'deployments-policy' },
-    'deployments-policy-custom-script':             { file: '../projects/deployments/layout-policy-custom-script',             tab: 'deployments', nav: 'deployments-policy' },
-  };
-  /* Modules that open a default content view when their header tab is selected.
-     Keyed by tab id → CONTENT_VIEWS slug. Home lands on the module dashboard. */
-  const TAB_DEFAULT_VIEW = {
-    home: 'module-dashboard',
-    tp: 'threats-patches-highly-vulnerable-systems',   /* Threats & Patches tab lands on the Highly Vulnerable Systems list */
-    sd: 'demo-deployments',   /* Software Deployment tab lands on the demo deployments list */
-    inv: 'acme-inventory-overview',   /* Inventory tab lands on the acme inventory overview dashboard */
-    deployments: 'deployments-summary',   /* Deployments tab lands on the module Summary */
-    bitlocker: 'bitlocker-dashboard',   /* BitLocker Management tab lands on the Summary Dashboard (Overview > Dashboard) */
-  };
+  /* CONTENT_VIEWS + TAB_DEFAULT_VIEW — imported from ./shell-catalog.js (single
+     source of truth, shared with the Ember app). Add new views there. */
   /* Keep the address bar in sync with the shown view so links reflect the
      current page, refresh lands on it, and Back/Forward work. Preserves any
      ?product= and the hash. history: 'push' (default) | 'replace' | 'none'. */

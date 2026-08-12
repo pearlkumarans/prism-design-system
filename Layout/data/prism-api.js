@@ -203,6 +203,163 @@
           throw err;
         }
       },
+      /* NEW endpoint (served by the BFF, server/bff.mjs). Mock mirrors the same
+         contract so the UI works with no backend. { rows, total }. */
+      async listComputers(params = {}) {
+        if (useMock()) {
+          const OS = ['Windows 11 Pro', 'Windows 11 Ent', 'Windows 10 Ent', 'Windows 10 Pro', 'Windows 8.1 Ent', 'Server 2019'];
+          const ST = ['Encrypted', 'Encrypted', 'Encrypted', 'In progress', 'Not started', 'Failed'];
+          const AU = ['TPM only', 'TPM + PIN', 'TPM + Enhanced PIN', 'Passphrase'];
+          const SC = ['Full drive', 'OS drive only', 'Used space only'];
+          const SE = ['2 min ago', '18 min ago', '1 hr ago', '3 hrs ago', 'Yesterday', 'Jul 8, 2026'];
+          const p = (a, i) => a[i % a.length];
+          const all = Array.from({ length: 42 }, (_, k) => {
+            const i = k + 1, status = p(ST, i + (i % 3));
+            return { id: i, name: p(['FIN', 'SALES', 'ENG', 'HR', 'OPS', 'SRV'], i) + '-WKS-' + (100 + i * 7), os: p(OS, i + 1), status, auth: p(AU, i), scope: p(SC, i), compliance: status === 'Encrypted' ? 'Compliant' : 'Not compliant', seen: p(SE, i) };
+          });
+          const arr = (v) => (Array.isArray(v) ? v : v ? [v] : []);
+          const f = { status: arr(params.status), os: arr(params.os), auth: arr(params.auth), compliance: arr(params.compliance) };
+          const q = String(params.search || '').trim().toLowerCase();
+          let matched = all.filter((r) => (!f.status.length || f.status.includes(r.status)) && (!f.os.length || f.os.includes(r.os)) && (!f.auth.length || f.auth.includes(r.auth)) && (!f.compliance.length || f.compliance.includes(r.compliance)) && (!q || r.name.toLowerCase().includes(q) || r.os.toLowerCase().includes(q)));
+          const total = matched.length;
+          if (params.sort) {
+            const dir = params.dir === 'desc' ? -1 : 1;
+            matched = [...matched].sort((a, b) => dir * String(a[params.sort] ?? '').localeCompare(String(b[params.sort] ?? ''), undefined, { numeric: true, sensitivity: 'base' }));
+          }
+          const page = Number(params.page || 1), size = Number(params.pageSize || 999);
+          const rows = matched.slice((page - 1) * size, (page - 1) * size + size);
+          const fc = (key, vals) => vals.map((v) => ({ value: v, count: all.filter((r) => r[key] === v).length }));
+          return {
+            rows, total,
+            kpis: { managed: all.length, encrypted: all.filter((r) => r.status === 'Encrypted').length, pending: all.filter((r) => r.status === 'In progress').length, noncompliant: all.filter((r) => r.compliance === 'Not compliant').length },
+            facets: { status: fc('status', ['Encrypted', 'In progress', 'Not started', 'Failed']), os: fc('os', OS), auth: fc('auth', AU), compliance: fc('compliance', ['Compliant', 'Not compliant']) },
+          };
+        }
+        const q = {};
+        ['status', 'os', 'auth', 'compliance', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => {
+          if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k];
+        });
+        const body = await httpGet('/bitlocker/api/managedComputers', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+    },
+
+    /* Deployments — the SECOND resource. Same server-driven-table contract; the
+       client wiring is identical to bitlocker.listComputers (only the path + shape
+       differ). Live → the BFF /deployments/api/list; mock mirrors the contract. */
+    deployments: {
+      async list(params = {}) {
+        if (useMock()) {
+          const T = ['Software', 'Patch', 'Configuration', 'Script'], P = ['Windows', 'macOS', 'Linux'];
+          const S = ['Success', 'Success', 'In progress', 'Failed', 'Scheduled'], TG = ['All Windows', 'Finance OU', 'Remote offices', 'Servers', 'Kiosks', 'Sales laptops'], CR = ['Just now', '10 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 6, 2026'];
+          const p = (a, i) => a[i % a.length];
+          const all = Array.from({ length: 30 }, (_, k) => { const i = k + 1; return { id: i, name: p(['Deploy', 'Rollout', 'Push', 'Install'], i) + '-' + p(T, i) + '-' + (1000 + i * 3), type: p(T, i), platform: p(P, i + 1), status: p(S, i + (i % 2)), target: p(TG, i), devices: 5 + (i * 13) % 240, created: p(CR, i) }; });
+          const arr = (v) => (Array.isArray(v) ? v : v ? [v] : []);
+          const f = { status: arr(params.status), type: arr(params.type), platform: arr(params.platform) };
+          const q = String(params.search || '').trim().toLowerCase();
+          let m = all.filter((r) => (!f.status.length || f.status.includes(r.status)) && (!f.type.length || f.type.includes(r.type)) && (!f.platform.length || f.platform.includes(r.platform)) && (!q || r.name.toLowerCase().includes(q) || r.target.toLowerCase().includes(q)));
+          const total = m.length;
+          if (params.sort) { const dir = params.dir === 'desc' ? -1 : 1; m = [...m].sort((a, b) => dir * String(a[params.sort] ?? '').localeCompare(String(b[params.sort] ?? ''), undefined, { numeric: true, sensitivity: 'base' })); }
+          const page = Number(params.page || 1), size = Number(params.pageSize || 999);
+          const fc = (key, vals) => vals.map((v) => ({ value: v, count: all.filter((r) => r[key] === v).length }));
+          return { rows: m.slice((page - 1) * size, (page - 1) * size + size), total, kpis: { total: all.length, success: all.filter((r) => r.status === 'Success').length, running: all.filter((r) => r.status === 'In progress').length, failed: all.filter((r) => r.status === 'Failed').length }, facets: { status: fc('status', ['Success', 'In progress', 'Failed', 'Scheduled']), type: fc('type', T), platform: fc('platform', P) } };
+        }
+        const q = {};
+        ['status', 'type', 'platform', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/deployments/api/list', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+      async devices(params = {}) {
+        if (useMock()) {
+          const OSS = ['Windows', 'macOS', 'Linux'], STS = ['Deployed', 'Deployed', 'In progress', 'Pending', 'Failed'], GRP = ['All Windows', 'Finance OU', 'Servers', 'Sales laptops', 'Kiosks'], SEE = ['Just now', '12 min ago', '1 hr ago', 'Today', 'Yesterday'];
+          const p = (a, i) => a[i % a.length];
+          const all = Array.from({ length: 36 }, (_, k) => { const i = k + 1; return { id: i, name: p(['FIN', 'SALES', 'ENG', 'HR', 'OPS', 'SRV'], i) + '-DEV-' + (200 + i * 5), os: p(OSS, i), status: p(STS, i + (i % 3)), deployments: 1 + (i * 7) % 6, lastRun: p(SEE, i), group: p(GRP, i) }; });
+          const arr = (v) => (Array.isArray(v) ? v : v ? [v] : []);
+          const f = { status: arr(params.status), os: arr(params.os), group: arr(params.group) };
+          const q = String(params.search || '').trim().toLowerCase();
+          let m = all.filter((r) => (!f.status.length || f.status.includes(r.status)) && (!f.os.length || f.os.includes(r.os)) && (!f.group.length || f.group.includes(r.group)) && (!q || r.name.toLowerCase().includes(q) || r.group.toLowerCase().includes(q)));
+          const total = m.length;
+          if (params.sort) { const dir = params.dir === 'desc' ? -1 : 1; m = [...m].sort((a, b) => dir * String(a[params.sort] ?? '').localeCompare(String(b[params.sort] ?? ''), undefined, { numeric: true, sensitivity: 'base' })); }
+          const page = Number(params.page || 1), size = Number(params.pageSize || 999);
+          const fc = (key, vals) => vals.map((v) => ({ value: v, count: all.filter((r) => r[key] === v).length }));
+          return { rows: m.slice((page - 1) * size, (page - 1) * size + size), total, kpis: { total: all.length, deployed: all.filter((r) => r.status === 'Deployed').length, pending: all.filter((r) => r.status === 'Pending' || r.status === 'In progress').length, failed: all.filter((r) => r.status === 'Failed').length }, facets: { status: fc('status', ['Deployed', 'In progress', 'Pending', 'Failed']), os: fc('os', OSS), group: fc('group', GRP) } };
+        }
+        const q = {};
+        ['status', 'os', 'group', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/deployments/api/devices', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+      /* Deployment policies — a plain list (no KPIs): name→detail, per-row menu. */
+      async policies(params = {}) {
+        if (useMock()) {
+          const PL = ['Windows', 'macOS', 'Linux'], TY = ['Profile', 'Software', 'Patch', 'Script'];
+          const ST = ['Draft', 'Ready to Execute', 'Executed', 'In Progress', 'In Progress (Failed)', 'Suspended', 'Rejected', 'Expired'];
+          const US = ['A. Menon', 'R. Kapoor', 'S. Iyer', 'J. Fernandes', 'M. Bose'], WH = ['Just now', '10 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 6, 2026', 'Jun 28, 2026'];
+          const p = (a, i) => a[i % a.length];
+          const all = Array.from({ length: 34 }, (_, k) => { const i = k + 1; return { id: i, name: p(['Onboarding', 'Baseline', 'Security', 'Kiosk', 'Finance', 'Field'], i) + '-' + p(TY, i) + '-' + (100 + i * 3), scope: i % 4 === 0 ? 'user' : 'computer', platform: p(PL, i), type: p(TY, i), status: p(ST, i + (i % 3)), createdBy: p(US, i), modified: p(WH, i), modifiedBy: p(US, i + 2) }; });
+          const arr = (v) => (Array.isArray(v) ? v : v ? [v] : []);
+          const f = { platform: arr(params.platform), type: arr(params.type), status: arr(params.status) };
+          const q = String(params.search || '').trim().toLowerCase();
+          let m = all.filter((r) => (!f.platform.length || f.platform.includes(r.platform)) && (!f.type.length || f.type.includes(r.type)) && (!f.status.length || f.status.includes(r.status)) && (!q || r.name.toLowerCase().includes(q) || r.createdBy.toLowerCase().includes(q)));
+          const total = m.length;
+          if (params.sort) { const dir = params.dir === 'desc' ? -1 : 1; m = [...m].sort((a, b) => dir * String(a[params.sort] ?? '').localeCompare(String(b[params.sort] ?? ''), undefined, { numeric: true, sensitivity: 'base' })); }
+          const page = Number(params.page || 1), size = Number(params.pageSize || 999);
+          const fc = (key, vals) => vals.map((v) => ({ value: v, count: all.filter((r) => r[key] === v).length }));
+          return { rows: m.slice((page - 1) * size, (page - 1) * size + size), total, kpis: null, facets: { platform: fc('platform', PL), type: fc('type', TY), status: fc('status', ST) } };
+        }
+        const q = {};
+        ['platform', 'type', 'status', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/deployments/api/policies', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+      /* Workflows — simplest list: name / stages / status, no KPIs. */
+      async workflows(params = {}) {
+        if (useMock()) {
+          const ST = ['Active', 'Draft', 'Paused'], NM = ['Onboarding', 'Patch Tuesday', 'Kiosk refresh', 'Security baseline', 'Server hardening', 'Field rollout', 'Finance close', 'Lab reimage'];
+          const p = (a, i) => a[i % a.length];
+          const all = Array.from({ length: 22 }, (_, k) => { const i = k + 1; return { id: i, name: p(NM, i) + ' workflow ' + (i * 3), stages: 2 + (i * 5) % 7, status: p(ST, i + (i % 2)) }; });
+          const arr = (v) => (Array.isArray(v) ? v : v ? [v] : []);
+          const f = { status: arr(params.status) };
+          const q = String(params.search || '').trim().toLowerCase();
+          let m = all.filter((r) => (!f.status.length || f.status.includes(r.status)) && (!q || r.name.toLowerCase().includes(q)));
+          const total = m.length;
+          if (params.sort) { const dir = params.dir === 'desc' ? -1 : 1; m = [...m].sort((a, b) => dir * String(a[params.sort] ?? '').localeCompare(String(b[params.sort] ?? ''), undefined, { numeric: true, sensitivity: 'base' })); }
+          const page = Number(params.page || 1), size = Number(params.pageSize || 999);
+          const fc = (key, vals) => vals.map((v) => ({ value: v, count: all.filter((r) => r[key] === v).length }));
+          return { rows: m.slice((page - 1) * size, (page - 1) * size + size), total, kpis: null, facets: { status: fc('status', ST) } };
+        }
+        const q = {};
+        ['status', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/deployments/api/workflows', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+      /* Device execution DETAIL — a by-name record (not list-shaped): meta +
+         donut counts + per-stage rows + timeline nodes. */
+      async deviceExecution(params = {}) {
+        const rec = {
+          name: params.name || 'VIR-LT-0245', domain: 'corp.acme.com', site: 'Chennai DC', loggedOn: 'nithya.k',
+          lastContact: 'Jul 21, 9:14 AM', batch: 'Onboarding — July batch', status: 'Failed',
+          donut: { succeeded: 2, failed: 1, waiting: 2 },
+          stages: [
+            { n: 1, name: 'Okta Verify — Install', type: 'Software', status: 'Succeeded', retry: '—', remarks: 'Installed 9.4 x64 silently', at: 'Jul 21, 8:02 AM' },
+            { n: 2, name: 'CrowdStrike Falcon — Install', type: 'Software', status: 'Succeeded', retry: '—', remarks: 'Sensor registered with cloud', at: 'Jul 21, 8:09 AM' },
+            { n: 3, name: 'Zscaler VPN Profile', type: 'Profile', status: 'Failed', retry: 'Retry In Progress', remarks: 'Error 0x87D1: profile install blocked by pending reboot', at: 'Jul 21, 8:15 AM' },
+            { n: 4, name: 'Domain Join — corp.acme.com', type: 'Profile', status: 'Yet to Apply', retry: '—', remarks: 'Waiting — upstream stage failed', at: '--' },
+            { n: 5, name: 'BitLocker — OS drive, TPM', type: 'Security', status: 'Yet to Apply', retry: '—', remarks: 'Waiting — upstream stage failed', at: '--' },
+          ],
+          timeline: [
+            { d: 'g', t: 'Announcement (pre)', out: 'Users saw a message: "IT is installing your onboarding profile — allow 15 min."' },
+            { d: 'g', t: '1. Okta Verify — Install', out: 'msiexec exit 0 / Detected: 9.4.0 x64', mono: true },
+            { d: 'g', t: '2. CrowdStrike Falcon — Install', out: 'Sensor installed · CID registered', mono: true },
+            { d: 'r', t: '3. Zscaler VPN Profile', out: 'Error 0x87D1: profile install blocked\nCause: pending reboot from Falcon sensor\nOn failure = Stop → downstream stages held\nRetry: attempt 2 of 2 scheduled after reboot', mono: true },
+            { d: 'n', t: '4. Domain Join — corp.acme.com', out: 'Waiting for stage 3 to succeed' },
+            { d: 'n', t: '5. BitLocker — OS drive, TPM', out: 'Waiting for stage 3 to succeed' },
+          ],
+        };
+        if (useMock()) return rec;
+        const body = await httpGet('/deployments/api/deviceExecution', params.name ? { name: params.name } : {});
+        return body || rec;
+      },
     },
 
     /* Interactive auth — used by the login page. Token stored in localStorage
