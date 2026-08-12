@@ -87,6 +87,22 @@ export default class BitlockerDashboard extends Component {
     return (k) => this.i18n.t(k);
   }
 
+  get header() {
+    const t = this.t;
+    return { icon: 'shield', title: t('bl.title'), description: t('bl.desc') };
+  }
+
+  get kpiCards() {
+    const t = this.t;
+    return [
+      { label: t('bl.kpi.managed'), value: '186', state: 'default', icon: 'computer' },
+      { label: t('bl.kpi.encrypted'), value: '142', state: 'success', icon: 'lock' },
+      { label: t('bl.kpi.inprogress'), value: '21', state: 'warning', icon: 'clock' },
+      { label: t('bl.kpi.noncompliant'), value: '15', state: 'alert', icon: 'exclamation-circle' },
+      { label: t('bl.kpi.keys'), value: '138', state: 'default', icon: 'key' },
+    ];
+  }
+
   get statusChart() {
     const t = this.t;
     return { categories: [t('bl.cat.encrypted'), t('bl.cat.inprogress'), t('bl.cat.notstarted'), t('bl.cat.failed')], series: [{ name: t('bl.s.computers'), values: [142, 14, 15, 15], colors: ['green', 'yellow', 'grey', 'red'] }] };

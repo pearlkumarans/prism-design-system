@@ -1,0 +1,28 @@
+{{! Patterns::ModuleDashboard — L02 frame. Header + scroll + uniform KPI row +
+    chart-refit wiring; the widget grid is the caller's :body block. }}
+<div class="bl-dash" {{refit-charts @refitKey}}>
+  <ds-page-header
+    icon={{this.header.icon}}
+    structure="default"
+    title={{this.header.title}}
+    description={{this.header.description}}
+    show-description
+    show-breadcrumbs={{if @breadcrumbs "true" "false"}}
+    collapse-on-scroll
+    scroll-target=".bl-dash__scroll"
+    {{set-prop "breadcrumbs" @breadcrumbs}}
+  >
+    {{yield to="headerActions"}}
+  </ds-page-header>
+
+  <div class="bl-dash__scroll">
+    {{#if this.kpis.length}}
+      <div class="bl-kpis">
+        {{#each this.kpis as |k|}}
+          <ds-kpi-card label={{k.label}} value={{k.value}} state={{k.state}} icon={{k.icon}}></ds-kpi-card>
+        {{/each}}
+      </div>
+    {{/if}}
+    {{yield to="body"}}
+  </div>
+</div>
