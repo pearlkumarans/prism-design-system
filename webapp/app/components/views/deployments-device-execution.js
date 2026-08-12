@@ -51,6 +51,10 @@ export default class DeploymentsDeviceExecution extends Component {
     }
   }
 
+  get header() {
+    return { icon: 'computer', title: this.rec?.name, description: this.description };
+  }
+
   get breadcrumbs() {
     const r = this.rec;
     if (!r) return [];

@@ -1,33 +1,27 @@
-{{! Device execution — DETAIL archetype. Header (breadcrumb + summary meta),
-    SVG donut, per-stage table, slide-in timeline. Bound to
-    PrismAPI.deployments.deviceExecution (a by-name record, not a list query). }}
-<div class="dev-detail">
-  {{#if this.error}}
-    <div class="bl-list__scroll">
+{{! Device execution — a thin Patterns::ListDetail instance (L04 record detail).
+    The RecordHeader/scroll/overlay frame lives in the pattern; this view supplies
+    the summary meta, the widget grid (:body), and the slide-in timeline (:overlay). }}
+{{#if this.error}}
+  <div class="ld-detail">
+    <div class="ld-detail__scroll">
       <ds-empty-state type="centered" illustration="common-error"
         title="Couldn't load device execution" description="The request failed. Is the BFF running (server/bff.mjs)?"
         primary-label="Retry" show-secondary="false"></ds-empty-state>
     </div>
-  {{else if this.rec}}
-    <ds-page-header
-      icon="computer"
-      structure="full"
-      title={{this.rec.name}}
-      description={{this.description}}
-      show-description
-      show-breadcrumbs
-      show-summary
-      collapse-on-scroll
-      scroll-target=".dev-detail__scroll"
-      {{set-prop "breadcrumbs" this.breadcrumbs}}
-      {{set-prop "summary" this.summary}}
-      {{on "click" this.onBreadcrumbClick}}
-    >
+  </div>
+{{else if this.rec}}
+  <Patterns::ListDetail
+    @header={{this.header}}
+    @breadcrumbs={{this.breadcrumbs}}
+    @summary={{this.summary}}
+    @onBreadcrumbClick={{this.onBreadcrumbClick}}
+  >
+    <:headerActions>
       <ds-button slot="actions" variant="primary" size="small" prefix-icon="clock"
         {{on "click" this.openPanel}}>View execution timeline</ds-button>
-    </ds-page-header>
+    </:headerActions>
 
-    <div class="dev-detail__scroll">
+    <:body>
       <div class="dev-cards">
         <div class="dev-donut-card">
           <h4>Execution status</h4>
@@ -65,37 +59,39 @@
           </div>
         </div>
       </div>
-    </div>
+    </:body>
 
-    <div class="tl-scrim" data-open="{{if this.panelOpen "true" "false"}}" {{on "click" this.closePanel}}></div>
-    <aside class="tl-panel" data-open="{{if this.panelOpen "true" "false"}}"
-      aria-hidden="{{if this.panelOpen "false" "true"}}" aria-label="Execution timeline">
-      <div class="tl-head">
-        <div style="flex: 1 1 auto; min-width: 0;">
-          <div class="tl-head-title">
-            <span>{{this.rec.name}}</span>
-            <ds-badge variant="subtle" state="critical" shape="rounded" size="medium">{{this.rec.status}}</ds-badge>
+    <:overlay>
+      <div class="tl-scrim" data-open="{{if this.panelOpen "true" "false"}}" {{on "click" this.closePanel}}></div>
+      <aside class="tl-panel" data-open="{{if this.panelOpen "true" "false"}}"
+        aria-hidden="{{if this.panelOpen "false" "true"}}" aria-label="Execution timeline">
+        <div class="tl-head">
+          <div style="flex: 1 1 auto; min-width: 0;">
+            <div class="tl-head-title">
+              <span>{{this.rec.name}}</span>
+              <ds-badge variant="subtle" state="critical" shape="rounded" size="medium">{{this.rec.status}}</ds-badge>
+            </div>
+            <div class="tl-head-meta">Started Jul 21, 8:02 AM · Duration 13 min 41 s</div>
           </div>
-          <div class="tl-head-meta">Started Jul 21, 8:02 AM · Duration 13 min 41 s</div>
+          <button type="button" class="tl-close" aria-label="Close timeline" {{on "click" this.closePanel}}>
+            <ds-icon name="cancel" size="18"></ds-icon>
+          </button>
         </div>
-        <button type="button" class="tl-close" aria-label="Close timeline" {{on "click" this.closePanel}}>
-          <ds-icon name="cancel" size="18"></ds-icon>
-        </button>
-      </div>
-      <div class="tl-body">
-        {{#each this.timeline as |node|}}
-          <div class="tl-node">
-            <span class="tl-dot {{node.d}}"></span>
-            <div class="tl-title">{{node.t}}</div>
-            <div class="tl-out {{if node.mono "mono"}}">{{node.out}}</div>
-          </div>
-        {{/each}}
-      </div>
-    </aside>
-  {{else}}
-    <div class="bl-list__loading" role="status">
-      <ds-icon name="loading" size="20"></ds-icon>
-      <span>Loading device execution…</span>
-    </div>
-  {{/if}}
-</div>
+        <div class="tl-body">
+          {{#each this.timeline as |node|}}
+            <div class="tl-node">
+              <span class="tl-dot {{node.d}}"></span>
+              <div class="tl-title">{{node.t}}</div>
+              <div class="tl-out {{if node.mono "mono"}}">{{node.out}}</div>
+            </div>
+          {{/each}}
+        </div>
+      </aside>
+    </:overlay>
+  </Patterns::ListDetail>
+{{else}}
+  <div class="bl-list__loading" role="status">
+    <ds-icon name="loading" size="20"></ds-icon>
+    <span>Loading device execution…</span>
+  </div>
+{{/if}}
