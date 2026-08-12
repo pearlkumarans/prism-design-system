@@ -4,20 +4,26 @@ import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 
 /**
- * Sectioned form — Phase E, SECOND pilot (a form archetype, no charts/i18n).
- * Native port of Layout/views/layout-sectioned-form.html. Options flow in via
- * set-prop; the repeatable "Define Target" rows — imperative innerHTML + relabel()
- * in the legacy — become a tracked array + {{#each}} (cleaner, auto-renumbered).
+ * Install/Uninstall Windows Patch — a thin Patterns::SectionedForm instance. The
+ * scaffold (header, section frames, footer, Save-as menu) lives in the pattern;
+ * this view supplies the header/breadcrumbs, the section FIELDS (in the :body
+ * block), and the form-specific actions + the repeatable "Define Target" rows.
  */
 export default class SectionedForm extends Component {
   @service router;
   @service shell;
 
+  header = {
+    icon: 'edit',
+    title: 'Install/Uninstall Windows Patch (Computer)',
+    description: 'A brief description of this page and its purpose.',
+  };
   breadcrumbs = [
     { label: 'All Configurations', href: '#' },
     { label: 'Windows', href: '#' },
     { label: 'Install/Uninstall Windows Patch' },
   ];
+  saveAsItems = [{ value: 'template', label: 'Save as template' }, { value: 'draft', label: 'Save as draft' }];
 
   optypeOptions = [
     { value: 'install', label: 'Install Patches', selected: true },
@@ -37,7 +43,6 @@ export default class SectionedForm extends Component {
     { value: 'custom-group', label: 'Custom Group' },
   ];
   targetOfficeOptions = [{ value: 'ny', label: 'New York' }, { value: 'ldn', label: 'London' }, { value: 'blr', label: 'Bengaluru' }];
-  saveAsItems = [{ value: 'template', label: 'Save as template' }, { value: 'draft', label: 'Save as draft' }];
 
   // Repeatable target rows — tracked ids; labels derive from index (auto-renumber).
   @tracked _targetIds = [1];
@@ -47,49 +52,17 @@ export default class SectionedForm extends Component {
     return this._targetIds.map((id, i) => ({ id, label: `Target ${i + 1}` }));
   }
 
-  @action addTarget() {
-    this._targetIds = [...this._targetIds, ++this._seq];
-  }
+  @action addTarget() { this._targetIds = [...this._targetIds, ++this._seq]; }
+  @action removeTarget(id) { if (this._targetIds.length > 1) this._targetIds = this._targetIds.filter((x) => x !== id); }
 
-  @action removeTarget(id) {
-    if (this._targetIds.length > 1) this._targetIds = this._targetIds.filter((x) => x !== id);
-  }
-
-  toast(msg, variant = 'success') {
-    if (globalThis.dsToast?.[variant]) { globalThis.dsToast[variant]({ title: msg }); return; }
-    const el = document.createElement('ds-toast');
-    el.setAttribute('variant', variant);
-    el.textContent = msg;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 3200);
-  }
+  toast(msg, variant = 'success') { globalThis.dsToast?.[variant]?.({ title: msg }); }
 
   @action deploy() {
     this.toast('Patch configuration deployed.', 'success');
     this.router.transitionTo('product.module.view', this.shell.productId, 'configs', 'tabbed-form');
   }
 
-  @action cancel() {
-    this.toast('Changes discarded.', 'info');
-  }
+  @action cancel() { this.toast('Changes discarded.', 'info'); }
 
-  @action openSaveAs(event) {
-    const btn = event.currentTarget;
-    const menu = btn.closest('.sform')?.querySelector('ds-dropdown-menu');
-    if (!menu) return;
-    event.stopPropagation();
-    const r = btn.getBoundingClientRect();
-    Object.assign(menu.style, {
-      position: 'fixed', left: `${r.left}px`, right: 'auto',
-      bottom: `${window.innerHeight - r.top + 6}px`, // open upward (footer is at the viewport bottom)
-      zIndex: '2000', minWidth: `${Math.max(200, Math.round(r.width))}px`,
-    });
-    menu.toggle?.();
-  }
-
-  @action onSaveAsChange(event) {
-    const d = event.detail || {};
-    this.toast(`Saved (${d.value || d.id || ''}).`, 'success');
-    event.currentTarget.close?.();
-  }
+  @action onSaveAs(value) { this.toast(`Saved (${value}).`, 'success'); }
 }
