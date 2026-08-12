@@ -29,6 +29,7 @@ export default class DrawersService extends Service {
       try {
         await this._loading.get(name);
         this._loaded.add(name);
+        this._confineIfContentScoped();
       } catch (e) {
         this._loading.delete(name);
         console.warn('[drawers] load failed:', name, e); // eslint-disable-line no-console
@@ -36,6 +37,22 @@ export default class DrawersService extends Service {
       }
     }
     window.ShellDrawers?.[name]?.show?.();
+  }
+
+  /**
+   * Content-scoped drawers (ds-drawer.ec-drawer — Help / Accessibility / Updates)
+   * are confined to the content region in the vanilla shell, not the full viewport.
+   * The shell injects them into .shell-area; here they land in the body host, so
+   * relocate any into .poc-area, where `.poc-area ds-drawer.ec-drawer { inset:0 }`
+   * frames them below the header and clear of the right rail. Full-viewport drawers
+   * (profile/apps/settings/search) have no .ec-drawer class and stay in the host.
+   */
+  _confineIfContentScoped() {
+    const area = document.querySelector('.poc-area');
+    if (!area) return;
+    this._host?.querySelectorAll('ds-drawer.ec-drawer').forEach((d) => {
+      if (d.parentElement !== area) area.appendChild(d);
+    });
   }
 
   close(name) {
