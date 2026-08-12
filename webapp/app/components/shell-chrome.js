@@ -80,16 +80,20 @@ export default class ShellChrome extends Component {
     //  product → external SDP page; get-started → the sectioned-form view.
     const rp = element.querySelector('ds-right-pane');
     const railPopover = new RailPopover(rp);
+    // Only ONE surface open at a time: opening any drawer closes the popover
+    // (beforeOpen) + every other drawer (drawers.open → closeAll); opening a
+    // popover card closes all drawers first.
+    this.drawers.beforeOpen = () => railPopover.hide();
     rp?.addEventListener('ds-right-pane-select', (e) => {
       const id = e.detail?.id;
-      if (id === 'help') { railPopover.hide(); this.drawers.open('help'); }
-      else if (id === 'accessibility') { railPopover.hide(); this.drawers.open('accessibility'); }
+      if (id === 'help') this.drawers.open('help');
+      else if (id === 'accessibility') this.drawers.open('accessibility');
       // ONLY announcement opens the full Product Updates drawer.
-      else if (id === 'announcement') { railPopover.hide(); this.drawers.open('updates'); }
+      else if (id === 'announcement') this.drawers.open('updates');
       // Update / Review / Road map are their own anchored notification cards.
-      else if (id === 'update') railPopover.toggle('update');
-      else if (id === 'review') railPopover.toggle('review');
-      else if (id === 'roadmap') railPopover.toggle('roadmap');
+      else if (id === 'update') { this.drawers.closeAll(); railPopover.toggle('update'); }
+      else if (id === 'review') { this.drawers.closeAll(); railPopover.toggle('review'); }
+      else if (id === 'roadmap') { this.drawers.closeAll(); railPopover.toggle('roadmap'); }
       // Product slot → ServiceDesk Plus product page.
       else if (id === 'product') window.open('https://www.manageengine.com/products/service-desk/', '_blank', 'noopener');
       // Direction toggle flips the language (en ⇄ ar → LTR ⇄ RTL).

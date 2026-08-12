@@ -27,6 +27,17 @@ export default class DrawersService extends Service {
   _bodyHost = null;
   _loaded = new Set();
   _loading = new Map();
+  // Optional hook run before any drawer opens — lets the shell close non-drawer
+  // surfaces (e.g. the rail notification popover) so only one thing is ever open.
+  beforeOpen = null;
+
+  // Close every open drawer except `exceptName` — drawers are mutually exclusive.
+  closeAll(exceptName) {
+    for (const name of this._loaded) {
+      if (name === exceptName) continue;
+      window.ShellDrawers?.[keyFor(name)]?.hide?.();
+    }
+  }
 
   _bodyHostEl() {
     if (!this._bodyHost) {
@@ -59,6 +70,8 @@ export default class DrawersService extends Service {
         return;
       }
     }
+    this.beforeOpen?.();      // close the rail popover / other non-drawer surfaces
+    this.closeAll(name);      // close any other open drawer — one at a time
     window.ShellDrawers?.[keyFor(name)]?.show?.();
   }
 
