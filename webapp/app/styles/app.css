@@ -172,9 +172,13 @@ body {
   /* 16px to match the vanilla shell's framed area (its --radius-lg resolves to 12). */
   border-radius: 16px;
   background: var(--uems-bg-primary);
-  overflow: hidden;
-  /* positioning context for content-confined drawers (help/accessibility/updates),
-     relocated here by the drawers service — mirrors Shell.html's .shell-area. */
+  /* clip (NOT hidden): clips the confined drawer to the framed area but is NOT a
+     scroll container — so the drawer's focus-on-open (close button, off-screen
+     mid-slide) can't scroll .poc-area sideways and jerk the nav/content. This is
+     exactly why Shell.html's .shell-area uses `overflow: clip`. */
+  overflow: clip;
+  /* positioning context for content-confined drawers (help/accessibility/updates)
+     injected here by the drawers service — mirrors Shell.html's .shell-area. */
   position: relative;
 }
 /* Content-confined drawers (ds-drawer.ec-drawer) fill the framed content region —
