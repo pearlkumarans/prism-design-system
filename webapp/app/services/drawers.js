@@ -17,6 +17,12 @@ import { injectViewInto } from 'prism-webapp/lib/inject-view';
  */
 const CONTENT_SCOPED = new Set(['help', 'accessibility', 'updates']);
 
+// A few drawer FILES register their ShellDrawers handle under a different KEY than
+// their file name (a quirk carried over from the vanilla shell). Map name → key so
+// show()/hide() target the right handle. (e.g. accessibility.html → ShellDrawers.a11y)
+const DRAWER_KEY = { accessibility: 'a11y' };
+const keyFor = (name) => DRAWER_KEY[name] || name;
+
 export default class DrawersService extends Service {
   _bodyHost = null;
   _loaded = new Set();
@@ -53,10 +59,10 @@ export default class DrawersService extends Service {
         return;
       }
     }
-    window.ShellDrawers?.[name]?.show?.();
+    window.ShellDrawers?.[keyFor(name)]?.show?.();
   }
 
   close(name) {
-    window.ShellDrawers?.[name]?.hide?.();
+    window.ShellDrawers?.[keyFor(name)]?.hide?.();
   }
 }
