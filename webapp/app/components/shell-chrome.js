@@ -85,7 +85,8 @@ export default class ShellChrome extends Component {
     //  update/review/roadmap → small anchored popover CARDS (not the updates drawer);
     //  product → external SDP page; get-started → the sectioned-form view.
     const rp = element.querySelector('ds-right-pane');
-    const railPopover = new RailPopover(rp);
+    const railPopover = new RailPopover(rp, this.theme);
+    railPopover.enableAppearanceHover(); // hover the theme icon → Appearance chooser
     // Only ONE surface open at a time: opening any drawer closes the popover
     // (beforeOpen) + every other drawer (drawers.open → closeAll); opening a
     // popover card closes all drawers first.
@@ -110,6 +111,8 @@ export default class ShellChrome extends Component {
     rp?.addEventListener('ds-right-pane-theme', (e) => {
       const base = e.detail?.theme === 'dark' ? 'dark' : 'light';
       this.theme.applyTheme(this.theme.family === 'green' ? `green-${base}` : base);
+      // If the Appearance chooser is open, re-render it to reflect the flip.
+      if (railPopover.isOpen() && railPopover.card === 'appearance') railPopover.showAppearance();
     });
 
     // Sidebar item with a `view` slug → view route.

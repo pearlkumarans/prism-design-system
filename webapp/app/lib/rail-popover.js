@@ -27,9 +27,13 @@ const ROADMAP = {
   links: ['Public product roadmap', "What's new — changelog", 'Planned & in-progress', 'Submit a feature request'],
 };
 
+// System-mode icon (half-filled circle) for the Appearance menu.
+const HALF_CIRCLE = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.6a7.4 7.4 0 0 0 0 14.8z" fill="currentColor"/></svg>';
+
 export class RailPopover {
-  constructor(rpEl) {
+  constructor(rpEl, theme) {
     this.rpEl = rpEl;
+    this.theme = theme; // Ember theme service — reads .appr, calls .applyTheme()
     this.el = null;
     this.card = null;
     this.anchorId = null;
@@ -123,5 +127,62 @@ export class RailPopover {
       </div>
       <div class="rm-list">${d.links.map((l) => `<div class="rm-row"><ds-text-link href="#" variant="primary" size="medium" underline="hover">${l}</ds-text-link><ds-icon class="rm-row__ext" name="share-square" size="18"></ds-icon></div>`).join('')}</div>
     </div>`;
+  }
+
+  /* ── Appearance (theme chooser) — opened by hovering the rail theme icon ─────── */
+  _combineTheme(mode, color) {
+    if (color === 'green') return mode === 'system' ? 'green-system' : (mode === 'dark' ? 'green-dark' : 'green-light');
+    return mode; // blue: light / dark / system
+  }
+
+  _appearanceHtml(curColor, curMode) {
+    const COLORS = [['blue', '#2C66DD'], ['green', '#1E8E3E']];
+    const colorBtns = COLORS.map(([c, hex]) => `<button type="button" class="appr-color${curColor === c ? ' is-active' : ''}" data-color="${c}" style="background:${hex}" aria-label="${c} accent"><ds-icon name="check" size="14"></ds-icon></button>`).join('');
+    const MODES = [['light', 'Light mode', 'sun'], ['dark', 'Dark mode', 'moon'], ['system', 'Use system settings', 'half']];
+    const rows = MODES.map(([m, label, icon]) => {
+      const ico = icon === 'half' ? HALF_CIRCLE : `<ds-icon name="${icon}" size="18"></ds-icon>`;
+      const active = curMode === m;
+      return `<button type="button" class="appr-item${active ? ' is-active' : ''}" role="menuitemradio" aria-checked="${active}" data-mode="${m}"><span class="appr-item__ico">${ico}</span><span class="appr-item__label">${label}</span>${active ? '<ds-icon class="appr-item__check" name="check" size="16"></ds-icon>' : ''}</button>`;
+    }).join('');
+    return `<div class="upd-card upd-card--appearance"><div class="appr-head"><span class="appr-title">Theme</span><span class="appr-colors">${colorBtns}</span></div><div class="appr-menu" role="menu" aria-label="Theme mode">${rows}</div></div>`;
+  }
+
+  showAppearance() {
+    const el = this._host();
+    this.anchorId = '__theme__';
+    const appr = String((this.theme && this.theme.appr) || document.documentElement.getAttribute('data-theme') || 'light');
+    const curColor = appr.indexOf('green') === 0 ? 'green' : 'blue';
+    const curMode = (appr === 'system' || appr === 'green-system') ? 'system' : (appr === 'dark' || appr === 'green-dark') ? 'dark' : 'light';
+    el.className = 'upd-pop upd-pop--appr';
+    el.innerHTML = this._appearanceHtml(curColor, curMode);
+    this.card = 'appearance';
+    // stopPropagation: re-rendering detaches the clicked node, else the bubbled
+    // click hits the outside-click handler and closes the menu.
+    el.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); this.theme?.applyTheme(this._combineTheme(b.dataset.mode, curColor)); this.showAppearance(); }));
+    el.querySelectorAll('[data-color]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); this.theme?.applyTheme(this._combineTheme(curMode, b.dataset.color)); this.showAppearance(); }));
+    el.classList.add('open');
+    this._position();
+  }
+
+  // Hover the theme icon → open the Appearance menu; a short close delay lets the
+  // pointer travel from the icon into the popover without it collapsing. (Clicking
+  // the icon still flips light/dark via the component's own ds-right-pane-theme.)
+  enableAppearanceHover() {
+    const rp = this.rpEl;
+    if (!rp) return;
+    let t;
+    const cancel = () => clearTimeout(t);
+    const schedule = () => { cancel(); t = setTimeout(() => { if (this.card === 'appearance') this.hide(); }, 180); };
+    const overTheme = (e) => e.target.closest && e.target.closest('button[data-id="__theme__"]');
+    rp.addEventListener('mouseover', (e) => {
+      if (overTheme(e)) { cancel(); if (!(this.isOpen() && this.card === 'appearance')) this.showAppearance(); }
+      else if (this.isOpen() && this.card === 'appearance') schedule();
+    });
+    rp.addEventListener('mouseout', (e) => {
+      if (overTheme(e) && !this._host().contains(e.relatedTarget)) schedule();
+    });
+    const el = this._host();
+    el.addEventListener('mouseenter', () => { if (this.card === 'appearance') cancel(); });
+    el.addEventListener('mouseleave', () => { if (this.card === 'appearance') schedule(); });
   }
 }
