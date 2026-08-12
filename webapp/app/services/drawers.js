@@ -22,7 +22,8 @@ export default class DrawersService extends Service {
   }
 
   async open(name) {
-    if (!this._loaded.has(name)) {
+    const firstLoad = !this._loaded.has(name);
+    if (firstLoad) {
       if (!this._loading.has(name)) {
         this._loading.set(name, injectViewInto(this._hostEl(), name));
       }
@@ -35,6 +36,12 @@ export default class DrawersService extends Service {
         console.warn('[drawers] load failed:', name, e); // eslint-disable-line no-console
         return;
       }
+      // The drawer was just injected (and, if content-scoped, MOVED into .poc-area).
+      // Paint that freshly-placed, still-closed element for a frame BEFORE toggling
+      // it open — otherwise the slide-in keyframe (translateX 100%→0) starts from an
+      // unpainted state and snaps instead of sliding. Vanilla avoids this by creating
+      // the element in its final home; we relocate, so we wait two frames here.
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     }
     window.ShellDrawers?.[name]?.show?.();
   }
