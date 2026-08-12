@@ -1,0 +1,362 @@
+/* POC page chrome only — uses design-system tokens, no hardcoded values. */
+body {
+  margin: 0;
+  font-family: var(--font-family-sans);
+  background: var(--uems-bg-base);
+  color: var(--uems-text-primary);
+}
+
+.poc-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--spacing-32, 32px) var(--spacing-24, 24px);
+}
+
+.poc-head h1 {
+  font-size: var(--font-size-24, 24px);
+  font-weight: var(--font-weight-bold);
+  margin: 0 0 var(--spacing-8, 8px);
+}
+
+.poc-head p {
+  font-size: var(--font-size-14, 14px);
+  color: var(--uems-text-secondary);
+  max-width: 60ch;
+  margin: 0 0 var(--spacing-24, 24px);
+}
+
+.poc-card {
+  background: var(--uems-bg-primary);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--spacing-16, 16px);
+}
+
+.poc-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12, 12px);
+  margin-bottom: var(--spacing-16, 16px);
+}
+
+.poc-event {
+  margin-top: var(--spacing-16, 16px);
+  font-size: var(--font-size-13, 13px);
+  color: var(--uems-text-secondary);
+}
+
+.poc-event code {
+  color: var(--uems-text-primary);
+}
+
+/* ── Routing-demo chrome ─────────────────────────────────────────────────── */
+.poc-appbar {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-12, 12px);
+  padding: var(--spacing-12, 12px) var(--spacing-24, 24px);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+  background: var(--uems-bg-primary);
+}
+.poc-appbar strong {
+  font-size: var(--font-size-16, 16px);
+  color: var(--uems-text-primary);
+}
+.poc-variant {
+  font-size: var(--font-size-12, 12px);
+  color: var(--uems-text-secondary);
+}
+.poc-tabs {
+  display: flex;
+  gap: var(--spacing-4, 4px);
+  padding: var(--spacing-8, 8px) var(--spacing-24, 24px) 0;
+  border-bottom: 1px solid var(--uems-border-tertiary);
+  background: var(--uems-bg-primary);
+  overflow-x: auto;
+}
+.poc-tab {
+  padding: var(--spacing-8, 8px) var(--spacing-12, 12px);
+  border-bottom: 2px solid transparent;
+  font-size: var(--font-size-14, 14px);
+  color: var(--uems-text-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.poc-tab:hover {
+  color: var(--uems-text-primary);
+}
+.poc-tab.active {
+  color: var(--uems-text-accent-link);
+  border-bottom-color: var(--uems-text-accent-link);
+  font-weight: var(--font-weight-semibold);
+}
+.poc-card + .poc-card {
+  margin-top: var(--spacing-16, 16px);
+}
+.poc-card h2 {
+  margin: 0 0 var(--spacing-12, 12px);
+  font-size: var(--font-size-15, 15px);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-primary);
+}
+.poc-state {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--spacing-4, 4px) var(--spacing-16, 16px);
+  margin: 0;
+  font-size: var(--font-size-13, 13px);
+}
+.poc-state dt {
+  color: var(--uems-text-secondary);
+}
+.poc-state dd {
+  margin: 0;
+  color: var(--uems-text-primary);
+}
+
+/* ── ContentOutlet ───────────────────────────────────────────────────────── */
+.poc-statebar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-4, 4px) var(--spacing-16, 16px);
+  padding: var(--spacing-8, 8px) var(--spacing-24, 24px);
+  background: var(--uems-bg-secondary, #f0f2f5);
+  border-bottom: 1px solid var(--uems-border-tertiary);
+  font-size: var(--font-size-12, 12px);
+  color: var(--uems-text-secondary);
+}
+.poc-statebar b {
+  color: var(--uems-text-secondary);
+  font-weight: var(--font-weight-semibold);
+}
+.poc-statebar code {
+  color: var(--uems-text-primary);
+}
+/* The real view mounts here; let it own its full height like <ds-content> does. */
+.poc-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+.poc-content-error {
+  padding: var(--spacing-24, 24px);
+  color: var(--uems-text-error, #d5304a);
+  font-size: var(--font-size-14, 14px);
+}
+
+/* ── ShellChrome (header · module-rail · L1/L2 · content · right-pane) ─────── */
+.poc-shellroot {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  /* Canvas tint — the per-theme background the vanilla shell uses (Cobalt-15 in
+     light, etc.). NOT --uems-bg-base, which is plain white. */
+  background: var(--uems-background);
+}
+.poc-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: var(--spacing-12, 12px);
+  gap: 0;
+}
+/* shell-area = the framed region wrapping L1 + L2 + content */
+.poc-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--uems-bg-primary);
+  overflow: hidden;
+}
+.poc-shellroot ds-sidebar-l1,
+.poc-shellroot ds-sidebar-l2 {
+  height: 100%;
+  max-width: 400px;
+  opacity: 1;
+  overflow: hidden;
+}
+/* The is-hidden collapse lives in Shell.html's own CSS (not the design system),
+   so replicate it: applyL2For toggles is-hidden, this makes it actually collapse. */
+.poc-shellroot ds-sidebar-l1.is-hidden,
+.poc-shellroot ds-sidebar-l2.is-hidden {
+  max-width: 0 !important;
+  opacity: 0 !important;
+  margin-inline-end: 0 !important;
+}
+.poc-shellroot ds-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+/* Right utility rail — flush to the end edge, outside the framed area. */
+.poc-shellroot ds-right-pane { flex: 0 0 auto; height: 100%; margin-inline-start: var(--spacing-12, 12px); }
+/* Left-nav module rail — flush to the start edge, outside the framed area. */
+.poc-modrail { flex: 0 0 auto; height: 100%; }
+.poc-modrail[hidden] { display: none; }
+
+/* ── Native BitLocker dashboard (Phase E pilot) ──────────────────────────────
+   Ported from the fragment's #bldash-pop scope to .bl-dash. Includes the layout
+   container styles the legacy view got from Layout/layout-base.css (not in the app). */
+.bl-dash { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.bl-dash__scroll {
+  flex: 1; min-height: 0; overflow: auto;
+  padding: 16px; display: flex; flex-direction: column; gap: 16px;
+}
+.bl-dash .bl-kpis { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 16px; }
+.bl-dash .bl-kpis ds-kpi-card { flex: 1 1 200px; min-width: 180px; }
+
+.bl-dash .bl-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; align-items: stretch; grid-auto-rows: 360px; }
+.bl-dash .bl-grid > ds-widget { min-width: 0; width: 100%; height: 100%; max-width: none; }
+.bl-dash .bl-grid ds-widget .ds-widget__surface { height: 100%; }
+.bl-dash .bl-grid ds-widget .ds-widget__body { min-height: 0; }
+.bl-dash .bl-grid .ds-widget--chart .ds-widget__body { padding-left: 16px; padding-right: 16px; }
+.bl-dash .bl-sp2 { grid-column: span 2; }
+.bl-dash .bl-sp3 { grid-column: span 3; }
+.bl-dash .bl-grid ds-chart { display: block; width: 100%; height: 100%; min-height: 200px; max-height: 100%; }
+.bl-dash .bl-grid .ds-chart__plot { max-height: 100%; }
+
+.bl-dash .wl-row { display: flex; align-items: center; gap: 12px; padding: 8px 16px; }
+.bl-dash .wl-ico { width: 28px; height: 28px; border-radius: 8px; background: var(--uems-bg-secondary-alt, #eef1f6); display: inline-flex; align-items: center; justify-content: center; color: var(--uems-icon-secondary, #55607a); flex-shrink: 0; }
+.bl-dash .wl-label { flex: 1 1 auto; min-width: 0; font-size: 14px; color: var(--uems-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bl-dash .wl-label--link { color: var(--uems-text-accent-link, #006aff); cursor: pointer; }
+.bl-dash .wl-val { flex-shrink: 0; font-size: 14px; font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); }
+
+.bl-dash .bl-attention .ds-widget__surface { height: auto; }
+.bl-dash .bl-name { display: inline-flex; align-items: center; gap: var(--spacing-8); color: var(--uems-text-primary); }
+.bl-dash .bl-name ds-icon { color: var(--uems-icon-tertiary); flex: none; }
+.bl-dash .cell-muted { color: var(--uems-text-secondary); }
+
+@media (max-width: 1200px) {
+  .bl-dash .bl-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .bl-dash .bl-sp3 { grid-column: span 4; }
+  .bl-dash .bl-sp2 { grid-column: span 2; }
+}
+@media (max-width: 760px) {
+  .bl-dash .bl-grid { grid-template-columns: 1fr; }
+  .bl-dash .bl-sp2, .bl-dash .bl-sp3 { grid-column: span 1; }
+}
+
+/* ── Native sectioned form (Phase E, 2nd pilot) ─────────────────────────────
+   Ported from #sform-pop; includes the layout scaffold from Layout/layout-base.css. */
+.sform { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.sform__scroll { flex: 1; min-height: 0; overflow: auto; padding: 0 24px 24px; }
+.sform__section { padding: 20px 0 4px; }
+.sform__fields { display: flex; flex-direction: column; gap: 20px; padding-top: 12px; }
+.sform__field { max-width: 820px; }
+.sform__control-only { padding-inline-start: 288px; }
+.sform__row-inline { display: flex; align-items: flex-start; gap: 12px; }
+.sform__row-policy { align-items: flex-start; flex-wrap: wrap; }
+.sform__label-col { width: 280px; flex-shrink: 0; padding-top: 8px; font-size: var(--font-size-13); font-weight: 600; color: var(--uems-text-primary); }
+.sform__target { display: flex; gap: 8px; max-width: 1000px; }
+.sform__target .sform__row-inline { flex: 1; align-items: center; }
+.sform__addl { display: flex; flex-direction: column; gap: 12px; }
+.sform__addl-title { display: inline-flex; align-items: center; gap: 12px; font-weight: 600; color: var(--uems-text-primary); }
+.sform__addl-body { padding-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.sform ds-radio-group .ds-radio-group__items,
+.sform ds-checkbox-group .ds-checkbox-group__items { display: flex; flex-direction: row; gap: 32px; flex-wrap: wrap; }
+.sform ds-checkbox-group .ds-checkbox-group__info { display: none; }
+@media (max-width: 640px) {
+  .sform__control-only { padding-inline-start: 0; }
+  .sform__label-col { width: auto; padding-top: 0; }
+  .sform__target { flex-direction: column; }
+}
+
+/* ── Native managed-computers list (Phase E, 3rd pilot / data-layer spike) ──── */
+.bl-list { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.bl-list__scroll { flex: 1; min-height: 0; overflow: auto; padding: 0 20px 20px; display: flex; flex-direction: column; gap: 16px; }
+.bl-list .bl-kpis { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 16px; }
+.bl-list .bl-kpis ds-kpi-card { flex: 1 1 200px; min-width: 180px; }
+/* Filter column collapsed by default (table full-width); the table's built-in
+   Filter button toggles `.is-filtering`, sliding the 240px sidebar open — this
+   mirrors the legacy list scaffold (projects/bitlocker/layout-managed-systems)
+   and keeps a single filter surface (no panel loose beside the table). */
+.bl-list__grid {
+  display: grid;
+  grid-template-columns: 0px minmax(0, 1fr);
+  column-gap: 0;
+  align-items: start;
+  min-height: 0;
+  transition: grid-template-columns 260ms var(--ease-standard, ease), column-gap 260ms var(--ease-standard, ease);
+}
+.bl-list__grid.is-filtering { grid-template-columns: 240px minmax(0, 1fr); column-gap: 16px; }
+.bl-list__filtercol { min-width: 0; overflow: hidden; position: relative; visibility: hidden; transition: visibility 0s linear 260ms; }
+.bl-list__grid.is-filtering .bl-list__filtercol { visibility: visible; transition-delay: 0s; }
+.bl-list__filters { width: 240px; }
+.bl-list__table { min-width: 0; }
+/* Policy list — name cell (scope icon + drill-down link) + row-action button. */
+.pol-cell-name { display: inline-flex; align-items: center; gap: var(--spacing-8, 8px); color: var(--uems-text-primary); font-weight: var(--font-weight-medium, 500); }
+.pol-cell-name .pol-name-link { color: var(--uems-text-link, var(--uems-primary)); text-decoration: none; }
+.pol-cell-name .pol-name-link:hover { text-decoration: underline; }
+.pol-actions { display: inline-flex; justify-content: flex-end; width: 100%; }
+.pol-actions button { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 0; background: transparent; border-radius: var(--radius-sm, 6px); cursor: pointer; color: var(--uems-icon-secondary); }
+.pol-actions button:hover { background: var(--uems-bg-secondary-alt, #eef1f6); }
+
+/* ── Device execution detail (ported from layout-deployment-device, tokens only) ── */
+.dev-detail { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.dev-detail__scroll { position: relative; flex: 1 1 auto; overflow: auto; padding: 0 20px 24px; }
+.dev-cards { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 16px; padding: 20px 0; }
+@media (max-width: 900px) { .dev-cards { grid-template-columns: 1fr; } }
+.dev-donut-card, .dev-table-card { padding: 20px; border: 1px solid var(--uems-border-tertiary); border-radius: 12px; background: var(--uems-bg-primary); }
+.dev-donut-card h4, .dev-table-card h4 { margin: 0 0 12px; font-size: 14px; font-weight: 600; color: var(--uems-text-primary); }
+.dev-donut { position: relative; width: 140px; height: 140px; margin: 0 auto; }
+.dev-donut .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.dev-donut .total { font-size: 22px; font-weight: 700; color: var(--uems-text-primary); }
+.dev-donut .label { font-size: 11px; color: var(--uems-text-secondary); }
+.dev-legend { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--uems-text-secondary); }
+.dev-legend .lg { display: inline-flex; align-items: center; gap: 6px; }
+.dev-legend .sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+.dev-legend .v { color: var(--uems-text-primary); font-weight: 500; margin-inline-start: auto; }
+
+/* Timeline slide-in panel. */
+.dev-detail .tl-scrim { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.32); opacity: 0; visibility: hidden; transition: opacity 220ms var(--ease-standard, ease), visibility 0s linear 220ms; z-index: 90; }
+.dev-detail .tl-scrim[data-open="true"] { opacity: 1; visibility: visible; transition: opacity 220ms var(--ease-standard, ease), visibility 0s linear 0s; }
+.dev-detail .tl-panel { position: absolute; top: 0; inset-inline-end: 0; bottom: 0; width: 460px; max-width: 92vw; background: var(--uems-bg-primary); border-inline-start: 1px solid var(--uems-border-tertiary); box-shadow: -8px 0 24px rgba(15, 23, 42, 0.12); transform: translateX(100%); transition: transform 260ms var(--ease-standard, ease); display: flex; flex-direction: column; z-index: 100; }
+.dev-detail .tl-panel[data-open="true"] { transform: translateX(0); }
+.dev-detail .tl-head { padding: 16px 20px; border-bottom: 1px solid var(--uems-border-tertiary); display: flex; align-items: flex-start; gap: 12px; }
+.dev-detail .tl-head-title { font-size: 15px; font-weight: 700; color: var(--uems-text-primary); display: inline-flex; align-items: center; gap: 8px; }
+.dev-detail .tl-head-meta { margin-top: 4px; font-size: 12px; color: var(--uems-text-secondary); }
+.dev-detail .tl-close { border: 0; background: transparent; padding: 0; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; color: var(--uems-icon-error); flex: none; display: inline-flex; align-items: center; justify-content: center; }
+.dev-detail .tl-close:hover { background: var(--uems-bg-secondary-hover); }
+.dev-detail .tl-body { flex: 1 1 auto; overflow: auto; padding: 20px; }
+.dev-detail .tl-node { position: relative; padding-inline-start: 32px; padding-bottom: 20px; }
+.dev-detail .tl-node:not(:last-child)::before { content: ''; position: absolute; left: 9px; top: 20px; bottom: 0; width: 2px; background: var(--uems-border-tertiary); }
+.dev-detail .tl-dot { position: absolute; left: 3px; top: 4px; width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 0 3px var(--uems-bg-primary); }
+.dev-detail .tl-dot.g { background: var(--uems-bg-success-solid, #16a34a); }
+.dev-detail .tl-dot.r { background: var(--uems-bg-error-solid, #dc2626); }
+.dev-detail .tl-dot.o { background: var(--uems-bg-info-solid, #2563eb); animation: dp-pulse 1.4s ease-in-out infinite; }
+.dev-detail .tl-dot.n { background: var(--uems-bg-secondary-solid, #94a3b8); }
+@keyframes dp-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+.dev-detail .tl-title { font-size: 13px; font-weight: 600; color: var(--uems-text-primary); }
+.dev-detail .tl-out { margin-top: 8px; padding: 10px 12px; border-radius: 6px; background: var(--uems-bg-secondary-subtle); font-size: 12px; color: var(--uems-text-secondary); white-space: pre-wrap; }
+.dev-detail .tl-out.mono { font-family: ui-monospace, 'SF Mono', Consolas, monospace; color: var(--uems-text-primary); }
+@media (prefers-reduced-motion: reduce) { .dev-detail .tl-dot.o { animation: none; } }
+.bl-list__loading { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 64px; color: var(--uems-text-secondary); font-size: var(--font-size-14, 14px); }
+.bl-list__loading ds-icon { animation: bl-spin 1s linear infinite; }
+/* Table stays visible during a server re-fetch; a small chip signals the round-trip. */
+.bl-list__tablewrap { position: relative; min-width: 0; }
+.bl-list__updating {
+  position: absolute; top: -6px; inset-inline-end: 0; z-index: 2;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--uems-bg-secondary-alt, #eef1f6); color: var(--uems-text-secondary);
+  font-size: var(--font-size-12, 12px);
+}
+.bl-list__updating ds-icon { animation: bl-spin 1s linear infinite; }
+@keyframes bl-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .bl-list__loading ds-icon { animation: none; } }
+@media (max-width: 900px) {
+  .bl-list__grid, .bl-list__grid.is-filtering { grid-template-columns: 1fr; column-gap: 0; }
+  .bl-list__filtercol { overflow: visible; }
+  .bl-list__grid:not(.is-filtering) .bl-list__filtercol { display: none; }
+  .bl-list__filters { width: 100%; }
+}
+
+/* Top ⇄ Left navigation: in left mode the module tabs move to the rail, so hide
+   the header's tab band (mirrors Shell.html's html.nav-left rule). */
+html.nav-left .poc-shellroot ds-header-nav .ds-header-nav__tabs { display: none; }
+html.nav-left .poc-body { padding-inline-start: var(--spacing-12, 12px); }

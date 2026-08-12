@@ -1,0 +1,68 @@
+{{! Native BitLocker policy form. Options via set-prop; conditional fields shown/hidden
+    from tracked state (auth to min-PIN, rotate to interval). Reuses the .sform layout. }}
+<div class="sform">
+  <ds-page-header
+    icon="edit"
+    structure="default"
+    title={{t "pf.title"}}
+    description={{t "pf.desc"}}
+    show-description
+    show-breadcrumbs
+    collapse-on-scroll
+    scroll-target=".sform__scroll"
+    {{set-prop "breadcrumbs" this.breadcrumbs}}
+  ></ds-page-header>
+
+  <div class="sform__scroll">
+    <section class="sform__section">
+      <ds-section-header style-variant="with-border" size="large" title={{t "pf.sh.details"}} description={{t "pf.sh.details.d"}}></ds-section-header>
+      <div class="sform__fields">
+        <ds-text-input class="sform__field" size="medium" label={{t "pf.name"}} label-position="left" required maxlength="100" show-counter counter="0/100" placeholder={{t "pf.name.ph"}}></ds-text-input>
+        <ds-text-area class="sform__field" size="medium" label={{t "pf.desc.lbl"}} label-position="left" placeholder={{t "pf.desc.ph"}}></ds-text-area>
+      </div>
+    </section>
+
+    <section class="sform__section">
+      <ds-section-header style-variant="with-border" size="large" title={{t "pf.sh.drive"}} description={{t "pf.sh.drive.d"}}></ds-section-header>
+      <div class="sform__fields">
+        <ds-toggle class="sform__field" checked label={{t "pf.encrypt.lbl"}}></ds-toggle>
+        <ds-radio-group class="sform__field" label={{t "pf.scope"}} label-position="left" {{set-prop "options" this.scopeOptions}}></ds-radio-group>
+        <ds-input-select class="sform__field" size="medium" label={{t "pf.algo"}} label-position="left" value="xts256" {{set-prop "options" this.algoOptions}}></ds-input-select>
+      </div>
+    </section>
+
+    <section class="sform__section">
+      <ds-section-header style-variant="with-border" size="large" title={{t "pf.sh.auth"}} description={{t "pf.sh.auth.d"}}></ds-section-header>
+      <div class="sform__fields">
+        <ds-radio-group class="sform__field" label={{t "pf.auth"}} label-position="left" {{set-prop "options" this.authOptions}} {{on "ds-radio-group-change" this.onAuthChange}}></ds-radio-group>
+        {{#if this.showPin}}
+          <ds-input-select class="sform__field" size="medium" label={{t "pf.pinlen"}} label-position="left" value="6" {{set-prop "options" this.pinLenOptions}}></ds-input-select>
+        {{/if}}
+      </div>
+    </section>
+
+    <section class="sform__section">
+      <ds-section-header style-variant="with-border" size="large" title={{t "pf.sh.startup"}} description={{t "pf.sh.startup.d"}}></ds-section-header>
+      <div class="sform__fields">
+        <ds-radio-group class="sform__field" label={{t "pf.startup"}} label-position="left" {{set-prop "options" this.startupOptions}}></ds-radio-group>
+      </div>
+    </section>
+
+    <section class="sform__section">
+      <ds-section-header style-variant="with-border" size="large" title={{t "pf.sh.recovery"}} description={{t "pf.sh.recovery.d"}}></ds-section-header>
+      <div class="sform__fields">
+        <ds-toggle class="sform__field" checked label={{t "pf.escrow.lbl"}}></ds-toggle>
+        <ds-toggle class="sform__field" label={{t "pf.rotate.lbl"}} {{on "ds-toggle-change" this.onRotateChange}}></ds-toggle>
+        {{#if this.showRotateDays}}
+          <ds-input-select class="sform__field" size="medium" label={{t "pf.rotdays"}} label-position="left" value="7" {{set-prop "options" this.rotateDaysOptions}}></ds-input-select>
+        {{/if}}
+      </div>
+    </section>
+  </div>
+
+  <ds-form-footer>
+    <ds-button slot="action" variant="outline" {{on "click" this.cancel}}>{{t "pf.cancel"}}</ds-button>
+    <ds-button slot="action" variant="secondary" {{on "click" this.saveDraft}}>{{t "pf.draft"}}</ds-button>
+    <ds-button slot="action" variant="primary" {{on "click" this.create}}>{{t "pf.create"}}</ds-button>
+  </ds-form-footer>
+</div>

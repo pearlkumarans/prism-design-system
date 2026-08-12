@@ -1,0 +1,101 @@
+{{! Device execution — DETAIL archetype. Header (breadcrumb + summary meta),
+    SVG donut, per-stage table, slide-in timeline. Bound to
+    PrismAPI.deployments.deviceExecution (a by-name record, not a list query). }}
+<div class="dev-detail">
+  {{#if this.error}}
+    <div class="bl-list__scroll">
+      <ds-empty-state type="centered" illustration="common-error"
+        title="Couldn't load device execution" description="The request failed. Is the BFF running (server/bff.mjs)?"
+        primary-label="Retry" show-secondary="false"></ds-empty-state>
+    </div>
+  {{else if this.rec}}
+    <ds-page-header
+      icon="computer"
+      structure="full"
+      title={{this.rec.name}}
+      description={{this.description}}
+      show-description
+      show-breadcrumbs
+      show-summary
+      collapse-on-scroll
+      scroll-target=".dev-detail__scroll"
+      {{set-prop "breadcrumbs" this.breadcrumbs}}
+      {{set-prop "summary" this.summary}}
+      {{on "click" this.onBreadcrumbClick}}
+    >
+      <ds-button slot="actions" variant="primary" size="small" prefix-icon="clock"
+        {{on "click" this.openPanel}}>View execution timeline</ds-button>
+    </ds-page-header>
+
+    <div class="dev-detail__scroll">
+      <div class="dev-cards">
+        <div class="dev-donut-card">
+          <h4>Execution status</h4>
+          <div class="dev-donut">
+            <svg viewBox="0 0 42 42" width="100%" height="100%" style="transform: rotate(-90deg);">
+              {{#each this.donutSegments as |seg|}}
+                <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke={{seg.color}}
+                  stroke-width="6" stroke-dasharray={{seg.dash}} stroke-dashoffset={{seg.offset}}></circle>
+              {{/each}}
+            </svg>
+            <div class="center">
+              <div class="total">{{this.donutTotal}}</div>
+              <div class="label">stages</div>
+            </div>
+          </div>
+          <div class="dev-legend">
+            {{#each this.legend as |lg|}}
+              <span class="lg"><span class="sw" style="background: {{lg.color}}"></span>{{lg.label}}<span class="v">{{lg.value}}</span></span>
+            {{/each}}
+          </div>
+        </div>
+
+        <div class="dev-table-card">
+          <h4>Per-stage status</h4>
+          <div {{on "click" this.onTableClick}}>
+            <ds-data-table
+              class="dev-table"
+              selection-mode="none"
+              row-height="comfortable"
+              show-footer="false"
+              sticky-header
+              {{set-prop "columns" this.columns}}
+              {{set-prop "rows" this.stages}}
+            ></ds-data-table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-scrim" data-open="{{if this.panelOpen "true" "false"}}" {{on "click" this.closePanel}}></div>
+    <aside class="tl-panel" data-open="{{if this.panelOpen "true" "false"}}"
+      aria-hidden="{{if this.panelOpen "false" "true"}}" aria-label="Execution timeline">
+      <div class="tl-head">
+        <div style="flex: 1 1 auto; min-width: 0;">
+          <div class="tl-head-title">
+            <span>{{this.rec.name}}</span>
+            <ds-badge variant="subtle" state="critical" shape="rounded" size="medium">{{this.rec.status}}</ds-badge>
+          </div>
+          <div class="tl-head-meta">Started Jul 21, 8:02 AM · Duration 13 min 41 s</div>
+        </div>
+        <button type="button" class="tl-close" aria-label="Close timeline" {{on "click" this.closePanel}}>
+          <ds-icon name="cancel" size="18"></ds-icon>
+        </button>
+      </div>
+      <div class="tl-body">
+        {{#each this.timeline as |node|}}
+          <div class="tl-node">
+            <span class="tl-dot {{node.d}}"></span>
+            <div class="tl-title">{{node.t}}</div>
+            <div class="tl-out {{if node.mono "mono"}}">{{node.out}}</div>
+          </div>
+        {{/each}}
+      </div>
+    </aside>
+  {{else}}
+    <div class="bl-list__loading" role="status">
+      <ds-icon name="loading" size="20"></ds-icon>
+      <span>Loading device execution…</span>
+    </div>
+  {{/if}}
+</div>
