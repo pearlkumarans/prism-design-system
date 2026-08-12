@@ -14,4 +14,5 @@ export const NATIVE_VIEWS = new Set([
   'deployments-policy-list',
   'deployments-workflow',
   'deployments-device-execution',
+  'deployments-summary',
 ]);
