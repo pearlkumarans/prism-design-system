@@ -24,10 +24,14 @@
     {{/if}}
 
     <div class="sform__scroll tabform__panels">
-      {{yield (hash
-        Panel=(component "patterns/tabbed-form/panel" activeId=this.activeId)
-        Section=(component "patterns/sectioned-form/section")
-      ) to="body"}}
+      {{#if @loading}}
+        <Patterns::Skeleton::Form @sections={{2}} />
+      {{else}}
+        {{yield (hash
+          Panel=(component "patterns/tabbed-form/panel" activeId=this.activeId)
+          Section=(component "patterns/sectioned-form/section")
+        ) to="body"}}
+      {{/if}}
     </div>
   </div>
 
