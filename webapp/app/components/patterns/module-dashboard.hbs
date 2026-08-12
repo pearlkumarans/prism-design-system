@@ -16,13 +16,17 @@
   </ds-page-header>
 
   <div class="bl-dash__scroll">
-    {{#if this.kpis.length}}
-      <div class="bl-kpis">
-        {{#each this.kpis as |k|}}
-          <ds-kpi-card label={{k.label}} value={{k.value}} state={{k.state}} icon={{k.icon}}></ds-kpi-card>
-        {{/each}}
-      </div>
+    {{#if @loading}}
+      <Patterns::Skeleton::Dashboard @kpis={{this.kpis.length}} />
+    {{else}}
+      {{#if this.kpis.length}}
+        <div class="bl-kpis">
+          {{#each this.kpis as |k|}}
+            <ds-kpi-card label={{k.label}} value={{k.value}} state={{k.state}} icon={{k.icon}}></ds-kpi-card>
+          {{/each}}
+        </div>
+      {{/if}}
+      {{yield to="body"}}
     {{/if}}
-    {{yield to="body"}}
   </div>
 </div>

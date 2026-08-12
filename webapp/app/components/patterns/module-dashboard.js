@@ -18,4 +18,5 @@ import Component from '@glimmer/component';
 export default class ModuleDashboardPattern extends Component {
   get header() { return this.args.header ?? {}; }
   get kpis() { return this.args.kpis ?? []; }
+  // @loading — opt-in: a fetching dashboard renders Skeleton::Dashboard until ready.
 }
