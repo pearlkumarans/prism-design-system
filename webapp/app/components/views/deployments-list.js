@@ -35,7 +35,7 @@ export default class DeploymentsList extends Component {
 
   kpis = (k) => [
     { label: 'Deployments', value: k.total, state: 'default', icon: 'settings-deploy' },
-    { label: 'Succeeded', value: k.success, state: 'success', icon: 'check-circle' },
+    { label: 'Succeeded', value: k.success, state: 'success', icon: 'circle-tick' },
     { label: 'In progress', value: k.running, state: 'warning', icon: 'clock' },
     { label: 'Failed', value: k.failed, state: 'alert', icon: 'exclamation-circle' },
   ];

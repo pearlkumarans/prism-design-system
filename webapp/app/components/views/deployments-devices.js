@@ -33,7 +33,7 @@ export default class DeploymentsDevices extends Component {
 
   kpis = (k) => [
     { label: 'Devices', value: k.total, state: 'default', icon: 'computer' },
-    { label: 'Deployed', value: k.deployed, state: 'success', icon: 'check-circle' },
+    { label: 'Deployed', value: k.deployed, state: 'success', icon: 'circle-tick' },
     { label: 'Pending', value: k.pending, state: 'warning', icon: 'clock' },
     { label: 'Failed', value: k.failed, state: 'alert', icon: 'exclamation-circle' },
   ];
