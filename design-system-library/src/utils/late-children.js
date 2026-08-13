@@ -26,10 +26,13 @@
      }
      disconnectedCallback() { stopLateChildren(this); }
 
-   `reproject` is whatever brings late content back into the fold — re-capture and
-   re-render, or move stray nodes into a label. The helper re-arms itself with a
-   fresh snapshot after every reproject, so it keeps working across repeated late
-   insertions and across the host being re-parented by its consumer.
+   `reproject(leakedNodes)` receives exactly the nodes that leaked in (already
+   filtered of whitespace), so a component can merge them into its own captured
+   buckets without re-scanning this.children — which would risk swallowing its own
+   generated wrappers. It may also ignore the argument and simply re-capture +
+   re-render. The helper re-arms itself with a fresh snapshot after every
+   reproject, so it keeps working across repeated late insertions and across the
+   host being re-parented by its consumer.
    ============================================================================= */
 
 const isBlankText = (n) => n.nodeType === 3 && !n.textContent.trim();
@@ -44,11 +47,11 @@ export function watchLateChildren(host, reproject) {
   const own = new Set(host.childNodes);
 
   host._lateObs = new MutationObserver(() => {
-    const leaked = [...host.childNodes].some((n) => !own.has(n) && !isBlankText(n));
-    if (!leaked) return;                 // only our own DOM (+ whitespace) present → nothing to do
+    const leaked = [...host.childNodes].filter((n) => !own.has(n) && !isBlankText(n));
+    if (!leaked.length) return;          // only our own DOM (+ whitespace) present → nothing to do
     host._lateObs.disconnect();          // stop BEFORE reproject re-renders (no re-entrancy)
     host._lateObs = null;
-    reproject();
+    reproject(leaked);                   // hand the component exactly the nodes that leaked
     watchLateChildren(host, reproject);  // re-arm with a fresh snapshot of the new DOM
   });
   host._lateObs.observe(host, { childList: true });

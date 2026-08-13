@@ -1,4 +1,5 @@
 import { boolAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 /* Composed sub-components — import so the box is self-contained. */
 import '../tab-bar-horizontal/tab-bar-horizontal.js';
 import '../scrollbar/scrollbar.js';
@@ -45,6 +46,14 @@ export class DsMessageBox extends HTMLElement {
       this._built = true;
     }
     this._render();
+    /* Frameworks insert rows after upgrade; merge any that leak in and re-render. */
+    watchLateChildren(this, (late) => {
+      late.forEach((el) => {
+        const g = el.getAttribute && el.getAttribute('slot') === 'information' ? 'information' : 'alerts';
+        this._groups[g].push(el);
+      });
+      this._render();
+    });
   }
 
   attributeChangedCallback(name) {
@@ -200,7 +209,7 @@ export class DsMessageBox extends HTMLElement {
     this._capRO.observe(list);
   }
 
-  disconnectedCallback() { this._capRO && this._capRO.disconnect(); }
+  disconnectedCallback() { this._capRO && this._capRO.disconnect(); stopLateChildren(this); }
 }
 
 if (typeof customElements !== 'undefined' && !customElements.get('ds-message-box')) {

@@ -38,6 +38,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import '../../icons/icon.js';
 /* Header action + footer action reuse shared components — never custom markup:
    the header "more" control is <ds-icon-button>, the footer link <ds-text-link>. */
@@ -83,6 +84,21 @@ export class DsCard extends HTMLElement {
     }
     this._mounted = true;
     this._render();
+    /* Frameworks insert children after upgrade; merge any that leak in and re-home. */
+    watchLateChildren(this, (late) => {
+      late.forEach((n) => {
+        const s = n.getAttribute && n.getAttribute('slot');
+        if (s === 'leading-icon') this._slottedLeadingIcon = n;
+        else if (s === 'header-action') this._slottedHeaderAction = n;
+        else if (s === 'media') this._slottedMedia = n;
+        else this._slottedContent.push(n);
+      });
+      this._render();
+    });
+  }
+
+  disconnectedCallback() {
+    stopLateChildren(this);
   }
   attributeChangedCallback(name, oldVal, newVal) {
     /* `title` collides with the native HTML tooltip attribute — left on the

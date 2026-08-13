@@ -20,6 +20,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 
 const SIZES = ['small', 'medium', 'large'];
 const STYLES = ['disc', 'circle', 'square', 'icon', 'number', 'letter', 'badge'];
@@ -53,7 +54,18 @@ export class DsList extends HTMLElement {
       this._pendingItems = undefined;
     }
     this._render();
+    /* Frameworks insert <ds-list-item> after upgrade; _render reads their content,
+       so merge any that leak in and drop the now-consumed nodes. */
+    watchLateChildren(this, (late) => {
+      const items = late.filter((n) => n.tagName && n.tagName.toLowerCase() === 'ds-list-item');
+      if (!items.length) return;
+      this._initialChildren.push(...items);
+      items.forEach((n) => n.remove());
+      this._render();
+    });
   }
+
+  disconnectedCallback() { stopLateChildren(this); }
 
   attributeChangedCallback() { if (this._root) this._render(); }
 

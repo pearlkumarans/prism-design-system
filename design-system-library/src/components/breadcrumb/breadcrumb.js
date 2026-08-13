@@ -15,6 +15,7 @@
    ============================================================================= */
 
 import { boolAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 /* Register <ds-dropdown-menu> so the overflow `···` button can reuse the real
    dropdown component. */
 import '../dropdown-menu/dropdown-menu.js';
@@ -58,6 +59,14 @@ export class DsBreadcrumb extends HTMLElement {
         this._ro.observe(this);
       }
       this._fit();
+      /* Frameworks insert crumbs after upgrade; merge any that leak in and re-render. */
+      watchLateChildren(this, (late) => {
+        const items = late.filter((n) => !n.dataset?.dsInternal);
+        if (!items.length) return;
+        this._items.push(...items);
+        this._render();
+        this._fit();
+      });
     }
   }
 
@@ -65,6 +74,7 @@ export class DsBreadcrumb extends HTMLElement {
     /* Drop the overflow-menu outside-click listener if we're removed while open. */
     if (this._closeOverflow) this._closeOverflow();
     if (this._ro) { this._ro.disconnect(); this._ro = null; }
+    stopLateChildren(this);
   }
 
   attributeChangedCallback() {
