@@ -247,6 +247,11 @@ body {
 /* ── Device execution detail (ported from layout-deployment-device, tokens only) ── */
 .ld-detail { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .ld-detail__scroll { position: relative; flex: 1 1 auto; overflow: auto; padding: 0 20px 24px; }
+/* Contain the execution-timeline ds-drawer to the content region: the pattern
+   renders it inside .ld-detail (position: relative), so switching the normally
+   viewport-fixed drawer to absolute bounds its panel + scrim to .ld-detail
+   (inset: 0 is inherited) instead of covering the shell header/rail. */
+.ld-detail ds-drawer { position: absolute; }
 /* Summary bento: execution-status chart + per-stage table, both as ds-widget cards. */
 .dev-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; padding: 20px 0; align-items: stretch; }
 @media (max-width: 900px) { .dev-grid { grid-template-columns: 1fr; } }
