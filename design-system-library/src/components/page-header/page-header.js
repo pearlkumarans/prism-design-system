@@ -195,6 +195,21 @@ export class DsPageHeader extends HTMLElement {
   _setupScrollCollapse() {
     if (this._scroller) return;
     const el = this._findScroller();
+    /* A named scroll-target may not be in the DOM yet: frameworks (Ember/React/Vue)
+       insert the sibling scroll container AFTER the header upgrades. Binding to the
+       window now would be wrong — the inner container scrolls, not the page — and it
+       would stick (this._scroller is set once). So while a scroll-target is named but
+       unresolved, retry next frame until it appears, bounded so a bad selector can't
+       spin forever. */
+    if (!el && this.getAttribute('scroll-target') && typeof requestAnimationFrame !== 'undefined') {
+      if ((this._collapseTries = (this._collapseTries || 0) + 1) <= 60) {
+        this._collapseRaf = requestAnimationFrame(() => {
+          this._collapseRaf = null;
+          if (this.isConnected && this.hasAttribute('collapse-on-scroll') && !this._scroller) this._setupScrollCollapse();
+        });
+        return;
+      }
+    }
     /* Fall back to the window/document when there's no scrollable container
        (e.g. dashboards whose content simply overflows the page). */
     const useWindow = !el;
@@ -257,6 +272,8 @@ export class DsPageHeader extends HTMLElement {
   }
 
   _teardownScrollCollapse() {
+    if (this._collapseRaf) { cancelAnimationFrame(this._collapseRaf); this._collapseRaf = null; }
+    this._collapseTries = 0;
     if (this._scroller && this._onScroll) this._scroller.removeEventListener('scroll', this._onScroll);
     this._applyCollapsed(false);   // restore action-button sizes before tearing down
     this._collapsedState = undefined;
