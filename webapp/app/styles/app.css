@@ -272,6 +272,68 @@ body {
 .tl-out { margin-top: 8px; padding: 10px 12px; border-radius: 6px; background: var(--uems-bg-secondary-subtle); font-size: var(--font-size-12); color: var(--uems-text-secondary); white-space: pre-wrap; }
 .tl-out.mono { font-family: ui-monospace, 'SF Mono', Consolas, monospace; color: var(--uems-text-primary); }
 @media (prefers-reduced-motion: reduce) { .tl-dot.o { animation: none; } }
+
+/* ── L04 device-summary bento (canonical list-detail — layout-list-detail.html) ── */
+.ld-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; align-items: stretch; padding-top: 16px; }
+.ld-grid > ds-widget { min-width: 0; width: 100%; height: 100%; max-width: none; }
+.ld-grid ds-widget .ds-widget__surface { height: 100%; }
+.ld-grid ds-widget .ds-widget__body { min-height: 0; }
+.sp2 { grid-column: span 2; }
+.sp3 { grid-column: span 3; }
+.sp4 { grid-column: span 4; }
+.ld-grid ds-chart { display: block; width: 100%; height: 100%; min-height: 200px; max-height: 100%; }
+
+/* Security & Compliance: a health tile + a 2-col checks list. A type-less widget
+   defaults to `chart`, whose `.ds-widget__body > *` rule (0,2,0) would flatten this
+   grid to a block — so scope with an extra element to win on specificity. */
+.ld-grid ds-widget .ld-sec { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 16px; align-items: stretch; height: 100%; }
+.ld-health { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; text-align: center; padding: 20px 16px; border-radius: var(--uems-radius-l, 16px); background: var(--uems-bg-error-primary); }
+.ld-health__ring { width: 56px; height: 56px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--uems-bg-error-solid); color: var(--uems-text-white); }
+.ld-health__text { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.ld-health__caption { font-size: var(--font-size-12); color: var(--uems-text-secondary); }
+.ld-health__label { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+.ld-checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px; align-content: center; }
+.ld-check { display: flex; align-items: center; gap: 10px; }
+.ld-check__ico { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.ld-check__ico--neutral { background: var(--uems-bg-secondary); color: var(--uems-icon-tertiary); }
+.ld-check__ico--error { background: var(--uems-bg-error-primary); color: var(--uems-icon-error); }
+.ld-check__ico--warning { background: var(--uems-bg-warning-primary); color: var(--uems-icon-warning); }
+.ld-check__ico--success { background: var(--uems-bg-success-primary); color: var(--uems-icon-success); }
+.ld-check__k { font-size: var(--font-size-13); color: var(--uems-text-secondary); }
+.ld-check__v { font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+
+/* DEX Score: fixed-height semicircle gauge + a centered legend beneath it. Same
+   chart-widget flatten caveat — scope the body + legend to beat (0,2,0). */
+.ld-grid .ld-w-dex .ds-widget__body { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.ld-w-dex ds-chart { height: 170px; min-height: 0; max-height: 170px; width: 100%; }
+.ld-grid ds-widget .ld-dex-foot { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: center; font-size: var(--font-size-12); color: var(--uems-text-secondary); }
+.ld-dex-foot .lgd { display: inline-flex; align-items: center; gap: 6px; }
+.ld-dex-foot .sw { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+
+/* Recent Activity — icon tile + title + meta (tag · user · time). */
+.ld-list { display: flex; flex-direction: column; gap: 4px; padding: 4px 16px; }
+.ld-arow { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; }
+.ld-arow__ico { width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.ld-arow__ico--error { background: var(--uems-bg-error-primary); color: var(--uems-icon-error); }
+.ld-arow__ico--info { background: var(--uems-bg-info-primary); color: var(--uems-icon-info); }
+.ld-arow__ico--warning { background: var(--uems-bg-warning-primary); color: var(--uems-icon-warning); }
+.ld-arow__ico--alert { background: var(--uems-bg-alert-primary); color: var(--uems-icon-alert-secondary); }
+.ld-arow__ico--success { background: var(--uems-bg-success-primary); color: var(--uems-icon-success); }
+.ld-arow__body { min-width: 0; flex: 1 1 auto; }
+.ld-arow__title { font-size: var(--font-size-14); font-weight: var(--font-weight-medium); color: var(--uems-text-primary); }
+.ld-arow__meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--uems-spacing-8, 8px); font-size: var(--font-size-12); color: var(--uems-text-tertiary); margin-top: 3px; }
+.ld-arow__tag .ds-status-indicator { padding-left: 0; padding-right: 0; }
+.ld-sep { color: var(--uems-border-secondary); }
+
+.ld-facet-empty { padding-top: 24px; }
+
+@media (max-width: 1100px) { .sp2, .sp3 { grid-column: span 3; } .sp4 { grid-column: span 6; } }
+@media (max-width: 760px) {
+  .ld-grid { grid-template-columns: 1fr; }
+  .sp2, .sp3, .sp4 { grid-column: span 1; }
+  .ld-sec { grid-template-columns: 1fr; }
+  .ld-checks { grid-template-columns: 1fr; }
+}
 .bl-list__loading { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 64px; color: var(--uems-text-secondary); font-size: var(--font-size-14, 14px); }
 .bl-list__loading ds-icon { animation: bl-spin 1s linear infinite; }
 /* Table stays visible during a server re-fetch; a small chip signals the round-trip. */
