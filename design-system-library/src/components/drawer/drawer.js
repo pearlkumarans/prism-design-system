@@ -34,6 +34,7 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import '../../icons/icon.js';
 import '../icon-button/icon-button.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 
 const SIDES = ['left', 'right'];
 const SIZES = ['s', 'm', 'l', 'full'];
@@ -72,11 +73,16 @@ export class DsDrawer extends HTMLElement {
     }
     this._sync();
     if (boolAttr(this, 'open')) this._onOpen();
+    /* Frameworks (Ember/React/Vue) insert slotted content AFTER upgrade, when the
+       capture above already ran on an empty element — the header/body/footer would
+       otherwise strand outside the panel. Re-distribute any late nodes by slot. */
+    watchLateChildren(this, (late) => { this._distribute(late); this._sync(); });
   }
 
   disconnectedCallback() {
     document.removeEventListener('keydown', this._onKeydown, true);
     this._unlockScroll();
+    stopLateChildren(this);
   }
 
   attributeChangedCallback(name) {
@@ -92,6 +98,28 @@ export class DsDrawer extends HTMLElement {
 
   open()  { this.setAttribute('open', ''); }
   close() { this.removeAttribute('open'); }
+
+  /* Route light-DOM nodes into the drawer's regions by their `slot`. Shared by
+     the initial build and by late re-distribution (framework-inserted content). */
+  _distribute(nodes) {
+    const titlesEl = this.querySelector('[data-titles]');
+    const customHeader = [];
+    for (const node of nodes) {
+      const slot = node.nodeType === Node.ELEMENT_NODE ? node.getAttribute('slot') : null;
+      if (slot === 'footer-start') { this._footerStartEl.appendChild(node); this._hasFooterContent = true; }
+      else if (slot === 'footer') { this._footerActionsEl.appendChild(node); this._hasFooterContent = true; }
+      else if (slot === 'header') { customHeader.push(node); }
+      else { this._bodyEl.appendChild(node); }
+    }
+    /* Custom header content (slot="header") replaces the title/subtitle block,
+       keeping the back + close affordances — a rich header (avatar, badges, meta)
+       instead of just title + subtitle. */
+    if (customHeader.length) {
+      if (titlesEl) titlesEl.style.display = 'none';   /* beat the class display rule */
+      this._headerEl.dataset.custom = '';
+      customHeader.forEach((n) => this._headerEl.insertBefore(n, this._closeBtn));
+    }
+  }
 
   // ---- Build --------------------------------------------------------------
   _build() {
@@ -134,23 +162,7 @@ export class DsDrawer extends HTMLElement {
 
     /* Distribute captured light-DOM content into the right regions by slot. */
     this._hasFooterContent = false;
-    this._customHeader = [];
-    const titlesEl = this.querySelector('[data-titles]');
-    for (const node of this._initialNodes) {
-      const slot = node.nodeType === Node.ELEMENT_NODE ? node.getAttribute('slot') : null;
-      if (slot === 'footer-start') { this._footerStartEl.appendChild(node); this._hasFooterContent = true; }
-      else if (slot === 'footer') { this._footerActionsEl.appendChild(node); this._hasFooterContent = true; }
-      else if (slot === 'header') { this._customHeader.push(node); }
-      else { this._bodyEl.appendChild(node); }
-    }
-    /* Custom header content (slot="header") replaces the title/subtitle block,
-       keeping the back + close affordances. Lets a drawer carry a rich header
-       (avatar, badges, meta) instead of just title + subtitle. */
-    if (this._customHeader.length) {
-      if (titlesEl) titlesEl.style.display = 'none';   /* beat the class display rule */
-      this._headerEl.dataset.custom = '';
-      this._customHeader.forEach((n) => this._headerEl.insertBefore(n, this._closeBtn));
-    }
+    this._distribute(this._initialNodes);
 
     this._closeBtn.addEventListener('click', () => this._dismiss('close'));
     this._backBtn.addEventListener('click', () => {

@@ -18,6 +18,7 @@ import '../src/components/widget/widget.js';
 import '../src/components/page-header/page-header.js';
 import '../src/components/form-footer/form-footer.js';
 import '../src/components/breadcrumb/breadcrumb.js';
+import '../src/components/drawer/drawer.js';
 
 const settle = async () => { await nextFrame(); await nextFrame(); };
 
@@ -92,6 +93,23 @@ describe('late-children — content injected after upgrade is recovered', () => 
     // must not remain a stray direct child.
     expect([...el.children].includes(a), 'raw crumb stranded as a direct host child').to.be.false;
     expect(el.querySelector('[data-ds-internal]'), 'trail not rendered').to.exist;
+  });
+
+  it('ds-drawer distributes header + body slots injected after upgrade', async () => {
+    const el = await fixture(html`<ds-drawer></ds-drawer>`);
+    const header = document.createElement('div');
+    header.setAttribute('slot', 'header');
+    header.textContent = 'Record name';
+    const body = document.createElement('p');
+    body.textContent = 'late body';
+    el.appendChild(header);
+    el.appendChild(body);
+    await settle();
+
+    expect(el.querySelector('.ds-drawer__header').contains(header), 'header slot not routed into the header').to.be.true;
+    expect(el.querySelector('.ds-drawer__body').contains(body), 'body content not routed into the body').to.be.true;
+    const stray = [...el.children].some((c) => !String(c.className || '').startsWith('ds-drawer__'));
+    expect(stray, 'slotted content stranded outside the panel').to.be.false;
   });
 
   it('static HTML (children present at upgrade) is untouched — no double-projection', async () => {

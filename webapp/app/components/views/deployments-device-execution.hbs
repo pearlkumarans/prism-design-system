@@ -22,62 +22,44 @@
     </:headerActions>
 
     <:body>
-      <div class="dev-cards">
-        <div class="dev-donut-card">
-          <h4>Execution status</h4>
-          <div class="dev-donut">
-            <svg viewBox="0 0 42 42" width="100%" height="100%" style="transform: rotate(-90deg);">
-              {{#each this.donutSegments as |seg|}}
-                <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke={{seg.color}}
-                  stroke-width="6" stroke-dasharray={{seg.dash}} stroke-dashoffset={{seg.offset}}></circle>
-              {{/each}}
-            </svg>
-            <div class="center">
-              <div class="total">{{this.donutTotal}}</div>
-              <div class="label">stages</div>
-            </div>
-          </div>
-          <div class="dev-legend">
-            {{#each this.legend as |lg|}}
-              <span class="lg"><span class="sw" style="background: {{lg.color}}"></span>{{lg.label}}<span class="v">{{lg.value}}</span></span>
-            {{/each}}
-          </div>
-        </div>
+      <div class="dev-grid">
+        <ds-widget class="dev-w-status" type="chart" title="Execution status"
+          show-drag="false" show-action="false" show-footer="false"
+          {{config-chart type="donut" legend="right" fit="contain" data=this.statusChart}}></ds-widget>
 
-        <div class="dev-table-card">
-          <h4>Per-stage status</h4>
-          <div {{on "click" this.onTableClick}}>
-            <ds-data-table
-              class="dev-table"
-              selection-mode="none"
-              row-height="comfortable"
-              show-footer="false"
-              sticky-header
-              {{set-prop "columns" this.columns}}
-              {{set-prop "rows" this.stages}}
-            ></ds-data-table>
-          </div>
-        </div>
+        <ds-widget class="dev-w-stages" type="table" title="Per-stage status"
+          show-drag="false" show-action="false" show-footer="false">
+          <ds-data-table
+            class="dev-table"
+            selection-mode="none"
+            row-height="comfortable"
+            show-toolbar="false"
+            show-footer="false"
+            sticky-header
+            {{on "click" this.onTableClick}}
+            {{set-prop "columns" this.columns}}
+            {{set-prop "rows" this.stages}}
+          ></ds-data-table>
+        </ds-widget>
       </div>
     </:body>
 
     <:overlay>
-      <div class="tl-scrim" data-open="{{if this.panelOpen "true" "false"}}" {{on "click" this.closePanel}}></div>
-      <aside class="tl-panel" data-open="{{if this.panelOpen "true" "false"}}"
-        aria-hidden="{{if this.panelOpen "false" "true"}}" aria-label="Execution timeline">
-        <div class="tl-head">
-          <div style="flex: 1 1 auto; min-width: 0;">
-            <div class="tl-head-title">
-              <span>{{this.rec.name}}</span>
-              <ds-badge variant="subtle" state="critical" shape="rounded" size="medium">{{this.rec.status}}</ds-badge>
-            </div>
-            <div class="tl-head-meta">Started Jul 21, 8:02 AM · Duration 13 min 41 s</div>
+      <ds-drawer
+        side="right"
+        size="m"
+        {{drawer-toggle this.panelOpen}}
+        {{on "ds-drawer-close" this.closePanel}}
+      >
+        <div slot="header" class="tl-head">
+          <div class="tl-head-title">
+            <span>{{this.rec.name}}</span>
+            <ds-badge variant="subtle" state="critical" shape="rounded" size="medium">{{this.rec.status}}</ds-badge>
           </div>
-          <button type="button" class="tl-close" aria-label="Close timeline" {{on "click" this.closePanel}}>
-            <ds-icon name="cancel" size="18"></ds-icon>
-          </button>
+          <div class="tl-head-meta">Started Jul 21, 8:02 AM · Duration 13 min 41 s</div>
         </div>
-        <div class="tl-body">
+
+        <div class="tl-timeline">
           {{#each this.timeline as |node|}}
             <div class="tl-node">
               <span class="tl-dot {{node.d}}"></span>
@@ -86,7 +68,7 @@
             </div>
           {{/each}}
         </div>
-      </aside>
+      </ds-drawer>
     </:overlay>
   </Patterns::ListDetail>
 {{else}}
