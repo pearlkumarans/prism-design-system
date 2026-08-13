@@ -41,6 +41,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import '../../icons/icon.js';
 /* Every interactive part reuses its existing component — never custom markup. */
 import '../icon-button/icon-button.js';
@@ -110,22 +111,17 @@ export class DsWidget extends HTMLElement {
     }
     this._mounted = true;
     this._render();
-    /* Static HTML has children at parse time; frameworks (Ember/React/Vue) insert
-       them AFTER the element upgrades, so the capture above misses them. Watch for
-       late direct children (content that leaked outside our surface) and re-project. */
-    if (!this._projectObs) {
-      this._projectObs = new MutationObserver(() => {
-        const stray = [...this.children].some((c) => !this._isOwnNode(c));
-        if (!stray) return;              // only our own wrappers remain → nothing to do
-        this._slotsCaptured = false;     // re-capture the now-present children
-        this.connectedCallback();
-      });
-      this._projectObs.observe(this, { childList: true });
-    }
+    /* Frameworks (Ember/React/Vue) insert children AFTER upgrade, so the capture
+       above can miss them. Re-capture + re-render when late content appears. */
+    watchLateChildren(this, () => { this._slotsCaptured = false; this.connectedCallback(); });
+  }
+
+  disconnectedCallback() {
+    stopLateChildren(this);
   }
 
   /* Our own generated wrappers all carry a `ds-widget__` class; a consumer's
-     slotted content never does — so this tells re-projection what to ignore. */
+     slotted content never does — so this tells the re-capture what to ignore. */
   _isOwnNode(node) {
     return !!(node.classList && Array.from(node.classList).some((k) => k.startsWith('ds-widget__')));
   }

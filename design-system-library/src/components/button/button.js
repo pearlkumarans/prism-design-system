@@ -15,6 +15,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 
 const VARIANTS = ['primary', 'secondary', 'tertiary', 'outline', 'destructive', 'success', 'warning', 'secondary-color'];
 const SIZES = ['large', 'medium', 'small', 'xsmall'];
@@ -62,21 +63,17 @@ export class DsButton extends HTMLElement {
       });
     }
 
+    this._sync();
     /* Static HTML has the label present at upgrade; frameworks (Ember/Glimmer,
        React, Vue) may append it AFTER upgrade, when the capture above already ran
-       on an empty element. Watch for stray children (anything that isn't our
-       rendered <button>) and re-home them into the label span. Re-armed on every
-       connect because re-parenting the host tears down the observer. */
-    if (!this._labelObs) {
-      this._labelObs = new MutationObserver(() => this._reclaimLabel());
-      this._labelObs.observe(this, { childList: true });
-    }
-    this._sync();
-    this._reclaimLabel();   // catch a label that arrived while disconnected
+       on an empty element — leaving the label as a stray node beside our <button>.
+       Reclaim one already present (e.g. after re-parenting), and any that arrives. */
+    this._reclaimLabel();
+    watchLateChildren(this, () => this._reclaimLabel());
   }
 
   disconnectedCallback() {
-    if (this._labelObs) { this._labelObs.disconnect(); this._labelObs = null; }
+    stopLateChildren(this);
   }
 
   _reclaimLabel() {

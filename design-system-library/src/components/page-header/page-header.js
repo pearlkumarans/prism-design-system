@@ -1,4 +1,5 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 /* Reuse existing design-system components — register them as dependencies so the
    page header works on any page that loads page-header.js. Breadcrumb, tabs,
    status, divider, icon-button all delegate to the real components; Buttons/Badge
@@ -95,13 +96,9 @@ export class DsPageHeader extends HTMLElement {
     if (this._pendingTitleMenu !== undefined) { this.titleMenu = this._pendingTitleMenu; this._pendingTitleMenu = undefined; }
     this._captureTitle();
     this._render();
-    /* Static HTML has [slot] children at parse time; frameworks (Ember/React/Vue)
-       insert them AFTER the element upgrades, so the capture above misses them.
-       Watch for late [slot] direct children (e.g. actions) and re-home them. */
-    if (!this._projectObs) {
-      this._projectObs = new MutationObserver(() => this._reprojectSlots());
-      this._projectObs.observe(this, { childList: true });
-    }
+    /* Frameworks (Ember/React/Vue) insert [slot] children AFTER upgrade, so the
+       capture above can miss them (e.g. actions). Re-home them when they appear. */
+    watchLateChildren(this, () => this._reprojectSlots());
     if (this.hasAttribute('collapse-on-scroll')) this._setupScrollCollapse();
     /* Watch the header's own width so actions fold into a ⋮ overflow when the
        header is narrow (container-based; works in a panel, not just a viewport).
@@ -129,7 +126,7 @@ export class DsPageHeader extends HTMLElement {
   disconnectedCallback() {
     this._teardownScrollCollapse();
     if (this._ro) { this._ro.disconnect(); this._ro = null; }
-    if (this._projectObs) { this._projectObs.disconnect(); this._projectObs = null; }
+    stopLateChildren(this);
     if (this._onWinResize) { window.removeEventListener('resize', this._onWinResize); this._onWinResize = null; }
     /* Drop any open inline-menu outside-click listener (title / action overflow). */
     this._pendingCloses.forEach((fn) => fn());
