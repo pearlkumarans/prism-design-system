@@ -100,16 +100,34 @@ export class DsWidget extends HTMLElement {
   }
 
   connectedCallback() {
-    /* Capture consumer children ONCE before the first render (after that,
-       this.children are our own generated wrappers). Same pattern as ds-card. */
+    /* Capture consumer children before the first render. Exclude our OWN generated
+       wrappers so a re-capture (see the observer below) never swallows them. */
     if (!this._slotsCaptured) {
       this._slottedHeaderAction = this.querySelector(':scope > [slot="header-action"]') || null;
       this._slottedFilter = this.querySelector(':scope > [slot="filter"]') || null;
-      this._slottedContent = [...this.children].filter((c) => !c.hasAttribute('slot'));
+      this._slottedContent = [...this.children].filter((c) => !c.hasAttribute('slot') && !this._isOwnNode(c));
       this._slotsCaptured = true;
     }
     this._mounted = true;
     this._render();
+    /* Static HTML has children at parse time; frameworks (Ember/React/Vue) insert
+       them AFTER the element upgrades, so the capture above misses them. Watch for
+       late direct children (content that leaked outside our surface) and re-project. */
+    if (!this._projectObs) {
+      this._projectObs = new MutationObserver(() => {
+        const stray = [...this.children].some((c) => !this._isOwnNode(c));
+        if (!stray) return;              // only our own wrappers remain → nothing to do
+        this._slotsCaptured = false;     // re-capture the now-present children
+        this.connectedCallback();
+      });
+      this._projectObs.observe(this, { childList: true });
+    }
+  }
+
+  /* Our own generated wrappers all carry a `ds-widget__` class; a consumer's
+     slotted content never does — so this tells re-projection what to ignore. */
+  _isOwnNode(node) {
+    return !!(node.classList && Array.from(node.classList).some((k) => k.startsWith('ds-widget__')));
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
