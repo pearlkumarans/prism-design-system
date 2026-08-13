@@ -19,6 +19,10 @@ import '../src/components/page-header/page-header.js';
 import '../src/components/form-footer/form-footer.js';
 import '../src/components/breadcrumb/breadcrumb.js';
 import '../src/components/drawer/drawer.js';
+import '../src/components/modal/modal.js';
+import '../src/components/popover/popover.js';
+import '../src/components/section-header/section-header.js';
+import '../src/components/empty-state/empty-state.js';
 
 const settle = async () => { await nextFrame(); await nextFrame(); };
 
@@ -110,6 +114,57 @@ describe('late-children — content injected after upgrade is recovered', () => 
     expect(el.querySelector('.ds-drawer__body').contains(body), 'body content not routed into the body').to.be.true;
     const stray = [...el.children].some((c) => !String(c.className || '').startsWith('ds-drawer__'));
     expect(stray, 'slotted content stranded outside the panel').to.be.false;
+  });
+
+  it('ds-modal distributes body + footer slots injected after upgrade', async () => {
+    const el = await fixture(html`<ds-modal></ds-modal>`);
+    const body = document.createElement('p');
+    body.textContent = 'late body';
+    const footer = document.createElement('ds-button');
+    footer.setAttribute('slot', 'footer');
+    el.appendChild(body);
+    el.appendChild(footer);
+    await settle();
+
+    expect(el.querySelector('.ds-modal__body').contains(body), 'body content not routed').to.be.true;
+    const stray = [...el.children].some((c) => !String(c.className || '').startsWith('ds-modal__'));
+    expect(stray, 'slotted content stranded outside the panel').to.be.false;
+  });
+
+  it('ds-popover routes body content injected after upgrade', async () => {
+    const el = await fixture(html`<ds-popover></ds-popover>`);
+    const body = document.createElement('p');
+    body.textContent = 'late body';
+    el.appendChild(body);
+    await settle();
+
+    expect(el.querySelector('.ds-popover__body').contains(body), 'body content not routed').to.be.true;
+    const stray = [...el.children].some((c) => !String(c.className || '').startsWith('ds-popover__'));
+    expect(stray, 'slotted content stranded outside the popover').to.be.false;
+  });
+
+  it('ds-section-header re-homes an action slot injected after upgrade', async () => {
+    // The action region is opt-in (show-action) + needs a label or slotted action.
+    const el = await fixture(html`<ds-section-header title="H" show-action></ds-section-header>`);
+    const action = document.createElement('ds-button');
+    action.setAttribute('slot', 'action');
+    el.appendChild(action);
+    await settle();
+
+    expect([...el.children].includes(action), 'action stranded as a direct host child').to.be.false;
+    expect(el.contains(action), 'action dropped').to.be.true;
+  });
+
+  it('ds-empty-state re-homes a description slot injected after upgrade', async () => {
+    const el = await fixture(html`<ds-empty-state title="Empty"></ds-empty-state>`);
+    const desc = document.createElement('span');
+    desc.setAttribute('slot', 'description');
+    desc.textContent = 'late description';
+    el.appendChild(desc);
+    await settle();
+
+    expect([...el.children].includes(desc), 'description stranded as a direct host child').to.be.false;
+    expect(el.contains(desc), 'description dropped').to.be.true;
   });
 
   it('static HTML (children present at upgrade) is untouched — no double-projection', async () => {

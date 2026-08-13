@@ -28,6 +28,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import '../../icons/icon.js';
 import '../icon-button/icon-button.js';
 
@@ -58,6 +59,19 @@ export class DsModal extends HTMLElement {
     this._suppressTitle = false;
   }
 
+  /* Route light-DOM nodes into the modal's regions by their `slot`. Shared by the
+     initial build and by late re-distribution (framework-inserted content). */
+  _distribute(nodes) {
+    for (const node of nodes) {
+      const slot = node.nodeType === Node.ELEMENT_NODE ? node.getAttribute('slot') : null;
+      if (slot === 'icon') { this._leadingEl.appendChild(node); this._hasLeading = true; }
+      else if (slot === 'header-action') { this._headerActionEl.appendChild(node); this._hasHeaderAction = true; }
+      else if (slot === 'footer-start') { this._footerStartEl.appendChild(node); this._hasFooterContent = true; }
+      else if (slot === 'footer') { this._footerActionsEl.appendChild(node); this._hasFooterContent = true; }
+      else { this._bodyEl.appendChild(node); }
+    }
+  }
+
   connectedCallback() {
     if (!this._mounted) {
       this._initialNodes = Array.from(this.childNodes);
@@ -66,10 +80,13 @@ export class DsModal extends HTMLElement {
     }
     this._sync();
     if (boolAttr(this, 'open')) this._onOpen();
+    /* Frameworks insert slotted content after upgrade; re-distribute late nodes. */
+    watchLateChildren(this, (late) => { this._distribute(late); this._sync(); });
   }
 
   disconnectedCallback() {
     document.removeEventListener('keydown', this._onKeydown, true);
+    stopLateChildren(this);
   }
 
   attributeChangedCallback(name) {
@@ -133,14 +150,7 @@ export class DsModal extends HTMLElement {
     this._hasLeading = false;
     this._hasHeaderAction = false;
     this._hasFooterContent = false;
-    for (const node of this._initialNodes) {
-      const slot = node.nodeType === Node.ELEMENT_NODE ? node.getAttribute('slot') : null;
-      if (slot === 'icon') { this._leadingEl.appendChild(node); this._hasLeading = true; }
-      else if (slot === 'header-action') { this._headerActionEl.appendChild(node); this._hasHeaderAction = true; }
-      else if (slot === 'footer-start') { this._footerStartEl.appendChild(node); this._hasFooterContent = true; }
-      else if (slot === 'footer') { this._footerActionsEl.appendChild(node); this._hasFooterContent = true; }
-      else { this._bodyEl.appendChild(node); }
-    }
+    this._distribute(this._initialNodes);
 
     this._closeBtn.addEventListener('click', () => this._dismiss('close'));
     this._overlay.addEventListener('click', () => {
