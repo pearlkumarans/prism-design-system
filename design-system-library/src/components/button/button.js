@@ -61,6 +61,29 @@ export class DsButton extends HTMLElement {
         }
       });
     }
+
+    /* Static HTML has the label present at upgrade; frameworks (Ember/Glimmer,
+       React, Vue) may append it AFTER upgrade, when the capture above already ran
+       on an empty element. Watch for stray children (anything that isn't our
+       rendered <button>) and re-home them into the label span. Re-armed on every
+       connect because re-parenting the host tears down the observer. */
+    if (!this._labelObs) {
+      this._labelObs = new MutationObserver(() => this._reclaimLabel());
+      this._labelObs.observe(this, { childList: true });
+    }
+    this._sync();
+    this._reclaimLabel();   // catch a label that arrived while disconnected
+  }
+
+  disconnectedCallback() {
+    if (this._labelObs) { this._labelObs.disconnect(); this._labelObs = null; }
+  }
+
+  _reclaimLabel() {
+    const strays = [...this.childNodes].filter((n) => n !== this._btn);
+    if (!strays.length) return;
+    strays.forEach((n) => this._label.appendChild(n));
+    this._defaultLabelHTML = this._label.innerHTML;   // late label becomes the new default
     this._sync();
   }
 
