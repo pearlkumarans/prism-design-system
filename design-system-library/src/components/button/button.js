@@ -15,6 +15,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 
 const VARIANTS = ['primary', 'secondary', 'tertiary', 'outline', 'destructive', 'success', 'warning', 'secondary-color'];
 const SIZES = ['large', 'medium', 'small', 'xsmall'];
@@ -61,6 +62,25 @@ export class DsButton extends HTMLElement {
         }
       });
     }
+
+    this._sync();
+    /* Static HTML has the label present at upgrade; frameworks (Ember/Glimmer,
+       React, Vue) may append it AFTER upgrade, when the capture above already ran
+       on an empty element — leaving the label as a stray node beside our <button>.
+       Reclaim one already present (e.g. after re-parenting), and any that arrives. */
+    this._reclaimLabel();
+    watchLateChildren(this, () => this._reclaimLabel());
+  }
+
+  disconnectedCallback() {
+    stopLateChildren(this);
+  }
+
+  _reclaimLabel() {
+    const strays = [...this.childNodes].filter((n) => n !== this._btn);
+    if (!strays.length) return;
+    strays.forEach((n) => this._label.appendChild(n));
+    this._defaultLabelHTML = this._label.innerHTML;   // late label becomes the new default
     this._sync();
   }
 

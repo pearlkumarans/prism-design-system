@@ -26,6 +26,7 @@
    ============================================================================= */
 
 import { boolAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 /* Action buttons reuse the shared Button component. */
 import '../button/button.js';
 
@@ -56,6 +57,18 @@ export class DsFormFooter extends HTMLElement {
     }
     this._mounted = true;
     this._render();
+    /* Frameworks insert children after upgrade; merge any that leak in and re-home. */
+    watchLateChildren(this, (late) => {
+      late.forEach((n) => {
+        if (n.getAttribute && n.getAttribute('slot') === 'left') this._slottedLeft.push(n);
+        else this._slottedActions.push(n);
+      });
+      this._render();
+    });
+  }
+
+  disconnectedCallback() {
+    stopLateChildren(this);
   }
 
   attributeChangedCallback() {

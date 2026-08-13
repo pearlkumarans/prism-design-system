@@ -1,0 +1,76 @@
+{{! Install/Uninstall Windows Patch — a thin Patterns::SectionedForm instance.
+    The scaffold/footer/save-as live in the pattern; the fields are the :body. }}
+<Patterns::SectionedForm
+  @header={{this.header}}
+  @breadcrumbs={{this.breadcrumbs}}
+  @footerNote="Last saved 2 min ago"
+  @primaryLabel="Deploy"
+  @saveAsItems={{this.saveAsItems}}
+  @onPrimary={{this.deploy}}
+  @onCancel={{this.cancel}}
+  @onSaveAs={{this.onSaveAs}}
+>
+  <:body as |Form|>
+    <Form.Section @title="Basic Information" @description="Optional description text for this section">
+      <ds-text-input class="sform__field" size="medium" label="Name" label-position="left" required maxlength="100" show-counter counter="0/100"></ds-text-input>
+      <ds-text-area class="sform__field" size="medium" label="Description" label-position="left" placeholder="Placeholder"></ds-text-area>
+    </Form.Section>
+
+    <Form.Section @title="Configure Patches" @description="Optional description text for this section">
+      <ds-radio-group class="sform__field" label="Operation Type" label-position="left" {{set-prop "options" this.optypeOptions}}></ds-radio-group>
+      <div class="sform__control-only">
+        <ds-button variant="secondary">Select Patches</ds-button>
+      </div>
+    </Form.Section>
+
+    <Form.Section @title="Deployment Settings" @description="Optional description text for this section">
+      <ds-checkbox-group class="sform__field" label="Deployment Option" label-position="left" value="deploy">
+        <ds-checkbox value="deploy" label="Deploy"></ds-checkbox>
+        <ds-checkbox value="ssp" label="Publish to Self Service Portal (SSP)"></ds-checkbox>
+      </ds-checkbox-group>
+      <div class="sform__field sform__row-inline sform__row-policy">
+        <ds-input-select size="medium" label="Apply Deployment Policy" label-position="left" placeholder="Select policy" {{set-prop "options" this.policyOptions}}></ds-input-select>
+        <ds-text-link size="medium" href="#" leading-icon="add" style="white-space:nowrap;">Create Policy</ds-text-link>
+      </div>
+      <ds-date-picker class="sform__field" label="Force deploy to unpatched systems after" label-position="left" placeholder="Select date"></ds-date-picker>
+    </Form.Section>
+
+    <Form.Section @title="Define Target" @description="Optional description text for this section">
+      {{#each this.targets as |tgt|}}
+        <div class="sform__target">
+          <div class="sform__label-col">{{tgt.label}}</div>
+          <div class="sform__row-inline">
+            <ds-input-select size="medium" value="remote-office" style="min-width:180px" {{set-prop "options" this.targetTypeOptions}}></ds-input-select>
+            <ds-input-select size="medium" placeholder="Select remote office" style="flex:1 1 320px; min-width:0;" {{set-prop "options" this.targetOfficeOptions}}></ds-input-select>
+            <ds-icon-button icon="add" label="Add target" type="tertiary-grey" size="small" {{on "click" this.addTarget}}></ds-icon-button>
+            <ds-icon-button icon="minus" label="Remove target" type="tertiary-grey" size="small" {{on "click" (fn this.removeTarget tgt.id)}}></ds-icon-button>
+          </div>
+        </div>
+      {{/each}}
+    </Form.Section>
+
+    <Form.Section @title="Additional Settings" @description="Optional group — enable only what you need" @bodyClass="sform__addl">
+      <ds-accordion type="toggle" expanded>
+        <span slot="title" class="sform__addl-title">Retry on Failed Targets</span>
+        <div slot="body" class="sform__addl-body">
+          <ds-input-select size="medium" class="sform__field" label="Retry on Startup" label-position="left" required value="1" {{set-prop "options" this.numOptions}}></ds-input-select>
+          <ds-input-select size="medium" class="sform__field" label="Retry on Refresh Cycle" label-position="left" required value="1" {{set-prop "options" this.numOptions}}></ds-input-select>
+        </div>
+      </ds-accordion>
+
+      <ds-accordion type="toggle">
+        <span slot="title" class="sform__addl-title">Notification Settings</span>
+        <div slot="body" class="sform__addl-body">
+          <ds-input-select size="medium" class="sform__field" label="Notify on completion" label-position="left" placeholder="Select recipients" {{set-prop "options" this.notifyOptions}}></ds-input-select>
+        </div>
+      </ds-accordion>
+
+      <ds-accordion>
+        <span slot="title" class="sform__addl-title">Scheduler Settings</span>
+        <div slot="body" class="sform__addl-body">
+          <ds-input-select size="medium" class="sform__field" label="Schedule" label-position="left" placeholder="Select schedule" {{set-prop "options" this.scheduleOptions}}></ds-input-select>
+        </div>
+      </ds-accordion>
+    </Form.Section>
+  </:body>
+</Patterns::SectionedForm>

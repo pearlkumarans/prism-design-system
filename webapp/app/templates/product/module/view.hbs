@@ -1,0 +1,9 @@
+{{! Phase E strangler switch: a slug with a native Ember component renders it;
+    everything else falls back to ContentOutlet (legacy dual-mode injection). }}
+{{#let (native-view this.model.slug) as |native|}}
+  {{#if native}}
+    {{component native}}
+  {{else}}
+    <ContentOutlet @slug={{this.model.slug}} />
+  {{/if}}
+{{/let}}

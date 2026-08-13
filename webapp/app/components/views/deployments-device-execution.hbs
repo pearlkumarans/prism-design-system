@@ -1,0 +1,76 @@
+{{! Device execution — a thin Patterns::ListDetail instance (L04 record detail).
+    The RecordHeader/scroll/overlay frame lives in the pattern; this view supplies
+    the summary meta, the widget grid (:body), and the slide-in timeline (:overlay). }}
+{{#if this.error}}
+  <Patterns::EmptyState
+    @illustration="state-error"
+    @title="Couldn't load device execution"
+    @description="The request failed. Is the BFF running (server/bff.mjs)?"
+    @primaryLabel="Retry"
+    @onPrimary={{this.reload}}
+  />
+{{else if this.rec}}
+  <Patterns::ListDetail
+    @header={{this.header}}
+    @breadcrumbs={{this.breadcrumbs}}
+    @summary={{this.summary}}
+    @onBreadcrumbClick={{this.onBreadcrumbClick}}
+  >
+    <:headerActions>
+      <ds-button slot="actions" variant="primary" size="small" prefix-icon="clock"
+        {{on "click" this.openPanel}}>View execution timeline</ds-button>
+    </:headerActions>
+
+    <:body>
+      <div class="dev-grid">
+        <ds-widget class="dev-w-status" type="chart" title="Execution status"
+          show-drag="false" show-action="false" show-footer="false"
+          {{config-chart type="donut" legend="right" fit="contain" data=this.statusChart}}></ds-widget>
+
+        <ds-widget class="dev-w-stages" type="table" title="Per-stage status"
+          show-drag="false" show-action="false" show-footer="false">
+          <ds-data-table
+            class="dev-table"
+            selection-mode="none"
+            row-height="comfortable"
+            show-toolbar="false"
+            show-footer="false"
+            sticky-header
+            {{on "click" this.onTableClick}}
+            {{set-prop "columns" this.columns}}
+            {{set-prop "rows" this.stages}}
+          ></ds-data-table>
+        </ds-widget>
+      </div>
+    </:body>
+
+    <:overlay>
+      <ds-drawer
+        side="right"
+        size="m"
+        {{drawer-toggle this.panelOpen}}
+        {{on "ds-drawer-close" this.closePanel}}
+      >
+        <div slot="header" class="tl-head">
+          <div class="tl-head-title">
+            <span>{{this.rec.name}}</span>
+            <ds-badge variant="subtle" state="critical" shape="rounded" size="medium">{{this.rec.status}}</ds-badge>
+          </div>
+          <div class="tl-head-meta">Started Jul 21, 8:02 AM · Duration 13 min 41 s</div>
+        </div>
+
+        <div class="tl-timeline">
+          {{#each this.timeline as |node|}}
+            <div class="tl-node">
+              <span class="tl-dot {{node.d}}"></span>
+              <div class="tl-title">{{node.t}}</div>
+              <div class="tl-out {{if node.mono "mono"}}">{{node.out}}</div>
+            </div>
+          {{/each}}
+        </div>
+      </ds-drawer>
+    </:overlay>
+  </Patterns::ListDetail>
+{{else}}
+  <Patterns::Skeleton::Detail />
+{{/if}}

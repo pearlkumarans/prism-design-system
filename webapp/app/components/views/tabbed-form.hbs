@@ -1,0 +1,66 @@
+{{! Configuration Settings — a thin Patterns::TabbedForm instance (6 categories). }}
+<Patterns::TabbedForm
+  @header={{this.header}}
+  @breadcrumbs={{this.breadcrumbs}}
+  @tabs={{this.tabs}}
+  @footerNote="All changes saved"
+  @primaryLabel="Save"
+  @onPrimary={{this.save}}
+  @onCancel={{this.cancel}}
+>
+  <:body as |Form|>
+    <Form.Panel @id="general">
+      <Form.Section @title="Identity" @description="Name and describe this configuration.">
+        <ds-text-input class="sform__field" size="medium" label="Configuration Name" label-position="left" required maxlength="60" show-counter counter="0/60"></ds-text-input>
+        <ds-text-area class="sform__field" size="medium" label="Description" label-position="left" placeholder="What is this configuration for?"></ds-text-area>
+      </Form.Section>
+      <Form.Section @title="Status" @description="Control whether this configuration is active.">
+        <ds-radio-group class="sform__field" label="Status" label-position="left" {{set-prop "options" this.statusOptions}}></ds-radio-group>
+      </Form.Section>
+    </Form.Panel>
+
+    <Form.Panel @id="deployment">
+      <Form.Section @title="Policy" @description="How this configuration rolls out.">
+        <ds-input-select class="sform__field" size="medium" label="Deployment policy" label-position="left" placeholder="Select policy" {{set-prop "options" this.policyOptions}}></ds-input-select>
+        <ds-input-select class="sform__field" size="medium" label="Retry attempts" label-position="left" value="3" {{set-prop "options" this.retryOptions}}></ds-input-select>
+      </Form.Section>
+      <Form.Section @title="Schedule" @description="When deployment runs.">
+        <ds-input-select class="sform__field" size="medium" label="Deploy window" label-position="left" placeholder="Select window" {{set-prop "options" this.windowOptions}}></ds-input-select>
+      </Form.Section>
+    </Form.Panel>
+
+    <Form.Panel @id="notifications">
+      <Form.Section @title="Alerts" @description="Who hears about deployment outcomes.">
+        <ds-checkbox-group class="sform__field" label="Notify me about" label-position="left" value="failure">
+          <ds-checkbox value="success" label="On success"></ds-checkbox>
+          <ds-checkbox value="failure" label="On failure"></ds-checkbox>
+        </ds-checkbox-group>
+        <ds-input-select class="sform__field" size="medium" label="Recipients" label-position="left" placeholder="Select recipients" {{set-prop "options" this.recipientsOptions}}></ds-input-select>
+      </Form.Section>
+    </Form.Panel>
+
+    <Form.Panel @id="security">
+      <Form.Section @title="Access" @description="Who can run and modify this configuration.">
+        <ds-input-select class="sform__field" size="medium" label="Required role" label-position="left" placeholder="Select role" {{set-prop "options" this.roleOptions}}></ds-input-select>
+        <ds-checkbox-group class="sform__field" label="Require approval" label-position="left" value="deploy">
+          <ds-checkbox value="deploy" label="Before deploy"></ds-checkbox>
+          <ds-checkbox value="delete" label="Before delete"></ds-checkbox>
+        </ds-checkbox-group>
+      </Form.Section>
+    </Form.Panel>
+
+    <Form.Panel @id="integrations">
+      <Form.Section @title="Connected apps" @description="Send configuration events to external tools.">
+        <ds-input-select class="sform__field" size="medium" label="Webhook target" label-position="left" placeholder="Select target" {{set-prop "options" this.webhookOptions}}></ds-input-select>
+        <ds-text-input class="sform__field" size="medium" label="Endpoint URL" label-position="left" placeholder="https://example.com/hook"></ds-text-input>
+      </Form.Section>
+    </Form.Panel>
+
+    <Form.Panel @id="advanced">
+      <Form.Section @title="Performance" @description="Fine-tune how the agent applies this configuration.">
+        <ds-input-select class="sform__field" size="medium" label="Bandwidth throttle" label-position="left" placeholder="Select limit" {{set-prop "options" this.throttleOptions}}></ds-input-select>
+        <ds-text-area class="sform__field" size="medium" label="Custom script" label-position="left" placeholder="Optional pre-deploy script"></ds-text-area>
+      </Form.Section>
+    </Form.Panel>
+  </:body>
+</Patterns::TabbedForm>

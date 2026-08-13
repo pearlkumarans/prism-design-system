@@ -1,0 +1,51 @@
+{{! BitLocker dashboard — a thin Patterns::ModuleDashboard instance. The frame,
+    KPI row, and chart-refit live in the pattern; the widget grid is the :body. }}
+<Patterns::ModuleDashboard @header={{this.header}} @kpis={{this.kpiCards}} @refitKey={{this.i18n.lang}}>
+  <:headerActions>
+    <ds-button slot="actions" variant="primary" prefix-icon="add" {{on "click" this.createPolicy}}>
+      {{t "bl.createPolicy"}}
+    </ds-button>
+  </:headerActions>
+  <:body>
+    <div class="bl-grid">
+      <ds-widget class="bl-sp2" type="chart" title={{t "bl.w.status"}} show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="donut" legend="right" fit="contain" data=this.statusChart}}></ds-widget>
+
+      <ds-widget class="bl-sp2" type="chart" title={{t "bl.w.os"}} show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="column" fit="fill" data=this.osChart}}></ds-widget>
+
+      <ds-widget class="bl-sp2" type="chart" title={{t "bl.w.auth"}} show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="donut" monotone="blue" legend="right" fit="contain" data=this.authChart}}></ds-widget>
+
+      <ds-widget class="bl-sp2" type="chart" title={{t "bl.w.prereq"}} show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="column" fit="fill" data=this.prereqChart}}></ds-widget>
+
+      <ds-widget class="bl-sp2" type="chart" title={{t "bl.w.escrow"}} show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="donut" legend="right" fit="contain" data=this.escrowChart}}></ds-widget>
+
+      <ds-widget class="bl-sp2" type="list" title={{t "bl.w.deploy"}} show-drag="false" show-action="false" footer-label={{t "bl.f.deploy"}} footer-href="#">
+        {{#each this.deploys as |d|}}
+          <div class="wl-row">
+            <span class="wl-ico"><ds-icon name={{d.icon}} size="16"></ds-icon></span>
+            <span class="wl-label wl-label--link">{{d.label}}</span>
+            <ds-badge variant="subtle" state={{d.state}} size="medium" shape="pill" label={{d.badgeLabel}}></ds-badge>
+          </div>
+        {{/each}}
+      </ds-widget>
+    </div>
+
+    <ds-widget class="bl-attention" type="table" title={{t "bl.w.attn"}} show-drag="false" show-action="false" footer-label={{t "bl.f.attn"}} footer-href="#">
+      <ds-data-table
+        selection-mode="none"
+        row-height="comfortable"
+        show-toolbar="false"
+        show-footer="false"
+        sticky-header
+        rows-per-page="6"
+        page="1"
+        {{set-prop "columns" this.columns}}
+        {{set-prop "rows" this.rows}}
+      ></ds-data-table>
+    </ds-widget>
+  </:body>
+</Patterns::ModuleDashboard>

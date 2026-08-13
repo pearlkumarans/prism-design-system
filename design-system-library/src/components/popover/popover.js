@@ -29,6 +29,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 
 const PLACEMENTS = [
   'top', 'top-start', 'top-center', 'top-end',
@@ -73,6 +74,8 @@ export class DsPopover extends HTMLElement {
     this._bindAnchor();
     this._sync();
     if (boolAttr(this, 'open')) this._onOpen();
+    /* Frameworks insert slotted content after upgrade; re-distribute late nodes. */
+    watchLateChildren(this, (late) => { this._distribute(late); this._sync(); });
   }
 
   disconnectedCallback() {
@@ -81,6 +84,20 @@ export class DsPopover extends HTMLElement {
     window.removeEventListener('resize', this._onReflow, true);
     window.removeEventListener('scroll', this._onReflow, true);
     this._unbindAnchor();
+    stopLateChildren(this);
+  }
+
+  /* Route light-DOM nodes into the popover's body / footer by their `slot`. Shared
+     by the initial build and by late re-distribution (framework-inserted content). */
+  _distribute(nodes) {
+    for (const node of nodes) {
+      if (node.nodeType === Node.ELEMENT_NODE && node.getAttribute('slot') === 'footer') {
+        while (node.firstChild) this._footerEl.appendChild(node.firstChild);
+        this._hasFooterContent = true;
+      } else {
+        this._bodyEl.appendChild(node);
+      }
+    }
   }
 
   attributeChangedCallback(name) {
@@ -128,14 +145,7 @@ export class DsPopover extends HTMLElement {
     /* Distribute the captured light-DOM content: [slot="footer"] children go to
        the footer (unwrapped), everything else into the body. */
     this._hasFooterContent = false;
-    for (const node of this._initialNodes) {
-      if (node.nodeType === Node.ELEMENT_NODE && node.getAttribute('slot') === 'footer') {
-        while (node.firstChild) this._footerEl.appendChild(node.firstChild);
-        this._hasFooterContent = true;
-      } else {
-        this._bodyEl.appendChild(node);
-      }
-    }
+    this._distribute(this._initialNodes);
 
     this._closeBtn.addEventListener('click', () => this._dismiss('close'));
 

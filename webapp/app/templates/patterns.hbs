@@ -1,0 +1,22 @@
+{{! Pattern preview gallery — left nav + isolated preview stage. }}
+<div class="pgal">
+  <aside class="pgal__nav">
+    <div class="pgal__brand">
+      <span class="pgal__brand-title">Pattern library</span>
+      <span class="pgal__brand-sub">Prism · Endpoint Central</span>
+    </div>
+    <nav class="pgal__links">
+      {{#each @model as |p|}}
+        <LinkTo @route="patterns.show" @model={{p.id}} class="pgal__link" @activeClass="is-active">
+          <span class="pgal__link-label">{{p.label}}</span>
+          <span class="pgal__link-spec">{{p.spec}}</span>
+        </LinkTo>
+      {{/each}}
+    </nav>
+    <a class="pgal__exit" href="/">← Back to the app</a>
+  </aside>
+
+  <main class="pgal__main">
+    {{outlet}}
+  </main>
+</div>

@@ -15,6 +15,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 /* The helper/note row reuses the shared <ds-field-helper> sub-component. */
 import '../field-helper/field-helper.js';
 
@@ -61,6 +62,18 @@ export class DsCheckboxGroup extends HTMLElement {
       this.addEventListener('ds-checkbox-change', () => this._emitChange());
     }
     this._sync();
+    /* Frameworks insert <ds-checkbox> after upgrade; append any that leak in. */
+    watchLateChildren(this, (late) => {
+      const boxes = late.filter((n) => n.tagName?.toLowerCase() === 'ds-checkbox');
+      if (!boxes.length) return;
+      boxes.forEach((b) => this._itemsEl.appendChild(b));
+      this._items = [...this._itemsEl.children];
+      this._sync();
+    });
+  }
+
+  disconnectedCallback() {
+    stopLateChildren(this);
   }
 
   attributeChangedCallback() {

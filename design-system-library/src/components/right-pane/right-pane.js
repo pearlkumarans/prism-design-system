@@ -14,13 +14,20 @@
      pane.topItems = [{ id, icon, label, active? }, ...];
      pane.bottomItems = [...];
 
+   Responsive height: when the rail is shorter than its icon set, the icons that
+   don't fit collapse into a "more" (⋮) button pinned at the bottom; clicking it
+   opens a menu listing the hidden items. Restores automatically as height grows.
+
    Events:
-     - ds-right-pane-select   detail: { id }
+     - ds-right-pane-select   detail: { id }   (also fires from the ⋮ overflow menu)
      - ds-right-pane-theme    detail: { theme }   (after toggle)
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+/* The "more" (⋮) overflow menu — shown when the rail is too short to fit every
+   icon — reuses the real <ds-dropdown-menu> panel (same pattern as ds-breadcrumb). */
+import '../dropdown-menu/dropdown-menu.js';
 /* The rail is icon-only, so each item reveals its label as a hover/focus
    tooltip — the component depends on <ds-tooltip>. Register it and auto-load its
    CSS so tooltips work on any page that uses ds-right-pane, not just full-bundle
@@ -194,10 +201,19 @@ export class DsRightPane extends HTMLElement {
       </li>`;
     };
 
+    /* "More" (⋮) overflow trigger — pinned at the very bottom, hidden until the
+       rail can't fit every icon (toggled by _reflow). */
+    const moreBtn = `<li class="ds-right-pane__more-li" hidden>
+      <button type="button" class="ds-right-pane__btn ds-right-pane__more" data-id="__more__"
+              aria-haspopup="menu" aria-expanded="false" aria-label="More">
+        <ds-icon name="more-vertical" size="20"></ds-icon>
+      </button>
+    </li>`;
+
     this._root.innerHTML = `
       <ul class="ds-right-pane__top" role="list">${topItems.map(renderItem).join('')}</ul>
       <div class="ds-right-pane__spacer" aria-hidden="true"></div>
-      <ul class="ds-right-pane__bottom" role="list">${directionBtn}${themeBtn}${bottomItems.map(renderItem).join('')}</ul>
+      <ul class="ds-right-pane__bottom" role="list">${directionBtn}${themeBtn}${bottomItems.map(renderItem).join('')}${moreBtn}</ul>
     `;
 
     this._root.querySelectorAll('.ds-right-pane__btn').forEach((btn) => {
@@ -207,6 +223,8 @@ export class DsRightPane extends HTMLElement {
           const next = theme === 'dark' ? 'light' : 'dark';
           this.setAttribute('theme', next);
           this.dispatchEvent(new CustomEvent('ds-right-pane-theme', { bubbles: true, detail: { theme: next } }));
+        } else if (id === '__more__') {
+          this._toggleMenu();
         } else {
           this.dispatchEvent(new CustomEvent('ds-right-pane-select', { bubbles: true, detail: { id } }));
         }
@@ -230,6 +248,136 @@ export class DsRightPane extends HTMLElement {
       btn.parentNode.insertBefore(tip, btn);
       tip.appendChild(btn);
     });
+
+    /* Overflow: when the rail is shorter than its icon set, collapse the ones
+       that don't fit into the ⋮ "more" menu (measured after layout). */
+    this._setupOverflow(topItems, bottomItems);
+    this._ensureObserver();
+    this._scheduleReflow();
+  }
+
+  // ---- Height overflow → "more" (⋮) menu ----------------------------------
+  /* Build the ordered list of collapsible items (top stack, then bottom support)
+     the fitter can hide. The theme toggle, direction toggle and the ⋮ button
+     itself are pinned and never collapse. */
+  _setupOverflow(topItems, bottomItems) {
+    this._moreBtn = this._root.querySelector('.ds-right-pane__more');
+    this._moreLi = this._moreBtn ? this._moreBtn.closest('li') : null;
+    const byId = new Map();
+    [...topItems, ...bottomItems].forEach((it) => { if (it && it.id) byId.set(it.id, it); });
+    const pinned = new Set(['__theme__', '__more__', 'direction']);
+    const topUl = this._root.querySelector('.ds-right-pane__top');
+    const botUl = this._root.querySelector('.ds-right-pane__bottom');
+    const lis = [...(topUl ? topUl.children : []), ...(botUl ? botUl.children : [])];
+    this._collapsible = lis.map((li) => {
+      const btn = li.querySelector && li.querySelector('.ds-right-pane__btn');
+      const id = btn && btn.dataset.id;
+      if (!id || pinned.has(id) || !byId.has(id)) return null;
+      return { li, item: byId.get(id) };
+    }).filter(Boolean);
+  }
+
+  _ensureObserver() {
+    if (this._ro || typeof ResizeObserver === 'undefined') return;
+    /* Observe the HOST (its height tracks the container); hiding inner items
+       doesn't resize the host, so there's no observer→reflow feedback loop. */
+    this._ro = new ResizeObserver(() => this._scheduleReflow());
+    this._ro.observe(this);
+  }
+
+  _scheduleReflow() {
+    /* rAF gives the fast, post-layout measure. The independent setTimeout is a
+       backstop for two cases: ds-icon / ds-tooltip laying out a frame or two late
+       (inflating the content height after the first measure), and rAF being
+       paused while the pane is in a background tab. _reflow is idempotent, so
+       running it from both is harmless. */
+    cancelAnimationFrame(this._reflowRaf);
+    this._reflowRaf = requestAnimationFrame(() => this._reflow());
+    clearTimeout(this._reflowT);
+    this._reflowT = setTimeout(() => this._reflow(), 260);
+  }
+
+  /* Fit pass: reveal all, then — if the content overflows the rail height — show
+     the ⋮ button and hide collapsible items from the tail until it fits. */
+  _reflow() {
+    if (!this._root || !this._moreLi || !this._collapsible) return;
+    this._collapsible.forEach((e) => { e.li.hidden = false; });
+    this._moreLi.hidden = true;
+    if (!this._root.clientHeight) return;
+    const fits = () => this._root.scrollHeight <= this._root.clientHeight + 1;
+    if (fits()) { this._hiddenItems = []; this._closeMenu(); return; }
+    this._moreLi.hidden = false;                 // reserve the ⋮ slot
+    for (let i = this._collapsible.length - 1; i >= 0 && !fits(); i--) {
+      this._collapsible[i].li.hidden = true;
+    }
+    this._hiddenItems = this._collapsible.filter((e) => e.li.hidden).map((e) => e.item);
+    if (!this._hiddenItems.length) { this._moreLi.hidden = true; return; }
+    /* Keep an open menu in sync with a live resize. */
+    if (this._menu && this._menu.hasAttribute('open')) {
+      this._menu.items = this._menuItems();
+      this._menu.positionFrom(this._moreBtn, { align: 'before', vAlign: 'top', gap: 8 });
+    }
+  }
+
+  _menuItems() {
+    return (this._hiddenItems || []).map((it) => ({
+      label: it.label || it.id, value: it.id,
+      icon: it.logo ? undefined : it.icon,   // logo items have no sprite icon → label only
+    }));
+  }
+
+  _ensureMenu() {
+    if (this._menu) return this._menu;
+    const dd = document.createElement('ds-dropdown-menu');
+    dd.setAttribute('type', 'default');
+    dd.classList.add('ds-right-pane__overflow-dd');
+    dd.addEventListener('ds-dropdown-select', (e) => {
+      const id = e.detail && e.detail.value;
+      this._closeMenu();
+      if (id) this.dispatchEvent(new CustomEvent('ds-right-pane-select', { bubbles: true, composed: true, detail: { id } }));
+    });
+    dd.addEventListener('ds-dropdown-close', () => this._closeMenu());
+    document.body.appendChild(dd);
+    this._menu = dd;
+    return dd;
+  }
+
+  _toggleMenu() { (this._menu && this._menu.hasAttribute('open')) ? this._closeMenu() : this._openMenu(); }
+
+  _openMenu() {
+    if (!this._hiddenItems || !this._hiddenItems.length || !this._moreBtn) return;
+    const dd = this._ensureMenu();
+    dd.items = this._menuItems();
+    dd.openFrom(this._moreBtn, { align: 'before', vAlign: 'top', gap: 8 });
+    this._moreBtn.setAttribute('aria-expanded', 'true');
+    this._onDocClick = (e) => {
+      if (this._moreBtn.contains(e.target) || (this._menu && this._menu.contains(e.target))) return;
+      this._closeMenu();
+    };
+    document.addEventListener('click', this._onDocClick, true);
+    this._onEsc = (e) => { if (e.key === 'Escape') { this._closeMenu(); this._moreBtn.focus(); } };
+    document.addEventListener('keydown', this._onEsc);
+  }
+
+  _closeMenu() {
+    /* Re-entry guard: close() dispatches ds-dropdown-close, whose listener calls
+       back here — the flag breaks that cycle. */
+    if (this._closing) return;
+    this._closing = true;
+    if (this._menu) this._menu.close();
+    if (this._moreBtn) this._moreBtn.setAttribute('aria-expanded', 'false');
+    if (this._onDocClick) { document.removeEventListener('click', this._onDocClick, true); this._onDocClick = null; }
+    if (this._onEsc) { document.removeEventListener('keydown', this._onEsc); this._onEsc = null; }
+    this._closing = false;
+  }
+
+  disconnectedCallback() {
+    if (this._ro) { this._ro.disconnect(); this._ro = null; }
+    if (this._reflowRaf) { cancelAnimationFrame(this._reflowRaf); this._reflowRaf = 0; }
+    clearTimeout(this._reflowT);
+    this._closeMenu();
+    if (this._menu && this._menu.parentNode) this._menu.parentNode.removeChild(this._menu);
+    this._menu = null;
   }
 }
 

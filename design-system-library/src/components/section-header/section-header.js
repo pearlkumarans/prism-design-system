@@ -1,4 +1,5 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 
 const SIZES = ['small', 'medium', 'large'];
 const STYLES = ['default', 'with-description', 'with-border'];
@@ -32,6 +33,17 @@ export class DsSectionHeader extends HTMLElement {
       this.appendChild(this._root);
     }
     this._render();
+    /* Frameworks may insert the action slot after upgrade; capture it + re-home. */
+    watchLateChildren(this, (late) => {
+      const action = late.find((n) => n.nodeType === 1 && n.getAttribute('slot') === 'action');
+      if (!action) return;
+      this._slottedAction = action;
+      this._render();
+    });
+  }
+
+  disconnectedCallback() {
+    stopLateChildren(this);
   }
 
   attributeChangedCallback() { if (this._root) this._render(); }

@@ -1,4 +1,5 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 /* Reuse existing design-system components — register them as dependencies so the
    page header works on any page that loads page-header.js. Breadcrumb, tabs,
    status, divider, icon-button all delegate to the real components; Buttons/Badge
@@ -95,6 +96,9 @@ export class DsPageHeader extends HTMLElement {
     if (this._pendingTitleMenu !== undefined) { this.titleMenu = this._pendingTitleMenu; this._pendingTitleMenu = undefined; }
     this._captureTitle();
     this._render();
+    /* Frameworks (Ember/React/Vue) insert [slot] children AFTER upgrade, so the
+       capture above can miss them (e.g. actions). Re-home them when they appear. */
+    watchLateChildren(this, () => this._reprojectSlots());
     if (this.hasAttribute('collapse-on-scroll')) this._setupScrollCollapse();
     /* Watch the header's own width so actions fold into a ⋮ overflow when the
        header is narrow (container-based; works in a panel, not just a viewport).
@@ -122,10 +126,25 @@ export class DsPageHeader extends HTMLElement {
   disconnectedCallback() {
     this._teardownScrollCollapse();
     if (this._ro) { this._ro.disconnect(); this._ro = null; }
+    stopLateChildren(this);
     if (this._onWinResize) { window.removeEventListener('resize', this._onWinResize); this._onWinResize = null; }
     /* Drop any open inline-menu outside-click listener (title / action overflow). */
     this._pendingCloses.forEach((fn) => fn());
     this._pendingCloses.clear();
+  }
+
+  /* Re-home [slot] children a framework inserted AFTER the initial capture (they
+     leak in as direct children of the host, outside `_root`). Idempotent: once a
+     slot node is homed into its placeholder it is no longer a `:scope >` child. */
+  _reprojectSlots() {
+    const stray = SLOT_NAMES.some((s) => this.querySelector(`:scope > [slot="${s}"]`));
+    if (!stray) return;
+    SLOT_NAMES.forEach((s) => {
+      const late = Array.from(this.querySelectorAll(`:scope > [slot="${s}"]`));
+      if (late.length) { this._slots[s] = late; late.forEach((n) => n.remove()); }
+    });
+    this._render();
+    this._fitActions();
   }
 
   attributeChangedCallback(name) {
@@ -176,6 +195,21 @@ export class DsPageHeader extends HTMLElement {
   _setupScrollCollapse() {
     if (this._scroller) return;
     const el = this._findScroller();
+    /* A named scroll-target may not be in the DOM yet: frameworks (Ember/React/Vue)
+       insert the sibling scroll container AFTER the header upgrades. Binding to the
+       window now would be wrong — the inner container scrolls, not the page — and it
+       would stick (this._scroller is set once). So while a scroll-target is named but
+       unresolved, retry next frame until it appears, bounded so a bad selector can't
+       spin forever. */
+    if (!el && this.getAttribute('scroll-target') && typeof requestAnimationFrame !== 'undefined') {
+      if ((this._collapseTries = (this._collapseTries || 0) + 1) <= 60) {
+        this._collapseRaf = requestAnimationFrame(() => {
+          this._collapseRaf = null;
+          if (this.isConnected && this.hasAttribute('collapse-on-scroll') && !this._scroller) this._setupScrollCollapse();
+        });
+        return;
+      }
+    }
     /* Fall back to the window/document when there's no scrollable container
        (e.g. dashboards whose content simply overflows the page). */
     const useWindow = !el;
@@ -238,6 +272,8 @@ export class DsPageHeader extends HTMLElement {
   }
 
   _teardownScrollCollapse() {
+    if (this._collapseRaf) { cancelAnimationFrame(this._collapseRaf); this._collapseRaf = null; }
+    this._collapseTries = 0;
     if (this._scroller && this._onScroll) this._scroller.removeEventListener('scroll', this._onScroll);
     this._applyCollapsed(false);   // restore action-button sizes before tearing down
     this._collapsedState = undefined;

@@ -41,6 +41,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import '../../icons/icon.js';
 /* Every interactive part reuses its existing component — never custom markup. */
 import '../icon-button/icon-button.js';
@@ -100,16 +101,29 @@ export class DsWidget extends HTMLElement {
   }
 
   connectedCallback() {
-    /* Capture consumer children ONCE before the first render (after that,
-       this.children are our own generated wrappers). Same pattern as ds-card. */
+    /* Capture consumer children before the first render. Exclude our OWN generated
+       wrappers so a re-capture (see the observer below) never swallows them. */
     if (!this._slotsCaptured) {
       this._slottedHeaderAction = this.querySelector(':scope > [slot="header-action"]') || null;
       this._slottedFilter = this.querySelector(':scope > [slot="filter"]') || null;
-      this._slottedContent = [...this.children].filter((c) => !c.hasAttribute('slot'));
+      this._slottedContent = [...this.children].filter((c) => !c.hasAttribute('slot') && !this._isOwnNode(c));
       this._slotsCaptured = true;
     }
     this._mounted = true;
     this._render();
+    /* Frameworks (Ember/React/Vue) insert children AFTER upgrade, so the capture
+       above can miss them. Re-capture + re-render when late content appears. */
+    watchLateChildren(this, () => { this._slotsCaptured = false; this.connectedCallback(); });
+  }
+
+  disconnectedCallback() {
+    stopLateChildren(this);
+  }
+
+  /* Our own generated wrappers all carry a `ds-widget__` class; a consumer's
+     slotted content never does — so this tells the re-capture what to ignore. */
+  _isOwnNode(node) {
+    return !!(node.classList && Array.from(node.classList).some((k) => k.startsWith('ds-widget__')));
   }
 
   attributeChangedCallback(name, oldVal, newVal) {

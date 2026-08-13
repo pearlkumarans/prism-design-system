@@ -1,0 +1,43 @@
+{{! Patterns::TabbedForm — L07. Header + tab bar (horizontal ≤5 / vertical >5) that
+    swaps sectioned-form panels + pinned footer. Yields Panel + Section to the body. }}
+<div class="sform tabform {{if this.vertical "tabform--vertical"}}">
+  <ds-page-header
+    icon={{this.header.icon}}
+    structure="default"
+    title={{this.header.title}}
+    description={{this.header.description}}
+    show-description
+    show-breadcrumbs={{if @breadcrumbs "true" "false"}}
+    show-actions="false"
+    collapse-on-scroll
+    scroll-target=".sform__scroll"
+    {{set-prop "breadcrumbs" @breadcrumbs}}
+  ></ds-page-header>
+
+  <div class="tabform__body">
+    {{#if this.vertical}}
+      <ds-tab-bar-vertical class="tabform__nav" type="fill" active-id={{this.activeId}}
+        aria-label="Categories" {{set-prop "items" this.tabs}} {{on "ds-tab-change" this.onTabChange}}></ds-tab-bar-vertical>
+    {{else}}
+      <ds-tab-bar-horizontal class="tabform__tabs" type="underline" active-id={{this.activeId}}
+        aria-label="Categories" {{set-prop "items" this.tabs}} {{on "ds-tab-change" this.onTabChange}}></ds-tab-bar-horizontal>
+    {{/if}}
+
+    <div class="sform__scroll tabform__panels">
+      {{#if @loading}}
+        <Patterns::Skeleton::Form @sections={{2}} />
+      {{else}}
+        {{yield (hash
+          Panel=(component "patterns/tabbed-form/panel" activeId=this.activeId)
+          Section=(component "patterns/sectioned-form/section")
+        ) to="body"}}
+      {{/if}}
+    </div>
+  </div>
+
+  <ds-form-footer>
+    {{#if @footerNote}}<span slot="left">{{@footerNote}}</span>{{/if}}
+    <ds-button slot="action" variant="outline" {{on "click" this.onCancel}}>Cancel</ds-button>
+    <ds-button slot="action" variant="primary" {{on "click" this.onPrimary}}>{{if @primaryLabel @primaryLabel "Save"}}</ds-button>
+  </ds-form-footer>
+</div>

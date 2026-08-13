@@ -32,6 +32,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 
 /* Boolean attr that defaults to `def` when absent; `foo="false"` turns it off
    (matches the show-* convention used across the form-field components). */
@@ -79,6 +80,17 @@ export class DsEmptyState extends HTMLElement {
       this.appendChild(this._root);
     }
     this._render();
+    /* Frameworks may insert the description slot after upgrade; merge + re-home. */
+    watchLateChildren(this, (late) => {
+      const desc = late.filter((n) => n.nodeType === 1 && n.getAttribute('slot') === 'description');
+      if (!desc.length) return;
+      this._descriptionSlot.push(...desc);
+      this._render();
+    });
+  }
+
+  disconnectedCallback() {
+    stopLateChildren(this);
   }
 
   attributeChangedCallback() { if (this._root) this._render(); }
