@@ -362,6 +362,31 @@
       },
     },
 
+    /* Home module dashboard — a composite record (KPIs + charts + list widgets +
+       a table) for the L02 bento, fetched in ONE call. Not list-shaped, so no
+       query params; same detail pattern as deployments.deviceExecution. The BFF
+       (/home/api/dashboard) owns the data; mock returns null so the view shows its
+       empty/error state rather than duplicating the whole dataset here. */
+    home: {
+      async dashboard() {
+        if (useMock()) return null;
+        return httpGet('/home/api/dashboard');
+      },
+    },
+
+    /* Threats & Patches — Highly Vulnerable Systems (the T&P landing list). Same
+       server-driven-table contract as deployments.list (filter/search/sort/page →
+       { rows, total, kpis, facets }). */
+    threatsPatches: {
+      async highlyVulnerableSystems(params = {}) {
+        if (useMock()) return { rows: [], total: 0, kpis: null, facets: null };
+        const q = {};
+        ['risk', 'os', 'group', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/threats-patches/api/highlyVulnerable', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+    },
+
     /* Interactive auth — used by the login page. Token stored in localStorage
        ('uems-token') and sent as `Authorization: Bearer <token>` by CONFIG.headers().
        (If your EC expects a cookie/other header instead, adjust CONFIG.headers().) */
@@ -400,12 +425,19 @@
       async login(username, password) {
         if (useMock()) { try { localStorage.setItem('uems-token', 'mock-token'); } catch (_) {} return 'mock-token'; }
         const A = CONFIG.auth;
+        /* Demo auth — until the real EC login endpoint is wired (CONFIG.auth.endpoint),
+           accept any non-empty credentials so the sign-in flow works end-to-end
+           against the demo backend. Checked BEFORE fetchLoginMeta so it doesn't hit
+           the (unimplemented) loginMeta endpoint. To go live: set CONFIG.auth.endpoint
+           (+ the RSA step below) and this branch no longer runs. */
+        if (!A.endpoint) {
+          if (!username || !password) throw new Error('Enter your username and password.');
+          if (typeof console !== 'undefined') console.warn('[PrismAPI.auth] Demo sign-in (no live login endpoint wired) — any credentials are accepted.');
+          try { localStorage.setItem('uems-token', 'demo-token'); } catch (_) {}
+          return 'demo-token';
+        }
         const meta = await this.fetchLoginMeta();            // step 1 — publicKey
         const publicKey = A.readPublicKey(meta);
-        if (!A.endpoint) {
-          throw new Error('Login endpoint not wired yet. EC uses loginMeta → RSA-encrypt password (publicKey ' +
-            (publicKey ? 'received' : 'MISSING') + ') → POST. Share the Sign-in network request to finish this.');
-        }
         /* TODO (pending the real request shape + encryption scheme): RSA-encrypt
            `password` with `publicKey`, then POST A.form(username, encrypted). */
         const res = await fetch(buildUrl(A.endpoint, {}), {

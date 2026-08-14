@@ -417,8 +417,12 @@
   /* Sign out — clear the auth token and return to the sign-in page. (The .env/proxy
      key path authenticates server-side, so there it just returns you to login.) */
   panel().querySelector('[data-pf-signout]')?.addEventListener('click', () => {
-    try { if (window.PrismAPI && PrismAPI.auth) PrismAPI.auth.logout(); } catch (_) {}
     try { hide(); } catch (_) {}
+    /* When the host app registers a sign-out hook (the Ember app → transition to
+       its /login route), route through it so redirects respect the app's router.
+       Otherwise (vanilla shell) clear the token and go to the sign-in page. */
+    if (window.ShellAuth && typeof window.ShellAuth.signOut === 'function') { window.ShellAuth.signOut(); return; }
+    try { if (window.PrismAPI && PrismAPI.auth) PrismAPI.auth.logout(); } catch (_) {}
     location.href = 'login.html';   /* relative to the Shell at /Layout/ → /Layout/login.html */
   });
   /* Appearance → "Advanced" jumps straight to Personalize ▸ Preferences */

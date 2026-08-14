@@ -1,9 +1,13 @@
 {{! Patterns::ModuleDashboard — L02 frame. Header + scroll + uniform KPI row +
     chart-refit wiring; the widget grid is the caller's :body block. }}
 <div class="bl-dash" {{refit-charts @refitKey}}>
+  {{! `structure` is the legacy shorthand and, when set, overrides show-tabs — so a
+      dashboard WITH sibling-dashboard tabs must use "with-tabs" for the header's
+      built-in tab strip to render; without tabs it stays "default" (unchanged). }}
   <ds-page-header
     icon={{this.header.icon}}
-    structure="default"
+    show-icon="false"
+    structure={{if @tabs "with-tabs" "default"}}
     title={{this.header.title}}
     description={{this.header.description}}
     show-description
@@ -11,6 +15,8 @@
     collapse-on-scroll
     scroll-target=".bl-dash__scroll"
     {{set-prop "breadcrumbs" @breadcrumbs}}
+    {{set-prop "tabs" @tabs}}
+    {{on "ds-page-header-tab" this.onTab}}
   >
     {{yield to="headerActions"}}
   </ds-page-header>

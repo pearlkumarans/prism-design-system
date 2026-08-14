@@ -22,6 +22,7 @@ export default modifier(function configChart(widget, _positional, opts) {
     if (!chart || chart.__cfgData === opts.data) return; // already set for this data → avoid loop
     if (opts.type) chart.setAttribute('type', opts.type);
     if (opts.monotone) chart.setAttribute('monotone', opts.monotone);
+    if (opts.area) chart.setAttribute('area', '');   // line charts: fill under the line
     chart.setAttribute('fit', opts.fit || 'contain');
     if (opts.legend) {
       chart.setAttribute('show-legend', '');

@@ -1,6 +1,12 @@
 import Service from '@ember/service';
 import { tracked } from '@glimmer/tracking';
-import { PRODUCTS, CONTENT_VIEWS, tabsForProduct } from 'prism-webapp/config/catalog';
+import { PRODUCTS, CONTENT_VIEWS, TAB_LABELS, tabsForProduct } from 'prism-webapp/config/catalog';
+
+// Framework-agnostic EC menu map, loaded natively from the vendored copy (same
+// path ShellChrome uses) so ember-auto-import doesn't try to bundle it. Used only
+// to harvest the view→label lookup that names the document title's page segment.
+const ORIGIN = globalThis.location?.origin ?? '';
+const _nativeImport = new Function('u', 'return import(u);');
 
 /**
  * shell — the single source of nav truth, replacing Shell.html's module-scoped
@@ -17,6 +23,14 @@ export default class ShellService extends Service {
   @tracked productId = null;
   @tracked tabId = null;
   @tracked viewSlug = null;
+
+  // { viewSlug: { label, labelAr } } harvested from ec-menus (async); null until loaded.
+  _viewLabels = null;
+
+  constructor() {
+    super(...arguments);
+    this._loadViewLabels();
+  }
 
   get product() {
     return PRODUCTS[this.productId] ?? null;
@@ -43,10 +57,12 @@ export default class ShellService extends Service {
 
   setProduct(productId) {
     this.productId = productId;
+    this._syncTitle();
   }
 
   setTab(tabId) {
     this.tabId = tabId;
+    this._syncTitle();
   }
 
   // Replaces openView()'s "inject the file into ds-content and show it". Here we
@@ -55,5 +71,47 @@ export default class ShellService extends Service {
   setView(slug) {
     this.viewSlug = slug;
     this.tabId = CONTENT_VIEWS[slug]?.tab ?? this.tabId;
+    this._syncTitle();
+  }
+
+  // ── Document title ────────────────────────────────────────────────────────
+  // "<page name> - ManageEngine <product>", where <page name> mirrors the active
+  // top/sidebar navigation: the open view's L2 sub-item label (or its drill-down
+  // parent's, via CONTENT_VIEWS[slug].nav), else the active header tab / L1 label.
+  // Parity with Layout/Shell.html's setDocTitle + syncNavTitle.
+  async _loadViewLabels() {
+    try {
+      const mod = await _nativeImport(`${ORIGIN}/vendor/ds/data/ec-menus.js`);
+      const map = {};
+      (function harvest(node) {
+        if (Array.isArray(node)) return node.forEach(harvest);
+        if (node && typeof node === 'object') {
+          if (node.view && node.label) map[node.view] = { label: node.label, labelAr: node.labelAr };
+          Object.values(node).forEach(harvest);
+        }
+        return undefined;
+      })(mod.EC_TAB_L2_MENUS ?? {});
+      this._viewLabels = map;
+      this._syncTitle(); // upgrade the title now that sub-item labels are known
+    } catch (_) {
+      /* menus unavailable — the tab-label fallback still applies */
+    }
+  }
+
+  // Deepest active nav label for the current view, or null (→ tab-label fallback).
+  get _pageName() {
+    const labels = this._viewLabels;
+    if (labels && this.viewSlug) {
+      if (labels[this.viewSlug]) return labels[this.viewSlug].label;
+      const parent = CONTENT_VIEWS[this.viewSlug]?.nav;
+      if (parent && labels[parent]) return labels[parent].label;
+    }
+    return this.tabId ? (TAB_LABELS[this.tabId] ?? null) : null;
+  }
+
+  _syncTitle() {
+    const brand = 'ManageEngine ' + (this.product?.name ?? 'Endpoint Central');
+    const page = this._pageName;
+    document.title = (page ? `${page} - ` : '') + brand;
   }
 }

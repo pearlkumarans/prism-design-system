@@ -1,0 +1,116 @@
+{{!-- Home · Module dashboard — thin Patterns::ModuleDashboard instance (L02).
+    Sibling-dashboard tabs over a 6-col bento; charts bind via config-chart,
+    list/table content is native. Faithful to layout-module-dashboard.html. --}}
+<Patterns::ModuleDashboard @header={{this.header}} @tabs={{this.tabs}} @refitKey={{this.refitKey}} @onTabChange={{this.onTabChange}} @loading={{this.isLoading}}>
+  <:body>
+    {{#if this.error}}
+      <div class="md-facet-empty">
+        <Patterns::EmptyState
+          @illustration="state-error"
+          @title="Couldn't load the dashboard"
+          @description="The request failed. Is the BFF running (server/bff.mjs)?"
+          @primaryLabel="Retry"
+          @onPrimary={{this.retry}}
+        />
+      </div>
+    {{else if this.onSummary}}
+    <div class="md-grid">
+      {{! Row 1: KPI tiles + Computers by OS | Last Contact summary }}
+      <div class="md-col md-sp3">
+        <div class="md-kpis">
+          {{#each this.kpis as |k|}}
+            <ds-kpi-card label={{k.label}} value={{k.value}} state={{k.state}} icon={{k.icon}}></ds-kpi-card>
+          {{/each}}
+        </div>
+        <ds-widget type="chart" title="Computers by Operating System" show-drag="false" show-action="false" show-footer="false"
+          {{config-chart type="donut" monotone="blue" legend="right" fit="contain" data=this.osChart}}></ds-widget>
+      </div>
+
+      <ds-widget class="md-sp3" id="w-contact" type="chart" title="Last Contact summary" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="line" area=true fit="fill" data=this.contactChart}}></ds-widget>
+
+      {{! Row 2: Vulnerability | Network Patch | Software Summary }}
+      <ds-widget class="md-sp2" type="chart" title="Vulnerability Severity Summary" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="column" fit="fill" data=this.vulnChart}}></ds-widget>
+
+      <ds-widget class="md-sp2" type="chart" title="Network Patch Status" trend="Healthy" trend-status="success" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="donut" legend="bottom" fit="contain" data=this.patchChart}}></ds-widget>
+
+      <ds-widget class="md-sp2" type="list" title="Software Summary" show-drag="false" show-action="false" show-footer="false">
+        <div>
+          {{#each this.softwareRows as |r|}}
+            <div class="wl-row">
+              <span class="wl-ico" style="background: {{r.bg}}; color: {{r.color}}"><ds-icon name={{r.icon}} size="16"></ds-icon></span>
+              <span class="wl-label">{{r.label}}</span>
+              <span class="wl-val">{{r.val}}</span>
+            </div>
+          {{/each}}
+        </div>
+      </ds-widget>
+
+      {{! Row 3: Remote Control | Image by OS | System Health Graph }}
+      <ds-widget class="md-sp2" type="list" title="Remote Control Connection Status" show-drag="false" show-action="false" show-footer="false">
+        <div>
+          {{#each this.remoteRows as |r|}}
+            <div class="wl-row">
+              <span class="wl-ico"><ds-icon name={{r.icon}} size="16"></ds-icon></span>
+              <span class="wl-label wl-label--link">{{r.label}}</span>
+              <ds-badge variant="subtle" state={{r.state}} size="medium" shape="pill" label={{r.badge}}></ds-badge>
+            </div>
+          {{/each}}
+        </div>
+      </ds-widget>
+
+      <ds-widget class="md-sp2" type="chart" title="Image by OS" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="donut" legend="bottom" fit="contain" data=this.imgChart}}></ds-widget>
+
+      <ds-widget class="md-sp2" type="chart" title="System Health Graph" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="bar" fit="fill" data=this.healthChart}}></ds-widget>
+
+      {{! Row 4: Software Repository | Configurations }}
+      <ds-widget class="md-sp4" type="table" title="Software Repository" show-drag="false" show-action="false" show-footer="false">
+        <ds-data-table selection-mode="none" row-height="comfortable" show-toolbar="false" show-footer="false" sticky-header rows-per-page="6" page="1"
+          {{set-prop "columns" this.repoColumns}} {{set-prop "rows" this.repoRows}}></ds-data-table>
+      </ds-widget>
+
+      <ds-widget class="md-sp2" type="list" title="Configurations" show-drag="false" show-action="false"
+        footer-summary="+101 more Connections" footer-label="View all Configurations" footer-href="#">
+        <div>
+          {{#each this.configRows as |r|}}
+            <div class="wl-row">
+              <span class="wl-ico"><ds-icon name={{r.icon}} size="16"></ds-icon></span>
+              <span class="wl-label wl-label--link">{{r.label}}</span>
+              <ds-badge variant="subtle" state={{r.state}} size="medium" shape="pill" label={{r.badge}}></ds-badge>
+            </div>
+          {{/each}}
+        </div>
+      </ds-widget>
+
+      {{! Row 5: Deployment | Device Type | Images By Status }}
+      <ds-widget class="md-sp2" type="chart" title="Deployment By Status" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="donut" legend="bottom" fit="contain" data=this.deployChart}}></ds-widget>
+
+      <ds-widget class="md-sp2" type="chart" title="Device Type" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="pie" legend="bottom" fit="contain" data=this.devtypeChart}}></ds-widget>
+
+      <ds-widget class="md-sp2" type="chart" title="Images By Status" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="bar" fit="fill" data=this.imgstatChart}}></ds-widget>
+
+      {{! Row 6: Drivers By Class | Configuration Summary }}
+      <ds-widget class="md-sp3" type="chart" title="Drivers By Class" filter-label="All Drivers" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="column" fit="fill" data=this.driversChart}}></ds-widget>
+
+      <ds-widget class="md-sp3" type="chart" title="Configuration Summary" filter-label="All Configuration" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="column" fit="fill" data=this.cfgsumChart}}></ds-widget>
+    </div>
+    {{else}}
+      <div class="md-facet-empty">
+        <ds-empty-state
+          show-illustration="false" show-secondary="false" show-primary="false"
+          title="{{this.facetLabel}} — demo dashboard"
+          description="This sibling dashboard is a demo facet; Summary is the primary view.">
+        </ds-empty-state>
+      </div>
+    {{/if}}
+  </:body>
+</Patterns::ModuleDashboard>

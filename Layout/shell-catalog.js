@@ -44,7 +44,7 @@ export const CONTENT_VIEWS = {
   'tabbed-form': { file: 'layout-tabbed-form', tab: 'configs' },
   'list-view': { file: 'layout-list-view', tab: 'inv' },
   'missing-patches': { file: 'missing-patches', tab: 'tp' },
-  'module-dashboard': { file: 'layout-module-dashboard', tab: 'tp' },
+  'module-dashboard': { file: 'layout-module-dashboard', tab: 'home' },
   'list-detail': { file: 'layout-list-detail', tab: 'inv' },
   /* project pages (projects/<project>/…) — grouped by project, shared shell.
      Slugs describe the page's PURPOSE, not the archetype it was built from. */

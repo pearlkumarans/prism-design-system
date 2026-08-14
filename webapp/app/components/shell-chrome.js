@@ -1,6 +1,6 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
-import { CONTENT_VIEWS } from 'prism-webapp/config/catalog';
+import { CONTENT_VIEWS, TAB_DEFAULT_VIEW } from 'prism-webapp/config/catalog';
 import { RailPopover } from 'prism-webapp/lib/rail-popover';
 
 // Framework-agnostic shell helpers, loaded from the repo through the dev proxy.
@@ -38,6 +38,11 @@ export default class ShellChrome extends Component {
 
   _els = null;
   _applyL2For = null;
+  // Signatures of the last tab set fed to the header / module rail. Re-feeding
+  // either re-renders it (and flashes the header's overflow reflow → right-cluster
+  // jerk), so we only re-feed when the set actually changes (product / language).
+  _tabsSig = null;
+  _railSig = null;
 
   async setupChrome(element) {
     await Promise.all([
@@ -66,7 +71,16 @@ export default class ShellChrome extends Component {
       if (!id) return;
       if (id === 'support') { this.drawers.open('support'); return; }
       this.drawers.close('support');
-      this.router.transitionTo('product.module', this.shell.productId, id);
+      // Go straight to the tab's default VIEW (not the bare module). Re-clicking
+      // the already-active tab then resolves to the same route+params — a no-op
+      // that leaves content intact — instead of dropping onto the empty module
+      // index (whose redirect Ember skips when the params are unchanged).
+      const view = TAB_DEFAULT_VIEW[id];
+      if (view && CONTENT_VIEWS[view]) {
+        this.router.transitionTo('product.module.view', this.shell.productId, id, view);
+      } else {
+        this.router.transitionTo('product.module', this.shell.productId, id);
+      }
     });
 
     // Header utility icons → drawers (avatar/profile, gear/settings, bento/apps, search).
@@ -147,8 +161,19 @@ export default class ShellChrome extends Component {
   syncChrome() {
     if (!this._els || !this._applyL2For) return;
     const { header, l1, l2, rail } = this._els;
+
+    // Feed the header its tab set ONLY when it changes (product or language). A
+    // fresh `this.shell.tabs.map(...)` array assigned to header.tabs re-renders the
+    // WHOLE header, which flashes its overflow reflow and jerks the right cluster
+    // on every switch. On a same-product tab/view switch the set is unchanged, so
+    // we skip the re-feed and let setActiveTab (cheap, class-only) do the highlight
+    // — mirroring the vanilla shell, which sets tabs only on product/lang change.
     const tabs = this.shell.tabs.map((t) => ({ id: t.id, label: t.label }));
-    header.tabs = tabs;
+    const sig = `${this.i18n.lang}:${tabs.map((t) => t.id).join('|')}`;
+    if (sig !== this._tabsSig) {
+      header.tabs = tabs;
+      this._tabsSig = sig;
+    }
 
     const tab = this.shell.tabId;
     if (tab) {
@@ -162,7 +187,11 @@ export default class ShellChrome extends Component {
       const left = this.nav.mode === 'left';
       rail.hidden = !left;
       if (left) {
-        rail.items = this.shell.tabs.map((t) => ({ id: t.id, label: t.label, icon: TAB_ICON[t.id] }));
+        // Same guard as the header — re-feeding rail.items re-renders the rail.
+        if (sig !== this._railSig) {
+          rail.items = this.shell.tabs.map((t) => ({ id: t.id, label: t.label, icon: TAB_ICON[t.id] }));
+          this._railSig = sig;
+        }
         if (this.nav.railIcons) rail.setAttribute('icons-only', ''); else rail.removeAttribute('icons-only');
         if (tab) rail.setActive?.(tab);
       }

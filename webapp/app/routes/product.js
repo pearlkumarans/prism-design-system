@@ -10,6 +10,18 @@ import { isValidProduct, DEFAULT_PRODUCT } from 'prism-webapp/config/catalog';
 export default class ProductRoute extends Route {
   @service shell;
   @service router;
+  @service session;
+
+  // Auth gate for the whole app: every real page lives under `product`, so one
+  // guard here covers them all (the `login` and dev `patterns` routes sit outside
+  // it, so they're never gated — no redirect loop). Off unless requireLogin is on.
+  beforeModel() {
+    if (this.session.requireLogin && !this.session.isAuthenticated) {
+      const next = (typeof window !== 'undefined') ? window.location.pathname + window.location.search : null;
+      return this.router.replaceWith('login', { queryParams: { next } });
+    }
+    return undefined;
+  }
 
   model(params) {
     const productId = params.product_id.toLowerCase();

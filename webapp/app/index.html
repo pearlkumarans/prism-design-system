@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>Prism · Endpoint Central</title>
+    <title>ManageEngine Endpoint Central</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <!-- Design-system tokens + component styles — the same source stylesheet the
@@ -34,6 +34,18 @@
          module script — relative imports resolve within /vendor/ds, same origin. -->
     <script type="module" src="/vendor/ds/components/index.js"></script>
 
+    <!-- Boot defaults PrismAPI reads at load — MUST run BEFORE prism-api.js:
+         mock mode (empty proxy + base) and the login gate ON. Users override by
+         setting uems-api-proxy / uems-api-base (go live) or uems-require-login='false'. -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem('uems-api-proxy') === null && localStorage.getItem('uems-api-base') === null) localStorage.setItem('uems-api-proxy', '');
+          if (localStorage.getItem('uems-require-login') === null) localStorage.setItem('uems-require-login', 'true');
+        } catch (_) {}
+      })();
+    </script>
+
     <!-- The app's framework-agnostic data layer (window.PrismAPI). Mock by default;
          set proxy/baseUrl to go live. The api service wraps this. -->
     <script src="/Layout/data/prism-api.js"></script>
@@ -52,14 +64,7 @@
         var t = 'light';
         try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {}
         document.documentElement.setAttribute('data-theme', t);
-        // Default: run PrismAPI in MOCK mode (no backend wired here). Only sets
-        // the default when the user hasn't chosen a proxy/baseUrl — going live is
-        // still just setting uems-api-proxy or uems-api-base. Must run before prism-api.js.
-        try {
-          if (localStorage.getItem('uems-api-proxy') === null && localStorage.getItem('uems-api-base') === null) {
-            localStorage.setItem('uems-api-proxy', '');
-          }
-        } catch (_) {}
+        // (PrismAPI's mock + login-gate defaults are set earlier, before prism-api.js.)
       })();
     </script>
 

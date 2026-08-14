@@ -146,6 +146,92 @@ const DEV_EXEC = {
 };
 const deviceExecution = (p) => ({ ...DEV_EXEC, name: p.get('name') || DEV_EXEC.name });
 
+/* ── Resource 7: Home module dashboard — a composite record (KPIs + charts +
+   list widgets + a table), not a table query. One fetch feeds the whole L02
+   bento. Charts are { categories, series:[{ name, values, colors? }] }; list
+   `tone` is a semantic key the client maps to tokens (no CSS in the API). ── */
+const HOME_DASHBOARD = {
+  kpis: [
+    { label: 'Managed Computers', value: '186', state: 'success', icon: 'computer' },
+    { label: 'SDP Computers', value: '39', state: 'default', icon: 'server-01' },
+    { label: 'Waiting Computers', value: '39', state: 'warning', icon: 'clock' },
+  ],
+  charts: {
+    os:      { categories: ['Redhat', 'Windows', 'Ubuntu', 'Mac', 'Others'], series: [{ name: 'Devices Enrolled', values: [43270, 78990, 86543, 121, 209] }] },
+    contact: { categories: ['0-3 Days', '4-7 days', '8-15 days', '16-30 days', '31+ days'], series: [{ name: 'Devices', values: [20, 50, 210, 60, 200], color: 'red' }] },
+    vuln:    { categories: ['Install', 'Important', 'Moderate', 'Low'], series: [{ name: 'Count', values: [1700, 1100, 650, 180], colors: ['red', 'orange', 'yellow', 'grey'] }] },
+    patch:   { categories: ['Installed', 'Missing'], series: [{ name: 'Patches', values: [125, 30], colors: ['green', 'red'] }] },
+    img:     { categories: ['Microsoft Windows 11 Professional'], series: [{ name: 'Total', values: [3], colors: ['blue'] }] },
+    health:  { categories: ['Vulnerable', 'High Vulnerable', 'Healthy', 'Health Not Available'], series: [{ name: 'Count Range', values: [22, 45, 55, 68], colors: ['orange', 'red', 'green', 'blue'] }] },
+    deploy:  { categories: ['Completed', 'Scheduled', 'In progress', 'Failed'], series: [{ name: 'Devices', values: [125, 90, 90, 90], colors: ['green', 'orange', 'yellow', 'red'] }] },
+    devtype: { categories: ['SmartPhone', 'Desktop', 'Laptop', 'Tablet', 'Others'], series: [{ name: 'Devices', values: [225, 200, 90, 90, 90] }] },
+    imgstat: { categories: ['In progress', 'Completed', 'Vulnerable', 'Failed'], series: [{ name: 'Count Range', values: [60, 40, 25, 30], colors: ['green', 'blue', 'grey', 'red'] }] },
+    drivers: { categories: ['Net', 'Mouse', 'Keyboard', 'System', 'I4IDClass', 'Process', 'fdc', 'USB', 'hdc', 'Ports', 'Display'], series: [{ name: 'Drivers', values: [5, 4, 3, 3, 2, 2, 2, 2, 2, 2, 1] }] },
+    cfgsum:  { categories: ['Expired', 'Ready to Execute', 'Executed', 'In progress', 'Suspended', 'Retry in progress', 'Draft'], series: [{ name: 'Status', values: [1500, 1300, 864, 744, 643, 465, 245], colors: ['red', 'blue', 'green', 'orange', 'purple', 'charoite', 'grey'] }] },
+  },
+  lists: {
+    software: [
+      { icon: 'layers', label: 'Total Software', val: '1,289', tone: 'info' },
+      { icon: 'circle-tick', label: 'In Compliance (Licensed)', val: '834', tone: 'success' },
+      { icon: 'exclamation-circle', label: 'Over Licensed', val: '89', tone: 'error' },
+      { icon: 'clock', label: 'Under Licensed', val: '42', tone: 'warning' },
+      { icon: 'info-circle', label: 'License Expired', val: '15', tone: 'error' },
+      { icon: 'shield', label: 'Prohibited Software', val: '13', tone: 'error' },
+    ],
+    remote: [
+      { icon: 'computer', label: 'Roy Device', link: true, badge: 'Disconnected', state: 'default' },
+      { icon: 'computer', label: 'Reser 2 device', link: true, badge: 'Disconnected', state: 'default' },
+      { icon: 'computer', label: 'Raju 209', link: true, badge: 'Operation failed!', state: 'critical' },
+      { icon: 'computer', label: '2892Dell dev', link: true, badge: 'Operation failed!', state: 'critical' },
+      { icon: 'computer', label: 'aravinth29302', link: true, badge: 'Disconnected', state: 'default' },
+      { icon: 'computer', label: 'James1239', link: true, badge: 'Operation failed!', state: 'critical' },
+    ],
+    config: [
+      { icon: 'settings', label: 'Configuration 2832', link: true, badge: 'Executed', state: 'success' },
+      { icon: 'settings', label: 'Configuration 1187', link: true, badge: 'Ready to Execute', state: 'default' },
+      { icon: 'settings', label: 'Configuration 0459', link: true, badge: 'Suspended', state: 'critical' },
+      { icon: 'settings', label: 'Configuration 7720', link: true, badge: 'Suspended', state: 'critical' },
+      { icon: 'settings', label: 'Configuration 5561', link: true, badge: 'Ready to Execute', state: 'default' },
+      { icon: 'settings', label: 'Configuration 3390', link: true, badge: 'Suspended', state: 'critical' },
+    ],
+  },
+  repo: ['Notepad 5.8.6', 'Orca', 'Nvidia-353 367.57-0 for Ubuntu 14.04 LTS', 'PostgreSQL 9.5.173 for Ubuntu 16.04 LTS (x64)', 'Nvidia-353 367.57-0 for Ubuntu 14.04 LTS', 'Orca']
+    .map((n, i) => ({ id: i + 1, name: n, path: 'C:\\DEMO\\DesktopCentral_Server\\lib\\703795-nvidia-352_3…' })),
+};
+const homeDashboard = () => HOME_DASHBOARD;
+
+/* ── Resource 8: Highly Vulnerable Systems (Threats & Patches landing) — a
+   server-driven table ranked by vulnerability/missing-patch risk. ── */
+const HVS_OS = ['Windows 11 Pro', 'Windows 10 Ent', 'Windows Server 2019', 'Ubuntu 22.04 LTS', 'macOS 14', 'RHEL 9'];
+const HVS_RISK = ['Critical', 'Critical', 'High', 'High', 'Medium', 'Low'];
+const HVS_GROUP = ['Finance OU', 'Servers', 'Sales laptops', 'Engineering', 'Kiosks', 'Remote offices'];
+const HVS_SCAN = ['12 min ago', '1 hr ago', '3 hrs ago', 'Today', 'Yesterday', 'Jul 9, 2026'];
+const HVS = Array.from({ length: 34 }, (_, k) => {
+  const i = k + 1, risk = pick(HVS_RISK, i + (i % 3));
+  const base = risk === 'Critical' ? 60 : risk === 'High' ? 35 : risk === 'Medium' ? 18 : 6;
+  return {
+    id: i,
+    name: pick(['FIN', 'SRV', 'ENG', 'SALES', 'OPS', 'HR'], i) + '-WKS-' + (100 + i * 5),
+    os: pick(HVS_OS, i + 1),
+    risk,
+    vulnerabilities: base + (i * 7) % 25,
+    missingPatches: 3 + (i * 3) % 40,
+    exploitable: risk === 'Critical' ? 2 + (i % 6) : risk === 'High' ? 1 + (i % 3) : 0,
+    group: pick(HVS_GROUP, i),
+    lastScan: pick(HVS_SCAN, i),
+  };
+});
+const highlyVulnerableQuery = (p) => applyQuery(HVS, p, {
+  searchFields: ['name', 'os', 'group'],
+  facets: { risk: ['Critical', 'High', 'Medium', 'Low'], os: HVS_OS, group: HVS_GROUP },
+  kpi: (d) => ({
+    total: d.length,
+    critical: d.filter((r) => r.risk === 'Critical').length,
+    high: d.filter((r) => r.risk === 'High').length,
+    exploitable: d.filter((r) => r.exploitable > 0).length,
+  }),
+});
+
 /* ── Routes ────────────────────────────────────────────────────────────────── */
 function handle(url) {
   const p = url.searchParams;
@@ -157,6 +243,8 @@ function handle(url) {
     case '/deployments/api/policies': return policiesQuery(p);
     case '/deployments/api/workflows': return workflowsQuery(p);
     case '/deployments/api/deviceExecution': return deviceExecution(p);
+    case '/home/api/dashboard': return homeDashboard();
+    case '/threats-patches/api/highlyVulnerable': return highlyVulnerableQuery(p);
     default: return null;
   }
 }

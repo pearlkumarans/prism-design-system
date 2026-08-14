@@ -24,6 +24,10 @@ export default class Router extends EmberRouter {
  * application route redirects them (see routes/application.js).
  */
 Router.map(function () {
+  // Native sign-in route — renders standalone (no shell chrome). The product
+  // route guards on it; the shared profile Sign-out returns here.
+  this.route('login');
+
   // Pattern preview gallery — each archetype at a stable /patterns/<id> URL,
   // rendered in isolation (no shell chrome). See routes/patterns + application.hbs.
   this.route('patterns', function () {
