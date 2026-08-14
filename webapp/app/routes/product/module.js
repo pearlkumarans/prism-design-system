@@ -1,12 +1,6 @@
 import Route from '@ember/routing/route';
 import { service } from '@ember/service';
-import {
-  tabAllowedForProduct,
-  TAB_DEFAULT_VIEW,
-  CONTENT_VIEWS,
-  FULL_PAGE_TABS,
-  landingForProduct,
-} from 'prism-webapp/config/catalog';
+import { tabAllowedForProduct, landingForProduct } from 'prism-webapp/config/catalog';
 
 /**
  * product.module == Shell.html's `selectTab(tabId)`.
@@ -24,7 +18,7 @@ export default class ProductModuleRoute extends Route {
     return params.tab_id.toLowerCase();
   }
 
-  afterModel(tabId, transition) {
+  afterModel(tabId) {
     const productId = this.paramsFor('product').product_id.toLowerCase();
 
     // Tab not offered by this product → bounce to the product's landing.
@@ -35,15 +29,9 @@ export default class ProductModuleRoute extends Route {
 
     this.shell.setTab(tabId);
 
-    // Full-page module (Support) renders itself — no default view child.
-    if (FULL_PAGE_TABS.has(tabId)) return undefined;
-
-    // Bare module landing (no /:view_slug child in the transition) → default view.
-    const goingToLeaf = transition.to?.name === 'product.module.index';
-    const defaultView = TAB_DEFAULT_VIEW[tabId];
-    if (goingToLeaf && defaultView && CONTENT_VIEWS[defaultView]) {
-      return this.router.replaceWith('product.module.view', productId, tabId, defaultView);
-    }
+    // The bare-module → default-view redirect lives in product.module.index so it
+    // fires even when the already-active tab is re-clicked (parent params unchanged
+    // → these hooks don't re-run, but the index route's redirect always does).
     return undefined;
   }
 }

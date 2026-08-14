@@ -5,6 +5,8 @@
  * lands; everything else keeps working via injection, unchanged.
  */
 export const NATIVE_VIEWS = new Set([
+  'module-dashboard',
+  'threats-patches-highly-vulnerable-systems',
   'bitlocker-dashboard',
   'sectioned-form',
   'bitlocker-managed-systems',

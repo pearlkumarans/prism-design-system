@@ -177,7 +177,13 @@ export class DsPageHeader extends HTMLElement {
       let scope = this.parentElement;
       while (scope) { const hit = scope.querySelector(sel); if (hit) return hit; scope = scope.parentElement; }
       const t = (this.getRootNode() || document).querySelector(sel);
-      if (t) return t;
+      /* An explicitly-named target that isn't in the DOM yet (frameworks render
+         the sibling scroll container a beat after the header) → return null so the
+         caller retries next frame. Do NOT fall through to the generic search: it
+         would bind to some other scrollable ancestor the consumer didn't ask for
+         (e.g. the shell's ds-content), and the header would never collapse when the
+         real container scrolls. */
+      return t || null;
     }
     const scrollable = (n) => { const oy = getComputedStyle(n).overflowY; return oy === 'auto' || oy === 'scroll'; };
     let node = this.parentElement;

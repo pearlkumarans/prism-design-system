@@ -46,6 +46,7 @@
   .a11y-kbd-row { display: flex; align-items: center; gap: 8px; }
   .a11y-kbd { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--uems-bg-accent-primary); color: var(--uems-text-accent-tertiary); border-radius: 8px; font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); }
   .a11y-kbd-plus { color: var(--uems-text-tertiary); font-size: var(--font-size-13); }
+  .a11y-sec__note { font-size: var(--font-size-12); line-height: 17px; color: var(--uems-text-tertiary); margin: 8px 0 0; }
   .a11y-sizes { display: flex; gap: 8px; }
   .a11y-size { width: 40px; height: 40px; border: 1px solid var(--uems-border-secondary); border-radius: 8px; background: var(--uems-bg-primary); color: var(--uems-text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: var(--font-weight-semibold); transition: border-color 140ms, box-shadow 140ms; }
   .a11y-size:hover { border-color: var(--uems-border-accent); }
@@ -76,28 +77,31 @@
 (function () {
   const MSGS = {
     en: {
-      'a11y.title': 'Accessibility Controls',
+      'a11y.title': 'Accessibility controls',
       'a11y.rtlLabel': 'Right-to-left layout',
       'a11y.rtlHint': 'Switch the interface to Arabic / RTL.',
-      'a11y.srTitle': 'Screen Reader',
+      'a11y.srTitle': 'Screen reader',
       'a11y.srDesc': 'Reads content out loud (only in live mode) and is compatible with screen reader extensions on your browser or computer. Invoke by pressing the following keyboard shortcut.',
-      'a11y.tsTitle': 'Text Size',
+      'a11y.srHintMac': 'This shortcut toggles VoiceOver on macOS.',
+      'a11y.srHintWin': 'This shortcut toggles Narrator on Windows. NVDA and JAWS launch from their own shortcuts.',
+      'a11y.srHintOther': 'Use your operating system’s screen-reader shortcut to start it.',
+      'a11y.tsTitle': 'Text size',
       'a11y.tsDesc': 'Choose your preferred text size for comfortable readability and visual clarity.',
       'a11y.zoomTitle': 'Zoom',
       'a11y.zoomDesc': 'Zooms content only in the live mode from 25% to 150% and is compatible with your browser’s zoom functionality.',
-      'a11y.kbTitle': 'Keyboard Navigation',
+      'a11y.kbTitle': 'Keyboard navigation',
       'a11y.kbDesc': 'Use keyboard shortcuts to navigate with ease and efficiency.',
-      'a11y.errTitle': 'Error Message Display Format',
+      'a11y.errTitle': 'Error message display format',
       'a11y.errDesc': 'Customize the color of error messages or add an error icon for improved visibility and faster resolution.',
       'a11y.errColor': 'Error message color',
       'a11y.errIcon': 'Show error icon with message',
       'a11y.preview': 'Preview',
-      'a11y.singleLine': 'Single Line',
+      'a11y.singleLine': 'Single line',
       'a11y.mandatory': 'This field is mandatory.',
-      'a11y.mandTitle': 'Mandatory Fields Display Format',
+      'a11y.mandTitle': 'Mandatory fields display format',
       'a11y.mandDesc': 'Choose your preferred format to visually indicate mandatory form fields.',
       'a11y.optAsterisk': 'Asterisk',
-      'a11y.optText': 'Mandatory Text',
+      'a11y.optText': 'Mandatory text',
       'a11y.mandWord': '(Mandatory)',
     },
     ar: {
@@ -106,6 +110,9 @@
       'a11y.rtlHint': 'تبديل الواجهة إلى العربية / RTL.',
       'a11y.srTitle': 'قارئ الشاشة',
       'a11y.srDesc': 'يقرأ المحتوى بصوت عالٍ (في الوضع المباشر فقط) ومتوافق مع إضافات قارئ الشاشة في متصفحك أو جهازك. قم بتفعيله بالضغط على اختصار لوحة المفاتيح التالي.',
+      'a11y.srHintMac': 'هذا الاختصار يبدّل VoiceOver على نظام macOS.',
+      'a11y.srHintWin': 'هذا الاختصار يبدّل Narrator على نظام Windows. أما NVDA وJAWS فيعملان باختصاراتهما الخاصة.',
+      'a11y.srHintOther': 'استخدم اختصار قارئ الشاشة الخاص بنظام التشغيل لديك لبدء تشغيله.',
       'a11y.tsTitle': 'حجم النص',
       'a11y.tsDesc': 'اختر حجم النص المفضّل لديك لقراءة مريحة ووضوح بصري.',
       'a11y.zoomTitle': 'التكبير',
@@ -148,10 +155,37 @@
   }
   const reqIndicator = () => _a11y.mand === 'asterisk' ? '<span class="req">*</span>' : `<span class="mand-text">${t('a11y.mandWord')}</span>`;
 
+  /* Screen-reader toggle differs per OS, so show the shortcut for the user's
+     platform (VoiceOver on macOS, Narrator on Windows) plus a note for the
+     Windows screen readers that launch from their own shortcut. */
+  function _srPlatform() {
+    const p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || '';
+    if (/mac|iphone|ipad|ipod/i.test(p)) return 'mac';
+    if (/win/i.test(p)) return 'win';
+    return 'other';
+  }
+  function _srKbd(keys) {
+    return keys.map((k) => (typeof k === 'object'
+      ? `<span class="a11y-kbd">${k.icon ? `<ds-icon name="${k.icon}" size="14"></ds-icon> ` : ''}${k.label}</span>`
+      : `<span class="a11y-kbd">${k}</span>`)).join('<span class="a11y-kbd-plus">+</span>');
+  }
+  function srShortcut(d) {
+    const plat = _srPlatform();
+    if (plat === 'mac') return { chips: _srKbd([{ icon: 'command', label: 'Cmd' }, 'F5']), hint: d.srHintMac };
+    if (plat === 'win') return { chips: _srKbd([{ label: 'Win' }, 'Ctrl', 'Enter']), hint: d.srHintWin };
+    return { chips: '', hint: d.srHintOther };
+  }
+  /* Browser zoom uses the platform's modifier: ⌘ on macOS, Ctrl elsewhere. */
+  function zoomShortcut() {
+    const mod = _srPlatform() === 'mac' ? { icon: 'command', label: 'Cmd' } : { label: 'Ctrl' };
+    return _srKbd([mod, '+ / -']);
+  }
+
   function renderA11y() {
     const d = {
       title: t('a11y.title'), rtlLabel: t('a11y.rtlLabel'), rtlHint: t('a11y.rtlHint'),
       srTitle: t('a11y.srTitle'), srDesc: t('a11y.srDesc'),
+      srHintMac: t('a11y.srHintMac'), srHintWin: t('a11y.srHintWin'), srHintOther: t('a11y.srHintOther'),
       tsTitle: t('a11y.tsTitle'), tsDesc: t('a11y.tsDesc'),
       zoomTitle: t('a11y.zoomTitle'), zoomDesc: t('a11y.zoomDesc'),
       kbTitle: t('a11y.kbTitle'), kbDesc: t('a11y.kbDesc'),
@@ -165,11 +199,11 @@
     if (rtl) p.setAttribute('rtl', ''); else p.removeAttribute('rtl');
     ab.innerHTML = `
       <div class="a11y-sec"><div class="a11y-sec__title">${d.srTitle}</div><p class="a11y-sec__desc">${d.srDesc}</p>
-        <div class="a11y-kbd-row"><span class="a11y-kbd"><ds-icon name="command" size="14"></ds-icon> Cmd</span><span class="a11y-kbd-plus">+</span><span class="a11y-kbd">F5</span></div></div>
+        ${(() => { const sr = srShortcut(d); return `${sr.chips ? `<div class="a11y-kbd-row">${sr.chips}</div>` : ''}${sr.hint ? `<p class="a11y-sec__note">${sr.hint}</p>` : ''}`; })()}</div>
       <div class="a11y-sec"><div class="a11y-sec__title">${d.tsTitle}</div><p class="a11y-sec__desc">${d.tsDesc}</p>
         <div class="a11y-sizes">${A11Y_SIZES.map((px, i) => `<button type="button" class="a11y-size${i === _a11y.size ? ' is-active' : ''}" data-size data-i="${i}" style="font-size:${px}px">Aa</button>`).join('')}</div></div>
       <div class="a11y-sec"><div class="a11y-sec__title">${d.zoomTitle}</div><p class="a11y-sec__desc">${d.zoomDesc}</p>
-        <div class="a11y-kbd-row"><span class="a11y-kbd"><ds-icon name="command" size="14"></ds-icon> Cmd</span><span class="a11y-kbd-plus">+</span><span class="a11y-kbd">+ / -</span></div></div>
+        <div class="a11y-kbd-row">${zoomShortcut()}</div></div>
       <div class="a11y-sec"><div class="a11y-sec__head"><div class="a11y-sec__title">${d.kbTitle}</div><ds-toggle id="a11y-kbd" size="medium" ${_a11y.kbd ? 'checked' : ''}></ds-toggle></div><p class="a11y-sec__desc">${d.kbDesc}</p></div>
       <div class="a11y-sec"><div class="a11y-sec__title">${d.errTitle}</div><p class="a11y-sec__desc">${d.errDesc}</p>
         <div class="a11y-line"><span class="a11y-line__label">${d.errColor}</span><div class="a11y-colors">${A11Y_COLORS.map((c) => `<button type="button" class="a11y-sw${c === _a11y.errColor ? ' is-active' : ''}" data-sw data-c="${c}" style="background:${c};color:${c}"><ds-icon name="check" size="12"></ds-icon></button>`).join('')}</div></div>

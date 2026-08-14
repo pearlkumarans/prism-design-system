@@ -9,6 +9,7 @@ export function initialize(appInstance) {
   const theme = appInstance.lookup('service:theme');
   const nav = appInstance.lookup('service:nav');
   appInstance.lookup('service:api'); // instantiate at boot (sets PrismAPI mock mode — no backend wired here)
+  appInstance.lookup('service:session'); // instantiate at boot (registers window.ShellAuth.signOut for the shared profile drawer)
 
   window.ShellDrawers = window.ShellDrawers || {};
   window.ShellCtx = {

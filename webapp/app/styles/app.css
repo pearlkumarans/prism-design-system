@@ -20,6 +20,21 @@ body {
 }
 
 /* ── ShellChrome (header · module-rail · L1/L2 · content · right-pane) ─────── */
+/* ── Native /login route (renders standalone, no shell chrome) ─────────────
+   Mirrors Layout/login.html's card; token-driven. */
+.lg-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--spacing-24); background: var(--uems-bg-secondary); }
+.lg-card {
+  width: 100%; max-width: 380px; background: var(--uems-bg-base);
+  border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-xl, 16px);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
+  padding: var(--spacing-32); display: flex; flex-direction: column; gap: var(--spacing-16);
+}
+.lg-title { margin: var(--spacing-8) 0 0; font-size: var(--font-size-20, 20px); font-weight: var(--font-weight-bold); color: var(--uems-text-primary); }
+.lg-sub { margin: 0 0 var(--spacing-8); font-size: var(--font-size-14); color: var(--uems-text-secondary); }
+.lg-error { font-size: var(--font-size-13); color: var(--uems-text-error); background: var(--uems-bg-error-primary, rgba(228, 37, 39, 0.08)); border-radius: var(--radius-sm, 6px); padding: var(--spacing-8) var(--spacing-12); }
+.lg-submit { width: 100%; }
+.lg-foot { font-size: var(--font-size-12); color: var(--uems-text-tertiary); text-align: center; }
+
 .shell-root {
   display: flex;
   flex-direction: column;
@@ -28,6 +43,36 @@ body {
      light, etc.). NOT --uems-bg-base, which is plain white. */
   background: var(--uems-background);
 }
+/* Module-switch progress — thin indeterminate slide bar flush under the header,
+   shown while the incoming view file injects and hidden when it resolves. A
+   sibling of the header; margin-top overlays it on the bottom edge (no layout
+   shift). Toggled by lib/nav-progress. Tokens only (parity with Layout/Shell.html). */
+.shell-navload {
+  position: relative;
+  height: 2px;
+  margin-top: -2px;
+  z-index: 50;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--uems-bg-accent-primary-subtle);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.shell-navload.is-on { opacity: 1; }
+.shell-navload::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, var(--uems-bg-button-primary) 50%, transparent 100%);
+  background-size: 45% 100%;
+  background-repeat: no-repeat;
+  animation: shell-navload-sweep 1.3s linear infinite;
+}
+@keyframes shell-navload-sweep { 0% { background-position: -45% 0; } 100% { background-position: 145% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .shell-navload::before { animation-duration: 2.2s; }
+}
+
 .shell-body {
   display: flex;
   flex: 1;
@@ -79,7 +124,12 @@ body {
   display: flex;
   flex-direction: column;
   overflow: auto;
+  /* Reserve the scrollbar gutter so a view swap (short ↔ tall content) never
+     toggles the scrollbar and jerks the content's right edge / top-right menus.
+     No-op on overlay-scrollbar systems; fixes it where scrollbars take width. */
+  scrollbar-gutter: stable;
 }
+.shell-root .lay__scroll { scrollbar-gutter: stable; }
 /* Right utility rail — flush to the end edge, sitting just outside the framed
    area (matches the vanilla shell: no 12px inset). */
 .shell-root ds-right-pane { flex: 0 0 auto; height: 100%; margin-inline-start: 0; }
@@ -127,6 +177,37 @@ body {
 @media (max-width: 760px) {
   .bl-dash .bl-grid { grid-template-columns: 1fr; }
   .bl-dash .bl-sp2, .bl-dash .bl-sp3 { grid-column: span 1; }
+}
+
+/* ── L02 home module dashboard — 6-col bento (sibling-dashboard tabs live in
+   the page header). Ported from layout-module-dashboard.html (tokens only).
+   Renders inside the Patterns::ModuleDashboard .bl-dash__scroll. */
+.md-facet-empty { padding-top: 24px; }
+/* 6-col base grid; row 1 taller (stacks the KPI tiles over the OS chart). */
+.md-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; align-items: stretch; grid-template-rows: 480px; grid-auto-rows: 400px; }
+.md-grid > ds-widget, .md-grid > .md-col { min-width: 0; width: 100%; height: 100%; max-width: none; }
+.md-col ds-widget { max-width: none; }
+.md-grid ds-widget .ds-widget__surface { height: 100%; }
+.md-grid ds-widget .ds-widget__body { min-height: 0; }
+.md-grid .ds-widget--chart .ds-widget__body { padding-left: 16px; padding-right: 16px; }
+.md-sp2 { grid-column: span 2; }
+.md-sp3 { grid-column: span 3; }
+.md-sp4 { grid-column: span 4; }
+.md-col { display: flex; flex-direction: column; gap: 16px; }
+.md-col > ds-widget { flex: 1 1 auto; min-height: 0; }
+.md-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.md-grid ds-chart { display: block; width: 100%; height: 100%; min-height: 200px; max-height: 100%; }
+.md-grid .ds-chart__plot { max-height: 100%; }
+#w-contact ds-chart { height: 100%; min-height: 0; }
+@media (max-width: 1200px) {
+  .md-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .md-sp3, .md-sp4 { grid-column: span 4; }
+  .md-sp2 { grid-column: span 2; }
+}
+@media (max-width: 760px) {
+  .md-grid { grid-template-columns: 1fr; }
+  .md-sp2, .md-sp3, .md-sp4 { grid-column: span 1; }
+  .md-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 /* ── Native sectioned form (Phase E, 2nd pilot) ─────────────────────────────

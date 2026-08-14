@@ -18,15 +18,33 @@ export async function injectViewInto(element, file) {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const html = await res.text();
 
-  const doc = document.createElement('template');
-  doc.innerHTML = html;
-  const fragTpl = doc.content.querySelector('#drawer-fragment');
-  const content = (fragTpl ? fragTpl.content : doc.content).cloneNode(true);
+  /* Parse in an inert document, then IMPORT the nodes into the live one — do NOT
+     use `<template>.content.cloneNode()` (the old path). In this app the ds-*
+     custom elements are ALREADY defined, so how a subtree first connects decides
+     upgrade order:
 
-  // Cloned <script> nodes don't execute — detach, inject markup, re-create them.
-  const scripts = [...content.querySelectorAll('script')];
+       - template.content.cloneNode() + appendChild → a parent (e.g. ds-widget)
+         upgrades BEFORE its children attach, captures empty, and injects a demo
+         chart — discarding the real slotted <ds-chart>. (This was the bug: every
+         injected view's charts/list/table content silently vanished.)
+       - DOMParser + document.importNode() + one appendChild → the whole subtree is
+         inserted in a single insert, so the parent upgrades with its children
+         already present and captures them. (Matches the vanilla shell's timing,
+         where components aren't defined yet at inject time.)
+
+     Verified empirically: cloneNode drops the chart; importNode keeps it (donut,
+     not the demo column). This fixes ALL injected views, not one component. */
+  const parsed = new DOMParser().parseFromString(html, 'text/html');
+  const fragTpl = parsed.querySelector('#drawer-fragment');
+  const source = fragTpl ? fragTpl.content : parsed.body;
+
+  const frag = document.createDocumentFragment();
+  for (const node of [...source.childNodes]) frag.appendChild(document.importNode(node, true));
+
+  // Imported <script> nodes don't execute — detach, inject markup, re-create them.
+  const scripts = [...frag.querySelectorAll('script')];
   scripts.forEach((s) => s.remove());
-  element.appendChild(content);
+  element.appendChild(frag);
   for (const original of scripts) {
     const s = document.createElement('script');
     if (original.type) s.type = original.type;

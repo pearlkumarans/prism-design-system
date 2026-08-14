@@ -19,6 +19,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;700&family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600&display=swap" />
   <script type="module">import '../design-system-library/src/components/index.js';</script>
+  <!-- Login gate ON by default (interactive sign-in). Must set the flag BEFORE
+       prism-api.js reads it; users can still turn it off with 'false'. -->
+  <script>try{if(localStorage.getItem('uems-require-login')===null)localStorage.setItem('uems-require-login','true');}catch(_){}</script>
   <script src="data/prism-api.js"></script>   <!-- app data layer (front-end ⇄ backend API); views read data via window.PrismAPI -->
   <script>
     /* Login gate (opt-in, loop-safe): if requireLogin is on and there's no auth
@@ -93,6 +96,24 @@
        icon menus paint on top of the panes below (Ask Zia, content, drawers).
        Full-viewport overlay drawers (profile / apps) sit above it — see their files. */
     #ec-header { position: relative; z-index: 40; }
+    /* Module-switch progress — thin indeterminate slide bar flush under the header,
+       shown while the incoming view injects and hidden when it resolves. margin-top
+       overlays it on the header's bottom edge with no layout shift; tokens only. */
+    .shell-navload {
+      position: relative; height: 2px; margin-top: -2px; z-index: 50;
+      overflow: hidden; pointer-events: none;
+      background: var(--uems-bg-accent-primary-subtle);
+      opacity: 0; transition: opacity .2s ease;
+    }
+    .shell-navload.is-on { opacity: 1; }
+    .shell-navload::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent 0%, var(--uems-bg-button-primary) 50%, transparent 100%);
+      background-size: 45% 100%; background-repeat: no-repeat;
+      animation: shell-navload-sweep 1.3s linear infinite;
+    }
+    @keyframes shell-navload-sweep { 0% { background-position: -45% 0; } 100% { background-position: 145% 0; } }
+    @media (prefers-reduced-motion: reduce) { .shell-navload::before { animation-duration: 2.2s; } }
 
     /* ── Boot splash / loader ────────────────────────────────────────────── */
     .shell-loader {
@@ -487,6 +508,11 @@
     /* Lift the content above the L2 collapse handle (z-index:3) so the handle's
        protruding part tucks BEHIND the content page instead of floating on it. */
     .shell-area ds-content { z-index: 5; }
+    /* Reserve the scrollbar gutter on the content scrollers so a module/view swap
+       (short ↔ tall content) never toggles the scrollbar and jerks the content's
+       right edge and its top-right menus. No-op on overlay-scrollbar systems;
+       removes the shift where scrollbars take width (Windows / "always show"). */
+    .shell-area ds-content, .lay__scroll { scrollbar-gutter: stable; }
     /* RTL — the framed content, L2 panel & its divider use PHYSICAL left radius/border in the
        DS; mirror them to the right so the nav curve sits on the correct (inner) side. */
     [dir="rtl"] .ds-content--framed { border-radius: 0 16px 16px 0 !important; box-shadow: 8px 0 24px rgba(15, 23, 42, 0.08) !important; }
@@ -694,6 +720,9 @@
 
   <!-- TOP — Header navigation -->
   <ds-header-nav id="ec-header" variant="endpoint-central" user-initials="AM" show-bookmark="false" show-zia="true"></ds-header-nav>
+  <!-- Module-switch progress: a thin indeterminate slide bar flush under the
+       header. A sibling (not a header child) so a header re-render can't wipe it. -->
+  <div id="shell-navload" class="shell-navload" aria-hidden="true"></div>
 
   <div class="body">
 
@@ -811,13 +840,33 @@
 
 <script type="module">
   import '../design-system-library/src/components/index.js';
-  import { applyL2For, wireL1ToL2 } from '../design-system-library/src/data/ec-menus.js';
+  import { applyL2For, wireL1ToL2, EC_TAB_L2_MENUS } from '../design-system-library/src/data/ec-menus.js';
   import { initShellResponsive } from '../design-system-library/src/shell/shell-responsive.js';
   /* Routing tables — single source of truth shared with the Ember app. See
      Layout/shell-catalog.js. Edit the catalog there, not inline here. */
   import { PRODUCTS, CONTENT_VIEWS, TAB_DEFAULT_VIEW } from './shell-catalog.js';
 
   const hEl  = document.getElementById('ec-header');
+  /* Module-switch progress bar controller. Ref-counted so overlapping nav
+     (selectTab → default view, openView → target) keeps it visible until the
+     last load resolves; a safety timer clears a missed done(). */
+  const navLoad = (() => {
+    const bar = document.getElementById('shell-navload');
+    let n = 0, safety = 0;
+    return {
+      start() {
+        if (!bar) return;
+        n++; bar.classList.add('is-on');
+        clearTimeout(safety);
+        safety = setTimeout(() => { n = 0; bar.classList.remove('is-on'); }, 8000);
+      },
+      done() {
+        if (!bar) return;
+        n = Math.max(0, n - 1);
+        if (n === 0) { clearTimeout(safety); bar.classList.remove('is-on'); }
+      },
+    };
+  })();
   const l1El = document.getElementById('shell-l1');
   const l2El = document.getElementById('shell-l2');
   const rpEl = document.getElementById('shell-rp');
@@ -929,7 +978,45 @@
   }
   /* Rebrand: the header variant drives the logo + product name; loader + title mirror it. */
   hEl.setAttribute('variant', _prod.variant);
-  document.title = _prod.name + ' · Prism';
+  /* Document title = "<page name> - ManageEngine <product>", where <page name>
+     mirrors the active top/sidebar navigation item (the header-tab / L1-module
+     label). setDocTitle() is re-called from selectTab on every navigation; with
+     no page yet it falls back to the brand alone. */
+  const _brand = 'ManageEngine ' + _prod.name;
+  function setDocTitle(pageName) {
+    document.title = (pageName ? pageName + ' - ' : '') + _brand;
+  }
+  /* view slug → its sidebar (L2/sub-item) label, harvested once from the EC menu
+     map. Mode-independent: it reads the menu *data*, so the page name matches the
+     sidebar label whether or not the L2 rail is currently rendered (e.g. top-nav
+     mode). Walks the whole tree and collects any node that carries both a `view`
+     and a `label`. */
+  const VIEW_LABELS = {};
+  (function harvest(node) {
+    if (Array.isArray(node)) { node.forEach(harvest); return; }
+    if (node && typeof node === 'object') {
+      if (node.view && node.label) VIEW_LABELS[node.view] = { label: node.label, labelAr: node.labelAr };
+      Object.values(node).forEach(harvest);
+    }
+  })(EC_TAB_L2_MENUS);
+  const _pick = (o) => o && ((_lang === 'ar' && o.labelAr) ? o.labelAr : o.label);
+  /* The sub-item label for a view: its own menu label, else its list-parent's
+     (drill-downs name a parent via CONTENT_VIEWS[slug].nav). Null if unmapped. */
+  function navLabelForView(slug) {
+    if (!slug) return null;
+    if (VIEW_LABELS[slug]) return _pick(VIEW_LABELS[slug]);
+    const parent = CONTENT_VIEWS[slug] && CONTENT_VIEWS[slug].nav;
+    if (parent && VIEW_LABELS[parent]) return _pick(VIEW_LABELS[parent]);
+    return null;
+  }
+  /* Page name = the active L2 sub-item's label when the open view maps to one
+     (deepest nav level, exactly what the sidebar highlights), else the active
+     header tab / L1 module label. */
+  function syncNavTitle(slug) {
+    const tab = (productTabs(_lang) || []).find((t) => t.id === _tab);
+    setDocTitle(navLabelForView(slug) || _pick(tab));
+  }
+  setDocTitle();
   { const _nm = document.querySelector('.shell-loader__name'); if (_nm) _nm.textContent = _prod.name; }
   let _tab  = _prod.tabs ? (_prod.tabs.find((id) => id !== 'home') || _prod.tabs[0] || 'home') : 'tp';
   function applyDir(lang) {
@@ -1103,13 +1190,14 @@
        form footer no longer stays pinned). openView still shows the target. */
     if (defView && CONTENT_VIEWS[defView] && !(opts && opts.skipDefault)) {
       if (ceEl) ceEl.hidden = true;
+      navLoad.start();
       injectDrawer(CONTENT_VIEWS[defView].file, 'content').then(() => {
         if (_tab !== tabId) return;   /* a later nav switched tabs — stale landing */
         window.ShellDrawers[defView]?.show();
         /* Sync the URL for a real (post-boot) tab landing; the _tab guard above
            already suppresses stale boot landings racing the deep-link resolver. */
         if (_navReady && new URLSearchParams(location.search).get('view') !== defView) syncUrl(defView, 'push');
-      });
+      }).finally(() => navLoad.done());
     } else if (defView && CONTENT_VIEWS[defView]) {
       if (ceEl) ceEl.hidden = true;   /* openView will inject + show the target */
     } else if (ceEl) {
@@ -1123,6 +1211,9 @@
     /* Re-frame the content for the (now expanded) L2 — without this the content
        keeps the collapsed framing from the previous tab. */
     if (typeof syncContentFrame === 'function') syncContentFrame();
+    /* Title = the tab's default view's sub-item label (else the tab label).
+       openView re-runs this with the specific slug when a non-default view opens. */
+    syncNavTitle(TAB_DEFAULT_VIEW[tabId]);
   }
   wireL1ToL2(l1El, l2El);
   /* Re-translate the L1/L2 nav when the language flips (the direction toggle
@@ -2063,6 +2154,7 @@
     const v = CONTENT_VIEWS[slug];
     if (!v) return;
     opts = opts || {};
+    navLoad.start();
     try {
       /* skipDefault: don't let selectTab async-open the tab's default view when
          we're opening a different specific view (prevents two stacked views). */
@@ -2081,9 +2173,11 @@
       window.ShellDrawers[slug]?.show();
       if (typeof syncL2Active === 'function') syncL2Active(slug);   /* highlight the matching L2 item */
       if (typeof syncL1Active === 'function') syncL1Active(slug);   /* highlight the matching L1 item (L1-only modules) */
+      syncNavTitle(slug);   /* title = this view's L2 sub-item label (deepest active nav) */
       if (typeof syncContentFrame === 'function') syncContentFrame();
       syncUrl(slug, opts.history);               /* reflect the view in the URL */
     } catch (e) { console.warn('[shell] openView failed:', slug, e); }
+    finally { navLoad.done(); }
   }
   /* Expose so an injected content view can navigate to another view
      (e.g. the sectioned-form's Save → openContentView('list-view')). */

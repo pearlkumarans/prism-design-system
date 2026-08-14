@@ -1,0 +1,32 @@
+{{! Native sign-in — reuses PrismAPI.auth via the session service. Renders
+    standalone (no shell chrome). Mirrors Layout/login.html's Prism card. }}
+<div class="lg-wrap">
+  <div class="lg-card" {{on "keydown" this.onKeydown}}>
+    <div class="ds-header-nav__brand">
+      {{#if this.brandLogo}}
+        <img class="ds-header-nav__logo" src={{this.brandLogo}} alt="" aria-hidden="true" />
+      {{/if}}
+      <span class="ds-header-nav__product">{{this.brandName}}</span>
+    </div>
+    <div>
+      <h1 class="lg-title">Sign in</h1>
+      <p class="lg-sub">Use your {{this.brandName}} account.</p>
+    </div>
+    <ds-text-input id="lg-user" label="Username" placeholder="Username or email" autocomplete="username"></ds-text-input>
+    <ds-text-input id="lg-pass" label="Password" type="password" placeholder="••••••••" autocomplete="current-password"></ds-text-input>
+    {{#if this.error}}
+      <div class="lg-error" role="alert">{{this.error}}</div>
+    {{/if}}
+    <ds-button
+      id="lg-submit"
+      class="lg-submit"
+      variant="primary"
+      size="large"
+      label={{if this.submitting "Signing in…" "Sign in"}}
+      {{on "click" this.submit}}
+    ></ds-button>
+    {{#if this.showDemoHint}}
+      <div class="lg-foot">Demo mode — any credentials sign you in.</div>
+    {{/if}}
+  </div>
+</div>
