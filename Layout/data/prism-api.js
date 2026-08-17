@@ -464,6 +464,30 @@
         const q = {}; if (params.id != null && String(params.id).length) q.id = params.id;
         return httpGet('/dex/api/script', q);
       },
+      async deployments(params = {}) {
+        if (useMock()) return { rows: [], total: 0, kpis: null, facets: null };
+        const q = {};
+        ['status', 'resourceType', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/dex/api/deployments', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+      async deployment(params = {}) {
+        if (useMock()) return null;
+        const q = {}; if (params.id != null && String(params.id).length) q.id = params.id;
+        return httpGet('/dex/api/deployment', q);
+      },
+      async workflows(params = {}) {
+        if (useMock()) return { rows: [], total: 0, kpis: null, facets: null };
+        const q = {};
+        ['status', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/dex/api/workflows', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+      async workflow(params = {}) {
+        if (useMock()) return null;
+        const q = {}; if (params.id != null && String(params.id).length) q.id = params.id;
+        return httpGet('/dex/api/workflow', q);
+      },
       /* Insight drill-down (L04). params: { id } or { type:'cpu' }. Composite record. */
       async insight(params = {}) {
         if (useMock()) return null;

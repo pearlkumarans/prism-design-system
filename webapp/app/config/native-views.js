@@ -43,4 +43,10 @@ export const NATIVE_VIEWS = new Set([
   'content-detail',
   'script-detail',
   'add-script',
+  'dex-deployments',
+  'dex-deployment-detail',
+  'dex-create-deployment',
+  'workflows',
+  'workflow-detail',
+  'workflow-builder',
 ]);

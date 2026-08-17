@@ -1,0 +1,41 @@
+{{! Deployment detail — a DEX deployment drill-down (L04), a thin Patterns::ListDetail
+    instance: record header + Overview (execution-status chart + per-device results). }}
+<Patterns::ListDetail
+  @header={{this.header}}
+  @breadcrumbs={{this.breadcrumbs}}
+  @summary={{this.summary}}
+  @tabs={{this.tabs}}
+  @refitKey={{this.refitKey}}
+  @onTabChange={{this.onTabChange}}
+  @onBreadcrumbClick={{this.onBreadcrumbClick}}
+>
+  <:headerActions>
+    <ds-button slot="actions" variant="outline" size="small" prefix-icon="refresh">Retry failed</ds-button>
+  </:headerActions>
+
+  <:body>
+    {{#if this.error}}
+      <div class="ld-facet-empty">
+        <Patterns::EmptyState @illustration="state-error" @title="Couldn't load deployment"
+          @description="The request failed. Is the BFF running (server/bff.mjs)?"
+          @primaryLabel="Retry" @onPrimary={{this.retry}} />
+      </div>
+    {{else if this.onOverview}}
+      <div class="ld-grid">
+        <ds-widget class="sp2" type="chart" title="Execution status" show-drag="false" show-action="false" show-footer="false"
+          {{config-chart type="donut" legend="right" fit="contain" data=this.statusChart}}></ds-widget>
+
+        <ds-widget class="sp4" type="table" title="Per-device results" show-drag="false" show-action="false" show-footer="false">
+          <ds-data-table selection-mode="none" row-height="comfortable" show-toolbar="false" show-footer="false" sticky-header rows-per-page="6" page="1"
+            {{set-prop "columns" this.resultColumns}} {{set-prop "rows" this.resultRows}}></ds-data-table>
+        </ds-widget>
+      </div>
+    {{else}}
+      <div class="ld-facet-empty">
+        <ds-empty-state show-illustration="false" show-secondary="false" show-primary="false"
+          title="{{this.facetLabel}} — demo facet"
+          description="This facet is a demo; Overview is the primary view."></ds-empty-state>
+      </div>
+    {{/if}}
+  </:body>
+</Patterns::ListDetail>

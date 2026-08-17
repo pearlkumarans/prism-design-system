@@ -633,6 +633,54 @@ function dexScript() {
   };
 }
 
+/* ── DEX Batch 5: Deployments (list + detail) + Workflows (list + detail) ── */
+const DXDEP_RESTYPE = ['Sensor', 'Script', 'Content pack', 'Sensor', 'Script'];
+const DXDEP_RES = ['Disk latency probe', 'Reset print spooler', 'Windows performance pack', 'CPU throttling check', 'Clear temp files'];
+const DXDEP_STATUS = ['Running', 'Completed', 'Completed', 'Failed', 'Scheduled'];
+const DXDEP_TARGET = ['Finance OU', 'Servers', 'Sales laptops', 'Engineering', 'All offices'];
+const DEX_DEPLOYMENTS = Array.from({ length: 24 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, resource: pick(DXDEP_RES, i), resourceType: pick(DXDEP_RESTYPE, i), target: pick(DXDEP_TARGET, i), devices: 4 + (i * 9) % 90, status: pick(DXDEP_STATUS, i + (i % 2)), started: pick(['2 min ago', '25 min ago', '1 hr ago', 'Today', 'Yesterday'], i) };
+});
+const dexDeploymentsQuery = (p) => applyQuery(DEX_DEPLOYMENTS, p, {
+  searchFields: ['resource', 'target'],
+  facets: { status: ['Running', 'Completed', 'Failed', 'Scheduled'], resourceType: ['Sensor', 'Script', 'Content pack'] },
+  kpi: (d) => ({ total: d.length, running: d.filter((r) => r.status === 'Running').length, completed: d.filter((r) => r.status === 'Completed').length, failed: d.filter((r) => r.status === 'Failed').length }),
+});
+function dexDeployment(p) {
+  const id = Number(p.get('id') || 1);
+  const base = DEX_DEPLOYMENTS.find((d) => d.id === id) || DEX_DEPLOYMENTS[0];
+  const n = base.devices;
+  const statusChart = { categories: ['Completed', 'Running', 'Failed', 'Pending'], series: [{ name: 'Devices', values: [Math.round(n * 0.7), Math.round(n * 0.1), Math.round(n * 0.08), Math.round(n * 0.12)], colors: ['green', 'orange', 'red', 'grey'] }] };
+  const results = Array.from({ length: 6 }, (_, k) => ({ id: k + 1, device: pick(['FIN-WKS', 'SALES-LT', 'ENG-WKS', 'HR-LT', 'OPS-WKS', 'DEV-MBP'], k + 1) + '-' + (100 + k * 7), status: k % 6 === 5 ? 'Failed' : k % 3 === 2 ? 'Running' : 'Completed', when: 'moments ago' }));
+  return { ...base, statusChart, results };
+}
+const DXWF_TRIGGER = ['Experience score drop', 'Alert: High CPU', 'Schedule: Daily', 'Alert: Disk latency', 'Manual'];
+const DXWF_STATUS = ['Enabled', 'Enabled', 'Disabled', 'Draft', 'Enabled'];
+const DXWF_NAME = ['Auto-remediate slow logon', 'Restart spooler on failure', 'Nightly cache cleanup', 'Escalate critical alerts', 'Reboot on memory pressure', 'Clear temp on low disk'];
+const DEX_WORKFLOWS = Array.from({ length: 20 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, name: pick(DXWF_NAME, i), trigger: pick(DXWF_TRIGGER, i), status: pick(DXWF_STATUS, i + (i % 2)), runs: (i * 13) % 140, lastRun: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], i) };
+});
+const dexWorkflowsQuery = (p) => applyQuery(DEX_WORKFLOWS, p, {
+  searchFields: ['name', 'trigger'],
+  facets: { status: ['Enabled', 'Disabled', 'Draft'] },
+  kpi: (d) => ({ total: d.length, enabled: d.filter((r) => r.status === 'Enabled').length, draft: d.filter((r) => r.status === 'Draft').length, disabled: d.filter((r) => r.status === 'Disabled').length }),
+});
+function dexWorkflow(p) {
+  const id = Number(p.get('id') || 1);
+  const base = DEX_WORKFLOWS.find((w) => w.id === id) || DEX_WORKFLOWS[0];
+  const steps = [
+    { id: 1, kind: 'Trigger', label: base.trigger },
+    { id: 2, kind: 'Condition', label: 'Experience score < 40 AND platform = Windows' },
+    { id: 3, kind: 'Action', label: 'Run script: Reset print spooler' },
+    { id: 4, kind: 'Action', label: 'Notify: dex-admins@acme.example' },
+    { id: 5, kind: 'Action', label: 'Create alert if unresolved after 1 hour' },
+  ];
+  const runs = Array.from({ length: 5 }, (_, k) => ({ id: k + 1, started: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], k + 1), status: pick(['Completed', 'Completed', 'Failed', 'Completed', 'Completed'], k + 1), devices: 3 + k * 4, duration: (1 + k) + 's' }));
+  return { ...base, steps, runs };
+}
+
 /* Insight drill-down (L04) — a single experience insight with its trend,
    contributing factors, affected devices, and remediation. ?type=cpu returns the
    CPU-specialised record; else ?id= picks from DEX_INSIGHTS. */
@@ -700,6 +748,10 @@ function handle(url) {
     case '/dex/api/extension': return dexExtension(p);
     case '/dex/api/content': return dexContent(p);
     case '/dex/api/script': return dexScript(p);
+    case '/dex/api/deployments': return dexDeploymentsQuery(p);
+    case '/dex/api/deployment': return dexDeployment(p);
+    case '/dex/api/workflows': return dexWorkflowsQuery(p);
+    case '/dex/api/workflow': return dexWorkflow(p);
     case '/dex/api/devices': return dexDevicesQuery(p);
     case '/dex/api/device': return dexDevice(p);
     case '/home/api/dashboard': return homeDashboard();

@@ -1,0 +1,35 @@
+{{! Create deployment — a thin Patterns::SectionedForm instance (L06). }}
+<Patterns::SectionedForm
+  @header={{this.header}}
+  @breadcrumbs={{this.breadcrumbs}}
+  @primaryLabel="Create deployment"
+  @saveAsItems={{this.saveAsItems}}
+  @onPrimary={{this.create}}
+  @onCancel={{this.cancel}}
+  @onSaveAs={{this.onSaveAs}}
+>
+  <:body as |Form|>
+    <Form.Section @title="Basic details" @description="Identify this deployment.">
+      <ds-text-input class="sform__field" size="medium" label="Deployment name" label-position="left" required maxlength="100" placeholder="e.g. Disk latency probe → Finance"></ds-text-input>
+      <ds-input-select class="sform__field" size="medium" label="Schedule" label-position="left" {{set-prop "options" this.scheduleOptions}}></ds-input-select>
+    </Form.Section>
+
+    <Form.Section @title="Define resources" @description="What to deploy.">
+      <div class="sform__field sform__row-inline">
+        <ds-input-select size="medium" label="Type" label-position="left" {{set-prop "options" this.resourceTypeOptions}}></ds-input-select>
+        <ds-input-select size="medium" placeholder="Resource" style="flex:1 1 320px; min-width:0;" {{set-prop "options" this.resourceOptions}}></ds-input-select>
+      </div>
+    </Form.Section>
+
+    <Form.Section @title="Define targets" @description="Where to deploy.">
+      <div class="sform__field sform__row-inline">
+        <ds-input-select size="medium" label="Target type" label-position="left" {{set-prop "options" this.targetTypeOptions}}></ds-input-select>
+        <ds-input-select size="medium" placeholder="Target" style="flex:1 1 320px; min-width:0;" {{set-prop "options" this.targetOptions}}></ds-input-select>
+      </div>
+      <ds-checkbox-group class="sform__field" label="Options" label-position="left" value="retry">
+        <ds-checkbox value="retry" label="Retry on failed devices"></ds-checkbox>
+        <ds-checkbox value="notify" label="Notify on completion"></ds-checkbox>
+      </ds-checkbox-group>
+    </Form.Section>
+  </:body>
+</Patterns::SectionedForm>
