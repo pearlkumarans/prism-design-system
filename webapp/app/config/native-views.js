@@ -29,4 +29,8 @@ export const NATIVE_VIEWS = new Set([
   'insight-detail',
   'insight-cpu',
   'live-telemetry',
+  'alerts',
+  'alert-detail',
+  'alert-profile-detail',
+  'create-alert-profile',
 ]);

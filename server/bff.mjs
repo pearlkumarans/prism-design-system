@@ -480,6 +480,65 @@ const remoteActionsQuery = (p) => applyQuery(DEX_REMOTE_ACTIONS, p, {
   kpi: (d) => ({ total: d.length, running: d.filter((r) => r.status === 'Running').length, completed: d.filter((r) => r.status === 'Completed').length, failed: d.filter((r) => r.status === 'Failed').length }),
 });
 
+/* ── DEX Batch 2: Alerts (list + detail) + alert profile detail ── */
+const AL_SEV = ['Critical', 'Critical', 'High', 'High', 'Medium', 'Low'];
+const AL_STATUS = ['Active', 'Active', 'Acknowledged', 'Resolved', 'Active', 'Acknowledged'];
+const AL_TITLE = ['Experience score dropped below 40', 'High CPU sustained 30+ min', 'Disk latency spike', 'Repeated app crashes', 'Boot time exceeded threshold', 'Memory pressure critical', 'Network drops detected', 'Battery health critical'];
+const AL_PROFILE = ['CPU health', 'Disk health', 'App stability', 'Boot performance', 'Network quality'];
+const DEX_ALERTS = Array.from({ length: 26 }, (_, k) => {
+  const i = k + 1;
+  return {
+    id: i,
+    title: pick(AL_TITLE, i),
+    severity: pick(AL_SEV, i + (i % 3)),
+    device: pick(DEX_NAMES, i) + '-' + (100 + i * 7),
+    status: pick(AL_STATUS, i + (i % 2)),
+    profile: pick(AL_PROFILE, i),
+    triggered: pick(['5 min ago', '22 min ago', '1 hr ago', '3 hrs ago', 'Today', 'Yesterday'], i),
+  };
+});
+const dexAlertsQuery = (p) => applyQuery(DEX_ALERTS, p, {
+  searchFields: ['title', 'device', 'profile'],
+  facets: { severity: ['Critical', 'High', 'Medium', 'Low'], status: ['Active', 'Acknowledged', 'Resolved'], profile: AL_PROFILE },
+  kpi: (d) => ({ total: d.length, critical: d.filter((r) => r.severity === 'Critical').length, active: d.filter((r) => r.status === 'Active').length, acknowledged: d.filter((r) => r.status === 'Acknowledged').length }),
+});
+function dexAlert(p) {
+  const id = Number(p.get('id') || 1);
+  const base = DEX_ALERTS.find((a) => a.id === id) || DEX_ALERTS[0];
+  const timeline = [
+    { id: 1, event: 'Alert triggered', detail: base.title, when: base.triggered, state: 'critical' },
+    { id: 2, event: 'Notification sent', detail: 'Email to dex-admins', when: base.triggered, state: 'info' },
+    { id: 3, event: 'Auto-remediation attempted', detail: 'Restart affected service', when: 'moments later', state: 'warning' },
+    { id: 4, event: base.status === 'Resolved' ? 'Resolved' : 'Awaiting acknowledgement', detail: '', when: 'now', state: base.status === 'Resolved' ? 'success' : 'default' },
+  ];
+  const devices = DEX_DEVICES.filter((d) => d.score != null).slice(0, 5).map((d) => ({ id: d.id, name: d.name, platform: d.platform, score: d.score }));
+  return { ...base, timeline, devices };
+}
+function dexAlertProfile(p) {
+  const id = p.get('id') || 'cpu-health';
+  return {
+    id,
+    name: 'CPU health',
+    description: 'Raises alerts when sustained CPU usage degrades the experience score.',
+    status: 'Enabled',
+    rules: [
+      { id: 1, metric: 'CPU usage', condition: '> 85% for 30 min', severity: 'High' },
+      { id: 2, metric: 'CPU usage', condition: '> 95% for 10 min', severity: 'Critical' },
+      { id: 3, metric: 'Top process', condition: 'single process > 60%', severity: 'Medium' },
+    ],
+    targets: [
+      { id: 1, type: 'Remote office', value: 'All offices' },
+      { id: 2, type: 'Platform', value: 'Windows' },
+    ],
+    notification: [
+      { term: 'Channel', description: 'Email' },
+      { term: 'Recipients', description: 'dex-admins@acme.example' },
+      { term: 'Throttle', description: 'Max 1 / hour / device' },
+      { term: 'Escalation', description: 'After 2 hours unacknowledged' },
+    ],
+  };
+}
+
 /* Insight drill-down (L04) — a single experience insight with its trend,
    contributing factors, affected devices, and remediation. ?type=cpu returns the
    CPU-specialised record; else ?id= picks from DEX_INSIGHTS. */
@@ -536,6 +595,9 @@ function handle(url) {
     case '/dex/api/insight': return dexInsight(p);
     case '/dex/api/telemetry': return dexTelemetry(p);
     case '/dex/api/remoteActions': return remoteActionsQuery(p);
+    case '/dex/api/alerts': return dexAlertsQuery(p);
+    case '/dex/api/alert': return dexAlert(p);
+    case '/dex/api/alertProfile': return dexAlertProfile(p);
     case '/dex/api/devices': return dexDevicesQuery(p);
     case '/dex/api/device': return dexDevice(p);
     case '/home/api/dashboard': return homeDashboard();

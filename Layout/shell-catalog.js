@@ -36,6 +36,18 @@ export const PRODUCTS = {
   site24x7: { variant: 'site24x7',         name: 'Site24x7',         tabs: ['home','reports','support'] },
 };
 
+/* Tab id → module-rail icon (left-nav). Presentation metadata for the tabs listed
+   in PRODUCTS. The Ember app reads this via catalog-data.js (one map, no drift);
+   Layout/Shell.html keeps its own inline copy for now, to consolidate onto this later. */
+export const TAB_ICONS = {
+  home: 'home', configs: 'settings-custom', tp: 'patch', sd: 'software',
+  inv: 'product', deployments: 'settings-deploy', osd: 'disk', mdm: 'mobile-devices', tools: 'computer-online',
+  agent: 'computer', browsers: 'globe', 'app-ctrl': 'property-slider',
+  malware: 'shield', dlp: 'computer-security', bitlocker: 'encryption-lock',
+  'dev-ctrl': 'device-control', reports: 'bar-vertical-chart',
+  support: 'help-circle', dex: 'speedometer',
+};
+
 /* slug → { file, tab, nav? }. `file` WITH a slash is relative to Layout/; a bare
    name lives under Layout/views/. `nav` (optional) is the list view whose sidebar
    item stays highlighted on a drill-down page. */
@@ -90,6 +102,10 @@ export const CONTENT_VIEWS = {
   'insight-detail':                               { file: '../projects/dex/layout-insight-detail',                           tab: 'dex', nav: 'experience-insights' },
   'insight-cpu':                                  { file: '../projects/dex/layout-insight-cpu',                              tab: 'dex', nav: 'experience-insights' },
   'live-telemetry':                               { file: '../projects/dex/layout-live-telemetry',                           tab: 'dex', nav: 'dex-devices' },
+  'alerts':                                       { file: '../projects/dex/layout-alerts',                                   tab: 'dex' },
+  'alert-detail':                                 { file: '../projects/dex/layout-alert-detail',                             tab: 'dex', nav: 'alerts' },
+  'alert-profile-detail':                         { file: '../projects/dex/layout-alert-profile-detail',                     tab: 'dex', nav: 'alerts' },
+  'create-alert-profile':                         { file: '../projects/dex/layout-create-alert-profile',                     tab: 'dex', nav: 'alerts' },
   'deployments-reports':                          { file: '../projects/deployments/layout-reports',                          tab: 'deployments' },
   'deployments-policy-install-uninstall-software':{ file: '../projects/deployments/layout-policy-install-uninstall-software',tab: 'deployments', nav: 'deployments-policy' },
   'deployments-policy-file-folder-operation':     { file: '../projects/deployments/layout-policy-file-folder-operation',     tab: 'deployments', nav: 'deployments-policy' },

@@ -1,0 +1,36 @@
+{{! Create alert profile — a thin Patterns::SectionedForm instance (L06). The
+    scaffold/footer/save-as live in the pattern; the fields are the :body. }}
+<Patterns::SectionedForm
+  @header={{this.header}}
+  @breadcrumbs={{this.breadcrumbs}}
+  @primaryLabel="Create profile"
+  @saveAsItems={{this.saveAsItems}}
+  @onPrimary={{this.create}}
+  @onCancel={{this.cancel}}
+  @onSaveAs={{this.onSaveAs}}
+>
+  <:body as |Form|>
+    <Form.Section @title="Name and description" @description="Identify this alert profile.">
+      <ds-text-input class="sform__field" size="medium" label="Profile name" label-position="left" required maxlength="100" placeholder="e.g. CPU health"></ds-text-input>
+      <ds-text-area class="sform__field" size="medium" label="Description" label-position="left" placeholder="What this profile watches for"></ds-text-area>
+    </Form.Section>
+
+    <Form.Section @title="Configure alert rules" @description="Raise an alert when the condition is met.">
+      <div class="sform__field sform__row-inline">
+        <ds-input-select size="medium" label="Metric" label-position="left" {{set-prop "options" this.metricOptions}}></ds-input-select>
+        <ds-input-select size="medium" placeholder="Operator" style="min-width:140px" {{set-prop "options" this.operatorOptions}}></ds-input-select>
+        <ds-text-input size="medium" placeholder="Threshold" style="max-width:140px"></ds-text-input>
+      </div>
+      <ds-input-select class="sform__field" size="medium" label="Severity" label-position="left" {{set-prop "options" this.severityOptions}}></ds-input-select>
+    </Form.Section>
+
+    <Form.Section @title="Notification" @description="Who gets notified when this fires.">
+      <ds-input-select class="sform__field" size="medium" label="Channel" label-position="left" {{set-prop "options" this.channelOptions}}></ds-input-select>
+      <ds-text-input class="sform__field" size="medium" label="Recipients" label-position="left" placeholder="dex-admins@acme.example"></ds-text-input>
+      <ds-checkbox-group class="sform__field" label="Options" label-position="left" value="throttle">
+        <ds-checkbox value="throttle" label="Throttle to 1 alert / hour / device"></ds-checkbox>
+        <ds-checkbox value="escalate" label="Escalate if unacknowledged for 2 hours"></ds-checkbox>
+      </ds-checkbox-group>
+    </Form.Section>
+  </:body>
+</Patterns::SectionedForm>

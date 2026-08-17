@@ -397,6 +397,27 @@
         const body = await httpGet('/dex/api/remoteActions', q);
         return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
       },
+      async alerts(params = {}) {
+        if (useMock()) return { rows: [], total: 0, kpis: null, facets: null };
+        const q = {};
+        ['severity', 'status', 'profile', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/dex/api/alerts', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+      /* Alert drill-down (L04). params: { id }. Composite (alert + timeline + devices). */
+      async alert(params = {}) {
+        if (useMock()) return null;
+        const q = {};
+        if (params.id != null && String(params.id).length) q.id = params.id;
+        return httpGet('/dex/api/alert', q);
+      },
+      /* Alert profile (L04 config). params: { id }. Rules + targets + notification. */
+      async alertProfile(params = {}) {
+        if (useMock()) return null;
+        const q = {};
+        if (params.id != null && String(params.id).length) q.id = params.id;
+        return httpGet('/dex/api/alertProfile', q);
+      },
       /* Insight drill-down (L04). params: { id } or { type:'cpu' }. Composite record. */
       async insight(params = {}) {
         if (useMock()) return null;
