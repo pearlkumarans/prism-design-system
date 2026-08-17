@@ -455,6 +455,45 @@ const remoteActionsQuery = (p) => applyQuery(DEX_REMOTE_ACTIONS, p, {
   kpi: (d) => ({ total: d.length, running: d.filter((r) => r.status === 'Running').length, completed: d.filter((r) => r.status === 'Completed').length, failed: d.filter((r) => r.status === 'Failed').length }),
 });
 
+/* Insight drill-down (L04) — a single experience insight with its trend,
+   contributing factors, affected devices, and remediation. ?type=cpu returns the
+   CPU-specialised record; else ?id= picks from DEX_INSIGHTS. */
+function dexInsight(p) {
+  const type = String(p.get('type') || '').toLowerCase();
+  const id = Number(p.get('id') || 1);
+  const base = type === 'cpu'
+    ? { id: 'cpu', title: 'Sustained high CPU', category: 'CPU', severity: 'High', affected: 63, impact: 'High', status: 'Active', detected: '1 hr ago' }
+    : (DEX_INSIGHTS.find((d) => d.id === id) || DEX_INSIGHTS[0]);
+  const days = Array.from({ length: 14 }, (_, k) => 'D-' + (13 - k));
+  const trend = { categories: days, series: [{ name: 'Affected devices', values: days.map((_, k) => Math.max(2, Math.round(base.affected * (0.6 + 0.4 * Math.sin(k / 3))))) }] };
+  const factorNames = type === 'cpu' ? ['User processes', 'System interrupts', 'Antivirus scan', 'Background updates'] : ['Read/write latency', 'Disk queue length', 'Fragmentation', 'Low free space'];
+  const factors = { categories: factorNames, series: [{ name: 'Contribution %', values: [38, 27, 20, 15] }] };
+  const devices = DEX_DEVICES.filter((d) => d.score != null).slice(0, 8).map((d) => ({ id: d.id, name: d.name, platform: d.platform, score: d.score, impact: d.score < 40 ? 'High' : d.score < 60 ? 'Medium' : 'Low' }));
+  const remediation = (type === 'cpu'
+    ? ['End runaway processes', 'Throttle background updates', 'Exclude hot paths from AV scan', 'Add RAM / upgrade CPU']
+    : ['Run disk cleanup', 'Update storage drivers', 'Enable SSD TRIM', 'Schedule defragmentation']).map((action, i) => ({ id: i + 1, action }));
+  return { ...base, trend, factors, devices, remediation };
+}
+
+/* Live telemetry (L04) — per-device real-time metric feed (CPU/mem/disk/network
+   time-series + current values + top processes). ?device= selects the device. */
+function dexTelemetry(p) {
+  const device = p.get('device') || (DEX_NAMES[0] + '-107');
+  const t = Array.from({ length: 20 }, (_, k) => (k < 10 ? '0' : '') + k + ':00');
+  const wave = (b, amp, ph) => t.map((_, k) => Math.max(1, Math.min(100, Math.round(b + amp * Math.sin((k + ph) / 2.5)))));
+  return {
+    device,
+    current: { cpu: 42, mem: 68, disk: 23, net: 14 },
+    series: {
+      cpu: { categories: t, series: [{ name: 'CPU %', values: wave(45, 25, 0) }] },
+      mem: { categories: t, series: [{ name: 'Memory %', values: wave(65, 12, 3) }] },
+      disk: { categories: t, series: [{ name: 'Disk I/O %', values: wave(25, 18, 1) }] },
+      net: { categories: t, series: [{ name: 'Network Mbps', values: wave(18, 14, 2) }] },
+    },
+    processes: ['chrome.exe', 'Teams.exe', 'antimalware.exe', 'node.exe', 'Code.exe'].map((name, i) => ({ id: i + 1, name, cpu: 28 - i * 4, mem: 15 - i * 2 })),
+  };
+}
+
 /* ── Routes ────────────────────────────────────────────────────────────────── */
 function handle(url) {
   const p = url.searchParams;
@@ -468,6 +507,8 @@ function handle(url) {
     case '/deployments/api/deviceExecution': return deviceExecution(p);
     case '/dex/api/overview': return dexOverview();
     case '/dex/api/insights': return insightsQuery(p);
+    case '/dex/api/insight': return dexInsight(p);
+    case '/dex/api/telemetry': return dexTelemetry(p);
     case '/dex/api/remoteActions': return remoteActionsQuery(p);
     case '/dex/api/devices': return dexDevicesQuery(p);
     case '/dex/api/device': return dexDevice(p);

@@ -25,4 +25,7 @@ export const NATIVE_VIEWS = new Set([
   'dex-device-detail',
   'experience-insights',
   'remote-actions',
+  'insight-detail',
+  'insight-cpu',
+  'live-telemetry',
 ]);

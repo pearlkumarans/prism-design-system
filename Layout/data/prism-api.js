@@ -393,6 +393,20 @@
         const body = await httpGet('/dex/api/remoteActions', q);
         return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
       },
+      /* Insight drill-down (L04). params: { id } or { type:'cpu' }. Composite record. */
+      async insight(params = {}) {
+        if (useMock()) return null;
+        const q = {};
+        ['id', 'type'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = params[k]; });
+        return httpGet('/dex/api/insight', q);
+      },
+      /* Live telemetry (L04). params: { device }. Time-series + current + processes. */
+      async telemetry(params = {}) {
+        if (useMock()) return null;
+        const q = {};
+        if (params.device != null && String(params.device).length) q.device = params.device;
+        return httpGet('/dex/api/telemetry', q);
+      },
       async devices(params = {}) {
         if (useMock()) {
           const OFFICE = ['HQ', 'Remote', 'Branch'];
