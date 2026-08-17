@@ -33,4 +33,9 @@ export const NATIVE_VIEWS = new Set([
   'alert-detail',
   'alert-profile-detail',
   'create-alert-profile',
+  'sensors',
+  'sensor-detail',
+  'sensor-deployment',
+  'sensor-run',
+  'add-sensor',
 ]);

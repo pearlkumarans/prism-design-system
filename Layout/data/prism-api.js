@@ -418,6 +418,30 @@
         if (params.id != null && String(params.id).length) q.id = params.id;
         return httpGet('/dex/api/alertProfile', q);
       },
+      async sensors(params = {}) {
+        if (useMock()) return { rows: [], total: 0, kpis: null, facets: null };
+        const q = {};
+        ['platform', 'category', 'status', 'type', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/dex/api/sensors', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+      async sensor(params = {}) {
+        if (useMock()) return null;
+        const q = {}; if (params.id != null && String(params.id).length) q.id = params.id;
+        return httpGet('/dex/api/sensor', q);
+      },
+      async sensorDeployments(params = {}) {
+        if (useMock()) return { rows: [], total: 0, kpis: null, facets: null };
+        const q = {};
+        ['status', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/dex/api/sensorDeployments', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+      async sensorRun(params = {}) {
+        if (useMock()) return null;
+        const q = {}; if (params.id != null && String(params.id).length) q.id = params.id;
+        return httpGet('/dex/api/sensorRun', q);
+      },
       /* Insight drill-down (L04). params: { id } or { type:'cpu' }. Composite record. */
       async insight(params = {}) {
         if (useMock()) return null;

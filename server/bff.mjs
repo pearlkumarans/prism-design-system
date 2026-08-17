@@ -539,6 +539,50 @@ function dexAlertProfile(p) {
   };
 }
 
+/* ── DEX Batch 3: Sensors (list + detail), sensor deployments, sensor run ── */
+const SEN_TYPE = ['Script', 'Query', 'Script', 'Registry check', 'Query'];
+const SEN_PLAT = ['Windows', 'Windows', 'macOS', 'Linux', 'Windows'];
+const SEN_CAT = ['Performance', 'Security', 'Compliance', 'Health', 'Inventory'];
+const SEN_STATUS = ['Enabled', 'Enabled', 'Enabled', 'Disabled', 'Enabled'];
+const SEN_NAME = ['Disk latency probe', 'CPU throttling check', 'Startup impact scan', 'Battery wear reader', 'Wi-Fi signal sampler', 'Crash log collector', 'Free space monitor', 'GPU driver check', 'Boot duration timer', 'Memory pressure gauge'];
+const DEX_SENSORS = Array.from({ length: 22 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, name: pick(SEN_NAME, i), type: pick(SEN_TYPE, i), platform: pick(SEN_PLAT, i), category: pick(SEN_CAT, i), status: pick(SEN_STATUS, i + (i % 3)), lastRun: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], i), deployments: 1 + (i * 3) % 8 };
+});
+const sensorsQuery = (p) => applyQuery(DEX_SENSORS, p, {
+  searchFields: ['name', 'category', 'type'],
+  facets: { platform: ['Windows', 'macOS', 'Linux'], category: SEN_CAT, status: ['Enabled', 'Disabled'], type: ['Script', 'Query', 'Registry check'] },
+  kpi: (d) => ({ total: d.length, enabled: d.filter((r) => r.status === 'Enabled').length, deployments: d.reduce((a, r) => a + r.deployments, 0), disabled: d.filter((r) => r.status === 'Disabled').length }),
+});
+function dexSensor(p) {
+  const id = Number(p.get('id') || 1);
+  const base = DEX_SENSORS.find((s) => s.id === id) || DEX_SENSORS[0];
+  const script = base.type === 'Query'
+    ? 'SELECT name, value FROM device_metrics\nWHERE metric = "disk_latency";'
+    : '# PowerShell sensor\n$c = Get-Counter "\\PhysicalDisk(_Total)\\Avg. Disk sec/Read"\nWrite-Output ($c.CounterSamples.CookedValue * 1000)';
+  const targets = [{ id: 1, type: 'Platform', value: base.platform }, { id: 2, type: 'Remote office', value: 'All offices' }];
+  const runs = Array.from({ length: 5 }, (_, k) => ({ id: k + 1, started: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], k + 1), status: pick(['Completed', 'Completed', 'Failed', 'Completed', 'Completed'], k + 1), devices: 8 + (k * 5) % 40, duration: (2 + k) + 's' }));
+  return { ...base, script, targets, runs };
+}
+const SD_STATUS = ['Running', 'Completed', 'Completed', 'Failed', 'Scheduled'];
+const DEX_SENSOR_DEPLOYMENTS = Array.from({ length: 20 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, sensor: pick(SEN_NAME, i), target: pick(['Finance OU', 'Servers', 'Sales laptops', 'Engineering', 'All offices'], i), devices: 3 + (i * 7) % 80, status: pick(SD_STATUS, i + (i % 2)), started: pick(['2 min ago', '20 min ago', '1 hr ago', 'Today', 'Yesterday'], i) };
+});
+const sensorDeploymentsQuery = (p) => applyQuery(DEX_SENSOR_DEPLOYMENTS, p, {
+  searchFields: ['sensor', 'target'],
+  facets: { status: ['Running', 'Completed', 'Failed', 'Scheduled'] },
+  kpi: (d) => ({ total: d.length, running: d.filter((r) => r.status === 'Running').length, completed: d.filter((r) => r.status === 'Completed').length, failed: d.filter((r) => r.status === 'Failed').length }),
+});
+function dexSensorRun() {
+  return {
+    id: 1, sensor: 'Disk latency probe', status: 'Completed', started: 'Today 03:12 PM', duration: '4.2s', exitCode: 0,
+    stats: { devices: 42, succeeded: 39, failed: 3 },
+    output: '[03:12:01] Sensor started on 42 devices\n[03:12:03] Collected disk_latency samples\n[03:12:05] 39 succeeded, 3 failed (timeout)\n[03:12:05] Sensor completed (exit 0)',
+    results: Array.from({ length: 6 }, (_, k) => ({ id: k + 1, device: pick(['FIN-WKS', 'SALES-LT', 'ENG-WKS', 'HR-LT', 'OPS-WKS', 'DEV-MBP'], k + 1) + '-' + (100 + k * 7), status: k % 5 === 4 ? 'Failed' : 'Succeeded', value: (12 + k * 3) + ' ms', when: 'moments ago' })),
+  };
+}
+
 /* Insight drill-down (L04) — a single experience insight with its trend,
    contributing factors, affected devices, and remediation. ?type=cpu returns the
    CPU-specialised record; else ?id= picks from DEX_INSIGHTS. */
@@ -598,6 +642,10 @@ function handle(url) {
     case '/dex/api/alerts': return dexAlertsQuery(p);
     case '/dex/api/alert': return dexAlert(p);
     case '/dex/api/alertProfile': return dexAlertProfile(p);
+    case '/dex/api/sensors': return sensorsQuery(p);
+    case '/dex/api/sensor': return dexSensor(p);
+    case '/dex/api/sensorDeployments': return sensorDeploymentsQuery(p);
+    case '/dex/api/sensorRun': return dexSensorRun(p);
     case '/dex/api/devices': return dexDevicesQuery(p);
     case '/dex/api/device': return dexDevice(p);
     case '/home/api/dashboard': return homeDashboard();

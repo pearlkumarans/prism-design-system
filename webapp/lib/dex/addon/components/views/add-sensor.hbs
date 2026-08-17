@@ -1,0 +1,32 @@
+{{! Add sensor — a thin Patterns::SectionedForm instance (L06). }}
+<Patterns::SectionedForm
+  @header={{this.header}}
+  @breadcrumbs={{this.breadcrumbs}}
+  @primaryLabel="Add sensor"
+  @saveAsItems={{this.saveAsItems}}
+  @onPrimary={{this.create}}
+  @onCancel={{this.cancel}}
+  @onSaveAs={{this.onSaveAs}}
+>
+  <:body as |Form|>
+    <Form.Section @title="Name and description" @description="Identify this sensor.">
+      <ds-text-input class="sform__field" size="medium" label="Sensor name" label-position="left" required maxlength="100" placeholder="e.g. Disk latency probe"></ds-text-input>
+      <ds-text-area class="sform__field" size="medium" label="Description" label-position="left" placeholder="What this sensor measures"></ds-text-area>
+      <ds-input-select class="sform__field" size="medium" label="Category" label-position="left" {{set-prop "options" this.categoryOptions}}></ds-input-select>
+    </Form.Section>
+
+    <Form.Section @title="Configure script" @description="The signal this sensor collects.">
+      <div class="sform__field sform__row-inline">
+        <ds-input-select size="medium" label="Platform" label-position="left" {{set-prop "options" this.platformOptions}}></ds-input-select>
+        <ds-input-select size="medium" placeholder="Type" style="min-width:160px" {{set-prop "options" this.typeOptions}}></ds-input-select>
+      </div>
+      <ds-text-area class="sform__field" size="medium" label="Script" label-position="left" placeholder="# Sensor script (returns a numeric value)"></ds-text-area>
+    </Form.Section>
+
+    <Form.Section @title="Execution settings" @description="When and how the sensor runs.">
+      <ds-input-select class="sform__field" size="medium" label="Schedule" label-position="left" {{set-prop "options" this.scheduleOptions}}></ds-input-select>
+      <ds-text-input class="sform__field" size="medium" label="Timeout (seconds)" label-position="left" placeholder="30"></ds-text-input>
+      <ds-input-select class="sform__field" size="medium" label="Run as" label-position="left" {{set-prop "options" this.runasOptions}}></ds-input-select>
+    </Form.Section>
+  </:body>
+</Patterns::SectionedForm>
