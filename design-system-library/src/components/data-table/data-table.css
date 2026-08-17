@@ -200,6 +200,10 @@ ds-data-table.is-col-resizing .ds-data-table__col-resizer::after { background: v
   padding: 0 var(--spacing-12);
   text-align: start;
   vertical-align: middle;
+  /* Whole-pixel line box: the inherited 21px (14×1.5) is odd, so centring a 16px
+     icon lands it on a half pixel — glyphs snap to the grid, SVG doesn't, and the
+     icon rides high. line-height:1 keeps the cell's line box on whole pixels. */
+  line-height: 1;
   box-sizing: border-box;
   /* Body cells: ultra-soft inter-row divider so the eye reads rows as a
      calm continuous list, not a heavy grid. Header keeps the stronger
@@ -217,6 +221,22 @@ ds-data-table.is-col-resizing .ds-data-table__col-resizer::after { background: v
 .ds-data-table__table th[data-align="center"],
 .ds-data-table__table td[data-align="center"] {
   text-align: center;
+}
+
+/* Icon-plus-label cells: the table owns the shape so it aligns wherever the cell
+   is rendered — including consumers (e.g. the Ember views) whose page-scoped
+   `.cell-*` alignment rules don't exist in that DOM, which left the icon on the
+   baseline riding a few px high. `vertical-align: middle` is the fallback floor;
+   the `:has()` rule catches the common <a|span|div><ds-icon> + text wrapper and
+   lays it out as a centred inline row. */
+.ds-data-table__table th ds-icon,
+.ds-data-table__table td ds-icon { vertical-align: middle; }
+
+.ds-data-table__table th :is(a, span, div):has(> ds-icon),
+.ds-data-table__table td :is(a, span, div):has(> ds-icon) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
 }
 
 /* Header row — keeps a slightly stronger divider so the head/body

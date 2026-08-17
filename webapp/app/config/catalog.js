@@ -6,7 +6,7 @@
  * `npm run sync:catalog`. This file re-exports it and adds the app-side helpers
  * (validation, label lookup, landing resolution) — pure logic, no data to drift.
  */
-export { PRODUCTS, CONTENT_VIEWS, TAB_DEFAULT_VIEW } from 'prism-webapp/config/catalog-data';
+export { PRODUCTS, CONTENT_VIEWS, TAB_DEFAULT_VIEW, TAB_ICONS } from 'prism-webapp/config/catalog-data';
 
 import { PRODUCTS, CONTENT_VIEWS, TAB_DEFAULT_VIEW } from 'prism-webapp/config/catalog-data';
 

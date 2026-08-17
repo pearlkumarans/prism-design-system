@@ -1,6 +1,6 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
-import { CONTENT_VIEWS, defaultViewFor } from 'prism-webapp/config/catalog';
+import { CONTENT_VIEWS, defaultViewFor, TAB_ICONS } from 'prism-webapp/config/catalog';
 import { RailPopover } from 'prism-webapp/lib/rail-popover';
 
 // Framework-agnostic shell helpers, loaded from the repo through the dev proxy.
@@ -13,18 +13,6 @@ let _responsive;
 // Vendored into public/vendor/ds by scripts/vendor-assets.mjs — same origin, no proxy.
 const loadEcMenus = () => (_ecMenus ||= _nativeImport(`${ORIGIN}/vendor/ds/data/ec-menus.js`));
 const loadResponsive = () => (_responsive ||= _nativeImport(`${ORIGIN}/vendor/ds/shell/shell-responsive.js`));
-
-// Tab → module-rail icon map (left-nav mode). Kept in sync with the canonical map
-// in Layout/Shell.html so the vanilla shell and the Ember app never drift on a
-// module's rail icon. (Ideally this moves into shell-catalog.js next to PRODUCTS.)
-const TAB_ICON = {
-  home: 'home', configs: 'settings-custom', tp: 'patch', sd: 'software',
-  inv: 'product', deployments: 'settings-deploy', osd: 'disk', mdm: 'mobile-devices', tools: 'computer-online',
-  agent: 'computer', browsers: 'globe', 'app-ctrl': 'property-slider',
-  malware: 'shield', dlp: 'computer-security', bitlocker: 'encryption-lock',
-  'dev-ctrl': 'device-control', reports: 'bar-vertical-chart',
-  support: 'help-circle', dex: 'speedometer',
-};
 
 /**
  * ShellChrome — the full shell frame:
@@ -211,7 +199,7 @@ export default class ShellChrome extends Component {
       if (left) {
         // Same guard as the header — re-feeding rail.items re-renders the rail.
         if (sig !== this._railSig) {
-          rail.items = this.shell.tabs.map((t) => ({ id: t.id, label: label(t), icon: TAB_ICON[t.id] }));
+          rail.items = this.shell.tabs.map((t) => ({ id: t.id, label: label(t), icon: TAB_ICONS[t.id] }));
           this._railSig = sig;
         }
         if (this.nav.railIcons) rail.setAttribute('icons-only', ''); else rail.removeAttribute('icons-only');
