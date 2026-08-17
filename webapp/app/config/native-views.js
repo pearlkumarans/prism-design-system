@@ -49,4 +49,12 @@ export const NATIVE_VIEWS = new Set([
   'workflows',
   'workflow-detail',
   'workflow-builder',
+  'dashboards',
+  'dashboard-view',
+  'dashboard-builder',
+  'reports',
+  'report-detail',
+  'ai-assistant',
+  'ai-settings',
+  'settings',
 ]);

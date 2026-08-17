@@ -1,0 +1,33 @@
+{{! Settings — a thin Patterns::SectionedForm instance (L06). }}
+<Patterns::SectionedForm
+  @header={{this.header}}
+  @breadcrumbs={{this.breadcrumbs}}
+  @primaryLabel="Save settings"
+  @onPrimary={{this.save}}
+  @onCancel={{this.cancel}}
+>
+  <:body as |Form|>
+    <Form.Section @title="Collection" @description="How often sensors collect signals.">
+      <ds-input-select class="sform__field" size="medium" label="Collection interval" label-position="left" {{set-prop "options" this.intervalOptions}}></ds-input-select>
+      <ds-checkbox-group class="sform__field" label="Options" label-position="left" value="realtime">
+        <ds-checkbox value="realtime" label="Enable real-time telemetry"></ds-checkbox>
+        <ds-checkbox value="offline" label="Buffer while offline"></ds-checkbox>
+      </ds-checkbox-group>
+    </Form.Section>
+
+    <Form.Section @title="Score thresholds" @description="Experience score bands.">
+      <div class="sform__field sform__row-inline">
+        <ds-text-input size="medium" label="Good ≥" label-position="left" placeholder="71" style="max-width:200px"></ds-text-input>
+        <ds-text-input size="medium" placeholder="Poor ≤ (31)" style="max-width:200px"></ds-text-input>
+      </div>
+    </Form.Section>
+
+    <Form.Section @title="Data retention" @description="How long experience data is kept.">
+      <ds-input-select class="sform__field" size="medium" label="Retain data for" label-position="left" {{set-prop "options" this.retentionOptions}}></ds-input-select>
+    </Form.Section>
+
+    <Form.Section @title="Notifications" @description="Where DEX sends alerts and reports.">
+      <ds-text-input class="sform__field" size="medium" label="Admin recipients" label-position="left" placeholder="dex-admins@acme.example"></ds-text-input>
+    </Form.Section>
+  </:body>
+</Patterns::SectionedForm>

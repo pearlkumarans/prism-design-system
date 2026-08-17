@@ -488,6 +488,34 @@
         const q = {}; if (params.id != null && String(params.id).length) q.id = params.id;
         return httpGet('/dex/api/workflow', q);
       },
+      async dashboards(params = {}) {
+        if (useMock()) return { rows: [], total: 0, kpis: null, facets: null };
+        const q = {};
+        ['owner', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/dex/api/dashboards', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+      async dashboard(params = {}) {
+        if (useMock()) return null;
+        const q = {}; if (params.id != null && String(params.id).length) q.id = params.id;
+        return httpGet('/dex/api/dashboard', q);
+      },
+      async reports(params = {}) {
+        if (useMock()) return { rows: [], total: 0, kpis: null, facets: null };
+        const q = {};
+        ['type', 'schedule', 'format', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/dex/api/reports', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+      async report(params = {}) {
+        if (useMock()) return null;
+        const q = {}; if (params.id != null && String(params.id).length) q.id = params.id;
+        return httpGet('/dex/api/report', q);
+      },
+      async ai(params = {}) {
+        if (useMock()) return null;
+        return httpGet('/dex/api/ai', {});
+      },
       /* Insight drill-down (L04). params: { id } or { type:'cpu' }. Composite record. */
       async insight(params = {}) {
         if (useMock()) return null;

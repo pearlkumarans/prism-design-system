@@ -681,6 +681,52 @@ function dexWorkflow(p) {
   return { ...base, steps, runs };
 }
 
+/* ── DEX Batch 6: Dashboards, Reports, AI assistant ── */
+const DASH_NAME = ['Fleet experience', 'Windows performance', 'Executive summary', 'Remote workers', 'Field devices', 'Security posture'];
+const DASH_OWNER = ['admin', 'j.doe', 's.smith', 'admin', 'ops-team'];
+const DEX_DASHBOARDS = Array.from({ length: 16 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, name: pick(DASH_NAME, i) + (i > 6 ? ' ' + i : ''), owner: pick(DASH_OWNER, i), widgets: 3 + (i * 2) % 9, shared: i % 2 === 0, modified: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], i) };
+});
+const dexDashboardsQuery = (p) => applyQuery(DEX_DASHBOARDS, p, {
+  searchFields: ['name', 'owner'],
+  facets: { owner: ['admin', 'j.doe', 's.smith', 'ops-team'] },
+  kpi: (d) => ({ total: d.length, shared: d.filter((r) => r.shared).length, mine: d.filter((r) => r.owner === 'admin').length, widgets: d.reduce((a, r) => a + r.widgets, 0) }),
+});
+const dexDashboardView = () => ({
+  name: 'Fleet experience',
+  kpis: [{ label: 'Avg score', value: '60', state: 'warning', icon: 'activity' }, { label: 'Devices', value: '26', state: 'default', icon: 'computer' }, { label: 'Poor', value: '4', state: 'critical', icon: 'exclamation-circle' }],
+  charts: {
+    band: { categories: ['Good', 'Average', 'Poor'], series: [{ name: 'Devices', values: [8, 11, 4], colors: ['green', 'orange', 'red'] }] },
+    trend: { categories: ['May', 'Jun', 'Jul'], series: [{ name: 'Score', values: [52, 57, 60] }] },
+    platform: { categories: ['Windows', 'macOS', 'Linux'], series: [{ name: 'Avg score', values: [64, 58, 45] }] },
+  },
+});
+const REP_TYPE = ['Experience', 'Compliance', 'Inventory', 'Performance', 'Executive'];
+const REP_FMT = ['PDF', 'CSV', 'PDF', 'XLSX', 'PDF'];
+const REP_SCHED = ['Daily', 'Weekly', 'Monthly', 'On demand', 'Weekly'];
+const REP_NAME = ['Weekly experience summary', 'Low-score devices', 'Sensor coverage', 'Remediation outcomes', 'Executive scorecard', 'Alert trends'];
+const DEX_REPORTS = Array.from({ length: 18 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, name: pick(REP_NAME, i), type: pick(REP_TYPE, i), schedule: pick(REP_SCHED, i), format: pick(REP_FMT, i), lastRun: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], i) };
+});
+const dexReportsQuery = (p) => applyQuery(DEX_REPORTS, p, {
+  searchFields: ['name', 'type'],
+  facets: { type: REP_TYPE, schedule: ['Daily', 'Weekly', 'Monthly', 'On demand'], format: ['PDF', 'CSV', 'XLSX'] },
+  kpi: (d) => ({ total: d.length, scheduled: d.filter((r) => r.schedule !== 'On demand').length, ondemand: d.filter((r) => r.schedule === 'On demand').length, types: new Set(d.map((r) => r.type)).size }),
+});
+const dexReport = () => ({
+  name: 'Weekly experience summary', type: 'Experience', schedule: 'Weekly', format: 'PDF', lastRun: 'Today 06:00 AM',
+  summary: [{ term: 'Type', description: 'Experience' }, { term: 'Schedule', description: 'Weekly (Mon 06:00)' }, { term: 'Format', description: 'PDF' }, { term: 'Recipients', description: 'dex-admins@acme.example' }],
+  chart: { categories: ['Wk1', 'Wk2', 'Wk3', 'Wk4'], series: [{ name: 'Avg score', values: [54, 57, 58, 60] }] },
+  rows: Array.from({ length: 6 }, (_, k) => ({ id: k + 1, metric: pick(['Avg score', 'Poor devices', 'Alerts', 'Remediations', 'New sensors', 'Coverage'], k + 1), value: [60, 4, 22, 18, 3, '92%'][k], change: ['+3', '-2', '+5', '+4', '+1', '+2%'][k] })),
+});
+const dexAi = () => ({
+  suggestions: ['Why did the experience score drop this week?', 'Which devices need attention?', 'What caused the CPU alerts?', 'Summarize remediation outcomes'],
+  answer: { question: 'Which devices need attention?', text: '8 devices scored below 40 this week, mostly in Finance OU. The top driver is disk latency (5 devices) followed by high CPU (2). I recommend deploying the "Disk latency probe" sensor and the "Reset print spooler" script to Finance OU.', confidence: 'High' },
+  insights: [{ icon: 'exclamation-triangle', label: 'Finance OU experience down 12%', val: 'High' }, { icon: 'exclamation-triangle', label: 'Disk latency affects 14 devices', val: 'Medium' }, { icon: 'circle-tick', label: 'Remediation success up 8%', val: 'Good' }],
+});
+
 /* Insight drill-down (L04) — a single experience insight with its trend,
    contributing factors, affected devices, and remediation. ?type=cpu returns the
    CPU-specialised record; else ?id= picks from DEX_INSIGHTS. */
@@ -752,6 +798,11 @@ function handle(url) {
     case '/dex/api/deployment': return dexDeployment(p);
     case '/dex/api/workflows': return dexWorkflowsQuery(p);
     case '/dex/api/workflow': return dexWorkflow(p);
+    case '/dex/api/dashboards': return dexDashboardsQuery(p);
+    case '/dex/api/dashboard': return dexDashboardView(p);
+    case '/dex/api/reports': return dexReportsQuery(p);
+    case '/dex/api/report': return dexReport(p);
+    case '/dex/api/ai': return dexAi(p);
     case '/dex/api/devices': return dexDevicesQuery(p);
     case '/dex/api/device': return dexDevice(p);
     case '/home/api/dashboard': return homeDashboard();

@@ -1,0 +1,51 @@
+{{!-- AI assistant — the DEX Zia assistant (ModuleDashboard frame + custom body). --}}
+<Patterns::ModuleDashboard @header={{this.header}} @loading={{this.isLoading}}>
+  <:body>
+    {{#if this.error}}
+      <div class="md-facet-empty">
+        <Patterns::EmptyState @illustration="state-error" @title="Couldn't reach the assistant"
+          @description="The request failed. Is the BFF running (server/bff.mjs)?"
+          @primaryLabel="Retry" @onPrimary={{this.retry}} />
+      </div>
+    {{else}}
+    <div class="md-grid">
+      {{! Ask panel — prompt + suggested questions }}
+      <ds-widget class="md-sp4" title="Ask Zia" show-drag="false" show-action="false" show-footer="false">
+        <div>
+          <ds-search-field placeholder="Ask about your fleet’s experience…"></ds-search-field>
+          <div style="display:flex; flex-wrap:wrap; gap:var(--spacing-8,8px); margin-top:var(--spacing-12,12px);">
+            {{#each this.suggestions as |q|}}
+              <ds-button variant="outline" size="small" {{on "click" (fn this.ask q)}}>{{q}}</ds-button>
+            {{/each}}
+          </div>
+        </div>
+      </ds-widget>
+
+      {{! Proactive insights }}
+      <ds-widget class="md-sp2" type="list" title="Insights" show-drag="false" show-action="false" show-footer="false">
+        <div>
+          {{#each this.insights as |i|}}
+            <div class="wl-row">
+              <span class="wl-ico"><ds-icon name={{i.icon}} size="16"></ds-icon></span>
+              <span class="wl-label">{{i.label}}</span>
+              <ds-badge variant="subtle" state={{i.state}} size="medium" shape="pill" label={{i.val}}></ds-badge>
+            </div>
+          {{/each}}
+        </div>
+      </ds-widget>
+
+      {{! Latest answer }}
+      {{#if this.answer}}
+        <ds-widget class="md-sp6" title="Answer" show-drag="false" show-action="false" show-footer="false">
+          <div>
+            <div style="display:flex; align-items:center; gap:var(--spacing-8,8px); margin-bottom:var(--spacing-8,8px);"><ds-icon name="sparkles" size="16"></ds-icon><span>{{this.answer.question}}</span>
+              <ds-badge variant="subtle" state={{this.confidenceState}} size="medium" shape="pill" label="Confidence: {{this.answer.confidence}}"></ds-badge>
+            </div>
+            <p class="tl-out" style="white-space: normal;">{{this.answer.text}}</p>
+          </div>
+        </ds-widget>
+      {{/if}}
+    </div>
+    {{/if}}
+  </:body>
+</Patterns::ModuleDashboard>
