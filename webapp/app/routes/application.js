@@ -3,14 +3,14 @@ import { service } from '@ember/service';
 import { DEFAULT_PRODUCT, CONTENT_VIEWS, landingForProduct } from 'prism-webapp/config/catalog';
 
 /**
- * Two jobs Shell.html did inline at boot:
+ * Backward-compat that Shell.html did inline at boot: old links use query params
+ * (?product=pmp&view=<slug>). Translate them to the new nested path ONCE, with
+ * replaceWith so the legacy URL doesn't linger in history (mirrors Shell's boot
+ * `history: 'replace'`).
  *
- *  1. Backward-compat: old links use query params (?product=pmp&view=<slug>).
- *     Translate them to the new nested path ONCE, with replaceWith so the legacy
- *     URL doesn't linger in history (mirrors Shell's boot `history: 'replace'`).
- *
- *  2. Bare "/" → land on the default product's landing view (Shell's
- *     `applyNavMode` + `selectTab('home')` / product primary-tab boot logic).
+ * Bare "/" → default landing is NOT handled here — it lives in the index route
+ * (routes/index.js), so it also fires on client-side transitions to "/" (e.g.
+ * the login page's post-sign-in redirect), which never re-enter this parent.
  */
 export default class ApplicationRoute extends Route {
   @service router;
@@ -33,11 +33,7 @@ export default class ApplicationRoute extends Route {
       return this.router.replaceWith('product.module.view', legacyProduct, tab, view);
     }
 
-    // 2. Bare "/" → default product landing.
-    if (transition.to?.name === 'application' || transition.to?.name === 'index') {
-      const { tab, view } = landingForProduct(DEFAULT_PRODUCT);
-      return this.router.replaceWith('product.module.view', DEFAULT_PRODUCT, tab, view);
-    }
+    // Bare "/" (no legacy params) → default landing is handled by the index route.
     return undefined;
   }
 }

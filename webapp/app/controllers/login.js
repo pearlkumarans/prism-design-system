@@ -26,6 +26,14 @@ export default class LoginController extends Controller {
       return false;
     }
   }
+  // The demo account the (non-live) sign-in accepts — surfaced in the hint so it
+  // stays in sync if CONFIG.auth.demoUser/demoPass are re-keyed.
+  get demoUser() {
+    try { return window.PrismAPI.config.auth.demoUser || 'admin'; } catch (_) { return 'admin'; }
+  }
+  get demoPass() {
+    try { return window.PrismAPI.config.auth.demoPass || 'admin'; } catch (_) { return 'admin'; }
+  }
   get brandName() {
     try { return window.PrismAPI.branding.name(); } catch (_) { return 'Endpoint Central'; }
   }
