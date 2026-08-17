@@ -1,0 +1,82 @@
+{{!-- Inventory · Overview — thin Patterns::ModuleDashboard instance (L02).
+    A 6-col bento summarising hardware + software inventory. Charts bind via
+    config-chart; list/table content is native. --}}
+<Patterns::ModuleDashboard @header={{this.header}} @refitKey={{this.refitKey}} @loading={{this.isLoading}}>
+  <:body>
+    {{#if this.error}}
+      <div class="md-facet-empty">
+        <Patterns::EmptyState
+          @illustration="state-error"
+          @title="Couldn't load inventory"
+          @description="The request failed. Is the BFF running (server/bff.mjs)?"
+          @primaryLabel="Retry"
+          @onPrimary={{this.retry}}
+        />
+      </div>
+    {{else}}
+    <div class="md-grid">
+      {{! Row 1: KPI tiles + Computers by OS | Hardware by Manufacturer }}
+      <div class="md-col md-sp3">
+        <div class="md-kpis">
+          {{#each this.kpis as |k|}}
+            <ds-kpi-card label={{k.label}} value={{k.value}} state={{k.state}} icon={{k.icon}}></ds-kpi-card>
+          {{/each}}
+        </div>
+        <ds-widget type="chart" title="Computers by Operating System" show-drag="false" show-action="false" show-footer="false"
+          {{config-chart type="donut" monotone="blue" legend="right" fit="contain" data=this.osChart}}></ds-widget>
+      </div>
+
+      <ds-widget class="md-sp3" type="chart" title="Hardware by Manufacturer" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="column" fit="fill" data=this.mfrChart}}></ds-widget>
+
+      {{! Row 2: Software by Category | License Compliance | Software Summary }}
+      <ds-widget class="md-sp2" type="chart" title="Software by Category" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="donut" legend="bottom" fit="contain" data=this.swcatChart}}></ds-widget>
+
+      <ds-widget class="md-sp2" type="chart" title="License Compliance" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="donut" legend="bottom" fit="contain" data=this.licenseChart}}></ds-widget>
+
+      <ds-widget class="md-sp2" type="list" title="Software Summary" show-drag="false" show-action="false" show-footer="false">
+        <div>
+          {{#each this.softwareRows as |r|}}
+            <div class="wl-row">
+              <span class="wl-ico" style="background: {{r.bg}}; color: {{r.color}}"><ds-icon name={{r.icon}} size="16"></ds-icon></span>
+              <span class="wl-label">{{r.label}}</span>
+              <span class="wl-val">{{r.val}}</span>
+            </div>
+          {{/each}}
+        </div>
+      </ds-widget>
+
+      {{! Row 3: Scan Status | Device Type | Memory (RAM) Distribution }}
+      <ds-widget class="md-sp2" type="chart" title="Inventory Scan Status" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="donut" legend="bottom" fit="contain" data=this.scanChart}}></ds-widget>
+
+      <ds-widget class="md-sp2" type="chart" title="Device Type" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="pie" legend="bottom" fit="contain" data=this.devtypeChart}}></ds-widget>
+
+      <ds-widget class="md-sp2" type="chart" title="Memory (RAM) Distribution" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="column" fit="fill" data=this.memoryChart}}></ds-widget>
+
+      {{! Row 4: Hardware inventory table | Warranty expiring }}
+      <ds-widget class="md-sp4" type="table" title="Hardware inventory" show-drag="false" show-action="false" show-footer="false">
+        <ds-data-table selection-mode="none" row-height="comfortable" show-toolbar="false" show-footer="false" sticky-header rows-per-page="8" page="1"
+          {{set-prop "columns" this.hardwareColumns}} {{set-prop "rows" this.hardwareRows}}></ds-data-table>
+      </ds-widget>
+
+      <ds-widget class="md-sp2" type="list" title="Warranty expiring soon" show-drag="false" show-action="false"
+        footer-label="View all assets" footer-href="#">
+        <div>
+          {{#each this.warrantyRows as |r|}}
+            <div class="wl-row">
+              <span class="wl-ico"><ds-icon name={{r.icon}} size="16"></ds-icon></span>
+              <span class="wl-label wl-label--link">{{r.label}}</span>
+              <ds-badge variant="subtle" state={{r.state}} size="medium" shape="pill" label={{r.badge}}></ds-badge>
+            </div>
+          {{/each}}
+        </div>
+      </ds-widget>
+    </div>
+    {{/if}}
+  </:body>
+</Patterns::ModuleDashboard>

@@ -20,7 +20,7 @@ export const PRODUCTS = {
   bsp: { variant: 'browser-security-plus',    name: 'Browser Security Plus',      tabs: ['home','browsers','inv','reports','support'] },
   acp: { variant: 'application-control-plus', name: 'Application Control Plus',   tabs: ['home','app-ctrl','inv','reports','support'] },
   dcp: { variant: 'device-control-plus',      name: 'Device Control Plus',        tabs: ['home','dev-ctrl','inv','reports','support'] },
-  dxm: { variant: 'dex-manager-plus',         name: 'DEX Manager Plus',           tabs: ['home','dex','inv','reports','support'] },
+  dxm: { variant: 'dex-manager-plus',         name: 'DEX Manager Plus',           tabs: ['home','dex','inv','reports','support'], tabDefaults: { home: 'dex-home' } },
   dlp: { variant: 'endpoint-dlp-plus',        name: 'Endpoint DLP Plus',          tabs: ['home','dlp','inv','reports','support'] },
   mpp: { variant: 'malware-protection-plus',  name: 'Malware Protection Plus',    tabs: ['home','malware','inv','reports','support'] },
   osd: { variant: 'os-deployer',              name: 'OS Deployer',                tabs: ['home','osd','inv','reports','support'] },
@@ -34,6 +34,18 @@ export const PRODUCTS = {
   pam360:   { variant: 'pam360',           name: 'PAM360',           tabs: ['home','reports','support'] },
   sdp:      { variant: 'servicedesk-plus', name: 'ServiceDesk Plus', tabs: ['home','reports','support'] },
   site24x7: { variant: 'site24x7',         name: 'Site24x7',         tabs: ['home','reports','support'] },
+};
+
+/* Tab id → module-rail icon (left-nav). Presentation metadata for the tabs listed
+   in PRODUCTS. The Ember app reads this via catalog-data.js (one map, no drift);
+   Layout/Shell.html keeps its own inline copy for now, to consolidate onto this later. */
+export const TAB_ICONS = {
+  home: 'home', configs: 'settings-custom', tp: 'patch', sd: 'software',
+  inv: 'product', deployments: 'settings-deploy', osd: 'disk', mdm: 'mobile-devices', tools: 'computer-online',
+  agent: 'computer', browsers: 'globe', 'app-ctrl': 'property-slider',
+  malware: 'shield', dlp: 'computer-security', bitlocker: 'encryption-lock',
+  'dev-ctrl': 'device-control', reports: 'bar-vertical-chart',
+  support: 'help-circle', dex: 'speedometer',
 };
 
 /* slug → { file, tab, nav? }. `file` WITH a slash is relative to Layout/; a bare
@@ -80,6 +92,44 @@ export const CONTENT_VIEWS = {
   'deployments-create':                           { file: '../projects/deployments/layout-deployment-create',                tab: 'deployments', nav: 'deployments-list' },
   'deployments-detail':                           { file: '../projects/deployments/layout-deployment-detail',                tab: 'deployments', nav: 'deployments-list' },
   'deployments-device-execution':                 { file: '../projects/deployments/layout-deployment-device',                tab: 'deployments', nav: 'deployments-list' },
+  /* DEX — Digital Experience (DEX Manager Plus). */
+  'dex-home':                                     { file: '../projects/dex/layout-home',                                     tab: 'home' },
+  'dex-overview':                                 { file: '../projects/dex/layout-overview',                                 tab: 'dex' },
+  'dex-devices':                                  { file: '../projects/dex/layout-devices',                                  tab: 'dex' },
+  'dex-device-detail':                            { file: '../projects/dex/layout-device-detail',                            tab: 'dex', nav: 'dex-devices' },
+  'experience-insights':                          { file: '../projects/dex/layout-experience-insights',                      tab: 'dex' },
+  'remote-actions':                               { file: '../projects/dex/layout-remote-actions',                           tab: 'dex' },
+  'insight-detail':                               { file: '../projects/dex/layout-insight-detail',                           tab: 'dex', nav: 'experience-insights' },
+  'insight-cpu':                                  { file: '../projects/dex/layout-insight-cpu',                              tab: 'dex', nav: 'experience-insights' },
+  'live-telemetry':                               { file: '../projects/dex/layout-live-telemetry',                           tab: 'dex', nav: 'dex-devices' },
+  'alerts':                                       { file: '../projects/dex/layout-alerts',                                   tab: 'dex' },
+  'alert-detail':                                 { file: '../projects/dex/layout-alert-detail',                             tab: 'dex', nav: 'alerts' },
+  'alert-profile-detail':                         { file: '../projects/dex/layout-alert-profile-detail',                     tab: 'dex', nav: 'alerts' },
+  'create-alert-profile':                         { file: '../projects/dex/layout-create-alert-profile',                     tab: 'dex', nav: 'alerts' },
+  'sensors':                                      { file: '../projects/dex/layout-sensors',                                  tab: 'dex' },
+  'sensor-detail':                                { file: '../projects/dex/layout-sensor-detail',                            tab: 'dex', nav: 'sensors' },
+  'sensor-deployment':                            { file: '../projects/dex/layout-sensor-deployment',                        tab: 'dex', nav: 'sensors' },
+  'sensor-run':                                   { file: '../projects/dex/layout-sensor-run',                               tab: 'dex', nav: 'sensors' },
+  'add-sensor':                                   { file: '../projects/dex/layout-add-sensor',                               tab: 'dex', nav: 'sensors' },
+  'extensions':                                   { file: '../projects/dex/layout-extensions',                               tab: 'dex' },
+  'extension-detail':                             { file: '../projects/dex/layout-extension-detail',                         tab: 'dex', nav: 'extensions' },
+  'content-detail':                               { file: '../projects/dex/layout-content-detail',                           tab: 'dex', nav: 'extensions' },
+  'script-detail':                                { file: '../projects/dex/layout-script-detail',                            tab: 'dex', nav: 'sensors' },
+  'add-script':                                   { file: '../projects/dex/layout-add-script',                               tab: 'dex', nav: 'sensors' },
+  'dex-deployments':                              { file: '../projects/dex/layout-deployments',                              tab: 'dex' },
+  'dex-deployment-detail':                        { file: '../projects/dex/layout-deployment-detail',                        tab: 'dex', nav: 'dex-deployments' },
+  'dex-create-deployment':                        { file: '../projects/dex/layout-create-deployment',                        tab: 'dex', nav: 'dex-deployments' },
+  'workflows':                                    { file: '../projects/dex/layout-workflows',                                tab: 'dex' },
+  'workflow-detail':                              { file: '../projects/dex/layout-workflow-detail',                          tab: 'dex', nav: 'workflows' },
+  'workflow-builder':                             { file: '../projects/dex/layout-workflow-builder',                         tab: 'dex', nav: 'workflows' },
+  'dashboards':                                   { file: '../projects/dex/layout-dashboards',                               tab: 'dex' },
+  'dashboard-view':                               { file: '../projects/dex/layout-dashboard-view',                           tab: 'dex', nav: 'dashboards' },
+  'dashboard-builder':                            { file: '../projects/dex/layout-dashboard-builder',                        tab: 'dex', nav: 'dashboards' },
+  'reports':                                      { file: '../projects/dex/layout-reports',                                  tab: 'dex' },
+  'report-detail':                                { file: '../projects/dex/layout-report-detail',                            tab: 'dex', nav: 'reports' },
+  'ai-assistant':                                 { file: '../projects/dex/layout-ai-assistant',                             tab: 'dex' },
+  'ai-settings':                                  { file: '../projects/dex/layout-ai-settings',                              tab: 'dex', nav: 'ai-assistant' },
+  'settings':                                     { file: '../projects/dex/layout-settings',                                 tab: 'dex' },
   'deployments-reports':                          { file: '../projects/deployments/layout-reports',                          tab: 'deployments' },
   'deployments-policy-install-uninstall-software':{ file: '../projects/deployments/layout-policy-install-uninstall-software',tab: 'deployments', nav: 'deployments-policy' },
   'deployments-policy-file-folder-operation':     { file: '../projects/deployments/layout-policy-file-folder-operation',     tab: 'deployments', nav: 'deployments-policy' },
@@ -95,4 +145,5 @@ export const TAB_DEFAULT_VIEW = {
   inv: 'acme-inventory-overview',   /* Inventory tab lands on the acme inventory overview dashboard */
   deployments: 'deployments-summary',   /* Deployments tab lands on the module Summary */
   bitlocker: 'bitlocker-dashboard',   /* BitLocker Management tab lands on the Summary Dashboard (Overview > Dashboard) */
+  dex: 'dex-overview',   /* DEX tab lands on the Digital Experience overview dashboard */
 };

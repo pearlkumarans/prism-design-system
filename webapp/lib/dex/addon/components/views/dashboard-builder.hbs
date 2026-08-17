@@ -1,0 +1,28 @@
+{{! Dashboard builder — a thin Patterns::SectionedForm instance (L07). }}
+<Patterns::SectionedForm
+  @header={{this.header}}
+  @breadcrumbs={{this.breadcrumbs}}
+  @primaryLabel="Save dashboard"
+  @saveAsItems={{this.saveAsItems}}
+  @onPrimary={{this.save}}
+  @onCancel={{this.cancel}}
+  @onSaveAs={{this.onSaveAs}}
+>
+  <:body as |Form|>
+    <Form.Section @title="Dashboard details" @description="Name and layout.">
+      <ds-text-input class="sform__field" size="medium" label="Dashboard name" label-position="left" required maxlength="100" placeholder="e.g. Fleet experience"></ds-text-input>
+      <ds-input-select class="sform__field" size="medium" label="Layout" label-position="left" {{set-prop "options" this.layoutOptions}}></ds-input-select>
+      <ds-input-select class="sform__field" size="medium" label="Sharing" label-position="left" {{set-prop "options" this.sharingOptions}}></ds-input-select>
+    </Form.Section>
+
+    <Form.Section @title="Add widgets" @description="Choose what appears on this dashboard.">
+      <ds-checkbox-group class="sform__field" label="Widgets" label-position="left" value="score,trend">
+        <ds-checkbox value="score" label="Experience score distribution"></ds-checkbox>
+        <ds-checkbox value="trend" label="Score trend"></ds-checkbox>
+        <ds-checkbox value="platform" label="Average score by platform"></ds-checkbox>
+        <ds-checkbox value="office" label="Devices by office"></ds-checkbox>
+        <ds-checkbox value="lowest" label="Lowest-scoring devices"></ds-checkbox>
+      </ds-checkbox-group>
+    </Form.Section>
+  </:body>
+</Patterns::SectionedForm>

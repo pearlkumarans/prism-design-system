@@ -38,11 +38,19 @@ export default class I18nService extends Service {
     const rtl = lang === 'ar';
     document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr');
     document.documentElement.setAttribute('lang', lang);
-    this._listeners.forEach((cb) => {
-      try { cb(lang); } catch (_) { /* a bad listener shouldn't break the flip */ }
-    });
-    // Injected drawers listen for this to re-render in the new language.
-    document.dispatchEvent(new CustomEvent('shell:langchange', { detail: { lang } }));
+    const notify = () => {
+      this._listeners.forEach((cb) => {
+        try { cb(lang); } catch (_) { /* a bad listener shouldn't break the flip */ }
+      });
+      // Injected drawers listen for this to re-render in the new language.
+      document.dispatchEvent(new CustomEvent('shell:langchange', { detail: { lang } }));
+    };
+    notify();
+    // Load the central per-locale catalog (Layout/i18n/locales/<lang>.json) and
+    // re-notify once its strings are registered, so views re-render with them.
+    if (typeof window !== 'undefined' && window.UEMSi18n) {
+      window.UEMSi18n.ensure(lang, (m) => this.addMessages(m)).then(notify).catch(() => {});
+    }
   }
 
   applyDir(lang) {

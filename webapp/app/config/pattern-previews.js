@@ -5,6 +5,7 @@
  */
 export const PATTERN_PREVIEWS = [
   { id: 'empty-state', label: 'Empty state', spec: 'L13', component: 'views/deployments-summary', desc: 'Full-page centered Prism empty state (illustration · title · description · primary action).' },
+  { id: 'empty-state-promo', label: 'Empty state — promo', spec: 'L13', component: 'views/empty-state-promo', desc: 'Promo empty state — media + title/description + primary action + footer, beside a benefits list.' },
   { id: 'list-view', label: 'List view', spec: 'L03', component: 'views/deployments-list', desc: 'Server-driven table — filter · search · sort · paginate, KPI row, bulk actions.' },
   { id: 'module-dashboard', label: 'Module dashboard', spec: 'L02', component: 'views/bitlocker-dashboard', desc: 'KPI row over a bento grid of chart / list / table widgets.' },
   { id: 'list-detail', label: 'List detail', spec: 'L04', component: 'views/inventory-computer-summary', desc: 'Record detail — full header (breadcrumbs · summary · facet tabs) + read-only widget bento.' },

@@ -1,6 +1,6 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
-import { CONTENT_VIEWS, TAB_DEFAULT_VIEW } from 'prism-webapp/config/catalog';
+import { CONTENT_VIEWS, defaultViewFor, TAB_ICONS } from 'prism-webapp/config/catalog';
 import { RailPopover } from 'prism-webapp/lib/rail-popover';
 
 // Framework-agnostic shell helpers, loaded from the repo through the dev proxy.
@@ -13,12 +13,6 @@ let _responsive;
 // Vendored into public/vendor/ds by scripts/vendor-assets.mjs — same origin, no proxy.
 const loadEcMenus = () => (_ecMenus ||= _nativeImport(`${ORIGIN}/vendor/ds/data/ec-menus.js`));
 const loadResponsive = () => (_responsive ||= _nativeImport(`${ORIGIN}/vendor/ds/shell/shell-responsive.js`));
-
-// Minimal tab → module-rail icon map (left-nav mode).
-const TAB_ICON = {
-  home: 'home', tp: 'bug', sd: 'settings-deploy', inv: 'computer',
-  bitlocker: 'encryption-lock', mdm: 'mobile', reports: 'file-report', support: 'help-circle',
-};
 
 /**
  * ShellChrome — the full shell frame:
@@ -75,7 +69,7 @@ export default class ShellChrome extends Component {
       // the already-active tab then resolves to the same route+params — a no-op
       // that leaves content intact — instead of dropping onto the empty module
       // index (whose redirect Ember skips when the params are unchanged).
-      const view = TAB_DEFAULT_VIEW[id];
+      const view = defaultViewFor(this.shell.productId, id);
       if (view && CONTENT_VIEWS[view]) {
         this.router.transitionTo('product.module.view', this.shell.productId, id, view);
       } else {
@@ -155,6 +149,14 @@ export default class ShellChrome extends Component {
       console.warn('[chrome] responsive init skipped:', err); // eslint-disable-line no-console
     }
 
+    // Re-render nav labels when the language flips. The chrome modifier only tracks
+    // route/nav state, not i18n.lang, so subscribe directly; the i18n service
+    // re-dispatches this once the central catalog for the new language has loaded.
+    // Resetting the sigs forces header.tabs / rail.items to be re-fed with the
+    // freshly-translated labels.
+    this._onLangChange = () => { this._tabsSig = null; this._railSig = null; this.syncChrome(); };
+    document.addEventListener('shell:langchange', this._onLangChange);
+
     this.syncChrome();
   }
 
@@ -168,7 +170,15 @@ export default class ShellChrome extends Component {
     // on every switch. On a same-product tab/view switch the set is unchanged, so
     // we skip the re-feed and let setActiveTab (cheap, class-only) do the highlight
     // — mirroring the vanilla shell, which sets tabs only on product/lang change.
-    const tabs = this.shell.tabs.map((t) => ({ id: t.id, label: t.label }));
+    // Nav labels resolve from the central i18n catalog (nav.tab.<id>) for the
+    // active language, falling back to the English label when a key isn't
+    // loaded/translated yet — same contract as the vanilla shell's productTabs().
+    const label = (t) => {
+      const k = `nav.tab.${t.id}`;
+      const v = this.i18n.t(k);
+      return v && v !== k ? v : t.label;
+    };
+    const tabs = this.shell.tabs.map((t) => ({ id: t.id, label: label(t) }));
     const sig = `${this.i18n.lang}:${tabs.map((t) => t.id).join('|')}`;
     if (sig !== this._tabsSig) {
       header.tabs = tabs;
@@ -189,7 +199,7 @@ export default class ShellChrome extends Component {
       if (left) {
         // Same guard as the header — re-feeding rail.items re-renders the rail.
         if (sig !== this._railSig) {
-          rail.items = this.shell.tabs.map((t) => ({ id: t.id, label: t.label, icon: TAB_ICON[t.id] }));
+          rail.items = this.shell.tabs.map((t) => ({ id: t.id, label: label(t), icon: TAB_ICONS[t.id] }));
           this._railSig = sig;
         }
         if (this.nav.railIcons) rail.setAttribute('icons-only', ''); else rail.removeAttribute('icons-only');

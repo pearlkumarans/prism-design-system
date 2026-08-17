@@ -1,6 +1,6 @@
 import Route from '@ember/routing/route';
 import { service } from '@ember/service';
-import { TAB_DEFAULT_VIEW, CONTENT_VIEWS, FULL_PAGE_TABS } from 'prism-webapp/config/catalog';
+import { defaultViewFor, CONTENT_VIEWS, FULL_PAGE_TABS } from 'prism-webapp/config/catalog';
 
 /**
  * product.module.index — landing on a bare module (e.g. /ec/home) redirects to
@@ -20,7 +20,7 @@ export default class ProductModuleIndexRoute extends Route {
     const tabId = this.paramsFor('product.module').tab_id.toLowerCase();
     if (FULL_PAGE_TABS.has(tabId)) return; // full-page module (e.g. Support) renders itself
     const productId = this.paramsFor('product').product_id.toLowerCase();
-    const defaultView = TAB_DEFAULT_VIEW[tabId];
+    const defaultView = defaultViewFor(productId, tabId);
     if (defaultView && CONTENT_VIEWS[defaultView]) {
       this.router.replaceWith('product.module.view', productId, tabId, defaultView);
     }

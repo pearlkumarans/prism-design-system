@@ -1,0 +1,30 @@
+{{!-- Dashboard view — a saved DEX dashboard (L02 ModuleDashboard). --}}
+<Patterns::ModuleDashboard @header={{this.header}} @refitKey={{this.refitKey}} @loading={{this.isLoading}}>
+  <:body>
+    {{#if this.error}}
+      <div class="md-facet-empty">
+        <Patterns::EmptyState @illustration="state-error" @title="Couldn't load dashboard"
+          @description="The request failed. Is the BFF running (server/bff.mjs)?"
+          @primaryLabel="Retry" @onPrimary={{this.retry}} />
+      </div>
+    {{else}}
+    <div class="md-grid">
+      <div class="md-col md-sp3">
+        <div class="md-kpis">
+          {{#each this.kpis as |k|}}
+            <ds-kpi-card label={{k.label}} value={{k.value}} state={{k.state}} icon={{k.icon}}></ds-kpi-card>
+          {{/each}}
+        </div>
+        <ds-widget type="chart" title="Experience score distribution" show-drag="false" show-action="false" show-footer="false"
+          {{config-chart type="donut" legend="right" fit="contain" data=this.bandChart}}></ds-widget>
+      </div>
+
+      <ds-widget class="md-sp3" type="chart" title="Score trend" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="line" area=true fit="fill" data=this.trendChart}}></ds-widget>
+
+      <ds-widget class="md-sp6" type="chart" title="Average score by platform" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="column" fit="fill" data=this.platformChart}}></ds-widget>
+    </div>
+    {{/if}}
+  </:body>
+</Patterns::ModuleDashboard>

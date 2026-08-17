@@ -1,0 +1,50 @@
+{{!-- DEX · Home — the DEX product Home landing (L02 ModuleDashboard). Experience
+    score (gauge), trend, score-range distribution, and high-priority insights. --}}
+<Patterns::ModuleDashboard @header={{this.header}} @refitKey={{this.refitKey}} @loading={{this.isLoading}}>
+  <:body>
+    {{#if this.error}}
+      <div class="md-facet-empty">
+        <Patterns::EmptyState
+          @illustration="state-error"
+          @title="Couldn't load DEX home"
+          @description="The request failed. Is the BFF running (server/bff.mjs)?"
+          @primaryLabel="Retry"
+          @onPrimary={{this.retry}}
+        />
+      </div>
+    {{else}}
+    <div class="md-grid">
+      {{! Row 1: KPIs + experience-score gauge | score trend }}
+      <div class="md-col md-sp3">
+        <div class="md-kpis">
+          {{#each this.kpis as |k|}}
+            <ds-kpi-card label={{k.label}} value={{k.value}} state={{k.state}} icon={{k.icon}}></ds-kpi-card>
+          {{/each}}
+        </div>
+        <ds-widget type="chart" title="Device experience score" show-drag="false" show-action="false" show-footer="false"
+          {{config-chart type="gauge" fit="contain" data=this.gaugeChart}}></ds-widget>
+      </div>
+
+      <ds-widget class="md-sp3" type="chart" title="Experience score trend" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="line" area=true fit="fill" data=this.trendChart}}></ds-widget>
+
+      {{! Row 2: score-range distribution | high priority insights }}
+      <ds-widget class="md-sp3" type="chart" title="Device experience score range" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="donut" legend="right" fit="contain" data=this.rangeChart}}></ds-widget>
+
+      <ds-widget class="md-sp3" type="list" title="High priority insights" show-drag="false" show-action="false"
+        footer-label="View devices" footer-href="#">
+        <div>
+          {{#each this.insightRows as |r|}}
+            <div class="wl-row">
+              <span class="wl-ico" style="background: var(--uems-bg-warning-primary); color: var(--uems-icon-warning)"><ds-icon name="exclamation-triangle" size="16"></ds-icon></span>
+              <span class="wl-label wl-label--link">{{r.title}}</span>
+              <ds-badge variant="subtle" state={{r.state}} size="medium" shape="pill" label={{r.severity}}></ds-badge>
+            </div>
+          {{/each}}
+        </div>
+      </ds-widget>
+    </div>
+    {{/if}}
+  </:body>
+</Patterns::ModuleDashboard>

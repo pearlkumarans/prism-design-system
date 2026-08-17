@@ -944,13 +944,28 @@ function setHidden(el, hide) {
 /* Localize a menu label/item to Arabic when requested — uses the `labelAr`
    field if present, else falls back to the English `label`. Backward-compatible:
    modules without `labelAr` stay English. Clones (never mutates the shared cfg). */
+/* Resolve one nav item's label for the active language: the central label catalog
+   (window.UEMSNavLabels[lang] = English → string, sourced from EC via
+   build-nav-labels.mjs), then the legacy inline labelAr for Arabic, then English. */
+function _locLabel(item, lang) {
+  const en = item.label;
+  const map = (typeof window !== 'undefined' && window.UEMSNavLabels && window.UEMSNavLabels[lang]) || null;
+  if (map && map[en] != null) return map[en];
+  if (lang === 'ar' && item.labelAr) return item.labelAr;
+  return en;
+}
 function _locItems(items, lang) {
-  if (lang !== 'ar' || !Array.isArray(items)) return items;
-  return items.map((it) => ({ ...it, label: it.labelAr || it.label }));
+  if (lang === 'en' || !Array.isArray(items)) return items;
+  return items.map((it) => ({
+    ...it,
+    label: _locLabel(it, lang),
+    items: it.items ? _locItems(it.items, lang) : it.items,
+    l2Groups: it.l2Groups ? _locGroups(it.l2Groups, lang) : it.l2Groups,
+  }));
 }
 function _locGroups(groups, lang) {
-  if (lang !== 'ar' || !Array.isArray(groups)) return groups;
-  return groups.map((g) => ({ ...g, label: g.labelAr || g.label, items: _locItems(g.items, lang) }));
+  if (lang === 'en' || !Array.isArray(groups)) return groups;
+  return groups.map((g) => ({ ...g, label: _locLabel(g, lang), items: _locItems(g.items, lang) }));
 }
 
 export function applyL2For(shellL1, shellL2, tabId, lang) {

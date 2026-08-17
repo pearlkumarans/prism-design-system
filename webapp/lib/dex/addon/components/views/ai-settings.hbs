@@ -1,0 +1,28 @@
+{{! AI settings — a thin Patterns::SectionedForm instance (L06). }}
+<Patterns::SectionedForm
+  @header={{this.header}}
+  @breadcrumbs={{this.breadcrumbs}}
+  @primaryLabel="Save settings"
+  @onPrimary={{this.save}}
+  @onCancel={{this.cancel}}
+>
+  <:body as |Form|>
+    <Form.Section @title="AI provider" @description="Which engine powers the assistant.">
+      <ds-input-select class="sform__field" size="medium" label="Provider" label-position="left" {{set-prop "options" this.providerOptions}}></ds-input-select>
+      <ds-input-select class="sform__field" size="medium" label="Model profile" label-position="left" {{set-prop "options" this.modelOptions}}></ds-input-select>
+    </Form.Section>
+
+    <Form.Section @title="AI features" @description="Enable only what you need.">
+      <ds-checkbox-group class="sform__field" label="Features" label-position="left" value="insights,summaries">
+        <ds-checkbox value="insights" label="Proactive insights"></ds-checkbox>
+        <ds-checkbox value="summaries" label="Answer summaries"></ds-checkbox>
+        <ds-checkbox value="remediation" label="Suggest remediations"></ds-checkbox>
+        <ds-checkbox value="autorun" label="Auto-run approved remediations"></ds-checkbox>
+      </ds-checkbox-group>
+    </Form.Section>
+
+    <Form.Section @title="Prompt templates" @description="Default prompts offered to users.">
+      <ds-text-area class="sform__field" size="medium" label="Templates" label-position="left" placeholder="One prompt per line"></ds-text-area>
+    </Form.Section>
+  </:body>
+</Patterns::SectionedForm>

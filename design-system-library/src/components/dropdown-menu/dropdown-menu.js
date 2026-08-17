@@ -106,6 +106,7 @@ export class DsDropdownMenu extends HTMLElement {
   disconnectedCallback() {
     document.removeEventListener('keydown', this._onKeydown);
     this._unbindReanchor();
+    this._unbindOutsideClose();
     this._destroySubmenus();
   }
 
@@ -138,6 +139,7 @@ export class DsDropdownMenu extends HTMLElement {
     this.removeAttribute('open');
     this._closeActiveSubmenu();
     this._unbindReanchor();
+    this._unbindOutsideClose();
     this.dispatchEvent(new CustomEvent('ds-dropdown-close', { bubbles: true }));
   }
   toggle() { this.hasAttribute('open') ? this.close() : this.open(); }
@@ -186,16 +188,25 @@ export class DsDropdownMenu extends HTMLElement {
       flipped = true;
     }
     top = Math.max(margin, top);
-    /* Horizontal placement:
-       - 'before' : panel sits entirely to the LEFT of the trigger, so a
-                    right-edge action (⋯) column stays visible on every row.
-       - 'left'   : panel's left edge aligns with the trigger's left edge.
-       - default  : panel's right edge aligns with the trigger's right edge. */
+    /* Horizontal placement — each alignment auto-FLIPS to its opposite side when
+       it would overflow the viewport and the other side has room, so a menu near
+       an edge is never clamped into a half-off, misaligned position:
+       - 'before' : LEFT of the trigger; flips to AFTER (right) when there's no room left.
+       - 'left'   : left edges aligned; flips to right-aligned when it overflows the right.
+       - default  : right edges aligned; flips to left-aligned when it overflows the left. */
+    const rEdge = vw - margin;
     let left;
-    if (opts.align === 'before')    left = rect.left - gap - menuW;
-    else if (opts.align === 'left') left = rect.left;
-    else                            left = rect.right - menuW;
-    left = Math.max(margin, Math.min(left, vw - menuW - margin));
+    if (opts.align === 'before') {
+      left = rect.left - gap - menuW;
+      if (left < margin && rect.right + gap + menuW <= rEdge) left = rect.right + gap;
+    } else if (opts.align === 'left') {
+      left = rect.left;
+      if (left + menuW > rEdge && rect.right - menuW >= margin) left = rect.right - menuW;
+    } else {
+      left = rect.right - menuW;
+      if (left < margin && rect.left + menuW <= rEdge) left = rect.left;
+    }
+    left = Math.max(margin, Math.min(left, rEdge - menuW));
     this.style.top = top + 'px';
     this.style.left = left + 'px';
     /* Grow the open animation from the edge nearest the trigger. */
@@ -205,7 +216,41 @@ export class DsDropdownMenu extends HTMLElement {
   /* Convenience — open then position against a trigger in one call. Opening
      first guarantees the panel is laid out for an accurate measurement; the
      style writes are batched in the same task, so there's no flash. */
-  openFrom(anchor, opts = {}) { this.open(); this.positionFrom(anchor, opts); }
+  openFrom(anchor, opts = {}) {
+    this.open();
+    this.positionFrom(anchor, opts);
+    /* An anchored menu is a popover, so dismiss it on an outside click by default
+       — the opener no longer has to wire that itself (a common miss that leaves the
+       menu stuck open). Opt out with `closeOnOutside:false` to manage dismissal
+       yourself. Clicks on the trigger, this menu, or any (body-portaled) submenu
+       panel are excluded. */
+    if (opts.closeOnOutside !== false) this._bindOutsideClose(anchor);
+  }
+
+  _bindOutsideClose(anchor) {
+    this._unbindOutsideClose();
+    this._outsideAnchor = anchor instanceof Element ? anchor : null;
+    this._onOutsidePointer = (e) => {
+      const t = e.target;
+      /* Any dropdown panel (this one or a portaled submenu) → keep open. */
+      if (t && t.closest && t.closest('.ds-dropdown-menu')) return;
+      if (this.contains(t)) return;
+      if (this._outsideAnchor && this._outsideAnchor.contains && this._outsideAnchor.contains(t)) return;
+      this.close();
+    };
+    /* Defer one frame so the same interaction that opened the menu can't
+       immediately dismiss it. */
+    this._outsideRaf = requestAnimationFrame(() => {
+      this._outsideRaf = 0;
+      document.addEventListener('pointerdown', this._onOutsidePointer, true);
+    });
+  }
+
+  _unbindOutsideClose() {
+    if (this._outsideRaf) { cancelAnimationFrame(this._outsideRaf); this._outsideRaf = 0; }
+    if (this._onOutsidePointer) { document.removeEventListener('pointerdown', this._onOutsidePointer, true); this._onOutsidePointer = null; }
+    this._outsideAnchor = null;
+  }
 
   /* Keep the panel glued to its trigger while open: reposition on any scroll
      (capture phase catches inner scroll containers, not just the window) and on

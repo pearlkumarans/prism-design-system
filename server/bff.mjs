@@ -232,6 +232,540 @@ const highlyVulnerableQuery = (p) => applyQuery(HVS, p, {
   }),
 });
 
+/* ── Resource 8b: Missing Patches (Threats & Patches) — patches missing across the
+   fleet, a server-driven table. Same applyQuery contract as HVS. ── */
+const MP_VENDOR = ['Microsoft', 'Adobe', 'Google', 'Mozilla', 'Oracle', '7-Zip'];
+const MP_SEV = ['Critical', 'Critical', 'Important', 'Important', 'Moderate', 'Low'];
+const MP_CAT = ['Security update', 'Rollup', 'Feature pack', 'Driver', 'Third-party app', 'Security update'];
+const MP_PLAT = ['Windows', 'Windows', 'Windows', 'macOS', 'Linux', 'Windows'];
+const MP_APPROVAL = ['Approved', 'Not approved', 'Not approved', 'Declined', 'Approved', 'Not approved'];
+const MP_TITLE = ['Cumulative Update for Windows', 'Security Update for .NET', 'Acrobat Reader security patch', 'Chrome stable channel update', 'Firefox ESR update', 'Java SE critical patch update', '7-Zip update', 'Edge security update', 'Office security update'];
+const MP_RELEASED = ['Jul 8, 2026', 'Jul 2, 2026', 'Jun 26, 2026', 'Jun 19, 2026', 'Jun 11, 2026', 'May 28, 2026'];
+const MISSING_PATCHES = Array.from({ length: 38 }, (_, k) => {
+  const i = k + 1;
+  return {
+    id: i,
+    bulletinId: 'KB' + (5030000 + i * 137),
+    title: pick(MP_TITLE, i) + ' (' + (2026 - (i % 3)) + ')',
+    vendor: pick(MP_VENDOR, i),
+    severity: pick(MP_SEV, i + (i % 4)),
+    category: pick(MP_CAT, i),
+    platform: pick(MP_PLAT, i),
+    missingSystems: 3 + (i * 11) % 120,
+    approval: pick(MP_APPROVAL, i),
+    reboot: i % 3 === 0 ? 'Yes' : 'No',
+    released: pick(MP_RELEASED, i),
+  };
+});
+const missingPatchesQuery = (p) => applyQuery(MISSING_PATCHES, p, {
+  searchFields: ['bulletinId', 'title', 'vendor'],
+  facets: { severity: ['Critical', 'Important', 'Moderate', 'Low'], vendor: MP_VENDOR, approval: ['Approved', 'Not approved', 'Declined'], platform: ['Windows', 'macOS', 'Linux'] },
+  kpi: (d) => ({
+    total: d.length,
+    critical: d.filter((r) => r.severity === 'Critical').length,
+    systemsAffected: d.reduce((a, r) => a + r.missingSystems, 0),
+    pendingApproval: d.filter((r) => r.approval === 'Not approved').length,
+  }),
+});
+
+/* ── Resource 9: Inventory overview (the Inventory tab landing) — an L02 bento
+   dashboard summarising hardware + software inventory across managed computers.
+   One composite record (KPIs + charts + list widgets + a hardware table), same
+   shape the home dashboard uses so the native view reads it with plain getters. */
+const INV_MFR   = ['Dell', 'HP', 'Lenovo', 'Apple', 'Microsoft', 'Others'];
+const INV_MODEL = ['OptiPlex 7090', 'EliteBook 840', 'ThinkPad T14', 'MacBook Pro 14', 'Surface Pro 9', 'Latitude 5540'];
+const INV_MEM   = ['8 GB', '16 GB', '16 GB', '32 GB', '8 GB', '16 GB'];
+const INV_DISK  = ['256 GB SSD', '512 GB SSD', '1 TB SSD', '512 GB SSD', '256 GB SSD', '1 TB NVMe'];
+const INVENTORY_OVERVIEW = {
+  kpis: [
+    { label: 'Managed Computers', value: '186', state: 'success', icon: 'computer' },
+    { label: 'Hardware Assets', value: '1,204', state: 'default', icon: 'server-01' },
+    { label: 'Software Products', value: '1,289', state: 'default', icon: 'layers' },
+  ],
+  charts: {
+    os:      { categories: ['Windows', 'Ubuntu', 'macOS', 'RHEL', 'Others'], series: [{ name: 'Computers', values: [118, 34, 21, 9, 4] }] },
+    mfr:     { categories: INV_MFR, series: [{ name: 'Assets', values: [420, 356, 240, 96, 62, 30] }] },
+    swcat:   { categories: ['Productivity', 'Developer', 'Security', 'Media', 'Utilities', 'Others'], series: [{ name: 'Products', values: [312, 268, 190, 140, 220, 159] }] },
+    license: { categories: ['Licensed', 'Over licensed', 'Under licensed', 'Expired'], series: [{ name: 'Software', values: [834, 89, 42, 15], colors: ['green', 'orange', 'yellow', 'red'] }] },
+    scan:    { categories: ['Success', 'Failed', 'Not scanned'], series: [{ name: 'Computers', values: [162, 14, 10], colors: ['green', 'red', 'grey'] }] },
+    devtype: { categories: ['Desktop', 'Laptop', 'Server', 'Tablet', 'Others'], series: [{ name: 'Devices', values: [78, 82, 18, 6, 2] }] },
+    memory:  { categories: ['4 GB', '8 GB', '16 GB', '32 GB', '64+ GB'], series: [{ name: 'Computers', values: [12, 64, 78, 26, 6] }] },
+  },
+  lists: {
+    software: [
+      { icon: 'layers', label: 'Total Software', val: '1,289', tone: 'info' },
+      { icon: 'circle-tick', label: 'In Compliance (Licensed)', val: '834', tone: 'success' },
+      { icon: 'exclamation-circle', label: 'Over Licensed', val: '89', tone: 'error' },
+      { icon: 'clock', label: 'Under Licensed', val: '42', tone: 'warning' },
+      { icon: 'info-circle', label: 'License Expired', val: '15', tone: 'error' },
+      { icon: 'shield', label: 'Prohibited Software', val: '13', tone: 'error' },
+    ],
+    warranty: [
+      { icon: 'computer', label: 'FIN-WKS-104 (Dell)', link: true, badge: 'Expires in 6 days', state: 'critical' },
+      { icon: 'computer', label: 'SALES-LT-221 (HP)', link: true, badge: 'Expires in 14 days', state: 'warning' },
+      { icon: 'computer', label: 'ENG-WKS-318 (Lenovo)', link: true, badge: 'Expires in 21 days', state: 'warning' },
+      { icon: 'computer', label: 'OPS-SRV-002 (Dell)', link: true, badge: 'Expires in 28 days', state: 'default' },
+      { icon: 'computer', label: 'HR-LT-140 (Apple)', link: true, badge: 'Expires in 30 days', state: 'default' },
+      { icon: 'computer', label: 'SRV-DB-011 (HP)', link: true, badge: 'Expired', state: 'critical' },
+    ],
+  },
+  hardware: Array.from({ length: 8 }, (_, k) => {
+    const i = k + 1;
+    return {
+      id: i,
+      name: pick(['FIN', 'SALES', 'ENG', 'OPS', 'HR', 'SRV'], i) + '-WKS-' + (100 + i * 6),
+      manufacturer: pick(INV_MFR, i),
+      model: pick(INV_MODEL, i),
+      memory: pick(INV_MEM, i),
+      disk: pick(INV_DISK, i),
+    };
+  }),
+};
+const inventoryOverview = () => INVENTORY_OVERVIEW;
+
+/* ── Resource 10: whoami (userMeta) — resolves the current session to a user for
+   the profile drawer, matching PrismAPI.auth.readUser's field names. This is a
+   demo backend: it returns a fixed admin (no real session check — the client
+   guard already gates on token presence). Wire a real auth check here to go live. */
+const userMeta = () => ({
+  displayName: 'Demo Admin',
+  loginID: 'admin',
+  roleName: 'Administrator',
+  email: 'admin@acme.example',
+  userTimeZone: 'America/Los_Angeles',
+  userLocale: 'en_US',
+  adminUser: true,
+});
+
+/* ── Resource: DEX devices — per-device digital-experience feed ──────────────
+   Score bands: Good 71–100 · Average 31–70 · Poor 0–30. DEX status = onboarded
+   to DEX (Enabled) or not (Yet to enable). Facets: platform / dexStatus / office
+   / band. Reuses applyQuery — data + config only. */
+const DEX_OFFICE = ['HQ', 'Remote', 'Branch'];
+const DEX_OSMAP = { Windows: ['Windows 11 Pro', 'Windows 10 Ent', 'Windows 10 Pro', 'Windows Server 2019', 'Windows 11 IoT', 'Windows 8.1'], macOS: ['macOS 14 Sonoma', 'macOS 13 Ventura'], Linux: ['Ubuntu 22.04 LTS', 'RHEL 9'] };
+const DEX_REMARK = ['High disk latency', 'Slow logon', 'High CPU', 'Memory pressure', 'Weak Wi-Fi', 'App crashes', 'Slow boot', 'Healthy', 'Unsupported OS', 'Battery drain'];
+const DEX_NAMES = ['FIN-WKS', 'SALES-LT', 'ENG-WKS', 'HR-LT', 'OPS-WKS', 'DEV-MBP', 'SRV-DB', 'MKT-LT', 'EXE-MBP', 'SUP-WKS', 'QA-WKS'];
+const dexBand = (s) => (s == null ? 'na' : s >= 71 ? 'Good' : s >= 31 ? 'Average' : 'Poor');
+const DEX_DEVICES = Array.from({ length: 26 }, (_, k) => {
+  const i = k + 1;
+  const platform = pick(['Windows', 'Windows', 'Windows', 'macOS', 'Linux'], i);
+  const enabled = i % 7 !== 0;
+  const score = enabled ? (17 + (i * 29) % 84) : null;
+  return { id: i, name: pick(DEX_NAMES, i) + '-' + (100 + i * 7), domain: 'corp.local', score, platform, os: pick(DEX_OSMAP[platform], i), office: pick(DEX_OFFICE, i), dexStatus: enabled ? 'Enabled' : 'Yet to enable', band: dexBand(score), remarks: enabled ? pick(DEX_REMARK, i) : 'Agent not deployed', agent: enabled && i % 4 !== 0 ? 'live' : 'down' };
+});
+const dexDevicesQuery = (p) => applyQuery(DEX_DEVICES, p, {
+  searchFields: ['name', 'os', 'remarks'],
+  facets: { platform: ['Windows', 'macOS', 'Linux'], dexStatus: ['Enabled', 'Yet to enable'], office: DEX_OFFICE, band: ['Good', 'Average', 'Poor'] },
+  kpi: (d) => { const scored = d.filter((r) => r.score != null); const avg = scored.length ? Math.round(scored.reduce((a, r) => a + r.score, 0) / scored.length) : 0; return { total: d.length, avg, good: d.filter((r) => r.band === 'Good').length, poor: d.filter((r) => r.band === 'Poor').length, pending: d.filter((r) => r.dexStatus === 'Yet to enable').length }; },
+});
+
+/* Single device record (drill-down) — the list row + contributing sub-scores that
+   roll up to the experience score, and a 14-day score trend for the chart. Fetched
+   by ?id=. */
+const DEX_FACTOR = ['CPU', 'Memory', 'Disk', 'Boot time', 'Network', 'App crashes'];
+const DEX_FACTOR_WEIGHT = ['25%', '20%', '20%', '15%', '12%', '8%'];
+const DEX_MODEL = ['Dell Latitude 7420', 'HP EliteBook 840', 'Lenovo ThinkPad X1', 'MacBook Pro 14', 'Surface Laptop 5'];
+function dexDevice(p) {
+  const id = Number(p.get('id') || 1);
+  const base = DEX_DEVICES.find((d) => d.id === id) || DEX_DEVICES[0];
+  const s = base.score == null ? 0 : base.score;
+  const subScores = DEX_FACTOR.map((factor, i) => {
+    const score = Math.max(4, Math.min(100, s + ((i * 17 + id * 7) % 41) - 20));
+    return { id: i + 1, factor, score, weight: DEX_FACTOR_WEIGHT[i], band: dexBand(score) };
+  });
+  const days = Array.from({ length: 14 }, (_, k) => 'D-' + (13 - k));
+  const values = Array.from({ length: 14 }, (_, k) => Math.max(6, Math.min(100, Math.round(s + 14 * Math.sin((k + id) / 2.3) - 4))));
+  return { ...base, model: pick(DEX_MODEL, id), lastSeen: 'Jul 16, 2026 03:19 PM', subScores, trend: { days, values } };
+}
+
+/* DEX overview (the DEX tab landing, L02 bento) — fleet-level digital-experience
+   summary aggregated from the same DEX_DEVICES dataset the list/detail use, so the
+   numbers reconcile. KPIs + charts + list widgets, same shape as the home/inventory
+   dashboards. */
+const dexOverview = () => {
+  const scored = DEX_DEVICES.filter((d) => d.score != null);
+  const avg = scored.length ? Math.round(scored.reduce((a, r) => a + r.score, 0) / scored.length) : 0;
+  const band = (b) => DEX_DEVICES.filter((d) => d.band === b).length;
+  const platAvg = (plat) => { const s = DEX_DEVICES.filter((d) => d.platform === plat && d.score != null); return s.length ? Math.round(s.reduce((a, r) => a + r.score, 0) / s.length) : 0; };
+  const officeCount = (o) => DEX_DEVICES.filter((d) => d.office === o).length;
+  const issueCounts = {};
+  DEX_DEVICES.forEach((d) => { if (d.remarks && d.remarks !== 'Healthy' && d.remarks !== 'Agent not deployed') issueCounts[d.remarks] = (issueCounts[d.remarks] || 0) + 1; });
+  const issues = Object.entries(issueCounts).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([label, n]) => ({ icon: 'exclamation-triangle', label, val: String(n) }));
+  const lowest = [...scored].sort((a, b) => a.score - b.score).slice(0, 6).map((d) => ({ id: d.id, name: d.name, score: d.score, band: d.band }));
+  return {
+    kpis: [
+      { label: 'Experience score', value: String(avg), state: avg >= 71 ? 'success' : avg >= 31 ? 'warning' : 'critical', icon: 'activity' },
+      { label: 'Devices monitored', value: String(DEX_DEVICES.length), state: 'default', icon: 'computer' },
+      { label: 'Poor experience', value: String(band('Poor')), state: 'critical', icon: 'exclamation-circle' },
+    ],
+    charts: {
+      band:       { categories: ['Good', 'Average', 'Poor'], series: [{ name: 'Devices', values: [band('Good'), band('Average'), band('Poor')], colors: ['green', 'orange', 'red'] }] },
+      trend:      { categories: ['May', 'Jun 1', 'Jun 8', 'Jun 15', 'Jun 22', 'Jul 1', 'Jul 8'], series: [{ name: 'Avg score', values: [52, 55, 54, 58, 57, 61, avg] }] },
+      platform:   { categories: ['Windows', 'macOS', 'Linux'], series: [{ name: 'Avg score', values: [platAvg('Windows'), platAvg('macOS'), platAvg('Linux')] }] },
+      office:     { categories: DEX_OFFICE, series: [{ name: 'Devices', values: DEX_OFFICE.map(officeCount) }] },
+      onboarding: { categories: ['Enabled', 'Yet to enable'], series: [{ name: 'Devices', values: [DEX_DEVICES.filter((d) => d.dexStatus === 'Enabled').length, DEX_DEVICES.filter((d) => d.dexStatus === 'Yet to enable').length], colors: ['green', 'grey'] }] },
+    },
+    lists: { issues, lowest },
+  };
+};
+
+/* DEX home (the DEX Manager Plus Home-tab landing, L02) — a product home focused on
+   digital experience: overall score, trend, score-range distribution, and the
+   high-priority insights. Aggregated from DEX_DEVICES + DEX_INSIGHTS so it reconciles
+   with the rest of the module. (Defined after DEX_INSIGHTS below via a getter fn.) */
+const dexHome = () => {
+  const scored = DEX_DEVICES.filter((d) => d.score != null);
+  const avg = scored.length ? Math.round(scored.reduce((a, r) => a + r.score, 0) / scored.length) : 0;
+  const band = (b) => DEX_DEVICES.filter((d) => d.band === b).length;
+  const highPriority = DEX_INSIGHTS.filter((i) => i.severity === 'Critical' || i.severity === 'High')
+    .slice(0, 6).map((i) => ({ id: i.id, title: i.title, category: i.category, severity: i.severity, affected: i.affected }));
+  return {
+    kpis: [
+      { label: 'Experience score', value: String(avg), state: avg >= 71 ? 'success' : avg >= 31 ? 'warning' : 'critical', icon: 'activity' },
+      { label: 'Devices monitored', value: String(DEX_DEVICES.length), state: 'default', icon: 'computer' },
+      { label: 'High priority insights', value: String(highPriority.length), state: 'alert', icon: 'light-bulb' },
+    ],
+    charts: {
+      gauge: { value: avg, label: 'out of 100' },
+      trend: { categories: ['May', 'Jun 1', 'Jun 8', 'Jun 15', 'Jun 22', 'Jul 1', 'Jul 8'], series: [{ name: 'Avg score', values: [52, 55, 54, 58, 57, 61, avg] }] },
+      range: { categories: ['Good', 'Average', 'Poor'], series: [{ name: 'Devices', values: [band('Good'), band('Average'), band('Poor')], colors: ['green', 'orange', 'red'] }] },
+    },
+    insights: highPriority,
+  };
+};
+
+/* ── DEX Batch 1: Experience insights + Remote actions (L03 lists) ── */
+const INS_CAT = ['Disk', 'CPU', 'Memory', 'Network', 'Boot', 'App crashes'];
+const INS_SEV = ['Critical', 'High', 'High', 'Medium', 'Medium', 'Low'];
+const INS_TITLE = ['High disk latency', 'Sustained high CPU', 'Memory pressure', 'Weak Wi-Fi signal', 'Slow boot time', 'Frequent app crashes', 'Slow logon', 'Low disk space', 'GPU driver faults', 'Battery degradation'];
+const INS_IMPACT = ['High', 'High', 'Medium', 'Medium', 'Low', 'Low'];
+const INS_STATUS = ['Active', 'Active', 'Active', 'Monitoring', 'Resolved', 'Active'];
+const DEX_INSIGHTS = Array.from({ length: 24 }, (_, k) => {
+  const i = k + 1;
+  return {
+    id: i,
+    title: pick(INS_TITLE, i),
+    category: pick(INS_CAT, i),
+    severity: pick(INS_SEV, i + (i % 3)),
+    affected: 2 + (i * 13) % 90,
+    impact: pick(INS_IMPACT, i),
+    status: pick(INS_STATUS, i + (i % 2)),
+    detected: pick(['12 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12, 2026'], i),
+  };
+});
+const insightsQuery = (p) => applyQuery(DEX_INSIGHTS, p, {
+  searchFields: ['title', 'category'],
+  facets: { category: INS_CAT, severity: ['Critical', 'High', 'Medium', 'Low'], status: ['Active', 'Monitoring', 'Resolved'] },
+  kpi: (d) => ({ total: d.length, critical: d.filter((r) => r.severity === 'Critical').length, affected: d.reduce((a, r) => a + r.affected, 0), active: d.filter((r) => r.status === 'Active').length }),
+});
+
+const RA_TYPE = ['Restart', 'Run script', 'Clear cache', 'Wake', 'Flush DNS', 'Kill process'];
+const RA_STATUS = ['Completed', 'Completed', 'Running', 'Failed', 'Completed', 'Queued'];
+const RA_BY = ['admin', 'j.doe', 'auto-remediation', 's.smith', 'auto-remediation'];
+const DEX_REMOTE_ACTIONS = Array.from({ length: 22 }, (_, k) => {
+  const i = k + 1;
+  return {
+    id: i,
+    action: pick(RA_TYPE, i),
+    device: pick(DEX_NAMES, i) + '-' + (100 + i * 7),
+    type: i % 3 === 0 ? 'Automated' : 'Manual',
+    status: pick(RA_STATUS, i + (i % 2)),
+    initiatedBy: pick(RA_BY, i),
+    time: pick(['2 min ago', '18 min ago', '1 hr ago', 'Today', 'Yesterday'], i),
+  };
+});
+const remoteActionsQuery = (p) => applyQuery(DEX_REMOTE_ACTIONS, p, {
+  searchFields: ['action', 'device', 'initiatedBy'],
+  facets: { status: ['Completed', 'Running', 'Failed', 'Queued'], type: ['Manual', 'Automated'] },
+  kpi: (d) => ({ total: d.length, running: d.filter((r) => r.status === 'Running').length, completed: d.filter((r) => r.status === 'Completed').length, failed: d.filter((r) => r.status === 'Failed').length }),
+});
+
+/* ── DEX Batch 2: Alerts (list + detail) + alert profile detail ── */
+const AL_SEV = ['Critical', 'Critical', 'High', 'High', 'Medium', 'Low'];
+const AL_STATUS = ['Active', 'Active', 'Acknowledged', 'Resolved', 'Active', 'Acknowledged'];
+const AL_TITLE = ['Experience score dropped below 40', 'High CPU sustained 30+ min', 'Disk latency spike', 'Repeated app crashes', 'Boot time exceeded threshold', 'Memory pressure critical', 'Network drops detected', 'Battery health critical'];
+const AL_PROFILE = ['CPU health', 'Disk health', 'App stability', 'Boot performance', 'Network quality'];
+const DEX_ALERTS = Array.from({ length: 26 }, (_, k) => {
+  const i = k + 1;
+  return {
+    id: i,
+    title: pick(AL_TITLE, i),
+    severity: pick(AL_SEV, i + (i % 3)),
+    device: pick(DEX_NAMES, i) + '-' + (100 + i * 7),
+    status: pick(AL_STATUS, i + (i % 2)),
+    profile: pick(AL_PROFILE, i),
+    triggered: pick(['5 min ago', '22 min ago', '1 hr ago', '3 hrs ago', 'Today', 'Yesterday'], i),
+  };
+});
+const dexAlertsQuery = (p) => applyQuery(DEX_ALERTS, p, {
+  searchFields: ['title', 'device', 'profile'],
+  facets: { severity: ['Critical', 'High', 'Medium', 'Low'], status: ['Active', 'Acknowledged', 'Resolved'], profile: AL_PROFILE },
+  kpi: (d) => ({ total: d.length, critical: d.filter((r) => r.severity === 'Critical').length, active: d.filter((r) => r.status === 'Active').length, acknowledged: d.filter((r) => r.status === 'Acknowledged').length }),
+});
+function dexAlert(p) {
+  const id = Number(p.get('id') || 1);
+  const base = DEX_ALERTS.find((a) => a.id === id) || DEX_ALERTS[0];
+  const timeline = [
+    { id: 1, event: 'Alert triggered', detail: base.title, when: base.triggered, state: 'critical' },
+    { id: 2, event: 'Notification sent', detail: 'Email to dex-admins', when: base.triggered, state: 'info' },
+    { id: 3, event: 'Auto-remediation attempted', detail: 'Restart affected service', when: 'moments later', state: 'warning' },
+    { id: 4, event: base.status === 'Resolved' ? 'Resolved' : 'Awaiting acknowledgement', detail: '', when: 'now', state: base.status === 'Resolved' ? 'success' : 'default' },
+  ];
+  const devices = DEX_DEVICES.filter((d) => d.score != null).slice(0, 5).map((d) => ({ id: d.id, name: d.name, platform: d.platform, score: d.score }));
+  return { ...base, timeline, devices };
+}
+function dexAlertProfile(p) {
+  const id = p.get('id') || 'cpu-health';
+  return {
+    id,
+    name: 'CPU health',
+    description: 'Raises alerts when sustained CPU usage degrades the experience score.',
+    status: 'Enabled',
+    rules: [
+      { id: 1, metric: 'CPU usage', condition: '> 85% for 30 min', severity: 'High' },
+      { id: 2, metric: 'CPU usage', condition: '> 95% for 10 min', severity: 'Critical' },
+      { id: 3, metric: 'Top process', condition: 'single process > 60%', severity: 'Medium' },
+    ],
+    targets: [
+      { id: 1, type: 'Remote office', value: 'All offices' },
+      { id: 2, type: 'Platform', value: 'Windows' },
+    ],
+    notification: [
+      { term: 'Channel', description: 'Email' },
+      { term: 'Recipients', description: 'dex-admins@acme.example' },
+      { term: 'Throttle', description: 'Max 1 / hour / device' },
+      { term: 'Escalation', description: 'After 2 hours unacknowledged' },
+    ],
+  };
+}
+
+/* ── DEX Batch 3: Sensors (list + detail), sensor deployments, sensor run ── */
+const SEN_TYPE = ['Script', 'Query', 'Script', 'Registry check', 'Query'];
+const SEN_PLAT = ['Windows', 'Windows', 'macOS', 'Linux', 'Windows'];
+const SEN_CAT = ['Performance', 'Security', 'Compliance', 'Health', 'Inventory'];
+const SEN_STATUS = ['Enabled', 'Enabled', 'Enabled', 'Disabled', 'Enabled'];
+const SEN_NAME = ['Disk latency probe', 'CPU throttling check', 'Startup impact scan', 'Battery wear reader', 'Wi-Fi signal sampler', 'Crash log collector', 'Free space monitor', 'GPU driver check', 'Boot duration timer', 'Memory pressure gauge'];
+const DEX_SENSORS = Array.from({ length: 22 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, name: pick(SEN_NAME, i), type: pick(SEN_TYPE, i), platform: pick(SEN_PLAT, i), category: pick(SEN_CAT, i), status: pick(SEN_STATUS, i + (i % 3)), lastRun: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], i), deployments: 1 + (i * 3) % 8 };
+});
+const sensorsQuery = (p) => applyQuery(DEX_SENSORS, p, {
+  searchFields: ['name', 'category', 'type'],
+  facets: { platform: ['Windows', 'macOS', 'Linux'], category: SEN_CAT, status: ['Enabled', 'Disabled'], type: ['Script', 'Query', 'Registry check'] },
+  kpi: (d) => ({ total: d.length, enabled: d.filter((r) => r.status === 'Enabled').length, deployments: d.reduce((a, r) => a + r.deployments, 0), disabled: d.filter((r) => r.status === 'Disabled').length }),
+});
+function dexSensor(p) {
+  const id = Number(p.get('id') || 1);
+  const base = DEX_SENSORS.find((s) => s.id === id) || DEX_SENSORS[0];
+  const script = base.type === 'Query'
+    ? 'SELECT name, value FROM device_metrics\nWHERE metric = "disk_latency";'
+    : '# PowerShell sensor\n$c = Get-Counter "\\PhysicalDisk(_Total)\\Avg. Disk sec/Read"\nWrite-Output ($c.CounterSamples.CookedValue * 1000)';
+  const targets = [{ id: 1, type: 'Platform', value: base.platform }, { id: 2, type: 'Remote office', value: 'All offices' }];
+  const runs = Array.from({ length: 5 }, (_, k) => ({ id: k + 1, started: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], k + 1), status: pick(['Completed', 'Completed', 'Failed', 'Completed', 'Completed'], k + 1), devices: 8 + (k * 5) % 40, duration: (2 + k) + 's' }));
+  return { ...base, script, targets, runs };
+}
+const SD_STATUS = ['Running', 'Completed', 'Completed', 'Failed', 'Scheduled'];
+const DEX_SENSOR_DEPLOYMENTS = Array.from({ length: 20 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, sensor: pick(SEN_NAME, i), target: pick(['Finance OU', 'Servers', 'Sales laptops', 'Engineering', 'All offices'], i), devices: 3 + (i * 7) % 80, status: pick(SD_STATUS, i + (i % 2)), started: pick(['2 min ago', '20 min ago', '1 hr ago', 'Today', 'Yesterday'], i) };
+});
+const sensorDeploymentsQuery = (p) => applyQuery(DEX_SENSOR_DEPLOYMENTS, p, {
+  searchFields: ['sensor', 'target'],
+  facets: { status: ['Running', 'Completed', 'Failed', 'Scheduled'] },
+  kpi: (d) => ({ total: d.length, running: d.filter((r) => r.status === 'Running').length, completed: d.filter((r) => r.status === 'Completed').length, failed: d.filter((r) => r.status === 'Failed').length }),
+});
+function dexSensorRun() {
+  return {
+    id: 1, sensor: 'Disk latency probe', status: 'Completed', started: 'Today 03:12 PM', duration: '4.2s', exitCode: 0,
+    stats: { devices: 42, succeeded: 39, failed: 3 },
+    output: '[03:12:01] Sensor started on 42 devices\n[03:12:03] Collected disk_latency samples\n[03:12:05] 39 succeeded, 3 failed (timeout)\n[03:12:05] Sensor completed (exit 0)',
+    results: Array.from({ length: 6 }, (_, k) => ({ id: k + 1, device: pick(['FIN-WKS', 'SALES-LT', 'ENG-WKS', 'HR-LT', 'OPS-WKS', 'DEV-MBP'], k + 1) + '-' + (100 + k * 7), status: k % 5 === 4 ? 'Failed' : 'Succeeded', value: (12 + k * 3) + ' ms', when: 'moments ago' })),
+  };
+}
+
+/* ── DEX Batch 4: Extensions (marketplace + detail), content, script detail ── */
+const EXT_PUB = ['ManageEngine', 'Acme Labs', 'Community', 'Zoho', 'Community'];
+const EXT_CAT = ['Integration', 'Content pack', 'Sensor pack', 'Report pack', 'Automation'];
+const EXT_PLAT = ['Cross-platform', 'Windows', 'macOS', 'Cross-platform', 'Linux'];
+const EXT_NAME = ['ServiceDesk sync', 'Slack notifications', 'Zoom experience pack', 'M365 health content', 'Chrome telemetry', 'Teams call quality', 'VPN health sensors', 'Zscaler integration', 'Intune bridge', 'Custom report pack'];
+const DEX_EXTENSIONS = Array.from({ length: 18 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, name: pick(EXT_NAME, i), publisher: pick(EXT_PUB, i), category: pick(EXT_CAT, i), platform: pick(EXT_PLAT, i), installed: i % 3 === 0, version: '1.' + (i % 9) + '.0' };
+});
+const extensionsQuery = (p) => applyQuery(DEX_EXTENSIONS, p, {
+  searchFields: ['name', 'publisher', 'category'],
+  facets: { category: EXT_CAT, publisher: ['ManageEngine', 'Acme Labs', 'Community', 'Zoho'], platform: ['Cross-platform', 'Windows', 'macOS', 'Linux'] },
+  kpi: (d) => ({ total: d.length, installed: d.filter((r) => r.installed).length, available: d.filter((r) => !r.installed).length, publishers: new Set(d.map((r) => r.publisher)).size }),
+});
+function dexExtension(p) {
+  const id = Number(p.get('id') || 1);
+  const base = DEX_EXTENSIONS.find((e) => e.id === id) || DEX_EXTENSIONS[0];
+  return {
+    ...base,
+    problem: `Teams struggle to correlate ${base.category.toLowerCase()} signals with device experience scores.`,
+    solution: `This extension streams ${base.name} data into DEX so you can see its impact on the experience score and alert on regressions.`,
+    features: ['Prebuilt sensors and dashboards', 'Automatic device correlation', 'Alert profiles included', 'No-code setup'],
+    about: [
+      { term: 'Publisher', description: base.publisher }, { term: 'Category', description: base.category },
+      { term: 'Platform', description: base.platform }, { term: 'Version', description: base.version },
+      { term: 'Updated', description: 'Jul 2, 2026' },
+    ],
+  };
+}
+function dexContent() {
+  return {
+    id: 1, name: 'Windows performance content pack', publisher: 'ManageEngine', category: 'Content pack', platform: 'Windows', version: '2.1.0',
+    problem: 'Baseline Windows performance monitoring requires many hand-built sensors and dashboards.',
+    solution: 'A curated pack of sensors, dashboards, and alert profiles for Windows performance, ready to deploy.',
+    features: ['12 performance sensors', '2 experience dashboards', '4 alert profiles', 'Quarterly content updates'],
+    about: [
+      { term: 'Publisher', description: 'ManageEngine' }, { term: 'Includes', description: '12 sensors · 2 dashboards' },
+      { term: 'Platform', description: 'Windows' }, { term: 'Version', description: '2.1.0' },
+    ],
+  };
+}
+function dexScript() {
+  return {
+    id: 1, name: 'Reset print spooler', language: 'PowerShell', status: 'Enabled',
+    code: 'Stop-Service -Name Spooler -Force\nStart-Sleep -Seconds 2\nStart-Service -Name Spooler\nWrite-Output "Spooler restarted"',
+    targets: [{ id: 1, type: 'Platform', value: 'Windows' }, { id: 2, type: 'Custom group', value: 'Print servers' }],
+    runs: Array.from({ length: 5 }, (_, k) => ({ id: k + 1, started: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], k + 1), status: pick(['Completed', 'Completed', 'Failed', 'Completed', 'Completed'], k + 1), devices: 4 + k * 3, duration: (1 + k) + 's' })),
+  };
+}
+
+/* ── DEX Batch 5: Deployments (list + detail) + Workflows (list + detail) ── */
+const DXDEP_RESTYPE = ['Sensor', 'Script', 'Content pack', 'Sensor', 'Script'];
+const DXDEP_RES = ['Disk latency probe', 'Reset print spooler', 'Windows performance pack', 'CPU throttling check', 'Clear temp files'];
+const DXDEP_STATUS = ['Running', 'Completed', 'Completed', 'Failed', 'Scheduled'];
+const DXDEP_TARGET = ['Finance OU', 'Servers', 'Sales laptops', 'Engineering', 'All offices'];
+const DEX_DEPLOYMENTS = Array.from({ length: 24 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, resource: pick(DXDEP_RES, i), resourceType: pick(DXDEP_RESTYPE, i), target: pick(DXDEP_TARGET, i), devices: 4 + (i * 9) % 90, status: pick(DXDEP_STATUS, i + (i % 2)), started: pick(['2 min ago', '25 min ago', '1 hr ago', 'Today', 'Yesterday'], i) };
+});
+const dexDeploymentsQuery = (p) => applyQuery(DEX_DEPLOYMENTS, p, {
+  searchFields: ['resource', 'target'],
+  facets: { status: ['Running', 'Completed', 'Failed', 'Scheduled'], resourceType: ['Sensor', 'Script', 'Content pack'] },
+  kpi: (d) => ({ total: d.length, running: d.filter((r) => r.status === 'Running').length, completed: d.filter((r) => r.status === 'Completed').length, failed: d.filter((r) => r.status === 'Failed').length }),
+});
+function dexDeployment(p) {
+  const id = Number(p.get('id') || 1);
+  const base = DEX_DEPLOYMENTS.find((d) => d.id === id) || DEX_DEPLOYMENTS[0];
+  const n = base.devices;
+  const statusChart = { categories: ['Completed', 'Running', 'Failed', 'Pending'], series: [{ name: 'Devices', values: [Math.round(n * 0.7), Math.round(n * 0.1), Math.round(n * 0.08), Math.round(n * 0.12)], colors: ['green', 'orange', 'red', 'grey'] }] };
+  const results = Array.from({ length: 6 }, (_, k) => ({ id: k + 1, device: pick(['FIN-WKS', 'SALES-LT', 'ENG-WKS', 'HR-LT', 'OPS-WKS', 'DEV-MBP'], k + 1) + '-' + (100 + k * 7), status: k % 6 === 5 ? 'Failed' : k % 3 === 2 ? 'Running' : 'Completed', when: 'moments ago' }));
+  return { ...base, statusChart, results };
+}
+const DXWF_TRIGGER = ['Experience score drop', 'Alert: High CPU', 'Schedule: Daily', 'Alert: Disk latency', 'Manual'];
+const DXWF_STATUS = ['Enabled', 'Enabled', 'Disabled', 'Draft', 'Enabled'];
+const DXWF_NAME = ['Auto-remediate slow logon', 'Restart spooler on failure', 'Nightly cache cleanup', 'Escalate critical alerts', 'Reboot on memory pressure', 'Clear temp on low disk'];
+const DEX_WORKFLOWS = Array.from({ length: 20 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, name: pick(DXWF_NAME, i), trigger: pick(DXWF_TRIGGER, i), status: pick(DXWF_STATUS, i + (i % 2)), runs: (i * 13) % 140, lastRun: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], i) };
+});
+const dexWorkflowsQuery = (p) => applyQuery(DEX_WORKFLOWS, p, {
+  searchFields: ['name', 'trigger'],
+  facets: { status: ['Enabled', 'Disabled', 'Draft'] },
+  kpi: (d) => ({ total: d.length, enabled: d.filter((r) => r.status === 'Enabled').length, draft: d.filter((r) => r.status === 'Draft').length, disabled: d.filter((r) => r.status === 'Disabled').length }),
+});
+function dexWorkflow(p) {
+  const id = Number(p.get('id') || 1);
+  const base = DEX_WORKFLOWS.find((w) => w.id === id) || DEX_WORKFLOWS[0];
+  const steps = [
+    { id: 1, kind: 'Trigger', label: base.trigger },
+    { id: 2, kind: 'Condition', label: 'Experience score < 40 AND platform = Windows' },
+    { id: 3, kind: 'Action', label: 'Run script: Reset print spooler' },
+    { id: 4, kind: 'Action', label: 'Notify: dex-admins@acme.example' },
+    { id: 5, kind: 'Action', label: 'Create alert if unresolved after 1 hour' },
+  ];
+  const runs = Array.from({ length: 5 }, (_, k) => ({ id: k + 1, started: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], k + 1), status: pick(['Completed', 'Completed', 'Failed', 'Completed', 'Completed'], k + 1), devices: 3 + k * 4, duration: (1 + k) + 's' }));
+  return { ...base, steps, runs };
+}
+
+/* ── DEX Batch 6: Dashboards, Reports, AI assistant ── */
+const DASH_NAME = ['Fleet experience', 'Windows performance', 'Executive summary', 'Remote workers', 'Field devices', 'Security posture'];
+const DASH_OWNER = ['admin', 'j.doe', 's.smith', 'admin', 'ops-team'];
+const DEX_DASHBOARDS = Array.from({ length: 16 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, name: pick(DASH_NAME, i) + (i > 6 ? ' ' + i : ''), owner: pick(DASH_OWNER, i), widgets: 3 + (i * 2) % 9, shared: i % 2 === 0, modified: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], i) };
+});
+const dexDashboardsQuery = (p) => applyQuery(DEX_DASHBOARDS, p, {
+  searchFields: ['name', 'owner'],
+  facets: { owner: ['admin', 'j.doe', 's.smith', 'ops-team'] },
+  kpi: (d) => ({ total: d.length, shared: d.filter((r) => r.shared).length, mine: d.filter((r) => r.owner === 'admin').length, widgets: d.reduce((a, r) => a + r.widgets, 0) }),
+});
+const dexDashboardView = () => ({
+  name: 'Fleet experience',
+  kpis: [{ label: 'Avg score', value: '60', state: 'warning', icon: 'activity' }, { label: 'Devices', value: '26', state: 'default', icon: 'computer' }, { label: 'Poor', value: '4', state: 'critical', icon: 'exclamation-circle' }],
+  charts: {
+    band: { categories: ['Good', 'Average', 'Poor'], series: [{ name: 'Devices', values: [8, 11, 4], colors: ['green', 'orange', 'red'] }] },
+    trend: { categories: ['May', 'Jun', 'Jul'], series: [{ name: 'Score', values: [52, 57, 60] }] },
+    platform: { categories: ['Windows', 'macOS', 'Linux'], series: [{ name: 'Avg score', values: [64, 58, 45] }] },
+  },
+});
+const REP_TYPE = ['Experience', 'Compliance', 'Inventory', 'Performance', 'Executive'];
+const REP_FMT = ['PDF', 'CSV', 'PDF', 'XLSX', 'PDF'];
+const REP_SCHED = ['Daily', 'Weekly', 'Monthly', 'On demand', 'Weekly'];
+const REP_NAME = ['Weekly experience summary', 'Low-score devices', 'Sensor coverage', 'Remediation outcomes', 'Executive scorecard', 'Alert trends'];
+const DEX_REPORTS = Array.from({ length: 18 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, name: pick(REP_NAME, i), type: pick(REP_TYPE, i), schedule: pick(REP_SCHED, i), format: pick(REP_FMT, i), lastRun: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], i) };
+});
+const dexReportsQuery = (p) => applyQuery(DEX_REPORTS, p, {
+  searchFields: ['name', 'type'],
+  facets: { type: REP_TYPE, schedule: ['Daily', 'Weekly', 'Monthly', 'On demand'], format: ['PDF', 'CSV', 'XLSX'] },
+  kpi: (d) => ({ total: d.length, scheduled: d.filter((r) => r.schedule !== 'On demand').length, ondemand: d.filter((r) => r.schedule === 'On demand').length, types: new Set(d.map((r) => r.type)).size }),
+});
+const dexReport = () => ({
+  name: 'Weekly experience summary', type: 'Experience', schedule: 'Weekly', format: 'PDF', lastRun: 'Today 06:00 AM',
+  summary: [{ term: 'Type', description: 'Experience' }, { term: 'Schedule', description: 'Weekly (Mon 06:00)' }, { term: 'Format', description: 'PDF' }, { term: 'Recipients', description: 'dex-admins@acme.example' }],
+  chart: { categories: ['Wk1', 'Wk2', 'Wk3', 'Wk4'], series: [{ name: 'Avg score', values: [54, 57, 58, 60] }] },
+  rows: Array.from({ length: 6 }, (_, k) => ({ id: k + 1, metric: pick(['Avg score', 'Poor devices', 'Alerts', 'Remediations', 'New sensors', 'Coverage'], k + 1), value: [60, 4, 22, 18, 3, '92%'][k], change: ['+3', '-2', '+5', '+4', '+1', '+2%'][k] })),
+});
+const dexAi = () => ({
+  suggestions: ['Why did the experience score drop this week?', 'Which devices need attention?', 'What caused the CPU alerts?', 'Summarize remediation outcomes'],
+  answer: { question: 'Which devices need attention?', text: '8 devices scored below 40 this week, mostly in Finance OU. The top driver is disk latency (5 devices) followed by high CPU (2). I recommend deploying the "Disk latency probe" sensor and the "Reset print spooler" script to Finance OU.', confidence: 'High' },
+  insights: [{ icon: 'exclamation-triangle', label: 'Finance OU experience down 12%', val: 'High' }, { icon: 'exclamation-triangle', label: 'Disk latency affects 14 devices', val: 'Medium' }, { icon: 'circle-tick', label: 'Remediation success up 8%', val: 'Good' }],
+});
+
+/* Insight drill-down (L04) — a single experience insight with its trend,
+   contributing factors, affected devices, and remediation. ?type=cpu returns the
+   CPU-specialised record; else ?id= picks from DEX_INSIGHTS. */
+function dexInsight(p) {
+  const type = String(p.get('type') || '').toLowerCase();
+  const id = Number(p.get('id') || 1);
+  const base = type === 'cpu'
+    ? { id: 'cpu', title: 'Sustained high CPU', category: 'CPU', severity: 'High', affected: 63, impact: 'High', status: 'Active', detected: '1 hr ago' }
+    : (DEX_INSIGHTS.find((d) => d.id === id) || DEX_INSIGHTS[0]);
+  const days = Array.from({ length: 14 }, (_, k) => 'D-' + (13 - k));
+  const trend = { categories: days, series: [{ name: 'Affected devices', values: days.map((_, k) => Math.max(2, Math.round(base.affected * (0.6 + 0.4 * Math.sin(k / 3))))) }] };
+  const factorNames = type === 'cpu' ? ['User processes', 'System interrupts', 'Antivirus scan', 'Background updates'] : ['Read/write latency', 'Disk queue length', 'Fragmentation', 'Low free space'];
+  const factors = { categories: factorNames, series: [{ name: 'Contribution %', values: [38, 27, 20, 15] }] };
+  const devices = DEX_DEVICES.filter((d) => d.score != null).slice(0, 8).map((d) => ({ id: d.id, name: d.name, platform: d.platform, score: d.score, impact: d.score < 40 ? 'High' : d.score < 60 ? 'Medium' : 'Low' }));
+  const remediation = (type === 'cpu'
+    ? ['End runaway processes', 'Throttle background updates', 'Exclude hot paths from AV scan', 'Add RAM / upgrade CPU']
+    : ['Run disk cleanup', 'Update storage drivers', 'Enable SSD TRIM', 'Schedule defragmentation']).map((action, i) => ({ id: i + 1, action }));
+  return { ...base, trend, factors, devices, remediation };
+}
+
+/* Live telemetry (L04) — per-device real-time metric feed (CPU/mem/disk/network
+   time-series + current values + top processes). ?device= selects the device. */
+function dexTelemetry(p) {
+  const device = p.get('device') || (DEX_NAMES[0] + '-107');
+  const t = Array.from({ length: 20 }, (_, k) => (k < 10 ? '0' : '') + k + ':00');
+  const wave = (b, amp, ph) => t.map((_, k) => Math.max(1, Math.min(100, Math.round(b + amp * Math.sin((k + ph) / 2.5)))));
+  return {
+    device,
+    current: { cpu: 42, mem: 68, disk: 23, net: 14 },
+    series: {
+      cpu: { categories: t, series: [{ name: 'CPU %', values: wave(45, 25, 0) }] },
+      mem: { categories: t, series: [{ name: 'Memory %', values: wave(65, 12, 3) }] },
+      disk: { categories: t, series: [{ name: 'Disk I/O %', values: wave(25, 18, 1) }] },
+      net: { categories: t, series: [{ name: 'Network Mbps', values: wave(18, 14, 2) }] },
+    },
+    processes: ['chrome.exe', 'Teams.exe', 'antimalware.exe', 'node.exe', 'Code.exe'].map((name, i) => ({ id: i + 1, name, cpu: 28 - i * 4, mem: 15 - i * 2 })),
+  };
+}
+
 /* ── Routes ────────────────────────────────────────────────────────────────── */
 function handle(url) {
   const p = url.searchParams;
@@ -243,8 +777,39 @@ function handle(url) {
     case '/deployments/api/policies': return policiesQuery(p);
     case '/deployments/api/workflows': return workflowsQuery(p);
     case '/deployments/api/deviceExecution': return deviceExecution(p);
+    case '/dex/api/home': return dexHome();
+    case '/dex/api/overview': return dexOverview();
+    case '/dex/api/insights': return insightsQuery(p);
+    case '/dex/api/insight': return dexInsight(p);
+    case '/dex/api/telemetry': return dexTelemetry(p);
+    case '/dex/api/remoteActions': return remoteActionsQuery(p);
+    case '/dex/api/alerts': return dexAlertsQuery(p);
+    case '/dex/api/alert': return dexAlert(p);
+    case '/dex/api/alertProfile': return dexAlertProfile(p);
+    case '/dex/api/sensors': return sensorsQuery(p);
+    case '/dex/api/sensor': return dexSensor(p);
+    case '/dex/api/sensorDeployments': return sensorDeploymentsQuery(p);
+    case '/dex/api/sensorRun': return dexSensorRun(p);
+    case '/dex/api/extensions': return extensionsQuery(p);
+    case '/dex/api/extension': return dexExtension(p);
+    case '/dex/api/content': return dexContent(p);
+    case '/dex/api/script': return dexScript(p);
+    case '/dex/api/deployments': return dexDeploymentsQuery(p);
+    case '/dex/api/deployment': return dexDeployment(p);
+    case '/dex/api/workflows': return dexWorkflowsQuery(p);
+    case '/dex/api/workflow': return dexWorkflow(p);
+    case '/dex/api/dashboards': return dexDashboardsQuery(p);
+    case '/dex/api/dashboard': return dexDashboardView(p);
+    case '/dex/api/reports': return dexReportsQuery(p);
+    case '/dex/api/report': return dexReport(p);
+    case '/dex/api/ai': return dexAi(p);
+    case '/dex/api/devices': return dexDevicesQuery(p);
+    case '/dex/api/device': return dexDevice(p);
     case '/home/api/dashboard': return homeDashboard();
     case '/threats-patches/api/highlyVulnerable': return highlyVulnerableQuery(p);
+    case '/threats-patches/api/missingPatches': return missingPatchesQuery(p);
+    case '/inventory/api/overview': return inventoryOverview();
+    case '/emsapi/uac/userMeta': return userMeta();
     default: return null;
   }
 }

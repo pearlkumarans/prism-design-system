@@ -1,6 +1,10 @@
-import Service from '@ember/service';
+import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { PRODUCTS, CONTENT_VIEWS, TAB_LABELS, tabsForProduct } from 'prism-webapp/config/catalog';
+
+// ds-header-nav renders a top-tab strip ONLY for these (combined Endpoint Central)
+// variants; every other variant is a point product that navigates via the left rail.
+const TOP_NAV_VARIANTS = new Set(['endpoint-central', 'endpoint-central-msp', 'msp-central']);
 
 // Framework-agnostic EC menu map, loaded natively from the vendored copy (same
 // path ShellChrome uses) so ember-auto-import doesn't try to bundle it. Used only
@@ -20,6 +24,8 @@ const _nativeImport = new Function('u', 'return import(u);');
  * the vanilla shell all disappear.
  */
 export default class ShellService extends Service {
+  @service nav;
+
   @tracked productId = null;
   @tracked tabId = null;
   @tracked viewSlug = null;
@@ -57,6 +63,9 @@ export default class ShellService extends Service {
 
   setProduct(productId) {
     this.productId = productId;
+    // Point products have no top-tab strip → force the left module rail.
+    const variant = PRODUCTS[productId]?.variant ?? null;
+    this.nav.setPointProduct(variant ? !TOP_NAV_VARIANTS.has(variant) : false);
     this._syncTitle();
   }
 

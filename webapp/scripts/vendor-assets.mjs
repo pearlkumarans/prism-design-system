@@ -25,6 +25,7 @@ const jobs = [
   { from: resolve(repo, 'projects'), to: resolve(pub, 'projects') },
   { from: resolve(repo, 'Layout/views'), to: resolve(pub, 'Layout/views') },
   { from: resolve(repo, 'Layout/data'), to: resolve(pub, 'Layout/data') }, // PrismAPI data layer
+  { from: resolve(repo, 'Layout/i18n'), to: resolve(pub, 'Layout/i18n') }, // central i18n runtime + locale catalogs
   { from: resolve(repo, 'Layout/layout-base.css'), to: resolve(pub, 'Layout/layout-base.css') }, // .lay scaffold for injected legacy views
 ];
 

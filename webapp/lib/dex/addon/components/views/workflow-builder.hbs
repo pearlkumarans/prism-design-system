@@ -1,0 +1,40 @@
+{{! Workflow builder — a thin Patterns::SectionedForm instance (L07). Structural
+    representation of the workflow model: Trigger → Conditions → Actions. }}
+<Patterns::SectionedForm
+  @header={{this.header}}
+  @breadcrumbs={{this.breadcrumbs}}
+  @primaryLabel="Save workflow"
+  @saveAsItems={{this.saveAsItems}}
+  @onPrimary={{this.save}}
+  @onCancel={{this.cancel}}
+  @onSaveAs={{this.onSaveAs}}
+>
+  <:body as |Form|>
+    <Form.Section @title="Trigger" @description="What starts this workflow.">
+      <ds-input-select class="sform__field" size="medium" label="Trigger" label-position="left" {{set-prop "options" this.triggerOptions}}></ds-input-select>
+    </Form.Section>
+
+    <Form.Section @title="Conditions" @description="Run only when these match.">
+      <div class="sform__field sform__row-inline">
+        <ds-input-select size="medium" label="Metric" label-position="left" {{set-prop "options" this.metricOptions}}></ds-input-select>
+        <ds-input-select size="medium" placeholder="Operator" style="min-width:140px" {{set-prop "options" this.operatorOptions}}></ds-input-select>
+        <ds-text-input size="medium" placeholder="Value" style="max-width:120px"></ds-text-input>
+      </div>
+      <ds-input-select class="sform__field" size="medium" label="Combine with" label-position="left" {{set-prop "options" this.logicOptions}}></ds-input-select>
+    </Form.Section>
+
+    <Form.Section @title="Actions" @description="What to do when triggered.">
+      {{#each this.actions as |a|}}
+        <div class="sform__target">
+          <div class="sform__label-col">{{a.label}}</div>
+          <div class="sform__row-inline">
+            <ds-input-select size="medium" value="script" style="min-width:180px" {{set-prop "options" this.actionOptions}}></ds-input-select>
+            <ds-text-input size="medium" placeholder="Configuration" style="flex:1 1 280px; min-width:0;"></ds-text-input>
+            <ds-icon-button icon="add" label="Add action" type="tertiary-grey" size="small" {{on "click" this.addAction}}></ds-icon-button>
+            <ds-icon-button icon="minus" label="Remove action" type="tertiary-grey" size="small" {{on "click" (fn this.removeAction a.id)}}></ds-icon-button>
+          </div>
+        </div>
+      {{/each}}
+    </Form.Section>
+  </:body>
+</Patterns::SectionedForm>

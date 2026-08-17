@@ -141,10 +141,15 @@ body {
    Ported from the fragment's #bldash-pop scope to .bl-dash. Includes the layout
    container styles the legacy view got from Layout/layout-base.css (not in the app). */
 .bl-dash { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-.bl-dash__scroll {
-  flex: 1; min-height: 0; overflow: auto;
-  padding: 16px; display: flex; flex-direction: column; gap: 16px;
-}
+/* Shared page scroll region for EVERY layout pattern — the scrolling content that
+   sits under a sticky ds-page-header. One class, identical for all: fill height ·
+   own scroll · stable gutter (a scrollbar never shifts content) · a uniform 20px
+   inset (0 top so content sits flush under the header). Every pattern's page-header
+   uses scroll-target=".prism-scroll", so collapse-on-scroll is a single convention. */
+.prism-scroll { position: relative; flex: 1 1 auto; min-height: 0; overflow: auto; scrollbar-gutter: stable; padding: 0 20px 20px; }
+/* Patterns whose content stacks its own children (list view, dashboard bento)
+   opt into a column with a consistent gap — the only per-pattern variation. */
+.prism-scroll--stack { display: flex; flex-direction: column; gap: 16px; }
 .bl-dash .bl-kpis { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 16px; }
 .bl-dash .bl-kpis ds-kpi-card { flex: 1 1 200px; min-width: 180px; }
 
@@ -181,7 +186,7 @@ body {
 
 /* ── L02 home module dashboard — 6-col bento (sibling-dashboard tabs live in
    the page header). Ported from layout-module-dashboard.html (tokens only).
-   Renders inside the Patterns::ModuleDashboard .bl-dash__scroll. */
+   Renders inside the Patterns::ModuleDashboard .prism-scroll. */
 .md-facet-empty { padding-top: 24px; }
 /* 6-col base grid; row 1 taller (stacks the KPI tiles over the OS chart). */
 .md-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; align-items: stretch; grid-template-rows: 480px; grid-auto-rows: 400px; }
@@ -213,7 +218,7 @@ body {
 /* ── Native sectioned form (Phase E, 2nd pilot) ─────────────────────────────
    Ported from #sform-pop; includes the layout scaffold from Layout/layout-base.css. */
 .sform { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-.sform__scroll { flex: 1; min-height: 0; overflow: auto; padding: 0 24px 24px; }
+/* .sform__scroll → .prism-scroll */
 .sform__section { padding: 20px 0 4px; }
 .sform__fields { display: flex; flex-direction: column; gap: 20px; padding-top: 12px; }
 .sform__field { max-width: 820px; }
@@ -232,7 +237,7 @@ body {
 .tabform__body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .tabform--vertical .tabform__body { flex-direction: row; }
 .tabform__tabs { flex: 0 0 auto; padding: 0 24px; border-bottom: 1px solid var(--uems-border-tertiary); }
-.tabform--vertical .tabform__nav { flex: 0 0 220px; padding: 16px 0 0 16px; overflow: auto; }
+.tabform--vertical .tabform__nav { flex: 0 0 220px; padding: 16px 12px 12px 16px; overflow: auto; border-inline-end: 1px solid var(--uems-border-tertiary); }
 .tabform__panels { flex: 1 1 auto; min-height: 0; }
 .tabform__panel[hidden] { display: none; }
 .sform ds-radio-group .ds-radio-group__items,
@@ -246,7 +251,7 @@ body {
 
 /* ── Native managed-computers list (Phase E, 3rd pilot / data-layer spike) ──── */
 .bl-list { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-.bl-list__scroll { flex: 1; min-height: 0; overflow: auto; padding: 0 20px 20px; display: flex; flex-direction: column; gap: 16px; }
+/* .bl-list__scroll → .prism-scroll.prism-scroll--stack */
 .bl-list .bl-kpis { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 16px; }
 .bl-list .bl-kpis ds-kpi-card { flex: 1 1 200px; min-width: 180px; }
 /* Filter column collapsed by default (table full-width); the table's built-in
@@ -327,7 +332,7 @@ body {
 
 /* ── Device execution detail (ported from layout-deployment-device, tokens only) ── */
 .ld-detail { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0; }
-.ld-detail__scroll { position: relative; flex: 1 1 auto; overflow: auto; padding: 0 20px 24px; }
+/* .ld-detail__scroll → .prism-scroll */
 /* Contain the execution-timeline ds-drawer to the content region: the pattern
    renders it inside .ld-detail (position: relative), so switching the normally
    viewport-fixed drawer to absolute bounds its panel + scrim to .ld-detail

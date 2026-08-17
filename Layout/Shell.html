@@ -23,6 +23,7 @@
        prism-api.js reads it; users can still turn it off with 'false'. -->
   <script>try{if(localStorage.getItem('uems-require-login')===null)localStorage.setItem('uems-require-login','true');}catch(_){}</script>
   <script src="data/prism-api.js"></script>   <!-- app data layer (front-end ⇄ backend API); views read data via window.PrismAPI -->
+  <script src="i18n/i18n.js"></script>        <!-- central per-locale catalog loader (window.UEMSi18n); locales in i18n/locales/*.json -->
   <script>
     /* Login gate (opt-in, loop-safe): if requireLogin is on and there's no auth
        token, redirect to the sign-in page before the app renders. Only checks token
@@ -973,8 +974,18 @@
   const _prod = PRODUCTS[_product] || PRODUCTS.ec;
   /* Header + mod-rail tabs, filtered to the active product's module subset. */
   function productTabs(lang) {
-    const all = TABS[lang] || TABS.en;
-    return _prod.tabs ? all.filter((t) => _prod.tabs.includes(t.id)) : all;
+    /* Labels resolve from the central i18n catalog (nav.tab.<id>) for the active
+       language, falling back to the canonical English in TABS.en when a key isn't
+       loaded/translated yet. TABS.en is the source of ids + meta; the old TABS.ar
+       array is retired (the catalog provides every language). */
+    const t = (window.ShellCtx && typeof window.ShellCtx.t === 'function') ? window.ShellCtx.t : null;
+    const all = TABS.en.map((tab) => {
+      if (!t) return { ...tab };
+      const key = 'nav.tab.' + tab.id;
+      const lbl = t(key);
+      return { ...tab, label: (lbl && lbl !== key) ? lbl : tab.label };
+    });
+    return _prod.tabs ? all.filter((x) => _prod.tabs.includes(x.id)) : all;
   }
   /* Rebrand: the header variant drives the logo + product name; loader + title mirror it. */
   hEl.setAttribute('variant', _prod.variant);
@@ -1030,13 +1041,27 @@
     });
     hEl.tabs = productTabs(lang);
     if (emptyEl) {
-      const e = EMPTY[lang];
+      const e = EMPTY[lang] || EMPTY.en;   /* only en/ar are inline; other locales fall back */
       emptyEl.setAttribute('title', e.t);
       emptyEl.setAttribute('description', e.d);
       emptyEl.setAttribute('primary-label', e.p);
       emptyEl.setAttribute('secondary-label', e.s);
     }
     translateStatic(lang);
+    /* Load the central per-locale catalog (Layout/i18n/locales/<lang>.json) for the
+       active language; its addMessages re-runs translateStatic once registered, and
+       we re-apply the header tabs + mod-rail so nav labels (nav.tab.<id>) pick up
+       the just-loaded translations. */
+    if (window.UEMSi18n && window.ShellCtx) {
+      window.UEMSi18n.ensure(lang, window.ShellCtx.addMessages).then(() => {
+        hEl.tabs = productTabs(lang);
+        try { if (_tab) applyL2For(l1El, l2El, _tab, lang); } catch (_) {} /* L2 nav labels */
+        if (typeof renderModRail === 'function' && document.documentElement.classList.contains('nav-left')) renderModRail();
+        /* Re-notify so any already-open drawer (help/settings/…) re-renders with the
+           now-loaded central strings (its t()-built content isn't declarative). */
+        document.dispatchEvent(new CustomEvent('shell:langchange', { detail: { lang } }));
+      });
+    }
     if (typeof renderModRail === 'function' && document.documentElement.classList.contains('nav-left')) renderModRail();
     /* Notify extracted drawer partials (e.g. Settings) so they re-render in the
        active language; they self-subscribe to this event. */
@@ -1132,14 +1157,16 @@
       const t = _i18nTarget(el);
       if (t._i18nEN === undefined) t._i18nEN = t.textContent;
       const en = I18N.en[key] != null ? I18N.en[key] : t._i18nEN;
-      t.textContent = (lang === 'ar' && I18N.ar[key] != null) ? I18N.ar[key] : en;
+      /* Active language's string when registered, else English (works for any
+         locale, not just Arabic — e.g. zh once its catalog is added). */
+      t.textContent = (I18N[lang] && I18N[lang][key] != null) ? I18N[lang][key] : en;
     });
     /* Placeholder attributes (e.g. ds-search-field) — translate via data-i18n-ph */
     document.querySelectorAll('[data-i18n-ph]').forEach((el) => {
       const key = el.getAttribute('data-i18n-ph');
       if (el._i18nPhEN === undefined) el._i18nPhEN = el.getAttribute('placeholder') || '';
       const en = I18N.en[key] != null ? I18N.en[key] : el._i18nPhEN;
-      el.setAttribute('placeholder', (lang === 'ar' && I18N.ar[key] != null) ? I18N.ar[key] : en);
+      el.setAttribute('placeholder', (I18N[lang] && I18N[lang][key] != null) ? I18N[lang][key] : en);
     });
   }
 

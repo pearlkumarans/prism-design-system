@@ -1,0 +1,29 @@
+{{! Patterns::ListDetail — L04 record-detail frame. Full RecordHeader + scrolling
+    :body widget grid + optional :overlay (slide-in panel within .ld-detail). }}
+<div class="ld-detail" {{refit-charts @refitKey}}>
+  <ds-page-header
+    icon={{this.header.icon}}
+    structure="full"
+    title={{this.header.title}}
+    description={{this.header.description}}
+    show-description={{if this.header.description "true" "false"}}
+    show-breadcrumbs={{if @breadcrumbs "true" "false"}}
+    show-summary={{if @summary "true" "false"}}
+    show-tabs={{if @tabs "true" "false"}}
+    collapse-on-scroll
+    scroll-target=".prism-scroll"
+    {{set-prop "breadcrumbs" @breadcrumbs}}
+    {{set-prop "summary" @summary}}
+    {{set-prop "tabs" @tabs}}
+    {{on "click" this.onHeaderClick}}
+    {{on "ds-page-header-tab" this.onTab}}
+  >
+    {{yield to="headerActions"}}
+  </ds-page-header>
+
+  <div class="prism-scroll">
+    {{yield to="body"}}
+  </div>
+
+  {{yield to="overlay"}}
+</div>

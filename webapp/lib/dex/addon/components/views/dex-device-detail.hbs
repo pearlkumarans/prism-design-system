@@ -1,0 +1,42 @@
+{{! DEX device detail — a thin Patterns::ListDetail instance (L04 record detail).
+    Summary meta + an experience-score trend chart and a contributing-factors table. }}
+{{#if this.error}}
+  <Patterns::EmptyState
+    @illustration="state-error"
+    @title={{this.errText.title}}
+    @description={{this.errText.desc}}
+    @primaryLabel={{this.errText.retry}}
+    @onPrimary={{this.reload}}
+  />
+{{else if this.rec}}
+  <Patterns::ListDetail
+    @header={{this.header}}
+    @breadcrumbs={{this.breadcrumbs}}
+    @summary={{this.summary}}
+    @onBreadcrumbClick={{this.onBreadcrumbClick}}
+  >
+    <:body>
+      <div class="dev-grid">
+        <ds-widget class="dev-w-status" type="chart" title={{this.trendTitle}}
+          show-drag="false" show-action="false" show-footer="false"
+          {{config-chart type="line" legend="none" fit="contain" data=this.trendChart}}></ds-widget>
+
+        <ds-widget class="dev-w-stages" type="table" title={{this.factorsTitle}}
+          show-drag="false" show-action="false" show-footer="false">
+          <ds-data-table
+            class="dev-table"
+            selection-mode="none"
+            row-height="comfortable"
+            show-toolbar="false"
+            show-footer="false"
+            sticky-header
+            {{set-prop "columns" this.columns}}
+            {{set-prop "rows" this.subScores}}
+          ></ds-data-table>
+        </ds-widget>
+      </div>
+    </:body>
+  </Patterns::ListDetail>
+{{else}}
+  <Patterns::Skeleton::Detail />
+{{/if}}
