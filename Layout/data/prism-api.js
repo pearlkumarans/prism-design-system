@@ -111,6 +111,11 @@
         locale: u.userLocale || '',
         isAdmin: !!u.adminUser,
       } : null,
+      /* Demo/mock sign-in (used until `endpoint` is wired): the ONLY accepted
+         account. Restricts the POC login to a single known credential instead of
+         waving through anything. Change here to re-key the demo account. */
+      demoUser: 'admin',
+      demoPass: 'admin',
       /* ↓↓ TODO: replace once we see the real Sign-in POST ↓↓ */
       endpoint: '',                                   // e.g. '/emsapi/login/authenticate' (unknown)
       method: 'POST',
@@ -362,6 +367,70 @@
       },
     },
 
+    /* DEX — Digital Experience. `devices` is a server-driven table (per-device
+       experience score, DEX status, remarks) with facets platform/dexStatus/
+       office/band. Mirrors the /dex/api/devices BFF resource; mock keeps the same
+       shape so the view works with no backend. */
+    dex: {
+      /* DEX overview — the DEX tab landing (L02 bento). The BFF (/dex/api/overview)
+         owns the aggregated record; mock returns null so the view shows its
+         empty/error state (same contract as inventory.overview). */
+      async overview() {
+        if (useMock()) return null;
+        return httpGet('/dex/api/overview');
+      },
+      async devices(params = {}) {
+        if (useMock()) {
+          const OFFICE = ['HQ', 'Remote', 'Branch'];
+          const OSMAP = { Windows: ['Windows 11 Pro', 'Windows 10 Ent', 'Windows 10 Pro', 'Windows Server 2019', 'Windows 11 IoT', 'Windows 8.1'], macOS: ['macOS 14 Sonoma', 'macOS 13 Ventura'], Linux: ['Ubuntu 22.04 LTS', 'RHEL 9'] };
+          const REMARK = ['High disk latency', 'Slow logon', 'High CPU', 'Memory pressure', 'Weak Wi-Fi', 'App crashes', 'Slow boot', 'Healthy', 'Unsupported OS', 'Battery drain'];
+          const NAMES = ['FIN-WKS', 'SALES-LT', 'ENG-WKS', 'HR-LT', 'OPS-WKS', 'DEV-MBP', 'SRV-DB', 'MKT-LT', 'EXE-MBP', 'SUP-WKS', 'QA-WKS'];
+          const p = (a, i) => a[i % a.length];
+          const band = (s) => (s == null ? 'na' : s >= 71 ? 'Good' : s >= 31 ? 'Average' : 'Poor');
+          const all = Array.from({ length: 26 }, (_, k) => { const i = k + 1; const platform = p(['Windows', 'Windows', 'Windows', 'macOS', 'Linux'], i); const enabled = i % 7 !== 0; const score = enabled ? (17 + (i * 29) % 84) : null; return { id: i, name: p(NAMES, i) + '-' + (100 + i * 7), domain: 'corp.local', score, platform, os: p(OSMAP[platform], i), office: p(OFFICE, i), dexStatus: enabled ? 'Enabled' : 'Yet to enable', band: band(score), remarks: enabled ? p(REMARK, i) : 'Agent not deployed', agent: enabled && i % 4 !== 0 ? 'live' : 'down' }; });
+          const arr = (v) => (Array.isArray(v) ? v : v ? [v] : []);
+          const f = { platform: arr(params.platform), dexStatus: arr(params.dexStatus), office: arr(params.office), band: arr(params.band) };
+          const q = String(params.search || '').trim().toLowerCase();
+          let m = all.filter((r) => (!f.platform.length || f.platform.includes(r.platform)) && (!f.dexStatus.length || f.dexStatus.includes(r.dexStatus)) && (!f.office.length || f.office.includes(r.office)) && (!f.band.length || f.band.includes(r.band)) && (!q || r.name.toLowerCase().includes(q) || r.os.toLowerCase().includes(q) || String(r.remarks).toLowerCase().includes(q)));
+          const total = m.length;
+          if (params.sort) { const dir = params.dir === 'desc' ? -1 : 1; m = [...m].sort((a, b) => dir * String(a[params.sort] ?? '').localeCompare(String(b[params.sort] ?? ''), undefined, { numeric: true, sensitivity: 'base' })); }
+          const page = Number(params.page || 1), size = Number(params.pageSize || 999);
+          const fc = (key, vals) => vals.map((v) => ({ value: v, count: all.filter((r) => r[key] === v).length }));
+          const scored = all.filter((r) => r.score != null); const avg = scored.length ? Math.round(scored.reduce((a, r) => a + r.score, 0) / scored.length) : 0;
+          return { rows: m.slice((page - 1) * size, (page - 1) * size + size), total, kpis: { total: all.length, avg, good: all.filter((r) => r.band === 'Good').length, poor: all.filter((r) => r.band === 'Poor').length, pending: all.filter((r) => r.dexStatus === 'Yet to enable').length }, facets: { platform: fc('platform', ['Windows', 'macOS', 'Linux']), dexStatus: fc('dexStatus', ['Enabled', 'Yet to enable']), office: fc('office', OFFICE), band: fc('band', ['Good', 'Average', 'Poor']) } };
+        }
+        const q = {};
+        ['platform', 'dexStatus', 'office', 'band', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/dex/api/devices', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+      /* Single device record (drill-down): the row + contributing sub-scores and a
+         14-day score trend. Fetched by id; mock mirrors the BFF exactly. */
+      async device(params = {}) {
+        const id = Number(params.id || 1);
+        if (useMock()) {
+          const OFFICE = ['HQ', 'Remote', 'Branch'];
+          const OSMAP = { Windows: ['Windows 11 Pro', 'Windows 10 Ent', 'Windows 10 Pro', 'Windows Server 2019', 'Windows 11 IoT', 'Windows 8.1'], macOS: ['macOS 14 Sonoma', 'macOS 13 Ventura'], Linux: ['Ubuntu 22.04 LTS', 'RHEL 9'] };
+          const REMARK = ['High disk latency', 'Slow logon', 'High CPU', 'Memory pressure', 'Weak Wi-Fi', 'App crashes', 'Slow boot', 'Healthy', 'Unsupported OS', 'Battery drain'];
+          const NAMES = ['FIN-WKS', 'SALES-LT', 'ENG-WKS', 'HR-LT', 'OPS-WKS', 'DEV-MBP', 'SRV-DB', 'MKT-LT', 'EXE-MBP', 'SUP-WKS', 'QA-WKS'];
+          const MODEL = ['Dell Latitude 7420', 'HP EliteBook 840', 'Lenovo ThinkPad X1', 'MacBook Pro 14', 'Surface Laptop 5'];
+          const FACTOR = ['CPU', 'Memory', 'Disk', 'Boot time', 'Network', 'App crashes'];
+          const WEIGHT = ['25%', '20%', '20%', '15%', '12%', '8%'];
+          const p = (a, i) => a[i % a.length];
+          const band = (s) => (s == null ? 'na' : s >= 71 ? 'Good' : s >= 31 ? 'Average' : 'Poor');
+          const platform = p(['Windows', 'Windows', 'Windows', 'macOS', 'Linux'], id); const enabled = id % 7 !== 0; const score = enabled ? (17 + (id * 29) % 84) : null;
+          const base = { id, name: p(NAMES, id) + '-' + (100 + id * 7), domain: 'corp.local', score, platform, os: p(OSMAP[platform], id), office: p(OFFICE, id), dexStatus: enabled ? 'Enabled' : 'Yet to enable', band: band(score), remarks: enabled ? p(REMARK, id) : 'Agent not deployed', agent: enabled && id % 4 !== 0 ? 'live' : 'down' };
+          const s = score == null ? 0 : score;
+          const subScores = FACTOR.map((factor, k) => { const sc = Math.max(4, Math.min(100, s + ((k * 17 + id * 7) % 41) - 20)); return { id: k + 1, factor, score: sc, weight: WEIGHT[k], band: band(sc) }; });
+          const days = Array.from({ length: 14 }, (_, k) => 'D-' + (13 - k));
+          const values = Array.from({ length: 14 }, (_, k) => Math.max(6, Math.min(100, Math.round(s + 14 * Math.sin((k + id) / 2.3) - 4))));
+          return { ...base, model: p(MODEL, id), lastSeen: 'Jul 16, 2026 03:19 PM', subScores, trend: { days, values } };
+        }
+        const body = await httpGet('/dex/api/device', { id });
+        return body || null;
+      },
+    },
+
     /* Home module dashboard — a composite record (KPIs + charts + list widgets +
        a table) for the L02 bento, fetched in ONE call. Not list-shaped, so no
        query params; same detail pattern as deployments.deviceExecution. The BFF
@@ -374,6 +443,16 @@
       },
     },
 
+    /* Inventory overview — the Inventory tab landing (L02 bento). The BFF
+       (/inventory/api/overview) owns the whole record; mock returns null so the
+       view shows its empty/error state rather than duplicating the dataset. */
+    inventory: {
+      async overview() {
+        if (useMock()) return null;
+        return httpGet('/inventory/api/overview');
+      },
+    },
+
     /* Threats & Patches — Highly Vulnerable Systems (the T&P landing list). Same
        server-driven-table contract as deployments.list (filter/search/sort/page →
        { rows, total, kpis, facets }). */
@@ -383,6 +462,13 @@
         const q = {};
         ['risk', 'os', 'group', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
         const body = await httpGet('/threats-patches/api/highlyVulnerable', q);
+        return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
+      },
+      async missingPatches(params = {}) {
+        if (useMock()) return { rows: [], total: 0, kpis: null, facets: null };
+        const q = {};
+        ['severity', 'vendor', 'approval', 'platform', 'search', 'sort', 'dir', 'page', 'pageSize'].forEach((k) => { if (params[k] != null && String(params[k]).length) q[k] = Array.isArray(params[k]) ? params[k].join(',') : params[k]; });
+        const body = await httpGet('/threats-patches/api/missingPatches', q);
         return { rows: (body && body.rows) || [], total: (body && body.total) || 0, kpis: (body && body.kpis) || null, facets: (body && body.facets) || null };
       },
     },
@@ -423,18 +509,21 @@
         return res.json();
       },
       async login(username, password) {
-        if (useMock()) { try { localStorage.setItem('uems-token', 'mock-token'); } catch (_) {} return 'mock-token'; }
         const A = CONFIG.auth;
-        /* Demo auth — until the real EC login endpoint is wired (CONFIG.auth.endpoint),
-           accept any non-empty credentials so the sign-in flow works end-to-end
-           against the demo backend. Checked BEFORE fetchLoginMeta so it doesn't hit
-           the (unimplemented) loginMeta endpoint. To go live: set CONFIG.auth.endpoint
-           (+ the RSA step below) and this branch no longer runs. */
-        if (!A.endpoint) {
+        /* Demo/mock auth — until the real EC login endpoint is wired
+           (CONFIG.auth.endpoint), accept ONLY the demo account (demoUser/demoPass,
+           default admin/admin) so the sign-in flow works end-to-end without waving
+           through arbitrary credentials. Checked BEFORE fetchLoginMeta so it doesn't
+           hit the (unimplemented) loginMeta endpoint. To go live: set
+           CONFIG.auth.endpoint (+ the RSA step below) and this branch no longer runs. */
+        if (useMock() || !A.endpoint) {
           if (!username || !password) throw new Error('Enter your username and password.');
-          if (typeof console !== 'undefined') console.warn('[PrismAPI.auth] Demo sign-in (no live login endpoint wired) — any credentials are accepted.');
-          try { localStorage.setItem('uems-token', 'demo-token'); } catch (_) {}
-          return 'demo-token';
+          if (username !== A.demoUser || password !== A.demoPass) {
+            throw new Error('Invalid credentials. Sign in with the demo account (' + A.demoUser + ' / ' + A.demoPass + ').');
+          }
+          const token = useMock() ? 'mock-token' : 'demo-token';
+          try { localStorage.setItem('uems-token', token); } catch (_) {}
+          return token;
         }
         const meta = await this.fetchLoginMeta();            // step 1 — publicKey
         const publicKey = A.readPublicKey(meta);

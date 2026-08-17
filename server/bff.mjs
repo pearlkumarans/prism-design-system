@@ -232,6 +232,183 @@ const highlyVulnerableQuery = (p) => applyQuery(HVS, p, {
   }),
 });
 
+/* ── Resource 8b: Missing Patches (Threats & Patches) — patches missing across the
+   fleet, a server-driven table. Same applyQuery contract as HVS. ── */
+const MP_VENDOR = ['Microsoft', 'Adobe', 'Google', 'Mozilla', 'Oracle', '7-Zip'];
+const MP_SEV = ['Critical', 'Critical', 'Important', 'Important', 'Moderate', 'Low'];
+const MP_CAT = ['Security update', 'Rollup', 'Feature pack', 'Driver', 'Third-party app', 'Security update'];
+const MP_PLAT = ['Windows', 'Windows', 'Windows', 'macOS', 'Linux', 'Windows'];
+const MP_APPROVAL = ['Approved', 'Not approved', 'Not approved', 'Declined', 'Approved', 'Not approved'];
+const MP_TITLE = ['Cumulative Update for Windows', 'Security Update for .NET', 'Acrobat Reader security patch', 'Chrome stable channel update', 'Firefox ESR update', 'Java SE critical patch update', '7-Zip update', 'Edge security update', 'Office security update'];
+const MP_RELEASED = ['Jul 8, 2026', 'Jul 2, 2026', 'Jun 26, 2026', 'Jun 19, 2026', 'Jun 11, 2026', 'May 28, 2026'];
+const MISSING_PATCHES = Array.from({ length: 38 }, (_, k) => {
+  const i = k + 1;
+  return {
+    id: i,
+    bulletinId: 'KB' + (5030000 + i * 137),
+    title: pick(MP_TITLE, i) + ' (' + (2026 - (i % 3)) + ')',
+    vendor: pick(MP_VENDOR, i),
+    severity: pick(MP_SEV, i + (i % 4)),
+    category: pick(MP_CAT, i),
+    platform: pick(MP_PLAT, i),
+    missingSystems: 3 + (i * 11) % 120,
+    approval: pick(MP_APPROVAL, i),
+    reboot: i % 3 === 0 ? 'Yes' : 'No',
+    released: pick(MP_RELEASED, i),
+  };
+});
+const missingPatchesQuery = (p) => applyQuery(MISSING_PATCHES, p, {
+  searchFields: ['bulletinId', 'title', 'vendor'],
+  facets: { severity: ['Critical', 'Important', 'Moderate', 'Low'], vendor: MP_VENDOR, approval: ['Approved', 'Not approved', 'Declined'], platform: ['Windows', 'macOS', 'Linux'] },
+  kpi: (d) => ({
+    total: d.length,
+    critical: d.filter((r) => r.severity === 'Critical').length,
+    systemsAffected: d.reduce((a, r) => a + r.missingSystems, 0),
+    pendingApproval: d.filter((r) => r.approval === 'Not approved').length,
+  }),
+});
+
+/* ── Resource 9: Inventory overview (the Inventory tab landing) — an L02 bento
+   dashboard summarising hardware + software inventory across managed computers.
+   One composite record (KPIs + charts + list widgets + a hardware table), same
+   shape the home dashboard uses so the native view reads it with plain getters. */
+const INV_MFR   = ['Dell', 'HP', 'Lenovo', 'Apple', 'Microsoft', 'Others'];
+const INV_MODEL = ['OptiPlex 7090', 'EliteBook 840', 'ThinkPad T14', 'MacBook Pro 14', 'Surface Pro 9', 'Latitude 5540'];
+const INV_MEM   = ['8 GB', '16 GB', '16 GB', '32 GB', '8 GB', '16 GB'];
+const INV_DISK  = ['256 GB SSD', '512 GB SSD', '1 TB SSD', '512 GB SSD', '256 GB SSD', '1 TB NVMe'];
+const INVENTORY_OVERVIEW = {
+  kpis: [
+    { label: 'Managed Computers', value: '186', state: 'success', icon: 'computer' },
+    { label: 'Hardware Assets', value: '1,204', state: 'default', icon: 'server-01' },
+    { label: 'Software Products', value: '1,289', state: 'default', icon: 'layers' },
+  ],
+  charts: {
+    os:      { categories: ['Windows', 'Ubuntu', 'macOS', 'RHEL', 'Others'], series: [{ name: 'Computers', values: [118, 34, 21, 9, 4] }] },
+    mfr:     { categories: INV_MFR, series: [{ name: 'Assets', values: [420, 356, 240, 96, 62, 30] }] },
+    swcat:   { categories: ['Productivity', 'Developer', 'Security', 'Media', 'Utilities', 'Others'], series: [{ name: 'Products', values: [312, 268, 190, 140, 220, 159] }] },
+    license: { categories: ['Licensed', 'Over licensed', 'Under licensed', 'Expired'], series: [{ name: 'Software', values: [834, 89, 42, 15], colors: ['green', 'orange', 'yellow', 'red'] }] },
+    scan:    { categories: ['Success', 'Failed', 'Not scanned'], series: [{ name: 'Computers', values: [162, 14, 10], colors: ['green', 'red', 'grey'] }] },
+    devtype: { categories: ['Desktop', 'Laptop', 'Server', 'Tablet', 'Others'], series: [{ name: 'Devices', values: [78, 82, 18, 6, 2] }] },
+    memory:  { categories: ['4 GB', '8 GB', '16 GB', '32 GB', '64+ GB'], series: [{ name: 'Computers', values: [12, 64, 78, 26, 6] }] },
+  },
+  lists: {
+    software: [
+      { icon: 'layers', label: 'Total Software', val: '1,289', tone: 'info' },
+      { icon: 'circle-tick', label: 'In Compliance (Licensed)', val: '834', tone: 'success' },
+      { icon: 'exclamation-circle', label: 'Over Licensed', val: '89', tone: 'error' },
+      { icon: 'clock', label: 'Under Licensed', val: '42', tone: 'warning' },
+      { icon: 'info-circle', label: 'License Expired', val: '15', tone: 'error' },
+      { icon: 'shield', label: 'Prohibited Software', val: '13', tone: 'error' },
+    ],
+    warranty: [
+      { icon: 'computer', label: 'FIN-WKS-104 (Dell)', link: true, badge: 'Expires in 6 days', state: 'critical' },
+      { icon: 'computer', label: 'SALES-LT-221 (HP)', link: true, badge: 'Expires in 14 days', state: 'warning' },
+      { icon: 'computer', label: 'ENG-WKS-318 (Lenovo)', link: true, badge: 'Expires in 21 days', state: 'warning' },
+      { icon: 'computer', label: 'OPS-SRV-002 (Dell)', link: true, badge: 'Expires in 28 days', state: 'default' },
+      { icon: 'computer', label: 'HR-LT-140 (Apple)', link: true, badge: 'Expires in 30 days', state: 'default' },
+      { icon: 'computer', label: 'SRV-DB-011 (HP)', link: true, badge: 'Expired', state: 'critical' },
+    ],
+  },
+  hardware: Array.from({ length: 8 }, (_, k) => {
+    const i = k + 1;
+    return {
+      id: i,
+      name: pick(['FIN', 'SALES', 'ENG', 'OPS', 'HR', 'SRV'], i) + '-WKS-' + (100 + i * 6),
+      manufacturer: pick(INV_MFR, i),
+      model: pick(INV_MODEL, i),
+      memory: pick(INV_MEM, i),
+      disk: pick(INV_DISK, i),
+    };
+  }),
+};
+const inventoryOverview = () => INVENTORY_OVERVIEW;
+
+/* ── Resource 10: whoami (userMeta) — resolves the current session to a user for
+   the profile drawer, matching PrismAPI.auth.readUser's field names. This is a
+   demo backend: it returns a fixed admin (no real session check — the client
+   guard already gates on token presence). Wire a real auth check here to go live. */
+const userMeta = () => ({
+  displayName: 'Demo Admin',
+  loginID: 'admin',
+  roleName: 'Administrator',
+  email: 'admin@acme.example',
+  userTimeZone: 'America/Los_Angeles',
+  userLocale: 'en_US',
+  adminUser: true,
+});
+
+/* ── Resource: DEX devices — per-device digital-experience feed ──────────────
+   Score bands: Good 71–100 · Average 31–70 · Poor 0–30. DEX status = onboarded
+   to DEX (Enabled) or not (Yet to enable). Facets: platform / dexStatus / office
+   / band. Reuses applyQuery — data + config only. */
+const DEX_OFFICE = ['HQ', 'Remote', 'Branch'];
+const DEX_OSMAP = { Windows: ['Windows 11 Pro', 'Windows 10 Ent', 'Windows 10 Pro', 'Windows Server 2019', 'Windows 11 IoT', 'Windows 8.1'], macOS: ['macOS 14 Sonoma', 'macOS 13 Ventura'], Linux: ['Ubuntu 22.04 LTS', 'RHEL 9'] };
+const DEX_REMARK = ['High disk latency', 'Slow logon', 'High CPU', 'Memory pressure', 'Weak Wi-Fi', 'App crashes', 'Slow boot', 'Healthy', 'Unsupported OS', 'Battery drain'];
+const DEX_NAMES = ['FIN-WKS', 'SALES-LT', 'ENG-WKS', 'HR-LT', 'OPS-WKS', 'DEV-MBP', 'SRV-DB', 'MKT-LT', 'EXE-MBP', 'SUP-WKS', 'QA-WKS'];
+const dexBand = (s) => (s == null ? 'na' : s >= 71 ? 'Good' : s >= 31 ? 'Average' : 'Poor');
+const DEX_DEVICES = Array.from({ length: 26 }, (_, k) => {
+  const i = k + 1;
+  const platform = pick(['Windows', 'Windows', 'Windows', 'macOS', 'Linux'], i);
+  const enabled = i % 7 !== 0;
+  const score = enabled ? (17 + (i * 29) % 84) : null;
+  return { id: i, name: pick(DEX_NAMES, i) + '-' + (100 + i * 7), domain: 'corp.local', score, platform, os: pick(DEX_OSMAP[platform], i), office: pick(DEX_OFFICE, i), dexStatus: enabled ? 'Enabled' : 'Yet to enable', band: dexBand(score), remarks: enabled ? pick(DEX_REMARK, i) : 'Agent not deployed', agent: enabled && i % 4 !== 0 ? 'live' : 'down' };
+});
+const dexDevicesQuery = (p) => applyQuery(DEX_DEVICES, p, {
+  searchFields: ['name', 'os', 'remarks'],
+  facets: { platform: ['Windows', 'macOS', 'Linux'], dexStatus: ['Enabled', 'Yet to enable'], office: DEX_OFFICE, band: ['Good', 'Average', 'Poor'] },
+  kpi: (d) => { const scored = d.filter((r) => r.score != null); const avg = scored.length ? Math.round(scored.reduce((a, r) => a + r.score, 0) / scored.length) : 0; return { total: d.length, avg, good: d.filter((r) => r.band === 'Good').length, poor: d.filter((r) => r.band === 'Poor').length, pending: d.filter((r) => r.dexStatus === 'Yet to enable').length }; },
+});
+
+/* Single device record (drill-down) — the list row + contributing sub-scores that
+   roll up to the experience score, and a 14-day score trend for the chart. Fetched
+   by ?id=. */
+const DEX_FACTOR = ['CPU', 'Memory', 'Disk', 'Boot time', 'Network', 'App crashes'];
+const DEX_FACTOR_WEIGHT = ['25%', '20%', '20%', '15%', '12%', '8%'];
+const DEX_MODEL = ['Dell Latitude 7420', 'HP EliteBook 840', 'Lenovo ThinkPad X1', 'MacBook Pro 14', 'Surface Laptop 5'];
+function dexDevice(p) {
+  const id = Number(p.get('id') || 1);
+  const base = DEX_DEVICES.find((d) => d.id === id) || DEX_DEVICES[0];
+  const s = base.score == null ? 0 : base.score;
+  const subScores = DEX_FACTOR.map((factor, i) => {
+    const score = Math.max(4, Math.min(100, s + ((i * 17 + id * 7) % 41) - 20));
+    return { id: i + 1, factor, score, weight: DEX_FACTOR_WEIGHT[i], band: dexBand(score) };
+  });
+  const days = Array.from({ length: 14 }, (_, k) => 'D-' + (13 - k));
+  const values = Array.from({ length: 14 }, (_, k) => Math.max(6, Math.min(100, Math.round(s + 14 * Math.sin((k + id) / 2.3) - 4))));
+  return { ...base, model: pick(DEX_MODEL, id), lastSeen: 'Jul 16, 2026 03:19 PM', subScores, trend: { days, values } };
+}
+
+/* DEX overview (the DEX tab landing, L02 bento) — fleet-level digital-experience
+   summary aggregated from the same DEX_DEVICES dataset the list/detail use, so the
+   numbers reconcile. KPIs + charts + list widgets, same shape as the home/inventory
+   dashboards. */
+const dexOverview = () => {
+  const scored = DEX_DEVICES.filter((d) => d.score != null);
+  const avg = scored.length ? Math.round(scored.reduce((a, r) => a + r.score, 0) / scored.length) : 0;
+  const band = (b) => DEX_DEVICES.filter((d) => d.band === b).length;
+  const platAvg = (plat) => { const s = DEX_DEVICES.filter((d) => d.platform === plat && d.score != null); return s.length ? Math.round(s.reduce((a, r) => a + r.score, 0) / s.length) : 0; };
+  const officeCount = (o) => DEX_DEVICES.filter((d) => d.office === o).length;
+  const issueCounts = {};
+  DEX_DEVICES.forEach((d) => { if (d.remarks && d.remarks !== 'Healthy' && d.remarks !== 'Agent not deployed') issueCounts[d.remarks] = (issueCounts[d.remarks] || 0) + 1; });
+  const issues = Object.entries(issueCounts).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([label, n]) => ({ icon: 'exclamation-triangle', label, val: String(n) }));
+  const lowest = [...scored].sort((a, b) => a.score - b.score).slice(0, 6).map((d) => ({ id: d.id, name: d.name, score: d.score, band: d.band }));
+  return {
+    kpis: [
+      { label: 'Experience score', value: String(avg), state: avg >= 71 ? 'success' : avg >= 31 ? 'warning' : 'critical', icon: 'activity' },
+      { label: 'Devices monitored', value: String(DEX_DEVICES.length), state: 'default', icon: 'computer' },
+      { label: 'Poor experience', value: String(band('Poor')), state: 'critical', icon: 'exclamation-circle' },
+    ],
+    charts: {
+      band:       { categories: ['Good', 'Average', 'Poor'], series: [{ name: 'Devices', values: [band('Good'), band('Average'), band('Poor')], colors: ['green', 'orange', 'red'] }] },
+      trend:      { categories: ['May', 'Jun 1', 'Jun 8', 'Jun 15', 'Jun 22', 'Jul 1', 'Jul 8'], series: [{ name: 'Avg score', values: [52, 55, 54, 58, 57, 61, avg] }] },
+      platform:   { categories: ['Windows', 'macOS', 'Linux'], series: [{ name: 'Avg score', values: [platAvg('Windows'), platAvg('macOS'), platAvg('Linux')] }] },
+      office:     { categories: DEX_OFFICE, series: [{ name: 'Devices', values: DEX_OFFICE.map(officeCount) }] },
+      onboarding: { categories: ['Enabled', 'Yet to enable'], series: [{ name: 'Devices', values: [DEX_DEVICES.filter((d) => d.dexStatus === 'Enabled').length, DEX_DEVICES.filter((d) => d.dexStatus === 'Yet to enable').length], colors: ['green', 'grey'] }] },
+    },
+    lists: { issues, lowest },
+  };
+};
+
 /* ── Routes ────────────────────────────────────────────────────────────────── */
 function handle(url) {
   const p = url.searchParams;
@@ -243,8 +420,14 @@ function handle(url) {
     case '/deployments/api/policies': return policiesQuery(p);
     case '/deployments/api/workflows': return workflowsQuery(p);
     case '/deployments/api/deviceExecution': return deviceExecution(p);
+    case '/dex/api/overview': return dexOverview();
+    case '/dex/api/devices': return dexDevicesQuery(p);
+    case '/dex/api/device': return dexDevice(p);
     case '/home/api/dashboard': return homeDashboard();
     case '/threats-patches/api/highlyVulnerable': return highlyVulnerableQuery(p);
+    case '/threats-patches/api/missingPatches': return missingPatchesQuery(p);
+    case '/inventory/api/overview': return inventoryOverview();
+    case '/emsapi/uac/userMeta': return userMeta();
     default: return null;
   }
 }
