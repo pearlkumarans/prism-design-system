@@ -23,4 +23,6 @@ export const NATIVE_VIEWS = new Set([
   'dex-overview',
   'dex-devices',
   'dex-device-detail',
+  'experience-insights',
+  'remote-actions',
 ]);

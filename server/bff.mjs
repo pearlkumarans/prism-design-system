@@ -409,6 +409,52 @@ const dexOverview = () => {
   };
 };
 
+/* ── DEX Batch 1: Experience insights + Remote actions (L03 lists) ── */
+const INS_CAT = ['Disk', 'CPU', 'Memory', 'Network', 'Boot', 'App crashes'];
+const INS_SEV = ['Critical', 'High', 'High', 'Medium', 'Medium', 'Low'];
+const INS_TITLE = ['High disk latency', 'Sustained high CPU', 'Memory pressure', 'Weak Wi-Fi signal', 'Slow boot time', 'Frequent app crashes', 'Slow logon', 'Low disk space', 'GPU driver faults', 'Battery degradation'];
+const INS_IMPACT = ['High', 'High', 'Medium', 'Medium', 'Low', 'Low'];
+const INS_STATUS = ['Active', 'Active', 'Active', 'Monitoring', 'Resolved', 'Active'];
+const DEX_INSIGHTS = Array.from({ length: 24 }, (_, k) => {
+  const i = k + 1;
+  return {
+    id: i,
+    title: pick(INS_TITLE, i),
+    category: pick(INS_CAT, i),
+    severity: pick(INS_SEV, i + (i % 3)),
+    affected: 2 + (i * 13) % 90,
+    impact: pick(INS_IMPACT, i),
+    status: pick(INS_STATUS, i + (i % 2)),
+    detected: pick(['12 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12, 2026'], i),
+  };
+});
+const insightsQuery = (p) => applyQuery(DEX_INSIGHTS, p, {
+  searchFields: ['title', 'category'],
+  facets: { category: INS_CAT, severity: ['Critical', 'High', 'Medium', 'Low'], status: ['Active', 'Monitoring', 'Resolved'] },
+  kpi: (d) => ({ total: d.length, critical: d.filter((r) => r.severity === 'Critical').length, affected: d.reduce((a, r) => a + r.affected, 0), active: d.filter((r) => r.status === 'Active').length }),
+});
+
+const RA_TYPE = ['Restart', 'Run script', 'Clear cache', 'Wake', 'Flush DNS', 'Kill process'];
+const RA_STATUS = ['Completed', 'Completed', 'Running', 'Failed', 'Completed', 'Queued'];
+const RA_BY = ['admin', 'j.doe', 'auto-remediation', 's.smith', 'auto-remediation'];
+const DEX_REMOTE_ACTIONS = Array.from({ length: 22 }, (_, k) => {
+  const i = k + 1;
+  return {
+    id: i,
+    action: pick(RA_TYPE, i),
+    device: pick(DEX_NAMES, i) + '-' + (100 + i * 7),
+    type: i % 3 === 0 ? 'Automated' : 'Manual',
+    status: pick(RA_STATUS, i + (i % 2)),
+    initiatedBy: pick(RA_BY, i),
+    time: pick(['2 min ago', '18 min ago', '1 hr ago', 'Today', 'Yesterday'], i),
+  };
+});
+const remoteActionsQuery = (p) => applyQuery(DEX_REMOTE_ACTIONS, p, {
+  searchFields: ['action', 'device', 'initiatedBy'],
+  facets: { status: ['Completed', 'Running', 'Failed', 'Queued'], type: ['Manual', 'Automated'] },
+  kpi: (d) => ({ total: d.length, running: d.filter((r) => r.status === 'Running').length, completed: d.filter((r) => r.status === 'Completed').length, failed: d.filter((r) => r.status === 'Failed').length }),
+});
+
 /* ── Routes ────────────────────────────────────────────────────────────────── */
 function handle(url) {
   const p = url.searchParams;
@@ -421,6 +467,8 @@ function handle(url) {
     case '/deployments/api/workflows': return workflowsQuery(p);
     case '/deployments/api/deviceExecution': return deviceExecution(p);
     case '/dex/api/overview': return dexOverview();
+    case '/dex/api/insights': return insightsQuery(p);
+    case '/dex/api/remoteActions': return remoteActionsQuery(p);
     case '/dex/api/devices': return dexDevicesQuery(p);
     case '/dex/api/device': return dexDevice(p);
     case '/home/api/dashboard': return homeDashboard();

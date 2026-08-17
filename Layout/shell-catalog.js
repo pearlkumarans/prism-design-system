@@ -84,6 +84,8 @@ export const CONTENT_VIEWS = {
   'dex-overview':                                 { file: '../projects/dex/layout-overview',                                 tab: 'dex' },
   'dex-devices':                                  { file: '../projects/dex/layout-devices',                                  tab: 'dex' },
   'dex-device-detail':                            { file: '../projects/dex/layout-device-detail',                            tab: 'dex', nav: 'dex-devices' },
+  'experience-insights':                          { file: '../projects/dex/layout-experience-insights',                      tab: 'dex' },
+  'remote-actions':                               { file: '../projects/dex/layout-remote-actions',                           tab: 'dex' },
   'deployments-reports':                          { file: '../projects/deployments/layout-reports',                          tab: 'deployments' },
   'deployments-policy-install-uninstall-software':{ file: '../projects/deployments/layout-policy-install-uninstall-software',tab: 'deployments', nav: 'deployments-policy' },
   'deployments-policy-file-folder-operation':     { file: '../projects/deployments/layout-policy-file-folder-operation',     tab: 'deployments', nav: 'deployments-policy' },
