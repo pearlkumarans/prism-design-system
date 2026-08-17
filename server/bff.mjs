@@ -583,6 +583,56 @@ function dexSensorRun() {
   };
 }
 
+/* ── DEX Batch 4: Extensions (marketplace + detail), content, script detail ── */
+const EXT_PUB = ['ManageEngine', 'Acme Labs', 'Community', 'Zoho', 'Community'];
+const EXT_CAT = ['Integration', 'Content pack', 'Sensor pack', 'Report pack', 'Automation'];
+const EXT_PLAT = ['Cross-platform', 'Windows', 'macOS', 'Cross-platform', 'Linux'];
+const EXT_NAME = ['ServiceDesk sync', 'Slack notifications', 'Zoom experience pack', 'M365 health content', 'Chrome telemetry', 'Teams call quality', 'VPN health sensors', 'Zscaler integration', 'Intune bridge', 'Custom report pack'];
+const DEX_EXTENSIONS = Array.from({ length: 18 }, (_, k) => {
+  const i = k + 1;
+  return { id: i, name: pick(EXT_NAME, i), publisher: pick(EXT_PUB, i), category: pick(EXT_CAT, i), platform: pick(EXT_PLAT, i), installed: i % 3 === 0, version: '1.' + (i % 9) + '.0' };
+});
+const extensionsQuery = (p) => applyQuery(DEX_EXTENSIONS, p, {
+  searchFields: ['name', 'publisher', 'category'],
+  facets: { category: EXT_CAT, publisher: ['ManageEngine', 'Acme Labs', 'Community', 'Zoho'], platform: ['Cross-platform', 'Windows', 'macOS', 'Linux'] },
+  kpi: (d) => ({ total: d.length, installed: d.filter((r) => r.installed).length, available: d.filter((r) => !r.installed).length, publishers: new Set(d.map((r) => r.publisher)).size }),
+});
+function dexExtension(p) {
+  const id = Number(p.get('id') || 1);
+  const base = DEX_EXTENSIONS.find((e) => e.id === id) || DEX_EXTENSIONS[0];
+  return {
+    ...base,
+    problem: `Teams struggle to correlate ${base.category.toLowerCase()} signals with device experience scores.`,
+    solution: `This extension streams ${base.name} data into DEX so you can see its impact on the experience score and alert on regressions.`,
+    features: ['Prebuilt sensors and dashboards', 'Automatic device correlation', 'Alert profiles included', 'No-code setup'],
+    about: [
+      { term: 'Publisher', description: base.publisher }, { term: 'Category', description: base.category },
+      { term: 'Platform', description: base.platform }, { term: 'Version', description: base.version },
+      { term: 'Updated', description: 'Jul 2, 2026' },
+    ],
+  };
+}
+function dexContent() {
+  return {
+    id: 1, name: 'Windows performance content pack', publisher: 'ManageEngine', category: 'Content pack', platform: 'Windows', version: '2.1.0',
+    problem: 'Baseline Windows performance monitoring requires many hand-built sensors and dashboards.',
+    solution: 'A curated pack of sensors, dashboards, and alert profiles for Windows performance, ready to deploy.',
+    features: ['12 performance sensors', '2 experience dashboards', '4 alert profiles', 'Quarterly content updates'],
+    about: [
+      { term: 'Publisher', description: 'ManageEngine' }, { term: 'Includes', description: '12 sensors · 2 dashboards' },
+      { term: 'Platform', description: 'Windows' }, { term: 'Version', description: '2.1.0' },
+    ],
+  };
+}
+function dexScript() {
+  return {
+    id: 1, name: 'Reset print spooler', language: 'PowerShell', status: 'Enabled',
+    code: 'Stop-Service -Name Spooler -Force\nStart-Sleep -Seconds 2\nStart-Service -Name Spooler\nWrite-Output "Spooler restarted"',
+    targets: [{ id: 1, type: 'Platform', value: 'Windows' }, { id: 2, type: 'Custom group', value: 'Print servers' }],
+    runs: Array.from({ length: 5 }, (_, k) => ({ id: k + 1, started: pick(['5 min ago', '1 hr ago', 'Today', 'Yesterday', 'Jul 12'], k + 1), status: pick(['Completed', 'Completed', 'Failed', 'Completed', 'Completed'], k + 1), devices: 4 + k * 3, duration: (1 + k) + 's' })),
+  };
+}
+
 /* Insight drill-down (L04) — a single experience insight with its trend,
    contributing factors, affected devices, and remediation. ?type=cpu returns the
    CPU-specialised record; else ?id= picks from DEX_INSIGHTS. */
@@ -646,6 +696,10 @@ function handle(url) {
     case '/dex/api/sensor': return dexSensor(p);
     case '/dex/api/sensorDeployments': return sensorDeploymentsQuery(p);
     case '/dex/api/sensorRun': return dexSensorRun(p);
+    case '/dex/api/extensions': return extensionsQuery(p);
+    case '/dex/api/extension': return dexExtension(p);
+    case '/dex/api/content': return dexContent(p);
+    case '/dex/api/script': return dexScript(p);
     case '/dex/api/devices': return dexDevicesQuery(p);
     case '/dex/api/device': return dexDevice(p);
     case '/home/api/dashboard': return homeDashboard();

@@ -38,4 +38,9 @@ export const NATIVE_VIEWS = new Set([
   'sensor-deployment',
   'sensor-run',
   'add-sensor',
+  'extensions',
+  'extension-detail',
+  'content-detail',
+  'script-detail',
+  'add-script',
 ]);

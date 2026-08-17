@@ -1,0 +1,34 @@
+{{! Add script — a thin Patterns::SectionedForm instance (L06). }}
+<Patterns::SectionedForm
+  @header={{this.header}}
+  @breadcrumbs={{this.breadcrumbs}}
+  @primaryLabel="Add script"
+  @saveAsItems={{this.saveAsItems}}
+  @onPrimary={{this.create}}
+  @onCancel={{this.cancel}}
+  @onSaveAs={{this.onSaveAs}}
+>
+  <:body as |Form|>
+    <Form.Section @title="Name and description" @description="Identify this script.">
+      <ds-text-input class="sform__field" size="medium" label="Script name" label-position="left" required maxlength="100" placeholder="e.g. Reset print spooler"></ds-text-input>
+      <ds-text-area class="sform__field" size="medium" label="Description" label-position="left" placeholder="What this script does"></ds-text-area>
+    </Form.Section>
+
+    <Form.Section @title="Script" @description="The remediation script to run.">
+      <div class="sform__field sform__row-inline">
+        <ds-input-select size="medium" label="Language" label-position="left" {{set-prop "options" this.languageOptions}}></ds-input-select>
+        <ds-input-select size="medium" placeholder="Platform" style="min-width:160px" {{set-prop "options" this.platformOptions}}></ds-input-select>
+      </div>
+      <ds-text-area class="sform__field" size="medium" label="Script" label-position="left" placeholder="# Script body"></ds-text-area>
+    </Form.Section>
+
+    <Form.Section @title="Execution settings" @description="When and how the script runs.">
+      <ds-input-select class="sform__field" size="medium" label="Run as" label-position="left" {{set-prop "options" this.runasOptions}}></ds-input-select>
+      <ds-input-select class="sform__field" size="medium" label="Timeout" label-position="left" {{set-prop "options" this.timeoutOptions}}></ds-input-select>
+      <ds-checkbox-group class="sform__field" label="Options" label-position="left" value="onfail">
+        <ds-checkbox value="onfail" label="Run automatically on matching alerts"></ds-checkbox>
+        <ds-checkbox value="reboot" label="Allow reboot"></ds-checkbox>
+      </ds-checkbox-group>
+    </Form.Section>
+  </:body>
+</Patterns::SectionedForm>
