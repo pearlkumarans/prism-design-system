@@ -277,7 +277,15 @@
     'Table View Preferences': 'تفضيلات عرض الجدول', 'Customize the table view settings to suit your preferences': 'خصّص إعدادات عرض الجدول لتناسب تفضيلاتك',
     'Theme': 'السمة', 'Select the theme to be applied to your product.': 'اختر السمة المراد تطبيقها على منتجك.', 'More': 'المزيد',
   };
-  const tr = (s) => (lang() === 'ar' && T_AR[s]) ? T_AR[s] : s;
+  /* Resolve a label for the active language: the central shared label catalog
+     (window.UEMSNavLabels[lang], English → string, sourced from EC), then the
+     legacy inline Arabic map, then the English label itself. */
+  const tr = (s) => {
+    const map = (typeof window !== 'undefined' && window.UEMSNavLabels && window.UEMSNavLabels[lang()]) || null;
+    if (map && map[s] != null) return map[s];
+    if (lang() === 'ar' && T_AR[s]) return T_AR[s];
+    return s;
+  };
   let _pfTab = 'general', _authSeg = 'pwd', _pfFont = 'Zoho Puvi';
   const PF_TABS = [{ id: 'general', label: 'General Settings' }, { id: 'auth', label: 'Authentication' }, { id: 'prefs', label: 'Preferences' }];
   const TALK = {
@@ -303,8 +311,22 @@
       set('#pf-sess', ['15 Minutes', '30 Minutes', '1 Hour', '4 Hours', '8 Hours'], '15 Minutes');
       set('#pf-tz', ['(GMT+5:30) India Standard Time (Asia/Kolkata)', '(GMT+0:00) UTC', '(GMT-8:00) Pacific Time'], '(GMT+5:30) India Standard Time (Asia/Kolkata)');
       set('#pf-fmt', ['Mar 23, 2026 10:30 AM', '23/03/2026 10:30', '2026-03-23 22:30'], 'Mar 23, 2026 10:30 AM');
-      { const el = box.querySelector('#pf-lang'); el.options = optsT(['English', 'Tamil', 'Hindi', 'Arabic']); el.value = lang() === 'ar' ? 'Arabic' : 'English'; }
-      box.querySelector('#pf-lang')?.addEventListener('ds-input-select-change', (e) => { ctx().applyDir && ctx().applyDir((e.detail && e.detail.value) === 'Arabic' ? 'ar' : 'en'); });
+      /* Display language — Endpoint Central's supported UI languages (+ Arabic).
+         The option `value` is the locale code passed to applyDir(); only Arabic
+         and Simplified Chinese are fully translated today — the rest fall back to
+         English via ctx().t(). */
+      const LANGS = [
+        { code: 'cs', native: 'Čeština' }, { code: 'da', native: 'Dansk' }, { code: 'de', native: 'Deutsch' },
+        { code: 'en', native: 'English' }, { code: 'es', native: 'Español' }, { code: 'fi', native: 'Suomi' },
+        { code: 'fr', native: 'Français' }, { code: 'hu', native: 'Magyar' }, { code: 'it', native: 'Italiano' },
+        { code: 'ja', native: '日本語' }, { code: 'ko', native: '한국어' }, { code: 'no', native: 'Norsk' },
+        { code: 'nl', native: 'Nederlands' }, { code: 'pl', native: 'Polski' }, { code: 'pt-BR', native: 'Português (Brasil)' },
+        { code: 'pt', native: 'Português' }, { code: 'ru', native: 'Русский' }, { code: 'sv', native: 'Svenska' },
+        { code: 'tr', native: 'Türkçe' }, { code: 'zh', native: '简体中文' }, { code: 'zh-TW', native: '繁體中文' },
+        { code: 'ar', native: 'العربية' },
+      ];
+      { const el = box.querySelector('#pf-lang'); el.options = LANGS.map((l) => ({ value: l.code, label: l.native })); el.value = lang(); }
+      box.querySelector('#pf-lang')?.addEventListener('ds-input-select-change', (e) => { const code = e.detail && e.detail.value; if (code && ctx().applyDir) ctx().applyDir(code); });
     } else if (_pfTab === 'auth') {
       box.innerHTML = `<ds-tab-filter id="pf-aseg" aria-label="Authentication mode"></ds-tab-filter><div id="pf-auth-body"></div>`;
       const seg = box.querySelector('#pf-aseg');

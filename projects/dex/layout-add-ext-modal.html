@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<!-- DEX — Add from Extension picker · SHARED OVERLAY fragment (projects/dex/).
+     A reusable ds-modal gallery of pre-built extensions, opened from the primary-action
+     dropdown "Extensions" / "Add from extensions" option on Dashboards, Sensors and Alerts.
+     Registers window.DEXExtModal.open({ kind }) — kind: 'dashboard' | 'sensor' | 'alert'.
+     Reuses the Extensions Content-tab card + toolbar (search / filter / sort).
+     Built ONLY from Prism ds-* components + --uems-* tokens. -->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="../../" />
+  <link rel="stylesheet" href="design-system-library/src/styles/index.css" />
+  <link rel="stylesheet" href="Layout/layout-base.css" />
+  <script type="module">import './design-system-library/src/components/index.js';</script>
+  <script src="design-system-library/src/data/dex-extensions.js"></script>
+  <script>
+    window.UEMS_ICON_SPRITE = 'design-system-library/src/icons/icons.svg';
+    window.UEMS_ILLUSTRATION_SPRITE = 'design-system-library/src/icons/illustrations.svg';
+    window.UEMS_LOGO_BASE = 'design-system-library/src/icons/logos';
+    (function () { var t = 'light'; try { t = localStorage.getItem('uems-theme') || 'light'; } catch (_) {} document.documentElement.setAttribute('data-theme', t); })();
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: var(--font-family-sans); background: var(--uems-bg-primary); }
+    .sa-host { display: flex; flex-direction: column; height: 100vh; }
+    .sa-host ds-button { margin: 24px; }
+  </style>
+</head>
+<body>
+
+<template id="drawer-fragment">
+<style>
+/* Widen the picker modal to a comfortable gallery width (still capped to viewport). */
+#axm-modal[data-size="lg"] .ds-modal__dialog, #axm-modal .ds-modal__dialog { max-width: min(1040px, 94vw); width: min(1040px, 94vw); }
+#axm { display: block; }
+/* Toolbar: search + filter (left), sort (right). */
+#axm .axm-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0 18px; }
+#axm .axm-toolbar__left { display: flex; align-items: center; gap: 10px; }
+#axm .axm-search { width: 320px; max-width: 100%; }
+#axm .axm-sort { display: inline-flex; align-items: center; gap: 6px; color: var(--uems-text-accent-link); cursor: pointer; font-size: 14px; }
+/* Filter popover, anchored below the filter icon. */
+#axm .axm-filter-wrap { position: relative; display: inline-flex; }
+#axm .axm-fpop { position: absolute; top: calc(100% + 8px); left: 0; z-index: 60; width: 300px; background: var(--uems-bg-primary, #fff); border: 1px solid var(--uems-border-tertiary); border-radius: 10px; box-shadow: var(--uems-shadow-300, 0 6px 16px rgba(20,28,51,.24)); padding: 16px; }
+#axm .axm-fpop[hidden] { display: none; }
+#axm .afp-title { font-size: 15px; font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); margin-bottom: 4px; }
+#axm .afp-sec { border-top: 1px solid var(--uems-border-tertiary); }
+#axm .afp-sec:first-of-type { border-top: 0; }
+#axm .afp-head { display: flex; align-items: center; gap: 10px; padding: 12px 2px; cursor: pointer; font-size: 14px; color: var(--uems-text-primary); }
+#axm .afp-chev { color: var(--uems-icon-secondary, #55607a); transition: transform 200ms ease; display: inline-flex; }
+#axm .afp-sec.is-open .afp-chev { transform: rotate(180deg); }
+#axm .afp-body { display: none; flex-direction: column; gap: 10px; padding: 0 2px 12px 28px; }
+#axm .afp-sec.is-open .afp-body { display: flex; }
+#axm .afp-foot { display: flex; gap: 12px; padding-top: 14px; }
+/* Card grid. */
+#axm .axm-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 900px) { #axm .axm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { #axm .axm-grid { grid-template-columns: 1fr; } }
+#axm .ext-card { display: flex; flex-direction: column; border: 1px solid var(--uems-border-tertiary); border-radius: 10px; padding: 20px; min-height: 180px; cursor: pointer; transition: border-color 120ms ease, box-shadow 120ms ease; }
+#axm .ext-card:hover, #axm .ext-card:focus-visible { border-color: var(--uems-border-brand, #006aff); box-shadow: var(--uems-shadow-200, 0 4px 14px rgba(20,28,51,.14)); outline: none; }
+#axm .ext-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+#axm .ext-card__title { font-size: 15px; font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+#axm .ext-card__desc { font-size: 13px; color: var(--uems-text-secondary); line-height: 1.5; margin: 12px 0 0; flex: 1 1 auto; }
+#axm .ext-card__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 18px; font-size: 13px; color: var(--uems-text-secondary); }
+#axm .ext-card__type { display: inline-flex; align-items: center; gap: 8px; }
+#axm .ext-sep { color: var(--uems-border-strong, #c9ced9); }
+#axm .ext-plat { display: inline-flex; align-items: center; color: var(--uems-icon-secondary, #55607a); }
+#axm .ext-added { display: inline-flex; align-items: center; gap: 6px; color: var(--uems-text-accent-link); }
+#axm .ext-deployed { display: inline-flex; align-items: center; gap: 6px; color: var(--uems-text-success, #0c8844); }
+#axm .ext-badge { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; background: var(--uems-bg-info-primary, #eaf0fc); color: var(--uems-text-info, #1e52bb); border-radius: 6px; padding: 3px 10px; font-size: 12px; white-space: nowrap; }
+#axm .ext-badge__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+#axm .axm-empty { padding: 48px 0; text-align: center; color: var(--uems-text-secondary); font-size: 14px; }
+/* ---- Detail view (swaps with the gallery when a card is opened) ---------- */
+#axm-detail[hidden] { display: none; }
+#axm .axd-back { display: inline-flex; align-items: center; gap: 6px; color: var(--uems-text-accent-link); cursor: pointer; font-size: 14px; margin-bottom: 16px; }
+#axm .axd-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+#axm .axd-title { font-size: 20px; font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); margin: 0; }
+#axm .axd-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 28px; padding: 14px 0 16px; border-bottom: 1px solid var(--uems-border-tertiary); margin-bottom: 22px; }
+#axm .axd-meta__item { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--uems-text-secondary); }
+#axm .axd-meta__item b { color: var(--uems-text-primary); font-weight: var(--font-weight-semibold); }
+#axm .axd-meta__ic { display: inline-flex; color: var(--uems-icon-secondary, #55607a); }
+#axm .axd-sec { margin-bottom: 22px; }
+#axm .axd-sec__title { font-size: 16px; font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); margin: 0 0 10px; }
+#axm .axd-p { font-size: 14px; color: var(--uems-text-secondary); line-height: 1.7; margin: 0; }
+#axm .axd-list { margin: 0; padding-inline-start: 20px; }
+#axm .axd-list li { font-size: 14px; color: var(--uems-text-secondary); line-height: 1.6; margin-bottom: 8px; }
+#axm .axd-shot { border: 1px solid var(--uems-border-tertiary); border-radius: 10px; overflow: hidden; max-width: 420px; }
+#axm .axd-shot__bar { height: 26px; background: var(--uems-bg-secondary); border-bottom: 1px solid var(--uems-border-tertiary); }
+#axm .axd-shot__body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+#axm .axd-shot__row { height: 12px; border-radius: 4px; background: var(--uems-bg-secondary, #eef1f6); }
+#axm .axd-shot__row--sm { width: 55%; }
+#axm .axd-shot__btns { display: flex; gap: 8px; margin-top: 6px; }
+#axm .axd-shot__btn { width: 54px; height: 20px; border-radius: 5px; }
+#axm .axd-shot__btn--p { background: var(--uems-bg-info-solid, #3b6fe0); }
+#axm .axd-shot__btn--s { background: var(--uems-bg-secondary, #eef1f6); }
+</style>
+
+<ds-modal id="axm-modal" size="lg" show-footer="false" dismiss-on-overlay title="Add from Extension"
+  description="Instant access to a comprehensive library of pre-built resources designed to meet your specific goals.">
+  <div id="axm">
+    <div id="axm-gallery">
+    <div class="axm-toolbar">
+      <div class="axm-toolbar__left">
+        <ds-text-input id="axm-search" class="axm-search" show-label="false" prefix-icon="search" placeholder="Search by Content"></ds-text-input>
+        <span class="axm-filter-wrap">
+          <ds-icon-button id="axm-filter" shape="square" type="tertiary-grey" size="medium" icon="filter" label="Filter"></ds-icon-button>
+          <div class="axm-fpop" id="axm-fpop" hidden>
+            <div class="afp-title">Apply Filters</div>
+            <div class="afp-sec" data-fsec>
+              <div class="afp-head" data-fhead><ds-icon class="afp-chev" name="chevron-down" size="16"></ds-icon><span>Status</span></div>
+              <div class="afp-body">
+                <ds-checkbox data-f="status" value="added" label="Added"></ds-checkbox>
+                <ds-checkbox data-f="status" value="notadded" label="Not added"></ds-checkbox>
+                <ds-checkbox data-f="status" value="update" label="Update available"></ds-checkbox>
+              </div>
+            </div>
+            <div class="afp-sec" data-fsec>
+              <div class="afp-head" data-fhead><ds-icon class="afp-chev" name="chevron-down" size="16"></ds-icon><span>Platform</span></div>
+              <div class="afp-body">
+                <ds-checkbox data-f="platform" value="win" label="Windows"></ds-checkbox>
+                <ds-checkbox data-f="platform" value="mac" label="Mac"></ds-checkbox>
+              </div>
+            </div>
+            <div class="afp-foot">
+              <ds-button id="axm-fcancel" variant="secondary">Cancel</ds-button>
+              <ds-button id="axm-fapply" variant="primary">Apply</ds-button>
+            </div>
+          </div>
+        </span>
+      </div>
+      <span class="axm-sort" id="axm-sort"><ds-icon id="axm-sort-ic" name="sort-down" size="16"></ds-icon><span id="axm-sort-txt">Newest First</span></span>
+    </div>
+    <div id="axm-grid" class="axm-grid"></div>
+    </div>
+    <div id="axm-detail" hidden></div>
+  </div>
+</ds-modal>
+
+<script>
+/* == DEX — shared "Add from Extension" picker modal ======================= */
+(function () {
+  if (window.__axmInit) return; window.__axmInit = true;
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const toast = (kind, title, description) => { try { globalThis.dsToast && globalThis.dsToast[kind]({ title, description, style: 'subtle' }); } catch (_) {} };
+  const D = (sel) => document.querySelector(sel);
+
+  const MSGS = {
+    en: {
+      'axm.search': 'Search by Content', 'axm.newest': 'Newest First', 'axm.oldest': 'Oldest First',
+      'axm.empty': 'No matching extensions.', 'axm.apply': 'Apply', 'axm.cancel': 'Cancel',
+      'axm.f.status': 'Status', 'axm.f.platform': 'Platform', 'axm.f.title': 'Apply Filters',
+      'axm.st.added': 'Added', 'axm.st.notadded': 'Not added', 'axm.st.update': 'Update available',
+      'axm.pl.win': 'Windows', 'axm.pl.mac': 'Mac',
+      'ext.added': 'Added', 'ext.update': 'Update available', 'ext.deployed': 'Deployed',
+      'ext.script': 'Script', 'ext.sensor': 'Sensor', 'ext.workflow': 'Workflow', 'ext.dashboard': 'Dashboard', 'ext.alert': 'Alert profile',
+      'axm.d.title': 'Add Dashboard from Extension', 'axm.d.desc': 'Instant access to a comprehensive library of pre-built dashboards that are designed to meet your specific goals.',
+      'axm.s.title': 'Add Sensor from Extension', 'axm.s.desc': 'Instant access to a comprehensive library of pre-built sensors that are designed to meet your specific goals.',
+      'axm.a.title': 'Add Alert Profile from Extension', 'axm.a.desc': 'Instant access to a comprehensive library of pre-built alert profiles that are designed to meet your specific goals.',
+      'axm.w.title': 'Add Workflow from Extension', 'axm.w.desc': 'Instant access to a comprehensive library of pre-built workflows that are designed to meet your specific goals.',
+      'axm.t.added': 'Added to your library', 'axm.add': 'Add',
+      'axm.back': 'Back', 'axm.type': 'Type', 'axm.released': 'Released On', 'axm.ver': 'Latest Version',
+      'axm.problem': 'Problem Statement', 'axm.solution': 'Solution', 'axm.platforms': 'Supported Platforms',
+      'axm.features': 'Key Features', 'axm.shots': 'Screenshots', 'axm.win': 'Windows', 'axm.mac': 'Mac',
+    },
+    ar: {
+      'axm.search': 'البحث حسب المحتوى', 'axm.newest': 'الأحدث أولاً', 'axm.oldest': 'الأقدم أولاً',
+      'axm.empty': 'لا توجد إضافات مطابقة.', 'axm.apply': 'تطبيق', 'axm.cancel': 'إلغاء',
+      'axm.f.status': 'الحالة', 'axm.f.platform': 'النظام الأساسي', 'axm.f.title': 'تطبيق عوامل التصفية',
+      'axm.st.added': 'مُضاف', 'axm.st.notadded': 'غير مُضاف', 'axm.st.update': 'يتوفر تحديث',
+      'axm.pl.win': 'Windows', 'axm.pl.mac': 'Mac',
+      'ext.added': 'مُضاف', 'ext.update': 'يتوفر تحديث', 'ext.deployed': 'منشور',
+      'ext.script': 'برنامج نصي', 'ext.sensor': 'مستشعر', 'ext.workflow': 'سير عمل', 'ext.dashboard': 'لوحة معلومات', 'ext.alert': 'ملف تعريف تنبيه',
+      'axm.d.title': 'إضافة لوحة معلومات من إضافة', 'axm.d.desc': 'وصول فوري إلى مكتبة شاملة من لوحات المعلومات الجاهزة المصممة لتحقيق أهدافك المحددة.',
+      'axm.s.title': 'إضافة مستشعر من إضافة', 'axm.s.desc': 'وصول فوري إلى مكتبة شاملة من المستشعرات الجاهزة المصممة لتحقيق أهدافك المحددة.',
+      'axm.a.title': 'إضافة ملف تعريف تنبيه من إضافة', 'axm.a.desc': 'وصول فوري إلى مكتبة شاملة من ملفات تعريف التنبيهات الجاهزة المصممة لتحقيق أهدافك المحددة.',
+      'axm.w.title': 'إضافة مسار عمل من إضافة', 'axm.w.desc': 'وصول فوري إلى مكتبة شاملة من مسارات العمل الجاهزة المصممة لتحقيق أهدافك المحددة.',
+      'axm.t.added': 'أُضيف إلى مكتبتك', 'axm.add': 'إضافة',
+      'axm.back': 'رجوع', 'axm.type': 'النوع', 'axm.released': 'صدر في', 'axm.ver': 'أحدث إصدار',
+      'axm.problem': 'بيان المشكلة', 'axm.solution': 'الحل', 'axm.platforms': 'الأنظمة المدعومة',
+      'axm.features': 'الميزات الرئيسية', 'axm.shots': 'لقطات الشاشة', 'axm.win': 'Windows', 'axm.mac': 'Mac',
+    },
+  };
+  if (window.ShellCtx && window.ShellCtx.addMessages) window.ShellCtx.addMessages(MSGS);
+  const t = (k) => (window.ShellCtx && window.ShellCtx.t) ? window.ShellCtx.t(k) : (MSGS.en[k] != null ? MSGS.en[k] : k);
+
+  /* SINGLE SOURCE OF TRUTH — the picker mirrors the real Extensions catalog
+     (window.DEX_EXT_CATALOG, from design-system-library/src/data/dex-extensions.js),
+     filtered to the content type that fits the page that opened it. */
+  const KIND_CFG = {
+    dashboard: { type: 'dashboard', titleK: 'axm.d.title', descK: 'axm.d.desc' },
+    sensor: { type: 'sensor', titleK: 'axm.s.title', descK: 'axm.s.desc' },
+    alert: { type: 'sensor', titleK: 'axm.a.title', descK: 'axm.a.desc' },
+    workflow: { type: 'workflow', titleK: 'axm.w.title', descK: 'axm.w.desc' },
+  };
+  /* Live view of the shared catalog for the current kind (never a private copy). */
+  function catalogFor(kind) {
+    const cfg = KIND_CFG[kind] || KIND_CFG.dashboard;
+    return (window.DEX_EXT_CATALOG || []).filter((x) => x.type === cfg.type);
+  }
+
+  const modal = D('#axm-modal');
+  let curKind = 'dashboard';
+  let query = '';
+  let sortNewest = true;
+  const filters = { status: new Set(), platform: new Set() };
+
+  const platIcon = (p) => p === 'mac'
+    ? `<span class="ext-plat" title="Mac"><ds-icon name="apple" size="16"></ds-icon></span>`
+    : `<span class="ext-plat" title="Windows"><ds-icon name="microsoft" size="16"></ds-icon></span>`;
+  const typeLabel = (type) => t('ext.' + (['sensor', 'workflow', 'dashboard', 'alert'].includes(type) ? type : 'script'));
+
+  function cardHTML(x) {
+    const plats = x.plats.map(platIcon).join('');
+    const badge = x.update ? `<span class="ext-badge"><span class="ext-badge__dot"></span>${esc(t('ext.update'))}</span>` : '';
+    const status = x.deployed
+      ? `<span class="ext-deployed"><ds-icon name="settings-deploy" size="15"></ds-icon>${esc(t('ext.deployed'))}</span>`
+      : x.added ? `<span class="ext-added"><ds-icon name="check" size="14"></ds-icon>${esc(t('ext.added'))}</span>` : '<span></span>';
+    return `<div class="ext-card" data-t="${esc(x.t)}">`
+      + `<div class="ext-card__top"><span class="ext-card__title">${esc(x.t)}</span>${badge}</div>`
+      + `<p class="ext-card__desc">${esc(x.d)}</p>`
+      + `<div class="ext-card__foot"><span class="ext-card__type">${esc(typeLabel(x.type))} <span class="ext-sep">|</span> ${plats}</span>${status}</div>`
+      + `</div>`;
+  }
+
+  /* ---- Detail view -------------------------------------------------------- */
+  const platLabels = (plats) => (plats && plats.length ? plats : ['win']).map((p) => p === 'mac' ? t('axm.mac') : t('axm.win'));
+  function detailFor(x) {
+    return {
+      version: '1.0.0', released: 'Jul 7, 2026',
+      problem: x.d || '',
+      solution: 'Add this ' + typeLabel(x.type).toLowerCase() + ' to monitor and manage the related experience across your managed devices.',
+      features: [
+        'Ready to add and deploy from the library in a few clicks.',
+        'Reusable across your managed endpoints.',
+        'Provides real-time visibility into the related signals.',
+      ],
+    };
+  }
+  const shotMock = () =>
+    `<div class="axd-shot"><div class="axd-shot__bar"></div><div class="axd-shot__body">`
+    + `<div class="axd-shot__row"></div><div class="axd-shot__row axd-shot__row--sm"></div>`
+    + `<div class="axd-shot__row"></div><div class="axd-shot__row axd-shot__row--sm"></div>`
+    + `<div class="axd-shot__btns"><span class="axd-shot__btn axd-shot__btn--p"></span><span class="axd-shot__btn axd-shot__btn--s"></span></div>`
+    + `</div></div>`;
+
+  function openDetail(x) {
+    const d = detailFor(x);
+    const addLabel = x.added ? t('ext.added') : t('axm.add');
+    const meta = [
+      `<span class="axd-meta__item"><span class="axd-meta__ic"><ds-icon name="file-report" size="16"></ds-icon></span>${esc(t('axm.type'))}: <b>${esc(typeLabel(x.type))}</b></span>`,
+      `<span class="axd-meta__item"><span class="axd-meta__ic"><ds-icon name="clock" size="16"></ds-icon></span>${esc(t('axm.released'))}: <b>${esc(d.released)}</b></span>`,
+      `<span class="axd-meta__item">${esc(t('axm.ver'))}: <b>${esc(d.version)}</b></span>`,
+    ].join('');
+    D('#axm-detail').innerHTML =
+      `<span class="axd-back" id="axm-back"><ds-icon name="chevron-down" size="16" style="transform:rotate(90deg)"></ds-icon>${esc(t('axm.back'))}</span>`
+      + `<div class="axd-head"><h2 class="axd-title">${esc(x.t)}</h2>`
+      + `<ds-button id="axm-add" variant="primary" ${x.added ? 'disabled' : ''}>${esc(addLabel)}</ds-button></div>`
+      + `<div class="axd-meta">${meta}</div>`
+      + `<div class="axd-sec"><h3 class="axd-sec__title">${esc(t('axm.problem'))}</h3><p class="axd-p">${esc(d.problem)}</p></div>`
+      + `<div class="axd-sec"><h3 class="axd-sec__title">${esc(t('axm.solution'))}</h3><p class="axd-p">${esc(d.solution)}</p></div>`
+      + `<div class="axd-sec"><h3 class="axd-sec__title">${esc(t('axm.platforms'))}</h3><ul class="axd-list">${platLabels(x.plats).map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>`
+      + `<div class="axd-sec"><h3 class="axd-sec__title">${esc(t('axm.features'))}</h3><ul class="axd-list">${d.features.map((f) => `<li>${esc(f)}</li>`).join('')}</ul></div>`
+      + `<div class="axd-sec"><h3 class="axd-sec__title">${esc(t('axm.shots'))}</h3>${shotMock()}</div>`;
+    D('#axm-detail').setAttribute('data-t', x.t);
+    D('#axm-gallery').hidden = true;
+    D('#axm-detail').hidden = false;
+    if (modal) modal.setAttribute('show-header', 'false');   /* detail view has its own Back + title */
+    const sc = modal.querySelector('.ds-modal__body, [id$="-body"]'); if (sc) sc.scrollTop = 0;
+  }
+  function backToGrid() {
+    D('#axm-detail').hidden = true;
+    D('#axm-gallery').hidden = false;
+    if (modal) modal.removeAttribute('show-header');   /* restore the picker header */
+  }
+
+  function matches(x) {
+    if (query && !((x.t + ' ' + x.d).toLowerCase().includes(query))) return false;
+    if (filters.status.size) {
+      const st = x.added ? 'added' : 'notadded';
+      const ok = [...filters.status].some((f) => f === 'update' ? !!x.update : f === st);
+      if (!ok) return false;
+    }
+    if (filters.platform.size && !x.plats.some((p) => filters.platform.has(p))) return false;
+    return true;
+  }
+
+  function render() {
+    const grid = D('#axm-grid');
+    if (!grid) return;
+    let list = catalogFor(curKind).filter(matches);
+    if (!sortNewest) list = list.slice().reverse();
+    grid.innerHTML = list.length ? list.map(cardHTML).join('') : `<div class="axm-empty">${esc(t('axm.empty'))}</div>`;
+  }
+
+  function applyStrings() {
+    const si = D('#axm-search'); if (si) si.setAttribute('placeholder', t('axm.search'));
+    const stx = D('#axm-sort-txt'); if (stx) stx.textContent = sortNewest ? t('axm.newest') : t('axm.oldest');
+    const cfg = KIND_CFG[curKind] || KIND_CFG.dashboard;
+    if (modal) { modal.setAttribute('title', t(cfg.titleK)); modal.setAttribute('description', t(cfg.descK)); }
+    render();
+  }
+
+  /* ---- Events (document-level delegation — the modal portals to <body>) ---- */
+  document.addEventListener('input', (e) => {
+    const si = e.target.closest && e.target.closest('#axm-search');
+    if (!si) return;
+    query = (e.target.value || '').trim().toLowerCase(); render();
+  });
+
+  document.addEventListener('click', (e) => {
+    /* Filter open/close. */
+    const fbtn = e.target.closest && e.target.closest('#axm-filter');
+    const pop = D('#axm-fpop');
+    if (fbtn) { if (pop) pop.hidden = !pop.hidden; return; }
+    /* Collapsible filter sections. */
+    const head = e.target.closest && e.target.closest('#axm-fpop [data-fhead]');
+    if (head) { head.closest('[data-fsec]').classList.toggle('is-open'); return; }
+    /* Apply / Cancel. */
+    if (e.target.closest && e.target.closest('#axm-fapply')) {
+      filters.status = new Set(); filters.platform = new Set();
+      D('#axm-fpop').querySelectorAll('ds-checkbox[data-f]').forEach((cb) => {
+        if (cb.hasAttribute('checked') || cb.checked) filters[cb.getAttribute('data-f')].add(cb.getAttribute('value'));
+      });
+      if (pop) pop.hidden = true; render(); return;
+    }
+    if (e.target.closest && e.target.closest('#axm-fcancel')) { if (pop) pop.hidden = true; return; }
+    /* Sort toggle. */
+    if (e.target.closest && e.target.closest('#axm-sort')) {
+      sortNewest = !sortNewest;
+      const ic = D('#axm-sort-ic'); if (ic) ic.setAttribute('name', sortNewest ? 'sort-down' : 'sort-up');
+      const tx = D('#axm-sort-txt'); if (tx) tx.textContent = sortNewest ? t('axm.newest') : t('axm.oldest');
+      render(); return;
+    }
+    /* Detail: back to gallery. */
+    if (e.target.closest && e.target.closest('#axm-back')) { backToGrid(); return; }
+    /* Detail: Add. */
+    if (e.target.closest && e.target.closest('#axm-add')) {
+      const item = catalogFor(curKind).find((x) => x.t === D('#axm-detail').getAttribute('data-t'));
+      if (item && !item.added) { item.added = true; toast('success', item.t, t('axm.t.added')); render(); openDetail(item); }
+      return;
+    }
+    /* Card → open its detail inside the popup. */
+    const card = e.target.closest && e.target.closest('#axm-grid .ext-card');
+    if (card) {
+      const item = catalogFor(curKind).find((x) => x.t === card.getAttribute('data-t'));
+      if (item) openDetail(item);
+      return;
+    }
+    /* Click-away closes the filter popover. */
+    if (pop && !pop.hidden) { const inPop = e.target.closest && e.target.closest('.axm-filter-wrap'); if (!inPop) pop.hidden = true; }
+  });
+
+  if (window.ShellCtx && window.ShellCtx.onLangChange) window.ShellCtx.onLangChange(() => applyStrings());
+
+  /* ---- Public API --------------------------------------------------------- */
+  window.DEXExtModal = {
+    open(opts) {
+      opts = opts || {};
+      curKind = KIND_CFG[opts.kind] ? opts.kind : 'dashboard';
+      query = ''; sortNewest = true;
+      filters.status = new Set(); filters.platform = new Set();
+      const si = D('#axm-search'); if (si) si.value = '';
+      const pop = D('#axm-fpop'); if (pop) pop.hidden = true;
+      backToGrid();
+      const ic = D('#axm-sort-ic'); if (ic) ic.setAttribute('name', 'sort-down');
+      document.querySelectorAll('#axm-fpop ds-checkbox[data-f]').forEach((cb) => { cb.removeAttribute('checked'); if ('checked' in cb) cb.checked = false; });
+      applyStrings();
+      if (modal && modal.open) modal.open(); else if (modal) modal.setAttribute('open', '');
+    },
+    close() { if (modal && modal.close) modal.close(); },
+  };
+})();
+</script>
+</template>
+
+<script>
+/* == STANDALONE HARNESS — runs ONLY when opened directly. ================ */
+(function () {
+  const host = document.createElement('div'); host.className = 'sa-host'; document.body.appendChild(host);
+  const frag = document.getElementById('drawer-fragment').content.cloneNode(true);
+  frag.querySelectorAll('style').forEach((s) => document.head.appendChild(s));
+  const scripts = [...frag.querySelectorAll('script')]; scripts.forEach((s) => s.remove());
+  host.appendChild(frag);
+  scripts.forEach((o) => { const s = document.createElement('script'); if (o.type) s.type = o.type; s.textContent = o.textContent; document.body.appendChild(s); });
+  /* Demo triggers so the picker can be exercised standalone. */
+  const bar = document.createElement('div');
+  ['dashboard', 'sensor', 'alert'].forEach((k) => {
+    const b = document.createElement('ds-button'); b.setAttribute('variant', 'primary'); b.textContent = 'Open ' + k + ' picker';
+    b.addEventListener('click', () => window.DEXExtModal && window.DEXExtModal.open({ kind: k })); bar.appendChild(b);
+  });
+  host.appendChild(bar);
+})();
+</script>
+</body>
+</html>

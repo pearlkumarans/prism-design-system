@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prism Capability Matrix</title>
+<style>
+  :root {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --surface-2: #eef1f6;
+    --border: #e3e7ee;
+    --border-strong: #cfd5df;
+    --text: #1a1e27;
+    --text-2: #545c68;
+    --text-3: #858d9a;
+
+    --accent: #2c66dd;
+    --accent-weak: #e9f0fc;
+    --accent-border: #b3c8ef;
+
+    --ok: #1c8b3c;      --ok-bg: #e6f4ea;   --ok-border: #bce0c6;
+    --warn: #a9640a;    --warn-bg: #fbf1df;  --warn-border: #eecf97;
+    --gap: #5c6675;     --gap-bg: #eceff3;   --gap-border: #d3d9e1;
+
+    --shadow: 0 1px 2px rgba(16,22,34,.04), 0 6px 20px rgba(16,22,34,.05);
+    --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151b;
+      --surface: #191d24;
+      --surface-2: #21262f;
+      --border: #2a3038;
+      --border-strong: #3a424e;
+      --text: #e7eaef;
+      --text-2: #a4adba;
+      --text-3: #6f7885;
+
+      --accent: #6c9bf3;
+      --accent-weak: #1a2540;
+      --accent-border: #32477b;
+
+      --ok: #52c471;     --ok-bg: #142e1e;   --ok-border: #23583a;
+      --warn: #e2a745;   --warn-bg: #322611;  --warn-border: #56441d;
+      --gap: #8b94a2;    --gap-bg: #232831;   --gap-border: #38414d;
+
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151b;
+    --surface: #191d24;
+    --surface-2: #21262f;
+    --border: #2a3038;
+    --border-strong: #3a424e;
+    --text: #e7eaef;
+    --text-2: #a4adba;
+    --text-3: #6f7885;
+
+    --accent: #6c9bf3;
+    --accent-weak: #1a2540;
+    --accent-border: #32477b;
+
+    --ok: #52c471;     --ok-bg: #142e1e;   --ok-border: #23583a;
+    --warn: #e2a745;   --warn-bg: #322611;  --warn-border: #56441d;
+    --gap: #8b94a2;    --gap-bg: #232831;   --gap-border: #38414d;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 1200px; margin: 0 auto; padding: 40px 24px 72px; }
+
+  /* ---- Header ---- */
+  .eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 10px;
+  }
+  h1 {
+    font-size: clamp(28px, 4vw, 40px); line-height: 1.08; letter-spacing: -.02em;
+    font-weight: 700; margin: 0 0 12px; text-wrap: balance;
+  }
+  .lede { margin: 0; max-width: 64ch; color: var(--text-2); font-size: 16px; }
+
+  /* ---- Summary tiles ---- */
+  .summary { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0 8px; }
+  .tile {
+    flex: 1 1 160px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .tile__num { font-size: 26px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .tile__label { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .dot--ok { background: var(--ok); }
+  .dot--warn { background: var(--warn); }
+  .dot--gap { background: var(--gap); }
+  .dot--total { background: var(--accent); }
+  .legend-note { color: var(--text-3); font-size: 12.5px; margin: 6px 2px 0; }
+
+  /* ---- Category section ---- */
+  .cat { margin-top: 34px; }
+  .cat__head { display: flex; align-items: baseline; gap: 10px; margin: 0 2px 12px; }
+  .cat__title { font-size: 18px; font-weight: 650; letter-spacing: -.01em; margin: 0;
+    padding-left: 11px; border-left: 3px solid var(--accent); }
+  .cat__count { font-size: 12.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+  .table-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow); overflow-x: auto;
+  }
+  table { width: 100%; min-width: 900px; border-collapse: collapse; }
+  thead th {
+    text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--text-3); padding: 11px 16px; border-bottom: 1px solid var(--border);
+    background: var(--surface-2); position: sticky; top: 0;
+  }
+  tbody td { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: color-mix(in srgb, var(--accent) 4%, transparent); }
+
+  .cap-name { font-weight: 600; color: var(--text); }
+  .cap-note { color: var(--text-3); font-size: 13px; margin-top: 3px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 999px;
+    background: var(--accent-weak); color: var(--accent); border: 1px solid var(--accent-border);
+    white-space: nowrap;
+  }
+  .supports-text { color: var(--text-2); font-size: 13.5px; }
+
+  .target { color: var(--text-2); font-size: 13.5px; }
+  .tcheck { color: var(--ok); font-weight: 700; margin-right: 5px; }
+
+  .src { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-2); white-space: nowrap; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+    font-size: 12.5px; font-weight: 600; padding: 3px 11px 3px 9px; border-radius: 999px;
+    border: 1px solid; letter-spacing: .01em;
+  }
+  .pill--full { color: var(--ok); background: var(--ok-bg); border-color: var(--ok-border); }
+  .pill--partial { color: var(--warn); background: var(--warn-bg); border-color: var(--warn-border); }
+  .pill--gap { color: var(--gap); background: var(--gap-bg); border-color: var(--gap-border); }
+
+  .col-status { width: 1%; }
+
+  footer { margin-top: 42px; padding-top: 20px; border-top: 1px solid var(--border);
+    color: var(--text-3); font-size: 12.5px; line-height: 1.6; }
+  footer code { font-family: var(--font-mono); color: var(--text-2); }
+
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (max-width: 560px) {
+    .page { padding: 28px 16px 56px; }
+    .tile { flex-basis: 130px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <p class="eyebrow">Prism · UEMS design system + Ember shell</p>
+    <h1>Capability Matrix</h1>
+    <p class="lede">What the design system and app shell support today versus the Endpoint Central / Prism reference — theming, accent, RTL &amp; internationalization, and accessibility — with maturity and where each capability lives. As of August 2026.</p>
+
+    <div class="summary" id="summary"></div>
+    <p class="legend-note"><strong>Full</strong> — supported end-to-end &nbsp;·&nbsp; <strong>Partial</strong> — works, but limited or incomplete &nbsp;·&nbsp; <strong>Gap</strong> — not yet supported</p>
+  </header>
+
+  <main id="matrix"></main>
+
+  <footer>
+    Scope: <code>design-system-library/</code> (Prism <code>ds-*</code> + tokens) · <code>Layout/</code> (Shell + views) · <code>webapp/</code> (Ember migration).
+    <strong>Current</strong> = what our setup does today; <strong>Target / reference</strong> = what Endpoint Central + the Prism reference implementation provide. Status reflects the current working tree; the source column shows the primary file.
+  </footer>
+</div>
+
+<script>
+  const DATA = [
+    { cat: 'Theme', rows: [
+      { name: 'Color modes', chips: ['Light','Dark','System'], target: 'Light · Dark · System', src: 'services/theme.js', status: 'full' },
+      { name: 'Theme families', chips: ['Blue','Green'], target: 'Multiple accent-driven families', src: 'services/theme.js', status: 'full' },
+      { name: 'Token-swap theming', note: 'All color via --uems-* under [data-theme]', target: 'All color tokenized', src: 'tokens/tokens.css', status: 'full' },
+      { name: 'System detection', note: 'matchMedia(prefers-color-scheme)', target: 'Follows OS theme', src: 'services/theme.js', status: 'full' },
+      { name: 'No-FOUC boot', note: 'Pre-paint data-theme script before first render', target: 'No flash on load', src: 'app/index.html', status: 'full' },
+      { name: 'Switcher UI', note: 'Appearance popover off the utility rail', target: 'In-product theme control', src: 'lib/rail-popover.js', status: 'full' },
+      { name: 'Persistence', note: 'localStorage — stores the resolved value, so “System” isn’t remembered', target: 'Remembers exact choice, incl. System', src: 'services/theme.js', status: 'partial' },
+      { name: 'Night / high-contrast theme', note: 'Defined in tokens, not exposed in the appearance menu', target: 'High-contrast theme selectable in-product', src: 'tokens/tokens.css', status: 'partial' },
+    ]},
+    { cat: 'Accent', rows: [
+      { name: 'Accent swatches', chips: ['Blue #2C66DD','Green #1E8E3E'], target: 'Preset accent colors', src: 'lib/rail-popover.js', status: 'full' },
+      { name: 'Accent token families', note: 'text / border / icon / bg accent roles', target: 'Accent drives all roles', src: 'tokens/tokens.css', status: 'full' },
+      { name: 'Arbitrary accent picker', note: 'Only two fixed families; no runtime accent variable', target: 'User-chosen accent color', src: '—', status: 'gap' },
+    ]},
+    { cat: 'RTL & internationalization', rows: [
+      { name: 'Direction flip', note: 'dir="rtl" on <html> when locale is Arabic', target: 'Full RTL layout', src: 'services/i18n.js', status: 'full' },
+      { name: 'Translation API', chips: ['t()','addMessages','onLangChange','{{t}}'], target: 'Reactive t() + live switch', src: 'services/i18n.js', status: 'full' },
+      { name: 'Language switch UI', note: 'Rail RTL toggle + profile language select', target: 'In-product language menu', src: 'components/shell-chrome.js', status: 'full' },
+      { name: 'Locales', chips: ['English','Arabic'], note: 'Profile lists more, but only en/ar actually change anything', target: 'Many locales, externalized catalog', src: 'services/i18n.js', status: 'partial' },
+      { name: 'Component RTL CSS', note: '[dir="rtl"] rules in ~50 of 72 components', target: 'RTL across all components', src: 'components/**', status: 'partial' },
+      { name: 'RTL at first paint', note: 'dir not set at boot → LTR flash for Arabic users', target: 'dir set before first paint', src: 'app/index.html', status: 'gap' },
+      { name: 'Date / number / timezone l10n', note: 'No Intl formatting anywhere in the webapp', target: 'Locale-aware Intl formatting', src: '—', status: 'gap' },
+    ]},
+    { cat: 'Accessibility', rows: [
+      { name: 'Accessibility Controls drawer', note: 'Text size · zoom · focus rings · error format · required-field format · SR hints · RTL', target: 'Full a11y preferences panel', src: 'views/accessibility.html', status: 'full' },
+      { name: 'Focus-visible + ring token', note: ':focus-visible base + --uems-focus-ring', target: 'Visible keyboard focus everywhere', src: 'styles/reset.css', status: 'full' },
+      { name: 'Reduced motion', note: 'prefers-reduced-motion honored globally + in ~68 components', target: 'Honors reduced-motion', src: 'styles/reset.css', status: 'full' },
+      { name: 'ARIA patterns', note: 'menu roles · aria-checked · Esc / outside-click close', target: 'ARIA + keyboard on all widgets', src: 'lib/rail-popover.js', status: 'full' },
+      { name: 'Automated a11y tests', note: 'axe on 5 of 72 components; color-contrast rule disabled', target: 'axe on all components, incl. contrast', src: 'test/a11y.test.js', status: 'partial' },
+      { name: 'Skip link', note: 'No “skip to content” anywhere', target: 'Skip-to-content link', src: '—', status: 'gap' },
+    ]},
+    { cat: 'System & UX', rows: [
+      { name: 'Skeleton loading', chips: ['dashboard','detail','form','list'], target: 'Skeletons for key views', src: 'patterns/skeleton/', status: 'full' },
+      { name: 'Empty states', note: 'Shared empty-state pattern over the Prism component', target: 'Empty-state pattern', src: 'patterns/empty-state', status: 'full' },
+      { name: 'Responsive layout', note: 'Container / media-query layouts + viewport meta', target: 'Responsive across breakpoints', src: 'styles/app.css', status: 'full' },
+      { name: 'Routing & navigation', note: 'Nested routes + nav service + nav-progress', target: 'Complete route graph', src: 'app/router.js', status: 'full' },
+      { name: 'Toast / notifications', note: 'ds-toast component exists, but no app-wide flash service', target: 'App-wide notification service', src: 'components/toast', status: 'partial' },
+      { name: 'Quality gates (CI)', note: 'token-lint + component tests run — for the library only, not the webapp', target: 'Lint + tests gate the app too', src: '.github/ci.yml', status: 'partial' },
+    ]},
+  ];
+
+  const STATUS = { full: 'Full', partial: 'Partial', gap: 'Gap' };
+  const DOT = { full: 'ok', partial: 'warn', gap: 'gap' };
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function rowHTML(r) {
+    let cur = '';
+    if (r.chips) cur += '<div class="chips">' + r.chips.map(c => '<span class="chip">' + esc(c) + '</span>').join('') + '</div>';
+    if (r.note) cur += '<div class="' + (r.chips ? 'cap-note' : 'supports-text') + '">' + esc(r.note) + '</div>';
+    const check = r.status === 'full' ? '<span class="tcheck">✓</span>' : '';
+    return '<tr>'
+      + '<td><div class="cap-name">' + esc(r.name) + '</div></td>'
+      + '<td>' + cur + '</td>'
+      + '<td><span class="target">' + check + esc(r.target) + '</span></td>'
+      + '<td><span class="src">' + esc(r.src) + '</span></td>'
+      + '<td class="col-status"><span class="pill pill--' + r.status + '"><span class="dot dot--' + DOT[r.status] + '"></span>' + STATUS[r.status] + '</span></td>'
+      + '</tr>';
+  }
+
+  function catHTML(c) {
+    const counts = { full: 0, partial: 0, gap: 0 };
+    c.rows.forEach(r => counts[r.status]++);
+    const parts = [];
+    if (counts.full) parts.push(counts.full + ' full');
+    if (counts.partial) parts.push(counts.partial + ' partial');
+    if (counts.gap) parts.push(counts.gap + ' gap');
+    return '<section class="cat">'
+      + '<div class="cat__head"><h2 class="cat__title">' + esc(c.cat) + '</h2>'
+      + '<span class="cat__count">' + parts.join(' · ') + '</span></div>'
+      + '<div class="table-wrap"><table>'
+      + '<thead><tr><th>Capability</th><th>Current</th><th>Target / reference</th><th>Source</th><th>Status</th></tr></thead>'
+      + '<tbody>' + c.rows.map(rowHTML).join('') + '</tbody>'
+      + '</table></div></section>';
+  }
+
+  const totals = { full: 0, partial: 0, gap: 0 };
+  DATA.forEach(c => c.rows.forEach(r => totals[r.status]++));
+  const total = totals.full + totals.partial + totals.gap;
+
+  document.getElementById('summary').innerHTML =
+      '<div class="tile"><div class="tile__num">' + total + '</div><div class="tile__label"><span class="dot dot--total"></span>Capabilities</div></div>'
+    + '<div class="tile"><div class="tile__num">' + totals.full + '</div><div class="tile__label"><span class="dot dot--ok"></span>Full</div></div>'
+    + '<div class="tile"><div class="tile__num">' + totals.partial + '</div><div class="tile__label"><span class="dot dot--warn"></span>Partial</div></div>'
+    + '<div class="tile"><div class="tile__num">' + totals.gap + '</div><div class="tile__label"><span class="dot dot--gap"></span>Gap</div></div>';
+
+  document.getElementById('matrix').innerHTML = DATA.map(catHTML).join('');
+</script>
+</body>
+</html>
