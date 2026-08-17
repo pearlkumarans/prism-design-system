@@ -375,6 +375,10 @@
       /* DEX overview — the DEX tab landing (L02 bento). The BFF (/dex/api/overview)
          owns the aggregated record; mock returns null so the view shows its
          empty/error state (same contract as inventory.overview). */
+      async home() {
+        if (useMock()) return null;
+        return httpGet('/dex/api/home');
+      },
       async overview() {
         if (useMock()) return null;
         return httpGet('/dex/api/overview');

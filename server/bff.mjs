@@ -409,6 +409,31 @@ const dexOverview = () => {
   };
 };
 
+/* DEX home (the DEX Manager Plus Home-tab landing, L02) — a product home focused on
+   digital experience: overall score, trend, score-range distribution, and the
+   high-priority insights. Aggregated from DEX_DEVICES + DEX_INSIGHTS so it reconciles
+   with the rest of the module. (Defined after DEX_INSIGHTS below via a getter fn.) */
+const dexHome = () => {
+  const scored = DEX_DEVICES.filter((d) => d.score != null);
+  const avg = scored.length ? Math.round(scored.reduce((a, r) => a + r.score, 0) / scored.length) : 0;
+  const band = (b) => DEX_DEVICES.filter((d) => d.band === b).length;
+  const highPriority = DEX_INSIGHTS.filter((i) => i.severity === 'Critical' || i.severity === 'High')
+    .slice(0, 6).map((i) => ({ id: i.id, title: i.title, category: i.category, severity: i.severity, affected: i.affected }));
+  return {
+    kpis: [
+      { label: 'Experience score', value: String(avg), state: avg >= 71 ? 'success' : avg >= 31 ? 'warning' : 'critical', icon: 'activity' },
+      { label: 'Devices monitored', value: String(DEX_DEVICES.length), state: 'default', icon: 'computer' },
+      { label: 'High priority insights', value: String(highPriority.length), state: 'alert', icon: 'light-bulb' },
+    ],
+    charts: {
+      gauge: { value: avg, label: 'out of 100' },
+      trend: { categories: ['May', 'Jun 1', 'Jun 8', 'Jun 15', 'Jun 22', 'Jul 1', 'Jul 8'], series: [{ name: 'Avg score', values: [52, 55, 54, 58, 57, 61, avg] }] },
+      range: { categories: ['Good', 'Average', 'Poor'], series: [{ name: 'Devices', values: [band('Good'), band('Average'), band('Poor')], colors: ['green', 'orange', 'red'] }] },
+    },
+    insights: highPriority,
+  };
+};
+
 /* ── DEX Batch 1: Experience insights + Remote actions (L03 lists) ── */
 const INS_CAT = ['Disk', 'CPU', 'Memory', 'Network', 'Boot', 'App crashes'];
 const INS_SEV = ['Critical', 'High', 'High', 'Medium', 'Medium', 'Low'];
@@ -505,6 +530,7 @@ function handle(url) {
     case '/deployments/api/policies': return policiesQuery(p);
     case '/deployments/api/workflows': return workflowsQuery(p);
     case '/deployments/api/deviceExecution': return deviceExecution(p);
+    case '/dex/api/home': return dexHome();
     case '/dex/api/overview': return dexOverview();
     case '/dex/api/insights': return insightsQuery(p);
     case '/dex/api/insight': return dexInsight(p);

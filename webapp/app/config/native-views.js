@@ -20,6 +20,7 @@ export const NATIVE_VIEWS = new Set([
   'deployments-device-execution',
   'deployments-summary',
   'tabbed-form',
+  'dex-home',
   'dex-overview',
   'dex-devices',
   'dex-device-detail',

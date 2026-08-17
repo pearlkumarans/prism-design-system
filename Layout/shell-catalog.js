@@ -20,7 +20,7 @@ export const PRODUCTS = {
   bsp: { variant: 'browser-security-plus',    name: 'Browser Security Plus',      tabs: ['home','browsers','inv','reports','support'] },
   acp: { variant: 'application-control-plus', name: 'Application Control Plus',   tabs: ['home','app-ctrl','inv','reports','support'] },
   dcp: { variant: 'device-control-plus',      name: 'Device Control Plus',        tabs: ['home','dev-ctrl','inv','reports','support'] },
-  dxm: { variant: 'dex-manager-plus',         name: 'DEX Manager Plus',           tabs: ['home','dex','inv','reports','support'] },
+  dxm: { variant: 'dex-manager-plus',         name: 'DEX Manager Plus',           tabs: ['home','dex','inv','reports','support'], tabDefaults: { home: 'dex-home' } },
   dlp: { variant: 'endpoint-dlp-plus',        name: 'Endpoint DLP Plus',          tabs: ['home','dlp','inv','reports','support'] },
   mpp: { variant: 'malware-protection-plus',  name: 'Malware Protection Plus',    tabs: ['home','malware','inv','reports','support'] },
   osd: { variant: 'os-deployer',              name: 'OS Deployer',                tabs: ['home','osd','inv','reports','support'] },
@@ -81,6 +81,7 @@ export const CONTENT_VIEWS = {
   'deployments-detail':                           { file: '../projects/deployments/layout-deployment-detail',                tab: 'deployments', nav: 'deployments-list' },
   'deployments-device-execution':                 { file: '../projects/deployments/layout-deployment-device',                tab: 'deployments', nav: 'deployments-list' },
   /* DEX — Digital Experience (DEX Manager Plus). */
+  'dex-home':                                     { file: '../projects/dex/layout-home',                                     tab: 'home' },
   'dex-overview':                                 { file: '../projects/dex/layout-overview',                                 tab: 'dex' },
   'dex-devices':                                  { file: '../projects/dex/layout-devices',                                  tab: 'dex' },
   'dex-device-detail':                            { file: '../projects/dex/layout-device-detail',                            tab: 'dex', nav: 'dex-devices' },

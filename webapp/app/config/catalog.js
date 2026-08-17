@@ -8,7 +8,7 @@
  */
 export { PRODUCTS, CONTENT_VIEWS, TAB_DEFAULT_VIEW } from 'prism-webapp/config/catalog-data';
 
-import { PRODUCTS, CONTENT_VIEWS } from 'prism-webapp/config/catalog-data';
+import { PRODUCTS, CONTENT_VIEWS, TAB_DEFAULT_VIEW } from 'prism-webapp/config/catalog-data';
 
 export const DEFAULT_PRODUCT = 'ec';
 
@@ -45,11 +45,22 @@ export function tabsForProduct(productId) {
   return ids.map((id) => ({ id, label: TAB_LABELS[id] ?? id }));
 }
 
-// The view a product lands on: its explicit defaultView, else the Home module.
+// The default view for a (product, tab): the product's per-tab override
+// (PRODUCTS[id].tabDefaults[tab]) if it names a real view, else the global
+// TAB_DEFAULT_VIEW[tab]. Lets a point product replace a shared tab landing — e.g.
+// DEX Manager Plus lands its Home tab on the DEX home, not the EC fleet overview.
+export function defaultViewFor(productId, tabId) {
+  const p = PRODUCTS[productId];
+  const override = p && p.tabDefaults && p.tabDefaults[tabId];
+  return (override && CONTENT_VIEWS[override]) ? override : TAB_DEFAULT_VIEW[tabId];
+}
+
+// The view a product lands on: its explicit defaultView, else its Home-tab default
+// (which may itself be a per-product override — see defaultViewFor).
 export function landingForProduct(productId) {
   const p = PRODUCTS[productId];
   if (p && p.defaultView && CONTENT_VIEWS[p.defaultView]) {
     return { tab: CONTENT_VIEWS[p.defaultView].tab, view: p.defaultView };
   }
-  return { tab: 'home', view: 'module-dashboard' };
+  return { tab: 'home', view: defaultViewFor(productId, 'home') };
 }
