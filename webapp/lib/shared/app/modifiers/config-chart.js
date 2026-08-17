@@ -33,9 +33,11 @@ export default modifier(function configChart(widget, _positional, opts) {
     if (chart.refit) requestAnimationFrame(() => chart.refit());
   };
 
+  const chartEl = () => widget.querySelector('.ds-widget__body ds-chart') || widget.querySelector('ds-chart');
+
   const sweep = () => {
     if (cancelled) return;
-    configure(widget.querySelector('.ds-widget__body ds-chart') || widget.querySelector('ds-chart'));
+    configure(chartEl());
   };
 
   Promise.all([
@@ -46,5 +48,29 @@ export default modifier(function configChart(widget, _positional, opts) {
   const observer = new MutationObserver(sweep);
   observer.observe(widget, { childList: true, subtree: true });
 
-  return () => { cancelled = true; observer.disconnect(); };
+  /* Refit the chart whenever the widget's box changes size. A chart sizes its
+     drawing to the container at draw time, so if it first renders before the
+     layout settles — e.g. entering a point product flips the shell to left-nav,
+     which narrows the content column AFTER the chart's initial fit — the arcs
+     draw to a stale (or zero) width and vanish. Observing the box and refitting
+     (debounced to an animation frame) makes charts self-heal on nav-mode switches,
+     window resizes, and responsive breakpoints. refit() only redraws within the
+     existing box, so it can't grow the widget and feed back into the observer. */
+  let rafId = 0;
+  const resize = new ResizeObserver(() => {
+    if (cancelled) return;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      const chart = chartEl();
+      if (chart && chart.refit) chart.refit();
+    });
+  });
+  resize.observe(widget);
+
+  return () => {
+    cancelled = true;
+    observer.disconnect();
+    resize.disconnect();
+    if (rafId) cancelAnimationFrame(rafId);
+  };
 });

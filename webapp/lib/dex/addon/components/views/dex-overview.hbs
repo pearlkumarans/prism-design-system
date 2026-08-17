@@ -1,0 +1,69 @@
+{{!-- DEX · Overview — thin Patterns::ModuleDashboard instance (L02). Experience
+    score distribution, trend, platform/office breakdowns, top issues, and the
+    lowest-scoring devices. Charts bind via config-chart; lists are native. --}}
+<Patterns::ModuleDashboard @header={{this.header}} @refitKey={{this.refitKey}} @loading={{this.isLoading}}>
+  <:body>
+    {{#if this.error}}
+      <div class="md-facet-empty">
+        <Patterns::EmptyState
+          @illustration="state-error"
+          @title="Couldn't load DEX overview"
+          @description="The request failed. Is the BFF running (server/bff.mjs)?"
+          @primaryLabel="Retry"
+          @onPrimary={{this.retry}}
+        />
+      </div>
+    {{else}}
+    <div class="md-grid">
+      {{! Row 1: KPIs + score-band distribution | experience score trend }}
+      <div class="md-col md-sp3">
+        <div class="md-kpis">
+          {{#each this.kpis as |k|}}
+            <ds-kpi-card label={{k.label}} value={{k.value}} state={{k.state}} icon={{k.icon}}></ds-kpi-card>
+          {{/each}}
+        </div>
+        <ds-widget type="chart" title="Experience score distribution" show-drag="false" show-action="false" show-footer="false"
+          {{config-chart type="donut" legend="right" fit="contain" data=this.bandChart}}></ds-widget>
+      </div>
+
+      <ds-widget class="md-sp3" type="chart" title="Experience score trend" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="line" area=true fit="fill" data=this.trendChart}}></ds-widget>
+
+      {{! Row 2: by platform | onboarding status | top issues }}
+      <ds-widget class="md-sp2" type="chart" title="Average score by platform" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="column" fit="fill" data=this.platformChart}}></ds-widget>
+
+      <ds-widget class="md-sp2" type="chart" title="DEX onboarding status" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="donut" legend="bottom" fit="contain" data=this.onboardingChart}}></ds-widget>
+
+      <ds-widget class="md-sp2" type="list" title="Top experience issues" show-drag="false" show-action="false" show-footer="false">
+        <div>
+          {{#each this.issueRows as |r|}}
+            <div class="wl-row">
+              <span class="wl-ico" style="background: var(--uems-bg-warning-primary); color: var(--uems-icon-warning)"><ds-icon name={{r.icon}} size="16"></ds-icon></span>
+              <span class="wl-label">{{r.label}}</span>
+              <span class="wl-val">{{r.val}}</span>
+            </div>
+          {{/each}}
+        </div>
+      </ds-widget>
+
+      {{! Row 3: devices by office | lowest-scoring devices }}
+      <ds-widget class="md-sp3" type="chart" title="Devices by office" show-drag="false" show-action="false" show-footer="false"
+        {{config-chart type="bar" fit="fill" data=this.officeChart}}></ds-widget>
+
+      <ds-widget class="md-sp3" type="list" title="Lowest-scoring devices" show-drag="false" show-action="false" show-footer="false">
+        <div>
+          {{#each this.lowestRows as |r|}}
+            <div class="wl-row">
+              <span class="wl-ico"><ds-icon name="computer" size="16"></ds-icon></span>
+              <span class="wl-label wl-label--link">{{r.name}}</span>
+              <ds-badge variant="subtle" state={{r.state}} size="medium" shape="pill" label={{r.score}}></ds-badge>
+            </div>
+          {{/each}}
+        </div>
+      </ds-widget>
+    </div>
+    {{/if}}
+  </:body>
+</Patterns::ModuleDashboard>

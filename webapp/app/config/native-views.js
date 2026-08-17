@@ -7,6 +7,8 @@
 export const NATIVE_VIEWS = new Set([
   'module-dashboard',
   'threats-patches-highly-vulnerable-systems',
+  'missing-patches',
+  'acme-inventory-overview',
   'bitlocker-dashboard',
   'sectioned-form',
   'bitlocker-managed-systems',
@@ -18,4 +20,7 @@ export const NATIVE_VIEWS = new Set([
   'deployments-device-execution',
   'deployments-summary',
   'tabbed-form',
+  'dex-overview',
+  'dex-devices',
+  'dex-device-detail',
 ]);

@@ -80,6 +80,10 @@ export const CONTENT_VIEWS = {
   'deployments-create':                           { file: '../projects/deployments/layout-deployment-create',                tab: 'deployments', nav: 'deployments-list' },
   'deployments-detail':                           { file: '../projects/deployments/layout-deployment-detail',                tab: 'deployments', nav: 'deployments-list' },
   'deployments-device-execution':                 { file: '../projects/deployments/layout-deployment-device',                tab: 'deployments', nav: 'deployments-list' },
+  /* DEX — Digital Experience (DEX Manager Plus). */
+  'dex-overview':                                 { file: '../projects/dex/layout-overview',                                 tab: 'dex' },
+  'dex-devices':                                  { file: '../projects/dex/layout-devices',                                  tab: 'dex' },
+  'dex-device-detail':                            { file: '../projects/dex/layout-device-detail',                            tab: 'dex', nav: 'dex-devices' },
   'deployments-reports':                          { file: '../projects/deployments/layout-reports',                          tab: 'deployments' },
   'deployments-policy-install-uninstall-software':{ file: '../projects/deployments/layout-policy-install-uninstall-software',tab: 'deployments', nav: 'deployments-policy' },
   'deployments-policy-file-folder-operation':     { file: '../projects/deployments/layout-policy-file-folder-operation',     tab: 'deployments', nav: 'deployments-policy' },
@@ -95,4 +99,5 @@ export const TAB_DEFAULT_VIEW = {
   inv: 'acme-inventory-overview',   /* Inventory tab lands on the acme inventory overview dashboard */
   deployments: 'deployments-summary',   /* Deployments tab lands on the module Summary */
   bitlocker: 'bitlocker-dashboard',   /* BitLocker Management tab lands on the Summary Dashboard (Overview > Dashboard) */
+  dex: 'dex-overview',   /* DEX tab lands on the Digital Experience overview dashboard */
 };
