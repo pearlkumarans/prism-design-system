@@ -145,7 +145,11 @@
   flex: 1 1 0;
   display: inline-flex;
   align-items: center;
-  gap: 0;
+  /* Backup space between the tab list and the ··· overflow button so the last
+     visible tab — especially the active chip pulled in by the reflow — has
+     breathing room and never reads as flush/cramped against ···. Collapses to
+     nothing when ··· is hidden (no overflow). */
+  gap: var(--spacing-8, 8px);
   min-width: 0;
   height: 100%;
 }
@@ -224,7 +228,9 @@
   cursor: pointer;
   border-radius: var(--radius-sm);
   flex-shrink: 0;
-  margin-inline-start: var(--spacing-4);
+  /* Gap to the tab list now comes from .ds-header-nav__tabs { gap } so it can
+     collapse when ··· is hidden — no extra margin here. */
+  margin-inline-start: 0;
 }
 .ds-header-nav__overflow:hover { background: var(--uems-bg-accent-primary-hover); }
 

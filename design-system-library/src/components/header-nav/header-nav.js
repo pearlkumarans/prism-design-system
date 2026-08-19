@@ -198,6 +198,10 @@ export class DsHeaderNav extends HTMLElement {
   get tabs() { return this._tabs; }
   set tabs(v) {
     this._tabs = Array.isArray(v) ? v.slice() : [];
+    /* Remember the caller's natural order. The overflow reflow reorders _tabs to
+       keep the active tab visible; resetting to this order before each reflow keeps
+       repeated tab switches from cumulatively scrambling the row. */
+    this._tabsOrder = this._tabs.map((t) => t.id);
     if (this._mounted) this._render();
   }
 
@@ -385,8 +389,32 @@ export class DsHeaderNav extends HTMLElement {
     if (!list || !wrap || !btn) return;
 
     /* Reset visibility before measuring natural widths. */
-    const tabEls = [...list.querySelectorAll('.ds-header-nav__tab')];
+    let tabEls = [...list.querySelectorAll('.ds-header-nav__tab')];
     tabEls.forEach((el) => { el.style.display = ''; });
+
+    /* Restore the caller's natural order before the "active is sacred" reorder
+       below. That reorder mutates _tabs and the DOM to pull the active tab into
+       view; without this reset, each successive tab switch would reorder from the
+       ALREADY-reordered row, cumulatively scrambling the tabs (e.g. a stale
+       "Agent Browsers BitLocker" sequence). Resetting makes every reflow
+       deterministic: natural order, then one active tab moved forward. */
+    if (Array.isArray(this._tabsOrder) && this._tabsOrder.length) {
+      const rank = new Map(this._tabsOrder.map((id, i) => [id, i]));
+      // Sort _tabs back to natural order (preserving active flags).
+      this._tabs.sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0));
+      // Re-sync the DOM to natural order too.
+      const byId = new Map();
+      tabEls.forEach((el) => { if (el.dataset.tabId) byId.set(el.dataset.tabId, el); });
+      const domOut = this._tabs.map((t) => byId.get(t.id)).filter(Boolean);
+      const scrambled = domOut.some((el, i) => tabEls[i] !== el);
+      if (scrambled) {
+        const frag = document.createDocumentFragment();
+        domOut.forEach((el) => frag.appendChild(el));
+        list.appendChild(frag);
+        tabEls = [...list.querySelectorAll('.ds-header-nav__tab')];
+        tabEls.forEach((el) => { el.style.display = ''; });
+      }
+    }
 
     /* Available width = the tabs <nav> container minus the ··· button width.
        Use the parent <nav class="ds-header-nav__tabs"> as the budget so the
@@ -580,9 +608,15 @@ export class DsHeaderNav extends HTMLElement {
         if (isActive) el.setAttribute('aria-current', 'page');
         else el.removeAttribute('aria-current');
       });
-      /* Recompute clipping after reorder */
-      if (fromOverflow && typeof this._reflowOverflow === 'function') {
-        requestAnimationFrame(() => this._reflowOverflow());
+      /* Recompute clipping. Both paths reflow so a newly-active tab that
+         sequential clipping had hidden (e.g. a late "Support" tab) is pulled
+         into the visible window by the "active is sacred" step — never left
+         highlighted-but-hidden in the ··· menu. Overflow path defers a frame
+         (its own placement already ran); a normal click reflows synchronously
+         so the row is right before first paint. */
+      if (typeof this._reflowOverflow === 'function') {
+        if (fromOverflow) requestAnimationFrame(() => this._reflowOverflow());
+        else this._reflowOverflow();
       }
     }
   }
@@ -625,6 +659,11 @@ export class DsHeaderNav extends HTMLElement {
       if (isActive) el.setAttribute('aria-current', 'page');
       else el.removeAttribute('aria-current');
     });
+    /* Re-run the overflow reflow: the newly-active tab may be one that sequential
+       clipping had hidden in the ··· menu. The reflow's "active is sacred" step
+       pulls it back into the visible window so its highlight is never on a
+       clipped/hidden tab. Synchronous so the row is correct before first paint. */
+    this._reflowOverflow();
   }
 
   /* Close any other open menu in this header so only one is open at a time. */
