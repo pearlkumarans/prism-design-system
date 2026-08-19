@@ -1,5 +1,6 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
+import { registerDestructor } from '@ember/destroyable';
 import { CONTENT_VIEWS, defaultViewFor, TAB_ICONS } from 'prism-webapp/config/catalog';
 import { RailPopover } from 'prism-webapp/lib/rail-popover';
 
@@ -38,6 +39,12 @@ export default class ShellChrome extends Component {
   _tabsSig = null;
   _railSig = null;
 
+  // Navigating dismisses any open drawer. Critical for the full-page swaps
+  // (Settings / Support / Ask Zia) which hide the L1/L2 nav while open — in a
+  // point product the L2 sidebar IS the nav, so without this you can only escape
+  // via the module rail. Bound field so on/off reference the same handler.
+  _closeDrawersOnNav = () => this.drawers.closeAll();
+
   async setupChrome(element) {
     await Promise.all([
       customElements.whenDefined('ds-header-nav'),
@@ -52,6 +59,11 @@ export default class ShellChrome extends Component {
     const l2 = element.querySelector('ds-sidebar-l2');
     const rail = element.querySelector('ds-module-rail');
     this._els = { header, l1, l2, rail };
+
+    // Close any open drawer on navigation (see _closeDrawersOnNav). Drawers don't
+    // change the route themselves, so routeWillChange only fires on real nav.
+    this.router.on('routeWillChange', this._closeDrawersOnNav);
+    registerDestructor(this, () => this.router.off('routeWillChange', this._closeDrawersOnNav));
 
     const { applyL2For, wireL1ToL2 } = await loadEcMenus();
     this._applyL2For = applyL2For;
