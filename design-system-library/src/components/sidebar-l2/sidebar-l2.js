@@ -103,9 +103,9 @@ export class DsSidebarL2 extends HTMLElement {
     this._collapseBtn.style.display = '';
     const collapsed = boolAttr(this, 'collapsed');
     const rtl = boolAttr(this, 'rtl');
-    /* Expanded → a plain chevron (points in to HIDE); collapsed → the panel/menu
-       glyph (points out to SHOW). */
-    this._collapseBtn.querySelector('ds-icon')?.setAttribute('name', collapsed ? 'panel-collapse' : 'chevron-left');
+    /* Same chevron for both states — the --flip class (below) mirrors it so it
+       points IN to HIDE (expanded) and OUT to SHOW (collapsed). */
+    this._collapseBtn.querySelector('ds-icon')?.setAttribute('name', 'chevron-left');
     /* Mirror for the show state and for RTL (XOR) so it always points the right way. */
     this._collapseBtn.classList.toggle('ds-sidebar-l2__collapse--flip', collapsed !== rtl);
     this._collapseBtn.setAttribute('aria-label', collapsed ? 'Show sub-menu' : 'Hide sub-menu');
