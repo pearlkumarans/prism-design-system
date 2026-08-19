@@ -334,6 +334,11 @@ export class DsHeaderNav extends HTMLElement {
     const menuBtn = this.querySelector('.ds-header-nav__menu-kebab');
     if (menuBtn) menuBtn.addEventListener('click', () => this._toggleMenu());
     if (isTopNav) {
+      /* Clip synchronously before the first paint so a freshly-rendered tab set
+         (all tabs shown at natural width) never paints with the active/last tab
+         cut off by the list's overflow:hidden. The scheduled reflow re-runs after
+         layout + fonts settle. */
+      this._reflowOverflow();
       this._scheduleReflow();
       /* Observe the tabs <nav> directly: it shrinks when the right cluster
          grows (icons/fonts loading), and that's exactly the trigger that
@@ -392,8 +397,11 @@ export class DsHeaderNav extends HTMLElement {
        below would compute lastFitIdx = -1 and yank the active tab to the front.
        The ResizeObserver re-runs this once the band is shown again. */
     if (!navEl || navEl.clientWidth === 0 || list.offsetParent === null) return;
-    const overflowBtnWidth = wrap.offsetWidth || 32;
-    const available = navEl.clientWidth - overflowBtnWidth - 4;
+    /* Reserve the ··· button + a safety margin so the last visible tab (especially
+       the active one) is never left marginally overflowing and clipped by the
+       list's overflow:hidden. Fallback 36 ≈ the button's real width when hidden. */
+    const overflowBtnWidth = wrap.offsetWidth || 36;
+    const available = navEl.clientWidth - overflowBtnWidth - 12;
 
     /* Active tab is sacred — it must always remain visible. If sequential
        clipping would hide it, move it into the visible window first. */
