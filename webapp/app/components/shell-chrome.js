@@ -76,7 +76,10 @@ export default class ShellChrome extends Component {
       const id = e.detail?.id;
       if (!id) return;
       if (id === 'support') { this.drawers.open('support'); return; }
-      this.drawers.close('support');
+      // Clicking any tab dismisses open drawers — incl. the full-page Settings/Zia
+      // swaps. Needed here (not just on routeWillChange) because re-clicking the
+      // ALREADY-ACTIVE tab resolves to the same route, so no route event fires.
+      this.drawers.closeAll();
       // Go straight to the tab's default VIEW (not the bare module). Re-clicking
       // the already-active tab then resolves to the same route+params — a no-op
       // that leaves content intact — instead of dropping onto the empty module
@@ -139,6 +142,7 @@ export default class ShellChrome extends Component {
     const toView = (e) => {
       const slug = e.detail?.item?.view;
       if (slug && CONTENT_VIEWS[slug]) {
+        this.drawers.closeAll();   // a sidebar click dismisses open drawers (see tab handler)
         this.router.transitionTo('product.module.view', this.shell.productId, CONTENT_VIEWS[slug].tab, slug);
       }
     };
@@ -148,7 +152,9 @@ export default class ShellChrome extends Component {
     // Left-nav module rail → module route (mirrors the header tabs).
     rail?.addEventListener('ds-module-rail-select', (e) => {
       const id = e.detail?.id;
-      if (id) this.router.transitionTo('product.module', this.shell.productId, id);
+      if (!id) return;
+      this.drawers.closeAll();     // a module-rail click dismisses open drawers (see tab handler)
+      this.router.transitionTo('product.module', this.shell.productId, id);
     });
 
     // Responsive: tablet collapses L1/L2; mobile moves the rails into an off-canvas
