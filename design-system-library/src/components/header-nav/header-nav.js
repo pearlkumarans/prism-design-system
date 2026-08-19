@@ -133,7 +133,7 @@ export class DsHeaderNav extends HTMLElement {
       'show-search', 'show-notifications', 'show-settings',
       'show-customer-selector', 'show-avatar', 'show-bento',
       'show-bookmark', 'show-zia',
-      'center',
+      'center', 'search',
       'rtl',
     ];
   }
@@ -237,10 +237,21 @@ export class DsHeaderNav extends HTMLElement {
        tabs move to a left rail and the top bar centres a search box instead. */
     const forceSearch = this.getAttribute('center') === 'search';
     const isTopNav = (variant === 'endpoint-central' || variant === 'endpoint-central-msp' || variant === 'msp-central') && !forceSearch;
-    /* Point / left-only products centre the search field; combined products
+    /* Search placement:
+         - top-nav (combined EC): the centre is the tab band, search is a right-cluster ICON.
+         - point / left-only products: centre a search FIELD by default. Set
+           `search="icon"` to instead hide the centre field and show the search ICON
+           in the right cluster (like top-nav) — used by the shell for point products. */
+    const searchMode = (this.getAttribute('search') || '').toLowerCase();
+    const searchAsIcon = showSearch && (isTopNav || searchMode === 'icon');
+    const searchAsField = showSearch && !isTopNav && searchMode !== 'icon';
+    /* Centre a search field only when one is actually rendered; combined products
        centre the 72%-wide tab band. Both balance brand & cluster (see CSS). */
-    this.classList.toggle('ds-header-nav--centered-search', !isTopNav);
+    this.classList.toggle('ds-header-nav--centered-search', searchAsField);
     this.classList.toggle('ds-header-nav--tabs', isTopNav);
+    /* Point product with search as an ICON → no centre content; push the cluster
+       to the inline-end (see CSS). */
+    this.classList.toggle('ds-header-nav--search-icon', searchAsIcon && !isTopNav);
 
     const logoBase = (typeof window !== 'undefined' && window.UEMS_LOGO_BASE) || '/logos';
 
@@ -265,7 +276,7 @@ export class DsHeaderNav extends HTMLElement {
 
     const centreHTML = isTopNav
       ? this._renderTabs()
-      : this._renderSearchBar(searchPh);
+      : (searchAsField ? this._renderSearchBar(searchPh) : '');
 
     const cluster = [];
     if (showCustomer) {
@@ -283,10 +294,10 @@ export class DsHeaderNav extends HTMLElement {
     /* Ask ZIA sits between the customer selector and the search icon (its
        inline-end divider then separates it from the utility icons). */
     if (showZia) cluster.push(ziaHTML);
-    /* Combined products (Endpoint Central / MSP) show search as a plain ICON
-       in the right cluster — the centre is occupied by the tab nav. Point /
-       left-only products render the centred search FIELD instead (below). */
-    if (showSearch && isTopNav) {
+    /* Search as a right-cluster ICON: combined products (tab nav occupies the
+       centre) and any product with search="icon" (point products opting out of the
+       centred field). The centred FIELD path renders in centreHTML instead. */
+    if (searchAsIcon) {
       cluster.push(this._iconBtn('search', 'search', 'Search'));
     }
     if (showSettings) cluster.push(this._iconBtn('settings', 'settings', 'Settings'));
