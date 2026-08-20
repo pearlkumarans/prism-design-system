@@ -430,6 +430,12 @@ export class DsHeaderNav extends HTMLElement {
        list's overflow:hidden. Fallback 36 ≈ the button's real width when hidden. */
     const overflowBtnWidth = wrap.offsetWidth || 36;
     const available = navEl.clientWidth - overflowBtnWidth - 12;
+    /* The tab row is a flexbox with a column-gap BETWEEN chips. The fit math must
+       count that gap per adjacent pair, or a row of narrow tabs (each just under
+       budget by width alone) overflows by (n-1) × gap and gets clipped by the
+       list's overflow:hidden — shaving the active chip's background. */
+    const gap = parseFloat(getComputedStyle(list).columnGap)
+      || parseFloat(getComputedStyle(list).gap) || 0;
 
     /* Active tab is sacred — it must always remain visible. If sequential
        clipping would hide it, move it into the visible window first. */
@@ -437,14 +443,16 @@ export class DsHeaderNav extends HTMLElement {
     if (activeIdx >= 0) {
       const activeEl = tabEls[activeIdx];
       const activeW = activeEl?.offsetWidth || 0;
-      /* Compute how many leading tabs fit alongside the active tab. */
+      /* Compute how many leading tabs fit alongside the active tab. acc already
+         holds one chip (the active one), so every leading chip added also adds a
+         gap between it and its neighbour. */
       let acc = activeW;
       let lastFitIdx = -1;
       for (let i = 0; i < tabEls.length; i++) {
         if (i === activeIdx) continue;
         const w = tabEls[i].offsetWidth;
-        if (acc + w <= available) {
-          acc += w;
+        if (acc + gap + w <= available) {
+          acc += gap + w;
           lastFitIdx = i;
         } else {
           break;
@@ -480,8 +488,10 @@ export class DsHeaderNav extends HTMLElement {
     this._clippedTabs = [];
     tabEls.forEach((el, i) => {
       const w = el.offsetWidth;
-      if (!clipFromHere && acc + w <= available) {
-        acc += w;
+      /* Count the gap before every chip except the first kept one. */
+      const need = (acc > 0 ? gap : 0) + w;
+      if (!clipFromHere && acc + need <= available) {
+        acc += need;
       } else {
         clipFromHere = true;
         el.style.display = 'none';
