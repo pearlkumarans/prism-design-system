@@ -1,5 +1,6 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
+import { registerDestructor } from '@ember/destroyable';
 import { CONTENT_VIEWS, defaultViewFor, TAB_ICONS } from 'prism-webapp/config/catalog';
 import { RailPopover } from 'prism-webapp/lib/rail-popover';
 
@@ -38,6 +39,24 @@ export default class ShellChrome extends Component {
   _tabsSig = null;
   _railSig = null;
 
+  // Navigating dismisses any open drawer. Critical for the full-page swaps
+  // (Settings / Support / Ask Zia) which hide the L1/L2 nav while open — in a
+  // point product the L2 sidebar IS the nav, so without this you can only escape
+  // via the module rail. Bound field so on/off reference the same handler.
+  _closeDrawersOnNav = () => this.drawers.closeAll();
+
+  // Header search icon / centre search field / ⌘K → toggle the global command
+  // palette (views/command-palette.html), matching Shell.html's showPalette().
+  // It's a body-level overlay that registers ShellDrawers['command-palette'] with
+  // { show, hide, isOpen }; drawers.open injects it on first use. Re-triggering
+  // toggles it closed. NOT the full search PAGE — the palette hands off to that
+  // itself via ShellCtx.showSearch.
+  _togglePalette = () => {
+    const cp = window.ShellDrawers?.['command-palette'];
+    if (cp?.isOpen?.()) { cp.hide(); return; }
+    this.drawers.open('command-palette');
+  };
+
   async setupChrome(element) {
     await Promise.all([
       customElements.whenDefined('ds-header-nav'),
@@ -51,7 +70,13 @@ export default class ShellChrome extends Component {
     const l1 = element.querySelector('ds-sidebar-l1');
     const l2 = element.querySelector('ds-sidebar-l2');
     const rail = element.querySelector('ds-module-rail');
-    this._els = { header, l1, l2, rail };
+    const content = element.querySelector('ds-content');
+    this._els = { header, l1, l2, rail, content };
+
+    // Close any open drawer on navigation (see _closeDrawersOnNav). Drawers don't
+    // change the route themselves, so routeWillChange only fires on real nav.
+    this.router.on('routeWillChange', this._closeDrawersOnNav);
+    registerDestructor(this, () => this.router.off('routeWillChange', this._closeDrawersOnNav));
 
     const { applyL2For, wireL1ToL2 } = await loadEcMenus();
     this._applyL2For = applyL2For;
@@ -64,7 +89,10 @@ export default class ShellChrome extends Component {
       const id = e.detail?.id;
       if (!id) return;
       if (id === 'support') { this.drawers.open('support'); return; }
-      this.drawers.close('support');
+      // Clicking any tab dismisses open drawers — incl. the full-page Settings/Zia
+      // swaps. Needed here (not just on routeWillChange) because re-clicking the
+      // ALREADY-ACTIVE tab resolves to the same route, so no route event fires.
+      this.drawers.closeAll();
       // Go straight to the tab's default VIEW (not the bare module). Re-clicking
       // the already-active tab then resolves to the same route+params — a no-op
       // that leaves content intact — instead of dropping onto the empty module
@@ -83,16 +111,33 @@ export default class ShellChrome extends Component {
       if (action === 'avatar') this.drawers.open('profile');
       else if (action === 'settings') this.drawers.open('settings');
       else if (action === 'bento') this.drawers.open('apps');
-      else if (action === 'search') this.drawers.open('search');
-      else if (action === 'zia') this.drawers.open('zia');
+      else if (action === 'search') this._togglePalette();
+      // Ask Zia — the in-flow pane (ask-zia.html / ShellDrawers.askzia), toggled;
+      // matches Shell.html. (Not zia.html, which is a different full-page swap.)
+      else if (action === 'zia') {
+        const z = window.ShellDrawers?.askzia;
+        if (z?.isOpen?.()) z.hide(); else this.drawers.open('ask-zia');
+      }
     });
-    header.addEventListener('ds-header-nav-search', () => this.drawers.open('search'));
+    header.addEventListener('ds-header-nav-search', () => this._togglePalette());
+
+    // ⌘K / Ctrl+K toggles the palette from anywhere (mirrors Shell.html). The
+    // palette owns its own keys once open; this only handles the global open/close.
+    this._onPaletteKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        this._togglePalette();
+      }
+    };
+    document.addEventListener('keydown', this._onPaletteKey);
+    registerDestructor(this, () => document.removeEventListener('keydown', this._onPaletteKey));
 
     // Right utility rail. Each id maps to a DISTINCT surface, matching Shell.html:
     //  help/accessibility → confined drawers; announcement → Product Updates drawer;
     //  update/review/roadmap → small anchored popover CARDS (not the updates drawer);
     //  product → external SDP page; get-started → the sectioned-form view.
     const rp = element.querySelector('ds-right-pane');
+    this._rp = rp;   // synced for direction (rtl) in syncChrome on language flip
     const railPopover = new RailPopover(rp, this.theme);
     railPopover.enableAppearanceHover(); // hover the theme icon → Appearance chooser
     // Only ONE surface open at a time: opening any drawer closes the popover
@@ -127,6 +172,7 @@ export default class ShellChrome extends Component {
     const toView = (e) => {
       const slug = e.detail?.item?.view;
       if (slug && CONTENT_VIEWS[slug]) {
+        this.drawers.closeAll();   // a sidebar click dismisses open drawers (see tab handler)
         this.router.transitionTo('product.module.view', this.shell.productId, CONTENT_VIEWS[slug].tab, slug);
       }
     };
@@ -136,7 +182,9 @@ export default class ShellChrome extends Component {
     // Left-nav module rail → module route (mirrors the header tabs).
     rail?.addEventListener('ds-module-rail-select', (e) => {
       const id = e.detail?.id;
-      if (id) this.router.transitionTo('product.module', this.shell.productId, id);
+      if (!id) return;
+      this.drawers.closeAll();     // a module-rail click dismisses open drawers (see tab handler)
+      this.router.transitionTo('product.module', this.shell.productId, id);
     });
 
     // Responsive: tablet collapses L1/L2; mobile moves the rails into an off-canvas
@@ -158,11 +206,41 @@ export default class ShellChrome extends Component {
     document.addEventListener('shell:langchange', this._onLangChange);
 
     this.syncChrome();
+
+    // Warm the Ask Zia pane after boot so its FIRST open plays the width slide
+    // (it mounts closed at width:0) instead of popping — injecting + opening in
+    // one frame skips the transition. Idempotent; idle for the common case, a
+    // setTimeout net for backgrounded tabs that suppress idle callbacks. Mirrors
+    // Shell.html's preinjectAskZia.
+    const warmZia = () => this.drawers.ensure?.('ask-zia');
+    const idleId = ('requestIdleCallback' in window) ? requestIdleCallback(warmZia, { timeout: 3000 }) : null;
+    const timerId = setTimeout(warmZia, 2000);
+    registerDestructor(this, () => {
+      clearTimeout(timerId);
+      if (idleId != null && 'cancelIdleCallback' in window) cancelIdleCallback(idleId);
+    });
   }
 
   syncChrome() {
     if (!this._els || !this._applyL2For) return;
-    const { header, l1, l2, rail } = this._els;
+    const { header, l1, l2, rail, content } = this._els;
+
+    // Propagate text direction to every chrome component, mirroring Shell.html's
+    // applyDir ([header, sidebar-l1, sidebar-l2, right-pane, content]). The app
+    // flips RTL by setting `dir` on <html> only; each component mirrors its layout
+    // / inward affordances off its own `rtl` attribute, and toggling it here is
+    // also what re-renders them (rtl is observed) so they flip on a language change.
+    // Only touch the attribute when it actually changes — setAttribute to an
+    // already-present value still fires attributeChangedCallback, and these
+    // components re-render on it, so a blind set would fully re-render the header
+    // + sidebars + content on every route change in RTL.
+    const rtl = this.i18n.dir === 'rtl';
+    [header, l1, l2, content, this._rp].forEach((el) => {
+      if (!el) return;
+      const has = el.hasAttribute('rtl');
+      if (rtl && !has) el.setAttribute('rtl', '');
+      else if (!rtl && has) el.removeAttribute('rtl');
+    });
 
     // Feed the header its tab set ONLY when it changes (product or language). A
     // fresh `this.shell.tabs.map(...)` array assigned to header.tabs re-renders the
@@ -202,7 +280,13 @@ export default class ShellChrome extends Component {
           rail.items = this.shell.tabs.map((t) => ({ id: t.id, label: label(t), icon: TAB_ICONS[t.id] }));
           this._railSig = sig;
         }
-        if (this.nav.railIcons) rail.setAttribute('icons-only', ''); else rail.removeAttribute('icons-only');
+        // Icon-only rail is product-aware: the combined EC suite has many modules,
+        // so its left rail is ALWAYS icon-only (a narrow rail with hover-expand);
+        // point products have few modules and open icon+label, with the user's
+        // railIcons toggle as an opt-in. (The personalize panel hides the toggle
+        // for EC to match — the choice only applies to point products.)
+        const iconsOnly = this.nav.pointProduct ? this.nav.railIcons : true;
+        if (iconsOnly) rail.setAttribute('icons-only', ''); else rail.removeAttribute('icons-only');
         if (tab) rail.setActive?.(tab);
       }
     }

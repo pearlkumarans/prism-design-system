@@ -26,7 +26,7 @@ const CONTENT_SCOPED = new Set(['help', 'accessibility', 'updates', 'settings', 
 // A few drawer FILES register their ShellDrawers handle under a different KEY than
 // their file name (a quirk carried over from the vanilla shell). Map name → key so
 // show()/hide() target the right handle. (e.g. accessibility.html → ShellDrawers.a11y)
-const DRAWER_KEY = { accessibility: 'a11y' };
+const DRAWER_KEY = { accessibility: 'a11y', 'ask-zia': 'askzia' };
 const keyFor = (name) => DRAWER_KEY[name] || name;
 
 export default class DrawersService extends Service {
@@ -62,20 +62,45 @@ export default class DrawersService extends Service {
     return this._bodyHostEl();
   }
 
-  async open(name) {
-    if (!this._loaded.has(name)) {
-      if (!this._loading.has(name)) {
-        this._loading.set(name, injectViewInto(this._hostFor(name), name));
-      }
-      try {
-        await this._loading.get(name);
-        this._loaded.add(name);
-      } catch (e) {
-        this._loading.delete(name);
-        console.warn('[drawers] load failed:', name, e); // eslint-disable-line no-console
-        return;
-      }
+  // Inject (+ place) a drawer, resolving once loaded. Shared by open() and the
+  // ensure() pre-warm path.
+  async _inject(name) {
+    if (this._loaded.has(name)) { this._place(name); return true; }
+    if (!this._loading.has(name)) {
+      this._loading.set(name, injectViewInto(this._hostFor(name), name));
     }
+    try {
+      await this._loading.get(name);
+      this._loaded.add(name);
+    } catch (e) {
+      this._loading.delete(name);
+      console.warn('[drawers] load failed:', name, e); // eslint-disable-line no-console
+      return false;
+    }
+    this._place(name);
+    return true;
+  }
+
+  // Ask Zia isn't an overlay — it's an in-flow 400px pane. Relocate #askzia-pop
+  // into .shell-body just before the right-pane so it lays out beside the content
+  // (mirrors Shell.html's ensureAskZia). Guarded so it only moves once.
+  _place(name) {
+    if (name !== 'ask-zia') return;
+    const pop = document.getElementById('askzia-pop');
+    const body = document.querySelector('.shell-body');
+    const rp = body?.querySelector('ds-right-pane');
+    if (pop && body && rp && pop.parentElement !== body) body.insertBefore(pop, rp);
+  }
+
+  // Pre-inject + place a drawer WITHOUT showing it. Used to warm the Ask Zia pane
+  // after boot so its first open plays the width transition (it mounts closed at
+  // width:0) instead of popping open. Idempotent.
+  async ensure(name) {
+    await this._inject(name);
+  }
+
+  async open(name) {
+    if (!(await this._inject(name))) return;
     this.beforeOpen?.();      // close the rail popover / other non-drawer surfaces
     this.closeAll(name);      // close any other open drawer — one at a time
     window.ShellDrawers?.[keyFor(name)]?.show?.();

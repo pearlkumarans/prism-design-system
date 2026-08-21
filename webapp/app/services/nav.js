@@ -7,30 +7,34 @@ import { tracked } from '@glimmer/tracking';
  * Toggles html.nav-left so the CSS relocates the module tabs to the left rail;
  * ShellChrome reads `mode`/`railIcons` (tracked) to render the rail.
  *
- * `mode` is the EFFECTIVE mode. It combines the user's Top/Left preference with a
- * product constraint: only Endpoint Central (the combined suite) has a top-tab
- * strip in ds-header-nav — every POINT product (Patch Manager Plus, DEX Manager
- * Plus, …) renders a centred search instead, so its modules have nowhere to go but
- * the LEFT rail. The shell flags that via setPointProduct on each product change,
- * and point products are forced to left-nav regardless of the stored preference.
+ * `mode` is the EFFECTIVE nav mode and follows the user's Top/Left preference for
+ * EVERY product, point products included — ds-header-nav now renders a point
+ * product's tabs on top as well, so its modules have somewhere to go in top mode
+ * (mirrors Shell.html's applyNavMode, which never force-locks a side). `pointProduct`
+ * is still tracked so the header shows a right-cluster search icon instead of the
+ * centred field, but it no longer constrains the nav mode.
  */
 export default class NavService extends Service {
   @tracked userMode = 'top';     // the stored Top/Left preference ('top' | 'left')
-  @tracked pointProduct = false; // current product has no top tabs → left-nav only
+  @tracked pointProduct = false; // current product uses the search-icon header (not nav mode)
   @tracked railIcons = false;
 
   constructor() {
     super(...arguments);
     try {
       this.userMode = localStorage.getItem('uems-nav-mode') === 'left' ? 'left' : 'top';
+      // Persisted like the vanilla shell (localStorage 'uems-rail-icons') so the
+      // icon-only sidebar preference survives reloads and is consistent across
+      // products — without this it reset to icon+label on every fresh load.
+      this.railIcons = localStorage.getItem('uems-rail-icons') === '1';
     } catch (_) { /* private mode */ }
     this._reflect();
   }
 
-  // Effective nav mode: a point product always uses the left rail; otherwise the
-  // user's preference wins. ShellChrome + the shell template read this.
+  // Effective nav mode: the user's Top/Left preference, for every product
+  // (point products included). ShellChrome + the shell template read this.
   get mode() {
-    return (this.pointProduct || this.userMode === 'left') ? 'left' : 'top';
+    return this.userMode === 'left' ? 'left' : 'top';
   }
 
   _reflect() {
@@ -54,5 +58,6 @@ export default class NavService extends Service {
 
   setRailIcons(on) {
     this.railIcons = !!on;
+    try { localStorage.setItem('uems-rail-icons', this.railIcons ? '1' : '0'); } catch (_) { /* private mode */ }
   }
 }

@@ -907,20 +907,44 @@ export const EC_TAB_L2_MENUS = {
   /* DEX */
   dex: {
     title: 'DEX',
-    /* No hideL1 + no `groups`: DEX drives the L1 rail directly from l1Items
-       (like tools/malware). `hideL1: true` here previously hid the rail AND
-       there was no L2 to fall back to, so the whole sidebar vanished. */
-    l1Items: [
-      { id: 'home',       label: 'Home',        icon: 'add-widget', active: true },
-      { id: 'devices',    label: 'Devices',     icon: 'mobile' },
-      { id: 'insights',   label: 'Insights',    icon: 'bar-horizontal-chart' },
-      { id: 'alerts',     label: 'Alerts',      icon: 'notification' },
-      { id: 'sensors',    label: 'Sensors',     icon: 'file-shield' },
-      { id: 'workflows',  label: 'Workflows',   icon: 'route' },
-      { id: 'deploys',    label: 'Deployments', icon: 'settings-deploy' },
-      { id: 'dashboards', label: 'Dashboards',  icon: 'add-widget' },
-      { id: 'extensions', label: 'Extensions',  icon: 'file-folder' },
-      { id: 'settings',   label: 'Settings',    icon: 'settings' },
+    /* L2 grouped sidebar (bitlocker-style): hideL1 + `groups`, so applyL2For renders
+       the grouped L2 list and hides the L1 rail. Each item's `view` is the
+       CONTENT_VIEWS slug the shell routes to on ds-sidebar-l2-select; drill-down
+       pages (detail/create/builder) carry `nav:` in the catalog so their list parent
+       stays highlighted. Every DEX page is now reachable from the sidebar. */
+    hideL1: true,
+    groups: [
+      { id: 'overview', label: 'Overview', expanded: true, items: [
+        { id: 'dex-overview', label: 'Digital experience', view: 'dex-overview', active: true },
+        { id: 'dashboards',   label: 'Dashboards',         view: 'dashboards' },
+        { id: 'reports',      label: 'Reports',            view: 'reports' },
+      ] },
+      { id: 'devices', label: 'Devices & experience', expanded: true, items: [
+        { id: 'devices',   label: 'Devices',             view: 'dex-devices' },
+        { id: 'insights',  label: 'Experience insights', view: 'experience-insights' },
+        { id: 'telemetry', label: 'Live telemetry',      view: 'live-telemetry' },
+        { id: 'remote',    label: 'Remote actions',      view: 'remote-actions' },
+      ] },
+      { id: 'monitoring', label: 'Monitoring', expanded: true, items: [
+        { id: 'alerts',         label: 'Alerts',         view: 'alerts' },
+        { id: 'alert-profiles', label: 'Alert profiles', view: 'alert-profile-detail' },
+      ] },
+      { id: 'automation', label: 'Automation', expanded: true, items: [
+        { id: 'sensors',     label: 'Sensors',     view: 'sensors' },
+        { id: 'scripts',     label: 'Scripts',     view: 'script-detail' },
+        { id: 'workflows',   label: 'Workflows',   view: 'workflows' },
+        { id: 'deployments', label: 'Deployments', view: 'dex-deployments' },
+      ] },
+      { id: 'catalog', label: 'Catalog', expanded: true, items: [
+        { id: 'extensions', label: 'Extensions', view: 'extensions' },
+      ] },
+      { id: 'assistant', label: 'AI', expanded: true, items: [
+        { id: 'ai-assistant', label: 'AI assistant', view: 'ai-assistant' },
+        { id: 'ai-settings',  label: 'AI settings',  view: 'ai-settings' },
+      ] },
+      { id: 'config', label: 'Configuration', expanded: true, items: [
+        { id: 'settings', label: 'Settings', view: 'settings' },
+      ] },
     ],
   },
 

@@ -78,8 +78,12 @@ body {
   flex: 1;
   min-height: 0;
   /* Match the vanilla shell: top 0 (framed area flush under the header),
-     end 0 (right rail flush to the window edge), bottom + start 12px. */
-  padding: 0 0 var(--spacing-12, 12px) var(--spacing-12, 12px);
+     end 0 (right rail flush to the window edge), bottom + start 12px. Logical
+     properties so it mirrors in RTL — the start side gets the gap, the right-pane
+     side stays flush (physical `padding: 0 0 12px 12px` would keep the gap on the
+     physical left in RTL, leaving the framed area glued to the wrong edge). */
+  padding-block: 0 var(--spacing-12, 12px);
+  padding-inline: var(--spacing-12, 12px) 0;
   gap: 0;
 }
 /* shell-area = the framed region wrapping L1 + L2 + content */
@@ -241,7 +245,8 @@ body {
 .tabform__panels { flex: 1 1 auto; min-height: 0; }
 .tabform__panel[hidden] { display: none; }
 .sform ds-radio-group .ds-radio-group__items,
-.sform ds-checkbox-group .ds-checkbox-group__items { display: flex; flex-direction: row; gap: 32px; flex-wrap: wrap; }
+/* gap: <row> <column> — 16px vertical between wrapped lines, 32px between options on a line. */
+.sform ds-checkbox-group .ds-checkbox-group__items { display: flex; flex-direction: row; gap: var(--spacing-16, 16px) var(--spacing-32, 32px); flex-wrap: wrap; }
 .sform ds-checkbox-group .ds-checkbox-group__info { display: none; }
 @media (max-width: 640px) {
   .sform__control-only { padding-inline-start: 0; }
@@ -525,4 +530,7 @@ body {
 /* Top ⇄ Left navigation: in left mode the module tabs move to the rail, so hide
    the header's tab band (mirrors Shell.html's html.nav-left rule). */
 html.nav-left .shell-root ds-header-nav .ds-header-nav__tabs { display: none; }
-html.nav-left .shell-body { padding-inline-start: var(--spacing-12, 12px); }
+/* Point products (left-nav): the module rail is the leftmost element, so drop the
+   shell-body's inline-start padding to sit it flush to the window edge (mirrors
+   Shell.html's `html.nav-left .body { padding-inline-start: 0 }`). */
+html.nav-left .shell-body { padding-inline-start: 0; }

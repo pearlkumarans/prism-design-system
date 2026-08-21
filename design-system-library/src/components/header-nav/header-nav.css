@@ -145,7 +145,11 @@
   flex: 1 1 0;
   display: inline-flex;
   align-items: center;
-  gap: 0;
+  /* Backup space between the tab list and the ··· overflow button so the last
+     visible tab — especially the active chip pulled in by the reflow — has
+     breathing room and never reads as flush/cramped against ···. Collapses to
+     nothing when ··· is hidden (no overflow). */
+  gap: var(--spacing-8, 8px);
   min-width: 0;
   height: 100%;
 }
@@ -176,6 +180,10 @@
   align-items: center;                         /* centres each tab box in the row */
   gap: var(--spacing-4, 4px);                  /* breathing room between top-nav tab chips */
   height: 100%;
+  /* Clip any tab that hasn't been display:none'd yet — safety net so tabs can
+     never visually spill past the list and overlap the ··· overflow button
+     during a mid-/stale-reflow frame (the reflow decides which tabs show). */
+  overflow: hidden;
 }
 
 /* Each tab IS the box. Height is padding-driven: line-height + padding-block,
@@ -220,7 +228,9 @@
   cursor: pointer;
   border-radius: var(--radius-sm);
   flex-shrink: 0;
-  margin-inline-start: var(--spacing-4);
+  /* Gap to the tab list now comes from .ds-header-nav__tabs { gap } so it can
+     collapse when ··· is hidden — no extra margin here. */
+  margin-inline-start: 0;
 }
 .ds-header-nav__overflow:hover { background: var(--uems-bg-accent-primary-hover); }
 
@@ -268,6 +278,10 @@
   gap: var(--spacing-4);
   flex-shrink: 0;
 }
+
+/* Point product with search as an ICON (search="icon"): the centre is empty, so
+   push the utility cluster to the inline-end (brand stays inline-start). */
+.ds-header-nav--search-icon .ds-header-nav__cluster { margin-inline-start: auto; }
 .ds-header-nav__customer {
   display: inline-flex;
   align-items: center;

@@ -8,6 +8,7 @@ export function initialize(appInstance) {
   const i18n = appInstance.lookup('service:i18n');
   const theme = appInstance.lookup('service:theme');
   const nav = appInstance.lookup('service:nav');
+  const drawers = appInstance.lookup('service:drawers');
   appInstance.lookup('service:api'); // instantiate at boot (sets PrismAPI mock mode — no backend wired here)
   appInstance.lookup('service:session'); // instantiate at boot (registers window.ShellAuth.signOut for the shared profile drawer)
 
@@ -35,11 +36,22 @@ export function initialize(appInstance) {
     // navigation preferences
     get navMode() { return nav.mode; },
     get railIcons() { return nav.railIcons; },
+    // Whether the current product is a point product (no top-tab suite). The
+    // personalize panel uses it to hide the icon-only toggle for the combined EC
+    // suite, whose left rail is always icon-only.
+    get pointProduct() { return nav.pointProduct; },
     setNavMode: (m) => nav.setMode(m),
     setRailIcons: (on) => nav.setRailIcons(on),
 
     // header icon highlight — not wired here (no-op).
     setActiveIcon: () => {},
+
+    // Command-palette hand-offs (Shell.html contract): the palette escapes to the
+    // full search PAGE / Ask Zia by calling these. Open the corresponding drawer
+    // (drawers.open closes the palette first via closeAll). show() takes no query
+    // in these views, so the term isn't forwarded — parity with the shell.
+    showSearch: () => drawers.open('search'),
+    showAskZia: () => drawers.open('ask-zia'),
   };
 }
 

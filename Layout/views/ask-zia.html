@@ -242,6 +242,13 @@
 <script>
 (function () {
   const USER = 'Kumaran';
+  /* Logo base from the host (Ember: /vendor/ds/icons/logos; standalone: the
+     relative path below). Build Zia logo srcs from it so they resolve in both
+     contexts — a hardcoded relative path 404s under the Ember origin. Fixes the
+     static header logo here; the AI-avatar builder below uses the same base. */
+  const LOGO_BASE = window.UEMS_LOGO_BASE || '../design-system-library/src/icons/logos';
+  const _hdrLogo = document.querySelector('#askzia-pop .az-hdr__logo');
+  if (_hdrLogo) _hdrLogo.src = LOGO_BASE + '/Zia-logo.svg';
   /* Central i18n catalog — all displayed strings live here (namespaced `askzia.`)
      and resolve via t()/ShellCtx.t(). The greeting keeps its ${USER} interpolation
      in JS by splitting into greetHi + greetTail around the name. */
@@ -374,7 +381,7 @@
     const u = document.createElement('div'); u.className = 'az-msg--user az-fade-in'; u.textContent = text; convo.appendChild(u);
 
     const ai = document.createElement('div'); ai.className = 'az-msg--ai az-fade-in';
-    ai.innerHTML = `<img class="az-ai__avatar" src="../design-system-library/src/icons/logos/Zia-logo.svg" alt="" />` +
+    ai.innerHTML = `<img class="az-ai__avatar" src="${LOGO_BASE}/Zia-logo.svg" alt="" />` +
       `<div class="az-ai__content"><div class="az-think">` +
       STEPS.map((s) => `<div class="az-step"><span class="az-step__ic"><span class="az-step__dot"></span></span><span>${s}</span></div>`).join('') +
       `</div></div>`;

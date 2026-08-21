@@ -133,7 +133,7 @@ export class DsHeaderNav extends HTMLElement {
       'show-search', 'show-notifications', 'show-settings',
       'show-customer-selector', 'show-avatar', 'show-bento',
       'show-bookmark', 'show-zia',
-      'center',
+      'center', 'search',
       'rtl',
     ];
   }
@@ -198,6 +198,10 @@ export class DsHeaderNav extends HTMLElement {
   get tabs() { return this._tabs; }
   set tabs(v) {
     this._tabs = Array.isArray(v) ? v.slice() : [];
+    /* Remember the caller's natural order. The overflow reflow reorders _tabs to
+       keep the active tab visible; resetting to this order before each reflow keeps
+       repeated tab switches from cumulatively scrambling the row. */
+    this._tabsOrder = this._tabs.map((t) => t.id);
     if (this._mounted) this._render();
   }
 
@@ -230,17 +234,30 @@ export class DsHeaderNav extends HTMLElement {
     if (rtl) this.setAttribute('dir', 'rtl');
     else this.removeAttribute('dir');
 
-    /* Combined products (Endpoint Central + its MSP variant) use the top tab
-       nav and a search ICON; everything else uses a centred search FIELD. */
-    /* `center="search"` forces the centred search field even on combined
-       products — used by the shell's LEFT-navigation mode, where the module
-       tabs move to a left rail and the top bar centres a search box instead. */
+    /* `center="search"` forces the centred search field regardless of tabs —
+       reserved for a shell that wants a pure search bar. */
     const forceSearch = this.getAttribute('center') === 'search';
-    const isTopNav = (variant === 'endpoint-central' || variant === 'endpoint-central-msp' || variant === 'msp-central') && !forceSearch;
-    /* Point / left-only products centre the search field; combined products
-       centre the 72%-wide tab band. Both balance brand & cluster (see CSS). */
-    this.classList.toggle('ds-header-nav--centered-search', !isTopNav);
-    this.classList.toggle('ds-header-nav--tabs', isTopNav);
+    /* The centre is the TAB BAND whenever this header has tabs. The combined
+       EC-family variants always show it; every other (point) product shows it too
+       once its tabs are fed, so Top/Left navigation both work for point products.
+       In LEFT nav the shell hides the band (`html.nav-left … __tabs`) and shows the
+       module rail instead — the component still renders it either way. */
+    const isCombined = variant === 'endpoint-central' || variant === 'endpoint-central-msp' || variant === 'msp-central';
+    const hasTabs = Array.isArray(this._tabs) && this._tabs.length > 0;
+    const showTabs = !forceSearch && (isCombined || hasTabs);
+    /* Search placement:
+         - tab band present → search is a right-cluster ICON.
+         - no tab band → centre a search FIELD by default; `search="icon"` moves it
+           to the right cluster instead (point products in a left-only layout). */
+    const searchMode = (this.getAttribute('search') || '').toLowerCase();
+    const searchAsIcon = showSearch && (showTabs || searchMode === 'icon');
+    const searchAsField = showSearch && !showTabs && searchMode !== 'icon';
+    /* Centre a search field only when one is actually rendered; a tab band centres
+       the 72%-wide strip instead. Both balance brand & cluster (see CSS). */
+    this.classList.toggle('ds-header-nav--centered-search', searchAsField);
+    this.classList.toggle('ds-header-nav--tabs', showTabs);
+    /* Search icon with no centre content → push the cluster to the inline-end. */
+    this.classList.toggle('ds-header-nav--search-icon', searchAsIcon && !showTabs);
 
     const logoBase = (typeof window !== 'undefined' && window.UEMS_LOGO_BASE) || '/logos';
 
@@ -263,9 +280,9 @@ export class DsHeaderNav extends HTMLElement {
         <span class="ds-header-nav__product">${productName}</span>
       </div>`;
 
-    const centreHTML = isTopNav
+    const centreHTML = showTabs
       ? this._renderTabs()
-      : this._renderSearchBar(searchPh);
+      : (searchAsField ? this._renderSearchBar(searchPh) : '');
 
     const cluster = [];
     if (showCustomer) {
@@ -283,10 +300,10 @@ export class DsHeaderNav extends HTMLElement {
     /* Ask ZIA sits between the customer selector and the search icon (its
        inline-end divider then separates it from the utility icons). */
     if (showZia) cluster.push(ziaHTML);
-    /* Combined products (Endpoint Central / MSP) show search as a plain ICON
-       in the right cluster — the centre is occupied by the tab nav. Point /
-       left-only products render the centred search FIELD instead (below). */
-    if (showSearch && isTopNav) {
+    /* Search as a right-cluster ICON: combined products (tab nav occupies the
+       centre) and any product with search="icon" (point products opting out of the
+       centred field). The centred FIELD path renders in centreHTML instead. */
+    if (searchAsIcon) {
       cluster.push(this._iconBtn('search', 'search', 'Search'));
     }
     if (showSettings) cluster.push(this._iconBtn('settings', 'settings', 'Settings'));
@@ -305,7 +322,7 @@ export class DsHeaderNav extends HTMLElement {
        tab variants; CSS keeps these hidden until compact. Wired explicitly (no
        data-action) so the kebab stays out of the utility-icon logic. */
     const activeTab = (this._tabs || []).find((t) => t.active);
-    const compactNavHTML = isTopNav ? `
+    const compactNavHTML = showTabs ? `
       <span class="ds-header-nav__current" aria-hidden="true">${activeTab ? escapeHtml(activeTab.label) : ''}</span>
       <button type="button" class="ds-header-nav__menu-kebab" aria-label="Open navigation menu"
               aria-haspopup="true" aria-expanded="false">
@@ -319,10 +336,15 @@ export class DsHeaderNav extends HTMLElement {
       <div class="ds-header-nav__cluster">${cluster.join('')}</div>
     `;
 
-    this._wire(isTopNav);
+    this._wire(showTabs);
     const menuBtn = this.querySelector('.ds-header-nav__menu-kebab');
     if (menuBtn) menuBtn.addEventListener('click', () => this._toggleMenu());
-    if (isTopNav) {
+    if (showTabs) {
+      /* Clip synchronously before the first paint so a freshly-rendered tab set
+         (all tabs shown at natural width) never paints with the active/last tab
+         cut off by the list's overflow:hidden. The scheduled reflow re-runs after
+         layout + fonts settle. */
+      this._reflowOverflow();
       this._scheduleReflow();
       /* Observe the tabs <nav> directly: it shrinks when the right cluster
          grows (icons/fonts loading), and that's exactly the trigger that
@@ -369,8 +391,32 @@ export class DsHeaderNav extends HTMLElement {
     if (!list || !wrap || !btn) return;
 
     /* Reset visibility before measuring natural widths. */
-    const tabEls = [...list.querySelectorAll('.ds-header-nav__tab')];
+    let tabEls = [...list.querySelectorAll('.ds-header-nav__tab')];
     tabEls.forEach((el) => { el.style.display = ''; });
+
+    /* Restore the caller's natural order before the "active is sacred" reorder
+       below. That reorder mutates _tabs and the DOM to pull the active tab into
+       view; without this reset, each successive tab switch would reorder from the
+       ALREADY-reordered row, cumulatively scrambling the tabs (e.g. a stale
+       "Agent Browsers BitLocker" sequence). Resetting makes every reflow
+       deterministic: natural order, then one active tab moved forward. */
+    if (Array.isArray(this._tabsOrder) && this._tabsOrder.length) {
+      const rank = new Map(this._tabsOrder.map((id, i) => [id, i]));
+      // Sort _tabs back to natural order (preserving active flags).
+      this._tabs.sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0));
+      // Re-sync the DOM to natural order too.
+      const byId = new Map();
+      tabEls.forEach((el) => { if (el.dataset.tabId) byId.set(el.dataset.tabId, el); });
+      const domOut = this._tabs.map((t) => byId.get(t.id)).filter(Boolean);
+      const scrambled = domOut.some((el, i) => tabEls[i] !== el);
+      if (scrambled) {
+        const frag = document.createDocumentFragment();
+        domOut.forEach((el) => frag.appendChild(el));
+        list.appendChild(frag);
+        tabEls = [...list.querySelectorAll('.ds-header-nav__tab')];
+        tabEls.forEach((el) => { el.style.display = ''; });
+      }
+    }
 
     /* Available width = the tabs <nav> container minus the ··· button width.
        Use the parent <nav class="ds-header-nav__tabs"> as the budget so the
@@ -381,8 +427,17 @@ export class DsHeaderNav extends HTMLElement {
        below would compute lastFitIdx = -1 and yank the active tab to the front.
        The ResizeObserver re-runs this once the band is shown again. */
     if (!navEl || navEl.clientWidth === 0 || list.offsetParent === null) return;
-    const overflowBtnWidth = wrap.offsetWidth || 32;
-    const available = navEl.clientWidth - overflowBtnWidth - 4;
+    /* Reserve the ··· button + a safety margin so the last visible tab (especially
+       the active one) is never left marginally overflowing and clipped by the
+       list's overflow:hidden. Fallback 36 ≈ the button's real width when hidden. */
+    const overflowBtnWidth = wrap.offsetWidth || 36;
+    const available = navEl.clientWidth - overflowBtnWidth - 12;
+    /* The tab row is a flexbox with a column-gap BETWEEN chips. The fit math must
+       count that gap per adjacent pair, or a row of narrow tabs (each just under
+       budget by width alone) overflows by (n-1) × gap and gets clipped by the
+       list's overflow:hidden — shaving the active chip's background. */
+    const gap = parseFloat(getComputedStyle(list).columnGap)
+      || parseFloat(getComputedStyle(list).gap) || 0;
 
     /* Active tab is sacred — it must always remain visible. If sequential
        clipping would hide it, move it into the visible window first. */
@@ -390,14 +445,16 @@ export class DsHeaderNav extends HTMLElement {
     if (activeIdx >= 0) {
       const activeEl = tabEls[activeIdx];
       const activeW = activeEl?.offsetWidth || 0;
-      /* Compute how many leading tabs fit alongside the active tab. */
+      /* Compute how many leading tabs fit alongside the active tab. acc already
+         holds one chip (the active one), so every leading chip added also adds a
+         gap between it and its neighbour. */
       let acc = activeW;
       let lastFitIdx = -1;
       for (let i = 0; i < tabEls.length; i++) {
         if (i === activeIdx) continue;
         const w = tabEls[i].offsetWidth;
-        if (acc + w <= available) {
-          acc += w;
+        if (acc + gap + w <= available) {
+          acc += gap + w;
           lastFitIdx = i;
         } else {
           break;
@@ -433,8 +490,10 @@ export class DsHeaderNav extends HTMLElement {
     this._clippedTabs = [];
     tabEls.forEach((el, i) => {
       const w = el.offsetWidth;
-      if (!clipFromHere && acc + w <= available) {
-        acc += w;
+      /* Count the gap before every chip except the first kept one. */
+      const need = (acc > 0 ? gap : 0) + w;
+      if (!clipFromHere && acc + need <= available) {
+        acc += need;
       } else {
         clipFromHere = true;
         el.style.display = 'none';
@@ -561,9 +620,15 @@ export class DsHeaderNav extends HTMLElement {
         if (isActive) el.setAttribute('aria-current', 'page');
         else el.removeAttribute('aria-current');
       });
-      /* Recompute clipping after reorder */
-      if (fromOverflow && typeof this._reflowOverflow === 'function') {
-        requestAnimationFrame(() => this._reflowOverflow());
+      /* Recompute clipping. Both paths reflow so a newly-active tab that
+         sequential clipping had hidden (e.g. a late "Support" tab) is pulled
+         into the visible window by the "active is sacred" step — never left
+         highlighted-but-hidden in the ··· menu. Overflow path defers a frame
+         (its own placement already ran); a normal click reflows synchronously
+         so the row is right before first paint. */
+      if (typeof this._reflowOverflow === 'function') {
+        if (fromOverflow) requestAnimationFrame(() => this._reflowOverflow());
+        else this._reflowOverflow();
       }
     }
   }
@@ -606,6 +671,11 @@ export class DsHeaderNav extends HTMLElement {
       if (isActive) el.setAttribute('aria-current', 'page');
       else el.removeAttribute('aria-current');
     });
+    /* Re-run the overflow reflow: the newly-active tab may be one that sequential
+       clipping had hidden in the ··· menu. The reflow's "active is sacred" step
+       pulls it back into the visible window so its highlight is never on a
+       clipped/hidden tab. Synchronous so the row is correct before first paint. */
+    this._reflowOverflow();
   }
 
   /* Close any other open menu in this header so only one is open at a time. */

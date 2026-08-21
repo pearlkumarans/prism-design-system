@@ -190,7 +190,7 @@
       </div>
       <ds-button class="pf-cta" variant="outline" size="small" data-i18n="pf.getQuote">Get Quote</ds-button>
     </ds-container>
-    <ds-container class="pf-card pf-trial pf-demo" radius="lg" style="--ds-container-bg: var(--uems-bg-secondary-subtle); --ds-container-border-width: 0;">
+    <ds-container class="pf-card pf-trial pf-demo" radius="lg" style="--ds-container-bg: var(--uems-bg-info-primary); --ds-container-border-width: 0;">
       <span class="pf-trial__ic"><ds-icon name="calendar" size="20"></ds-icon></span>
       <div class="pf-trial__body">
         <div class="pf-rowtitle" data-i18n="pf.requestDemo">Request a demo</div>
@@ -359,7 +359,7 @@
         `<div class="pf-divider"></div>` +
         `<div class="pf-field"><span class="pf-field__label">${tr('Navigation')}</span><div class="pf-muted">${tr('Select the navigation to be applied to your product.')}</div>` +
           `<div class="pf-navs" style="margin-top:10px"><div class="pf-nav pf-nav--top" data-nav="top"><div class="pf-nav__thumb"></div><div class="pf-nav__lbl">${tr('Top Navigation')}</div></div><div class="pf-nav pf-nav--left" data-nav="left"><div class="pf-nav__thumb"></div><div class="pf-nav__lbl">${tr('Left Navigation')}</div></div></div></div>` +
-        `<div class="pf-toggle-row"><span class="pf-field__label">${tr('Display Icons Only in Sidebar')}</span><ds-toggle id="pf-rail-icons" size="medium"${ctx().railIcons ? ' checked' : ''}></ds-toggle></div>` +
+        `<div class="pf-toggle-row" id="pf-rail-row"><span class="pf-field__label">${tr('Display Icons Only in Sidebar')}</span><ds-toggle id="pf-rail-icons" size="medium"${ctx().railIcons ? ' checked' : ''}></ds-toggle></div>` +
         `<div class="pf-divider"></div>` +
         `<div class="pf-field"><span class="pf-field__label">${tr('Font')}</span><div class="pf-muted">${tr('Select the font to be applied to your product.')}</div><ds-input-select id="pf-font" label-position="top" show-label="false" show-helper-row="false"></ds-input-select>` +
           `<div class="pf-sizes" style="margin-top:8px">${[[11, 0.85], [13, 0.92], [15, 1], [18, 1.12], [22, 1.3]].map(([px, sc], i) => `<button type="button" class="pf-size${i === 2 ? ' is-active' : ''}" data-pfsize data-scale="${sc}" style="font-size:${px}px">Aa</button>`).join('')}</div></div>` +
@@ -379,9 +379,22 @@
       /* Top / Left navigation — reflect the active mode, then drive the shell. */
       const curNav = ctx().navMode || 'top';
       box.querySelectorAll('[data-nav]').forEach((b) => b.classList.toggle('is-active', b.dataset.nav === curNav));
+      /* "Display Icons Only in Sidebar" only applies to the LEFT module rail, and
+         only to POINT products — the combined EC suite's left rail is always
+         icon-only (many modules), so the choice is hidden there. Show the row only
+         when: left nav AND a point product. */
+      const railRow = box.querySelector('#pf-rail-row');
+      /* Hide the toggle only for the combined EC suite, which the host reports via
+         pointProduct === false. When the host doesn't expose pointProduct (the
+         standalone Shell.html), leave the row visible in left nav — its prior
+         behavior — rather than hiding it everywhere. */
+      const isCombined = ctx().pointProduct === false;
+      const syncRailRow = (mode) => { if (railRow) railRow.style.display = (mode === 'left' && !isCombined) ? '' : 'none'; };
+      syncRailRow(curNav);
       box.querySelectorAll('[data-nav]').forEach((b) => b.addEventListener('click', () => {
         box.querySelectorAll('[data-nav]').forEach((x) => x.classList.toggle('is-active', x === b));
         ctx().setNavMode && ctx().setNavMode(b.dataset.nav);
+        syncRailRow(b.dataset.nav);
       }));
       /* Display Icons Only in Sidebar → narrows the left module rail. */
       box.querySelector('#pf-rail-icons')?.addEventListener('ds-toggle-change', (e) => {
