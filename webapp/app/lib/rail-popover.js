@@ -71,14 +71,19 @@ export class RailPopover {
     this._position();
   }
 
-  // Anchor to the clicked rail icon: rail sits far-right → card opens to its left.
+  // Anchor to the clicked rail icon. LTR: rail is far-right → card opens to its
+  // left. RTL: the shell mirrors and the rail sits far-left → card opens to its
+  // right (else it clamps to x=12 and overlaps the content). Mirrors Shell.html's
+  // positionUpdate().
   _position() {
     const btn = this.rpEl?.querySelector(`button[data-id="${this.anchorId}"]`);
     if (!btn) return;
     const r = btn.getBoundingClientRect();
     const w = this.el.offsetWidth || 456;
     const gap = 12;
-    let left = Math.max(12, Math.min(r.left - w - gap, window.innerWidth - w - 12));
+    const rtl = document.documentElement.getAttribute('dir') === 'rtl';
+    const raw = rtl ? (r.right + gap) : (r.left - w - gap);
+    const left = Math.max(12, Math.min(raw, window.innerWidth - w - 12));
     const h = this.el.offsetHeight || 180;
     const top = Math.max(12, Math.min(r.top, window.innerHeight - h - 12));
     this.el.style.left = `${left}px`;

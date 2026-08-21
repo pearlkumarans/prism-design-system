@@ -58,7 +58,8 @@ export default class ShellChrome extends Component {
     const l1 = element.querySelector('ds-sidebar-l1');
     const l2 = element.querySelector('ds-sidebar-l2');
     const rail = element.querySelector('ds-module-rail');
-    this._els = { header, l1, l2, rail };
+    const content = element.querySelector('ds-content');
+    this._els = { header, l1, l2, rail, content };
 
     // Close any open drawer on navigation (see _closeDrawersOnNav). Drawers don't
     // change the route themselves, so routeWillChange only fires on real nav.
@@ -108,6 +109,7 @@ export default class ShellChrome extends Component {
     //  update/review/roadmap → small anchored popover CARDS (not the updates drawer);
     //  product → external SDP page; get-started → the sectioned-form view.
     const rp = element.querySelector('ds-right-pane');
+    this._rp = rp;   // synced for direction (rtl) in syncChrome on language flip
     const railPopover = new RailPopover(rp, this.theme);
     railPopover.enableAppearanceHover(); // hover the theme icon → Appearance chooser
     // Only ONE surface open at a time: opening any drawer closes the popover
@@ -180,7 +182,18 @@ export default class ShellChrome extends Component {
 
   syncChrome() {
     if (!this._els || !this._applyL2For) return;
-    const { header, l1, l2, rail } = this._els;
+    const { header, l1, l2, rail, content } = this._els;
+
+    // Propagate text direction to every chrome component, mirroring Shell.html's
+    // applyDir ([header, sidebar-l1, sidebar-l2, right-pane, content]). The app
+    // flips RTL by setting `dir` on <html> only; each component mirrors its layout
+    // / inward affordances off its own `rtl` attribute, and toggling it here is
+    // also what re-renders them (rtl is observed) so they flip on a language change.
+    const rtl = this.i18n.dir === 'rtl';
+    [header, l1, l2, content, this._rp].forEach((el) => {
+      if (!el) return;
+      if (rtl) el.setAttribute('rtl', ''); else el.removeAttribute('rtl');
+    });
 
     // Feed the header its tab set ONLY when it changes (product or language). A
     // fresh `this.shell.tabs.map(...)` array assigned to header.tabs re-renders the

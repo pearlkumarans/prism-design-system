@@ -78,8 +78,12 @@ body {
   flex: 1;
   min-height: 0;
   /* Match the vanilla shell: top 0 (framed area flush under the header),
-     end 0 (right rail flush to the window edge), bottom + start 12px. */
-  padding: 0 0 var(--spacing-12, 12px) var(--spacing-12, 12px);
+     end 0 (right rail flush to the window edge), bottom + start 12px. Logical
+     properties so it mirrors in RTL — the start side gets the gap, the right-pane
+     side stays flush (physical `padding: 0 0 12px 12px` would keep the gap on the
+     physical left in RTL, leaving the framed area glued to the wrong edge). */
+  padding-block: 0 var(--spacing-12, 12px);
+  padding-inline: var(--spacing-12, 12px) 0;
   gap: 0;
 }
 /* shell-area = the framed region wrapping L1 + L2 + content */
