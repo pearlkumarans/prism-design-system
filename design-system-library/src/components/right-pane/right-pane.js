@@ -67,7 +67,7 @@ const DEFAULT_BOTTOM = [
   { id: 'upload-logs',  icon: 'upload',              label: 'Upload logs' },
   { id: 'call',         icon: 'calling',             label: 'Call' },
   { id: 'tickets',      icon: 'ticket',              label: 'Tickets' },
-  { id: 'chat',         icon: 'message-chat-square', label: 'Chat' },
+  { id: 'chat',         icon: 'message-text-square',  label: 'Chat', fab: true },
 ];
 
 const SHOW_ATTR_TOP = {
@@ -137,7 +137,14 @@ export class DsRightPane extends HTMLElement {
 
   _render() {
     const theme = enumAttr(this, 'theme', THEMES, 'light');
-    const rtl = boolAttr(this, 'rtl');
+    /* RTL from our own `rtl` attribute OR an ancestor's `dir="rtl"` (apps often
+       flip direction on <html> only). Inward-pointing tooltips and the mirrored
+       layout depend on this, so honour the ambient direction too — the host must
+       still re-render us on a dir flip (toggling `rtl` is the trigger). */
+    const rtl = boolAttr(this, 'rtl')
+      || (typeof document !== 'undefined'
+          && (this.closest('[dir="rtl"]') != null
+              || document.documentElement.getAttribute('dir') === 'rtl'));
     const hideToggle = boolAttr(this, 'hide-theme-toggle');
 
     if (rtl) this._root.setAttribute('dir', 'rtl');
@@ -182,6 +189,19 @@ export class DsRightPane extends HTMLElement {
       const logoName = it.id === 'product'
         ? (this.getAttribute('product-logo') || it.logo)
         : it.logo;
+      // FAB slot (e.g. Chat): render our own icon-button component with its
+      // built-in `primary` variant — no bespoke rail styling. It carries its own
+      // aria-label + hover tooltip, so it's excluded from the rail's tooltip
+      // re-parent pass below; the click delegation matches it via data-id.
+      if (it.fab) {
+        return `<li>
+          <ds-icon-button class="ds-right-pane__fab" data-id="${escapeHtml(it.id)}"
+                          type="primary" shape="square" size="xl"
+                          icon="${escapeHtml(it.icon)}"
+                          label="${escapeHtml(it.label || it.id)}"
+                          tooltip-position="${rtl ? 'right' : 'left'}"></ds-icon-button>
+        </li>`;
+      }
       const content = logoName
         ? `<img class="ds-right-pane__logo" src="${logoBase}/${escapeHtml(logoName)}.svg" alt="" />`
         : `<ds-icon name="${escapeHtml(it.icon)}" size="20"></ds-icon>`;
@@ -216,7 +236,7 @@ export class DsRightPane extends HTMLElement {
       <ul class="ds-right-pane__bottom" role="list">${directionBtn}${themeBtn}${bottomItems.map(renderItem).join('')}${moreBtn}</ul>
     `;
 
-    this._root.querySelectorAll('.ds-right-pane__btn').forEach((btn) => {
+    this._root.querySelectorAll('.ds-right-pane__btn, .ds-right-pane__fab').forEach((btn) => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
         if (id === '__theme__') {
