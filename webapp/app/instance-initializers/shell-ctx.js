@@ -47,7 +47,7 @@ export function initialize(appInstance) {
     // (drawers.open closes the palette first via closeAll). show() takes no query
     // in these views, so the term isn't forwarded — parity with the shell.
     showSearch: () => drawers.open('search'),
-    showAskZia: () => drawers.open('zia'),
+    showAskZia: () => drawers.open('ask-zia'),
   };
 }
 

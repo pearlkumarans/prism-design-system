@@ -112,7 +112,12 @@ export default class ShellChrome extends Component {
       else if (action === 'settings') this.drawers.open('settings');
       else if (action === 'bento') this.drawers.open('apps');
       else if (action === 'search') this._togglePalette();
-      else if (action === 'zia') this.drawers.open('zia');
+      // Ask Zia — the in-flow pane (ask-zia.html / ShellDrawers.askzia), toggled;
+      // matches Shell.html. (Not zia.html, which is a different full-page swap.)
+      else if (action === 'zia') {
+        const z = window.ShellDrawers?.askzia;
+        if (z?.isOpen?.()) z.hide(); else this.drawers.open('ask-zia');
+      }
     });
     header.addEventListener('ds-header-nav-search', () => this._togglePalette());
 
@@ -201,6 +206,15 @@ export default class ShellChrome extends Component {
     document.addEventListener('shell:langchange', this._onLangChange);
 
     this.syncChrome();
+
+    // Warm the Ask Zia pane after boot so its FIRST open plays the width slide
+    // (it mounts closed at width:0) instead of popping — injecting + opening in
+    // one frame skips the transition. Idempotent; idle for the common case, a
+    // setTimeout net for backgrounded tabs that suppress idle callbacks. Mirrors
+    // Shell.html's preinjectAskZia.
+    const warmZia = () => this.drawers.ensure?.('ask-zia');
+    if ('requestIdleCallback' in window) requestIdleCallback(warmZia, { timeout: 3000 });
+    setTimeout(warmZia, 2000);
   }
 
   syncChrome() {
