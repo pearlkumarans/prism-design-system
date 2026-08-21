@@ -45,6 +45,18 @@ export default class ShellChrome extends Component {
   // via the module rail. Bound field so on/off reference the same handler.
   _closeDrawersOnNav = () => this.drawers.closeAll();
 
+  // Header search icon / centre search field / ⌘K → toggle the global command
+  // palette (views/command-palette.html), matching Shell.html's showPalette().
+  // It's a body-level overlay that registers ShellDrawers['command-palette'] with
+  // { show, hide, isOpen }; drawers.open injects it on first use. Re-triggering
+  // toggles it closed. NOT the full search PAGE — the palette hands off to that
+  // itself via ShellCtx.showSearch.
+  _togglePalette = () => {
+    const cp = window.ShellDrawers?.['command-palette'];
+    if (cp?.isOpen?.()) { cp.hide(); return; }
+    this.drawers.open('command-palette');
+  };
+
   async setupChrome(element) {
     await Promise.all([
       customElements.whenDefined('ds-header-nav'),
@@ -99,10 +111,21 @@ export default class ShellChrome extends Component {
       if (action === 'avatar') this.drawers.open('profile');
       else if (action === 'settings') this.drawers.open('settings');
       else if (action === 'bento') this.drawers.open('apps');
-      else if (action === 'search') this.drawers.open('search');
+      else if (action === 'search') this._togglePalette();
       else if (action === 'zia') this.drawers.open('zia');
     });
-    header.addEventListener('ds-header-nav-search', () => this.drawers.open('search'));
+    header.addEventListener('ds-header-nav-search', () => this._togglePalette());
+
+    // ⌘K / Ctrl+K toggles the palette from anywhere (mirrors Shell.html). The
+    // palette owns its own keys once open; this only handles the global open/close.
+    this._onPaletteKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        this._togglePalette();
+      }
+    };
+    document.addEventListener('keydown', this._onPaletteKey);
+    registerDestructor(this, () => document.removeEventListener('keydown', this._onPaletteKey));
 
     // Right utility rail. Each id maps to a DISTINCT surface, matching Shell.html:
     //  help/accessibility → confined drawers; announcement → Product Updates drawer;

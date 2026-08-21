@@ -405,6 +405,14 @@
 (function () {
   const root = document.getElementById('cmdk-pop');
   if (!root || root.__init) return; root.__init = true;
+
+  /* Logo base — the host sets window.UEMS_LOGO_BASE (Ember: /vendor/ds/icons/logos;
+     standalone: the relative path below). Build the Zia logo src from it so it
+     resolves in BOTH contexts — a hardcoded relative path 404s under the Ember
+     origin. Fixes the static toggle-button img here; the dynamic row tile below
+     uses the same LOGO_BASE. */
+  const LOGO_BASE = window.UEMS_LOGO_BASE || '../design-system-library/src/icons/logos';
+  root.querySelectorAll('img.cmdk-zia-logo').forEach((img) => { img.src = LOGO_BASE + '/Zia-logo.svg'; });
   /* Scope EVERY query to root — the palette shares <body> with the whole shell. */
   const $ = (id) => root.querySelector('#' + id) || document.getElementById(id);
 
@@ -932,7 +940,7 @@
      from Layout/ in both modes (injected: relative to Shell.html; standalone:
      via <base href="../">). */
   const ZIA_TILE = '<span class="cmdk-row__tile cmdk-row__tile--zia">' +
-    '<img class="cmdk-zia-logo" src="../design-system-library/src/icons/logos/Zia-logo.svg" alt="" /></span>';
+    '<img class="cmdk-zia-logo" src="' + LOGO_BASE + '/Zia-logo.svg" alt="" /></span>';
 
   /* ── Ranking ──────────────────────────────────────────────────────────────
      Score a match so the FIRST row is the row the admin meant — exact label >
