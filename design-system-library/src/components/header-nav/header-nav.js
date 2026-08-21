@@ -234,28 +234,30 @@ export class DsHeaderNav extends HTMLElement {
     if (rtl) this.setAttribute('dir', 'rtl');
     else this.removeAttribute('dir');
 
-    /* Combined products (Endpoint Central + its MSP variant) use the top tab
-       nav and a search ICON; everything else uses a centred search FIELD. */
-    /* `center="search"` forces the centred search field even on combined
-       products — used by the shell's LEFT-navigation mode, where the module
-       tabs move to a left rail and the top bar centres a search box instead. */
+    /* `center="search"` forces the centred search field regardless of tabs —
+       reserved for a shell that wants a pure search bar. */
     const forceSearch = this.getAttribute('center') === 'search';
-    const isTopNav = (variant === 'endpoint-central' || variant === 'endpoint-central-msp' || variant === 'msp-central') && !forceSearch;
+    /* The centre is the TAB BAND whenever this header has tabs. The combined
+       EC-family variants always show it; every other (point) product shows it too
+       once its tabs are fed, so Top/Left navigation both work for point products.
+       In LEFT nav the shell hides the band (`html.nav-left … __tabs`) and shows the
+       module rail instead — the component still renders it either way. */
+    const isCombined = variant === 'endpoint-central' || variant === 'endpoint-central-msp' || variant === 'msp-central';
+    const hasTabs = Array.isArray(this._tabs) && this._tabs.length > 0;
+    const showTabs = !forceSearch && (isCombined || hasTabs);
     /* Search placement:
-         - top-nav (combined EC): the centre is the tab band, search is a right-cluster ICON.
-         - point / left-only products: centre a search FIELD by default. Set
-           `search="icon"` to instead hide the centre field and show the search ICON
-           in the right cluster (like top-nav) — used by the shell for point products. */
+         - tab band present → search is a right-cluster ICON.
+         - no tab band → centre a search FIELD by default; `search="icon"` moves it
+           to the right cluster instead (point products in a left-only layout). */
     const searchMode = (this.getAttribute('search') || '').toLowerCase();
-    const searchAsIcon = showSearch && (isTopNav || searchMode === 'icon');
-    const searchAsField = showSearch && !isTopNav && searchMode !== 'icon';
-    /* Centre a search field only when one is actually rendered; combined products
-       centre the 72%-wide tab band. Both balance brand & cluster (see CSS). */
+    const searchAsIcon = showSearch && (showTabs || searchMode === 'icon');
+    const searchAsField = showSearch && !showTabs && searchMode !== 'icon';
+    /* Centre a search field only when one is actually rendered; a tab band centres
+       the 72%-wide strip instead. Both balance brand & cluster (see CSS). */
     this.classList.toggle('ds-header-nav--centered-search', searchAsField);
-    this.classList.toggle('ds-header-nav--tabs', isTopNav);
-    /* Point product with search as an ICON → no centre content; push the cluster
-       to the inline-end (see CSS). */
-    this.classList.toggle('ds-header-nav--search-icon', searchAsIcon && !isTopNav);
+    this.classList.toggle('ds-header-nav--tabs', showTabs);
+    /* Search icon with no centre content → push the cluster to the inline-end. */
+    this.classList.toggle('ds-header-nav--search-icon', searchAsIcon && !showTabs);
 
     const logoBase = (typeof window !== 'undefined' && window.UEMS_LOGO_BASE) || '/logos';
 
@@ -278,7 +280,7 @@ export class DsHeaderNav extends HTMLElement {
         <span class="ds-header-nav__product">${productName}</span>
       </div>`;
 
-    const centreHTML = isTopNav
+    const centreHTML = showTabs
       ? this._renderTabs()
       : (searchAsField ? this._renderSearchBar(searchPh) : '');
 
@@ -320,7 +322,7 @@ export class DsHeaderNav extends HTMLElement {
        tab variants; CSS keeps these hidden until compact. Wired explicitly (no
        data-action) so the kebab stays out of the utility-icon logic. */
     const activeTab = (this._tabs || []).find((t) => t.active);
-    const compactNavHTML = isTopNav ? `
+    const compactNavHTML = showTabs ? `
       <span class="ds-header-nav__current" aria-hidden="true">${activeTab ? escapeHtml(activeTab.label) : ''}</span>
       <button type="button" class="ds-header-nav__menu-kebab" aria-label="Open navigation menu"
               aria-haspopup="true" aria-expanded="false">
@@ -334,10 +336,10 @@ export class DsHeaderNav extends HTMLElement {
       <div class="ds-header-nav__cluster">${cluster.join('')}</div>
     `;
 
-    this._wire(isTopNav);
+    this._wire(showTabs);
     const menuBtn = this.querySelector('.ds-header-nav__menu-kebab');
     if (menuBtn) menuBtn.addEventListener('click', () => this._toggleMenu());
-    if (isTopNav) {
+    if (showTabs) {
       /* Clip synchronously before the first paint so a freshly-rendered tab set
          (all tabs shown at natural width) never paints with the active/last tab
          cut off by the list's overflow:hidden. The scheduled reflow re-runs after

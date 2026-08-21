@@ -36,6 +36,10 @@ export function initialize(appInstance) {
     // navigation preferences
     get navMode() { return nav.mode; },
     get railIcons() { return nav.railIcons; },
+    // Whether the current product is a point product (no top-tab suite). The
+    // personalize panel uses it to hide the icon-only toggle for the combined EC
+    // suite, whose left rail is always icon-only.
+    get pointProduct() { return nav.pointProduct; },
     setNavMode: (m) => nav.setMode(m),
     setRailIcons: (on) => nav.setRailIcons(on),
 

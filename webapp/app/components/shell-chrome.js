@@ -270,7 +270,13 @@ export default class ShellChrome extends Component {
           rail.items = this.shell.tabs.map((t) => ({ id: t.id, label: label(t), icon: TAB_ICONS[t.id] }));
           this._railSig = sig;
         }
-        if (this.nav.railIcons) rail.setAttribute('icons-only', ''); else rail.removeAttribute('icons-only');
+        // Icon-only rail is product-aware: the combined EC suite has many modules,
+        // so its left rail is ALWAYS icon-only (a narrow rail with hover-expand);
+        // point products have few modules and open icon+label, with the user's
+        // railIcons toggle as an opt-in. (The personalize panel hides the toggle
+        // for EC to match — the choice only applies to point products.)
+        const iconsOnly = this.nav.pointProduct ? this.nav.railIcons : true;
+        if (iconsOnly) rail.setAttribute('icons-only', ''); else rail.removeAttribute('icons-only');
         if (tab) rail.setActive?.(tab);
       }
     }
