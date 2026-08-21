@@ -213,8 +213,12 @@ export default class ShellChrome extends Component {
     // setTimeout net for backgrounded tabs that suppress idle callbacks. Mirrors
     // Shell.html's preinjectAskZia.
     const warmZia = () => this.drawers.ensure?.('ask-zia');
-    if ('requestIdleCallback' in window) requestIdleCallback(warmZia, { timeout: 3000 });
-    setTimeout(warmZia, 2000);
+    const idleId = ('requestIdleCallback' in window) ? requestIdleCallback(warmZia, { timeout: 3000 }) : null;
+    const timerId = setTimeout(warmZia, 2000);
+    registerDestructor(this, () => {
+      clearTimeout(timerId);
+      if (idleId != null && 'cancelIdleCallback' in window) cancelIdleCallback(idleId);
+    });
   }
 
   syncChrome() {
@@ -226,10 +230,16 @@ export default class ShellChrome extends Component {
     // flips RTL by setting `dir` on <html> only; each component mirrors its layout
     // / inward affordances off its own `rtl` attribute, and toggling it here is
     // also what re-renders them (rtl is observed) so they flip on a language change.
+    // Only touch the attribute when it actually changes — setAttribute to an
+    // already-present value still fires attributeChangedCallback, and these
+    // components re-render on it, so a blind set would fully re-render the header
+    // + sidebars + content on every route change in RTL.
     const rtl = this.i18n.dir === 'rtl';
     [header, l1, l2, content, this._rp].forEach((el) => {
       if (!el) return;
-      if (rtl) el.setAttribute('rtl', ''); else el.removeAttribute('rtl');
+      const has = el.hasAttribute('rtl');
+      if (rtl && !has) el.setAttribute('rtl', '');
+      else if (!rtl && has) el.removeAttribute('rtl');
     });
 
     // Feed the header its tab set ONLY when it changes (product or language). A

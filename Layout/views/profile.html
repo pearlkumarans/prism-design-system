@@ -384,8 +384,12 @@
          icon-only (many modules), so the choice is hidden there. Show the row only
          when: left nav AND a point product. */
       const railRow = box.querySelector('#pf-rail-row');
-      const isPoint = !!(ctx().pointProduct);
-      const syncRailRow = (mode) => { if (railRow) railRow.style.display = (mode === 'left' && isPoint) ? '' : 'none'; };
+      /* Hide the toggle only for the combined EC suite, which the host reports via
+         pointProduct === false. When the host doesn't expose pointProduct (the
+         standalone Shell.html), leave the row visible in left nav — its prior
+         behavior — rather than hiding it everywhere. */
+      const isCombined = ctx().pointProduct === false;
+      const syncRailRow = (mode) => { if (railRow) railRow.style.display = (mode === 'left' && !isCombined) ? '' : 'none'; };
       syncRailRow(curNav);
       box.querySelectorAll('[data-nav]').forEach((b) => b.addEventListener('click', () => {
         box.querySelectorAll('[data-nav]').forEach((x) => x.classList.toggle('is-active', x === b));
