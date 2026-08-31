@@ -39,15 +39,11 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import '../field-helper/field-helper.js';
+import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-token-field-fh-css', '../field-helper/field-helper.css');
-_injectCss('ds-token-field-tag-css', '../tag/tag.css');
+injectCss('ds-token-field-fh-css', '../field-helper/field-helper.css', import.meta.url);
+injectCss('ds-token-field-tag-css', '../tag/tag.css', import.meta.url);
 
 const esc = (s) => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -278,7 +274,7 @@ export class DsTokenField extends HTMLElement {
       : '';
 
     const prefixHTML = showPrefixIcon
-      ? `<span class="ds-token-field__prefix" aria-hidden="true"><ds-icon name="${prefixIcon}" size="16"></ds-icon></span>`
+      ? `<span class="ds-token-field__prefix" aria-hidden="true"><ds-icon name="${escapeHtml(prefixIcon)}" size="16"></ds-icon></span>`
       : '';
 
     /* Tokens: each a removable ds-tag. In filled (single-row) mode an overflow

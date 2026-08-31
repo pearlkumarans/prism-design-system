@@ -49,15 +49,10 @@ import '../badge/badge.js';
 /* The gauge/chart slot renders the shared Chart component (type="gauge" or
    "line") — no bespoke SVG here. */
 import '../chart/chart.js?v=9';
+import { injectCss } from '../../utils/inject-css.js';
 
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-kpi-card-badge-css', '../badge/badge.css');
-_injectCss('ds-kpi-card-chart-css', '../chart/chart.css');
+injectCss('ds-kpi-card-badge-css', '../badge/badge.css', import.meta.url);
+injectCss('ds-kpi-card-chart-css', '../chart/chart.css', import.meta.url);
 
 const VARIANTS    = ['default', 'wide', 'multi', 'single', 'two'];
 const STATES      = ['default', 'success', 'warning', 'alert'];
@@ -178,7 +173,7 @@ export class DsKpiCard extends HTMLElement {
     if (!iconName) return '';
     return `
       <span class="ds-kpi-card__icon-badge ds-kpi-card__icon-badge--${state}" aria-hidden="true">
-        <ds-icon name="${iconName}" size="20"></ds-icon>
+        <ds-icon name="${escapeHtml(iconName)}" size="20"></ds-icon>
       </span>`;
   }
 

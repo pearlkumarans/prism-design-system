@@ -11,17 +11,13 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 /* The dismiss/close affordance reuses <ds-icon-button>; the action reuses <ds-text-link>. */
 import '../icon-button/icon-button.js';
 import '../text-link/text-link.js';
+import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Auto-load icon-button.css once (light-DOM, so it's present even on pages that
    load inline-alert.css individually). Idempotent. */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-inline-alert-icon-button-css', '../icon-button/icon-button.css');
-_injectCss('ds-inline-alert-text-link-css', '../text-link/text-link.css');
+injectCss('ds-inline-alert-icon-button-css', '../icon-button/icon-button.css', import.meta.url);
+injectCss('ds-inline-alert-text-link-css', '../text-link/text-link.css', import.meta.url);
 
 const TYPES = ['info', 'success', 'warning', 'error', 'neutral'];
 const STYLES = ['subtle', 'intense'];
@@ -82,7 +78,7 @@ export class DsInlineAlert extends HTMLElement {
     else this._root.removeAttribute('dir');
 
     const iconHTML = showIcon
-      ? `<span class="ds-inline-alert__icon"><ds-icon name="${ICON_FOR[type]}" size="20"></ds-icon></span>`
+      ? `<span class="ds-inline-alert__icon"><ds-icon name="${escapeHtml(ICON_FOR[type])}" size="20"></ds-icon></span>`
       : '';
     const titleHTML = title ? `<div class="ds-inline-alert__title">${title}</div>` : '';
     const descHTML = description ? `<div class="ds-inline-alert__description">${description}</div>` : '';

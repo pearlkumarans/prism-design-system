@@ -18,16 +18,11 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 /* The helper/note row reuses the shared <ds-field-helper> sub-component. */
 import '../field-helper/field-helper.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Auto-load field-helper.css once (both are light-DOM, so the stylesheet must
    be present even on pages that load checkbox-group.css individually). */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-checkbox-group-fh-css', '../field-helper/field-helper.css');
+injectCss('ds-checkbox-group-fh-css', '../field-helper/field-helper.css', import.meta.url);
 
 const POSITIONS = ['none', 'left', 'top'];
 const SIZES = ['small', 'medium'];

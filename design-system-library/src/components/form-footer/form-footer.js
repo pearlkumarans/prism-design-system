@@ -29,14 +29,9 @@ import { boolAttr } from '../../utils/attr.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 /* Action buttons reuse the shared Button component. */
 import '../button/button.js';
+import { injectCss } from '../../utils/inject-css.js';
 
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-form-footer-button-css', '../button/button.css');
+injectCss('ds-form-footer-button-css', '../button/button.css', import.meta.url);
 
 export class DsFormFooter extends HTMLElement {
   static get observedAttributes() {

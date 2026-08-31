@@ -27,15 +27,11 @@
 
 import { boolAttr } from '../../utils/attr.js';
 import '../../icons/icon.js';
+import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Auto-load this component's stylesheet once (light-DOM). Idempotent. */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-module-rail-css', './module-rail.css');
+injectCss('ds-module-rail-css', './module-rail.css', import.meta.url);
 
 export class DsModuleRail extends HTMLElement {
   static get observedAttributes() { return ['icons-only', 'rtl', 'more-label']; }
@@ -211,7 +207,7 @@ export class DsModuleRail extends HTMLElement {
     this._menu.innerHTML = this._items.map((t) => {
       const active = t.active ? ' is-active' : '';
       return `<button type="button" class="ds-module-rail__menuitem${active}" data-id="${this._esc(t.id)}"${t.active ? ' aria-current="page"' : ''}>`
-        + `<span class="ds-module-rail__menuic"><ds-icon name="${this._esc(t.icon || 'product')}" size="20"></ds-icon></span>`
+        + `<span class="ds-module-rail__menuic"><ds-icon name="${escapeHtml(this._esc(t.icon || 'product'))}" size="20"></ds-icon></span>`
         + `<span class="ds-module-rail__menulbl">${this._esc(t.label)}</span></button>`;
     }).join('');
     /* Size to content but never taller than the viewport; anchor to the rail's
@@ -253,7 +249,7 @@ export class DsModuleRail extends HTMLElement {
     }
     const list = this._items.filter((t) => this._overflowIds.includes(t.id));
     this._fly.innerHTML = list.map((t) => `<button type="button" class="ds-module-rail__flyitem${t.active ? ' is-active' : ''}" data-id="${this._esc(t.id)}">`
-      + `<ds-icon name="${this._esc(t.icon || 'product')}" size="18"></ds-icon><span>${this._esc(t.label)}</span></button>`).join('');
+      + `<ds-icon name="${escapeHtml(this._esc(t.icon || 'product'))}" size="18"></ds-icon><span>${this._esc(t.label)}</span></button>`).join('');
     this._fly.hidden = false;
     const r = btn.getBoundingClientRect();
     this._fly.style.bottom = (window.innerHeight - r.bottom) + 'px';

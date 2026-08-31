@@ -9,6 +9,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 const VARIANTS = ['intense', 'subtle'];
 const STATES   = ['default', 'active', 'critical', 'moderate', 'important', 'success', 'acknowledge'];
@@ -99,7 +100,7 @@ export class DsBadge extends HTMLElement {
     if (iconName && !hasIconSlot && !this.querySelector('.ds-badge__icon')) {
       const wrap = document.createElement('span');
       wrap.className = 'ds-badge__icon';
-      wrap.innerHTML = `<ds-icon name="${iconName}" size="${this._iconPx()}"></ds-icon>`;
+      wrap.innerHTML = `<ds-icon name="${escapeHtml(iconName)}" size="${this._iconPx()}"></ds-icon>`;
       this.prepend(wrap);
     }
     if (labelAttr && !this.querySelector('.ds-badge__label')) {
@@ -126,11 +127,11 @@ export class DsBadge extends HTMLElement {
     if (iconName) {
       const px = this._iconPx();
       if (iconWrap) {
-        iconWrap.innerHTML = `<ds-icon name="${iconName}" size="${px}"></ds-icon>`;
+        iconWrap.innerHTML = `<ds-icon name="${escapeHtml(iconName)}" size="${px}"></ds-icon>`;
       } else if (!this.querySelector('[slot="icon"]')) {
         const w = document.createElement('span');
         w.className = 'ds-badge__icon';
-        w.innerHTML = `<ds-icon name="${iconName}" size="${px}"></ds-icon>`;
+        w.innerHTML = `<ds-icon name="${escapeHtml(iconName)}" size="${px}"></ds-icon>`;
         this.prepend(w);
       }
     } else if (iconWrap && !iconWrap.querySelector('[slot="icon"]')) {

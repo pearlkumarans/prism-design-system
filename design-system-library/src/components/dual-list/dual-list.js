@@ -31,15 +31,10 @@ import '../icon-button/icon-button.js';
 import '../tooltip/tooltip.js';           /* ds-icon-button renders a ds-tooltip for its label */
 import '../field-helper/field-helper.js';
 import '../../icons/icon.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Light-DOM components need their own stylesheet present even when the page
    loads dual-list.css on its own — inject each dependency's CSS once. */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
 [
   ['ds-dl-checkbox-css', '../checkbox/checkbox.css'],
   ['ds-dl-search-css', '../search-field/search-field.css'],
@@ -47,7 +42,7 @@ function _injectCss(id, rel) {
   ['ds-dl-iconbtn-css', '../icon-button/icon-button.css'],
   ['ds-dl-tooltip-css', '../tooltip/tooltip.css'],
   ['ds-dl-fieldhelper-css', '../field-helper/field-helper.css'],
-].forEach(([id, rel]) => _injectCss(id, rel));
+].forEach(([id, rel]) => injectCss(id, rel, import.meta.url));
 
 let uid = 0;
 

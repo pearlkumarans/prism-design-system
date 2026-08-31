@@ -14,17 +14,12 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
    component — neither is a raw <button>, per the spec + DS rules. */
 import '../icon-button/icon-button.js';
 import '../text-link/text-link.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Auto-load sub-component CSS once (light-DOM, so it must be present even on
    pages that load calendar.css individually). */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-calendar-icon-button-css', '../icon-button/icon-button.css');
-_injectCss('ds-calendar-text-link-css', '../text-link/text-link.css');
+injectCss('ds-calendar-icon-button-css', '../icon-button/icon-button.css', import.meta.url);
+injectCss('ds-calendar-text-link-css', '../text-link/text-link.css', import.meta.url);
 
 const TYPES = ['single', 'range'];
 const WEEKDAYS_LTR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

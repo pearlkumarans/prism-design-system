@@ -11,6 +11,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 const STATUSES = ['info', 'success', 'warning', 'error'];
 const STYLES = ['subtle', 'filled'];
@@ -124,7 +125,7 @@ export class DsToast extends HTMLElement {
 
     this._root.innerHTML = `
       <div class="ds-toast__content">
-        <span class="ds-toast__icon" aria-hidden="true"><ds-icon name="${ICON_FOR[status]}" size="20"></ds-icon></span>
+        <span class="ds-toast__icon" aria-hidden="true"><ds-icon name="${escapeHtml(ICON_FOR[status])}" size="20"></ds-icon></span>
         <div class="ds-toast__body">
           ${title ? `<div class="ds-toast__title">${title}</div>` : ''}
           ${showDescription ? `<div class="ds-toast__description">${description}</div>` : ''}

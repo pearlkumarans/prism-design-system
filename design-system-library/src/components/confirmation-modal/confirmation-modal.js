@@ -297,11 +297,13 @@ export class DsConfirmationModal extends HTMLElement {
   _setBtn(act, label) {
     const btn = this._btns[act];
     if (!btn) return;
-    /* The upgraded <ds-button> wraps its label in .ds-button__label; update
-       that span if present so we don't clobber the icon/loading slots. */
-    const inner = btn.querySelector('.ds-button__label');
-    if (inner) inner.textContent = label;
-    else btn.textContent = label;
+    /* Set ds-button's `label` ATTRIBUTE, not the label span's textContent.
+       ds-button treats `label` as the source of truth and restores it on every
+       re-render — and we change the button's `variant` right after this in _sync,
+       which triggers exactly such a re-render. Writing textContent would be wiped
+       by that restore (the empty default), leaving a blank button. The attribute
+       survives re-renders and updates reactively regardless of upgrade timing. */
+    btn.setAttribute('label', label);
   }
 
   // ---- Lifecycle ----------------------------------------------------------

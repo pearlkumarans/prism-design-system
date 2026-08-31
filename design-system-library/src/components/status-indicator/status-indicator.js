@@ -1,4 +1,5 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 const STATUSES = ['neutral', 'success', 'warning', 'critical', 'info', 'alert'];
 const SIZES = ['small', 'medium', 'large'];
@@ -45,7 +46,7 @@ export class DsStatusIndicator extends HTMLElement {
        Figma bug; code enforces the swap). */
     this._root.innerHTML = `
       ${icon
-        ? `<span class="ds-status-indicator__icon" aria-hidden="true"><ds-icon name="${icon}" size="${iconPx}"></ds-icon></span>`
+        ? `<span class="ds-status-indicator__icon" aria-hidden="true"><ds-icon name="${escapeHtml(icon)}" size="${iconPx}"></ds-icon></span>`
         : '<span class="ds-status-indicator__dot" aria-hidden="true"></span>'}
       ${showLabel ? `<span class="ds-status-indicator__label">${label}</span>` : ''}
     `;

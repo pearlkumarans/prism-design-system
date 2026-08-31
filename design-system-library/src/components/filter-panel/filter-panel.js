@@ -46,26 +46,21 @@ import '../toggle/toggle.js';
 import '../date-picker/date-picker.js';
 /* Phase 4 field type. */
 import '../token-field/token-field.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Auto-load light-DOM stylesheets once (so this works on pages that link
    filter-panel.css individually, not just the bundled index.css). */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-filter-panel-css', './filter-panel.css');
-_injectCss('ds-filter-panel-cb-css', '../checkbox/checkbox.css');
-_injectCss('ds-filter-panel-rg-css', '../radio-group/radio-group.css');
-_injectCss('ds-filter-panel-is-css', '../input-select/input-select.css');
-_injectCss('ds-filter-panel-tag-css', '../tag/tag.css');
-_injectCss('ds-filter-panel-btn-css', '../button/button.css');
-_injectCss('ds-filter-panel-sf-css', '../search-field/search-field.css');
-_injectCss('ds-filter-panel-sl-css', '../slider/slider.css');
-_injectCss('ds-filter-panel-tg-css', '../toggle/toggle.css');
-_injectCss('ds-filter-panel-dp-css', '../date-picker/date-picker.css');
-_injectCss('ds-filter-panel-tf-css', '../token-field/token-field.css');
+injectCss('ds-filter-panel-css', './filter-panel.css', import.meta.url);
+injectCss('ds-filter-panel-cb-css', '../checkbox/checkbox.css', import.meta.url);
+injectCss('ds-filter-panel-rg-css', '../radio-group/radio-group.css', import.meta.url);
+injectCss('ds-filter-panel-is-css', '../input-select/input-select.css', import.meta.url);
+injectCss('ds-filter-panel-tag-css', '../tag/tag.css', import.meta.url);
+injectCss('ds-filter-panel-btn-css', '../button/button.css', import.meta.url);
+injectCss('ds-filter-panel-sf-css', '../search-field/search-field.css', import.meta.url);
+injectCss('ds-filter-panel-sl-css', '../slider/slider.css', import.meta.url);
+injectCss('ds-filter-panel-tg-css', '../toggle/toggle.css', import.meta.url);
+injectCss('ds-filter-panel-dp-css', '../date-picker/date-picker.css', import.meta.url);
+injectCss('ds-filter-panel-tf-css', '../token-field/token-field.css', import.meta.url);
 
 const boolAttr = (el, name, dflt) =>
   el.hasAttribute(name) ? el.getAttribute(name) !== 'false' : dflt;

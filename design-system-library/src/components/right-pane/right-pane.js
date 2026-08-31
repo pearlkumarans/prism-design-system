@@ -33,16 +33,8 @@ import '../dropdown-menu/dropdown-menu.js';
    CSS so tooltips work on any page that uses ds-right-pane, not just full-bundle
    pages (same self-contained-dependency pattern as ds-icon-button). */
 import '../tooltip/tooltip.js';
-if (typeof document !== 'undefined') {
-  const id = 'ds-right-pane-tooltip-css';
-  if (!document.getElementById(id)) {
-    const link = document.createElement('link');
-    link.id = id;
-    link.rel = 'stylesheet';
-    link.href = new URL('../tooltip/tooltip.css', import.meta.url).href;
-    document.head.appendChild(link);
-  }
-}
+import { injectCss } from '../../utils/inject-css.js';
+injectCss('ds-right-pane-tooltip-css', '../tooltip/tooltip.css', import.meta.url);
 
 const THEMES = ['light', 'dark'];
 
@@ -54,19 +46,19 @@ const THEMES = ['light', 'dark'];
 const DEFAULT_TOP = [
   { id: 'update',      icon: 'update',      label: 'Check for updates', highlight: true },
   { id: 'product',     logo: 'sdp',         label: 'Product', tooltip: 'Jump to SDP' }, /* product logo slot — swap via product-logo="endpoint-central" etc.; override `tooltip` to match */
-  { id: 'mobile',      icon: 'mobile',      label: 'Mobile app' },
-  { id: 'get-started', icon: 'rocket',      label: 'Getting started' },
-  { id: 'help',        icon: 'help-circle', label: 'Help' },
-  { id: 'roadmap',     icon: 'light-bulb',  label: 'Road map' },
-  { id: 'review',      icon: 'review',      label: 'Review' },
+  { id: 'mobile',      icon: 'mobile',      label: 'Mobile app', button: 'tertiary-grey' },
+  { id: 'get-started', icon: 'rocket',      label: 'Getting started', button: 'tertiary-grey' },
+  { id: 'help',        icon: 'help-circle', label: 'Help', button: 'tertiary-grey' },
+  { id: 'roadmap',     icon: 'light-bulb',  label: 'Road map', button: 'tertiary-grey' },
+  { id: 'review',      icon: 'review',      label: 'Review', button: 'tertiary-grey' },
 ];
 const DEFAULT_BOTTOM = [
-  { id: 'announcement', icon: 'announcement',        label: 'Announcement' },
-  { id: 'accessibility',icon: 'accessibility',       label: 'Accessibility' },
-  { id: 'get-quote',    icon: 'price-tag',           label: 'Get a quote' },
-  { id: 'upload-logs',  icon: 'upload',              label: 'Upload logs' },
-  { id: 'call',         icon: 'calling',             label: 'Call' },
-  { id: 'tickets',      icon: 'ticket',              label: 'Tickets' },
+  { id: 'announcement', icon: 'announcement',        label: 'Announcement', button: 'tertiary-grey' },
+  { id: 'accessibility',icon: 'accessibility',       label: 'Accessibility', button: 'tertiary-grey' },
+  { id: 'get-quote',    icon: 'price-tag',           label: 'Get a quote', button: 'tertiary-grey' },
+  { id: 'upload-logs',  icon: 'upload',              label: 'Upload logs', button: 'tertiary-grey' },
+  { id: 'call',         icon: 'calling',             label: 'Call', button: 'tertiary-grey' },
+  { id: 'tickets',      icon: 'ticket',              label: 'Tickets', button: 'tertiary-grey' },
   { id: 'chat',         icon: 'message-text-square',  label: 'Chat', fab: true },
 ];
 
@@ -160,7 +152,7 @@ export class DsRightPane extends HTMLElement {
       <button type="button" class="ds-right-pane__btn"
               data-id="__theme__"
               aria-label="Switch to ${theme === 'dark' ? 'light' : 'dark'} theme">
-        <ds-icon name="${theme === 'dark' ? 'sun' : 'moon'}" size="20"></ds-icon>
+        <ds-icon name="${escapeHtml(theme === 'dark' ? 'sun' : 'moon')}" size="20"></ds-icon>
       </button>
     </li>`;
 
@@ -173,7 +165,7 @@ export class DsRightPane extends HTMLElement {
       <button type="button" class="ds-right-pane__btn"
               data-id="direction"
               aria-label="${this.getAttribute('direction-label') || 'Switch language and direction'}">
-        <ds-icon name="${this.getAttribute('direction-icon') || 'globe'}" size="20"></ds-icon>
+        <ds-icon name="${escapeHtml(this.getAttribute('direction-icon') || 'globe')}" size="20"></ds-icon>
       </button>
     </li>` : '';
 
@@ -196,10 +188,25 @@ export class DsRightPane extends HTMLElement {
       if (it.fab) {
         return `<li>
           <ds-icon-button class="ds-right-pane__fab" data-id="${escapeHtml(it.id)}"
-                          type="primary" shape="square" size="xl"
+                          type="primary" shape="circle" size="xl"
                           icon="${escapeHtml(it.icon)}"
                           label="${escapeHtml(it.label || it.id)}"
                           tooltip-position="${rtl ? 'right' : 'left'}"></ds-icon-button>
+        </li>`;
+      }
+      // Icon-button slot: render the shared ds-icon-button (default `tertiary`) so
+      // the item gets the component's built-in resting / hover / press states and
+      // its own aria-label tooltip. The persistent "surface open" look is layered
+      // via setActive → aria-pressed (styled in right-pane.css). Wired into the
+      // rail's click delegation + overflow via the `.ds-right-pane__ib` marker.
+      if (it.button) {
+        return `<li>
+          <ds-icon-button class="ds-right-pane__ib" data-id="${escapeHtml(it.id)}"
+                          type="${escapeHtml(it.button === true ? 'tertiary' : it.button)}" shape="square" size="xl"
+                          icon="${escapeHtml(it.icon)}"
+                          label="${escapeHtml(it.label || it.id)}"
+                          tooltip-position="${rtl ? 'right' : 'left'}"
+                          ${it.active ? 'selected' : ''}></ds-icon-button>
         </li>`;
       }
       const content = logoName
@@ -236,7 +243,7 @@ export class DsRightPane extends HTMLElement {
       <ul class="ds-right-pane__bottom" role="list">${directionBtn}${themeBtn}${bottomItems.map(renderItem).join('')}${moreBtn}</ul>
     `;
 
-    this._root.querySelectorAll('.ds-right-pane__btn, .ds-right-pane__fab').forEach((btn) => {
+    this._root.querySelectorAll('.ds-right-pane__btn, .ds-right-pane__fab, .ds-right-pane__ib').forEach((btn) => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
         if (id === '__theme__') {
@@ -274,6 +281,27 @@ export class DsRightPane extends HTMLElement {
     this._setupOverflow(topItems, bottomItems);
     this._ensureObserver();
     this._scheduleReflow();
+
+    /* Re-assert the active icon after a re-render (rtl/theme/lang flips rebuild
+       the markup), so the open surface's icon stays highlighted. */
+    if (this._activeId) this.setActive(this._activeId);
+  }
+
+  /* Public: highlight the icon whose surface is currently open (help, updates,
+     etc.), clearing any previous one. Pass a falsy id to clear all. The active
+     look is the same aria-pressed chip the component already styles. */
+  setActive(id) {
+    this._activeId = id || null;
+    /* Plain rail buttons carry aria-pressed directly; ds-icon-button items use the
+       component's own `selected` state (which reflects aria-pressed internally). */
+    this._root?.querySelectorAll('.ds-right-pane__btn').forEach((b) => {
+      if (this._activeId && b.dataset.id === this._activeId) b.setAttribute('aria-pressed', 'true');
+      else b.removeAttribute('aria-pressed');
+    });
+    this._root?.querySelectorAll('.ds-right-pane__ib').forEach((b) => {
+      if (this._activeId && b.dataset.id === this._activeId) b.setAttribute('selected', '');
+      else b.removeAttribute('selected');
+    });
   }
 
   // ---- Height overflow → "more" (⋮) menu ----------------------------------
@@ -290,7 +318,7 @@ export class DsRightPane extends HTMLElement {
     const botUl = this._root.querySelector('.ds-right-pane__bottom');
     const lis = [...(topUl ? topUl.children : []), ...(botUl ? botUl.children : [])];
     this._collapsible = lis.map((li) => {
-      const btn = li.querySelector && li.querySelector('.ds-right-pane__btn');
+      const btn = li.querySelector && li.querySelector('.ds-right-pane__btn, .ds-right-pane__ib');
       const id = btn && btn.dataset.id;
       if (!id || pinned.has(id) || !byId.has(id)) return null;
       return { li, item: byId.get(id) };

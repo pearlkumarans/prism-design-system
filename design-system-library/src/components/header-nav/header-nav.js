@@ -33,17 +33,12 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
 /* Centre search uses the shared search-field component. */
 import '../search-field/search-field.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* ds-search-field is light-DOM (styled via `ds-search-field {…}` in its own
    CSS). Auto-load that stylesheet so the centre search field is styled even on
    pages that link header-nav.css individually without search-field.css. */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-header-nav-search-field-css', '../search-field/search-field.css');
+injectCss('ds-header-nav-search-field-css', '../search-field/search-field.css', import.meta.url);
 
 /* Spec ships 4 product variants. The set is extended below with the rest of
    the ManageEngine endpoint-management product family — same chrome, different
@@ -544,7 +539,7 @@ export class DsHeaderNav extends HTMLElement {
     return `
       <button type="button" class="ds-header-nav__icon-btn"
               data-action="${action}" aria-label="${label}">
-        <ds-icon name="${icon}" size="20"></ds-icon>
+        <ds-icon name="${escapeHtml(icon)}" size="20"></ds-icon>
       </button>`;
   }
 

@@ -13,16 +13,8 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
    auto-load its CSS so the tooltip works on any page that uses ds-icon-button,
    not just full-bundle pages. */
 import '../tooltip/tooltip.js';
-if (typeof document !== 'undefined') {
-  const id = 'ds-icon-button-tooltip-css';
-  if (!document.getElementById(id)) {
-    const link = document.createElement('link');
-    link.id = id;
-    link.rel = 'stylesheet';
-    link.href = new URL('../tooltip/tooltip.css', import.meta.url).href;
-    document.head.appendChild(link);
-  }
-}
+import { injectCss } from '../../utils/inject-css.js';
+injectCss('ds-icon-button-tooltip-css', '../tooltip/tooltip.css', import.meta.url);
 
 const SHAPES = ['square', 'circle'];
 const TYPES = ['primary', 'secondary', 'tertiary', 'outline', 'danger', 'tertiary-grey'];
@@ -31,7 +23,7 @@ const ICON_PX = { xl: 20, large: 16, small: 12, xsmall: 8 }; /* FIXED per spec �
 
 export class DsIconButton extends HTMLElement {
   static get observedAttributes() {
-    return ['shape', 'type', 'size', 'icon', 'label', 'disabled', 'tooltip-position'];
+    return ['shape', 'type', 'size', 'icon', 'label', 'disabled', 'selected', 'tooltip-position'];
   }
 
   connectedCallback() {
@@ -76,9 +68,16 @@ export class DsIconButton extends HTMLElement {
     const icon = this.getAttribute('icon') || '';
     const label = this.getAttribute('label') || '';
     const disabled = boolAttr(this, 'disabled');
+    /* `selected` — the PERSISTENT current/checked look (e.g. a toolbar or rail
+       icon whose surface is open), distinct from the momentary `:active` press
+       state. Exposed as aria-pressed so it is announced as a toggle button. */
+    const selected = boolAttr(this, 'selected');
 
-    btn.className = `ds-icon-button ds-icon-button--${shape} ds-icon-button--${type} ds-icon-button--${size}`;
+    btn.className = `ds-icon-button ds-icon-button--${shape} ds-icon-button--${type} ds-icon-button--${size}`
+      + (selected ? ' ds-icon-button--selected' : '');
     btn.disabled = disabled;
+    if (selected) btn.setAttribute('aria-pressed', 'true');
+    else btn.removeAttribute('aria-pressed');
     if (label) {
       btn.setAttribute('aria-label', label);
       // Keep the auto-tooltip text in sync with the label.
@@ -97,9 +96,19 @@ export class DsIconButton extends HTMLElement {
       }
     }
 
-    btn.innerHTML = icon
-      ? `<ds-icon name="${icon}" size="${ICON_PX[size]}"></ds-icon>`
-      : '';
+    /* Icon: build the <ds-icon> once and update it via setAttribute — never
+       innerHTML. setAttribute escapes the value (no HTML injection from `icon`),
+       and reusing the element means an unrelated attribute change (selected /
+       disabled / label) no longer destroys + re-upgrades the icon each _sync. */
+    if (icon) {
+      if (!this._icon) { this._icon = document.createElement('ds-icon'); btn.appendChild(this._icon); }
+      if (this._iconName !== icon) { this._icon.setAttribute('name', icon); this._iconName = icon; }
+      const px = String(ICON_PX[size]);
+      if (this._iconPx !== px) { this._icon.setAttribute('size', px); this._iconPx = px; }
+    } else if (this._icon) {
+      this._icon.remove();
+      this._icon = null; this._iconName = null; this._iconPx = null;
+    }
   }
 
   click() { this._btn?.click(); }

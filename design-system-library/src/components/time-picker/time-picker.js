@@ -51,19 +51,13 @@ import '../text-input/text-input.js';
 import '../field-helper/field-helper.js';
 /* Inline-variant stepper arrows reuse <ds-icon-button> (chevron up / down). */
 import '../icon-button/icon-button.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Auto-load dependent stylesheets (both are light-DOM, so their CSS must be
    present even on pages that load time-picker.css individually). */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet';
-  l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-time-picker-ti-css', '../text-input/text-input.css');
-_injectCss('ds-time-picker-fh-css', '../field-helper/field-helper.css');
-_injectCss('ds-time-picker-ib-css', '../icon-button/icon-button.css');
+injectCss('ds-time-picker-ti-css', '../text-input/text-input.css', import.meta.url);
+injectCss('ds-time-picker-fh-css', '../field-helper/field-helper.css', import.meta.url);
+injectCss('ds-time-picker-ib-css', '../icon-button/icon-button.css', import.meta.url);
 
 const VARIANTS = ['list', 'inline'];
 const TYPES = ['single', 'range'];

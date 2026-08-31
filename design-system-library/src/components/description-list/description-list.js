@@ -47,25 +47,20 @@ import '../text-link/text-link.js';
 import '../avatar/avatar.js';
 import '../progress-bar/progress-bar.js';
 import '../toggle/toggle.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Auto-load light-DOM sub-component stylesheets once (so this works on pages
    that link description-list.css individually, not just the bundled index.css). */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-description-list-css', './description-list.css');
-_injectCss('ds-description-list-ib-css', '../icon-button/icon-button.css');
-_injectCss('ds-description-list-tt-css', '../tooltip/tooltip.css');
-_injectCss('ds-description-list-si-css', '../status-indicator/status-indicator.css');
-_injectCss('ds-description-list-bg-css', '../badge/badge.css');
-_injectCss('ds-description-list-tag-css', '../tag/tag.css');
-_injectCss('ds-description-list-tl-css', '../text-link/text-link.css');
-_injectCss('ds-description-list-av-css', '../avatar/avatar.css');
-_injectCss('ds-description-list-pb-css', '../progress-bar/progress-bar.css');
-_injectCss('ds-description-list-tg-css', '../toggle/toggle.css');
+injectCss('ds-description-list-css', './description-list.css', import.meta.url);
+injectCss('ds-description-list-ib-css', '../icon-button/icon-button.css', import.meta.url);
+injectCss('ds-description-list-tt-css', '../tooltip/tooltip.css', import.meta.url);
+injectCss('ds-description-list-si-css', '../status-indicator/status-indicator.css', import.meta.url);
+injectCss('ds-description-list-bg-css', '../badge/badge.css', import.meta.url);
+injectCss('ds-description-list-tag-css', '../tag/tag.css', import.meta.url);
+injectCss('ds-description-list-tl-css', '../text-link/text-link.css', import.meta.url);
+injectCss('ds-description-list-av-css', '../avatar/avatar.css', import.meta.url);
+injectCss('ds-description-list-pb-css', '../progress-bar/progress-bar.css', import.meta.url);
+injectCss('ds-description-list-tg-css', '../toggle/toggle.css', import.meta.url);
 
 const esc = (s) => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

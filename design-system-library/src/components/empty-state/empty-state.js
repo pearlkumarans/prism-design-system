@@ -33,6 +33,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Boolean attr that defaults to `def` when absent; `foo="false"` turns it off
    (matches the show-* convention used across the form-field components). */
@@ -131,7 +132,7 @@ export class DsEmptyState extends HTMLElement {
       ? `<span class="ds-empty-state__supported">
            <span class="ds-empty-state__supported-label">${esc(supportedLabel)}</span>
            <span class="ds-empty-state__supported-icons" role="list">
-             ${supported.map((id) => `<ds-icon name="${OS_ICON[id] || id}" size="16" role="listitem" aria-label="${esc(id)}"></ds-icon>`).join('')}
+             ${supported.map((id) => `<ds-icon name="${escapeHtml(OS_ICON[id] || id)}" size="16" role="listitem" aria-label="${esc(id)}"></ds-icon>`).join('')}
            </span>
          </span>` : '';
     const links = [];

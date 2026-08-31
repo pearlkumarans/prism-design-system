@@ -16,6 +16,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 const VARIANTS = ['primary', 'secondary', 'tertiary', 'outline', 'destructive', 'success', 'warning', 'secondary-color'];
 const SIZES = ['large', 'medium', 'small', 'xsmall'];
@@ -126,10 +127,10 @@ export class DsButton extends HTMLElement {
       this._suffix.innerHTML = '';
       this._suffix.style.display = 'none';
     } else {
-      this._prefix.innerHTML = prefixIcon ? `<ds-icon name="${prefixIcon}" size="${iconPx}"></ds-icon>` : '';
+      this._prefix.innerHTML = prefixIcon ? `<ds-icon name="${escapeHtml(prefixIcon)}" size="${iconPx}"></ds-icon>` : '';
       this._prefix.style.display = prefixIcon ? '' : 'none';
 
-      this._suffix.innerHTML = suffixIcon ? `<ds-icon name="${suffixIcon}" size="${iconPx}"></ds-icon>` : '';
+      this._suffix.innerHTML = suffixIcon ? `<ds-icon name="${escapeHtml(suffixIcon)}" size="${iconPx}"></ds-icon>` : '';
       this._suffix.style.display = suffixIcon ? '' : 'none';
     }
   }

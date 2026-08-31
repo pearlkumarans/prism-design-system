@@ -77,20 +77,15 @@ import '../split-button/split-button.js';
    a consumer won't know to bundle). */
 import '../icon-button/icon-button.js';
 import '../tooltip/tooltip.js';
+import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 (function _injectToolbarCss() {
   if (typeof document === 'undefined') return;
   [
     ['ds-data-table-split-button-css', '../split-button/split-button.css'],
     ['ds-data-table-icon-button-css', '../icon-button/icon-button.css'],
     ['ds-data-table-tooltip-css', '../tooltip/tooltip.css'],
-  ].forEach(([id, rel]) => {
-    if (document.getElementById(id)) return;
-    const l = document.createElement('link');
-    l.id = id;
-    l.rel = 'stylesheet';
-    l.href = new URL(rel, import.meta.url).href;
-    document.head.appendChild(l);
-  });
+  ].forEach(([id, rel]) => injectCss(id, rel, import.meta.url));
 })();
 
 /* Focus modality: the toolbar search should show the focus RING only when
@@ -1152,7 +1147,7 @@ export class DsDataTable extends HTMLElement {
       <span class="ds-data-table__bulk-bar-actions">` + this._bulkActions.map((a) => `
         <button class="ds-data-table__bulk-bar-action" data-bulk-id="${a.id}"
                 ${a.destructive ? 'data-destructive="true"' : ''}>
-          ${a.icon ? `<ds-icon name="${a.icon}" size="16"></ds-icon>` : ''} ${(DT_STRINGS.en[a.id] && a.label === DT_STRINGS.en[a.id]) ? this._t(a.id) : a.label}
+          ${a.icon ? `<ds-icon name="${escapeHtml(a.icon)}" size="16"></ds-icon>` : ''} ${(DT_STRINGS.en[a.id] && a.label === DT_STRINGS.en[a.id]) ? this._t(a.id) : a.label}
         </button>
       `).join('') + `</span>
       <span class="ds-data-table__bulk-bar-divider"></span>

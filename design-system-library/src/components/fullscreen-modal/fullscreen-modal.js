@@ -39,18 +39,13 @@ import '../../icons/icon.js';
 import '../button/button.js';
 import '../icon-button/icon-button.js';
 import '../divider/divider.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Auto-load the sub-component CSS (idempotent) so the modal is self-contained
    on any page, mirroring the calendar/accordion pattern. */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-fsm-button-css',      '../button/button.css');
-_injectCss('ds-fsm-icon-button-css', '../icon-button/icon-button.css');
-_injectCss('ds-fsm-divider-css',     '../divider/divider.css');
+injectCss('ds-fsm-button-css',      '../button/button.css', import.meta.url);
+injectCss('ds-fsm-icon-button-css', '../icon-button/icon-button.css', import.meta.url);
+injectCss('ds-fsm-divider-css',     '../divider/divider.css', import.meta.url);
 
 const TONES = ['info', 'warning', 'success', 'brand'];
 
