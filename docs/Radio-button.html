@@ -747,6 +747,7 @@
           <p class="doc-section-subtitle">Toggle props on the left and watch the group react in real time. The HTML below updates as you go &mdash; copy it straight into your project.</p>
           <div class="code-playground">
             <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Variant</label><select class="cp-select" id="pg-variant"><option value="default">default</option><option value="card">card</option></select></div>
               <div class="cp-control-group"><label class="cp-label">Label position</label><select class="cp-select" id="pg-layout"><option value="left">left (default)</option><option value="top">top</option><option value="none">none</option></select></div>
               <div class="cp-control-group"><label class="cp-label">Size</label><select class="cp-select" id="pg-size"><option value="s">s</option><option value="m" selected>m</option><option value="l">l</option><option value="mobile">mobile</option></select></div>
               <div class="cp-control-group"><label class="cp-label">State</label><select class="cp-select" id="pg-state"><option value="default">default</option><option value="error">error</option><option value="disabled">disabled</option></select></div>
@@ -766,6 +767,7 @@
           <script>
           (function(){
             var els = {
+              variant: document.getElementById('pg-variant'),
               layout:  document.getElementById('pg-layout'),
               size:    document.getElementById('pg-size'),
               state:   document.getElementById('pg-state'),
@@ -800,6 +802,7 @@
             };
             var pgRawCode = '';
             function build(){
+              var variant = els.variant.value;
               var layout = els.layout.value;
               var size   = els.size.value;
               var state  = els.state.value;
@@ -815,6 +818,7 @@
               rg.setAttribute('label', copy.groupLabel);
               rg.setAttribute('helper', helper);
               if (layout !== 'left') rg.setAttribute('label-position', layout);
+              if (variant !== 'default') rg.setAttribute('variant', variant);
               if (size !== 'm') rg.setAttribute('size', size);
               if (state !== 'default') rg.setAttribute('state', state);
               if (info) rg.setAttribute('show-info', '');
@@ -832,6 +836,7 @@
               // HTML representation for the code panel
               var attrs = ['label="' + copy.groupLabel + '"'];
               if (layout !== 'left') attrs.push('label-position="' + layout + '"');
+              if (variant !== 'default') attrs.push('variant="' + variant + '"');
               if (size !== 'm') attrs.push('size="' + size + '"');
               if (state !== 'default') attrs.push('state="' + state + '"');
               attrs.push('helper="' + helper.replace(/"/g, '&quot;') + '"');
@@ -880,6 +885,7 @@
                 <tr><td><code>size</code></td><td><code>'s' | 'm' | 'l' | 'mobile'</code></td><td><code>'m'</code></td><td>14 / 16 / 20 px controls.</td></tr>
                 <tr><td><code>state</code></td><td><code>'default' | 'error' | 'disabled'</code></td><td><code>'default'</code></td><td>Validation / interaction state.</td></tr>
                 <tr><td><code>label-position</code></td><td><code>'none' | 'left' | 'top'</code></td><td><code>'left'</code></td><td><code>left</code> lays options horizontally; <code>top</code> stacks them; <code>none</code> hides the group label (kept as <code>aria-labelledby</code>).</td></tr>
+                <tr><td><code>variant</code></td><td><code>'default' | 'card'</code></td><td><code>'default'</code></td><td><code>card</code> renders each option as a selectable card &mdash; neutral grey when unselected, accent tint + accent border when selected. Tokens only.</td></tr>
                 <tr><td><code>name</code></td><td>string</td><td>auto</td><td>HTML <code>name</code> shared by all radios.</td></tr>
                 <tr><td><code>rtl</code></td><td>boolean</td><td>unset</td><td>Right-to-left layout.</td></tr>
                 <tr><td><code>show-info</code></td><td>boolean</td><td>unset</td><td>Show an info-circle next to the label.</td></tr>
