@@ -1993,6 +1993,11 @@
   let _activeRp = null;
   function setRpActive(id) {
     _activeRp = id || null;
+    /* Delegate to the component: ds-right-pane renders items as plain buttons OR
+       as <ds-icon-button> (which carries its own `selected` state), so only it
+       knows how to mark each kind. Re-querying '.ds-right-pane__btn' here used to
+       silently skip the icon-button items. Fallback kept for an older component. */
+    if (typeof rpEl.setActive === 'function') { rpEl.setActive(_activeRp); return; }
     rpEl.querySelectorAll('.ds-right-pane__btn').forEach((b) => {
       const on = !!_activeRp && b.dataset.id === _activeRp;
       if (on) b.setAttribute('aria-pressed', 'true'); else b.removeAttribute('aria-pressed');

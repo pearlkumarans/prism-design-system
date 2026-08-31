@@ -43,7 +43,7 @@ export default class ShellChrome extends Component {
   // (Settings / Support / Ask Zia) which hide the L1/L2 nav while open — in a
   // point product the L2 sidebar IS the nav, so without this you can only escape
   // via the module rail. Bound field so on/off reference the same handler.
-  _closeDrawersOnNav = () => this.drawers.closeAll();
+  _closeDrawersOnNav = () => { this.drawers.closeAll(); this._rp?.setActive(null); };
 
   // Header search icon / centre search field / ⌘K → toggle the global command
   // palette (views/command-palette.html), matching Shell.html's showPalette().
@@ -93,6 +93,7 @@ export default class ShellChrome extends Component {
       // swaps. Needed here (not just on routeWillChange) because re-clicking the
       // ALREADY-ACTIVE tab resolves to the same route, so no route event fires.
       this.drawers.closeAll();
+      this._rp?.setActive(null);
       // Go straight to the tab's default VIEW (not the bare module). Re-clicking
       // the already-active tab then resolves to the same route+params — a no-op
       // that leaves content intact — instead of dropping onto the empty module
@@ -108,6 +109,9 @@ export default class ShellChrome extends Component {
     // Header utility icons → drawers (avatar/profile, gear/settings, bento/apps, search).
     header.addEventListener('ds-header-nav-action', (e) => {
       const action = e.detail?.action;
+      // A header surface (profile/settings/apps/search/zia) supersedes any open
+      // right-pane surface, so drop the rail's active highlight.
+      this._rp?.setActive(null);
       if (action === 'avatar') this.drawers.open('profile');
       else if (action === 'settings') this.drawers.open('settings');
       else if (action === 'bento') this.drawers.open('apps');
@@ -146,10 +150,16 @@ export default class ShellChrome extends Component {
     this.drawers.beforeOpen = () => railPopover.hide();
     rp?.addEventListener('ds-right-pane-select', (e) => {
       const id = e.detail?.id;
-      if (id === 'help') this.drawers.open('help');
-      else if (id === 'accessibility') this.drawers.open('accessibility');
+      // What a drawer toggle DECIDED (true = opened, false = closed). Used for the
+      // rail highlight: drawers.open() awaits injection, so reading isOpen() right
+      // after the click can still see the old state — the decision is the truth.
+      let opened = true;
+      // Drawer-backed surfaces TOGGLE: clicking the icon of an already-open drawer
+      // closes it (mirrors Shell.html's toggleHelp/toggleA11y/toggleUpdates).
+      if (id === 'help') opened = this.drawers.toggle('help');
+      else if (id === 'accessibility') opened = this.drawers.toggle('accessibility');
       // ONLY announcement opens the full Product Updates drawer.
-      else if (id === 'announcement') this.drawers.open('updates');
+      else if (id === 'announcement') opened = this.drawers.toggle('updates');
       // Update / Review / Road map are their own anchored notification cards.
       else if (id === 'update') { this.drawers.closeAll(); railPopover.toggle('update'); }
       else if (id === 'review') { this.drawers.closeAll(); railPopover.toggle('review'); }
@@ -160,7 +170,22 @@ export default class ShellChrome extends Component {
       else if (id === 'direction') this.i18n.setLang(this.i18n.lang === 'ar' ? 'en' : 'ar');
       // Get started → the sectioned-form pattern view (shell does this on Configurations).
       else if (id === 'get-started') this.router.transitionTo('product.module.view', this.shell.productId, 'configs', 'sectioned-form');
+      // Reflect the open surface on its rail icon (active/pressed). Ids that open a
+      // persistent right-pane surface stay lit; one-shot actions (product opens an
+      // external tab, direction flips language, get-started routes away) clear it.
+      const RP_SURFACE = new Set(['help', 'accessibility', 'announcement', 'update', 'review', 'roadmap']);
+      // Light the icon only if the click actually left a surface OPEN — a toggle
+      // that closed it must clear the highlight. (Closing by the drawer's own
+      // X / Esc / scrim is handled by the ds-drawer-close listener above.)
+      rp.setActive(RP_SURFACE.has(id) && opened ? id : null);
     });
+    // A drawer closed by its OWN affordance (X / Esc / scrim) never routes through
+    // the rail, so the highlight would linger. ds-drawer bubbles ds-drawer-close —
+    // listen at the document and drop the rail's active state (mirrors Shell.html).
+    this._onDrawerClose = () => rp?.setActive(null);
+    document.addEventListener('ds-drawer-close', this._onDrawerClose);
+    registerDestructor(this, () => document.removeEventListener('ds-drawer-close', this._onDrawerClose));
+
     rp?.addEventListener('ds-right-pane-theme', (e) => {
       const base = e.detail?.theme === 'dark' ? 'dark' : 'light';
       this.theme.applyTheme(this.theme.family === 'green' ? `green-${base}` : base);

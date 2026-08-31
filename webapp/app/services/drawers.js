@@ -29,6 +29,16 @@ const CONTENT_SCOPED = new Set(['help', 'accessibility', 'updates', 'settings', 
 const DRAWER_KEY = { accessibility: 'a11y', 'ask-zia': 'askzia' };
 const keyFor = (name) => DRAWER_KEY[name] || name;
 
+// Root element id per drawer file — lets isOpen() read open state straight off the
+// DOM for the views that don't expose an isOpen() of their own (help/a11y/updates
+// register only { show, hide, render }).
+const DRAWER_ROOT = {
+  help: 'help-pop', accessibility: 'a11y-pop', updates: 'updates-pop',
+  settings: 'set-pop', support: 'support-pop', zia: 'zia-pop',
+  profile: 'profile-pop', apps: 'apps-pop', search: 'search-pop',
+  'ask-zia': 'askzia-pop',
+};
+
 export default class DrawersService extends Service {
   _bodyHost = null;
   _loaded = new Set();
@@ -104,6 +114,24 @@ export default class DrawersService extends Service {
     this.beforeOpen?.();      // close the rail popover / other non-drawer surfaces
     this.closeAll(name);      // close any other open drawer — one at a time
     window.ShellDrawers?.[keyFor(name)]?.show?.();
+  }
+
+  // Is this drawer currently open? Prefers the view's own isOpen() (ask-zia,
+  // command-palette expose one); otherwise reads the `open` attribute off its root.
+  // Needed for TOGGLE behaviour: clicking an already-open rail icon should close it.
+  isOpen(name) {
+    const api = window.ShellDrawers?.[keyFor(name)];
+    if (typeof api?.isOpen === 'function') return !!api.isOpen();
+    const id = DRAWER_ROOT[name];
+    const el = id ? document.getElementById(id) : null;
+    return !!(el && el.hasAttribute('open'));
+  }
+
+  // Open if closed, close if open — the rail's click contract.
+  toggle(name) {
+    if (this.isOpen(name)) { this.close(name); return false; }
+    this.open(name);
+    return true;
   }
 
   close(name) {

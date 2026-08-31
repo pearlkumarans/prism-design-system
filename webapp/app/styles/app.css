@@ -85,6 +85,16 @@ body {
   padding-block: 0 var(--spacing-12, 12px);
   padding-inline: var(--spacing-12, 12px) 0;
   gap: 0;
+  /* Absorb the right rail's decorative bleed (the chat-FAB ripple paints past the
+     32px rail via overflow-clip-margin). Chrome still reports that clip-margin
+     region as overflow to ancestors, so without a clip HERE it reached the
+     document: ~19px of horizontal overflow → a horizontal scrollbar → the shell
+     shrank by the scrollbar width and left an empty gutter down the right edge.
+     `clip` (not hidden) keeps this a non-scrollable container, and nothing in this
+     row legitimately overflows horizontally — drawers live inside .shell-area,
+     which clips itself; tooltips and rail popovers are portaled to <body>. */
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 /* shell-area = the framed region wrapping L1 + L2 + content */
 .shell-area {
