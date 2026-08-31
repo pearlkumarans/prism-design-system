@@ -72,28 +72,23 @@ import '../field-helper/field-helper.js';
 import '../tag/tag.js';
 import '../text-link/text-link.js';
 import '../empty-state/empty-state.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Auto-load light-DOM stylesheets once (so this works on pages that link
    criteria-filter.css individually, not just the bundled index.css). */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-criteria-filter-css', './criteria-filter.css');
-_injectCss('ds-cf-btn-css', '../button/button.css');
-_injectCss('ds-cf-iconbtn-css', '../icon-button/icon-button.css');
-_injectCss('ds-cf-is-css', '../input-select/input-select.css');
-_injectCss('ds-cf-ti-css', '../text-input/text-input.css');
-_injectCss('ds-cf-dp-css', '../date-picker/date-picker.css');
-_injectCss('ds-cf-tf-css', '../token-field/token-field.css');
-_injectCss('ds-cf-tab-css', '../tab-filter/tab-filter.css');
-_injectCss('ds-cf-toggle-css', '../toggle/toggle.css');
-_injectCss('ds-cf-fh-css', '../field-helper/field-helper.css');
-_injectCss('ds-cf-tag-css', '../tag/tag.css');
-_injectCss('ds-cf-textlink-css', '../text-link/text-link.css');
-_injectCss('ds-cf-empty-css', '../empty-state/empty-state.css');
+injectCss('ds-criteria-filter-css', './criteria-filter.css', import.meta.url);
+injectCss('ds-cf-btn-css', '../button/button.css', import.meta.url);
+injectCss('ds-cf-iconbtn-css', '../icon-button/icon-button.css', import.meta.url);
+injectCss('ds-cf-is-css', '../input-select/input-select.css', import.meta.url);
+injectCss('ds-cf-ti-css', '../text-input/text-input.css', import.meta.url);
+injectCss('ds-cf-dp-css', '../date-picker/date-picker.css', import.meta.url);
+injectCss('ds-cf-tf-css', '../token-field/token-field.css', import.meta.url);
+injectCss('ds-cf-tab-css', '../tab-filter/tab-filter.css', import.meta.url);
+injectCss('ds-cf-toggle-css', '../toggle/toggle.css', import.meta.url);
+injectCss('ds-cf-fh-css', '../field-helper/field-helper.css', import.meta.url);
+injectCss('ds-cf-tag-css', '../tag/tag.css', import.meta.url);
+injectCss('ds-cf-textlink-css', '../text-link/text-link.css', import.meta.url);
+injectCss('ds-cf-empty-css', '../empty-state/empty-state.css', import.meta.url);
 
 const boolAttr = (el, name, dflt) =>
   el.hasAttribute(name) ? el.getAttribute(name) !== 'false' : dflt;

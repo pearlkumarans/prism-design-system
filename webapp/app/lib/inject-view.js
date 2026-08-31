@@ -13,10 +13,17 @@ export function resolveViewUrl(file) {
   return new URL(rel, `${window.location.origin}/Layout/Shell.html`).pathname;
 }
 
-export async function injectViewInto(element, file) {
-  const res = await fetch(resolveViewUrl(file));
+export async function injectViewInto(element, file, opts = {}) {
+  const { signal, shouldAbort } = opts;
+  const res = await fetch(resolveViewUrl(file), signal ? { signal } : undefined);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const html = await res.text();
+
+  /* Superseded while the fetch was in flight? Bail before touching `element`.
+     Callers that reuse one host across swaps (mount-view) pass shouldAbort so a
+     slow earlier view can't land its markup on top of the view that replaced it.
+     No abort hook (e.g. the drawers service, one host per drawer) → always inject. */
+  if (shouldAbort && shouldAbort()) return;
 
   /* Parse in an inert document, then IMPORT the nodes into the live one — do NOT
      use `<template>.content.cloneNode()` (the old path). In this app the ds-*

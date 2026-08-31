@@ -43,19 +43,15 @@ import '../search-field/search-field.js';
 import '../tooltip/tooltip.js';
 /* The options list + the prefix/suffix unit menu both use the Dropdown Menu. */
 import '../dropdown-menu/dropdown-menu.js';
+import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Auto-load sub-component stylesheets once (all light-DOM, so their CSS must be
    present even on pages that load input-select.css individually). */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-input-select-fh-css', '../field-helper/field-helper.css');
-_injectCss('ds-input-select-sf-css', '../search-field/search-field.css');
-_injectCss('ds-input-select-tt-css', '../tooltip/tooltip.css');
-_injectCss('ds-input-select-dd-css', '../dropdown-menu/dropdown-menu.css');
+injectCss('ds-input-select-fh-css', '../field-helper/field-helper.css', import.meta.url);
+injectCss('ds-input-select-sf-css', '../search-field/search-field.css', import.meta.url);
+injectCss('ds-input-select-tt-css', '../tooltip/tooltip.css', import.meta.url);
+injectCss('ds-input-select-dd-css', '../dropdown-menu/dropdown-menu.css', import.meta.url);
 
 const esc = (s) => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -424,7 +420,7 @@ export class DsInputSelect extends HTMLElement {
     if (!prefixText && !showPrefixIcon) return '';
     const inner = `${
       prefixText ? `<span class="ds-input-select__affix-text">${esc(prefixText)}</span>` : ''
-    }${showPrefixIcon ? `<ds-icon name="${prefixIcon}" size="16"></ds-icon>` : ''}`;
+    }${showPrefixIcon ? `<ds-icon name="${escapeHtml(prefixIcon)}" size="16"></ds-icon>` : ''}`;
     /* When `prefix-dropdown` is set, the prefix is a unit-selection trigger
        (mirrors ds-text-input) — a real button that fires an event; the consumer
        opens the unit menu. It stops propagation so the main select stays closed. */
@@ -440,7 +436,7 @@ export class DsInputSelect extends HTMLElement {
     if (!suffixText && !suffixIcon) return '';
     const inner = `${
       suffixText ? `<span class="ds-input-select__affix-text">${esc(suffixText)}</span>` : ''
-    }${suffixIcon ? `<ds-icon name="${suffixIcon}" size="16"></ds-icon>` : ''}`;
+    }${suffixIcon ? `<ds-icon name="${escapeHtml(suffixIcon)}" size="16"></ds-icon>` : ''}`;
     /* When `suffix-dropdown` is set, the suffix is a unit-selection trigger
        (mirrors ds-text-input): a real button firing ds-input-select-suffix-click. */
     if (boolAttr(this, 'suffix-dropdown')) {

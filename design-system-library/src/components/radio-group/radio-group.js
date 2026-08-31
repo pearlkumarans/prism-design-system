@@ -36,16 +36,11 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 import '../radio/radio.js';
 /* Helper/note row = the shared "Form Field Helper Row" sub-component. */
 import '../field-helper/field-helper.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Auto-load field-helper.css once (light-DOM, so it must be present even on
    pages that load radio-group.css individually). */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-radio-group-fh-css', '../field-helper/field-helper.css');
+injectCss('ds-radio-group-fh-css', '../field-helper/field-helper.css', import.meta.url);
 
 const SIZES = ['s', 'm', 'l', 'mobile'];
 const STATES = ['default', 'error', 'disabled'];

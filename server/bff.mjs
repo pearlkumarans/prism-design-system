@@ -394,9 +394,9 @@ const dexOverview = () => {
   const lowest = [...scored].sort((a, b) => a.score - b.score).slice(0, 6).map((d) => ({ id: d.id, name: d.name, score: d.score, band: d.band }));
   return {
     kpis: [
-      { label: 'Experience score', value: String(avg), state: avg >= 71 ? 'success' : avg >= 31 ? 'warning' : 'critical', icon: 'activity' },
+      { label: 'Experience score', value: String(avg), state: avg >= 71 ? 'success' : avg >= 31 ? 'warning' : 'alert', icon: 'activity' },
       { label: 'Devices monitored', value: String(DEX_DEVICES.length), state: 'default', icon: 'computer' },
-      { label: 'Poor experience', value: String(band('Poor')), state: 'critical', icon: 'exclamation-circle' },
+      { label: 'Poor experience', value: String(band('Poor')), state: 'alert', icon: 'exclamation-circle' },
     ],
     charts: {
       band:       { categories: ['Good', 'Average', 'Poor'], series: [{ name: 'Devices', values: [band('Good'), band('Average'), band('Poor')], colors: ['green', 'orange', 'red'] }] },
@@ -421,7 +421,7 @@ const dexHome = () => {
     .slice(0, 6).map((i) => ({ id: i.id, title: i.title, category: i.category, severity: i.severity, affected: i.affected }));
   return {
     kpis: [
-      { label: 'Experience score', value: String(avg), state: avg >= 71 ? 'success' : avg >= 31 ? 'warning' : 'critical', icon: 'activity' },
+      { label: 'Experience score', value: String(avg), state: avg >= 71 ? 'success' : avg >= 31 ? 'warning' : 'alert', icon: 'activity' },
       { label: 'Devices monitored', value: String(DEX_DEVICES.length), state: 'default', icon: 'computer' },
       { label: 'High priority insights', value: String(highPriority.length), state: 'alert', icon: 'light-bulb' },
     ],
@@ -695,7 +695,7 @@ const dexDashboardsQuery = (p) => applyQuery(DEX_DASHBOARDS, p, {
 });
 const dexDashboardView = () => ({
   name: 'Fleet experience',
-  kpis: [{ label: 'Avg score', value: '60', state: 'warning', icon: 'activity' }, { label: 'Devices', value: '26', state: 'default', icon: 'computer' }, { label: 'Poor', value: '4', state: 'critical', icon: 'exclamation-circle' }],
+  kpis: [{ label: 'Avg score', value: '60', state: 'warning', icon: 'activity' }, { label: 'Devices', value: '26', state: 'default', icon: 'computer' }, { label: 'Poor', value: '4', state: 'alert', icon: 'exclamation-circle' }],
   charts: {
     band: { categories: ['Good', 'Average', 'Poor'], series: [{ name: 'Devices', values: [8, 11, 4], colors: ['green', 'orange', 'red'] }] },
     trend: { categories: ['May', 'Jun', 'Jul'], series: [{ name: 'Score', values: [52, 57, 60] }] },

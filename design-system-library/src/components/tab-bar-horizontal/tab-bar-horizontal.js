@@ -18,15 +18,11 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 /* The overflow pager reuses <ds-icon-button> — import it so the bar is
    self-contained (the host page need not pre-register it). */
 import '../icon-button/icon-button.js';
+import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Auto-load icon-button.css once (light-DOM). Idempotent. */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-tab-bar-horizontal-icon-button-css', '../icon-button/icon-button.css');
+injectCss('ds-tab-bar-horizontal-icon-button-css', '../icon-button/icon-button.css', import.meta.url);
 
 const TYPES = ['fill', 'underline'];
 
@@ -254,7 +250,7 @@ export class DsTabBarHorizontal extends HTMLElement {
 
     const iconHTML = item.icon
       ? `<span class="ds-tab-bar-horizontal__item-icon" aria-hidden="true">
-           <ds-icon name="${item.icon}" size="20"></ds-icon>
+           <ds-icon name="${escapeHtml(item.icon)}" size="20"></ds-icon>
          </span>`
       : '';
 

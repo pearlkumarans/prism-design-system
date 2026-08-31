@@ -39,31 +39,15 @@ import '../text-input/text-input.js';
 
 /* Auto-load text-input.css so the slotted <ds-text-input> in light DOM is
    styled regardless of which page hosts the date picker. */
-if (typeof document !== 'undefined') {
-  const id = 'ds-date-picker-text-input-css';
-  if (!document.getElementById(id)) {
-    const link = document.createElement('link');
-    link.id = id;
-    link.rel = 'stylesheet';
-    link.href = new URL('../text-input/text-input.css', import.meta.url).href;
-    document.head.appendChild(link);
-  }
-}
+injectCss('ds-date-picker-text-input-css', '../text-input/text-input.css', import.meta.url);
 
 /* Helper/note row = the shared "Form Field Helper Row" sub-component. */
 import '../field-helper/field-helper.js';
 /* Embedded time picker (inline variant) for the datetime mode (`enable-time`). */
 import '../time-picker/time-picker.js';
-if (typeof document !== 'undefined') {
-  [['ds-date-picker-fh-css', '../field-helper/field-helper.css'],
-   ['ds-date-picker-tp-css', '../time-picker/time-picker.css']].forEach(([id, rel]) => {
-    if (document.getElementById(id)) return;
-    const link = document.createElement('link');
-    link.id = id; link.rel = 'stylesheet';
-    link.href = new URL(rel, import.meta.url).href;
-    document.head.appendChild(link);
-  });
-}
+import { injectCss } from '../../utils/inject-css.js';
+[['ds-date-picker-fh-css', '../field-helper/field-helper.css'],
+ ['ds-date-picker-tp-css', '../time-picker/time-picker.css']].forEach(([id, rel]) => injectCss(id, rel, import.meta.url));
 
 const TYPES = ['single', 'range'];
 const VALIDATIONS = ['none', 'success', 'error'];

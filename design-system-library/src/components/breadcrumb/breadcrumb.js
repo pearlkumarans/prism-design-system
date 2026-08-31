@@ -22,16 +22,9 @@ import '../dropdown-menu/dropdown-menu.js';
 
 /* Auto-load dropdown-menu.css since the breadcrumb now reuses the dropdown
    panel in light DOM. Idempotent — injected once per document. */
-if (typeof document !== 'undefined') {
-  const id = 'ds-breadcrumb-dd-css';
-  if (!document.getElementById(id)) {
-    const link = document.createElement('link');
-    link.id = id;
-    link.rel = 'stylesheet';
-    link.href = new URL('../dropdown-menu/dropdown-menu.css', import.meta.url).href;
-    document.head.appendChild(link);
-  }
-}
+import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
+injectCss('ds-breadcrumb-dd-css', '../dropdown-menu/dropdown-menu.css', import.meta.url);
 
 const DEFAULT_SEPARATOR = 'chevron-right';
 const RTL_SEPARATOR = 'chevron-left';
@@ -235,7 +228,7 @@ export class DsBreadcrumb extends HTMLElement {
         const sep = document.createElement('span');
         sep.className = 'ds-breadcrumb__separator';
         sep.setAttribute('aria-hidden', 'true');
-        sep.innerHTML = `<ds-icon name="${separator}" size="12"></ds-icon>`;
+        sep.innerHTML = `<ds-icon name="${escapeHtml(separator)}" size="12"></ds-icon>`;
         ol.appendChild(sep);
       }
     });

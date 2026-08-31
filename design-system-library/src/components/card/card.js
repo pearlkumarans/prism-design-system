@@ -44,15 +44,11 @@ import '../../icons/icon.js';
    the header "more" control is <ds-icon-button>, the footer link <ds-text-link>. */
 import '../icon-button/icon-button.js';
 import '../text-link/text-link.js';
+import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-card-icon-button-css', '../icon-button/icon-button.css');
-_injectCss('ds-card-text-link-css', '../text-link/text-link.css');
+injectCss('ds-card-icon-button-css', '../icon-button/icon-button.css', import.meta.url);
+injectCss('ds-card-text-link-css', '../text-link/text-link.css', import.meta.url);
 
 const TYPES = ['elevated', 'outlined', 'filled', 'plain'];
 const SIZES = ['small', 'medium', 'large'];
@@ -177,7 +173,7 @@ export class DsCard extends HTMLElement {
     if (showLeadingIcon) {
       const slot = this.querySelector('[data-slot="leading-icon"]');
       if (this._slottedLeadingIcon) slot.appendChild(this._slottedLeadingIcon);
-      else slot.innerHTML = `<ds-icon name="${leadingIcon}" size="20"></ds-icon>`;
+      else slot.innerHTML = `<ds-icon name="${escapeHtml(leadingIcon)}" size="20"></ds-icon>`;
     }
     if (showHeaderAction) {
       const slot = this.querySelector('[data-slot="header-action"]');

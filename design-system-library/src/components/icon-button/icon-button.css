@@ -5,6 +5,9 @@
    ============================================================================= */
 
 :host { display: inline-block; vertical-align: middle; line-height: 0; }
+/* Light-DOM component: :host never applies — mirror the host box on the element
+   so the button aligns as inline-block (no baseline gap) wherever it's placed. */
+ds-icon-button { display: inline-block; vertical-align: middle; line-height: 0; }
 
 /* Auto-tooltip wrapper (inserted around the button when `label` is set) — hug
    the button so it never adds a baseline gap or changes the button's box. */
@@ -57,7 +60,7 @@ ds-icon-button > .ds-icon-button__tip { display: inline-flex; vertical-align: mi
 
 /* Tertiary — no resting fill; tint appears on hover/active; accent icon. */
 .ds-icon-button--tertiary                       { background: transparent;                    color: var(--uems-icon-accent); }
-.ds-icon-button--tertiary:hover:not(:disabled)  { background: var(--uems-bg-accent-primary-hover); }
+.ds-icon-button--tertiary:hover:not(:disabled)  { background: var(--uems-bg-accent-primary); }
 .ds-icon-button--tertiary:active:not(:disabled) { background: var(--uems-bg-accent-secondary); }
 
 /* Outline — neutral bordered; icon + border shift to accent on hover/active. */
@@ -70,12 +73,37 @@ ds-icon-button > .ds-icon-button__tip { display: inline-flex; vertical-align: mi
 .ds-icon-button--danger:hover:not(:disabled)  { background: var(--uems-bg-error-solid-hover); }
 .ds-icon-button--danger:active:not(:disabled) { background: var(--uems-bg-error-solid-pressed); }
 
-/* Tertiary Grey — quiet neutral; icon turns accent-blue when pressed.
-   All non-Active, non-Disabled states use Icon-Secondary (the old
-   Icon-Tertiary focus drift was fixed in Figma 2026-06-11). */
-.ds-icon-button--tertiary-grey                       { background: transparent;             color: var(--uems-icon-secondary); }
-.ds-icon-button--tertiary-grey:hover:not(:disabled)  { background: var(--uems-bg-primary-hover); color: var(--uems-icon-secondary); }
-.ds-icon-button--tertiary-grey:active:not(:disabled) { background: var(--uems-bg-secondary);     color: var(--uems-icon-accent-button); }
+/* Tertiary Grey — quiet neutral GLYPH on Tertiary's accent-tinted surfaces.
+   Resting/hover keep Icon-Secondary; the icon turns accent-blue when pressed.
+   Hover + Active backgrounds are shared with Tertiary (accent tints) so the two
+   ghost types give identical pointer feedback and only differ in glyph colour. */
+.ds-icon-button--tertiary-grey                       { background: transparent;                        color: var(--uems-icon-secondary); }
+.ds-icon-button--tertiary-grey:hover:not(:disabled)  { background: var(--uems-bg-accent-primary);       color: var(--uems-icon-secondary); }
+.ds-icon-button--tertiary-grey:active:not(:disabled) { background: var(--uems-bg-accent-secondary);     color: var(--uems-icon-accent-button); }
+
+/* ---- Selected — the PERSISTENT current/checked look, for a button whose
+        surface is open (right-pane rail, toolbars, view switchers). Distinct
+        from `:active`, which is the momentary press.
+
+        Set via the `selected` attribute (reflected as aria-pressed).
+
+        Selected is the STRONGEST tint of the three, because it persists while
+        hover/press are momentary. `:not(:disabled)` lifts these rules to the
+        same specificity as Hover/Active (0,3,0); declared later, they win — so
+        hovering a selected button never washes it back to the lighter hover
+        fill. Disabled buttons don't match at all, so Disabled still wins.
+
+        Why the strong tint matters: the app canvas token is
+        `linear-gradient(--uems-bg-accent-primary → --uems-bg-success-primary)`,
+        so a selected fill of --uems-bg-accent-primary is INVISIBLE at the top of
+        the canvas (identical colour). The accent-secondary step reads on both
+        white surfaces and the canvas. ------------------------------------- */
+.ds-icon-button--primary.ds-icon-button--selected:not(:disabled)        { background: var(--uems-bg-button-primary-pressed); color: var(--uems-icon-white); }
+.ds-icon-button--secondary.ds-icon-button--selected:not(:disabled)      { background: var(--uems-bg-accent-secondary);       color: var(--uems-icon-accent); }
+.ds-icon-button--tertiary.ds-icon-button--selected:not(:disabled)       { background: var(--uems-bg-accent-secondary);         color: var(--uems-icon-accent); }
+.ds-icon-button--tertiary-grey.ds-icon-button--selected:not(:disabled)  { background: var(--uems-bg-accent-secondary);         color: var(--uems-icon-accent-button); }
+.ds-icon-button--outline.ds-icon-button--selected:not(:disabled)        { background: var(--uems-bg-accent-secondary);         color: var(--uems-icon-accent); border-color: var(--uems-border-accent-secondary); }
+.ds-icon-button--danger.ds-icon-button--selected:not(:disabled)         { background: var(--uems-bg-error-solid-pressed);    color: var(--uems-icon-white); }
 
 /* ---- Focus — 2px accent ring, 2px gap from the button edge;
         colors stay Default. (Design review: 2px offset on every

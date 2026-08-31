@@ -167,6 +167,21 @@ ds-button { display: inline-block; vertical-align: middle; }
   --_btn-border: var(--uems-border-primary);
 }
 
+/* Surface — an OPAQUE surface fill, unlike Outline which is transparent. Use it
+   wherever the button sits on a tinted ground (the app canvas is a
+   --uems-bg-accent-primary → --uems-bg-success-primary gradient, and coloured
+   cards tint too): Outline would let that ground show through, Surface reads as a
+   solid button. Bordered, since a surface fill on a light canvas has little edge
+   definition on its own.
+   Named by ROLE, not colour: --uems-bg-primary-alt is #FFFFFF in light but
+   #20242E in dark, so a "white" variant would render dark and the name would lie. */
+.ds-button--surface {
+  --_btn-bg: var(--uems-bg-primary-alt);
+  --_btn-bg-hover: var(--uems-bg-secondary-alt);
+  --_btn-fg: var(--uems-text-primary);
+  --_btn-border: var(--uems-border-primary);
+}
+
 .ds-button--destructive {
   --_btn-bg: var(--uems-bg-error-solid);
   --_btn-bg-hover: var(--uems-bg-error-solid-hover);
@@ -232,6 +247,12 @@ ds-button { display: inline-block; vertical-align: middle; }
 .ds-button--tertiary:disabled,
 .ds-button--outline:disabled { --_btn-fg: var(--uems-text-disabled); }
 .ds-button--outline:disabled { --_btn-border: var(--uems-border-disabled); }
+
+/* Surface — keeps its surface fill; label + border go disabled. */
+.ds-button--surface:disabled {
+  --_btn-fg: var(--uems-text-disabled);
+  --_btn-border: var(--uems-border-disabled);
+}
 
 /* Secondary Color — info tint + disabled text. */
 .ds-button--secondary-color:disabled {

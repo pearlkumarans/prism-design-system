@@ -11,16 +11,12 @@ import '../status-indicator/status-indicator.js';
 import '../breadcrumb/breadcrumb.js';
 import '../description-list/description-list.js';
 import '../dropdown-menu/dropdown-menu.js';
+import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Auto-load the CSS of the components this one composes (light-DOM, so their
    stylesheets must be present even on pages that don't <link> them). Guarded +
    idempotent — no-ops if the page already linked them. */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
 [
   ['ds-ph-css', './page-header.css'],
   ['ds-ph-divider-css', '../divider/divider.css'],
@@ -30,7 +26,7 @@ function _injectCss(id, rel) {
   ['ds-ph-breadcrumb-css', '../breadcrumb/breadcrumb.css'],
   ['ds-ph-dl-css', '../description-list/description-list.css'],
   ['ds-ph-dropdown-css', '../dropdown-menu/dropdown-menu.css'],
-].forEach(([id, rel]) => _injectCss(id, rel));
+].forEach(([id, rel]) => injectCss(id, rel, import.meta.url));
 
 /* `structure` is kept only as a backward-compatible shorthand; the real model is
    the independent booleans (matches the refactored Figma component). */
@@ -395,8 +391,8 @@ export class DsPageHeader extends HTMLElement {
         ${/* Back + leading icon are common to the whole title+description block:
             they sit to its left (icon in a grey tile), not inline with the title. */''}
         <div class="ds-page-header__title-main">
-          ${showBack ? `<button class="ds-page-header__back" type="button" aria-label="${rtl ? 'رجوع' : 'Back'}" data-back><ds-icon name="${backIcon}" size="20"></ds-icon></button>` : ''}
-          ${showIcon ? `<span class="ds-page-header__icon" aria-hidden="true"><ds-icon name="${this._esc(icon)}" size="24"></ds-icon></span>` : ''}
+          ${showBack ? `<button class="ds-page-header__back" type="button" aria-label="${rtl ? 'رجوع' : 'Back'}" data-back><ds-icon name="${escapeHtml(backIcon)}" size="20"></ds-icon></button>` : ''}
+          ${showIcon ? `<span class="ds-page-header__icon" aria-hidden="true"><ds-icon name="${escapeHtml(this._esc(icon))}" size="24"></ds-icon></span>` : ''}
           <div class="ds-page-header__title-stack">
             <div class="ds-page-header__leading">
               <h1 class="ds-page-header__title">${this._esc(title)}</h1>

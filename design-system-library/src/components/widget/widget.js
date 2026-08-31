@@ -51,22 +51,17 @@ import '../button/button.js';
 import '../empty-state/empty-state.js';
 import '../illustration/illustration.js'; /* ds-empty-state renders <ds-illustration> but doesn't import it */
 import '../chart/chart.js';
+import { injectCss } from '../../utils/inject-css.js';
 import '../data-table/data-table.js'; /* table-type body */
 
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-widget-icon-button-css', '../icon-button/icon-button.css');
-_injectCss('ds-widget-text-link-css', '../text-link/text-link.css');
-_injectCss('ds-widget-badge-css', '../badge/badge.css');
-_injectCss('ds-widget-button-css', '../button/button.css');
-_injectCss('ds-widget-empty-state-css', '../empty-state/empty-state.css');
-_injectCss('ds-widget-illustration-css', '../illustration/illustration.css');
-_injectCss('ds-widget-chart-css', '../chart/chart.css?v=3');
-_injectCss('ds-widget-data-table-css', '../data-table/data-table.css');
+injectCss('ds-widget-icon-button-css', '../icon-button/icon-button.css', import.meta.url);
+injectCss('ds-widget-text-link-css', '../text-link/text-link.css', import.meta.url);
+injectCss('ds-widget-badge-css', '../badge/badge.css', import.meta.url);
+injectCss('ds-widget-button-css', '../button/button.css', import.meta.url);
+injectCss('ds-widget-empty-state-css', '../empty-state/empty-state.css', import.meta.url);
+injectCss('ds-widget-illustration-css', '../illustration/illustration.css', import.meta.url);
+injectCss('ds-widget-chart-css', '../chart/chart.css?v=3', import.meta.url);
+injectCss('ds-widget-data-table-css', '../data-table/data-table.css', import.meta.url);
 
 /* ds-illustration needs a sprite path. Default it (relative to this module) so
    the widget's state illustrations work on any page — a page that already set

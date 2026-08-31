@@ -29,14 +29,9 @@ import '../../icons/icon.js';
 /* Trend indicator = the shared Badge component (token-driven state colors),
    not a hand-rolled chip. */
 import '../badge/badge.js';
+import { injectCss } from '../../utils/inject-css.js';
 
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-kpi-breakdown-badge-css', '../badge/badge.css');
+injectCss('ds-kpi-breakdown-badge-css', '../badge/badge.css', import.meta.url);
 
 const LAYOUTS = ['compact', 'stacked', 'wide'];
 const TREND_TONES = ['positive', 'negative', 'neutral'];

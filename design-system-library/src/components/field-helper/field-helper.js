@@ -10,6 +10,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Spec state name is `negative`; `error` is kept as a working alias since
    existing fields (date-picker, slider, input-select, otp-input) pass it. */
@@ -85,7 +86,7 @@ export class DsFieldHelper extends HTMLElement {
        decorative (aria-hidden) and only shown alongside text. */
     this._root.innerHTML = `
       <span class="ds-field-helper__group">
-        ${showIcon && text ? `<span class="ds-field-helper__icon" aria-hidden="true"><ds-icon name="${icon}" size="12"></ds-icon></span>` : ''}
+        ${showIcon && text ? `<span class="ds-field-helper__icon" aria-hidden="true"><ds-icon name="${escapeHtml(icon)}" size="12"></ds-icon></span>` : ''}
         ${text ? `<span class="ds-field-helper__text">${esc(text)}</span>` : ''}
       </span>
       ${counter ? `<span class="ds-field-helper__counter">${esc(counter)}</span>` : ''}

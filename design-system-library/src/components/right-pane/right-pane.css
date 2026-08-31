@@ -5,7 +5,18 @@
 
 :host { display: inline-block; vertical-align: top; height: 100%; }
 /* Light-DOM component: :host never applies — mirror display on the element. */
-ds-right-pane { display: inline-block; vertical-align: top; height: 100%; }
+ds-right-pane {
+  display: inline-block; vertical-align: top; height: 100%;
+  /* Same clip contract as the inner .ds-right-pane: `clip` creates NO scrollable
+     overflow region, so the chat-FAB ripple's clip-margin bleed can paint past the
+     32px rail WITHOUT propagating overflow to .shell-body → .shell-root → the
+     document. Without this the host stayed `visible`, the ripple leaked ~19px, and
+     the page grew a horizontal scrollbar that shrank the shell and left an empty
+     gutter down the right edge (visible whenever the ring was mid-flight). */
+  overflow: hidden;
+  overflow: clip;
+  overflow-clip-margin: 2.5rem;
+}
 
 .ds-right-pane {
   width: 32px;
@@ -13,8 +24,14 @@ ds-right-pane { display: inline-block; vertical-align: top; height: 100%; }
   /* Fills its container; the spacer between the top + bottom stacks expands to
      push them apart. No forced min-height — when the container is shorter than
      the icon set, items collapse into the "more" (⋮) overflow menu instead of
-     spilling past the viewport (handled in JS via a height fit). */
+     spilling past the viewport (handled in JS via a height fit).
+     Progressive: `clip` keeps that containment but `overflow-clip-margin` lets the
+     chat-FAB attention ripple bleed a little past the 32px rail (it's only 2px from
+     the edges). Browsers without `clip` fall back to `hidden` — ripple simply stays
+     contained, no breakage. */
   overflow: hidden;
+  overflow: clip;
+  overflow-clip-margin: 2.5rem;
   /* Figma: no fill, no border on the rail itself — it sits transparently on
      the app shell. (The component description mentions BG-White + a left
      border, but the actual node carries neither.) */
@@ -51,17 +68,13 @@ ds-right-pane { display: inline-block; vertical-align: top; height: 100%; }
   background: transparent;
   border: 0;
   border-radius: var(--radius-sm);
-  color: var(--uems-icon-tertiary);
+  /* Match ds-icon-button's `tertiary-grey` resting glyph, so the few items that
+     are NOT icon-buttons (theme toggle, direction, overflow, the update slot)
+     sit at the same weight as their icon-button neighbours. */
+  color: var(--uems-icon-secondary);
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-standard),
               color var(--duration-fast) var(--ease-standard);
-}
-
-/* Update slot — persistent alert tint (Figma: bg-alert-primary). */
-.ds-right-pane__btn--highlight,
-.ds-right-pane__btn--highlight:hover {
-  background: var(--uems-bg-alert-primary);
-  color: var(--uems-icon-warning, var(--uems-text-primary));
 }
 
 /* Full-color logo items (e.g. ServiceDesk Plus) — 28×28 button, 20px logo centered. */
@@ -85,13 +98,76 @@ ds-right-pane { display: inline-block; vertical-align: top; height: 100%; }
   background: var(--uems-border-tertiary);
   list-style: none;
 }
-.ds-right-pane__btn:hover { background: var(--uems-bg-accent-primary-hover); color: var(--uems-text-primary); }
+/* Hover / selected mirror ds-icon-button's `tertiary-grey`, so the plain items
+   (theme toggle, direction, overflow, update) behave identically to their
+   icon-button neighbours. Hover is the LIGHT tint and keeps the resting glyph;
+   selected is the STRONG tint with the accent glyph — and being declared after
+   hover with equal specificity, selected survives hovering. */
+.ds-right-pane__btn:hover { background: var(--uems-bg-accent-primary); color: var(--uems-icon-secondary); }
 .ds-right-pane__btn:focus-visible {
   outline: 2px solid var(--uems-border-accent-focus);
   outline-offset: 2px;
 }
+/* Update slot — persistent alert tint (Figma: bg-alert-primary). Declared AFTER
+   :hover so the tint survives hovering: both rules are (0,2,0), so order decides,
+   and when this sat above :hover the generic hover silently overrode it. Still
+   declared BEFORE [aria-pressed] so an open Updates panel shows the selected
+   state rather than the alert tint. */
+.ds-right-pane__btn--highlight,
+.ds-right-pane__btn--highlight:hover {
+  background: var(--uems-bg-alert-primary);
+  color: var(--uems-icon-warning, var(--uems-text-primary));
+}
+
 .ds-right-pane__btn[aria-pressed="true"],
 .ds-right-pane__btn[aria-expanded="true"] {
-  background: var(--uems-bg-accent-primary);
-  color: var(--uems-text-accent-link);
+  background: var(--uems-bg-accent-secondary);
+  color: var(--uems-icon-accent-button);
+}
+
+/* Icon-button rail items (ds-icon-button, e.g. Help) need NO rail styling: the
+   component owns default / hover / press / focus / disabled AND the persistent
+   `selected` state (driven by setActive). Kept as a note so nobody re-adds an
+   override here — rail-side rules targeting .ds-icon-button also lose the cascade
+   to the runtime-injected copies of icon-button.css. */
+
+/* --- Chat FAB attention ripple ---------------------------------------------
+   A soft accent circle that pulses outward from the chat FAB to draw the eye. It
+   sits BEHIND the button (own stacking context + z-index) and ignores pointer
+   events, so it never blocks the click or shifts layout. The rail lets it bleed
+   via overflow-clip-margin (above). Suppressed under reduced-motion. */
+.ds-right-pane__fab { position: relative; z-index: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  /* Two rings on the same loop, offset by half the duration, so one is always
+     mid-flight — a continuous "sonar" pulse rather than an on/off blink. */
+  .ds-right-pane__fab::before,
+  .ds-right-pane__fab::after {
+    content: "";
+    position: absolute;
+    /* Fixed circle, centered on the FAB and DECOUPLED from the button/icon box
+       (no `inset:0`), so the icon's own size never drives or distorts the ring —
+       and `border-radius:50%` on a square base keeps it a true circle, not an
+       ellipse of the square button. */
+    left: 50%;
+    top: 50%;
+    width: 28px;
+    height: 28px;
+    margin: -14px 0 0 -14px;
+    border-radius: 50%;
+    /* HOLLOW ring — no fill (per the CodePen ripple). The transparent centre never
+       sits over the icon; only the accent outline expands. Brand blue, not the
+       accent-surface token (which inverts to a dark fill in dark theme). */
+    background: none;
+    border: 3px solid var(--uems-border-accent-focus, var(--uems-bg-button-primary, #00a6ff));
+    z-index: -1;
+    pointer-events: none;
+    animation: ds-right-pane-fab-ripple 3.6s var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1)) infinite;
+  }
+  /* Second ring offset half a cycle → a continuous outward ripple, always on
+     (the CodePen triggers on hover; here it runs by default). */
+  .ds-right-pane__fab::after { animation-delay: 1.8s; }
+}
+@keyframes ds-right-pane-fab-ripple {
+  0%   { opacity: 0.7; transform: scale(0.8); }
+  100% { opacity: 0;   transform: scale(2.6); }
 }

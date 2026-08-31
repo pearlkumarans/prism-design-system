@@ -24,16 +24,11 @@ import { boolAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
 /* Collapsed (icon-only) items reveal their label via the shared <ds-tooltip>. */
 import '../tooltip/tooltip.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Auto-load tooltip.css once (light-DOM, so the stylesheet must be present even
    on pages that load sidebar-l1.css individually). Idempotent. */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-sidebar-l1-tooltip-css', '../tooltip/tooltip.css');
+injectCss('ds-sidebar-l1-tooltip-css', '../tooltip/tooltip.css', import.meta.url);
 
 export class DsSidebarL1 extends HTMLElement {
   static get observedAttributes() { return ['collapsed', 'rtl', 'show-collapse']; }

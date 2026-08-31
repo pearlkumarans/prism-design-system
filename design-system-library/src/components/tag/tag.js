@@ -12,6 +12,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 const VARIANTS = ['neutral', 'primary', 'success', 'warning', 'error', 'outline'];
 const SIZES = ['small', 'medium', 'large'];
@@ -100,7 +101,7 @@ export class DsTag extends HTMLElement {
     if (leading === 'status') {
       leadingHTML = `<span class="ds-tag__dot-box" aria-hidden="true"><span class="ds-tag__dot" style="--_tag-dot: ${STATUS_DOT[status]}"></span></span>`;
     } else if (leading === 'icon' && icon) {
-      leadingHTML = `<span class="ds-tag__icon" aria-hidden="true"><ds-icon name="${icon}" size="${iconPx}"></ds-icon></span>`;
+      leadingHTML = `<span class="ds-tag__icon" aria-hidden="true"><ds-icon name="${escapeHtml(icon)}" size="${iconPx}"></ds-icon></span>`;
     }
 
     this._root.innerHTML = `

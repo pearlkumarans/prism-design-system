@@ -21,6 +21,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 const SIZES = ['small', 'medium', 'large'];
 const STYLES = ['disc', 'circle', 'square', 'icon', 'number', 'letter', 'badge'];
@@ -116,7 +117,7 @@ export class DsList extends HTMLElement {
     const level = String((isObj && item.level) || 1);
     const icon = isObj && item.icon ? item.icon : DEFAULT_ICON;
     const iconHTML = style === 'icon'
-      ? `<span class="ds-list__icon" aria-hidden="true"><ds-icon name="${icon}" size="100%"></ds-icon></span>`
+      ? `<span class="ds-list__icon" aria-hidden="true"><ds-icon name="${escapeHtml(icon)}" size="100%"></ds-icon></span>`
       : '';
     return `<li class="ds-list__item" data-level="${level}">${iconHTML}<span class="ds-list__text">${text}</span></li>`;
   }

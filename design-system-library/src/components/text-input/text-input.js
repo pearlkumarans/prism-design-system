@@ -3,17 +3,13 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 import '../field-helper/field-helper.js';
 /* Prefix / suffix dropdown chips open a shared Dropdown Menu. */
 import '../dropdown-menu/dropdown-menu.js';
+import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Auto-load field-helper.css once (both are light-DOM, so the stylesheet must
    be present even on pages that load text-input.css individually). */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-text-input-fh-css', '../field-helper/field-helper.css');
-_injectCss('ds-text-input-dropdown-css', '../dropdown-menu/dropdown-menu.css');
+injectCss('ds-text-input-fh-css', '../field-helper/field-helper.css', import.meta.url);
+injectCss('ds-text-input-dropdown-css', '../dropdown-menu/dropdown-menu.css', import.meta.url);
 
 const esc = (s) => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -137,11 +133,11 @@ export class DsTextInput extends HTMLElement {
     const prefixInner =
       `${flag ? `<span class="ds-text-input__affix-flag" aria-hidden="true">${flag}</span>` : ''}` +
       `${prefixText ? `<span class="ds-text-input__affix-text ds-text-input__affix-text--prefix">${esc(prefixText)}</span>` : ''}` +
-      `${prefixIcon ? `<span class="ds-text-input__affix-icon"><ds-icon name="${prefixIcon}" size="16"></ds-icon></span>` : ''}`;
+      `${prefixIcon ? `<span class="ds-text-input__affix-icon"><ds-icon name="${escapeHtml(prefixIcon)}" size="16"></ds-icon></span>` : ''}`;
     const suffixInner =
       `${suffixText ? `<span class="ds-text-input__affix-text ds-text-input__affix-text--suffix">${esc(suffixText)}</span>` : ''}` +
-      `${suffixIcon ? `<span class="ds-text-input__affix-icon"><ds-icon name="${suffixIcon}" size="16"></ds-icon></span>` : ''}` +
-      `${suffixIconRight ? `<span class="ds-text-input__affix-icon ds-text-input__affix-icon--far-right"><ds-icon name="${suffixIconRight}" size="16"></ds-icon></span>` : ''}`;
+      `${suffixIcon ? `<span class="ds-text-input__affix-icon"><ds-icon name="${escapeHtml(suffixIcon)}" size="16"></ds-icon></span>` : ''}` +
+      `${suffixIconRight ? `<span class="ds-text-input__affix-icon ds-text-input__affix-icon--far-right"><ds-icon name="${escapeHtml(suffixIconRight)}" size="16"></ds-icon></span>` : ''}`;
     const prefixGroup = hasPrefix
       ? (prefixDropdown
           ? `<button type="button" class="ds-text-input__prefix ds-text-input__prefix--dropdown" data-prefix-dropdown aria-haspopup="listbox">${prefixInner}</button>`

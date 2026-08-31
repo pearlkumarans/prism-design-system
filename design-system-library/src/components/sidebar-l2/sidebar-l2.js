@@ -28,15 +28,10 @@ import { escapeHtml } from '../../utils/escape.js';
    the back/collapse control reuses the shared <ds-icon-button>. */
 import '../tooltip/tooltip.js';
 import '../icon-button/icon-button.js';
+import { injectCss } from '../../utils/inject-css.js';
 
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-sidebar-l2-tooltip-css', '../tooltip/tooltip.css');
-_injectCss('ds-sidebar-l2-icon-button-css', '../icon-button/icon-button.css');
+injectCss('ds-sidebar-l2-tooltip-css', '../tooltip/tooltip.css', import.meta.url);
+injectCss('ds-sidebar-l2-icon-button-css', '../icon-button/icon-button.css', import.meta.url);
 
 export class DsSidebarL2 extends HTMLElement {
   static get observedAttributes() {

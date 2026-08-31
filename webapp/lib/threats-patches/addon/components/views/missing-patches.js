@@ -37,7 +37,7 @@ export default class MissingPatchesView extends Component {
 
   kpis = (k) => [
     { label: 'Missing patches', value: k.total, state: 'default', icon: 'patch' },
-    { label: 'Critical', value: k.critical, state: 'critical', icon: 'exclamation-circle' },
+    { label: 'Critical', value: k.critical, state: 'alert', icon: 'exclamation-circle' },
     { label: 'Systems affected', value: k.systemsAffected, state: 'warning', icon: 'computer' },
     { label: 'Pending approval', value: k.pendingApproval, state: 'alert', icon: 'clock' },
   ];

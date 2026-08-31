@@ -18,8 +18,41 @@ A compact, icon-only button for toolbars, table rows, card headers, and embedded
 | `Type` | Primary (default), Secondary, Tertiary, Outline, Danger, Tertiary Grey | 6 |
 | `Size` | XL (default), Large, Small, XSmall | 4 |
 | `State` | Default, Hover, Active, Focus, Disabled | 5 |
+| `Selected` | off (default), on | 2 |
 
 **Total:** 2 × 6 × 4 × 5 = **240 variants**
+
+### Selected (persistent) vs Active (press)
+
+`Active` in the state matrix is the momentary **press** (`:active`) — it lasts only
+while the pointer is held down. For a button that must stay lit while its surface
+is open (a right-pane rail icon, a toolbar toggle, a view switcher), use the
+`selected` attribute instead:
+
+```html
+<ds-icon-button type="tertiary" icon="help-circle" label="Help" selected></ds-icon-button>
+```
+
+It reflects `aria-pressed="true"` on the inner button, so assistive tech announces
+a toggle button, and adds `.ds-icon-button--selected`.
+
+Selected is the **strongest** tint of the three, because it persists while
+hover/press are momentary — hovering a selected button never washes it back to the
+lighter hover fill. Disabled still overrides it.
+
+This matters on the app canvas: `--uems-background` is
+`linear-gradient(--uems-bg-accent-primary → --uems-bg-success-primary)`, so a
+selected fill of `--uems-bg-accent-primary` is **invisible** at the top of the
+canvas. The accent-secondary step reads on both white surfaces and the canvas.
+
+| Type | Selected background | Icon |
+|---|---|---|
+| Primary | `--uems-bg-button-primary-pressed` | `--uems-icon-white` |
+| Secondary | `--uems-bg-accent-secondary` | `--uems-icon-accent` |
+| Tertiary | `--uems-bg-accent-secondary` | `--uems-icon-accent` |
+| Tertiary Grey | `--uems-bg-accent-secondary` | `--uems-icon-accent-button` |
+| Outline | `--uems-bg-accent-secondary` + `--uems-border-accent-secondary` | `--uems-icon-accent` |
+| Danger | `--uems-bg-error-solid-pressed` | `--uems-icon-white` |
 
 ### Component properties
 
@@ -59,7 +92,7 @@ Hex comments = Light theme. All icons are **stroke-drawn** — color applies to 
 | | Active | `--uems-bg-button-primary-pressed` /* #184091 */ | — | `--uems-icon-white` |
 | | Disabled | `--uems-bg-disabled` /* #E1E4EB */ | — | `--uems-icon-disabled` |
 | **Secondary** | Default | `--uems-bg-accent-primary-alt` /* #EAF0FC */ | — | `--uems-icon-accent` |
-| | Hover | `--uems-bg-accent-primary-hover` /* #D5E0F8 */ | — | `--uems-icon-accent` |
+| | Hover | `--uems-bg-accent-primary` /* #EAF0FC */ | — | `--uems-icon-accent` |
 | | Active | `--uems-bg-accent-secondary` /* #D5E0F8 */ | — | `--uems-icon-accent` |
 | | Disabled | `--uems-bg-disabled` | — | `--uems-icon-disabled` |
 | **Tertiary** | Default | transparent | — | `--uems-icon-accent` |
@@ -75,8 +108,8 @@ Hex comments = Light theme. All icons are **stroke-drawn** — color applies to 
 | | Active | `--uems-bg-error-solid-pressed` /* #811012 */ | — | `--uems-icon-white` |
 | | Disabled | `--uems-bg-disabled` | — | `--uems-icon-disabled` |
 | **Tertiary Grey** | Default | transparent | — | `--uems-icon-secondary` |
-| | Hover | `--uems-bg-primary-hover` /* #F0F2F5 */ | — | `--uems-icon-secondary` |
-| | Active | `--uems-bg-secondary` /* #F0F2F5 */ | — | `--uems-icon-accent-button` /* #006AFF */ |
+| | Hover | `--uems-bg-accent-primary` /* #EAF0FC */ | — | `--uems-icon-secondary` |
+| | Active | `--uems-bg-accent-secondary` /* #D5E0F8 */ | — | `--uems-icon-accent-button` /* #006AFF */ |
 | | Disabled | transparent | — | `--uems-icon-disabled` |
 
 ### Focus (all types)

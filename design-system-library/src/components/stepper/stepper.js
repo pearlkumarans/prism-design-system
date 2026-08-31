@@ -40,15 +40,10 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import '../../icons/icon.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Auto-load this component's stylesheet once (light-DOM). Idempotent. */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-stepper-css', './stepper.css');
+injectCss('ds-stepper-css', './stepper.css', import.meta.url);
 
 const ICON_SIZE = { sm: 12, md: 14, lg: 16 };
 

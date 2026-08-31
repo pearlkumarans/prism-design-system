@@ -37,19 +37,14 @@ import '../checkbox/checkbox.js';
 import '../radio/radio.js';
 /* Footer + selection-bar links reuse the TextLink component (no custom buttons). */
 import '../text-link/text-link.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* ds-checkbox / ds-radio are light-DOM (styled via their own CSS files). Auto-
    load those stylesheets so the embedded indicators are styled even on pages
    that link dropdown-menu.css without the full token/component bundle. */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-dropdown-checkbox-css', '../checkbox/checkbox.css');
-_injectCss('ds-dropdown-radio-css', '../radio/radio.css');
-_injectCss('ds-dropdown-textlink-css', '../text-link/text-link.css');
+injectCss('ds-dropdown-checkbox-css', '../checkbox/checkbox.css', import.meta.url);
+injectCss('ds-dropdown-radio-css', '../radio/radio.css', import.meta.url);
+injectCss('ds-dropdown-textlink-css', '../text-link/text-link.css', import.meta.url);
 
 /* Escape consumer-provided strings before they go into the menu's innerHTML.
    Labels/descriptions/badges are frequently data-derived (customer names, saved

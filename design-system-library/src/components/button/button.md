@@ -15,7 +15,7 @@ The Button is the primary interactive element for triggering actions. The runtim
 
 | Attribute | Values | Default | Description |
 |-----------|--------|---------|-------------|
-| `variant` | `primary` \| `secondary` \| `tertiary` \| `outline` \| `destructive` \| `success` \| `warning` \| `secondary-color` | `primary` | Visual style + semantics |
+| `variant` | `primary` \| `secondary` \| `tertiary` \| `outline` \| `surface` \| `destructive` \| `success` \| `warning` \| `secondary-color` | `primary` | Visual style + semantics |
 | `size` | `large` \| `medium` \| `small` \| `xsmall` | `medium` | Height + padding + font size |
 | `type` | `button` \| `submit` \| `reset` | `button` | Forwarded to the inner `<button>` |
 | `disabled` | boolean | unset | Disables interaction; mirrors to inner button |
@@ -46,6 +46,7 @@ The custom element does not invent its own click event; consumers listen for nat
 | `secondary` | `--bg-secondary` | `--bg-secondary-hover` | `--text-primary` | — |
 | `tertiary` | transparent | `--bg-accent-primary-subtle` | `--text-accent-link` | — |
 | `outline` | transparent | `--bg-secondary-hover` | `--text-primary` | `--border-secondary` |
+| `surface` | `--bg-primary-alt` | `--bg-secondary-alt` | `--text-primary` | `--border-primary` |
 | `destructive` | `--bg-error-solid` | `--bg-error-solid-hover` | `--text-white` | — |
 | `success` | `--bg-success-solid` | `--bg-success-solid-hover` | `--text-white` | — |
 | `warning` | `--bg-warning-solid` | `--bg-warning-solid-hover` | `--text-white` | — |
@@ -75,6 +76,12 @@ All sizes use `--radius-sm` (8px).
 ## Do / Don't
 
 - ✅ One Primary per section. Pair with Secondary/Outline for secondary actions.
+- ✅ **`surface` vs `outline`:** Outline is *transparent* — on a tinted ground (the app
+  canvas is a `--uems-bg-accent-primary` → `--uems-bg-success-primary` gradient, and
+  coloured cards tint too) the ground shows through it. Use `surface` there for an
+  opaque, bordered button. On a white surface the two are equivalent, so prefer
+  `outline`. `surface` is named by role, not colour: `--uems-bg-primary-alt` is
+  `#FFFFFF` in light and `#20242E` in dark, so it inverts correctly.
 - ✅ Use Destructive only for irreversible actions.
 - ❌ Don't use Loading without disabling user interaction (the component handles this — but don't hand-roll it).
 - ❌ Don't use color alone to convey meaning — keep label text descriptive.

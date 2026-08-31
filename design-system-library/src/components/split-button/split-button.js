@@ -1,16 +1,12 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 /* Reuse the DS dropdown menu as the caret's overlay. */
 import '../dropdown-menu/dropdown-menu.js';
+import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Auto-load dropdown-menu.css once (split-button + the menu are light-DOM, so
    the stylesheet must be present on the page). Idempotent. */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-split-button-dd-css', '../dropdown-menu/dropdown-menu.css');
+injectCss('ds-split-button-dd-css', '../dropdown-menu/dropdown-menu.css', import.meta.url);
 
 const SIZES = ['large', 'medium', 'small', 'xsmall'];
 const VARIANTS = ['primary', 'outline'];
@@ -83,7 +79,7 @@ export class DsSplitButton extends HTMLElement {
     const hasMenu = this._menuItems.length > 0;
     this._root.innerHTML = `
       <button type="button" class="ds-split-button__main" data-main ${disabled ? 'disabled' : ''}>
-        ${icon ? `<ds-icon name="${icon}" size="${iconPx}"></ds-icon>` : ''}
+        ${icon ? `<ds-icon name="${escapeHtml(icon)}" size="${iconPx}"></ds-icon>` : ''}
         <span>${label}</span>
       </button>
       <button type="button" class="ds-split-button__chev" aria-label="More ${label} options" aria-haspopup="menu" aria-expanded="false" data-chev ${disabled ? 'disabled' : ''}>

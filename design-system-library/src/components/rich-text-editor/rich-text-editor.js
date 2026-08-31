@@ -20,16 +20,11 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 /* Helper/counter row = the shared "Form Field Helper Row" sub-component. */
 import '../field-helper/field-helper.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Auto-load field-helper.css once (both are light-DOM, so the stylesheet must
    be present even on pages that load rich-text-editor.css individually). */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-rte-fh-css', '../field-helper/field-helper.css');
+injectCss('ds-rte-fh-css', '../field-helper/field-helper.css', import.meta.url);
 
 const esc = (s) => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

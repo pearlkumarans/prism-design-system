@@ -25,16 +25,11 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Self-inject the component stylesheet so the card is styled even on pages that
    don't pull the full bundle — resolved relative to this module. */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-container-css', './container.css');
+injectCss('ds-container-css', './container.css', import.meta.url);
 
 const PADS     = ['none', 'xs', 'sm', 'md', 'lg', 'xl'];
 const RADII    = ['none', 'sm', 'md', 'lg', 'xl', '2xl', 'full'];

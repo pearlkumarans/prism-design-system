@@ -14,6 +14,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 const TYPES = ['fill', 'underline'];
 
@@ -159,7 +160,7 @@ export class DsTabBarVertical extends HTMLElement {
 
     const iconHTML = item.icon
       ? `<span class="ds-tab-bar-vertical__item-icon" aria-hidden="true">
-           <ds-icon name="${item.icon}" size="20"></ds-icon>
+           <ds-icon name="${escapeHtml(item.icon)}" size="20"></ds-icon>
          </span>`
       : '';
 

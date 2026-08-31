@@ -11,18 +11,13 @@
    ============================================================================= */
 
 import { boolAttr } from '../../utils/attr.js';
+import { injectCss } from '../../utils/inject-css.js';
 import '../../icons/icon.js';   // optional trailing help icon
 
 /* Auto-load radio.css once so the control is fully styled wherever <ds-radio>
    is used — standalone or via <ds-radio-group> — without the host page needing
    to link it (matches the self-contained pattern used across the DS). */
-function _injectCss(id, rel) {
-  if (typeof document === 'undefined' || document.getElementById(id)) return;
-  const l = document.createElement('link');
-  l.id = id; l.rel = 'stylesheet'; l.href = new URL(rel, import.meta.url).href;
-  document.head.appendChild(l);
-}
-_injectCss('ds-radio-css', './radio.css');
+injectCss('ds-radio-css', './radio.css', import.meta.url);
 
 const SIZES = ['s', 'm', 'l', 'mobile'];
 /* Legacy aliases kept so existing size="small|medium" usages still work. */

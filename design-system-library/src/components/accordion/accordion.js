@@ -8,21 +8,13 @@ import { boolAttr, enumAttr, reflectBool } from '../../utils/attr.js';
    its leading controls (type="checkbox" / type="toggle"). */
 import '../checkbox/checkbox.js';
 import '../toggle/toggle.js';
+import { injectCss } from '../../utils/inject-css.js';
 
 /* Auto-load checkbox.css + toggle.css since the accordion now reuses these
    components in light DOM. Idempotent — each is injected only once per
    document. */
-function _injectStylesheet(id, relativePath) {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(id)) return;
-  const link = document.createElement('link');
-  link.id = id;
-  link.rel = 'stylesheet';
-  link.href = new URL(relativePath, import.meta.url).href;
-  document.head.appendChild(link);
-}
-_injectStylesheet('ds-accordion-cb-css',     '../checkbox/checkbox.css');
-_injectStylesheet('ds-accordion-toggle-css', '../toggle/toggle.css');
+injectCss('ds-accordion-cb-css', '../checkbox/checkbox.css', import.meta.url);
+injectCss('ds-accordion-toggle-css', '../toggle/toggle.css', import.meta.url);
 
 let uid = 0;
 
