@@ -33,7 +33,7 @@ export default class AlertsView extends Component {
 
   kpis = (k) => [
     { label: 'Alerts', value: k.total, state: 'default', icon: 'notification' },
-    { label: 'Critical', value: k.critical, state: 'critical', icon: 'exclamation-circle' },
+    { label: 'Critical', value: k.critical, state: 'alert', icon: 'exclamation-circle' },
     { label: 'Active', value: k.active, state: 'alert', icon: 'activity' },
     { label: 'Acknowledged', value: k.acknowledged, state: 'warning', icon: 'clock' },
   ];

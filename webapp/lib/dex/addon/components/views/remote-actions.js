@@ -30,7 +30,7 @@ export default class RemoteActionsView extends Component {
     { label: 'Actions', value: k.total, state: 'default', icon: 'settings-deploy' },
     { label: 'Running', value: k.running, state: 'alert', icon: 'refresh' },
     { label: 'Completed', value: k.completed, state: 'success', icon: 'circle-tick' },
-    { label: 'Failed', value: k.failed, state: 'critical', icon: 'exclamation-circle' },
+    { label: 'Failed', value: k.failed, state: 'alert', icon: 'exclamation-circle' },
   ];
 
   get columns() {

@@ -31,7 +31,7 @@ export default class ExperienceInsightsView extends Component {
 
   kpis = (k) => [
     { label: 'Insights', value: k.total, state: 'default', icon: 'light-bulb' },
-    { label: 'Critical', value: k.critical, state: 'critical', icon: 'exclamation-circle' },
+    { label: 'Critical', value: k.critical, state: 'alert', icon: 'exclamation-circle' },
     { label: 'Devices affected', value: k.affected, state: 'warning', icon: 'computer' },
     { label: 'Active', value: k.active, state: 'alert', icon: 'activity' },
   ];

@@ -37,7 +37,7 @@ export default class ThreatsPatchesHighlyVulnerableSystems extends Component {
     { label: 'Vulnerable systems', value: k.total, state: 'default', icon: 'computer' },
     { label: 'Critical', value: k.critical, state: 'alert', icon: 'exclamation-circle' },
     { label: 'High', value: k.high, state: 'warning', icon: 'exclamation-triangle' },
-    { label: 'Exploitable', value: k.exploitable, state: 'critical', icon: 'shield' },
+    { label: 'Exploitable', value: k.exploitable, state: 'alert', icon: 'shield' },
   ];
 
   get columns() {
