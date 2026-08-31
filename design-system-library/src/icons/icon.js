@@ -77,8 +77,12 @@ export class DsIcon extends HTMLElement {
   }
 
   render() {
-    const name = this.getAttribute('name') || '';
-    const size = this.getAttribute('size') || '20';
+    /* Sanitise before either value reaches innerHTML below. Icon names are
+       sprite/font ids ([a-z0-9_-]) and size is numeric, so stripping to those
+       charsets is safer than escaping — a hostile value simply yields no icon
+       instead of breaking out of the <use href>/<svg width> attributes. */
+    const name = (this.getAttribute('name') || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    const size = String(parseFloat(this.getAttribute('size')) || 20);
 
     this.style.display = 'inline-flex';
     this.style.lineHeight = '0';
