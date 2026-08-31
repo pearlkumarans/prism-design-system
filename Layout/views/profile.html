@@ -83,18 +83,12 @@
   .pf-themes__colors .pf-color { width: 32px; height: 32px; align-self: center; border-radius: 8px; }
   .pf-theme { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--uems-border-tertiary); border-radius: 8px; background: var(--uems-bg-primary); cursor: pointer; font-family: inherit; font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
   .pf-theme.is-active { border-color: var(--uems-text-accent-link); box-shadow: 0 0 0 1px var(--uems-text-accent-link); color: var(--uems-text-accent-link); }
-  .pf-sw { width: 24px; height: 24px; border-radius: 4px; border: 1px solid var(--uems-border-tertiary); flex: 0 0 auto; position: relative; overflow: hidden; }
-  .pf-sw::before { content: ''; position: absolute; border-radius: 50%; z-index: 1; }
-  .pf-sw::after  { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 62%; clip-path: polygon(0 100%, 20% 42%, 38% 72%, 60% 28%, 82% 66%, 100% 48%, 100% 100%); }
-  .pf-sw--light { background: linear-gradient(170deg, #b9d2f4 0%, #d7e4fa 55%, #eef4fd 100%); }
-  .pf-sw--light::before { top: 4px; left: 5px; width: 6px; height: 6px; background: radial-gradient(circle at 35% 35%, #ffe7a3, #ffce5c); box-shadow: 0 0 4px rgba(255, 206, 92, .85); }
-  .pf-sw--light::after  { background: linear-gradient(180deg, #8ea2c8, #6f83ac); }
-  .pf-sw--dark { background: linear-gradient(170deg, #161b2a 0%, #232c44 60%, #2f3b58 100%); }
-  .pf-sw--dark::before { top: 4px; right: 6px; width: 6px; height: 6px; background: #e7ecf7; box-shadow: inset -2px 0 0 0 #232c44; }
-  .pf-sw--dark::after  { background: linear-gradient(180deg, #2c3650, #1c2336); }
-  .pf-sw--sys { background: linear-gradient(125deg, #b9d2f4 0 48%, #161b2a 52% 100%); }
-  .pf-sw--sys::before { top: 4px; left: 5px; width: 6px; height: 6px; background: radial-gradient(circle, #ffe7a3, #ffce5c); box-shadow: 0 0 3px rgba(255, 206, 92, .7); }
-  .pf-sw--sys::after  { background: linear-gradient(125deg, #7385ad 0 48%, #283250 52% 100%); }
+  /* Mode icons — the same set the right-pane theme hover menu uses (sun / moon /
+     half-filled circle), so the two appearance choosers read identically.
+     currentColor means the icon follows .pf-theme's active accent colour. */
+  .pf-theme__ico { width: 20px; height: 20px; flex: 0 0 auto; display: inline-flex;
+    align-items: center; justify-content: center; color: currentColor; }
+  .pf-theme__ico svg { display: block; }
   .pf-mobile { display: flex; gap: 12px; align-items: flex-start; margin-top: auto; }
   .pf-mobile__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
   .pf-stores { display: flex; gap: 8px; margin-top: 2px; }
@@ -145,8 +139,13 @@
   .pf-size { width: 40px; height: 40px; border: 1px solid var(--uems-border-secondary); border-radius: 8px; background: var(--uems-bg-primary); color: var(--uems-text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: var(--font-weight-semibold); }
   .pf-size.is-active { border-color: var(--uems-text-accent-link); color: var(--uems-text-accent-link); }
   .pf-colors { display: flex; align-items: center; gap: 8px; }
-  .pf-color { width: 34px; height: 34px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; display: flex; align-items: center; justify-content: center; color: #fff; }
-  .pf-color.is-active { box-shadow: 0 0 0 1.5px var(--uems-bg-primary), 0 0 0 2.5px var(--uems-text-accent-link); }
+  /* Accent swatches — same treatment as the right-pane theme popover's
+     .appr-color: no inset border, a white tick revealed on select, and a 1px/2px
+     ring (page-coloured inner gap + accent outer). The tick is white because the
+     swatch sets only `background` inline; an inline `color` would make
+     currentColor match the swatch and the tick would vanish. */
+  .pf-color { width: 34px; height: 34px; border-radius: 8px; cursor: pointer; border: 0; padding: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .pf-color.is-active { box-shadow: 0 0 0 1px var(--uems-bg-primary), 0 0 0 2px var(--uems-text-accent-link); }
   .pf-color ds-icon { opacity: 0; } .pf-color.is-active ds-icon { opacity: 1; }
   .pf-color-sep { width: 1px; height: 24px; background: var(--uems-border-tertiary); }
   .pf-rowlink { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
@@ -188,15 +187,15 @@
         <div class="pf-rowtitle"><span data-i18n="pf.trial">Trial version</span> <ds-badge variant="subtle" state="important" size="medium" shape="rounded" data-i18n="pf.daysLeft">7 days left</ds-badge></div>
         <div class="pf-muted" data-i18n="pf.trialDesc">Upgrade now to keep your data and features.</div>
       </div>
-      <ds-button class="pf-cta" variant="outline" size="small" data-i18n="pf.getQuote">Get Quote</ds-button>
+      <ds-button class="pf-cta" variant="surface" size="small" data-i18n="pf.getQuote">Get Quote</ds-button>
     </ds-container>
-    <ds-container class="pf-card pf-trial pf-demo" radius="lg" style="--ds-container-bg: var(--uems-bg-info-primary); --ds-container-border-width: 0;">
+    <ds-container class="pf-card pf-trial pf-demo" radius="lg" style="--ds-container-bg: var(--uems-bg-accent-primary); --ds-container-border-width: 0;">
       <span class="pf-trial__ic"><ds-icon name="calendar" size="20"></ds-icon></span>
       <div class="pf-trial__body">
         <div class="pf-rowtitle" data-i18n="pf.requestDemo">Request a demo</div>
         <div class="pf-muted" data-i18n="pf.knowMore">Want to know more?</div>
       </div>
-      <ds-button class="pf-cta" variant="outline" size="small" data-i18n="pf.bookNow">Book Now</ds-button>
+      <ds-button class="pf-cta" variant="surface" size="small" data-i18n="pf.bookNow">Book Now</ds-button>
     </ds-container>
     <ds-container class="pf-card pf-grid" variant="outline" radius="lg">
       <button type="button" class="pf-link" data-pf-nav="talk"><ds-icon name="calling" size="18"></ds-icon> <span data-i18n="pf.talk">Talk with us</span></button>
@@ -210,12 +209,12 @@
         <ds-text-link href="#" variant="primary" size="small" data-pf-advanced data-i18n="pf.advanced">Advanced</ds-text-link>
       </div>
       <div class="pf-themes">
-        <button type="button" class="pf-theme is-active" data-pf-theme="light"><span class="pf-sw pf-sw--light"></span><span data-i18n="pf.light">Light</span></button>
-        <button type="button" class="pf-theme" data-pf-theme="dark"><span class="pf-sw pf-sw--dark"></span><span data-i18n="pf.dark">Dark</span></button>
-        <button type="button" class="pf-theme" data-pf-theme="system"><span class="pf-sw pf-sw--sys"></span><span data-i18n="pf.system">System</span></button>
+        <button type="button" class="pf-theme is-active" data-pf-theme="light"><span class="pf-theme__ico"><ds-icon name="sun" size="18"></ds-icon></span><span data-i18n="pf.light">Light</span></button>
+        <button type="button" class="pf-theme" data-pf-theme="dark"><span class="pf-theme__ico"><ds-icon name="moon" size="18"></ds-icon></span><span data-i18n="pf.dark">Dark</span></button>
+        <button type="button" class="pf-theme" data-pf-theme="system"><span class="pf-theme__ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.6a7.4 7.4 0 0 0 0 14.8z" fill="currentColor"/></svg></span><span data-i18n="pf.system">System</span></button>
         <div class="pf-colors pf-themes__colors">
-          <button type="button" class="pf-color is-active" data-pfcolor data-theme-fam="blue" style="background:#2C66DD;color:#2C66DD" aria-label="Blue"><ds-icon name="check" size="14"></ds-icon></button>
-          <button type="button" class="pf-color" data-pfcolor data-theme-fam="green" style="background:#1E8E3E;color:#1E8E3E" aria-label="Green"><ds-icon name="check" size="14"></ds-icon></button>
+          <button type="button" class="pf-color is-active" data-pfcolor data-theme-fam="blue" style="background:#2C66DD" aria-label="Blue"><ds-icon name="check" size="14"></ds-icon></button>
+          <button type="button" class="pf-color" data-pfcolor data-theme-fam="green" style="background:#1E8E3E" aria-label="Green"><ds-icon name="check" size="14"></ds-icon></button>
         </div>
       </div>
     </ds-container>
@@ -257,6 +256,20 @@
   const pfMain = () => document.getElementById('pf-main');
   const pfSub  = () => document.getElementById('pf-sub');
   const ctx = () => window.ShellCtx || {};
+
+  /* A theme value carries BOTH halves — an accent family and a mode:
+       blue  → light | dark | system
+       green → green-light | green-dark | green-system
+     Every control has to round-trip both. Dropping one is why choosing Dark used
+     to reset a green accent back to blue, and why choosing an accent while on
+     System collapsed it to light/dark. Mirrors RailPopover._combineTheme. */
+  const themeFamOf  = (v) => String(v).includes('green') ? 'green' : 'blue';
+  const themeModeOf = (v) => {
+    v = String(v);
+    return v.includes('system') ? 'system' : v.includes('dark') ? 'dark' : 'light';
+  };
+  const combineTheme = (fam, mode) => (fam === 'green' ? 'green-' + mode : mode);
+  const applyCombined = (fam, mode) => { if (ctx().applyTheme) ctx().applyTheme(combineTheme(fam, mode)); };
   const lang = () => ctx().lang || 'en';
   /* Arabic for the JS-built sub-view strings (main view translates via data-i18n) */
   const T_AR = {
@@ -355,7 +368,7 @@
     } else {
       box.innerHTML =
         `<div class="pf-field"><span class="pf-field__label">${tr('Appearance')}</span><div class="pf-muted">${tr('Choose the mode in which you want to view your product.')}</div>` +
-          `<div class="pf-themes" style="margin-top:10px"><button type="button" class="pf-theme" data-pf-theme="light"><span class="pf-sw pf-sw--light"></span>${tr('Light')}</button><button type="button" class="pf-theme" data-pf-theme="dark"><span class="pf-sw pf-sw--dark"></span>${tr('Dark')}</button><button type="button" class="pf-theme" data-pf-theme="system"><span class="pf-sw pf-sw--sys"></span>${tr('System')}</button></div></div>` +
+          `<div class="pf-themes" style="margin-top:10px"><button type="button" class="pf-theme" data-pf-theme="light"><span class="pf-theme__ico"><ds-icon name="sun" size="18"></ds-icon></span>${tr('Light')}</button><button type="button" class="pf-theme" data-pf-theme="dark"><span class="pf-theme__ico"><ds-icon name="moon" size="18"></ds-icon></span>${tr('Dark')}</button><button type="button" class="pf-theme" data-pf-theme="system"><span class="pf-theme__ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.6a7.4 7.4 0 0 0 0 14.8z" fill="currentColor"/></svg></span>${tr('System')}</button></div></div>` +
         `<div class="pf-divider"></div>` +
         `<div class="pf-field"><span class="pf-field__label">${tr('Navigation')}</span><div class="pf-muted">${tr('Select the navigation to be applied to your product.')}</div>` +
           `<div class="pf-navs" style="margin-top:10px"><div class="pf-nav pf-nav--top" data-nav="top"><div class="pf-nav__thumb"></div><div class="pf-nav__lbl">${tr('Top Navigation')}</div></div><div class="pf-nav pf-nav--left" data-nav="left"><div class="pf-nav__thumb"></div><div class="pf-nav__lbl">${tr('Left Navigation')}</div></div></div></div>` +
@@ -367,7 +380,7 @@
         `<div class="pf-rowlink"><div><div class="pf-field__label">${tr('Table View Preferences')}</div><div class="pf-rowlink__sub">${tr('Customize the table view settings to suit your preferences')}</div></div><ds-icon name="chevron-right" size="18"></ds-icon></div>` +
         `<div class="pf-divider"></div>` +
         `<div class="pf-field"><span class="pf-field__label">${tr('Theme')}</span><div class="pf-muted">${tr('Select the theme to be applied to your product.')}</div>` +
-          `<div class="pf-colors" style="margin-top:10px">${[['#2C66DD', 'blue'], ['#1E8E3E', 'green'], ['#D5304A', ''], ['#6B4FD8', '']].map(([c, fam]) => `<button type="button" class="pf-color" data-pfcolor${fam ? ` data-theme-fam="${fam}"` : ''} style="background:${c};color:${c}"><ds-icon name="check" size="14"></ds-icon></button>`).join('')}<span class="pf-color-sep"></span><ds-text-link href="#" variant="primary" size="small">${tr('More')}</ds-text-link></div></div>`;
+          `<div class="pf-colors" style="margin-top:10px">${[['#2C66DD', 'blue'], ['#1E8E3E', 'green'], ['#D5304A', ''], ['#6B4FD8', '']].map(([c, fam]) => `<button type="button" class="pf-color" data-pfcolor${fam ? ` data-theme-fam="${fam}"` : ''} style="background:${c}"><ds-icon name="check" size="14"></ds-icon></button>`).join('')}<span class="pf-color-sep"></span><ds-text-link href="#" variant="primary" size="small">${tr('More')}</ds-text-link></div></div>`;
       const font = box.querySelector('#pf-font'); font.options = opts(['Zoho Puvi', 'Lato', 'Roboto', 'Inter', 'Poppins']); font.value = _pfFont;
       const FONT_STACK = { 'Lato': '"Lato", sans-serif', 'Roboto': '"Roboto", sans-serif', 'Inter': '"Inter", sans-serif', 'Poppins': '"Poppins", sans-serif' };
       font.addEventListener('ds-input-select-change', (e) => {
@@ -406,12 +419,12 @@
       box.querySelectorAll('.pf-color').forEach((b) => b.classList.toggle('is-active', b.dataset.themeFam === curFam));
       box.querySelectorAll('[data-pf-theme]').forEach((b) => b.addEventListener('click', () => {
         const m = b.dataset.pfTheme; const f = String(ctx().appr).includes('green') ? 'green' : 'blue';
-        ctx().applyTheme && ctx().applyTheme(m === 'system' ? 'system' : (f === 'green' ? 'green-' + m : m));
+        applyCombined(f, m);
         box.querySelectorAll('[data-pf-theme]').forEach((x) => x.classList.toggle('is-active', x === b));
       }));
       box.querySelectorAll('.pf-color').forEach((b) => b.addEventListener('click', () => {
         const fam = b.dataset.themeFam;
-        if (fam) { const md = String(ctx().appr).includes('dark') ? 'dark' : 'light'; ctx().applyTheme && ctx().applyTheme(fam === 'green' ? 'green-' + md : md); }
+        if (fam) applyCombined(fam, themeModeOf(ctx().appr));
         box.querySelectorAll('.pf-color').forEach((x) => x.classList.toggle('is-active', x === b));
       }));
       box.querySelectorAll('[data-pfsize]').forEach((b) => b.addEventListener('click', () => {
@@ -463,14 +476,14 @@
   /* Appearance → "Advanced" jumps straight to Personalize ▸ Preferences */
   panel().querySelector('[data-pf-advanced]')?.addEventListener('click', (e) => { e.preventDefault(); _pfTab = 'prefs'; openPfSub('personalize'); });
   panel().querySelectorAll('#pf-main [data-pf-theme]').forEach((b) => b.addEventListener('click', () => {
-    ctx().applyTheme && ctx().applyTheme(b.dataset.pfTheme);
-    panel().querySelectorAll('#pf-main [data-pf-theme]').forEach((x) => x.classList.toggle('is-active', x === b));
+    applyCombined(themeFamOf(ctx().appr), b.dataset.pfTheme);
+    syncMainAppearance();
   }));
   /* Appearance ▸ Theme colour swatches — apply the accent family (blue / green). */
   panel().querySelectorAll('#pf-main [data-pfcolor]').forEach((b) => b.addEventListener('click', () => {
     const fam = b.dataset.themeFam;
-    if (fam) { const md = String(ctx().appr).includes('dark') ? 'dark' : 'light'; ctx().applyTheme && ctx().applyTheme(fam === 'green' ? 'green-' + md : md); }
-    panel().querySelectorAll('#pf-main [data-pfcolor]').forEach((x) => x.classList.toggle('is-active', x === b));
+    if (fam) applyCombined(fam, themeModeOf(ctx().appr));
+    syncMainAppearance();
   }));
 
   /* Populate the header from the live session (userMeta via PrismAPI.auth.whoami).
@@ -488,7 +501,18 @@
     const em = p.querySelector('[data-pf-email]'); if (em && !u.email) em.hidden = true;
   }
 
-  function show() { closePfSub(); const p = panel(); if (p) p.open(); populateUser(); }
+  /* Reflect the live theme on the main Appearance card. Its active mode + accent
+     were hardcoded in the markup (Light + Blue), so opening the drawer on a
+     green-dark theme showed the wrong pair selected. */
+  function syncMainAppearance() {
+    const p = panel(); if (!p) return;
+    const appr = ctx().appr || document.documentElement.getAttribute('data-theme') || 'light';
+    const mode = themeModeOf(appr), fam = themeFamOf(appr);
+    p.querySelectorAll('#pf-main [data-pf-theme]').forEach((x) => x.classList.toggle('is-active', x.dataset.pfTheme === mode));
+    p.querySelectorAll('#pf-main [data-pfcolor]').forEach((x) => x.classList.toggle('is-active', x.dataset.themeFam === fam));
+  }
+
+  function show() { closePfSub(); const p = panel(); if (p) p.open(); populateUser(); syncMainAppearance(); }
   function hide() { const p = panel(); if (p) p.close(); }
   /* Custom header close (matches the help/apps drawers' small tertiary-grey X). */
   panel().querySelector('[data-pf-close]')?.addEventListener('click', hide);
