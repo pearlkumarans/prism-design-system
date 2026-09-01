@@ -51,6 +51,16 @@ export class RailPopover {
         this.hide();
       });
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.hide(); });
+      // The Appearance card renders its checked row + accent swatch FROM the theme,
+      // so a theme change made elsewhere (profile drawer, or any host calling
+      // applyTheme) left a stale selection showing while the card was open. Its own
+      // clicks already re-render; this covers everything else.
+      if (typeof MutationObserver !== 'undefined') {
+        this._themeMo = new MutationObserver(() => {
+          if (this.isOpen() && this.card === 'appearance') this.showAppearance();
+        });
+        this._themeMo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+      }
     }
     return this.el;
   }

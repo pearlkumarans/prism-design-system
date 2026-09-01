@@ -1755,6 +1755,11 @@
     document.documentElement.setAttribute('data-theme', theme);
     try { localStorage.setItem('uems-theme', theme); } catch (_) {}
     document.querySelectorAll('ds-right-pane').forEach((rp) => rp.setAttribute('theme', theme));
+    /* If the Appearance card is open, re-render it: its checked row + accent
+       swatch come FROM the theme, so an external change (the profile drawer calls
+       ShellCtx.applyTheme, not setTheme) would leave a stale selection on screen. */
+    if (typeof popEl !== 'undefined' && popEl && popEl.classList.contains('open')
+        && typeof _card !== 'undefined' && _card === 'appearance') renderAppearance();
   }
   function setTheme(v) { applyTheme(v); renderAppearance(); }   /* Appearance menu: also re-render the menu */
 

@@ -112,6 +112,14 @@ export class DsRightPane extends HTMLElement {
     if (this._pendingTop !== undefined) { this._customTop = this._pendingTop; this._pendingTop = undefined; }
     if (this._pendingBottom !== undefined) { this._customBottom = this._pendingBottom; this._pendingBottom = undefined; }
     this._render();
+
+    /* Keep the toggle's glyph honest when the theme is changed elsewhere (profile
+       drawer, appearance popover, or a host calling applyTheme). Watching the
+       attribute is host-agnostic — no shell wiring required. */
+    if (typeof MutationObserver !== 'undefined' && !this._themeMo) {
+      this._themeMo = new MutationObserver(() => this._syncThemeBtn());
+      this._themeMo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    }
   }
 
   attributeChangedCallback() { if (this._root) this._render(); }
@@ -127,8 +135,34 @@ export class DsRightPane extends HTMLElement {
     return this.getAttribute(attrName) !== 'false';
   }
 
+  /* The toggle's glyph reflects the ACTIVE theme, and <html data-theme> is the
+     single source of truth for that — the theme can be changed from the profile
+     drawer or the appearance popover, and neither touches this element.
+     Ambient therefore WINS over our own `theme` attribute: the toggle sets that
+     attribute on click, so preferring it would let one click freeze the glyph and
+     make every later external change invisible (the original bug, just moved).
+     The attribute remains the fallback for standalone use, where no host applies
+     a document theme. Any dark family counts as dark — data-theme is one of
+     light | dark | night | green-light | green-dark. */
+  _resolveTheme() {
+    const ambient = (typeof document !== 'undefined'
+      && document.documentElement.getAttribute('data-theme')) || '';
+    if (ambient) return /dark|night/i.test(ambient) ? 'dark' : 'light';
+    return enumAttr(this, 'theme', THEMES, 'light');
+  }
+
+  /* Cheap sync for a theme flip — swap the glyph + label instead of re-rendering
+     the whole rail (which would rebuild tooltips and re-run the overflow fit). */
+  _syncThemeBtn() {
+    const btn = this._root?.querySelector('.ds-right-pane__btn[data-id="__theme__"]');
+    if (!btn) return;
+    const theme = this._resolveTheme();
+    btn.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`);
+    btn.querySelector('ds-icon')?.setAttribute('name', theme === 'dark' ? 'sun' : 'moon');
+  }
+
   _render() {
-    const theme = enumAttr(this, 'theme', THEMES, 'light');
+    const theme = this._resolveTheme();
     /* RTL from our own `rtl` attribute OR an ancestor's `dir="rtl"` (apps often
        flip direction on <html> only). Inward-pointing tooltips and the mirrored
        layout depend on this, so honour the ambient direction too — the host must
@@ -420,6 +454,8 @@ export class DsRightPane extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this._themeMo?.disconnect();
+    this._themeMo = null;
     if (this._ro) { this._ro.disconnect(); this._ro = null; }
     if (this._reflowRaf) { cancelAnimationFrame(this._reflowRaf); this._reflowRaf = 0; }
     clearTimeout(this._reflowT);
