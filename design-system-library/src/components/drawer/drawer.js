@@ -131,7 +131,7 @@ export class DsDrawer extends HTMLElement {
 
     this.innerHTML = `
       <div class="ds-drawer__overlay" data-overlay></div>
-      <aside class="ds-drawer__panel" role="dialog" aria-modal="true"
+      <div class="ds-drawer__panel" role="dialog" aria-modal="true"
              aria-labelledby="${this._titleId}" tabindex="-1" data-panel>
         <div class="ds-drawer__header" data-header>
           <ds-icon-button class="ds-drawer__back" shape="square" type="tertiary-grey" size="large" icon="chevron-left" label="Back" no-tooltip data-back hidden></ds-icon-button>
@@ -147,7 +147,7 @@ export class DsDrawer extends HTMLElement {
           <div class="ds-drawer__spacer"></div>
           <div class="ds-drawer__footer-actions" data-footer-actions></div>
         </div>
-      </aside>`;
+      </div>`;
 
     this._overlay = this.querySelector('[data-overlay]');
     this._panel = this.querySelector('[data-panel]');

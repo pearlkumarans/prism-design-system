@@ -417,9 +417,13 @@ export class DsDropdownMenu extends HTMLElement {
        and the selection bar), show a "No options" row, not a 0-height surface. */
     const renderable = this._items.filter((it) => it && !['heading', 'divider', 'selection-bar'].includes(it.type));
     const emptyText = this.getAttribute('empty-text') || 'No options';
+    /* role="none" on the <ul>: the panel is role=menu (or listbox), whose only
+       allowed children are the item roles — an intervening <ul> would break both
+       aria-required-children (menu) and aria-required-parent (menuitem). none
+       removes the <ul> from the a11y tree so the <li> items associate directly. */
     const itemsHTML = renderable.length === 0
-      ? `<ul class="ds-dropdown-menu__list"><li class="ds-dropdown-menu__empty" role="presentation">${escapeHtml(emptyText)}</li></ul>`
-      : `<ul class="ds-dropdown-menu__list">${this._items.map((it, idx) => this._renderItem(it, idx, type)).join('')}</ul>`;
+      ? `<ul class="ds-dropdown-menu__list" role="none"><li class="ds-dropdown-menu__empty" role="presentation">${escapeHtml(emptyText)}</li></ul>`
+      : `<ul class="ds-dropdown-menu__list" role="none">${this._items.map((it, idx) => this._renderItem(it, idx, type)).join('')}</ul>`;
 
     let footerHTML = '';
     if (showFooter) {
