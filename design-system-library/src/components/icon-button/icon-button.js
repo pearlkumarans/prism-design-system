@@ -24,7 +24,7 @@ const ICON_PX = { xl: 20, large: 16, small: 12, xsmall: 8 }; /* FIXED per spec â
 
 export class DsIconButton extends HTMLElement {
   static get observedAttributes() {
-    return ['shape', 'type', 'size', 'icon', 'label', 'disabled', 'selected', 'tooltip-position'];
+    return ['shape', 'type', 'size', 'icon', 'label', 'disabled', 'selected', 'tooltip-position', 'no-tooltip'];
   }
 
   connectedCallback() {

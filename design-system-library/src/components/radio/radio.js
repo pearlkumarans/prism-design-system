@@ -22,6 +22,7 @@ injectCss('ds-radio-css', './radio.css', import.meta.url);
 const SIZES = ['s', 'm', 'l', 'mobile'];
 /* Legacy aliases kept so existing size="small|medium" usages still work. */
 const SIZE_ALIAS = { small: 's', medium: 'm' };
+const _warnedSize = new Set();   // dedup the S2-style invalid-size warning
 /* Help-icon px per size — matches the control scale (S 16 · M 20 · L 24 · Mobile 20). */
 const HELP_ICON_SIZE = { s: 16, m: 20, l: 24, mobile: 20 };
 
@@ -105,6 +106,12 @@ export class DsRadio extends HTMLElement {
     const rawSize = (this.getAttribute('size') || '').toLowerCase();
     const aliased = SIZE_ALIAS[rawSize] || rawSize;
     const size = SIZES.includes(aliased) ? aliased : 's';
+    /* Custom validation (not enumAttr, because we accept the small/medium aliases)
+       — but still surface a set-but-invalid value the way enumAttr would (S2). */
+    if (rawSize && !SIZES.includes(aliased) && typeof console !== 'undefined' && !_warnedSize.has(rawSize)) {
+      _warnedSize.add(rawSize);
+      console.warn(`[ds] Unknown size="${rawSize}" — expected one of [${SIZES.join(', ')}] (or aliases small/medium); using "s".`, this);
+    }
     const checked = boolAttr(this, 'checked');
     const disabled = boolAttr(this, 'disabled');
     const error = boolAttr(this, 'error');
