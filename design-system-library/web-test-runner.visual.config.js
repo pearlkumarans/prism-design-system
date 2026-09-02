@@ -50,7 +50,12 @@ export default {
     }),
   ],
   testRunnerHtml: (testFramework) => `<!doctype html>
-    <html>
+    <!-- Pin the theme: without an explicit data-theme, the tokens' @media
+         (prefers-color-scheme: dark) block flips the whole render to the dark
+         palette whenever headless Chrome reports dark — non-deterministic
+         baselines. data-theme="light" makes [data-theme="light"] win and neuters
+         the :root:not([data-theme]) dark override. -->
+    <html data-theme="light">
       <head>
         <script>
           window.UEMS_ICON_SPRITE = '/src/icons/icons.svg';
