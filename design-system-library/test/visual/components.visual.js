@@ -19,6 +19,33 @@ import '../../src/components/inline-alert/inline-alert.js';
 import '../../src/components/kpi-card/kpi-card.js';
 import '../../src/components/stepper/stepper.js';
 import '../../src/components/tab-filter/tab-filter.js';
+import '../../src/components/counter/counter.js';
+import '../../src/components/divider/divider.js';
+import '../../src/components/text-link/text-link.js';
+import '../../src/components/avatar/avatar.js';
+import '../../src/components/icon-button/icon-button.js';
+import '../../src/components/text-input/text-input.js';
+import '../../src/components/text-area/text-area.js';
+import '../../src/components/search-field/search-field.js';
+import '../../src/components/otp-input/otp-input.js';
+import '../../src/components/slider/slider.js';
+import '../../src/components/radio-group/radio-group.js';
+import '../../src/components/checkbox-group/checkbox-group.js';
+import '../../src/components/field-helper/field-helper.js';
+import '../../src/components/input-select/input-select.js';
+import '../../src/components/token-field/token-field.js';
+import '../../src/components/description-list/description-list.js';
+import '../../src/components/list/list.js';
+import '../../src/components/data-table/data-table.js';
+import '../../src/components/empty-state/empty-state.js';
+import '../../src/components/card/card.js';
+import '../../src/components/breadcrumb/breadcrumb.js';
+import '../../src/components/section-header/section-header.js';
+import '../../src/components/page-header/page-header.js';
+import '../../src/components/tab-bar-horizontal/tab-bar-horizontal.js';
+import '../../src/components/accordion/accordion.js';
+import '../../src/components/dropdown-menu/dropdown-menu.js';
+import '../../src/components/toast/toast.js';
 
 const shot = async (el, name) => { await settleStyles(); await visualDiff(el, name); };
 /* Fixed-width white frame for prop-driven / layout components. */
@@ -77,5 +104,182 @@ describe('visual — composed', () => {
       { value: 'all', label: 'All' }, { value: 'open', label: 'Open' }, { value: 'closed', label: 'Closed' },
     ];
     await shot(el, 'tab-filter-3');
+  });
+});
+
+describe('visual — buttons', () => {
+  it('button-tertiary', async () => {
+    await shot(await fixture(html`<ds-button variant="tertiary">Learn more</ds-button>`), 'button-tertiary');
+  });
+  it('button-danger', async () => {
+    await shot(await fixture(html`<ds-button variant="danger">Delete</ds-button>`), 'button-danger');
+  });
+  it('button-outline', async () => {
+    await shot(await fixture(html`<ds-button variant="outline">Export</ds-button>`), 'button-outline');
+  });
+  it('button-with-icon', async () => {
+    await shot(await fixture(html`<ds-button variant="primary" prefix-icon="plus">Add item</ds-button>`), 'button-with-icon');
+  });
+  it('button-loading', async () => {
+    await shot(await fixture(html`<ds-button variant="primary" loading>Saving</ds-button>`), 'button-loading');
+  });
+  it('icon-button', async () => {
+    await shot(await fixture(html`<ds-icon-button icon="settings" label="Settings"></ds-icon-button>`), 'icon-button');
+  });
+});
+
+describe('visual — indicators & chips', () => {
+  it('badge-subtle-warning', async () => {
+    await shot(await fixture(html`<ds-badge variant="subtle" state="warning">Warning</ds-badge>`), 'badge-subtle-warning');
+  });
+  it('tag-with-close', async () => {
+    await shot(await fixture(html`<ds-tag label="Marketing" variant="primary" show-close></ds-tag>`), 'tag-with-close');
+  });
+  it('counter', async () => {
+    await shot(await fixture(html`<ds-counter value="12" max="99"></ds-counter>`), 'counter');
+  });
+  it('toggle-off', async () => {
+    await shot(await fixture(html`<ds-toggle label="Wi-Fi"></ds-toggle>`), 'toggle-off');
+  });
+  it('checkbox-unchecked', async () => {
+    await shot(await fixture(html`<ds-checkbox label="Subscribe"></ds-checkbox>`), 'checkbox-unchecked');
+  });
+  it('text-link', async () => {
+    await shot(await fixture(html`<ds-text-link href="/docs">Read the docs</ds-text-link>`), 'text-link');
+  });
+  it('avatar-initials', async () => {
+    await shot(await fixture(html`<ds-avatar name="Jane Doe"></ds-avatar>`), 'avatar-initials');
+  });
+  it('progress-bar-indeterminate', async () => {
+    const el = await fixture(frame(html`<ds-progress-bar variant="indeterminate" label="Loading"></ds-progress-bar>`, '280px'));
+    await shot(el, 'progress-bar-indeterminate');
+  });
+  it('divider', async () => {
+    const el = await fixture(frame(html`<ds-divider></ds-divider>`, '280px'));
+    await shot(el, 'divider');
+  });
+});
+
+describe('visual — form fields', () => {
+  it('text-input', async () => {
+    const el = await fixture(frame(html`<ds-text-input label="Email" value="ada@example.com"></ds-text-input>`, '320px'));
+    await shot(el, 'text-input');
+  });
+  it('text-input-error', async () => {
+    const el = await fixture(frame(html`<ds-text-input label="Email" value="not-an-email" state="error" helper="Enter a valid email"></ds-text-input>`, '320px'));
+    await shot(el, 'text-input-error');
+  });
+  it('text-area', async () => {
+    const el = await fixture(frame(html`<ds-text-area label="Notes" value="A short note about this record."></ds-text-area>`, '320px'));
+    await shot(el, 'text-area');
+  });
+  it('search-field', async () => {
+    const el = await fixture(frame(html`<ds-search-field placeholder="Search devices…"></ds-search-field>`, '300px'));
+    await shot(el, 'search-field');
+  });
+  it('otp-input', async () => {
+    const el = await fixture(frame(html`<ds-otp-input length="6" value="123456" label="One-time code"></ds-otp-input>`, '320px'));
+    await shot(el, 'otp-input');
+  });
+  it('slider', async () => {
+    const el = await fixture(frame(html`<ds-slider type="single" label="Volume" value="60"></ds-slider>`, '300px'));
+    await shot(el, 'slider');
+  });
+  it('field-helper-error', async () => {
+    const el = await fixture(frame(html`<ds-field-helper text="This field is required" state="error"></ds-field-helper>`, '320px'));
+    await shot(el, 'field-helper-error');
+  });
+  it('radio-group', async () => {
+    const el = await fixture(frame(html`<ds-radio-group label="Plan" label-position="top"></ds-radio-group>`, '260px'));
+    el.querySelector('ds-radio-group').options = [
+      { value: 'basic', label: 'Basic', selected: true }, { value: 'pro', label: 'Pro' },
+    ];
+    await shot(el, 'radio-group');
+  });
+  it('checkbox-group', async () => {
+    const el = await fixture(frame(html`
+      <ds-checkbox-group label="Toppings">
+        <ds-checkbox label="Cheese" checked></ds-checkbox>
+        <ds-checkbox label="Olives"></ds-checkbox>
+      </ds-checkbox-group>`, '260px'));
+    await shot(el, 'checkbox-group');
+  });
+  it('input-select', async () => {
+    const el = await fixture(frame(html`<ds-input-select label="Region" value="us"></ds-input-select>`, '300px'));
+    el.querySelector('ds-input-select').options = [
+      { label: 'United States', value: 'us' }, { label: 'Canada', value: 'ca' },
+    ];
+    await shot(el, 'input-select');
+  });
+  it('token-field', async () => {
+    const el = await fixture(frame(html`<ds-token-field label="Tags"></ds-token-field>`, '320px'));
+    await shot(el, 'token-field');
+  });
+});
+
+describe('visual — content & data', () => {
+  it('description-list', async () => {
+    const el = await fixture(frame(html`<ds-description-list></ds-description-list>`, '340px'));
+    el.querySelector('ds-description-list').items = [
+      { term: 'Status', description: 'Active' }, { term: 'Owner', description: 'Jane Doe' }, { term: 'Region', description: 'US East' },
+    ];
+    await shot(el, 'description-list');
+  });
+  it('list', async () => {
+    const el = await fixture(frame(html`<ds-list></ds-list>`, '260px'));
+    el.querySelector('ds-list').items = ['Alpha', 'Beta', 'Gamma'];
+    await shot(el, 'list');
+  });
+  it('data-table', async () => {
+    const el = await fixture(frame(html`<ds-data-table selection-mode="none"></ds-data-table>`, '460px'));
+    const t = el.querySelector('ds-data-table');
+    t.columns = [{ id: 'name', header: 'Name', accessor: 'name' }, { id: 'role', header: 'Role', accessor: 'role' }];
+    t.rows = [{ id: '1', name: 'Ada Lovelace', role: 'Admin' }, { id: '2', name: 'Grace Hopper', role: 'User' }];
+    await shot(el, 'data-table');
+  });
+  it('empty-state', async () => {
+    const el = await fixture(frame(html`<ds-empty-state type="centered" title="No results" description="Try a different filter."></ds-empty-state>`, '380px'));
+    await shot(el, 'empty-state');
+  });
+  it('card', async () => {
+    const el = await fixture(frame(html`<ds-card><p style="margin:0">Card body content sits in the default slot.</p></ds-card>`, '320px'));
+    await shot(el, 'card');
+  });
+  it('toast', async () => {
+    const el = await fixture(frame(html`<ds-toast status="success" title="Saved" description="Your changes are live."></ds-toast>`, '380px'));
+    await shot(el, 'toast');
+  });
+});
+
+describe('visual — nav & structure', () => {
+  it('breadcrumb', async () => {
+    const el = await fixture(frame(html`<ds-breadcrumb><a href="/">Home</a><a href="/reports">Reports</a><a href="/reports/q3">Q3</a></ds-breadcrumb>`, '360px'));
+    await shot(el, 'breadcrumb');
+  });
+  it('section-header', async () => {
+    const el = await fixture(frame(html`<ds-section-header title="Team members"></ds-section-header>`, '360px'));
+    await shot(el, 'section-header');
+  });
+  it('page-header', async () => {
+    const el = await fixture(frame(html`<ds-page-header title="Devices" description="All managed endpoints"></ds-page-header>`, '460px'));
+    await shot(el, 'page-header');
+  });
+  it('tab-bar-horizontal', async () => {
+    const el = await fixture(frame(html`<ds-tab-bar-horizontal aria-label="Sections"></ds-tab-bar-horizontal>`, '420px'));
+    el.querySelector('ds-tab-bar-horizontal').items = [
+      { id: 'overview', label: 'Overview', icon: 'home' }, { id: 'activity', label: 'Activity', icon: 'activity' }, { id: 'members', label: 'Members', icon: 'mail-user' },
+    ];
+    await shot(el, 'tab-bar-horizontal');
+  });
+  it('accordion', async () => {
+    const el = await fixture(frame(html`<ds-accordion initial-expanded><span slot="title">Advanced settings</span><div slot="body">Body content inside the panel.</div></ds-accordion>`, '380px'));
+    await shot(el, 'accordion');
+  });
+  it('dropdown-menu-open', async () => {
+    const el = await fixture(frame(html`<ds-dropdown-menu open aria-label="Actions"></ds-dropdown-menu>`, '240px'));
+    el.querySelector('ds-dropdown-menu').items = [
+      { label: 'Edit', value: 'edit', icon: 'edit' }, { label: 'Duplicate', value: 'dup', icon: 'copy' }, { label: 'Delete', value: 'del', icon: 'trash', danger: true },
+    ];
+    await shot(el, 'dropdown-menu-open');
   });
 });
