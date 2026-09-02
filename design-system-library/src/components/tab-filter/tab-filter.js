@@ -63,9 +63,22 @@ export class DsTabFilter extends HTMLElement {
   attributeChangedCallback(name) {
     if (!this._mounted) return;
     /* A value change just slides the active card to the new tab — no rebuild,
-       so the indicator can animate across. Everything else rebuilds. */
+       so the indicator can animate across. The group's aria-label/labelledby are
+       set on the root only, so update them in place too. Everything else (size/
+       disabled/rtl, which change option markup + geometry) rebuilds. */
     if (name === 'value') this._syncActive(true);
+    else if (name === 'aria-label' || name === 'aria-labelledby') this._paintAria();
     else this._render();
+  }
+
+  /* Reflect the group's accessible name onto the root — no option rebuild. */
+  _paintAria() {
+    const ariaLabel = this.getAttribute('aria-label');
+    const ariaLabelledBy = this.getAttribute('aria-labelledby');
+    if (ariaLabel) this._root.setAttribute('aria-label', ariaLabel);
+    else this._root.removeAttribute('aria-label');
+    if (ariaLabelledBy) this._root.setAttribute('aria-labelledby', ariaLabelledBy);
+    else this._root.removeAttribute('aria-labelledby');
   }
 
   disconnectedCallback() {

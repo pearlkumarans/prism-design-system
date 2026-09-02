@@ -103,6 +103,7 @@ export class DsBadge extends HTMLElement {
       wrap.className = 'ds-badge__icon';
       wrap.innerHTML = `<ds-icon name="${escapeHtml(iconName)}" size="${this._iconPx()}"></ds-icon>`;
       this.prepend(wrap);
+      this._iconKey = `${iconName}|${this._iconPx()}`;
     }
     if (labelAttr && !this.querySelector('.ds-badge__label')) {
       const span = document.createElement('span');
@@ -127,16 +128,25 @@ export class DsBadge extends HTMLElement {
     const iconWrap = this.querySelector('.ds-badge__icon');
     if (iconName) {
       const px = this._iconPx();
+      const key = `${iconName}|${px}`;
       if (iconWrap) {
-        iconWrap.innerHTML = `<ds-icon name="${escapeHtml(iconName)}" size="${px}"></ds-icon>`;
+        /* Only re-parse the <ds-icon> when the name/size actually changed — a bare
+           state/size/variant toggle re-runs _update but must not rebuild the icon
+           (the button memoization pattern). */
+        if (key !== this._iconKey) {
+          iconWrap.innerHTML = `<ds-icon name="${escapeHtml(iconName)}" size="${px}"></ds-icon>`;
+          this._iconKey = key;
+        }
       } else if (!this.querySelector('[slot="icon"]')) {
         const w = document.createElement('span');
         w.className = 'ds-badge__icon';
         w.innerHTML = `<ds-icon name="${escapeHtml(iconName)}" size="${px}"></ds-icon>`;
         this.prepend(w);
+        this._iconKey = key;
       }
     } else if (iconWrap && !iconWrap.querySelector('[slot="icon"]')) {
       iconWrap.remove();
+      this._iconKey = '';
     }
 
     // Update label

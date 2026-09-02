@@ -68,7 +68,14 @@ export class DsTooltip extends HTMLElement {
     if (this._tip && this._tip.parentNode) this._tip.parentNode.removeChild(this._tip);
   }
 
-  attributeChangedCallback() { if (this._tip) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this._tip) return;
+    /* Visual-only attrs (position/theme/rtl) just re-class + reposition the tip —
+       no need to rebuild innerHTML (which re-parses the <ds-icon>). Structural
+       attrs (text/icon/show-icon) change the content, so they rebuild. */
+    if (name === 'position' || name === 'theme' || name === 'rtl') this._paintState();
+    else this._render();
+  }
 
   _show = () => {
     clearTimeout(this._hideT);
@@ -185,21 +192,26 @@ export class DsTooltip extends HTMLElement {
     t.classList.add(`ds-tooltip__tip--${posClass}`);
   }
 
-  _render() {
-    const text = this.getAttribute('text') || '';
+  /* Class + direction + reposition only — no innerHTML touch. */
+  _paintState() {
     const position = enumAttr(this, 'position', POSITIONS, 'up-center');
     const theme = enumAttr(this, 'theme', THEMES, 'dark');
-    /* Spec: Show Icon defaults ON. Hide only when caller sets show-icon="false". */
-    const showIcon = !this.hasAttribute('show-icon') || this.getAttribute('show-icon') !== 'false';
-    const icon = this.getAttribute('icon') || 'info-circle';
     const rtl = boolAttr(this, 'rtl');
-
     /* --floating makes the tip position:fixed and clears the variant anchor
        offsets; the position class still drives the arrow direction. */
     this._tip.className = `ds-tooltip__tip ds-tooltip__tip--floating ds-tooltip__tip--${theme} ds-tooltip__tip--${position}`;
     if (rtl) this._tip.setAttribute('dir', 'rtl');
     else this._tip.removeAttribute('dir');
+    if (this._open) this._position();
+  }
 
+  _render() {
+    const text = this.getAttribute('text') || '';
+    /* Spec: Show Icon defaults ON. Hide only when caller sets show-icon="false". */
+    const showIcon = !this.hasAttribute('show-icon') || this.getAttribute('show-icon') !== 'false';
+    const icon = this.getAttribute('icon') || 'info-circle';
+
+    this._paintState();
     this._tip.innerHTML = `
       ${showIcon ? `<span class="ds-tooltip__icon" aria-hidden="true"><ds-icon name="${escapeHtml(icon)}" size="20"></ds-icon></span>` : ''}
       <span class="ds-tooltip__text">${escapeHtml(text)}</span>
