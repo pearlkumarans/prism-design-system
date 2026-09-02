@@ -36,24 +36,23 @@ export class DsContent extends HTMLElement {
     if (this._mounted) this._render();
   }
 
+  /* Single source of truth for the framed state — the explicit `framed`
+     attribute wins; otherwise auto-frame when the previous sibling (typically
+     ds-sidebar-l2) is hidden. Runs on mount AND from the observer, so the
+     initial state is honoured too (previously `_render` ran after the
+     auto-frame apply() and clobbered it). */
   _render() {
-    const framed = boolAttr(this, 'framed');
+    const prev = this.previousElementSibling;
+    const framed = boolAttr(this, 'framed')
+      || (!this.hasAttribute('framed') && !!prev && prev.classList.contains('is-hidden'));
     this.classList.toggle('ds-content--framed', framed);
   }
 
-  /* Auto-frame: observe the previous sibling (typically ds-sidebar-l2).
-     When it gains `is-hidden`, set framed=true; when it loses it, framed=false.
-     Apps can still override with the explicit `framed` attribute. */
+  /* Observe the previous sibling's class so a runtime is-hidden toggle re-frames. */
   _wireAutoFrame() {
     const prev = this.previousElementSibling;
     if (!prev) return;
-    const apply = () => {
-      if (this.hasAttribute('framed')) return;  // explicit override wins
-      const isFramed = prev.classList.contains('is-hidden');
-      this.classList.toggle('ds-content--framed', isFramed);
-    };
-    apply();
-    this._observer = new MutationObserver(apply);
+    this._observer = new MutationObserver(() => this._render());
     this._observer.observe(prev, { attributes: true, attributeFilter: ['class'] });
   }
 
