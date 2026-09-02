@@ -208,4 +208,19 @@ describe('ds-text-area — teardown', () => {
     expect(el.querySelectorAll('textarea').length, 'exactly one textarea after reconnect').to.equal(1);
     expect(el.value).to.equal('keep');
   });
+
+  it('drops the resize-drag window listeners when disconnected mid-drag', async () => {
+    const el = await fixture(html`<ds-text-area label="Notes"></ds-text-area>`);
+    await nextFrame();
+    const grip = el.querySelector('.ds-text-area__resizer');
+    expect(grip, 'resize grip present').to.exist;
+
+    // begin a drag — pointermove/pointerup are added to window and the teardown stored
+    grip.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10 }));
+    expect(el._endDrag, 'active-drag teardown is stored on the host').to.be.a('function');
+
+    // disconnect BEFORE pointerup — disconnectedCallback must tear the listeners down
+    el.remove();
+    expect(el._endDrag, 'disconnect mid-drag dropped the window listeners').to.equal(null);
+  });
 });

@@ -31,6 +31,12 @@ export class DsTextArea extends HTMLElement {
     this._render();
   }
 
+  disconnectedCallback() {
+    /* Drop any in-flight resize drag's window listeners — otherwise a disconnect
+       mid-drag leaks pointermove/pointerup handlers firing on a detached field. */
+    if (this._endDrag) this._endDrag();
+  }
+
   attributeChangedCallback(name) {
     if (!this._root) return;
     if (name === 'value' && this._textarea) this._textarea.value = this.getAttribute('value') ?? '';
@@ -221,9 +227,13 @@ export class DsTextArea extends HTMLElement {
       const up = () => {
         window.removeEventListener('pointermove', move);
         window.removeEventListener('pointerup', up);
+        this._endDrag = null;
       };
       window.addEventListener('pointermove', move);
       window.addEventListener('pointerup', up);
+      /* Expose the teardown so a disconnect mid-drag can drop the window listeners
+         (they'd otherwise keep firing _applySize on a detached field). */
+      this._endDrag = up;
     });
 
     /* Double-click resets to the natural (attribute-driven) size. */
