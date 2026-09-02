@@ -60,8 +60,42 @@ export class DsTextInput extends HTMLElement {
 
   attributeChangedCallback(name) {
     if (!this._root) return;
-    if (name === 'value' && this._input) this._input.value = this.getAttribute('value') ?? '';
+    if (name === 'value' && this._input) { this._input.value = this.getAttribute('value') ?? ''; return; }
+    /* Visual-only attrs (size/state/rtl) don't change the field's structure — a
+       full _render() here would rebuild innerHTML and re-wire ~8 listeners (and
+       churn the affixes) just to swap classes + a couple of aria/input attrs.
+       Update them in place instead. label-position stays structural (it switches
+       the label-col branch); everything else rebuilds. */
+    if ((name === 'size' || name === 'state' || name === 'rtl') && this._input) this._paintState();
     else this._render();
+  }
+
+  /* In-place mirror of the size/state/rtl footprint — no innerHTML rebuild. Must
+     stay in lockstep with the class + input-attr + helper-cascade logic in _render. */
+  _paintState() {
+    const size = enumAttr(this, 'size', SIZES, 'medium');
+    const state = enumAttr(this, 'state', STATES, 'default');
+    const position = enumAttr(this, 'label-position', POSITIONS, 'left');
+    const rtl = boolAttr(this, 'rtl');
+
+    this._root.className = `ds-text-input ds-text-input--${size} ds-text-input--${state} ds-text-input--${position}`;
+    if (rtl) this._root.setAttribute('dir', 'rtl');
+    else this._root.removeAttribute('dir');
+
+    const input = this._input;
+    input.disabled = state === 'disabled';
+    input.toggleAttribute('readonly', state === 'readonly');
+    if (state === 'readonly') input.setAttribute('aria-readonly', 'true'); else input.removeAttribute('aria-readonly');
+    if (state === 'error') input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
+
+    const helperEl = this._root.querySelector('ds-field-helper');
+    if (helperEl) {
+      const helperState = state === 'error' ? 'error'
+        : state === 'success' ? 'success'
+        : state === 'disabled' ? 'disabled' : 'default';
+      helperEl.setAttribute('state', helperState);
+      if (rtl) helperEl.setAttribute('rtl', ''); else helperEl.removeAttribute('rtl');
+    }
   }
 
   get value() { return this._input?.value ?? ''; }

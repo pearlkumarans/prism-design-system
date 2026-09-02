@@ -140,10 +140,11 @@ describe('review regressions — portaled menus torn down on re-render (not just
     await nextFrame();
     expect(affixMenus().length, 'affix menu should portal into body on open').to.equal(1);
 
-    // an unrelated attribute change (e.g. a form marking the field invalid) rebuilds
-    // innerHTML — the open portaled menu + its global listeners must be torn down,
-    // not orphaned (the leak class: _render now calls _closeAffixMenu first).
-    el.setAttribute('state', 'error');
+    // A STRUCTURAL attribute change (label) rebuilds innerHTML — the open portaled
+    // menu + its global listeners must be torn down, not orphaned (the leak class:
+    // _render now calls _closeAffixMenu first). (Visual-only attrs like `state` take
+    // the in-place fast path, which doesn't rebuild and so can't orphan the menu.)
+    el.setAttribute('label', 'Amount (USD)');
     await nextFrame();
     expect(affixMenus().length, 're-render must not orphan the portaled affix menu').to.equal(0);
     expect(el.querySelector('[data-prefix-dropdown]')?.getAttribute('aria-expanded'))
