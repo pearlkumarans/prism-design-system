@@ -33,6 +33,13 @@ const ciBrowsers = process.env.CI
   ? [chromeLauncher({ launchOptions: { args: ['--no-sandbox', '--disable-dev-shm-usage'] } })]
   : undefined;
 
+/* Baselines are OS-specific — font rasterisation differs between macOS and the
+   Linux CI runner — so key them by platform (Chrome-darwin / Chrome-linux …).
+   A dev's macOS baselines and CI's Linux baselines then coexist instead of
+   overwriting each other; each environment compares against its own set. */
+const platform = process.platform;
+const nameFor = (sub) => ({ browser, name }) => path.join(`${browser}-${platform}`, sub, name);
+
 export default {
   files: 'test/visual/**/*.visual.js',
   nodeResolve: true,
@@ -47,6 +54,9 @@ export default {
          trips it. Tighten toward 0 once baselines live on a pinned CI image. */
       failureThreshold: 0.15,          // ≤0.15% of pixels may differ
       failureThresholdType: 'percent',
+      getBaselineName: nameFor('baseline'),
+      getFailedName: nameFor('failed'),
+      getDiffName: ({ browser, name }) => path.join(`${browser}-${platform}`, 'failed', `${name}-diff`),
     }),
   ],
   testRunnerHtml: (testFramework) => `<!doctype html>

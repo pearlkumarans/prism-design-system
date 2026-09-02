@@ -31,8 +31,11 @@ npm run test:visual            # compare against baselines (the gate)
 npm run test:visual:update     # (re)write baselines — do this on purpose
 ```
 
-Baselines live in `screenshots/Chrome/baseline/`. On a failure the actual +
-diff images are written to `screenshots/Chrome/failed/` (git-ignored).
+Baselines are **OS-keyed** (font rasterisation differs across platforms), so a
+dev's macOS set and CI's Linux set coexist:
+`screenshots/Chrome-<platform>/baseline/` (e.g. `Chrome-darwin`, `Chrome-linux`).
+On a failure the actual + diff images are written to
+`screenshots/Chrome-<platform>/failed/` (git-ignored).
 
 ## Adding a component
 
@@ -42,11 +45,24 @@ fixed-width `frame(...)` wrapper so the shot is stable. Run
 `npm run test:visual:update` to bless the new baseline, eyeball the PNG, commit
 it.
 
-## ⚠️ Baselines are environment-specific
+## CI
 
-Screenshots depend on the OS's font rendering, so baselines generated on one
-machine will show sub-pixel diffs on another. The `failureThreshold` (0.15%)
-absorbs a little of that, but **the canonical baselines should be generated on
-the CI runner image** (or a pinned font container) and regenerated there when a
-component legitimately changes. Treat the committed PNGs here as the reference
-for *this* environment; re-bless on the CI image before enforcing in CI.
+The `visual` job in `.github/workflows/ci.yml` runs `npm run test:visual` on
+`ubuntu-latest`, comparing against `Chrome-linux/baseline/**`. Because screenshots
+depend on OS font rendering, those Linux baselines must be generated on the runner
+— the committed `Chrome-darwin/**` set (macOS) won't match.
+
+**Bootstrap (current state):** the CI step is **non-blocking**
+(`continue-on-error`) and, on the expected "no baseline" failure, uploads the
+Linux renders + diffs as the `visual-regression-linux` artifact.
+
+**To bless the Linux baselines and enforce:**
+1. Download the `visual-regression-linux` artifact from a CI run (or run
+   `npm run test:visual:update` on a Linux checkout / container).
+2. Copy the images from `Chrome-linux/failed/` into `Chrome-linux/baseline/` and
+   commit them.
+3. Remove `continue-on-error: true` from the `visual` job so a real visual
+   regression fails the build.
+
+The `failureThreshold` (0.15%) absorbs sub-pixel AA noise; tighten it toward 0
+once baselines are stable on the runner.

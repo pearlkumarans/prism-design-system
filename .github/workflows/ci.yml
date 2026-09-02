@@ -49,3 +49,48 @@ jobs:
       # config add --no-sandbox / --disable-dev-shm-usage (see web-test-runner.config.js).
       - name: Run component tests
         run: npm test
+
+  visual:
+    name: Visual regression (styled render)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: design-system-library
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: design-system-library/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci || (rm -rf node_modules package-lock.json && npm install)
+
+      # Renders every component STYLED (tokens + component CSS) and pixel-diffs it
+      # against a committed baseline. Baselines are OS-specific (font rasterisation),
+      # so this runner compares against screenshots/Chrome-linux/baseline/**.
+      #
+      # BOOTSTRAP (current): those Linux baselines don't exist yet, so this step is
+      # NON-BLOCKING (continue-on-error) and uploads the Linux renders + diffs as an
+      # artifact. To bless them: download the artifact, copy the images from
+      # Chrome-linux/failed/ into Chrome-linux/baseline/ (or run
+      # `npm run test:visual:update` on a Linux checkout), and commit.
+      # ENFORCE (after blessing): delete `continue-on-error: true` so a real visual
+      # regression fails the build. See design-system-library/test/visual/README.md.
+      - name: Visual regression
+        id: visual
+        continue-on-error: true
+        run: npm run test:visual
+
+      - name: Upload visual diffs / renders
+        if: steps.visual.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-linux
+          path: design-system-library/screenshots/Chrome-linux/**
+          if-no-files-found: warn
+          retention-days: 14
