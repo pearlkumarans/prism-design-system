@@ -14,7 +14,7 @@
    - Renders into light DOM so consumer styles + links keep working.
    ============================================================================= */
 
-import { boolAttr } from '../../utils/attr.js';
+import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 /* Register <ds-dropdown-menu> so the overflow `···` button can reuse the real
    dropdown component. */
@@ -85,7 +85,7 @@ export class DsBreadcrumb extends HTMLElement {
     const homeIcon = boolAttr(this, 'home-icon');
     const overflow = boolAttr(this, 'overflow');
     const rtl = boolAttr(this, 'rtl');
-    const size = this.getAttribute('size') === 'medium' ? 'medium' : 'small'; /* spec default: small */
+    const size = enumAttr(this, 'size', ['small', 'medium'], 'small'); /* spec default: small */
     const disabled = boolAttr(this, 'disabled');
     // Spec: collapse when items > 4 — keep the first item, the … trigger,
     // the last 2 ancestors, and the current page.

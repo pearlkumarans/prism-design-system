@@ -193,7 +193,7 @@ const TEMPLATE = (sprite) => `
     .slot-empty { display: none !important; }
   </style>
 
-  <div part="header" role="button" tabindex="0" aria-expanded="false">
+  <div part="header" role="button" tabindex="0" aria-expanded="false" id="acc-header" aria-controls="acc-body">
     <span part="leading" aria-hidden="true">
       <slot name="leading-control">
         <span class="acc-chevron">
@@ -215,7 +215,7 @@ const TEMPLATE = (sprite) => `
       </svg>
     </span>
   </div>
-  <div part="body" role="region">
+  <div part="body" role="region" id="acc-body" aria-labelledby="acc-header">
     <div class="acc-body-inner">
       <slot name="body"></slot>
       <slot name="body2"></slot>

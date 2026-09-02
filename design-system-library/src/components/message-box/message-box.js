@@ -1,4 +1,4 @@
-import { boolAttr } from '../../utils/attr.js';
+import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 /* Composed sub-components — import so the box is self-contained. */
 import '../tab-bar-horizontal/tab-bar-horizontal.js';
@@ -75,8 +75,8 @@ export class DsMessageBox extends HTMLElement {
     this._render();
   }
 
-  get _expanded() { return this.getAttribute('expanded') !== 'false'; }
-  get _tab() { return this.getAttribute('tab') === 'information' ? 'information' : 'alerts'; }
+  get _expanded() { return enumAttr(this, 'expanded', ['true', 'false'], 'true') !== 'false'; }
+  get _tab() { return enumAttr(this, 'tab', ['alerts', 'information'], 'alerts'); }
   _count(group) {
     const attr = this.getAttribute(group === 'information' ? 'information-count' : 'alerts-count');
     if (attr != null && attr !== '') return attr;

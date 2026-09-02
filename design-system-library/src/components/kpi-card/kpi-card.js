@@ -321,6 +321,9 @@ export class DsKpiCard extends HTMLElement {
     this.classList.add('ds-kpi-card', `ds-kpi-card--${variant}`, `ds-kpi-card--${state}`);
     if (clickable && !loading) this.classList.add('ds-kpi-card--clickable');
     if (loading) this.classList.add('ds-kpi-card--loading');
+    /* Announce the skeleton to assistive tech so SRs don't read stale/placeholder
+       content while the card loads (removed once real content is in). */
+    if (loading) this.setAttribute('aria-busy', 'true'); else this.removeAttribute('aria-busy');
     if (rtl) this.setAttribute('dir', 'rtl');
 
     if (clickable && !loading) {
