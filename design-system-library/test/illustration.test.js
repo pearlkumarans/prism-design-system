@@ -1,8 +1,7 @@
 /* ds-illustration — renders an inline <svg><use href="…#illu-<name>"> that
    references the multi-color illustrations sprite. Covers the svg/use structure,
    the name → sprite href wiring, the width/height sizing attrs, aria-hidden, and
-   reactive name updates. (The component sets its own aria-hidden — it is
-   decorative — so no escaping/label assertions apply here.) */
+   reactive name updates. The name/width/height are escaped before going into innerHTML (verified below). */
 import { fixture, html, expect, nextFrame } from '@open-wc/testing';
 import '../src/components/illustration/illustration.js';
 
@@ -59,5 +58,21 @@ describe('ds-illustration — sizing & reactivity', () => {
     parent.appendChild(el);
     await nextFrame();
     expect(svg(el)).to.exist;
+  });
+});
+
+describe('ds-illustration — escaping', () => {
+  it('escapes a hostile name so it cannot break out of the href attribute', async () => {
+    const el = await fixture(html`<ds-illustration name=${'x"><img src=y onerror=alert(1)>'}></ds-illustration>`);
+    await nextFrame();
+    expect(el.querySelector('img'), 'name broke out into an injected <img>').to.not.exist;
+    // the escaped value stays inside the <use> href
+    expect(el.querySelector('use').getAttribute('href')).to.contain('#illu-');
+  });
+
+  it('escapes hostile width/height so they cannot inject an attribute', async () => {
+    const el = await fixture(html`<ds-illustration name="x" width=${'1" onload="alert(1)'}></ds-illustration>`);
+    await nextFrame();
+    expect(svg(el).hasAttribute('onload'), 'width broke out into an onload attribute').to.be.false;
   });
 });

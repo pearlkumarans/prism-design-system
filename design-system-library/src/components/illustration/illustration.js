@@ -9,6 +9,8 @@
      - Override at runtime via window.UEMS_ILLUSTRATION_SPRITE.
    ============================================================================= */
 
+import { escapeHtml } from '../../utils/escape.js';
+
 const DEFAULT_SPRITE = '/illustrations.svg';
 
 export class DsIllustration extends HTMLElement {
@@ -34,13 +36,16 @@ export class DsIllustration extends HTMLElement {
 
     this.setAttribute('aria-hidden', 'true');
 
+    /* name/width/height are consumer attributes interpolated into innerHTML —
+       escape them so a value containing a `"` can't break out of the attribute.
+       (sprite is a trusted window-config path.) */
     const sizeAttrs = [];
-    if (width)  sizeAttrs.push(`width="${width}"`);
-    if (height) sizeAttrs.push(`height="${height}"`);
+    if (width)  sizeAttrs.push(`width="${escapeHtml(width)}"`);
+    if (height) sizeAttrs.push(`height="${escapeHtml(height)}"`);
 
     this.innerHTML = `
       <svg ${sizeAttrs.join(' ') || 'width="100%" height="100%"'} focusable="false" aria-hidden="true">
-        <use href="${sprite}#illu-${name}"></use>
+        <use href="${sprite}#illu-${escapeHtml(name)}"></use>
       </svg>
     `;
   }
