@@ -123,3 +123,52 @@ describe('ds-text-input — escaping & teardown', () => {
     expect(el.querySelectorAll('input').length).to.equal(1);
   });
 });
+
+describe('ds-text-input — truncated affix reveal on input focus (keyboard parity)', () => {
+  const TIP_ID = 'ds-text-input-affix-tooltip';
+  const tip = () => document.getElementById(TIP_ID);
+  // the shared tip is a body singleton — clear it between cases
+  afterEach(() => { tip()?.remove(); });
+
+  // CSS max-width isn't applied in the harness, so force the truncation measurement.
+  const setClip = (el, scroll, client) => {
+    Object.defineProperty(el, 'scrollWidth', { value: scroll, configurable: true });
+    Object.defineProperty(el, 'clientWidth', { value: client, configurable: true });
+  };
+
+  it('reveals a truncated prefix on focus and hides it on blur — no extra tab stop', async () => {
+    const el = await fixture(html`<ds-text-input label="Amount" prefix-text="United States Dollar"></ds-text-input>`);
+    await nextFrame();
+    const affix = el.querySelector('.ds-text-input__affix-text--prefix');
+    const input = el.querySelector('input');
+    setClip(affix, 200, 40);          // truncated
+    expect(input.tabIndex, 'input is the tab stop; affix adds none').to.not.equal(-1);
+    expect(affix.hasAttribute('tabindex'), 'affix must not become focusable').to.be.false;
+
+    input.dispatchEvent(new FocusEvent('focus'));
+    expect(tip(), 'tip element').to.exist;
+    expect(tip().style.display).to.equal('block');
+    expect(tip().textContent).to.equal('United States Dollar');
+
+    input.dispatchEvent(new FocusEvent('blur'));
+    expect(tip().style.display).to.equal('none');
+  });
+
+  it('does not reveal the tip on focus when the affix is not truncated', async () => {
+    const el = await fixture(html`<ds-text-input label="Amount" prefix-text="USD"></ds-text-input>`);
+    await nextFrame();
+    setClip(el.querySelector('.ds-text-input__affix-text--prefix'), 30, 40);   // fits
+    el.querySelector('input').dispatchEvent(new FocusEvent('focus'));
+    expect(tip() == null || tip().style.display === 'none', 'tip stays hidden').to.be.true;
+  });
+
+  it('reveals a truncated suffix when there is no prefix', async () => {
+    const el = await fixture(html`<ds-text-input label="URL" suffix-text="example.com/very/long/path"></ds-text-input>`);
+    await nextFrame();
+    const affix = el.querySelector('.ds-text-input__affix-text--suffix');
+    setClip(affix, 260, 50);
+    el.querySelector('input').dispatchEvent(new FocusEvent('focus'));
+    expect(tip().style.display).to.equal('block');
+    expect(tip().textContent).to.equal('example.com/very/long/path');
+  });
+});

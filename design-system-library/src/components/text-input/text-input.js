@@ -334,10 +334,23 @@ export class DsTextInput extends HTMLElement {
       t.style.left = `${Math.round(left)}px`;
       t.style.top = `${Math.round(r.top - tr.height - 8)}px`;
     };
-    this._root.querySelectorAll('.ds-text-input__affix-text').forEach((el) => {
+    const affixTexts = [...this._root.querySelectorAll('.ds-text-input__affix-text')];
+    affixTexts.forEach((el) => {
       el.addEventListener('mouseenter', () => showTip(el));
       el.addEventListener('mouseleave', hideTip);
     });
+    /* Keyboard parity: a keyboard-only user can't hover the affix, so reveal a
+       truncated affix while the FIELD itself is focused — no new tab stops, since
+       the input is already the tab stop. showTip self-guards on truncation, so we
+       pick the first affix that's actually clipped (prefix before suffix). Both
+       listeners live on the per-render input, so they're GC-clean on rebuild. */
+    if (this._input && affixTexts.length) {
+      this._input.addEventListener('focus', () => {
+        const clipped = affixTexts.find((el) => el.scrollWidth > el.clientWidth + 1);
+        if (clipped) showTip(clipped);
+      });
+      this._input.addEventListener('blur', hideTip);
+    }
   }
 
   disconnectedCallback() { this._closeAffixMenu(); }
