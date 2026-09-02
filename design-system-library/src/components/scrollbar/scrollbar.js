@@ -54,6 +54,7 @@ export class DsScrollbar extends HTMLElement {
     this._mo && this._mo.disconnect();
     if (this._onWinResize) removeEventListener('resize', this._onWinResize);
     clearTimeout(this._initT);
+    clearTimeout(this._idle);   /* touch-fade one-shot — clear alongside _initT */
   }
 
   /* Layout may not be settled at connect (the component stylesheet is injected

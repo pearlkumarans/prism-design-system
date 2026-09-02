@@ -5,14 +5,13 @@ import '../field-helper/field-helper.js';
 import '../dropdown-menu/dropdown-menu.js';
 import { injectCss } from '../../utils/inject-css.js';
 import { escapeHtml } from '../../utils/escape.js';
+import { rafThrottle } from '../../utils/raf-throttle.js';
+import '../../icons/icon.js';
 
 /* Auto-load field-helper.css once (both are light-DOM, so the stylesheet must
    be present even on pages that load text-input.css individually). */
 injectCss('ds-text-input-fh-css', '../field-helper/field-helper.css', import.meta.url);
 injectCss('ds-text-input-dropdown-css', '../dropdown-menu/dropdown-menu.css', import.meta.url);
-
-const esc = (s) => String(s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /* ISO 3166-1 alpha-2 country code → flag emoji (regional-indicator letters).
    e.g. "us" → 🇺🇸, "in" → 🇮🇳. Returns '' for anything that isn't 2 letters. */
@@ -69,6 +68,17 @@ export class DsTextInput extends HTMLElement {
   set value(v) { if (this._input) this._input.value = v ?? ''; }
 
   _render() {
+    /* Preserve the LIVE input across the rebuild: typing updates `this._input.value`
+       but NOT the `value` attribute, so an unrelated attribute change (e.g. a form
+       setting state="error" on validation) must not revert the field or drop focus.
+       The explicit `value`-attribute path is handled in attributeChangedCallback and
+       never re-renders, so it still wins. */
+    const _prev = this._input;
+    const _liveValue = _prev ? _prev.value : null;
+    const _hadFocus = !!_prev && typeof document !== 'undefined' && document.activeElement === _prev;
+    const _selStart = _hadFocus ? _prev.selectionStart : null;
+    const _selEnd = _hadFocus ? _prev.selectionEnd : null;
+
     const size = enumAttr(this, 'size', SIZES, 'medium');
     const state = enumAttr(this, 'state', STATES, 'default');
     const position = enumAttr(this, 'label-position', POSITIONS, 'left');
@@ -111,7 +121,7 @@ export class DsTextInput extends HTMLElement {
     /* label-position="none" hides the label visually; the text is kept as an
        accessible name via aria-label on the input (set after render). */
     const labelHTML = (label && position !== 'none')
-      ? `<span class="ds-text-input__label-row"><label class="ds-text-input__label" for="${this._id}">${esc(label)}${required ? '<span class="ds-text-input__required">*</span>' : ''}</label>${labelHelpHTML}</span>`
+      ? `<span class="ds-text-input__label-row"><label class="ds-text-input__label" for="${this._id}">${escapeHtml(label)}${required ? '<span class="ds-text-input__required">*</span>' : ''}</label>${labelHelpHTML}</span>`
       : '';
 
     /* The whole helper row is one <ds-field-helper id="…-helper"> (icon + text
@@ -132,10 +142,10 @@ export class DsTextInput extends HTMLElement {
        automatically via dir="rtl" on the root (flex reverses visual order). */
     const prefixInner =
       `${flag ? `<span class="ds-text-input__affix-flag" aria-hidden="true">${flag}</span>` : ''}` +
-      `${prefixText ? `<span class="ds-text-input__affix-text ds-text-input__affix-text--prefix">${esc(prefixText)}</span>` : ''}` +
+      `${prefixText ? `<span class="ds-text-input__affix-text ds-text-input__affix-text--prefix">${escapeHtml(prefixText)}</span>` : ''}` +
       `${prefixIcon ? `<span class="ds-text-input__affix-icon"><ds-icon name="${escapeHtml(prefixIcon)}" size="16"></ds-icon></span>` : ''}`;
     const suffixInner =
-      `${suffixText ? `<span class="ds-text-input__affix-text ds-text-input__affix-text--suffix">${esc(suffixText)}</span>` : ''}` +
+      `${suffixText ? `<span class="ds-text-input__affix-text ds-text-input__affix-text--suffix">${escapeHtml(suffixText)}</span>` : ''}` +
       `${suffixIcon ? `<span class="ds-text-input__affix-icon"><ds-icon name="${escapeHtml(suffixIcon)}" size="16"></ds-icon></span>` : ''}` +
       `${suffixIconRight ? `<span class="ds-text-input__affix-icon ds-text-input__affix-icon--far-right"><ds-icon name="${escapeHtml(suffixIconRight)}" size="16"></ds-icon></span>` : ''}`;
     const prefixGroup = hasPrefix
@@ -154,8 +164,8 @@ export class DsTextInput extends HTMLElement {
     const fieldHTML = `
       <div class="ds-text-input__field">
         ${prefixGroup}
-        <input id="${this._id}" type="${type}" placeholder="${placeholder}" value="${value.replace(/"/g, '&quot;')}"
-               autocomplete="${autocomplete}"
+        <input id="${this._id}" type="${escapeHtml(type)}" placeholder="${escapeHtml(placeholder)}" value="${escapeHtml(value)}"
+               autocomplete="${escapeHtml(autocomplete)}"
                ${state === 'readonly' ? 'readonly aria-readonly="true"' : ''}
                ${state === 'disabled' ? 'disabled' : ''}
                ${required ? 'required aria-required="true"' : ''}
@@ -173,9 +183,9 @@ export class DsTextInput extends HTMLElement {
       : state === 'disabled' ? 'disabled' : 'default';
     const helperHTML = showHelperRow
       ? `<ds-field-helper class="ds-text-input__helper-row" id="${helperId}"
-           text="${esc(helper)}" state="${helperState}"
+           text="${escapeHtml(helper)}" state="${helperState}"
            ${helper ? '' : 'show-icon="false"'}
-           ${showCounter && counter ? `counter="${esc(counter)}"` : ''}
+           ${showCounter && counter ? `counter="${escapeHtml(counter)}"` : ''}
            ${rtl ? 'rtl' : ''}></ds-field-helper>`
       : '';
 
@@ -192,7 +202,14 @@ export class DsTextInput extends HTMLElement {
     }
 
     this._input = this._root.querySelector('input');
+    /* Restore the live value + focus/caret captured at the top of _render, so an
+       attribute change while the user is typing doesn't wipe their input. */
+    if (_liveValue != null) this._input.value = _liveValue;
     if (position === 'none' && label) this._input.setAttribute('aria-label', label);
+    if (_hadFocus) {
+      this._input.focus();
+      try { this._input.setSelectionRange(_selStart, _selEnd); } catch (_) { /* type has no text selection */ }
+    }
     const helperEl = this._root.querySelector('ds-field-helper');
 
     /* Live counter — derive the max from the counter attr ("0/100" → 100),
@@ -328,7 +345,7 @@ export class DsTextInput extends HTMLElement {
     });
 
     this._positionAffixMenu();
-    this._affixReanchor = () => this._positionAffixMenu();
+    this._affixReanchor = rafThrottle(() => this._positionAffixMenu());
     window.addEventListener('scroll', this._affixReanchor, true);
     window.addEventListener('resize', this._affixReanchor);
     this._affixDocClick = (ev) => {

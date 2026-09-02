@@ -41,14 +41,12 @@ import '../progress-bar/progress-bar.js';
 import '../button/button.js';
 import { injectCss } from '../../utils/inject-css.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 injectCss('ds-file-upload-css', './file-upload.css', import.meta.url);
 injectCss('ds-file-upload-fh-css', '../field-helper/field-helper.css', import.meta.url);
 injectCss('ds-file-upload-pb-css', '../progress-bar/progress-bar.css', import.meta.url);
 injectCss('ds-file-upload-btn-css', '../button/button.css', import.meta.url);
-
-const esc = (s) => String(s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const VARIANTS = ['form', 'prominent'];
 const STATUS_ICON = {
@@ -211,12 +209,12 @@ export class DsFileUpload extends HTMLElement {
       : state === 'success' ? 'success'
       : state === 'disabled' ? 'disabled' : 'default';
     const helperHtml = showHelper && helper
-      ? `<ds-field-helper id="${this._id}-helper" text="${esc(helper)}" state="${helperState}" show-icon="${helperState === 'error' || helperState === 'success'}"${rtl ? ' rtl' : ''}></ds-field-helper>`
+      ? `<ds-field-helper id="${this._id}-helper" text="${escapeHtml(helper)}" state="${helperState}" show-icon="${helperState === 'error' || helperState === 'success'}"${rtl ? ' rtl' : ''}></ds-field-helper>`
       : '';
 
     const labelId = `${this._id}-label`;
     const labelHtml = label
-      ? `<span class="ds-file-upload__label-row"><label class="ds-file-upload__label" id="${labelId}">${esc(label)}${required ? '<span class="ds-file-upload__required">*</span>' : ''}</label></span>`
+      ? `<span class="ds-file-upload__label-row"><label class="ds-file-upload__label" id="${labelId}">${escapeHtml(label)}${required ? '<span class="ds-file-upload__required">*</span>' : ''}</label></span>`
       : '';
 
     /* Box + list + helper are the "field body"; the label sits beside (left) or
@@ -225,7 +223,7 @@ export class DsFileUpload extends HTMLElement {
       <div class="ds-file-upload__body">
         <div class="ds-file-upload__box" role="button" tabindex="${disabled ? -1 : 0}"
              aria-disabled="${disabled}"
-             ${label ? `aria-labelledby="${labelId}"` : `aria-label="${esc(placeholder)}"`}
+             ${label ? `aria-labelledby="${labelId}"` : `aria-label="${escapeHtml(placeholder)}"`}
              ${helperHtml ? `aria-describedby="${this._id}-helper"` : ''}>
           ${boxContent}
         </div>
@@ -244,12 +242,12 @@ export class DsFileUpload extends HTMLElement {
 
   /* Form field content per state. */
   _formBoxHtml(single, placeholder, buttonLabel, disabled) {
-    const browse = `<ds-button class="ds-file-upload__browse" variant="secondary" size="small"${disabled ? ' disabled' : ''}>${esc(buttonLabel)}</ds-button>`;
+    const browse = `<ds-button class="ds-file-upload__browse" variant="secondary" size="small"${disabled ? ' disabled' : ''}>${escapeHtml(buttonLabel)}</ds-button>`;
     if (single) {
       if (single.status === 'uploading' || single.status === 'scanning') {
         return `
           <span class="ds-file-upload__file-icon"><ds-icon name="${escapeHtml(STATUS_ICON[single.status])}" size="16"></ds-icon></span>
-          <span class="ds-file-upload__name" title="">${esc(single.name)}</span>
+          <span class="ds-file-upload__name" title="">${escapeHtml(single.name)}</span>
           ${single.status === 'scanning'
             ? '<span class="ds-file-upload__status ds-file-upload__status--scanning">Scanning…</span>'
             : `<ds-progress-bar class="ds-file-upload__progress" size="small" value="${single.progress}" show-label="false"></ds-progress-bar>`}
@@ -258,20 +256,20 @@ export class DsFileUpload extends HTMLElement {
       }
       if (single.status === 'error') {
         return `
-          <span class="ds-file-upload__name ds-file-upload__name--error">${esc(single.name)}</span>
+          <span class="ds-file-upload__name ds-file-upload__name--error">${escapeHtml(single.name)}</span>
           <span class="ds-file-upload__state-icon ds-file-upload__state-icon--error"><ds-icon name="exclamation-circle" size="16"></ds-icon></span>
           ${browse}
         `;
       }
       /* success */
       return `
-        <span class="ds-file-upload__name">${esc(single.name)}</span>
+        <span class="ds-file-upload__name">${escapeHtml(single.name)}</span>
         <span class="ds-file-upload__state-icon ds-file-upload__state-icon--success"><ds-icon name="tick" size="16"></ds-icon></span>
         ${browse}
       `;
     }
     return `
-      <span class="ds-file-upload__placeholder">${esc(placeholder)}</span>
+      <span class="ds-file-upload__placeholder">${escapeHtml(placeholder)}</span>
       ${browse}
     `;
   }
@@ -286,8 +284,8 @@ export class DsFileUpload extends HTMLElement {
       return `<div class="ds-file-upload__zone-item">${this._itemHtml(single)}</div>`;
     }
     return `
-      <span class="ds-file-upload__hint">${esc(zoneHint)}</span>
-      <ds-button class="ds-file-upload__browse" variant="primary" size="xsmall"${disabled ? ' disabled' : ''}>${esc(buttonLabel)}</ds-button>
+      <span class="ds-file-upload__hint">${escapeHtml(zoneHint)}</span>
+      <ds-button class="ds-file-upload__browse" variant="primary" size="xsmall"${disabled ? ' disabled' : ''}>${escapeHtml(buttonLabel)}</ds-button>
     `;
   }
 
@@ -306,13 +304,13 @@ export class DsFileUpload extends HTMLElement {
                   <span class="ds-file-upload__pct">${Math.round(f.progress)}%</span>`,
       scanning: '<span class="ds-file-upload__status ds-file-upload__status--scanning">Scanning…</span>',
       success: '',
-      error: f.statusText ? `<span class="ds-file-upload__status ds-file-upload__status--error">${esc(f.statusText)}</span>` : '',
+      error: f.statusText ? `<span class="ds-file-upload__status ds-file-upload__status--error">${escapeHtml(f.statusText)}</span>` : '',
     }[f.status];
 
     return `
-      <div class="ds-file-upload__item ds-file-upload__item--${f.status}" data-id="${esc(f.id)}">
+      <div class="ds-file-upload__item ds-file-upload__item--${f.status}" data-id="${escapeHtml(f.id)}">
         <span class="ds-file-upload__item-icon ds-file-upload__item-icon--${f.status}"><ds-icon name="${escapeHtml(STATUS_ICON[f.status])}" size="16"></ds-icon></span>
-        <span class="ds-file-upload__name">${esc(f.name)}</span>
+        <span class="ds-file-upload__name">${escapeHtml(f.name)}</span>
         ${middle}
         ${actions}
       </div>
@@ -337,7 +335,7 @@ export class DsFileUpload extends HTMLElement {
       <button type="button" class="ds-file-upload__summary ds-file-upload__summary--${summaryState}"
               aria-expanded="${expanded}">
         <ds-icon name="chevron-${expanded ? 'up' : 'down'}" size="16"></ds-icon>
-        <span class="ds-file-upload__summary-text">${esc(summaryText)}</span>
+        <span class="ds-file-upload__summary-text">${escapeHtml(summaryText)}</span>
       </button>` : '';
 
     const rows = (expanded || total === 1)
@@ -351,7 +349,7 @@ export class DsFileUpload extends HTMLElement {
   }
 
   _actionBtn(action, id, icon, label) {
-    return `<button type="button" class="ds-file-upload__action" data-action="${action}" data-id="${esc(id)}" aria-label="${esc(label)}">
+    return `<button type="button" class="ds-file-upload__action" data-action="${action}" data-id="${escapeHtml(id)}" aria-label="${escapeHtml(label)}">
       <ds-icon name="${escapeHtml(icon)}" size="16"></ds-icon>
     </button>`;
   }

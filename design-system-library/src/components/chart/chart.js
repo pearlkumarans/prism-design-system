@@ -24,6 +24,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 const TYPES = ['column', 'bar', 'line', 'pie', 'donut', 'funnel', 'gauge'];
 const MODES = ['single', 'grouped', 'stacked'];
@@ -904,7 +905,7 @@ export class DsChart extends HTMLElement {
       if (single) {
         const s = allSeries[0] || { values: [] };
         const colorCls = type === 'funnel' ? this._funnelColorClass(ci) : this._seriesColorClass(ci);
-        rows = `<div class="ds-chart__tip-row"><span class="ds-chart__swatch ds-chart__swatch--dot ${colorCls}"></span><span class="ds-chart__tip-name">${this._esc(cat)}</span><span class="ds-chart__tip-val">${this._esc(s.values[ci])}</span></div>`;
+        rows = `<div class="ds-chart__tip-row"><span class="ds-chart__swatch ds-chart__swatch--dot ${colorCls}"></span><span class="ds-chart__tip-name">${escapeHtml(cat)}</span><span class="ds-chart__tip-val">${escapeHtml(s.values[ci])}</span></div>`;
       } else if (allSeries.length === 1) {
         /* Single series → one row whose swatch matches the bar's own color
            (explicit data color → category palette → series color). */
@@ -912,14 +913,14 @@ export class DsChart extends HTMLElement {
         const named = Array.isArray(s.colors) ? s.colors[ci] : null;
         const cls = named ? this._namedColorClass(named)
           : this._seriesColorClass(boolAttr(this, 'color-by-category') ? ci : 0);
-        rows = `<div class="ds-chart__tip-row"><span class="ds-chart__swatch ds-chart__swatch--dot ${cls}"></span><span class="ds-chart__tip-name">${this._esc(cat)}</span><span class="ds-chart__tip-val">${this._esc(s.values[ci])}</span></div>`;
+        rows = `<div class="ds-chart__tip-row"><span class="ds-chart__swatch ds-chart__swatch--dot ${cls}"></span><span class="ds-chart__tip-name">${escapeHtml(cat)}</span><span class="ds-chart__tip-val">${escapeHtml(s.values[ci])}</span></div>`;
       } else {
         allSeries.forEach((s, i) => {
           if (this._hidden.has(i)) return;
-          rows += `<div class="ds-chart__tip-row"><span class="ds-chart__swatch ds-chart__swatch--dot ${this._seriesColorClass(i)}"></span><span class="ds-chart__tip-name">${this._esc(s.name || `Series ${i + 1}`)}</span><span class="ds-chart__tip-val">${this._esc(s.values[ci])}</span></div>`;
+          rows += `<div class="ds-chart__tip-row"><span class="ds-chart__swatch ds-chart__swatch--dot ${this._seriesColorClass(i)}"></span><span class="ds-chart__tip-name">${escapeHtml(s.name || `Series ${i + 1}`)}</span><span class="ds-chart__tip-val">${escapeHtml(s.values[ci])}</span></div>`;
         });
       }
-      this._tip.innerHTML = `<div class="ds-chart__tip-head">${this._esc(cat)}</div>${rows}`;
+      this._tip.innerHTML = `<div class="ds-chart__tip-head">${escapeHtml(cat)}</div>${rows}`;
       this._tip.hidden = false;
       this._moveTip(e);
     };
@@ -949,25 +950,21 @@ export class DsChart extends HTMLElement {
   _hideTip() { if (this._tip) this._tip.hidden = true; }
 
   // ---- Data table + a11y --------------------------------------------------
-  _esc(v) {
-    return String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  }
-
   _buildTable(type, data, isGauge, isPart) {
     const table = document.createElement('table');
     table.className = 'ds-chart__a11y-table';
     if (isGauge) {
-      table.innerHTML = `<caption>Gauge</caption><tbody><tr><th scope="row">${this._esc((data && data.label) || 'Value')}</th><td>${this._esc(data && data.value)}</td></tr></tbody>`;
+      table.innerHTML = `<caption>Gauge</caption><tbody><tr><th scope="row">${escapeHtml((data && data.label) || 'Value')}</th><td>${escapeHtml(data && data.value)}</td></tr></tbody>`;
       return table;
     }
     const categories = (data && data.categories) || [];
     const series = (data && data.series) || [];
-    const head = ['<th scope="col">Category</th>', ...series.map((s) => `<th scope="col">${this._esc(s.name)}</th>`)].join('');
+    const head = ['<th scope="col">Category</th>', ...series.map((s) => `<th scope="col">${escapeHtml(s.name)}</th>`)].join('');
     const rows = categories.map((cat, ci) => {
-      const cells = series.map((s) => `<td>${this._esc(s.values[ci])}</td>`).join('');
-      return `<tr><th scope="row">${this._esc(cat)}</th>${cells}</tr>`;
+      const cells = series.map((s) => `<td>${escapeHtml(s.values[ci])}</td>`).join('');
+      return `<tr><th scope="row">${escapeHtml(cat)}</th>${cells}</tr>`;
     }).join('');
-    table.innerHTML = `<caption>${this._esc(type)} chart data</caption><thead><tr>${head}</tr></thead><tbody>${rows}</tbody>`;
+    table.innerHTML = `<caption>${escapeHtml(type)} chart data</caption><thead><tr>${head}</tr></thead><tbody>${rows}</tbody>`;
     return table;
   }
 

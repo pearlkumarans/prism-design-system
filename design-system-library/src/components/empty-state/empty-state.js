@@ -34,6 +34,24 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import { escapeHtml } from '../../utils/escape.js';
+import { injectCss } from '../../utils/inject-css.js';
+import '../../icons/icon.js';
+import '../badge/badge.js';
+import '../button/button.js';
+import '../illustration/illustration.js';
+import '../list/list.js';
+import '../text-link/text-link.js';
+
+/* The reused light-DOM sub-components (badge/button/illustration/list/text-link)
+   need their own stylesheets present even on a page that only links
+   empty-state.css — inject each once. (ds-icon is self-contained.) */
+[
+  ['ds-empty-state-badge-css', '../badge/badge.css'],
+  ['ds-empty-state-button-css', '../button/button.css'],
+  ['ds-empty-state-illustration-css', '../illustration/illustration.css'],
+  ['ds-empty-state-list-css', '../list/list.css'],
+  ['ds-empty-state-textlink-css', '../text-link/text-link.css'],
+].forEach(([id, rel]) => injectCss(id, rel, import.meta.url));
 
 /* Boolean attr that defaults to `def` when absent; `foo="false"` turns it off
    (matches the show-* convention used across the form-field components). */
@@ -47,9 +65,6 @@ const OS_ICON = {
   windows: 'microsoft', macos: 'apple', apple: 'apple',
   linux: 'terminal-square', android: 'android', ios: 'apple', chromeos: 'chrome',
 };
-const esc = (s) => String(s == null ? '' : s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
 export class DsEmptyState extends HTMLElement {
   static get observedAttributes() {
     return [
@@ -99,10 +114,10 @@ export class DsEmptyState extends HTMLElement {
   /* ---- shared region builders --------------------------------------- */
   _headerHTML(title, description) {
     const titleHTML = title
-      ? `<h2 class="ds-empty-state__title" id="${this._titleId}">${esc(title)}</h2>` : '';
+      ? `<h2 class="ds-empty-state__title" id="${this._titleId}">${escapeHtml(title)}</h2>` : '';
     const descHTML = (this._descriptionSlot && this._descriptionSlot.length)
       ? `<p class="ds-empty-state__description" data-slot></p>`
-      : (description ? `<p class="ds-empty-state__description">${description}</p>` : '');
+      : (description ? `<p class="ds-empty-state__description">${escapeHtml(description)}</p>` : '');
     return `<div class="ds-empty-state__header">${titleHTML}${descHTML}</div>`;
   }
 
@@ -113,8 +128,8 @@ export class DsEmptyState extends HTMLElement {
     const showSecondary = !primaryOnly && secondaryLabel && boolAttrDefault(this, 'show-secondary', true);
     if (!showPrimary && !showSecondary) return '';
     return `<div class="ds-empty-state__actions">
-      ${showSecondary ? `<ds-button variant="secondary" size="medium" data-secondary>${esc(secondaryLabel)}</ds-button>` : ''}
-      ${showPrimary ? `<ds-button variant="primary" size="medium" data-primary>${esc(primaryLabel)}</ds-button>` : ''}
+      ${showSecondary ? `<ds-button variant="secondary" size="medium" data-secondary>${escapeHtml(secondaryLabel)}</ds-button>` : ''}
+      ${showPrimary ? `<ds-button variant="primary" size="medium" data-primary>${escapeHtml(primaryLabel)}</ds-button>` : ''}
     </div>`;
   }
 
@@ -130,14 +145,14 @@ export class DsEmptyState extends HTMLElement {
 
     const supportedHTML = showSupported
       ? `<span class="ds-empty-state__supported">
-           <span class="ds-empty-state__supported-label">${esc(supportedLabel)}</span>
+           <span class="ds-empty-state__supported-label">${escapeHtml(supportedLabel)}</span>
            <span class="ds-empty-state__supported-icons" role="list">
-             ${supported.map((id) => `<ds-icon name="${escapeHtml(OS_ICON[id] || id)}" size="16" role="listitem" aria-label="${esc(id)}"></ds-icon>`).join('')}
+             ${supported.map((id) => `<ds-icon name="${escapeHtml(OS_ICON[id] || id)}" size="16" role="listitem" aria-label="${escapeHtml(id)}"></ds-icon>`).join('')}
            </span>
          </span>` : '';
     const links = [];
-    if (ul != null) links.push(`<ds-text-link class="ds-empty-state__link" href="${esc(ul || '#')}" leading-icon="link" size="small">${esc(ulLabel)}</ds-text-link>`);
-    if (wv != null) links.push(`<ds-text-link class="ds-empty-state__link" href="${esc(wv || '#')}" leading-icon="video" size="small">${esc(wvLabel)}</ds-text-link>`);
+    if (ul != null) links.push(`<ds-text-link class="ds-empty-state__link" href="${escapeHtml(ul || '#')}" leading-icon="link" size="small">${escapeHtml(ulLabel)}</ds-text-link>`);
+    if (wv != null) links.push(`<ds-text-link class="ds-empty-state__link" href="${escapeHtml(wv || '#')}" leading-icon="video" size="small">${escapeHtml(wvLabel)}</ds-text-link>`);
     const linksHTML = links.length
       ? `<span class="ds-empty-state__links">${links.join('<span class="ds-empty-state__sep" aria-hidden="true">/</span>')}</span>` : '';
     if (!supportedHTML && !linksHTML) return '';
@@ -149,7 +164,7 @@ export class DsEmptyState extends HTMLElement {
     const illustration = this.getAttribute('illustration') || '';
     if (!illustration || !boolAttrDefault(this, 'show-illustration', true)) return '';
     const iSize = size === 'sm' ? 'small' : size === 'lg' ? 'large' : 'medium';
-    return `<div class="ds-empty-state__illustration"><ds-illustration name="${esc(illustration)}" size="${iSize}"></ds-illustration></div>`;
+    return `<div class="ds-empty-state__illustration"><ds-illustration name="${escapeHtml(illustration)}" size="${iSize}"></ds-illustration></div>`;
   }
 
   /* ---- type templates ----------------------------------------------- */
@@ -158,9 +173,9 @@ export class DsEmptyState extends HTMLElement {
       : [{ badge: 'Step 1', label: 'Step one' }, { badge: 'Step 2', label: 'Step two' }, { badge: 'Step 3', label: 'Step three' }];
     return `<div class="ds-empty-state__steps" role="list">
       ${items.map((s) => `<div class="ds-empty-state__step" role="listitem">
-        ${s.icon ? `<span class="ds-empty-state__step-icon"><ds-icon name="${esc(s.icon)}" size="32"></ds-icon></span>` : '<span class="ds-empty-state__step-icon"></span>'}
-        ${s.badge ? `<ds-badge variant="subtle" state="active" size="small">${esc(s.badge)}</ds-badge>` : ''}
-        <span class="ds-empty-state__step-label">${esc(s.label || '')}</span>
+        ${s.icon ? `<span class="ds-empty-state__step-icon"><ds-icon name="${escapeHtml(s.icon)}" size="32"></ds-icon></span>` : '<span class="ds-empty-state__step-icon"></span>'}
+        ${s.badge ? `<ds-badge variant="subtle" state="active" size="small">${escapeHtml(s.badge)}</ds-badge>` : ''}
+        <span class="ds-empty-state__step-label">${escapeHtml(s.label || '')}</span>
       </div>`).join('')}
     </div>`;
   }
@@ -171,8 +186,8 @@ export class DsEmptyState extends HTMLElement {
     const actionLabel = this.getAttribute('banner-action-label') || '';
     return `<div class="ds-empty-state__banner" role="status">
       <ds-icon class="ds-empty-state__banner-icon" name="info-circle" size="20"></ds-icon>
-      <span class="ds-empty-state__banner-text">${esc(text)}</span>
-      ${actionLabel ? `<ds-button variant="primary" size="small" data-banner-action>${esc(actionLabel)}</ds-button>` : ''}
+      <span class="ds-empty-state__banner-text">${escapeHtml(text)}</span>
+      ${actionLabel ? `<ds-button variant="primary" size="small" data-banner-action>${escapeHtml(actionLabel)}</ds-button>` : ''}
     </div>`;
   }
 
@@ -181,10 +196,10 @@ export class DsEmptyState extends HTMLElement {
     if (!items.length) return '';
     return `<div class="ds-empty-state__options">
       ${items.map((o, i) => `<div class="ds-empty-state__option">
-        ${o.icon ? `<div class="ds-empty-state__option-icon"><ds-illustration name="${esc(o.icon)}" size="small"></ds-illustration></div>` : ''}
-        <h3 class="ds-empty-state__option-title">${esc(o.title || '')}</h3>
-        ${o.description ? `<p class="ds-empty-state__option-desc">${o.description}</p>` : ''}
-        ${o.actionLabel ? `<ds-button variant="outline" size="medium" data-option="${i}"${o.actionIcon ? ` prefix-icon="${esc(o.actionIcon)}"` : ''}>${esc(o.actionLabel)}</ds-button>` : ''}
+        ${o.icon ? `<div class="ds-empty-state__option-icon"><ds-illustration name="${escapeHtml(o.icon)}" size="small"></ds-illustration></div>` : ''}
+        <h3 class="ds-empty-state__option-title">${escapeHtml(o.title || '')}</h3>
+        ${o.description ? `<p class="ds-empty-state__option-desc">${escapeHtml(o.description)}</p>` : ''}
+        ${o.actionLabel ? `<ds-button variant="outline" size="medium" data-option="${i}"${o.actionIcon ? ` prefix-icon="${escapeHtml(o.actionIcon)}"` : ''}>${escapeHtml(o.actionLabel)}</ds-button>` : ''}
       </div>`).join('')}
     </div>`;
   }
@@ -195,9 +210,9 @@ export class DsEmptyState extends HTMLElement {
     if (!items.length) return '';
     const label = this.getAttribute('benefits-label') || 'Feature Benefits';
     return `<div class="ds-empty-state__benefits">
-      <p class="ds-empty-state__benefits-label">${esc(label)}</p>
+      <p class="ds-empty-state__benefits-label">${escapeHtml(label)}</p>
       <ds-list class="ds-empty-state__benefit-list" style-variant="icon" size="medium">
-        ${items.map((b) => `<ds-list-item icon="circle-tick">${esc(b)}</ds-list-item>`).join('')}
+        ${items.map((b) => `<ds-list-item icon="circle-tick">${escapeHtml(b)}</ds-list-item>`).join('')}
       </ds-list>
     </div>`;
   }
@@ -222,7 +237,7 @@ export class DsEmptyState extends HTMLElement {
       html = this._headerHTML(title, description) + this._bannerHTML() + this._optionsHTML();
     } else if (type === 'promo') {
       const media = boolAttrDefault(this, 'show-media', true) && this.getAttribute('media')
-        ? `<div class="ds-empty-state__media"><ds-illustration name="${esc(this.getAttribute('media'))}" size="small"></ds-illustration></div>` : '';
+        ? `<div class="ds-empty-state__media"><ds-illustration name="${escapeHtml(this.getAttribute('media'))}" size="small"></ds-illustration></div>` : '';
       const left = `<div class="ds-empty-state__col">${media}${this._headerHTML(title, description)}${this._actionsHTML({ primaryOnly: true })}${this._footerHTML()}</div>`;
       const benefits = this._benefitsHTML();
       const divider = benefits ? `<span class="ds-empty-state__divider" aria-hidden="true"></span>` : '';

@@ -90,8 +90,6 @@ export class DsModuleRail extends HTMLElement {
       || (typeof document !== 'undefined' && document.documentElement.getAttribute('dir') === 'rtl');
   }
   _moreLabel() { return this.getAttribute('more-label') || (this._isRtl() ? 'المزيد' : 'More'); }
-  _esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
-
   _render() {
     const icons = boolAttr(this, 'icons-only');
     this.classList.toggle('ds-module-rail--icons', icons);
@@ -100,12 +98,12 @@ export class DsModuleRail extends HTMLElement {
       const active = t.active ? ' ds-module-rail__item--active' : '';
       const ic = t.icon || 'product';
       const single = !/\s/.test(t.label || '');   /* single word → 1-line ellipsis, never split */
-      return `<button type="button" class="ds-module-rail__item${active}" data-id="${this._esc(t.id)}" aria-label="${this._esc(t.label)}"${t.active ? ' aria-current="page"' : ''}>`
-        + `<ds-icon class="ds-module-rail__ic" name="${this._esc(ic)}" size="20"></ds-icon>`
-        + `<span class="ds-module-rail__lbl${single ? ' ds-module-rail__lbl--single' : ''}">${this._esc(t.label)}</span></button>`;
+      return `<button type="button" class="ds-module-rail__item${active}" data-id="${escapeHtml(t.id)}" aria-label="${escapeHtml(t.label)}"${t.active ? ' aria-current="page"' : ''}>`
+        + `<ds-icon class="ds-module-rail__ic" name="${escapeHtml(ic)}" size="20"></ds-icon>`
+        + `<span class="ds-module-rail__lbl${single ? ' ds-module-rail__lbl--single' : ''}">${escapeHtml(t.label)}</span></button>`;
     }).join('');
     this.innerHTML = itemsHTML
-      + `<button type="button" class="ds-module-rail__more" data-more aria-label="${this._esc(this._moreLabel())}" aria-haspopup="true" aria-expanded="false"><ds-icon name="more-horizontal" size="20"></ds-icon></button>`;
+      + `<button type="button" class="ds-module-rail__more" data-more aria-label="${escapeHtml(this._moreLabel())}" aria-haspopup="true" aria-expanded="false"><ds-icon name="more-horizontal" size="20"></ds-icon></button>`;
     requestAnimationFrame(() => this._reflow());
   }
 
@@ -206,9 +204,9 @@ export class DsModuleRail extends HTMLElement {
     this._menu.classList.toggle('ds-module-rail__menu--rtl', rtl);
     this._menu.innerHTML = this._items.map((t) => {
       const active = t.active ? ' is-active' : '';
-      return `<button type="button" class="ds-module-rail__menuitem${active}" data-id="${this._esc(t.id)}"${t.active ? ' aria-current="page"' : ''}>`
-        + `<span class="ds-module-rail__menuic"><ds-icon name="${escapeHtml(this._esc(t.icon || 'product'))}" size="20"></ds-icon></span>`
-        + `<span class="ds-module-rail__menulbl">${this._esc(t.label)}</span></button>`;
+      return `<button type="button" class="ds-module-rail__menuitem${active}" data-id="${escapeHtml(t.id)}"${t.active ? ' aria-current="page"' : ''}>`
+        + `<span class="ds-module-rail__menuic"><ds-icon name="${escapeHtml(t.icon || 'product')}" size="20"></ds-icon></span>`
+        + `<span class="ds-module-rail__menulbl">${escapeHtml(t.label)}</span></button>`;
     }).join('');
     /* Size to content but never taller than the viewport; anchor to the rail's
        top, nudging up only if the panel would overflow the bottom edge. */
@@ -248,8 +246,8 @@ export class DsModuleRail extends HTMLElement {
       });
     }
     const list = this._items.filter((t) => this._overflowIds.includes(t.id));
-    this._fly.innerHTML = list.map((t) => `<button type="button" class="ds-module-rail__flyitem${t.active ? ' is-active' : ''}" data-id="${this._esc(t.id)}">`
-      + `<ds-icon name="${escapeHtml(this._esc(t.icon || 'product'))}" size="18"></ds-icon><span>${this._esc(t.label)}</span></button>`).join('');
+    this._fly.innerHTML = list.map((t) => `<button type="button" class="ds-module-rail__flyitem${t.active ? ' is-active' : ''}" data-id="${escapeHtml(t.id)}">`
+      + `<ds-icon name="${escapeHtml(t.icon || 'product')}" size="18"></ds-icon><span>${escapeHtml(t.label)}</span></button>`).join('');
     this._fly.hidden = false;
     const r = btn.getBoundingClientRect();
     this._fly.style.bottom = (window.innerHeight - r.bottom) + 'px';

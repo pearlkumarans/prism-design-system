@@ -33,6 +33,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { lockScroll, unlockScroll } from '../../utils/scroll-lock.js';
 /* Reuse DS primitives instead of raw HTML: footer actions = <ds-button>,
    close = <ds-icon-button>, header/footer rules = <ds-divider>. */
 import '../../icons/icon.js';
@@ -287,9 +288,12 @@ export class DsFullscreenModal extends HTMLElement {
   _setBtn(act, label) {
     const btn = this._btns[act];
     if (!btn) return;
-    const inner = btn.querySelector('.ds-button__label');
-    if (inner) inner.textContent = label;
-    else btn.textContent = label;
+    /* Set ds-button's `label` ATTRIBUTE, not the label span's textContent: this
+       _sync toggles the button's `loading`/`disabled` attrs right after, and that
+       re-renders ds-button's internals — which would wipe a textContent write,
+       leaving an empty button (the confirmation-modal empty-button bug). The
+       attribute is reactive, so it survives the re-render. */
+    btn.setAttribute('label', label);
   }
 
   // ---- Lifecycle ----------------------------------------------------------
@@ -340,18 +344,11 @@ export class DsFullscreenModal extends HTMLElement {
     }
   }
 
-  _applyScrollLock() {
-    if (this._scrollLocked) return;
-    this._prevBodyOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    this._scrollLocked = true;
-  }
-
-  _releaseScrollLock() {
-    if (!this._scrollLocked) return;
-    document.body.style.overflow = this._prevBodyOverflow || '';
-    this._scrollLocked = false;
-  }
+  /* Background scroll lock via the shared ref-counted util (adds scrollbar-shift
+     compensation + composes with a stacked modal/drawer); the instance flag keeps
+     the ref-count balanced. */
+  _applyScrollLock() { if (!this._scrollLocked) { this._scrollLocked = true; lockScroll(); } }
+  _releaseScrollLock() { if (this._scrollLocked) { this._scrollLocked = false; unlockScroll(); } }
 
   _dismiss() {
     /* All dismiss paths (close button, overlay, Esc) route through here, so a

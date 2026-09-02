@@ -52,6 +52,7 @@ import '../field-helper/field-helper.js';
 /* Inline-variant stepper arrows reuse <ds-icon-button> (chevron up / down). */
 import '../icon-button/icon-button.js';
 import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Auto-load dependent stylesheets (both are light-DOM, so their CSS must be
    present even on pages that load time-picker.css individually). */
@@ -65,9 +66,6 @@ const SIZES = ['small', 'medium', 'large'];
 const CYCLES = ['12', '24'];
 const VALIDATIONS = ['none', 'success', 'error'];
 const RANGE_SEP = ' – ';   /* en-dash separator for the range field display */
-
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) =>
-  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 const DAY_MINS = 24 * 60;
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -171,7 +169,11 @@ export class DsTimePicker extends HTMLElement {
     document.removeEventListener('click', this._docClickHandler);
     document.removeEventListener('keydown', this._docKeyHandler, true);
     this._unbindReanchor();
+    if (this._reanchorRaf) { cancelAnimationFrame(this._reanchorRaf); this._reanchorRaf = 0; }
     if (this._popover && this._popover.parentNode) this._popover.parentNode.removeChild(this._popover);
+    /* Removed while open: drop the open flag so a later reconnect starts closed
+       (the popover was just detached) rather than believing it's still open. */
+    this._isOpen = false;
   }
 
   attributeChangedCallback(name) {
@@ -552,12 +554,12 @@ export class DsTimePicker extends HTMLElement {
         const [s, e] = String(p.value || '').split('/');
         if (hhmmToMins(s) == null || hhmmToMins(e) == null) return '';
         return `<li class="ds-time-picker__option ds-time-picker__option--preset" role="option"
-                    data-range="${esc(p.value)}">${esc(p.label)}</li>`;
+                    data-range="${escapeHtml(p.value)}">${escapeHtml(p.label)}</li>`;
       }
       const mins = hhmmToMins(p.value);
       if (mins == null) return '';
       return `<li class="ds-time-picker__option ds-time-picker__option--preset" role="option"
-                  data-mins="${mins}">${esc(p.label)}</li>`;
+                  data-mins="${mins}">${escapeHtml(p.label)}</li>`;
     }).filter(Boolean);
   }
 
@@ -587,7 +589,7 @@ export class DsTimePicker extends HTMLElement {
         `<li class="ds-time-picker__option${isSel ? ' is-selected' : ''}" role="option"
              id="ds-tp-${this._uid}-opt-${t}" data-mins="${t}"
              aria-selected="${isSel ? 'true' : 'false'}"
-             ${disabled ? 'aria-disabled="true"' : ''}>${label}</li>`
+             ${disabled ? 'aria-disabled="true"' : ''}>${escapeHtml(label)}</li>`
       );
     }
     if (!rows.length) rows.push(`<li class="ds-time-picker__empty" role="presentation">No matching time</li>`);
@@ -612,7 +614,7 @@ export class DsTimePicker extends HTMLElement {
     } else {
       const sTxt = this._rStart != null ? fmtDisplay(this._rStart, cycle) : '';
       rows.push(`<li class="ds-time-picker__rhead" role="presentation">`
-        + `<button type="button" class="ds-time-picker__rback" data-rback aria-label="Back to start time">&lsaquo; ${esc(sTxt)}</button>`
+        + `<button type="button" class="ds-time-picker__rback" data-rback aria-label="Back to start time">&lsaquo; ${escapeHtml(sTxt)}</button>`
         + `<span>End time</span></li>`);
     }
     const selMins = picking === 'start' ? this._rStart : this._rEnd;
@@ -837,9 +839,15 @@ export class DsTimePicker extends HTMLElement {
     this._reanchor = (e) => {
       if (!this._isOpen) return;
       /* Ignore the list's OWN internal scroll (capture-phase scroll fires for
-         descendants too) — only page/ancestor scrolls should re-anchor. */
+         descendants too) — only page/ancestor scrolls should re-anchor. This
+         filter must stay synchronous (needs the event); the reposition itself is
+         rAF-throttled so a scroll burst doesn't thrash layout. */
       if (e && e.type === 'scroll' && e.target && this._popover.contains(e.target)) return;
-      this._position();
+      if (this._reanchorRaf) return;
+      this._reanchorRaf = requestAnimationFrame(() => {
+        this._reanchorRaf = 0;
+        if (this._isOpen) this._position();
+      });
     };
     window.addEventListener('scroll', this._reanchor, true);
     window.addEventListener('resize', this._reanchor);

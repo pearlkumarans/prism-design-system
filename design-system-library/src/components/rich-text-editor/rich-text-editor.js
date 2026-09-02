@@ -21,13 +21,12 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 /* Helper/counter row = the shared "Form Field Helper Row" sub-component. */
 import '../field-helper/field-helper.js';
 import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 /* Auto-load field-helper.css once (both are light-DOM, so the stylesheet must
    be present even on pages that load rich-text-editor.css individually). */
 injectCss('ds-rte-fh-css', '../field-helper/field-helper.css', import.meta.url);
-
-const esc = (s) => String(s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const STATES = ['default', 'error', 'disabled', 'readonly'];
 const TOOLBARS = ['fixed', 'floating', 'hidden'];
@@ -167,12 +166,12 @@ export class DsRichTextEditor extends HTMLElement {
 
     this._root.innerHTML = `
       <div class="${cls}" ${rtl ? 'dir="rtl"' : ''}>
-        ${showLabel ? `<label class="ds-rte__label">${label}</label>` : ''}
+        ${showLabel ? `<label class="ds-rte__label">${escapeHtml(label)}</label>` : ''}
         <div class="ds-rte__frame">
           ${toolbarHTML}
           <div class="ds-rte__body"
-               role="textbox" aria-multiline="true" aria-label="${label}"
-               data-placeholder="${placeholder}"
+               role="textbox" aria-multiline="true" aria-label="${escapeHtml(label)}"
+               data-placeholder="${escapeHtml(placeholder)}"
                ${editable ? 'contenteditable="true"' : 'contenteditable="false"'}
                ${isDisabled ? 'aria-disabled="true"' : ''}
                ${isReadonly ? 'aria-readonly="true"' : ''}
@@ -181,7 +180,7 @@ export class DsRichTextEditor extends HTMLElement {
           ${editable ? `<div class="ds-rte__resize-grip" title="Drag to resize" aria-hidden="true"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M11 11H9v-2h2v2zm0-4H7v-2h2v2h2v2zm-4 4H5v-2h2v2z"/></svg></div>` : ''}
         </div>
         ${helperRowShown ? `<ds-field-helper class="ds-rte__helper-row" id="${helperId}"
-          text="${esc(helper)}" state="${helperState}"
+          text="${escapeHtml(helper)}" state="${helperState}"
           ${helper ? '' : 'show-icon="false"'}
           ${hasMax ? `counter="0/${maxLength}"` : ''}
           ${rtl ? 'rtl' : ''}></ds-field-helper>` : ''}
@@ -203,6 +202,11 @@ export class DsRichTextEditor extends HTMLElement {
       this._updateCounter();
       this.dispatchEvent(new CustomEvent('ds-rte-change', { bubbles: true, detail: { value: this.value } }));
     });
+    /* Floating toolbar repositions on caret move. `_body` is rebuilt on every
+       _render, so (unlike the once-wired host/root listeners in _wireFloating)
+       this must re-bind here — otherwise keyup-reposition dies after the first
+       attribute change. */
+    this._body.addEventListener('keyup', () => this._updateFloating());
     this._root.querySelectorAll('.ds-rte__btn').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -216,10 +220,10 @@ export class DsRichTextEditor extends HTMLElement {
         }
         if (!cmd) return;
         if (cmd === 'createLink') {
-          const url = prompt('Enter URL');
+          const url = this._safeUrl(prompt('Enter URL'));
           if (url) this._exec('createLink', url);
         } else if (cmd === 'image') {
-          const src = prompt('Enter image URL');
+          const src = this._safeUrl(prompt('Enter image URL'));
           if (src) this._exec('insertImage', src);
         } else {
           this._exec(cmd);
@@ -283,10 +287,10 @@ export class DsRichTextEditor extends HTMLElement {
     if (this._floatingWired) return;
     this._floatingWired = true;
 
-    const reposition = () => this._updateFloating();
     /* selectionchange is managed by connect/disconnect (this._onSelChange) so it
-       can be removed when the editor leaves the DOM — do NOT add it here. */
-    this._body && this._body.addEventListener('keyup', reposition);
+       can be removed when the editor leaves the DOM — do NOT add it here. The
+       per-caret `keyup` reposition is bound in _wire (the _body is rebuilt each
+       render); only the persistent host/root listeners live here. */
     this.addEventListener('keydown', (e) => { if (e.key === 'Escape') this._hideFloating(); });
 
     /* Drag the leading move handle (⋮⋮) to reposition the bubble. */
@@ -342,6 +346,19 @@ export class DsRichTextEditor extends HTMLElement {
     top = Math.max(4, Math.min(top, frame.clientHeight - flH - 4));
     fl.style.left = left + 'px';
     fl.style.top = top + 'px';
+  }
+
+  /* Reject dangerous URL schemes for typed links/images so a link can't smuggle
+     script into the editor's HTML `value` (which a consumer may later render for
+     other users). Whitespace (incl. the tab/newline/CR a browser ignores inside a
+     scheme) is stripped for the check so an obfuscated scheme can't slip past.
+     Returns the trimmed URL, or null if unsafe/empty. */
+  _safeUrl(url) {
+    if (!url) return null;
+    const trimmed = String(url).trim();
+    const scheme = trimmed.replace(/\s+/g, '').toLowerCase();
+    if (/^(?:javascript|data|vbscript):/.test(scheme)) return null;
+    return trimmed;
   }
 
   _exec(command, value = null) {

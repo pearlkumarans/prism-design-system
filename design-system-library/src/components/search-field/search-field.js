@@ -22,6 +22,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 const SIZES = ['small', 'medium', 'large'];
 
@@ -93,9 +94,10 @@ export class DsSearchField extends HTMLElement {
     this._iconSlot = this.querySelector('[data-icon-search]');
     this._trailing = this.querySelector('[data-trailing]');
 
-    /* Inject the search icon (uses the icon sprite for visual consistency
-       with the rest of the system; falls back to inline SVG when no sprite
-       is configured so the field still works in isolation). */
+    /* Inject the search icon via the icon sprite (`<use href="…#icon-search">`);
+       the sprite URL is `window.UEMS_ICON_SPRITE` or `/icons.svg`. NOTE: this
+       needs that sprite present — there is no inline-SVG fallback, so a page that
+       loads search-field without the sprite shows an empty icon. */
     this._iconSlot.innerHTML = this._svg('search');
 
     /* Wire input events */
@@ -203,7 +205,7 @@ export class DsSearchField extends HTMLElement {
           ${this._svg('close', 16)}
         </button>`;
     } else if (showShort && !disabled) {
-      trailingHTML = `<kbd class="ds-search-field__shortcut">${shortLabel}</kbd>`;
+      trailingHTML = `<kbd class="ds-search-field__shortcut">${escapeHtml(shortLabel)}</kbd>`;
     }
     if (this._trailing.innerHTML !== trailingHTML) {
       this._trailing.innerHTML = trailingHTML;

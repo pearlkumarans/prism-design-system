@@ -32,6 +32,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { lockScroll, unlockScroll } from '../../utils/scroll-lock.js';
 import '../../icons/icon.js';
 import '../icon-button/icon-button.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
@@ -256,17 +257,11 @@ export class DsDrawer extends HTMLElement {
   }
 
   // ---- Body scroll lock (modal) ------------------------------------------
-  _lockScroll() {
-    if (this._scrollLocked) return;
-    this._prevBodyOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    this._scrollLocked = true;
-  }
-  _unlockScroll() {
-    if (!this._scrollLocked) return;
-    document.body.style.overflow = this._prevBodyOverflow || '';
-    this._scrollLocked = false;
-  }
+  /* Shared, ref-counted scroll lock (adds scrollbar-shift compensation and
+     composes with a stacked modal/confirmation). Only called for modal drawers
+     (see _onOpen); the instance flag keeps the ref-count balanced. */
+  _lockScroll() { if (!this._scrollLocked) { this._scrollLocked = true; lockScroll(); } }
+  _unlockScroll() { if (this._scrollLocked) { this._scrollLocked = false; unlockScroll(); } }
 
   // ---- Focus trap (modal) -------------------------------------------------
   _trapFocus(e) {

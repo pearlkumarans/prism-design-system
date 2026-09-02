@@ -20,9 +20,14 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 import '../icon-button/icon-button.js';
 import { injectCss } from '../../utils/inject-css.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
+import '../badge/badge.js';
 
 /* Auto-load icon-button.css once (light-DOM). Idempotent. */
 injectCss('ds-tab-bar-horizontal-icon-button-css', '../icon-button/icon-button.css', import.meta.url);
+/* Items may render a light-DOM <ds-badge>; inject its CSS too (JS import alone
+   doesn't carry the stylesheet). Idempotent. */
+injectCss('ds-tab-bar-horizontal-badge-css', '../badge/badge.css', import.meta.url);
 
 const TYPES = ['fill', 'underline'];
 
@@ -66,7 +71,13 @@ export class DsTabBarHorizontal extends HTMLElement {
     else this._render();
   }
 
-  disconnectedCallback() { this._ro?.disconnect(); }
+  disconnectedCallback() {
+    /* `_render` re-observes the scroller on every render (so reconnect re-attaches
+       the RO), hence disconnect is enough here — but also clear the one-shot
+       indicator-slide timer. */
+    this._ro?.disconnect();
+    clearTimeout(this._animTimer);
+  }
 
   // ---- Public API ---------------------------------------------------------
   get items() { return this._items; }
@@ -104,7 +115,7 @@ export class DsTabBarHorizontal extends HTMLElement {
        when the row overflows; each button's disabled state tracks scroll pos. */
     this._root.innerHTML =
       `<div class="ds-tab-bar-horizontal__scroller" role="tablist" aria-orientation="horizontal"
-            ${ariaLabel ? `aria-label="${ariaLabel}"` : ''} ${ariaLabelledBy ? `aria-labelledby="${ariaLabelledBy}"` : ''}>
+            ${ariaLabel ? `aria-label="${escapeHtml(ariaLabel)}"` : ''} ${ariaLabelledBy ? `aria-labelledby="${escapeHtml(ariaLabelledBy)}"` : ''}>
          <span class="ds-tab-bar-horizontal__indicator" aria-hidden="true"></span>
          ${this._items.map((it, idx) => this._renderItem(it, idx, activeId, rtl)).join('')}
        </div>
@@ -260,7 +271,7 @@ export class DsTabBarHorizontal extends HTMLElement {
       const badgeText = isObj ? (item.badge.text != null ? String(item.badge.text) : '') : String(item.badge);
       const badgeVariant = isObj && item.badge.variant ? item.badge.variant : 'subtle';
       const badgeState   = isObj && item.badge.state   ? item.badge.state   : 'default';
-      badgeHTML = `<span class="ds-tab-bar-horizontal__item-badge"><ds-badge variant="${badgeVariant}" state="${badgeState}" size="small">${badgeText}</ds-badge></span>`;
+      badgeHTML = `<span class="ds-tab-bar-horizontal__item-badge"><ds-badge variant="${escapeHtml(badgeVariant)}" state="${escapeHtml(badgeState)}" size="small">${escapeHtml(badgeText)}</ds-badge></span>`;
     }
 
     const cls = [
@@ -274,14 +285,14 @@ export class DsTabBarHorizontal extends HTMLElement {
               role="tab"
               id="${id}"
               class="${cls}"
-              ${item.panelId ? `aria-controls="${item.panelId}"` : ''}
+              ${item.panelId ? `aria-controls="${escapeHtml(item.panelId)}"` : ''}
               aria-selected="${isActive ? 'true' : 'false'}"
               ${isDisabled ? 'aria-disabled="true" disabled' : ''}
               tabindex="${isActive && !isDisabled ? 0 : -1}"
-              data-id="${item.id}"
+              data-id="${escapeHtml(item.id ?? '')}"
               data-index="${idx}">
               ${iconHTML}
-              <span class="ds-tab-bar-horizontal__item-label" data-label="${String(label).replace(/"/g, '&quot;')}"><span>${label}</span></span>
+              <span class="ds-tab-bar-horizontal__item-label" data-label="${String(label).replace(/"/g, '&quot;')}"><span>${escapeHtml(label)}</span></span>
               ${badgeHTML}
             </button>`;
   }

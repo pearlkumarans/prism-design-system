@@ -47,6 +47,8 @@ import '../date-picker/date-picker.js';
 /* Phase 4 field type. */
 import '../token-field/token-field.js';
 import { injectCss } from '../../utils/inject-css.js';
+import { rafThrottle } from '../../utils/raf-throttle.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Auto-load light-DOM stylesheets once (so this works on pages that link
    filter-panel.css individually, not just the bundled index.css). */
@@ -107,7 +109,7 @@ export class DsFilterPanel extends HTMLElement {
         n.classList.contains('ds-token-field__dropdown')))) return;
       this.close();
     };
-    this._onReposition = () => { if (this._open && this._effectiveMode() === 'popover') this._positionPopover(); };
+    this._onReposition = rafThrottle(() => { if (this._open && this._effectiveMode() === 'popover') this._positionPopover(); });
     this._fitEnabled = false;              // fit-viewport: cap height to the screen (mirrors ds-data-table)
     this._onFit = () => this._fitViewport();
   }
@@ -277,7 +279,11 @@ export class DsFilterPanel extends HTMLElement {
     const card = this._root.querySelector('.ds-filter-panel');
     if (!card) return;
     const anchorSel = this.getAttribute('anchor');
-    const anchor = this._trigger || (anchorSel && document.querySelector(anchorSel));
+    /* A consumer-supplied `anchor` selector could be malformed; querySelector
+       throws on an invalid selector, and this runs on every rAF-throttled
+       scroll/resize — guard it rather than throw each frame. */
+    let anchor = this._trigger;
+    if (!anchor && anchorSel) { try { anchor = document.querySelector(anchorSel); } catch (_) { anchor = null; } }
     if (!anchor) return;
     const a = anchor.getBoundingClientRect();
     const w = card.offsetWidth || 280, h = card.offsetHeight || 320, gap = 8, vw = innerWidth, vh = innerHeight;
@@ -319,8 +325,6 @@ export class DsFilterPanel extends HTMLElement {
   /* ---- Internals -------------------------------------------------------- */
   get _applyMode() { return this.getAttribute('apply-mode') === 'apply' ? 'apply' : 'live'; }
   _emit(type, detail) { this.dispatchEvent(new CustomEvent('ds-filter-panel-' + type, { bubbles: true, detail })); }
-  _esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-
   _group(id) { return this._groups.find((g) => g.id === id); }
   _isMulti(g) { return g.type === 'checkbox' || g.type === 'tags' || (g.type === 'select' && g.multi); }
   _optLabel(g, val) { return (g.options || []).find((o) => o.value === val)?.label ?? val; }
@@ -394,13 +398,13 @@ export class DsFilterPanel extends HTMLElement {
 
     const panelInner = `
       <div class="ds-filter-panel__header">
-        <span class="ds-filter-panel__title">${this._esc(title)}</span>
+        <span class="ds-filter-panel__title">${escapeHtml(title)}</span>
         <span class="ds-filter-panel__header-end">
-          ${count != null ? `<span class="ds-filter-panel__count">${this._esc(count)}</span>` : ''}
+          ${count != null ? `<span class="ds-filter-panel__count">${escapeHtml(count)}</span>` : ''}
           ${overlay ? '<button type="button" class="ds-fp-close" aria-label="Close filters"><ds-icon name="close" size="18"></ds-icon></button>' : ''}
         </span>
       </div>
-      ${showSearch && !loading ? `<div class="ds-filter-panel__toolbar"><ds-search-field class="ds-fp-search" placeholder="Search filters…" value="${this._esc(this._query)}"></ds-search-field></div>` : ''}
+      ${showSearch && !loading ? `<div class="ds-filter-panel__toolbar"><ds-search-field class="ds-fp-search" placeholder="Search filters…" value="${escapeHtml(this._query)}"></ds-search-field></div>` : ''}
       <div class="ds-filter-panel__summary" role="group" aria-label="Active filters" hidden></div>
       <div class="ds-filter-panel__body"></div>
       <div class="ds-filter-panel__footer" hidden></div>`;
@@ -409,7 +413,7 @@ export class DsFilterPanel extends HTMLElement {
       this._root.className = 'ds-fp-host ds-fp-host--' + em + (this._open ? ' is-open' : '');
       this._root.innerHTML =
         '<div class="ds-fp-backdrop"></div>' +
-        `<div class="ds-filter-panel" role="dialog" aria-modal="true" tabindex="-1" aria-label="${this._esc(title)}">${panelInner}</div>`;
+        `<div class="ds-filter-panel" role="dialog" aria-modal="true" tabindex="-1" aria-label="${escapeHtml(title)}">${panelInner}</div>`;
     } else {
       this._root.className = 'ds-filter-panel';
       this._root.innerHTML = panelInner;
@@ -421,7 +425,7 @@ export class DsFilterPanel extends HTMLElement {
         '<div class="ds-fp-skel-group"><div class="ds-fp-skel ds-fp-skel--title"></div>'
         + '<div class="ds-fp-skel ds-fp-skel--row"></div><div class="ds-fp-skel ds-fp-skel--row"></div><div class="ds-fp-skel ds-fp-skel--row"></div></div>').join('');
     } else if (!this._groups.length) {
-      body.innerHTML = `<div class="ds-fp-empty">${this._esc(this.getAttribute('empty-text') || 'No filters available.')}</div>`;
+      body.innerHTML = `<div class="ds-fp-empty">${escapeHtml(this.getAttribute('empty-text') || 'No filters available.')}</div>`;
     } else {
       this._groups.forEach((g) => body.appendChild(this._renderGroup(g, collapsible)));
     }
@@ -461,7 +465,7 @@ export class DsFilterPanel extends HTMLElement {
     head.className = 'ds-fp-group__head';
     if (collapsible) { head.type = 'button'; head.setAttribute('aria-expanded', String(!collapsed)); }
     head.innerHTML =
-      `<span class="ds-fp-group__label">${this._esc(g.label || g.id)}</span>` +
+      `<span class="ds-fp-group__label">${escapeHtml(g.label || g.id)}</span>` +
       (collapsible ? `<ds-icon class="ds-fp-group__chevron" name="chevron-down" size="16"></ds-icon>` : '');
     if (collapsible) head.addEventListener('click', () => {
       this._collapsed[g.id] = !this._collapsed[g.id];
@@ -617,7 +621,7 @@ export class DsFilterPanel extends HTMLElement {
     host.hidden = chips.length === 0;
     if (!chips.length) { host.innerHTML = ''; return; }
     host.innerHTML =
-      chips.map((c) => `<ds-tag class="ds-fp-chip" variant="subtle" size="medium" show-close data-group="${this._esc(c.id)}" data-key="${this._esc(c.key)}">${this._esc(c.label)}</ds-tag>`).join('') +
+      chips.map((c) => `<ds-tag class="ds-fp-chip" variant="subtle" size="medium" show-close data-group="${escapeHtml(c.id)}" data-key="${escapeHtml(c.key)}">${escapeHtml(c.label)}</ds-tag>`).join('') +
       `<button type="button" class="ds-fp-clear">Clear all</button>`;
     host.querySelectorAll('.ds-fp-chip').forEach((t) => t.addEventListener('ds-tag-close', (e) => {
       const el = e.target.closest('[data-group]'); if (!el) return;

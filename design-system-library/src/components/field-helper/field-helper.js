@@ -11,6 +11,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 /* Spec state name is `negative`; `error` is kept as a working alias since
    existing fields (date-picker, slider, input-select, otp-input) pass it. */
@@ -22,9 +23,6 @@ const ICON_FOR = {
   success: 'tick',                 // spec §Color: Success glyph = tick
   disabled: 'info-circle',
 };
-
-const esc = (s) => String(s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 export class DsFieldHelper extends HTMLElement {
   static get observedAttributes() { return ['text', 'state', 'icon', 'show-icon', 'counter', 'rtl']; }
@@ -87,9 +85,9 @@ export class DsFieldHelper extends HTMLElement {
     this._root.innerHTML = `
       <span class="ds-field-helper__group">
         ${showIcon && text ? `<span class="ds-field-helper__icon" aria-hidden="true"><ds-icon name="${escapeHtml(icon)}" size="12"></ds-icon></span>` : ''}
-        ${text ? `<span class="ds-field-helper__text">${esc(text)}</span>` : ''}
+        ${text ? `<span class="ds-field-helper__text">${escapeHtml(text)}</span>` : ''}
       </span>
-      ${counter ? `<span class="ds-field-helper__counter">${esc(counter)}</span>` : ''}
+      ${counter ? `<span class="ds-field-helper__counter">${escapeHtml(counter)}</span>` : ''}
     `;
 
     /* Truncation tooltip: the help text is single-line + ellipsis, so when it's

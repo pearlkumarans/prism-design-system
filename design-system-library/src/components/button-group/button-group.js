@@ -41,6 +41,12 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 import '../../icons/icon.js';
 /* Select-all / deselect-all uses the real <ds-text-link> component. */
 import '../text-link/text-link.js';
+import { escapeHtml } from '../../utils/escape.js';
+/* Auto-load text-link.css since the select-all row reuses <ds-text-link> in
+   light DOM (its styles would otherwise be missing standalone). Idempotent —
+   injected once per document. */
+import { injectCss } from '../../utils/inject-css.js';
+injectCss('ds-button-group-textlink-css', '../text-link/text-link.css', import.meta.url);
 
 const MODES   = ['single', 'multi', 'none'];
 const LAYOUTS = ['row', 'grid', 'column'];
@@ -48,9 +54,6 @@ const VARIANTS = ['separated', 'attached'];
 const SIZES   = ['small', 'medium', 'large'];
 const LABEL_POSITIONS = ['none', 'left', 'top'];
 let bgUid = 0;
-
-const esc = (s) => String(s == null ? '' : s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 export class DsButtonGroup extends HTMLElement {
   static get observedAttributes() {
@@ -178,9 +181,9 @@ export class DsButtonGroup extends HTMLElement {
     const buttonsHtml = this._items.map((o, i) => {
       const disabled = groupDisabled || !!o.disabled;
       const roleAttr = mode === 'single' ? ' role="radio"' : '';
-      const icon = o.icon ? `<ds-icon class="ds-button-group__icon" name="${esc(o.icon)}" size="${iconPx}"></ds-icon>` : '';
-      const text = (o.label != null && o.label !== '') ? `<span class="ds-button-group__label">${esc(o.label)}</span>` : '';
-      const aria = o.ariaLabel ? ` aria-label="${esc(o.ariaLabel)}"` : '';
+      const icon = o.icon ? `<ds-icon class="ds-button-group__icon" name="${escapeHtml(o.icon)}" size="${iconPx}"></ds-icon>` : '';
+      const text = (o.label != null && o.label !== '') ? `<span class="ds-button-group__label">${escapeHtml(o.label)}</span>` : '';
+      const aria = o.ariaLabel ? ` aria-label="${escapeHtml(o.ariaLabel)}"` : '';
       return `<button type="button" class="ds-button-group__item"${roleAttr}${aria}`
         + ` data-index="${i}"${disabled ? ' disabled' : ''}>${icon}${text}</button>`;
     }).join('');
@@ -188,14 +191,14 @@ export class DsButtonGroup extends HTMLElement {
     const lblId = `ds-bg-${this._uid}-lbl`;
     if (wrap) {
       const labelHtml = hasLabel
-        ? `<div class="ds-button-group__label-col"><label class="ds-button-group__grp-label" id="${lblId}">${esc(label)}</label></div>`
+        ? `<div class="ds-button-group__label-col"><label class="ds-button-group__grp-label" id="${lblId}">${escapeHtml(label)}</label></div>`
         : '';
       /* Select-all row. When there's no positioned label but a `label` is set
          (legacy header usage), the label rides at the start of this row and the
          link at the end (space-between); otherwise the link right-aligns. */
-      const inlineLabel = (!hasLabel && label) ? esc(label) : '';
+      const inlineLabel = (!hasLabel && label) ? label : '';   // raw; escaped once at the sink below
       const selectAllHtml = showSelectAll
-        ? `<div class="ds-button-group__actions"><span class="ds-button-group__actions-label">${inlineLabel}</span>`
+        ? `<div class="ds-button-group__actions"><span class="ds-button-group__actions-label">${escapeHtml(inlineLabel)}</span>`
           + `<ds-text-link class="ds-button-group__select-all" href="#" size="small"></ds-text-link></div>`
         : '';
       this.innerHTML = labelHtml

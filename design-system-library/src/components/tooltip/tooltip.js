@@ -13,6 +13,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 const POSITIONS = ['up-center', 'up-left', 'up-right', 'down-center', 'down-left', 'down-right', 'left', 'right', 'without-arrow'];
 const THEMES = ['dark', 'light', 'red'];
@@ -100,7 +101,15 @@ export class DsTooltip extends HTMLElement {
      or resize repositions the tip so it stays glued to the trigger. */
   _bindReanchor = () => {
     if (this._reanchor) return;
-    this._reanchor = () => { if (this._open) this._position(); };
+    /* rAF-throttle: scroll fires many times per frame; coalesce into one layout
+       read + reposition per frame so an open tooltip doesn't thrash layout on
+       scroll. A frame that lands after hide is a no-op (guarded by _open). */
+    let rafPending = false;
+    this._reanchor = () => {
+      if (!this._open || rafPending) return;
+      rafPending = true;
+      requestAnimationFrame(() => { rafPending = false; if (this._open) this._position(); });
+    };
     window.addEventListener('scroll', this._reanchor, true);
     window.addEventListener('resize', this._reanchor);
   };

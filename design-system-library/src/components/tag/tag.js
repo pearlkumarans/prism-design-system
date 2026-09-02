@@ -13,6 +13,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 const VARIANTS = ['neutral', 'primary', 'success', 'warning', 'error', 'outline'];
 const SIZES = ['small', 'medium', 'large'];
@@ -106,8 +107,8 @@ export class DsTag extends HTMLElement {
 
     this._root.innerHTML = `
       ${leadingHTML}
-      <span class="ds-tag__label">${label}</span>
-      ${showClose ? `<button class="ds-tag__close" type="button" aria-label="Remove ${label}" tabindex="-1" data-close><ds-icon name="close" size="8"></ds-icon></button>` : ''}
+      <span class="ds-tag__label">${escapeHtml(label)}</span>
+      ${showClose ? `<button class="ds-tag__close" type="button" aria-label="Remove ${escapeHtml(label)}" tabindex="-1" data-close><ds-icon name="close" size="8"></ds-icon></button>` : ''}
     `;
 
     this._root.querySelector('[data-close]')?.addEventListener('click', (e) => {

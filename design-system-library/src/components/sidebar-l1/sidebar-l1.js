@@ -25,6 +25,7 @@ import { escapeHtml } from '../../utils/escape.js';
 /* Collapsed (icon-only) items reveal their label via the shared <ds-tooltip>. */
 import '../tooltip/tooltip.js';
 import { injectCss } from '../../utils/inject-css.js';
+import '../../icons/icon.js';
 
 /* Auto-load tooltip.css once (light-DOM, so the stylesheet must be present even
    on pages that load sidebar-l1.css individually). Idempotent. */
@@ -60,7 +61,15 @@ export class DsSidebarL1 extends HTMLElement {
 
   attributeChangedCallback() { if (this._root) this._render(); }
 
-  disconnectedCallback() { this._ro?.disconnect(); }
+  disconnectedCallback() {
+    /* Null the observer, not just disconnect it — `_render` only re-creates the
+       RO `if (!this._ro)`, so leaving the stale (disconnected) reference here
+       would leave it dead after a disconnect → reconnect (SPA/tab switch),
+       silently breaking indicator repositioning + truncation tooltips on resize. */
+    this._ro?.disconnect();
+    this._ro = null;
+    clearTimeout(this._animTimer);   /* one-shot chip-glide flag reset */
+  }
 
   get items() { return this._items; }
   set items(v) { this._items = Array.isArray(v) ? v.slice() : []; if (this._root) this._render(); }

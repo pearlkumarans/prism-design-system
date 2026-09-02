@@ -48,6 +48,7 @@ import '../avatar/avatar.js';
 import '../progress-bar/progress-bar.js';
 import '../toggle/toggle.js';
 import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Auto-load light-DOM sub-component stylesheets once (so this works on pages
    that link description-list.css individually, not just the bundled index.css). */
@@ -61,9 +62,6 @@ injectCss('ds-description-list-tl-css', '../text-link/text-link.css', import.met
 injectCss('ds-description-list-av-css', '../avatar/avatar.css', import.meta.url);
 injectCss('ds-description-list-pb-css', '../progress-bar/progress-bar.css', import.meta.url);
 injectCss('ds-description-list-tg-css', '../toggle/toggle.css', import.meta.url);
-
-const esc = (s) => String(s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const COLUMNS = ['1', '2', '3', 'auto'];
 const ORIENTATIONS = ['stacked', 'horizontal', 'horizontal-auto'];
@@ -112,13 +110,13 @@ export class DsDescriptionList extends HTMLElement {
     if (rtl) this._root.setAttribute('dir', 'rtl'); else this._root.removeAttribute('dir');
 
     this._root.innerHTML = this._items.map((it, i) => {
-      const term = esc(it.term ?? '');
+      const term = escapeHtml(it.term ?? '');
       /* Empty value reads as an em-dash rather than a blank <dd> (spec edge case). */
       const hasValue = it.description != null && String(it.description).trim() !== '';
-      const value = hasValue ? esc(it.description) : '—';
+      const value = hasValue ? escapeHtml(it.description) : '—';
 
       const help = it.help
-        ? `<ds-tooltip class="ds-description-list__help-tip" text="${esc(it.help)}" position="up-center" show-icon="false">`
+        ? `<ds-tooltip class="ds-description-list__help-tip" text="${escapeHtml(it.help)}" position="up-center" show-icon="false">`
           + `<button type="button" class="ds-description-list__help" data-help="${i}" aria-label="About ${term}">`
           + `<ds-icon name="help-circle" size="14"></ds-icon></button></ds-tooltip>`
         : '';
@@ -133,6 +131,8 @@ export class DsDescriptionList extends HTMLElement {
 
       return (
         `<div class="ds-description-list__item">`
+        /* `term` is already escaped (top of _render) and `help` is a built,
+           already-escaped HTML fragment — interpolate both raw, never re-escape. */
         + `<dt class="ds-description-list__term"><span class="ds-description-list__term-text">${term}</span>${help}</dt>`
         + `<dd class="ds-description-list__value${hasValue ? '' : ' ds-description-list__value--empty'}">`
         + `${valueInner}${edit}</dd>`
@@ -147,38 +147,44 @@ export class DsDescriptionList extends HTMLElement {
      Back-compat: an `it.status` with no `type` is treated as type:'status'. */
   _valueHtml(it, i, term, hasValue, value, rtl) {
     const type = it.type || (it.status ? 'status' : 'text');
+    /* `term`, `value`, `label` and `fallback` are ALREADY escaped by the caller
+       — interpolate them raw. Only RAW `it.*` fields (status/variant/icon/href/…)
+       get escaped at their sink below. Re-escaping the pre-escaped locals was a
+       double-escape bug (values rendered a literal `&amp;`). */
     const label = hasValue ? value : '';          // `value` is already escaped
     const fallback = label || term;               // typed values fall back to the term
     const rtlA = rtl ? ' rtl' : '';
 
     switch (type) {
       case 'status':
-        return `<ds-status-indicator class="ds-description-list__status" size="large" status="${esc(it.status || 'default')}" label="${fallback}"${rtlA}></ds-status-indicator>`;
+        return `<ds-status-indicator class="ds-description-list__status" size="large" status="${escapeHtml(it.status || 'default')}" label="${fallback}"${rtlA}></ds-status-indicator>`;
 
       case 'badge':
-        return `<ds-badge variant="${esc(it.variant || 'subtle')}" state="${esc(it.state || 'default')}" size="large"`
-          + `${it.icon ? ` icon="${esc(it.icon)}"` : ''}${rtlA}>${fallback}</ds-badge>`;
+        return `<ds-badge variant="${escapeHtml(it.variant || 'subtle')}" state="${escapeHtml(it.state || 'default')}" size="large"`
+          + `${it.icon ? ` icon="${escapeHtml(it.icon)}"` : ''}${rtlA}>${fallback}</ds-badge>`;
 
       case 'link':
-        return `<ds-text-link href="${esc(it.href || '#')}" size="medium"`
-          + `${it.icon ? ` leading-icon="${esc(it.icon)}"` : ''}${rtlA}>${fallback}</ds-text-link>`;
+        return `<ds-text-link href="${escapeHtml(it.href || '#')}" size="medium"`
+          + `${it.icon ? ` leading-icon="${escapeHtml(it.icon)}"` : ''}${rtlA}>${fallback}</ds-text-link>`;
 
       case 'tags': {
         const tags = Array.isArray(it.tags) ? it.tags : [];
         if (!tags.length) return `<span class="ds-description-list__value-text">—</span>`;
         return `<span class="ds-description-list__tags">`
           + tags.map((t) => {
-            const tl = esc(typeof t === 'string' ? t : (t && t.label != null ? t.label : ''));
-            const tv = esc((t && t.variant) || 'neutral');
+            const tl = escapeHtml(typeof t === 'string' ? t : (t && t.label != null ? t.label : ''));
+            const tv = escapeHtml((t && t.variant) || 'neutral');
             return `<ds-tag variant="${tv}" size="medium" label="${tl}" show-close="false"></ds-tag>`;
           }).join('') + `</span>`;
       }
 
       case 'user': {
-        const name = esc(it.name != null ? it.name : (label || ''));
-        const avatarAttr = it.avatar ? ` src="${esc(it.avatar)}"` : '';
+        /* Escape RAW it.name once; else reuse the already-escaped label. `email`
+           is a built (already-escaped) fragment — both interpolate raw below. */
+        const name = it.name != null ? escapeHtml(it.name) : (label || '');
+        const avatarAttr = it.avatar ? ` src="${escapeHtml(it.avatar)}"` : '';
         const email = it.email
-          ? `<span class="ds-description-list__user-email">${esc(it.email)}</span>` : '';
+          ? `<span class="ds-description-list__user-email">${escapeHtml(it.email)}</span>` : '';
         return `<span class="ds-description-list__user">`
           + `<ds-avatar size="small" name="${name}"${avatarAttr}></ds-avatar>`
           + `<span class="ds-description-list__user-txt"><span>${name || '—'}</span>${email}</span></span>`;
@@ -186,16 +192,16 @@ export class DsDescriptionList extends HTMLElement {
 
       case 'icon':
         return `<span class="ds-description-list__icon-val">`
-          + `<ds-icon name="${esc(it.icon || 'info-circle')}" size="16"></ds-icon>`
+          + `<ds-icon name="${escapeHtml(it.icon || 'info-circle')}" size="16"></ds-icon>`
           + `<span>${fallback || '—'}</span></span>`;
 
       case 'progress': {
         const v = Math.max(0, Math.min(100, Number(it.value) || 0));
-        const vl = it.valueLabel != null ? esc(String(it.valueLabel)) : (v + '%');
+        const vl = it.valueLabel != null ? escapeHtml(String(it.valueLabel)) : (v + '%');
         /* The term already labels the row, so suppress the bar's built-in label
            ("Progress") and render just the bar + our own percentage. */
         return `<span class="ds-description-list__progress">`
-          + `<ds-progress-bar size="small" value="${v}" show-label="false" variant="${esc(it.variant || 'default')}"></ds-progress-bar>`
+          + `<ds-progress-bar size="small" value="${escapeHtml(v)}" show-label="false" variant="${escapeHtml(it.variant || 'default')}"></ds-progress-bar>`
           + `<span class="ds-description-list__progress-pct">${vl}</span></span>`;
       }
 

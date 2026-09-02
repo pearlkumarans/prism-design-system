@@ -1,5 +1,6 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 const STATUSES = ['neutral', 'success', 'warning', 'critical', 'info', 'alert'];
 const SIZES = ['small', 'medium', 'large'];
@@ -48,7 +49,7 @@ export class DsStatusIndicator extends HTMLElement {
       ${icon
         ? `<span class="ds-status-indicator__icon" aria-hidden="true"><ds-icon name="${escapeHtml(icon)}" size="${iconPx}"></ds-icon></span>`
         : '<span class="ds-status-indicator__dot" aria-hidden="true"></span>'}
-      ${showLabel ? `<span class="ds-status-indicator__label">${label}</span>` : ''}
+      ${showLabel ? `<span class="ds-status-indicator__label">${escapeHtml(label)}</span>` : ''}
     `;
   }
 }

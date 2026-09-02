@@ -10,6 +10,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 const VARIANTS = ['intense', 'subtle'];
 const STATES   = ['default', 'active', 'critical', 'moderate', 'important', 'success', 'acknowledge'];

@@ -30,6 +30,7 @@ import '../../icons/icon.js';
    not a hand-rolled chip. */
 import '../badge/badge.js';
 import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 injectCss('ds-kpi-breakdown-badge-css', '../badge/badge.css', import.meta.url);
 
@@ -92,7 +93,7 @@ export class DsKpiBreakdown extends HTMLElement {
     /* Same up-trend / down-trend sprite icons as the Figma trend badge, now
        rendered via the shared Badge component (token-driven state colors). */
     const icon = _dir === 'up' ? 'up-trend' : 'down-trend';
-    return `<ds-badge class="ds-kpi-card__delta" variant="subtle" state="${state}" size="medium" shape="rounded" icon="${icon}" label="${Math.abs(num)}"></ds-badge>`;
+    return `<ds-badge class="ds-kpi-card__delta" variant="subtle" state="${escapeHtml(state)}" size="medium" shape="rounded" icon="${icon}" label="${Math.abs(num)}"></ds-badge>`;
   }
 
   /* Small "redirect" (external/navigate) arrow — same glyph as the existing
@@ -109,7 +110,7 @@ export class DsKpiBreakdown extends HTMLElement {
     const label = obj.label ?? sev.label;
     const href  = obj.href;
     const link = (layout === 'wide' && href)
-      ? `<a class="ds-kpi-card__chip-link" href="${href}"><span>View</span>
+      ? `<a class="ds-kpi-card__chip-link" href="${escapeHtml(href)}"><span>View</span>
            <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l6-6 M5 3h4v4"/></svg></a>`
       : '';
     /* The redirect arrow next to the label is a stand-in for the "View" link
@@ -118,8 +119,8 @@ export class DsKpiBreakdown extends HTMLElement {
        so the same affordance doesn't show twice on one cell. */
     return `
       <button type="button" class="ds-kpi-breakdown__cell ds-kpi-breakdown__cell--${sev.key}" data-sev="${sev.key}">
-        <span class="ds-kpi-breakdown__count">${value}</span>
-        <span class="ds-kpi-breakdown__label"><span class="ds-kpi-breakdown__label-text">${label}</span>${link ? '' : this._redirectIcon()}</span>
+        <span class="ds-kpi-breakdown__count">${escapeHtml(value)}</span>
+        <span class="ds-kpi-breakdown__label"><span class="ds-kpi-breakdown__label-text">${escapeHtml(label)}</span>${link ? '' : this._redirectIcon()}</span>
         ${link}
       </button>`;
   }
@@ -158,14 +159,14 @@ export class DsKpiBreakdown extends HTMLElement {
       <div class="ds-kpi-breakdown__header">
         <div class="ds-kpi-breakdown__stat">
           <div class="ds-kpi-breakdown__value-row">
-            <div class="ds-kpi-breakdown__value">${loading ? ' ' : value}</div>
+            <div class="ds-kpi-breakdown__value">${loading ? ' ' : escapeHtml(value)}</div>
             ${this._renderDelta(trendNum, trendTone, trendDir)}
           </div>
           ${title ? `<div class="ds-kpi-breakdown__title-row">
-            <span class="ds-kpi-breakdown__title">${title}</span>
+            <span class="ds-kpi-breakdown__title">${escapeHtml(title)}</span>
             ${showFilter ? `<button type="button" class="ds-kpi-breakdown__filter-btn" data-filter aria-label="Filter"><ds-icon name="filter" size="14"></ds-icon></button>` : ''}
           </div>` : ''}
-          ${sub ? `<div class="ds-kpi-breakdown__subtitle">${sub}</div>` : ''}
+          ${sub ? `<div class="ds-kpi-breakdown__subtitle">${escapeHtml(sub)}</div>` : ''}
         </div>
       </div>`;
 

@@ -41,6 +41,7 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import '../../icons/icon.js';
 import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Auto-load this component's stylesheet once (light-DOM). Idempotent. */
 injectCss('ds-stepper-css', './stepper.css', import.meta.url);
@@ -100,8 +101,6 @@ export class DsStepper extends HTMLElement {
   }
 
   /* ── internals ─────────────────────────────────────────────────────────── */
-  _esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
-
   _isRtl() {
     return boolAttr(this, 'rtl')
       || this.closest('[dir="rtl"]') != null
@@ -163,10 +162,10 @@ export class DsStepper extends HTMLElement {
       if (st === 'completed') iconName = 'tick';
       else if (hideNumbers && s.icon) iconName = s.icon;
       const glyph = iconName
-        ? `<ds-icon class="ds-stepper__glyph" name="${this._esc(iconName)}" size="${isz}"></ds-icon>`
-        : `<span class="ds-stepper__num">${this._esc(num)}</span>`;
+        ? `<ds-icon class="ds-stepper__glyph" name="${escapeHtml(iconName)}" size="${isz}"></ds-icon>`
+        : `<span class="ds-stepper__num">${escapeHtml(num)}</span>`;
       const optional = s.optional ? '<span class="ds-stepper__optional">Optional</span>' : '';
-      const desc = s.description ? `<span class="ds-stepper__desc">${this._esc(s.description)}</span>` : '';
+      const desc = s.description ? `<span class="ds-stepper__desc">${escapeHtml(s.description)}</span>` : '';
       const aria = [
         st === 'active' ? ' aria-current="step"' : '',
         st === 'error' ? ' aria-invalid="true"' : '',
@@ -175,11 +174,11 @@ export class DsStepper extends HTMLElement {
       const openTag = tag === 'button'
         ? `<button class="ds-stepper__main" type="button" data-idx="${i}"${disAttr}>`
         : `<span class="ds-stepper__main" data-idx="${i}"${disAttr}>`;
-      return `<li class="ds-stepper__step ds-stepper__step--${st}" data-id="${this._esc(s.id != null ? s.id : i)}"${aria}>`
+      return `<li class="ds-stepper__step ds-stepper__step--${st}" data-id="${escapeHtml(s.id != null ? s.id : i)}"${aria}>`
         + '<span class="ds-stepper__connector" aria-hidden="true"></span>'
         + openTag
         + `<span class="ds-stepper__node">${glyph}</span>`
-        + `<span class="ds-stepper__text"><span class="ds-stepper__title">${this._esc(s.label != null ? s.label : '')}</span>${optional}${desc}</span>`
+        + `<span class="ds-stepper__text"><span class="ds-stepper__title">${escapeHtml(s.label != null ? s.label : '')}</span>${optional}${desc}</span>`
         + `</${tag}>`
         + '</li>';
     }).join('');
@@ -192,10 +191,10 @@ export class DsStepper extends HTMLElement {
        the container query in the CSS); hidden from AT since the live region below
        already announces progress. */
     const compact = `<div class="ds-stepper__compact" aria-hidden="true">`
-      + `<span class="ds-stepper__compact-label">${this._esc(summary)}</span>`
+      + `<span class="ds-stepper__compact-label">${escapeHtml(summary)}</span>`
       + `<span class="ds-stepper__compact-bar"><span class="ds-stepper__compact-fill" style="inline-size:${pct}%"></span></span>`
       + `</div>`;
-    this.innerHTML = rows + compact + `<span class="ds-stepper__sr" role="status" aria-live="polite">${this._esc(summary)}</span>`;
+    this.innerHTML = rows + compact + `<span class="ds-stepper__sr" role="status" aria-live="polite">${escapeHtml(summary)}</span>`;
   }
 
   /* ── events ────────────────────────────────────────────────────────────── */

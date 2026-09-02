@@ -45,6 +45,9 @@ import '../tooltip/tooltip.js';
 import '../dropdown-menu/dropdown-menu.js';
 import { injectCss } from '../../utils/inject-css.js';
 import { escapeHtml } from '../../utils/escape.js';
+import { rafThrottle } from '../../utils/raf-throttle.js';
+import '../../icons/icon.js';
+import '../tag/tag.js';
 
 /* Auto-load sub-component stylesheets once (all light-DOM, so their CSS must be
    present even on pages that load input-select.css individually). */
@@ -52,9 +55,6 @@ injectCss('ds-input-select-fh-css', '../field-helper/field-helper.css', import.m
 injectCss('ds-input-select-sf-css', '../search-field/search-field.css', import.meta.url);
 injectCss('ds-input-select-tt-css', '../tooltip/tooltip.css', import.meta.url);
 injectCss('ds-input-select-dd-css', '../dropdown-menu/dropdown-menu.css', import.meta.url);
-
-const esc = (s) => String(s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const SIZES = ['small', 'medium', 'large'];
 const STATES = [
@@ -217,16 +217,16 @@ export class DsInputSelect extends HTMLElement {
        focusing) it shows the hint; the button still emits ds-input-select-help. */
     const showLabelHelp = boolAttr(this, 'show-label-help-icon');
     const labelHelpText = this.getAttribute('label-help') || '';
-    const labelHelpBtn = `<button type="button" class="ds-input-select__label-help" aria-label="${labelHelpText ? esc(labelHelpText) : 'Help'}" data-label-help><ds-icon name="help-circle" size="16"></ds-icon></button>`;
+    const labelHelpBtn = `<button type="button" class="ds-input-select__label-help" aria-label="${labelHelpText ? escapeHtml(labelHelpText) : 'Help'}" data-label-help><ds-icon name="help-circle" size="16"></ds-icon></button>`;
     const labelHelpHTML = showLabelHelp
       ? (labelHelpText
-          ? `<ds-tooltip class="ds-input-select__label-help-tip" text="${esc(labelHelpText)}" position="up-center" theme="dark"${rtl ? ' rtl' : ''}>${labelHelpBtn}</ds-tooltip>`
+          ? `<ds-tooltip class="ds-input-select__label-help-tip" text="${escapeHtml(labelHelpText)}" position="up-center" theme="dark"${rtl ? ' rtl' : ''}>${labelHelpBtn}</ds-tooltip>`
           : labelHelpBtn)
       : '';
     const labelHTML = (showLabel && label)
       ? `<div class="ds-input-select__label-row">
            <label class="ds-input-select__label" id="${this._id}-label">
-             ${label}${required ? '<span class="ds-input-select__required" aria-hidden="true">*</span>' : ''}
+             ${escapeHtml(label)}${required ? '<span class="ds-input-select__required" aria-hidden="true">*</span>' : ''}
            </label>${labelHelpHTML}
          </div>`
       : '';
@@ -248,9 +248,9 @@ export class DsInputSelect extends HTMLElement {
       : effectiveState === 'disabled' ? 'disabled' : 'default';
     const helperHTML = showHelperRow
       ? `<ds-field-helper class="ds-input-select__helper" id="${helperId}"
-           text="${esc(helper)}" state="${helperState}"
+           text="${escapeHtml(helper)}" state="${helperState}"
            ${showHelperIconFlag ? '' : 'show-icon="false"'}
-           ${showCounter && counter ? `counter="${esc(counter)}"` : ''}
+           ${showCounter && counter ? `counter="${escapeHtml(counter)}"` : ''}
            ${rtl ? 'rtl' : ''}></ds-field-helper>`
       : '';
 
@@ -291,7 +291,7 @@ export class DsInputSelect extends HTMLElement {
         aria-controls="${this._id}-listbox"
         ${(showLabel && label && position !== 'none')
           ? `aria-labelledby="${this._id}-label"`
-          : (label ? `aria-label="${esc(label)}"` : '')}
+          : (label ? `aria-label="${escapeHtml(label)}"` : '')}
         ${required ? 'aria-required="true"' : ''}
         ${effectiveState === 'error' ? 'aria-invalid="true"' : ''}
         ${isDisabled ? 'aria-disabled="true"' : ''}
@@ -397,7 +397,7 @@ export class DsInputSelect extends HTMLElement {
 
   _bindReanchor() {
     if (this._reanchor) return;
-    this._reanchor = () => { if (this._isOpen) this._positionDropdown(); };
+    this._reanchor = rafThrottle(() => { if (this._isOpen) this._positionDropdown(); });
     window.addEventListener('scroll', this._reanchor, true);
     window.addEventListener('resize', this._reanchor);
   }
@@ -419,7 +419,7 @@ export class DsInputSelect extends HTMLElement {
     const showPrefixIcon = boolAttrDefault(this, 'show-prefix-icon', !!this.getAttribute('prefix-icon'));
     if (!prefixText && !showPrefixIcon) return '';
     const inner = `${
-      prefixText ? `<span class="ds-input-select__affix-text">${esc(prefixText)}</span>` : ''
+      prefixText ? `<span class="ds-input-select__affix-text">${escapeHtml(prefixText)}</span>` : ''
     }${showPrefixIcon ? `<ds-icon name="${escapeHtml(prefixIcon)}" size="16"></ds-icon>` : ''}`;
     /* When `prefix-dropdown` is set, the prefix is a unit-selection trigger
        (mirrors ds-text-input) — a real button that fires an event; the consumer
@@ -435,7 +435,7 @@ export class DsInputSelect extends HTMLElement {
     const suffixIcon = this.getAttribute('suffix-icon') || '';
     if (!suffixText && !suffixIcon) return '';
     const inner = `${
-      suffixText ? `<span class="ds-input-select__affix-text">${esc(suffixText)}</span>` : ''
+      suffixText ? `<span class="ds-input-select__affix-text">${escapeHtml(suffixText)}</span>` : ''
     }${suffixIcon ? `<ds-icon name="${escapeHtml(suffixIcon)}" size="16"></ds-icon>` : ''}`;
     /* When `suffix-dropdown` is set, the suffix is a unit-selection trigger
        (mirrors ds-text-input): a real button firing ds-input-select-suffix-click. */
@@ -488,7 +488,7 @@ export class DsInputSelect extends HTMLElement {
     });
 
     this._positionAffixMenu();
-    this._affixReanchor = () => this._positionAffixMenu();
+    this._affixReanchor = rafThrottle(() => this._positionAffixMenu());
     window.addEventListener('scroll', this._affixReanchor, true);
     window.addEventListener('resize', this._affixReanchor);
     this._affixDocClick = (ev) => {
@@ -538,13 +538,13 @@ export class DsInputSelect extends HTMLElement {
     const opt = this._options.find((o) => String(o.value) === String(value));
     const text = opt ? opt.label : value;
     return text
-      ? `<span class="ds-input-select__value">${text}</span>`
-      : `<span class="ds-input-select__value ds-input-select__value--placeholder">${placeholder}</span>`;
+      ? `<span class="ds-input-select__value">${escapeHtml(text)}</span>`
+      : `<span class="ds-input-select__value ds-input-select__value--placeholder">${escapeHtml(placeholder)}</span>`;
   }
 
   _renderTags(placeholder) {
     if (!this._values.length) {
-      return `<span class="ds-input-select__value ds-input-select__value--placeholder">${placeholder}</span>`;
+      return `<span class="ds-input-select__value ds-input-select__value--placeholder">${escapeHtml(placeholder)}</span>`;
     }
     const showBadge = boolAttr(this, 'show-badge');
     const badgeText = this.getAttribute('badge-text') || '+3';
@@ -554,10 +554,10 @@ export class DsInputSelect extends HTMLElement {
     const tags = this._values.map((val) => {
       const opt = this._options.find((o) => String(o.value) === String(val));
       const text = opt ? opt.label : val;
-      return `<ds-tag size="${size}" data-tag-value="${val}">${text}</ds-tag>`;
+      return `<ds-tag size="${size}" data-tag-value="${escapeHtml(val)}">${escapeHtml(text)}</ds-tag>`;
     }).join('');
     const badge = showBadge
-      ? `<span class="ds-input-select__badge">${badgeText}</span>`
+      ? `<span class="ds-input-select__badge">${escapeHtml(badgeText)}</span>`
       : '';
     return `<span class="ds-input-select__tags">${tags}${badge}</span>`;
   }
@@ -567,7 +567,7 @@ export class DsInputSelect extends HTMLElement {
        a selected-row highlight, no radio) per the Input Select spec. Multi keeps
        the multi-select variant with its Select-all / Clear-all footer. */
     const searchable = boolAttr(this, 'searchable') && !multi;
-    const searchPh = esc(this.getAttribute('search-placeholder') || 'Search');
+    const searchPh = escapeHtml(this.getAttribute('search-placeholder') || 'Search');
     /* The dropdown is portaled to <body> (outside the dir="rtl" root), so RTL
        must be propagated explicitly: dir on the wrapper + `rtl` on the menu and
        search field so their own mirroring kicks in. */

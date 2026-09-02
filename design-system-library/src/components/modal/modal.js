@@ -28,6 +28,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { lockScroll, unlockScroll } from '../../utils/scroll-lock.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import '../../icons/icon.js';
 import '../icon-button/icon-button.js';
@@ -87,7 +88,15 @@ export class DsModal extends HTMLElement {
   disconnectedCallback() {
     document.removeEventListener('keydown', this._onKeydown, true);
     stopLateChildren(this);
+    /* A modal removed from the DOM while still open must not leave the page
+       permanently scroll-locked. */
+    this._unlockScroll();
   }
+
+  /* Background scroll lock via the shared ref-counted util; the instance flag
+     keeps this balanced (lock once per open, unlock once). */
+  _lockScroll() { if (!this._scrollLocked) { this._scrollLocked = true; lockScroll(); } }
+  _unlockScroll() { if (this._scrollLocked) { this._scrollLocked = false; unlockScroll(); } }
 
   attributeChangedCallback(name) {
     if (!this._mounted) return;
@@ -261,6 +270,9 @@ export class DsModal extends HTMLElement {
     }
     if (this._isOpen) return;
     this._isOpen = true;
+    /* Lock background scroll while open — the scrim + aria-modal imply the page
+       behind must not scroll. Restored on close AND disconnect. */
+    this._lockScroll();
     /* Re-center on each open — clear any prior drag offset. */
     this._dragOffset = { x: 0, y: 0 };
     if (this._dialog) this._dialog.style.transform = '';
@@ -278,6 +290,7 @@ export class DsModal extends HTMLElement {
 
   _onClose() {
     this._isOpen = false;
+    this._unlockScroll();
     document.removeEventListener('keydown', this._onKeydown, true);
     if (this._previouslyFocused?.focus) this._previouslyFocused.focus();
     this.dispatchEvent(new CustomEvent('ds-modal-close', { bubbles: true }));

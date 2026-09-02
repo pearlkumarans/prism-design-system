@@ -5,6 +5,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { getInitials } from '../../utils/initials.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Icon glyph size per avatar size — fixed per spec (Small 16 / Medium 20 /
    Large 24), NOT a diameter multiplier. */
@@ -108,6 +109,19 @@ export class DsAvatar extends HTMLElement {
   connectedCallback() {
     if (!this.shadowRoot.firstElementChild) {
       this.shadowRoot.innerHTML = `<style>${STYLES}</style><div part="content"></div><div class="overlay" part="overlay"></div>`;
+      /* Keyboard activation for editable avatars. The host is exposed as
+         role="button" + tabindex=0 (see _render), but a non-native button
+         gets no Enter/Space → click for free — keyboard users could focus it
+         yet never activate it. Synthesize a native click so a consumer's
+         existing click handler fires for keyboard users too. The listener is
+         on the host, so it is GC'd with the element (no teardown needed). */
+      this.addEventListener('keydown', (e) => {
+        if (!boolAttr(this, 'editable') || boolAttr(this, 'disabled')) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.click();
+        }
+      });
     }
     this._render();
   }
@@ -154,13 +168,13 @@ export class DsAvatar extends HTMLElement {
     if (!content) return;
 
     if (type === 'image' && src) {
-      content.innerHTML = `<img alt="${this._escape(name) || ''}" src="${this._escape(src)}" />`;
+      content.innerHTML = `<img alt="${escapeHtml(name) || ''}" src="${escapeHtml(src)}" />`;
       content.querySelector('img').addEventListener('error', () => {
         // Graceful fallback when src fails
         this.removeAttribute('src');
       }, { once: true });
     } else if (type === 'initials' && name) {
-      content.innerHTML = `<span class="initials">${this._escape(getInitials(name))}</span>`;
+      content.innerHTML = `<span class="initials">${escapeHtml(getInitials(name))}</span>`;
     } else if (type === 'hover') {
       // Figma "Hover" type — solid black surface + white image icon.
       content.innerHTML = `
@@ -188,11 +202,6 @@ export class DsAvatar extends HTMLElement {
          </svg>`;
   }
 
-  _escape(s) {
-    return String(s).replace(/[&<>"']/g, (c) => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-    }[c]));
-  }
 }
 
 if (typeof customElements !== 'undefined' && !customElements.get('ds-avatar')) {

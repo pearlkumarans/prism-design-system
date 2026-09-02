@@ -73,6 +73,8 @@ import '../tag/tag.js';
 import '../text-link/text-link.js';
 import '../empty-state/empty-state.js';
 import { injectCss } from '../../utils/inject-css.js';
+import { rafThrottle } from '../../utils/raf-throttle.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Auto-load light-DOM stylesheets once (so this works on pages that link
    criteria-filter.css individually, not just the bundled index.css). */
@@ -175,7 +177,7 @@ export class DsCriteriaFilter extends HTMLElement {
         n.classList.contains('ds-token-field__dropdown')))) return;
       this.close();
     };
-    this._onReposition = () => { if (this._open && this.mode === 'popover') this._positionPopover(); };
+    this._onReposition = rafThrottle(() => { if (this._open && this.mode === 'popover') this._positionPopover(); });
   }
 
   connectedCallback() {
@@ -234,7 +236,11 @@ export class DsCriteriaFilter extends HTMLElement {
     const card = this._root.querySelector('.ds-criteria-filter');
     if (!card) return;
     const anchorSel = this.getAttribute('anchor');
-    const anchor = this._trigger || (anchorSel && document.querySelector(anchorSel));
+    /* A consumer-supplied `anchor` selector could be malformed; querySelector
+       throws a SyntaxError on an invalid selector, and this runs on every
+       rAF-throttled scroll/resize — so guard it rather than throw each frame. */
+    let anchor = this._trigger;
+    if (!anchor && anchorSel) { try { anchor = document.querySelector(anchorSel); } catch (_) { anchor = null; } }
     if (!anchor) return;
     const a = anchor.getBoundingClientRect();
     const gap = 8, margin = 8, vw = innerWidth, vh = innerHeight;
@@ -443,7 +449,6 @@ export class DsCriteriaFilter extends HTMLElement {
   _optionLabel(field, val) { return (field && field.options || []).find((o) => o.value === val)?.label ?? val; }
 
   _emit(type, detail) { this.dispatchEvent(new CustomEvent('ds-criteria-filter-' + type, { bubbles: true, detail })); }
-  _esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   _debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
   _clone(o) { return JSON.parse(JSON.stringify(o)); }
 
@@ -826,7 +831,7 @@ export class DsCriteriaFilter extends HTMLElement {
     const cardInner = `
       <div class="ds-criteria-filter__header">
         <span class="ds-cf-header-start">
-          <span class="ds-criteria-filter__title">${this._esc(title)}</span>
+          <span class="ds-criteria-filter__title">${escapeHtml(title)}</span>
           <span class="ds-cf-presets"></span>
         </span>
         <span class="ds-cf-header-end">
@@ -843,7 +848,7 @@ export class DsCriteriaFilter extends HTMLElement {
       this._root.className = 'ds-cf-host ds-cf-host--' + this.mode + (this._open ? ' is-open' : '');
       this._root.innerHTML =
         '<div class="ds-cf-backdrop"></div>' +
-        `<div class="ds-criteria-filter" role="dialog" aria-modal="true" tabindex="-1" aria-label="${this._esc(title)}">${cardInner}</div>`;
+        `<div class="ds-criteria-filter" role="dialog" aria-modal="true" tabindex="-1" aria-label="${escapeHtml(title)}">${cardInner}</div>`;
     } else {
       this._root.className = 'ds-criteria-filter';
       this._root.innerHTML = cardInner;
@@ -857,7 +862,7 @@ export class DsCriteriaFilter extends HTMLElement {
         '<div class="ds-cf-skel-row"><div class="ds-cf-skel ds-cf-skel--field"></div>'
         + '<div class="ds-cf-skel ds-cf-skel--op"></div><div class="ds-cf-skel ds-cf-skel--val"></div></div>').join('');
     } else if (!this._fields.length) {
-      body.innerHTML = `<div class="ds-cf-empty-text">${this._esc(this.getAttribute('empty-text') || 'No fields configured.')}</div>`;
+      body.innerHTML = `<div class="ds-cf-empty-text">${escapeHtml(this.getAttribute('empty-text') || 'No fields configured.')}</div>`;
     } else if (!hasRules) {
       body.appendChild(this._renderEmpty());
     } else {
@@ -1305,9 +1310,9 @@ export class DsCriteriaFilter extends HTMLElement {
     if (!this._showPreview || !rules.length) { host.hidden = true; host.innerHTML = ''; return; }
     host.hidden = false;
     host.innerHTML =
-      `<div class="ds-cf-preview__summary">${this._esc(this._describe(this._query, true))}</div>` +
+      `<div class="ds-cf-preview__summary">${escapeHtml(this._describe(this._query, true))}</div>` +
       '<div class="ds-cf-preview__chips">' +
-      rules.map((r) => `<ds-tag class="ds-cf-preview__chip" variant="subtle" size="medium" show-close data-rule="${this._esc(r.id)}">${this._esc(this._describeRule(r))}</ds-tag>`).join('') +
+      rules.map((r) => `<ds-tag class="ds-cf-preview__chip" variant="subtle" size="medium" show-close data-rule="${escapeHtml(r.id)}">${escapeHtml(this._describeRule(r))}</ds-tag>`).join('') +
       '</div>';
     host.querySelectorAll('.ds-cf-preview__chip').forEach((t) => t.addEventListener('ds-tag-close', (e) => {
       const el = e.target.closest('[data-rule]'); if (el) this._removeNode(el.dataset.rule);

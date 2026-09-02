@@ -41,12 +41,14 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 import '../field-helper/field-helper.js';
 import { injectCss } from '../../utils/inject-css.js';
 import { escapeHtml } from '../../utils/escape.js';
+import { rafThrottle } from '../../utils/raf-throttle.js';
+import '../../icons/icon.js';
+import '../dropdown-menu/dropdown-menu.js';
+import '../tag/tag.js';
+import '../tooltip/tooltip.js';
 
 injectCss('ds-token-field-fh-css', '../field-helper/field-helper.css', import.meta.url);
 injectCss('ds-token-field-tag-css', '../tag/tag.css', import.meta.url);
-
-const esc = (s) => String(s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const SIZES = ['medium', 'large'];
 let _uid = 0;
@@ -109,6 +111,7 @@ export class DsTokenField extends HTMLElement {
     document.removeEventListener('click', this._docClick);
     this._removePortaledDropdown();
     if (this._ro) { this._ro.disconnect(); this._ro = null; }
+    clearTimeout(this._collapseT);   // the filled-state backstop must not fire on a detached tree
   }
 
   attributeChangedCallback(name) {
@@ -247,16 +250,16 @@ export class DsTokenField extends HTMLElement {
        text is set it's wrapped in a <ds-tooltip>; otherwise it's a plain button. */
     const showLabelHelp = boolAttr(this, 'show-label-help-icon');
     const labelHelpText = this.getAttribute('label-help') || '';
-    const labelHelpBtn = `<button type="button" class="ds-token-field__label-help" aria-label="${labelHelpText ? esc(labelHelpText) : 'Help'}" data-label-help><ds-icon name="help-circle" size="16"></ds-icon></button>`;
+    const labelHelpBtn = `<button type="button" class="ds-token-field__label-help" aria-label="${labelHelpText ? escapeHtml(labelHelpText) : 'Help'}" data-label-help><ds-icon name="help-circle" size="16"></ds-icon></button>`;
     const labelHelpHTML = showLabelHelp
       ? (labelHelpText
-          ? `<ds-tooltip class="ds-token-field__label-help-tip" text="${esc(labelHelpText)}" position="up-center" theme="dark"${rtl ? ' rtl' : ''}>${labelHelpBtn}</ds-tooltip>`
+          ? `<ds-tooltip class="ds-token-field__label-help-tip" text="${escapeHtml(labelHelpText)}" position="up-center" theme="dark"${rtl ? ' rtl' : ''}>${labelHelpBtn}</ds-tooltip>`
           : labelHelpBtn)
       : '';
     const labelHTML = (showLabel && label)
       ? `<div class="ds-token-field__label-row">
            <label class="ds-token-field__label" for="${this._id}-input">
-             ${esc(label)}${required ? '<span class="ds-token-field__required" aria-hidden="true">*</span>' : ''}
+             ${escapeHtml(label)}${required ? '<span class="ds-token-field__required" aria-hidden="true">*</span>' : ''}
            </label>${labelHelpHTML}
          </div>`
       : '';
@@ -268,7 +271,7 @@ export class DsTokenField extends HTMLElement {
     const helperMsg = this._inputError ? (this.getAttribute('error-text') || 'Invalid value') : helper;
     const helperHTML = showHelperRow
       ? `<ds-field-helper class="ds-token-field__helper" id="${helperId}"
-           text="${esc(helperMsg)}" state="${helperState}"
+           text="${escapeHtml(helperMsg)}" state="${helperState}"
            ${helperState === 'error' ? '' : 'show-icon="false"'}
            ${rtl ? 'rtl' : ''}></ds-field-helper>`
       : '';
@@ -282,9 +285,9 @@ export class DsTokenField extends HTMLElement {
     const tagSize = size === 'large' ? 'large' : 'medium';
     const errorText = this.getAttribute('error-text') || 'Invalid value';
     const tagsHTML = this._tokens.map((t) =>
-      `<ds-tag size="${tagSize}" variant="${t.invalid ? 'error' : 'neutral'}" data-tag-value="${esc(t.value)}"`
-      + `${t.invalid ? ` title="${esc(errorText)}" data-invalid` : ''}`
-      + `${isDisabled || isReadOnly ? ' show-close="false"' : ''}>${esc(t.label)}</ds-tag>`
+      `<ds-tag size="${tagSize}" variant="${t.invalid ? 'error' : 'neutral'}" data-tag-value="${escapeHtml(t.value)}"`
+      + `${t.invalid ? ` title="${escapeHtml(errorText)}" data-invalid` : ''}`
+      + `${isDisabled || isReadOnly ? ' show-close="false"' : ''}>${escapeHtml(t.label)}</ds-tag>`
     ).join('');
 
     /* The caret. Hidden in disabled/read-only and in resting filled (so the
@@ -294,10 +297,11 @@ export class DsTokenField extends HTMLElement {
     const inputHTML = showInput
       ? `<input id="${this._id}-input" class="ds-token-field__input" type="text"
            autocomplete="off" spellcheck="false"
-           placeholder="${hasTokens ? '' : esc(placeholder)}"
-           aria-label="${esc(label || placeholder)}"
-           aria-describedby="${showHelperRow ? helperId : ''}"
+           placeholder="${hasTokens ? '' : escapeHtml(placeholder)}"
+           aria-label="${escapeHtml(label || placeholder)}"
+           ${showHelperRow ? `aria-describedby="${helperId}"` : ''}
            aria-expanded="${isOpen}" role="combobox" aria-autocomplete="list"
+           ${isOpen ? `aria-controls="${this._id}-listbox"` : ''}
            ${required ? 'aria-required="true"' : ''}
            ${state === 'error' ? 'aria-invalid="true"' : ''} data-input>`
       : '';
@@ -387,7 +391,7 @@ export class DsTokenField extends HTMLElement {
     const rtl = boolAttr(this, 'rtl');
     const emptyText = this.getAttribute('empty-text') || 'No results found';
     return `<div class="ds-token-field__dropdown" id="${this._id}-listbox"${rtl ? ' dir="rtl"' : ''}>
-      <ds-dropdown-menu type="${type}" open show-footer="false" empty-text="${esc(emptyText)}"${rtl ? ' rtl' : ''} data-menu></ds-dropdown-menu>
+      <ds-dropdown-menu type="${escapeHtml(type)}" open show-footer="false" empty-text="${escapeHtml(emptyText)}"${rtl ? ' rtl' : ''} data-menu></ds-dropdown-menu>
     </div>`;
   }
 
@@ -481,7 +485,7 @@ export class DsTokenField extends HTMLElement {
   }
   _bindReanchor() {
     if (this._reanchor) return;
-    this._reanchor = () => { if (this._focused) this._positionDropdown(); };
+    this._reanchor = rafThrottle(() => { if (this._focused) this._positionDropdown(); });
     window.addEventListener('scroll', this._reanchor, true);
     window.addEventListener('resize', this._reanchor);
   }

@@ -3,6 +3,7 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 import '../dropdown-menu/dropdown-menu.js';
 import { injectCss } from '../../utils/inject-css.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 /* Auto-load dropdown-menu.css once (split-button + the menu are light-DOM, so
    the stylesheet must be present on the page). Idempotent. */
@@ -80,9 +81,9 @@ export class DsSplitButton extends HTMLElement {
     this._root.innerHTML = `
       <button type="button" class="ds-split-button__main" data-main ${disabled ? 'disabled' : ''}>
         ${icon ? `<ds-icon name="${escapeHtml(icon)}" size="${iconPx}"></ds-icon>` : ''}
-        <span>${label}</span>
+        <span>${escapeHtml(label)}</span>
       </button>
-      <button type="button" class="ds-split-button__chev" aria-label="More ${label} options" aria-haspopup="menu" aria-expanded="false" data-chev ${disabled ? 'disabled' : ''}>
+      <button type="button" class="ds-split-button__chev" aria-label="More ${escapeHtml(label)} options" aria-haspopup="menu" aria-expanded="false" data-chev ${disabled ? 'disabled' : ''}>
         <ds-icon name="chevron-down" size="${iconPx}"></ds-icon>
       </button>
       ${hasMenu ? `<ds-dropdown-menu class="ds-split-button__menu" type="action"${rtl ? ' rtl' : ''}></ds-dropdown-menu>` : ''}

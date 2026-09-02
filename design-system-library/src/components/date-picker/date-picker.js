@@ -45,9 +45,17 @@ injectCss('ds-date-picker-text-input-css', '../text-input/text-input.css', impor
 import '../field-helper/field-helper.js';
 /* Embedded time picker (inline variant) for the datetime mode (`enable-time`). */
 import '../time-picker/time-picker.js';
+/* The calendar pane — a hard dependency: _renderPane() creates <ds-calendar>, so
+   it must be defined AND styled here, not left for the host page to remember to
+   load (that reliance previously broke a standalone `import 'date-picker.js'`). */
+import '../calendar/calendar.js';
 import { injectCss } from '../../utils/inject-css.js';
+import { rafThrottle } from '../../utils/raf-throttle.js';
+import { escapeHtml } from '../../utils/escape.js';
+import '../button/button.js';
 [['ds-date-picker-fh-css', '../field-helper/field-helper.css'],
- ['ds-date-picker-tp-css', '../time-picker/time-picker.css']].forEach(([id, rel]) => injectCss(id, rel, import.meta.url));
+ ['ds-date-picker-tp-css', '../time-picker/time-picker.css'],
+ ['ds-date-picker-cal-css', '../calendar/calendar.css']].forEach(([id, rel]) => injectCss(id, rel, import.meta.url));
 
 const TYPES = ['single', 'range'];
 const VALIDATIONS = ['none', 'success', 'error'];
@@ -185,6 +193,15 @@ export class DsDatePicker extends HTMLElement {
       this._build();
       this._mounted = true;
     }
+    /* Recover a property assigned BEFORE upgrade (e.g. `el.value = …` while the
+       module was still loading): the own-property shadows the accessor, so the
+       setter never ran and the value would be lost. Replay it through the real
+       setter. Matches ds-input-select / ds-time-picker. */
+    ['value', 'type'].forEach((prop) => {
+      if (Object.prototype.hasOwnProperty.call(this, prop)) {
+        const v = this[prop]; delete this[prop]; this[prop] = v;
+      }
+    });
     this._sync();
   }
 
@@ -231,7 +248,7 @@ export class DsDatePicker extends HTMLElement {
           <ds-field-helper class="ds-date-picker__helper" hidden></ds-field-helper>
         </div>
       </div>
-      <div class="ds-date-picker__popover" role="dialog" aria-modal="false" hidden>
+      <div class="ds-date-picker__popover" role="dialog" aria-modal="false" aria-label="Choose date" hidden>
         <div class="ds-date-picker__body">
           <div class="ds-date-picker__presets" role="tablist" hidden></div>
           <div class="ds-date-picker__pane"></div>
@@ -437,14 +454,12 @@ export class DsDatePicker extends HTMLElement {
     }
   }
 
-  /* Update <ds-button> text without clobbering its upgraded inner structure
-     (the upgrade moves the label into a child <span class="ds-button__label">). */
+  /* Set the label via ds-button's `label` ATTRIBUTE (its documented, reactive
+     path) — writing the `.ds-button__label` span's textContent would be wiped by
+     any later ds-button re-render (see ds-button docs: "ALWAYS prefer [label]
+     over el.textContent"). */
   _setBtnLabel(act, text) {
-    const dsBtn = this._footerEl.querySelector(`[data-act="${act}"]`);
-    if (!dsBtn) return;
-    const inner = dsBtn.querySelector('.ds-button__label');
-    if (inner) inner.textContent = text;
-    else dsBtn.textContent = text;
+    this._footerEl.querySelector(`[data-act="${act}"]`)?.setAttribute('label', text);
   }
 
   _renderPresets() {
@@ -455,7 +470,7 @@ export class DsDatePicker extends HTMLElement {
     this._presetsEl.innerHTML = DEFAULT_PRESETS.map((p) =>
       `<button type="button" class="ds-date-picker__preset"
                role="tab" data-preset-id="${p.id}"
-               aria-pressed="${p.id === activeId ? 'true' : 'false'}">${p.label}</button>`
+               aria-pressed="${p.id === activeId ? 'true' : 'false'}">${escapeHtml(p.label)}</button>`
     ).join('');
     this._presetsEl.querySelectorAll('[data-preset-id]').forEach((btn) => {
       btn.addEventListener('click', () => this._applyPreset(btn.dataset.presetId));
@@ -735,7 +750,7 @@ export class DsDatePicker extends HTMLElement {
 
   _bindReanchor() {
     if (this._reanchor) return;
-    this._reanchor = () => { if (this._isOpen) this._positionPopover(); };
+    this._reanchor = rafThrottle(() => { if (this._isOpen) this._positionPopover(); });
     window.addEventListener('scroll', this._reanchor, true);
     window.addEventListener('resize', this._reanchor);
   }

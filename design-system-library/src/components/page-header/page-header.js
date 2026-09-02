@@ -13,6 +13,7 @@ import '../description-list/description-list.js';
 import '../dropdown-menu/dropdown-menu.js';
 import { injectCss } from '../../utils/inject-css.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 /* Auto-load the CSS of the components this one composes (light-DOM, so their
    stylesheets must be present even on pages that don't <link> them). Guarded +
@@ -295,9 +296,12 @@ export class DsPageHeader extends HTMLElement {
   get titleMenu() { return this._titleMenu; }
   get tabs() { return this._tabs; }
 
-  _esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-
   _render() {
+    /* Close any open inline menu (title / action-overflow) before we rebuild the
+       markup below, so its document outside-click listener can't outlive the
+       nodes it references (matches disconnect + the breadcrumb pattern). Each
+       close fn removes its own doc listener and deletes itself from the set. */
+    if (this._pendingCloses.size) { this._pendingCloses.forEach((fn) => fn()); this._pendingCloses.clear(); }
     /* Ensure any late-set title attribute is captured + stripped before we read. */
     this._captureTitle();
     const title = this._title || 'Page Title';
@@ -363,8 +367,8 @@ export class DsPageHeader extends HTMLElement {
           this._breadcrumbs.map((b, i) => {
             const last = i === this._breadcrumbs.length - 1;
             return last
-              ? `<span>${this._esc(b.label)}</span>`
-              : `<a href="${b.href || '#'}">${this._esc(b.label)}</a>`;
+              ? `<span>${escapeHtml(b.label)}</span>`
+              : `<a href="${b.href || '#'}">${escapeHtml(b.label)}</a>`;
           }).join('')
         }</ds-breadcrumb>`
       : '';
@@ -392,10 +396,10 @@ export class DsPageHeader extends HTMLElement {
             they sit to its left (icon in a grey tile), not inline with the title. */''}
         <div class="ds-page-header__title-main">
           ${showBack ? `<button class="ds-page-header__back" type="button" aria-label="${rtl ? 'رجوع' : 'Back'}" data-back><ds-icon name="${escapeHtml(backIcon)}" size="20"></ds-icon></button>` : ''}
-          ${showIcon ? `<span class="ds-page-header__icon" aria-hidden="true"><ds-icon name="${escapeHtml(this._esc(icon))}" size="24"></ds-icon></span>` : ''}
+          ${showIcon ? `<span class="ds-page-header__icon" aria-hidden="true"><ds-icon name="${escapeHtml(icon)}" size="24"></ds-icon></span>` : ''}
           <div class="ds-page-header__title-stack">
             <div class="ds-page-header__leading">
-              <h1 class="ds-page-header__title">${this._esc(title)}</h1>
+              <h1 class="ds-page-header__title">${escapeHtml(title)}</h1>
               ${showChevron ? `<span class="ds-page-header__title-menu">
                 <ds-icon-button class="ds-page-header__chevron" shape="square" type="tertiary-grey" size="small" icon="chevron-down" label="Title menu" no-tooltip aria-haspopup="menu" aria-expanded="false" data-chevron></ds-icon-button>
                 ${this._titleMenu.length ? `<ds-dropdown-menu class="ds-page-header__title-menu-dd" type="default" data-title-dd></ds-dropdown-menu>` : ''}
@@ -409,7 +413,7 @@ export class DsPageHeader extends HTMLElement {
             ${summaryHTML || (showDescription
               ? (hasSlotDescription
                   ? `<p class="ds-page-header__description" data-slot="description"></p>`
-                  : `<p class="ds-page-header__description">${this._esc(description)}</p>`)
+                  : `<p class="ds-page-header__description">${escapeHtml(description)}</p>`)
               : '')}
           </div>
         </div>

@@ -13,12 +13,19 @@
    `dir="rtl"` flips for free (On = thumb leading in RTL) — no left/right.
    ============================================================================= */
 
-:host { display: inline-block; vertical-align: middle; font-family: var(--font-family-sans); }
-
-/* Host shrink-wraps the control. inline-flex removes the inline line-box
+/* Light-DOM component: it renders into its own children, so there is no shadow
+   root and `:host` never matches. Style the element selector directly — and set
+   font-family HERE (a dead `:host` rule used to hold it, so the switch text
+   silently fell back to the page font). inline-flex removes the inline line-box
    descender that otherwise made <ds-toggle> ~5px taller than the track and
    pushed the toggle off-centre against adjacent label text. */
-ds-toggle { display: inline-flex; align-items: center; gap: var(--spacing-8); vertical-align: middle; }
+ds-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  vertical-align: middle;
+  font-family: var(--font-family-sans);
+}
 
 /* Field label beside the switch (like other form fields). Clicking it toggles. */
 .ds-toggle__label {

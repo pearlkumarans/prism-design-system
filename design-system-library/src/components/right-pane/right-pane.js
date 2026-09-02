@@ -34,7 +34,14 @@ import '../dropdown-menu/dropdown-menu.js';
    pages (same self-contained-dependency pattern as ds-icon-button). */
 import '../tooltip/tooltip.js';
 import { injectCss } from '../../utils/inject-css.js';
+import '../../icons/icon.js';
+import '../icon-button/icon-button.js';
 injectCss('ds-right-pane-tooltip-css', '../tooltip/tooltip.css', import.meta.url);
+/* The rail renders <ds-icon-button> items and a body-portaled <ds-dropdown-menu>
+   overflow — both light-DOM, so inject their stylesheets too (the JS imports
+   above register the elements but don't carry their CSS). */
+injectCss('ds-right-pane-iconbtn-css', '../icon-button/icon-button.css', import.meta.url);
+injectCss('ds-right-pane-dropdown-css', '../dropdown-menu/dropdown-menu.css', import.meta.url);
 
 const THEMES = ['light', 'dark'];
 
@@ -198,7 +205,7 @@ export class DsRightPane extends HTMLElement {
     const directionBtn = showDirection ? `<li>
       <button type="button" class="ds-right-pane__btn"
               data-id="direction"
-              aria-label="${this.getAttribute('direction-label') || 'Switch language and direction'}">
+              aria-label="${escapeHtml(this.getAttribute('direction-label') || 'Switch language and direction')}">
         <ds-icon name="${escapeHtml(this.getAttribute('direction-icon') || 'globe')}" size="20"></ds-icon>
       </button>
     </li>` : '';

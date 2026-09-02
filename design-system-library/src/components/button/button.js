@@ -17,6 +17,7 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 const VARIANTS = ['primary', 'secondary', 'tertiary', 'outline', 'surface', 'destructive', 'success', 'warning', 'secondary-color'];
 const SIZES = ['large', 'medium', 'small', 'xsmall'];

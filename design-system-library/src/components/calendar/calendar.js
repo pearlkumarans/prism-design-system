@@ -14,12 +14,16 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
    component — neither is a raw <button>, per the spec + DS rules. */
 import '../icon-button/icon-button.js';
 import '../text-link/text-link.js';
+/* The `show-footer` Cancel/Apply row uses <ds-button> — a hard dependency, so it
+   must be defined AND styled here rather than left for the host page to load. */
+import '../button/button.js';
 import { injectCss } from '../../utils/inject-css.js';
 
 /* Auto-load sub-component CSS once (light-DOM, so it must be present even on
    pages that load calendar.css individually). */
 injectCss('ds-calendar-icon-button-css', '../icon-button/icon-button.css', import.meta.url);
 injectCss('ds-calendar-text-link-css', '../text-link/text-link.css', import.meta.url);
+injectCss('ds-calendar-button-css', '../button/button.css', import.meta.url);
 
 const TYPES = ['single', 'range'];
 const WEEKDAYS_LTR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -61,6 +65,13 @@ export class DsCalendar extends HTMLElement {
   }
 
   connectedCallback() {
+    /* Recover value/type assigned as a property BEFORE upgrade (own-property
+       shadows the accessor, so the setter never ran) — replay through the setter. */
+    ['value', 'type'].forEach((prop) => {
+      if (Object.prototype.hasOwnProperty.call(this, prop)) {
+        const v = this[prop]; delete this[prop]; this[prop] = v;
+      }
+    });
     if (!this._mounted) {
       this._readValue();
       this._initFocus();
@@ -477,6 +488,13 @@ export class DsCalendar extends HTMLElement {
       this.querySelector(`[data-iso="${this._focusISO}"]`)?.focus();
     });
   }
+
+  /* Reflected properties so `cal.value = '2026-04-26'` works like the attribute
+     (it was attribute-only, so a property assignment silently no-op'd). */
+  get value() { return this.getAttribute('value') || ''; }
+  set value(v) { if (v) this.setAttribute('value', String(v)); else this.removeAttribute('value'); }
+  get type() { return this._type(); }
+  set type(v) { this.setAttribute('type', v); }
 }
 
 if (typeof customElements !== 'undefined' && !customElements.get('ds-calendar')) {

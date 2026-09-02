@@ -22,6 +22,7 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 const SIZES = ['small', 'medium', 'large'];
 const STYLES = ['disc', 'circle', 'square', 'icon', 'number', 'letter', 'badge'];
@@ -99,10 +100,22 @@ export class DsList extends HTMLElement {
 
     let itemsHTML = '';
     if (this._items && this._items.length) {
-      itemsHTML = this._items.map((it) => this._renderItem(it, style)).join('');
+      /* `items` are DATA (often server-sourced) → escape each string once. */
+      itemsHTML = this._items.map((it) => {
+        const isObj = typeof it === 'object' && it !== null;
+        const raw = typeof it === 'string' ? it : (it.text ?? it.label ?? '');
+        return this._renderItem({
+          html: escapeHtml(raw),
+          level: (isObj && it.level) || 1,
+          icon: isObj ? it.icon : null,
+        }, style);
+      }).join('');
     } else if (this._initialChildren && this._initialChildren.length) {
+      /* Slotted <ds-list-item> innerHTML is AUTHOR markup (they wrote it in their
+         own template) → keep it as-is so inline markup (a link, <b>) renders and
+         entities aren't double-escaped. `items` above is the escaped data path. */
       itemsHTML = this._initialChildren.map((node) => this._renderItem({
-        text: node.innerHTML,
+        html: node.innerHTML,
         level: node.getAttribute('level') || '1',
         icon: node.getAttribute('icon'),
       }, style)).join('');
@@ -112,14 +125,15 @@ export class DsList extends HTMLElement {
   }
 
   _renderItem(item, style) {
-    const isObj = typeof item === 'object' && item !== null;
-    const text = typeof item === 'string' ? item : (item.text ?? item.label ?? '');
-    const level = String((isObj && item.level) || 1);
-    const icon = isObj && item.icon ? item.icon : DEFAULT_ICON;
+    /* `item.html` arrives already-safe: escaped for the data path, trusted
+       author markup for the slotted path. Level is clamped to digits so it's
+       safe in the attribute; icon is a raw field → escaped here. */
+    const level = String(item.level ?? 1).replace(/[^0-9]/g, '') || '1';
+    const icon = escapeHtml(item.icon || DEFAULT_ICON);
     const iconHTML = style === 'icon'
-      ? `<span class="ds-list__icon" aria-hidden="true"><ds-icon name="${escapeHtml(icon)}" size="100%"></ds-icon></span>`
+      ? `<span class="ds-list__icon" aria-hidden="true"><ds-icon name="${icon}" size="100%"></ds-icon></span>`
       : '';
-    return `<li class="ds-list__item" data-level="${level}">${iconHTML}<span class="ds-list__text">${text}</span></li>`;
+    return `<li class="ds-list__item" data-level="${level}">${iconHTML}<span class="ds-list__text">${item.html}</span></li>`;
   }
 }
 

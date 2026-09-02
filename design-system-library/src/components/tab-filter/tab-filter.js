@@ -20,6 +20,13 @@
 
 import { boolAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import { injectCss } from '../../utils/inject-css.js';
+import '../../icons/icon.js';
+import '../badge/badge.js';
+
+/* Options may render a light-DOM <ds-badge>; inject its CSS (the JS import alone
+   doesn't carry the stylesheet). Idempotent. */
+injectCss('ds-tab-filter-badge-css', '../badge/badge.css', import.meta.url);
 
 let _uid = 0;
 
@@ -61,7 +68,14 @@ export class DsTabFilter extends HTMLElement {
     else this._render();
   }
 
-  disconnectedCallback() { this._ro?.disconnect(); }
+  disconnectedCallback() {
+    /* Null the RO (not just disconnect): it observes the persistent `_root` and
+       `_render` re-creates it only `if (!this._ro)`, so a stale reference here
+       leaves it dead after a disconnect → reconnect. */
+    this._ro?.disconnect();
+    this._ro = null;
+    clearTimeout(this._animTimer);
+  }
 
   // ---- Public API ---------------------------------------------------------
   get options() { return this._options; }
@@ -195,7 +209,7 @@ export class DsTabFilter extends HTMLElement {
     if (opt.badge != null && opt.badge !== false
         && opt.badge !== 0 && String(opt.badge) !== '0') {
       const badgeText = typeof opt.badge === 'object' ? '' : String(opt.badge);
-      badgeHTML = `<span class="ds-tab-filter__option-badge"><ds-badge variant="subtle" state="default" size="small">${badgeText}</ds-badge></span>`;
+      badgeHTML = `<span class="ds-tab-filter__option-badge"><ds-badge variant="subtle" state="default" size="small">${escapeHtml(badgeText)}</ds-badge></span>`;
     }
 
     const cls = [
@@ -236,7 +250,12 @@ export class DsTabFilter extends HTMLElement {
     if (String(this.value) === String(opt.value)) return;
     this.value = opt.value;
     requestAnimationFrame(() => {
-      const next = this._root.querySelector(`[data-value="${opt.value}"]`);
+      /* Re-find the rebuilt button by its numeric index — an escaped
+         `[data-value="…"]` selector doesn't throw, but the HTML-entity escaping
+         mismatches the decoded DOM attribute for values containing a quote, so
+         focus restoration would silently miss. */
+      const idx = this._options.indexOf(opt);
+      const next = idx >= 0 ? this._root.querySelector(`[data-index="${idx}"]`) : null;
       next?.focus?.();
     });
     this.dispatchEvent(new CustomEvent('ds-tab-filter-change', {

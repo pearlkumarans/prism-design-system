@@ -12,6 +12,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 const STATUSES = ['info', 'success', 'warning', 'error'];
 const STYLES = ['subtle', 'filled'];
@@ -120,15 +121,15 @@ export class DsToast extends HTMLElement {
       && (!this.hasAttribute('show-timeout') || this.getAttribute('show-timeout') !== 'false');
 
     const ctaEl = ctaHref
-      ? `<a class="ds-toast__cta" href="${ctaHref}" data-cta>${ctaText}</a>`
-      : `<button class="ds-toast__cta" type="button" data-cta>${ctaText}</button>`;
+      ? `<a class="ds-toast__cta" href="${escapeHtml(ctaHref)}" data-cta>${escapeHtml(ctaText)}</a>`
+      : `<button class="ds-toast__cta" type="button" data-cta>${escapeHtml(ctaText)}</button>`;
 
     this._root.innerHTML = `
       <div class="ds-toast__content">
         <span class="ds-toast__icon" aria-hidden="true"><ds-icon name="${escapeHtml(ICON_FOR[status])}" size="20"></ds-icon></span>
         <div class="ds-toast__body">
-          ${title ? `<div class="ds-toast__title">${title}</div>` : ''}
-          ${showDescription ? `<div class="ds-toast__description">${description}</div>` : ''}
+          ${title ? `<div class="ds-toast__title">${escapeHtml(title)}</div>` : ''}
+          ${showDescription ? `<div class="ds-toast__description">${escapeHtml(description)}</div>` : ''}
         </div>
         ${showCta ? ctaEl : ''}
         ${showClose ? `<button class="ds-toast__close" type="button" aria-label="Dismiss notification" data-close><ds-icon name="close" size="16"></ds-icon></button>` : ''}

@@ -52,6 +52,7 @@ import '../empty-state/empty-state.js';
 import '../illustration/illustration.js'; /* ds-empty-state renders <ds-illustration> but doesn't import it */
 import '../chart/chart.js';
 import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 import '../data-table/data-table.js'; /* table-type body */
 
 injectCss('ds-widget-icon-button-css', '../icon-button/icon-button.css', import.meta.url);
@@ -72,6 +73,10 @@ if (typeof window !== 'undefined' && !window.UEMS_ILLUSTRATION_SPRITE) {
 
 const TYPES = ['chart', 'list', 'table', 'error', 'empty', 'no-data'];
 const STATE_TYPES = ['error', 'empty', 'no-data'];
+/* Attributes that only change host classes/attrs (selection ring, edit chrome,
+   direction) — repaint in place instead of rebuilding innerHTML, so toggling
+   them can't detach and reset the slotted body (a <ds-chart>/<ds-data-table>). */
+const VISUAL_ONLY = new Set(['selected', 'edit-mode', 'state', 'dir', 'rtl']);
 /* trend-status → ds-badge state */
 const TREND_STATE = { success: 'success', warning: 'moderate', critical: 'critical', info: 'active' };
 /* Built-in placeholder content per state type (overridable via attributes). */
@@ -108,7 +113,22 @@ export class DsWidget extends HTMLElement {
     this._render();
     /* Frameworks (Ember/React/Vue) insert children AFTER upgrade, so the capture
        above can miss them. Re-capture + re-render when late content appears. */
-    watchLateChildren(this, () => { this._slotsCaptured = false; this.connectedCallback(); });
+    /* Merge genuinely-late external children into the captured slot buckets by
+       node identity — never re-scan this.children (the helper's own doc warns
+       that re-capturing swallows our generated wrappers; on a structural
+       re-render, whose new surface/overlay look "leaked", that dropped the
+       slotted body and replaced it with a default). */
+    watchLateChildren(this, (leaked) => {
+      let added = false;
+      leaked.forEach((n) => {
+        if (n.nodeType !== 1 || this._isOwnNode(n)) return;   // ignore our own wrappers
+        const slot = n.getAttribute && n.getAttribute('slot');
+        if (slot === 'header-action') { this._slottedHeaderAction = n; added = true; }
+        else if (slot === 'filter') { this._slottedFilter = n; added = true; }
+        else if (!this._slottedContent.includes(n)) { this._slottedContent.push(n); added = true; }
+      });
+      if (added) this._render();
+    });
   }
 
   disconnectedCallback() {
@@ -128,7 +148,26 @@ export class DsWidget extends HTMLElement {
       this.removeAttribute('title');
       return;
     }
-    if (this._mounted) this._render();
+    if (!this._mounted) return;
+    /* Visual-only attrs repaint in place; structural attrs rebuild the markup
+       (and re-home the slotted body). */
+    if (VISUAL_ONLY.has(name)) this._paintState();
+    else this._render();
+  }
+
+  /* Host classes + state attrs only — no innerHTML rebuild (see VISUAL_ONLY). */
+  _paintState() {
+    const type = enumAttr(this, 'type', TYPES, 'chart');
+    const selected = boolAttr(this, 'selected') || this.getAttribute('state') === 'selected';
+    const editMode = boolAttr(this, 'edit-mode');
+    const rtl = boolAttr(this, 'rtl') || this.getAttribute('dir') === 'rtl';
+    [...this.classList].forEach((c) => { if (c.startsWith('ds-widget')) this.classList.remove(c); });
+    this.classList.add('ds-widget', `ds-widget--${type}`);
+    if (editMode) this.classList.add('ds-widget--edit');
+    if (selected) this.classList.add('ds-widget--selected');
+    /* Guard the same-value set so a dir="rtl" write can't re-enter the callback. */
+    if (rtl && this.getAttribute('dir') !== 'rtl') this.setAttribute('dir', 'rtl');
+    if (selected) this.setAttribute('aria-selected', 'true'); else this.removeAttribute('aria-selected');
   }
 
   _render() {
@@ -148,30 +187,20 @@ export class DsWidget extends HTMLElement {
     const footerSummary = this.getAttribute('footer-summary') || '';
     const footerLabel = this.getAttribute('footer-label') || 'View all';
     const footerHref = this.getAttribute('footer-href') || '#';
-    const selected = boolAttr(this, 'selected') || this.getAttribute('state') === 'selected';
-    const editMode = boolAttr(this, 'edit-mode');
-    const rtl = boolAttr(this, 'rtl') || this.getAttribute('dir') === 'rtl';
-
-    [...this.classList].forEach((c) => { if (c.startsWith('ds-widget')) this.classList.remove(c); });
-    this.classList.add('ds-widget', `ds-widget--${type}`);
-    if (editMode) this.classList.add('ds-widget--edit');
-    if (selected) this.classList.add('ds-widget--selected');
-    if (rtl) this.setAttribute('dir', 'rtl');
-
+    this._paintState();
     if (!this.hasAttribute('role')) this.setAttribute('role', 'group');
     if (title && !this.hasAttribute('aria-label')) this.setAttribute('aria-label', title);
-    if (selected) this.setAttribute('aria-selected', 'true'); else this.removeAttribute('aria-selected');
 
     /* ---- Header ---- */
     const header = `
       <div class="ds-widget__header">
         <div class="ds-widget__title-area">
           ${showDrag ? '<ds-icon-button class="ds-widget__drag" type="tertiary-grey" size="small" icon="move-vertical" label="Drag to reorder" no-tooltip></ds-icon-button>' : ''}
-          ${title ? `<h3 class="ds-widget__title">${title}</h3>` : ''}
-          ${showInfo ? `<ds-icon class="ds-widget__info" name="${infoIcon}" size="18"></ds-icon>` : ''}
+          ${title ? `<h3 class="ds-widget__title">${escapeHtml(title)}</h3>` : ''}
+          ${showInfo ? `<ds-icon class="ds-widget__info" name="${escapeHtml(infoIcon)}" size="18"></ds-icon>` : ''}
         </div>
         <div class="ds-widget__trailing">
-          ${trend ? `<ds-badge variant="subtle" state="${TREND_STATE[trendStatus]}" size="medium" shape="pill" icon="${trendIcon}" label="${trend}"></ds-badge>` : ''}
+          ${trend ? `<ds-badge variant="subtle" state="${TREND_STATE[trendStatus]}" size="medium" shape="pill" icon="${escapeHtml(trendIcon)}" label="${escapeHtml(trend)}"></ds-badge>` : ''}
           ${(filterLabel || this._slottedFilter) ? '<span class="ds-widget__filter" data-slot="filter"></span>' : ''}
           ${showAction ? '<span class="ds-widget__action" data-slot="header-action"></span>' : ''}
         </div>
@@ -187,8 +216,8 @@ export class DsWidget extends HTMLElement {
       const illo = this.getAttribute('state-illustration') || p.illustration;
       body = `
         <div class="ds-widget__body ds-widget__body--state">
-          <ds-empty-state size="sm" illustration="${illo}" title="${st}" description="${sd}"
-            ${retry ? `primary-label="${retry}"` : ''}></ds-empty-state>
+          <ds-empty-state size="sm" illustration="${escapeHtml(illo)}" title="${escapeHtml(st)}" description="${escapeHtml(sd)}"
+            ${retry ? `primary-label="${escapeHtml(retry)}"` : ''}></ds-empty-state>
         </div>`;
     } else {
       body = '<div class="ds-widget__body" data-slot="content"></div>';
@@ -197,8 +226,8 @@ export class DsWidget extends HTMLElement {
     /* ---- Footer ---- */
     const footer = showFooter ? `
       <div class="ds-widget__footer">
-        <span class="ds-widget__summary">${footerSummary}</span>
-        <ds-text-link class="ds-widget__view-all" variant="primary" size="small" href="${footerHref}" trailing-icon="chevron-right" data-view-all>${footerLabel}</ds-text-link>
+        <span class="ds-widget__summary">${escapeHtml(footerSummary)}</span>
+        <ds-text-link class="ds-widget__view-all" variant="primary" size="small" href="${escapeHtml(footerHref)}" trailing-icon="chevron-right" data-view-all>${escapeHtml(footerLabel)}</ds-text-link>
       </div>` : '';
 
     /* ---- Selection ring + resize handles (visual only) ---- */
@@ -233,7 +262,7 @@ export class DsWidget extends HTMLElement {
     if (showAction) {
       const slot = this.querySelector('[data-slot="header-action"]');
       if (this._slottedHeaderAction) slot.appendChild(this._slottedHeaderAction);
-      else slot.innerHTML = `<ds-icon-button type="tertiary-grey" size="xl" icon="${actionIcon}" label="Widget settings" no-tooltip data-header-action></ds-icon-button>`;
+      else slot.innerHTML = `<ds-icon-button type="tertiary-grey" size="xl" icon="${escapeHtml(actionIcon)}" label="Widget settings" no-tooltip data-header-action></ds-icon-button>`;
     }
     if (!isState) {
       const contentSlot = this.querySelector('[data-slot="content"]');

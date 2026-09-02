@@ -29,6 +29,7 @@ import { escapeHtml } from '../../utils/escape.js';
 import '../tooltip/tooltip.js';
 import '../icon-button/icon-button.js';
 import { injectCss } from '../../utils/inject-css.js';
+import '../../icons/icon.js';
 
 injectCss('ds-sidebar-l2-tooltip-css', '../tooltip/tooltip.css', import.meta.url);
 injectCss('ds-sidebar-l2-icon-button-css', '../icon-button/icon-button.css', import.meta.url);
@@ -67,7 +68,15 @@ export class DsSidebarL2 extends HTMLElement {
     this._syncCollapseToggle();
   }
 
-  disconnectedCallback() { this._ro?.disconnect(); }
+  disconnectedCallback() {
+    /* Null the observer, not just disconnect it — `_render` re-creates the RO
+       only `if (!this._ro)`, so a stale disconnected reference here leaves it
+       dead after a disconnect → reconnect (SPA/tab switch), silently breaking
+       indicator repositioning + truncation tooltips on later resizes. */
+    this._ro?.disconnect();
+    this._ro = null;
+    clearTimeout(this._animTimer);   /* one-shot chip-glide flag reset */
+  }
 
   get groups() { return this._groups; }
   set groups(v) { this._groups = Array.isArray(v) ? v.slice() : []; if (this._root) this._render(); }
@@ -125,14 +134,14 @@ export class DsSidebarL2 extends HTMLElement {
     const headerHTML = (isSettings && (showBack || title))
       ? `<div class="ds-sidebar-l2__header">
            ${showBack ? `<ds-icon-button class="ds-sidebar-l2__back" shape="square" type="tertiary-grey" size="small" icon="${rtl ? 'chevron-right' : 'chevron-left'}" label="Back" no-tooltip data-back></ds-icon-button>` : ''}
-           ${title ? `<h2 class="ds-sidebar-l2__title">${title}</h2>` : ''}
+           ${title ? `<h2 class="ds-sidebar-l2__title">${escapeHtml(title)}</h2>` : ''}
          </div>`
       : '';
 
     const searchHTML = showSearch
       ? `<div class="ds-sidebar-l2__search">
            <span class="ds-sidebar-l2__search-icon" aria-hidden="true"><ds-icon name="search" size="16"></ds-icon></span>
-           <input type="search" placeholder="${placeholder}" aria-label="Search navigation" data-search value="${this._query.replace(/"/g, '&quot;')}" />
+           <input type="search" placeholder="${escapeHtml(placeholder)}" aria-label="Search navigation" data-search value="${this._query.replace(/"/g, '&quot;')}" />
          </div>`
       : '';
 

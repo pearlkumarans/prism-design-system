@@ -15,6 +15,13 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import { injectCss } from '../../utils/inject-css.js';
+import '../../icons/icon.js';
+import '../badge/badge.js';
+
+/* Items may render a light-DOM <ds-badge>; inject its CSS (the JS import alone
+   doesn't carry the stylesheet). Idempotent. */
+injectCss('ds-tab-bar-vertical-badge-css', '../badge/badge.css', import.meta.url);
 
 const TYPES = ['fill', 'underline'];
 
@@ -58,7 +65,14 @@ export class DsTabBarVertical extends HTMLElement {
     else this._render();
   }
 
-  disconnectedCallback() { this._ro?.disconnect(); }
+  disconnectedCallback() {
+    /* Null the RO (not just disconnect): it observes the persistent `_root` and
+       `_render` re-creates it only `if (!this._ro)`, so a stale reference here
+       leaves it dead after a disconnect → reconnect. */
+    this._ro?.disconnect();
+    this._ro = null;
+    clearTimeout(this._animTimer);
+  }
 
   // ---- Public API ---------------------------------------------------------
   get items() { return this._items; }
@@ -167,7 +181,7 @@ export class DsTabBarVertical extends HTMLElement {
     let badgeHTML = '';
     if (item.badge != null && item.badge !== false) {
       const badgeText = typeof item.badge === 'object' ? '' : String(item.badge);
-      badgeHTML = `<span class="ds-tab-bar-vertical__item-badge"><ds-badge variant="subtle" state="default" size="small">${badgeText}</ds-badge></span>`;
+      badgeHTML = `<span class="ds-tab-bar-vertical__item-badge"><ds-badge variant="subtle" state="default" size="small">${escapeHtml(badgeText)}</ds-badge></span>`;
     }
 
     const cls = [
@@ -181,14 +195,14 @@ export class DsTabBarVertical extends HTMLElement {
               role="tab"
               id="${id}"
               class="${cls}"
-              ${item.panelId ? `aria-controls="${item.panelId}"` : ''}
+              ${item.panelId ? `aria-controls="${escapeHtml(item.panelId)}"` : ''}
               aria-selected="${isActive ? 'true' : 'false'}"
               ${isDisabled ? 'aria-disabled="true" disabled' : ''}
               tabindex="${isActive && !isDisabled ? 0 : -1}"
-              data-id="${item.id}"
+              data-id="${escapeHtml(item.id ?? '')}"
               data-index="${idx}">
               ${iconHTML}
-              <span class="ds-tab-bar-vertical__item-label">${label}</span>
+              <span class="ds-tab-bar-vertical__item-label">${escapeHtml(label)}</span>
               ${badgeHTML}
             </button>`;
   }
@@ -211,7 +225,10 @@ export class DsTabBarVertical extends HTMLElement {
     /* Restore focus on the newly active row so keyboard users keep the
        tab stop correctly placed after a click. */
     requestAnimationFrame(() => {
-      const next = this._root.querySelector(`[data-id="${item.id}"]`);
+      /* Re-find the rebuilt button by its numeric index — a `[data-id="…"]`
+         selector built from a consumer id throws on special chars (`"`, `]`). */
+      const idx = this._items.indexOf(item);
+      const next = idx >= 0 ? this._root.querySelector(`[data-index="${idx}"]`) : null;
       next?.focus?.();
     });
     this.dispatchEvent(new CustomEvent('ds-tab-change', {

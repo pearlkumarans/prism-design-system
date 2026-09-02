@@ -50,6 +50,7 @@ import '../badge/badge.js';
    "line") — no bespoke SVG here. */
 import '../chart/chart.js?v=9';
 import { injectCss } from '../../utils/inject-css.js';
+import '../tooltip/tooltip.js';
 
 injectCss('ds-kpi-card-badge-css', '../badge/badge.css', import.meta.url);
 injectCss('ds-kpi-card-chart-css', '../chart/chart.css', import.meta.url);
@@ -200,8 +201,8 @@ export class DsKpiCard extends HTMLElement {
     const abs = Math.abs(trendNum);
     /* Increment/decrement icons = the sprite's up-trend / down-trend (the same
        icons the Figma trend-badge instances, 13824:171/172). */
-    const icon = dir === 'up' ? 'up-trend' : 'down-trend';
-    return `<ds-badge class="ds-kpi-card__delta" variant="subtle" state="${state}" size="medium" shape="rounded" icon="${icon}" label="${abs}"></ds-badge>`;
+    const icon = dir === 'up' ? 'up-trend' : 'down-trend';   // internal sprite literal, not the consumer `icon` attr
+    return `<ds-badge class="ds-kpi-card__delta" variant="subtle" state="${escapeHtml(state)}" size="medium" shape="rounded" icon="${icon}" label="${abs}"></ds-badge>`;  // lint-ok — `icon` above is an internal literal; the consumer attr escapes via _renderIconBadge
   }
 
   /* Date-range selector (period label + chevron) — replaces the icon slot. */
@@ -209,7 +210,7 @@ export class DsKpiCard extends HTMLElement {
     if (!periodLabel) return '';
     return `
       <button type="button" class="ds-kpi-card__selector" data-selector>
-        <span>${periodLabel}</span>
+        <span>${escapeHtml(periodLabel)}</span>
         <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
       </button>`;
   }
@@ -218,7 +219,7 @@ export class DsKpiCard extends HTMLElement {
     if (!text) return '';
     return `
       <button type="button" class="ds-kpi-card__trend-pill" data-trend-pill>
-        <span>${text}</span>
+        <span>${escapeHtml(text)}</span>
         <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
       </button>`;
   }
@@ -331,7 +332,7 @@ export class DsKpiCard extends HTMLElement {
     }
 
     const delta = showTrend ? this._renderDelta(trendNum, trendTone, trendDir) : '';
-    const subHTML = (desc && showSub) ? `<p class="ds-kpi-card__description">${desc}</p>` : '';
+    const subHTML = (desc && showSub) ? `<p class="ds-kpi-card__description">${escapeHtml(desc)}</p>` : '';
 
     /* ── Legacy group variants (Multi / Single / Two) ─────────────────── */
     if (variant === 'multi' || variant === 'single' || variant === 'two') {
@@ -410,7 +411,7 @@ export class DsKpiCard extends HTMLElement {
                 <div class="ds-kpi-card__value">${loading ? ' ' : escapeHtml(value)}</div>${delta}
               </div>
               ${label ? `<h3 class="ds-kpi-card__label">${escapeHtml(label)}</h3>` : ''}
-              ${period ? `<div class="ds-kpi-card__date">${period}</div>` : ''}
+              ${period ? `<div class="ds-kpi-card__date">${escapeHtml(period)}</div>` : ''}
               ${subHTML}
             </div>
             <div class="ds-kpi-card__default-end ds-kpi-card__default-end--bottom">${this._renderChart(chartType, sparkline)}</div>
@@ -420,7 +421,7 @@ export class DsKpiCard extends HTMLElement {
           <div class="ds-kpi-card__default ds-kpi-card__default--date-gauge">
             <div class="ds-kpi-card__default-body">
               ${label ? `<h3 class="ds-kpi-card__label">${escapeHtml(label)}</h3>` : ''}
-              <div class="ds-kpi-card__date">${period}</div>
+              <div class="ds-kpi-card__date">${escapeHtml(period)}</div>
               <div class="ds-kpi-card__value-row">
                 <div class="ds-kpi-card__value ds-kpi-card__value--display-sm">${loading ? ' ' : escapeHtml(value)}</div>${delta}
               </div>

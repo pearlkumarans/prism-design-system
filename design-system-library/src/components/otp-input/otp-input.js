@@ -14,6 +14,7 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 /* Helper/note row = the shared "Form Field Helper Row" sub-component. */
 import '../field-helper/field-helper.js';
 import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 /* Auto-load field-helper.css once (both are light-DOM, so the stylesheet must
    be present even on pages that load otp-input.css individually). */
@@ -69,6 +70,11 @@ export class DsOtpInput extends HTMLElement {
     const str = (v ?? '').toString().slice(0, this._length || this._readLength());
     if (this._inputs) {
       this._inputs.forEach((inp, i) => { inp.value = str[i] || ''; });
+    } else {
+      /* Boxes not built yet (property set on an upgraded-but-unconnected
+         element, the common framework "set props then mount" order) — stash so
+         connectedCallback applies it once the boxes exist. */
+      this._pendingValue = str;
     }
   }
 
@@ -78,6 +84,13 @@ export class DsOtpInput extends HTMLElement {
   }
 
   _render() {
+    /* Preserve the entered code across a rebuild. The typed digits live only in
+       the box <input>s (they aren't reflected to the `value` attribute), so a
+       plain innerHTML rebuild would wipe them — e.g. setting `state="error"`
+       after validation. The getter returns the current boxes' value on a
+       re-render, or the `value` attribute on the first render (so an initial
+       `value="123456"` is honoured too). Restored after the boxes are rebuilt. */
+    const prevValue = this.value;
     const length = this._readLength();
     const size = enumAttr(this, 'size', SIZES, 'medium');
     const label = this.getAttribute('label') || '';
@@ -96,14 +109,14 @@ export class DsOtpInput extends HTMLElement {
 
     const helperId = `ds-otp-${this._uid}-helper`;
     const labelHTML = (label && position !== 'none')
-      ? `<label class="ds-otp-input__label">${label}</label>`
+      ? `<label class="ds-otp-input__label">${escapeHtml(label)}</label>`
       : '';
     /* Per a11y spec: the input group is described by the helper row (when
        present) so screen readers read the helper after the field name. The
        helper row also flips to assertive live in the error state so the
        message is announced immediately when validation fails. */
     const fieldsHTML = `<div class="ds-otp-input__fields" role="group"
-        aria-label="${label || 'One-time code'}"
+        aria-label="${escapeHtml(label || 'One-time code')}"
         ${helper ? `aria-describedby="${helperId}"` : ''}>` +
       Array.from({ length }, (_, i) => `
         <input class="ds-otp-input__box"
@@ -117,7 +130,7 @@ export class DsOtpInput extends HTMLElement {
     /* Helper row is the shared <ds-field-helper> sub-component — it owns the
        icon, the default/error/disabled colour, and its own ARIA live-region. */
     const helperState = state === 'error' ? 'error' : (state === 'disabled' ? 'disabled' : 'default');
-    const helperAttr = String(helper).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    const helperAttr = escapeHtml(helper);
     const helperHTML = helper
       ? `<ds-field-helper id="${helperId}" text="${helperAttr}" state="${helperState}" ${rtl ? 'rtl' : ''}></ds-field-helper>`
       : '';
@@ -125,6 +138,8 @@ export class DsOtpInput extends HTMLElement {
     this._root.innerHTML = labelHTML + fieldsHTML + helperHTML;
     this._inputs = [...this._root.querySelectorAll('.ds-otp-input__box')];
     this._wire();
+    /* Restore the captured code into the freshly-built boxes. */
+    if (prevValue) this.value = prevValue;
   }
 
   _wire() {

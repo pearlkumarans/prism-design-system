@@ -253,12 +253,8 @@ export class DsAccordion extends HTMLElement {
   attributeChangedCallback(name, oldValue, newValue) {
     if (!this.shadowRoot.firstElementChild) return;
     if (name === 'type') this._renderLeading();
-    /* Clear "open settled" the moment we leave the expanded state so the
-       body re-clips during the collapse animation. The expanded → settled
-       flip happens in the transitionend listener wired in _wire(). */
-    if (name === 'expanded' && newValue === null && this._body) {
-      delete this._body.dataset.openSettled;
-    }
+    /* The `data-open-settled` flag (which lets slotted popovers escape the body)
+       is owned by _sync + the transitionend listener wired in _wire(). */
     this._sync();
   }
 
@@ -371,6 +367,23 @@ export class DsAccordion extends HTMLElement {
       if (disabled) leading.setAttribute('disabled', '');
       else leading.removeAttribute('disabled');
     }
+    /* Own the "open settled" flag (body → overflow:visible so slotted popovers
+       escape). Collapsed: always clipped. Expanded: settle synchronously under
+       reduced-motion — the body's transition is `none`, so `transitionend`
+       never fires and the animated path in _wire() would leave it clipped
+       forever (also covers an accordion that starts [expanded]). Under normal
+       motion, leave it unset here and let transitionend flip it after the
+       open animation finishes. */
+    if (this._body) {
+      if (!expanded) delete this._body.dataset.openSettled;
+      else if (this._prefersReducedMotion()) this._body.dataset.openSettled = '';
+    }
+  }
+
+  _prefersReducedMotion() {
+    return typeof window !== 'undefined'
+      && typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
   toggle() {

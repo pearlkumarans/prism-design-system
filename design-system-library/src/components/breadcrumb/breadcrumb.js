@@ -7,10 +7,10 @@
    </ds-breadcrumb>
 
    - Wraps each child in <li>, injects separators, marks the last item as current.
-   - When `overflow` is set and there are more children than `max-visible` (default 3),
-     the middle items collapse into a `···` token; first + last two stay visible.
-     Default of 3 means a 4-item trail with `overflow` will collapse, matching the
-     spec's `Count=4 Overflow=True` variant.
+   - When `overflow` is set and there are more children than `max-visible` (default 4),
+     the middle items collapse into a `···` token; the first item, the last two
+     ancestors, and the current page stay visible. So a 5-item trail with `overflow`
+     collapses; a responsive fitter also collapses when the trail can't fit its width.
    - Renders into light DOM so consumer styles + links keep working.
    ============================================================================= */
 
@@ -24,6 +24,7 @@ import '../dropdown-menu/dropdown-menu.js';
    panel in light DOM. Idempotent — injected once per document. */
 import { injectCss } from '../../utils/inject-css.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 injectCss('ds-breadcrumb-dd-css', '../dropdown-menu/dropdown-menu.css', import.meta.url);
 
 const DEFAULT_SEPARATOR = 'chevron-right';
@@ -75,6 +76,12 @@ export class DsBreadcrumb extends HTMLElement {
   }
 
   _render() {
+    /* Tear down any overflow menu still open from a previous render before we
+       rebuild the <ol>. Otherwise its capturing document-click listener
+       outlives this render — it only self-removes on the next document click,
+       and its stale closeDd nulls `this._closeOverflow`, which can clobber a
+       later-opened menu's tracking so disconnectedCallback leaks it. */
+    if (this._closeOverflow) this._closeOverflow();
     const homeIcon = boolAttr(this, 'home-icon');
     const overflow = boolAttr(this, 'overflow');
     const rtl = boolAttr(this, 'rtl');

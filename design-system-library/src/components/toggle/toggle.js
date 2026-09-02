@@ -18,9 +18,21 @@ export class DsToggle extends HTMLElement {
         this.checked = !this.checked;
         this.dispatchEvent(new CustomEvent('ds-toggle-change', { bubbles: true, detail: { checked: this.checked } }));
       });
-      this._btn.addEventListener('keydown', (e) => {
-        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); this._btn.click(); }
-      });
+      /* No keydown handler: a native <button> already activates on Space and
+         Enter. A manual one is redundant and double-fires on Space (it clicks on
+         keydown while the browser also clicks on keyup). */
+      /* Persistent thumb — built ONCE so its CSS slide transition can actually
+         play. Rebuilding the button's innerHTML each render (as before) recreated
+         the thumb every toggle, so the 240ms `inset-inline-start` glide never ran
+         — the new element simply appeared at its end position. The in-track text
+         span is added/removed in _render because its PRESENCE drives the `:has()`
+         labeled-layout rules in CSS. */
+      this._thumb = document.createElement('span');
+      this._thumb.className = 'ds-toggle__thumb';
+      this._thumb.setAttribute('aria-hidden', 'true');
+      this._btn.appendChild(this._thumb);
+      this._text = document.createElement('span');
+      this._text.className = 'ds-toggle__text';
       /* Visible field label beside the switch (like other form fields).
          Clicking it toggles the switch, and it labels the control for AT. */
       this._label = document.createElement('span');
@@ -95,10 +107,15 @@ export class DsToggle extends HTMLElement {
         }
       }
     }
-    this._btn.innerHTML = `
-      ${inlineText ? `<span class="ds-toggle__text">${inlineText}</span>` : ''}
-      <span class="ds-toggle__thumb" aria-hidden="true"></span>
-    `;
+    /* Update in place — never wipe innerHTML (that would recreate the thumb and
+       kill its slide). The text span is present only when labeled, so `:has()`
+       toggles the labeled geometry; the thumb persists across every render. */
+    if (inlineText) {
+      this._text.textContent = inlineText;
+      if (this._text.parentNode !== this._btn) this._btn.insertBefore(this._text, this._thumb);
+    } else if (this._text.parentNode === this._btn) {
+      this._btn.removeChild(this._text);
+    }
   }
 }
 

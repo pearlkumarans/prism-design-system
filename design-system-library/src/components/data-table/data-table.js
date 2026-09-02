@@ -79,6 +79,10 @@ import '../icon-button/icon-button.js';
 import '../tooltip/tooltip.js';
 import { injectCss } from '../../utils/inject-css.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
+import '../button/button.js';
+import '../checkbox/checkbox.js';
+import '../tag/tag.js';
 (function _injectToolbarCss() {
   if (typeof document === 'undefined') return;
   [
@@ -321,7 +325,19 @@ export class DsDataTable extends HTMLElement {
     }
   }
 
-  disconnectedCallback() { this._disableFit(); if (this._langObs) { this._langObs.disconnect(); this._langObs = null; } }
+  disconnectedCallback() {
+    this._disableFit();
+    if (this._langObs) { this._langObs.disconnect(); this._langObs = null; }
+    /* Tear down the lazily-portaled menus: each was appended to <body> and added a
+       document click-listener whose closure retains this instance. Without this,
+       any table whose overflow/filter/export menu was opened leaks (an orphan menu
+       node in <body> + a live document listener pinning the table) on unmount. */
+    if (this._menuAbort) { this._menuAbort.abort(); this._menuAbort = null; }
+    [this._overflowMenu, this._advFilterMenu, this._exportMenu].forEach((m) => {
+      if (m && m.parentNode) m.parentNode.removeChild(m);
+    });
+    this._overflowMenu = this._advFilterMenu = this._exportMenu = null;
+  }
 
   /* fit-viewport: keep the whole table within the screen so the footer stays
      visible; short data still hugs (max-height, not height). */
@@ -1275,7 +1291,7 @@ export class DsDataTable extends HTMLElement {
       document.addEventListener('click', (e) => {
         if (menu.hasAttribute('open') && !menu.contains(e.target) &&
             !(e.target.closest && e.target.closest('[data-act="overflow"]'))) menu.close();
-      });
+      }, { signal: (this._menuAbort ||= new AbortController()).signal });
       document.body.appendChild(menu);
       this._overflowMenu = menu;
     }
@@ -1337,7 +1353,7 @@ export class DsDataTable extends HTMLElement {
       document.addEventListener('click', (e) => {
         if (menu.hasAttribute('open') && !menu.contains(e.target) &&
             !(e.target.closest && e.target.closest('.ds-data-table__filter'))) menu.close();
-      });
+      }, { signal: (this._menuAbort ||= new AbortController()).signal });
       document.body.appendChild(menu);
       this._advFilterMenu = menu;
     }
@@ -1435,7 +1451,7 @@ export class DsDataTable extends HTMLElement {
       document.addEventListener('click', (e) => {
         if (menu.hasAttribute('open') && !menu.contains(e.target) &&
             !(e.target.closest && e.target.closest('[data-bulk-id="export"]'))) menu.close();
-      });
+      }, { signal: (this._menuAbort ||= new AbortController()).signal });
       document.body.appendChild(menu);
       this._exportMenu = menu;
     }

@@ -52,6 +52,10 @@ injectCss('ds-card-text-link-css', '../text-link/text-link.css', import.meta.url
 
 const TYPES = ['elevated', 'outlined', 'filled', 'plain'];
 const SIZES = ['small', 'medium', 'large'];
+/* Attributes that only change host classes/attrs (surface look, selected ring,
+   disabled dim, direction) — repaint in place instead of rebuilding innerHTML,
+   so a `selected`/`disabled` toggle can't detach and re-home slotted content. */
+const VISUAL_ONLY = new Set(['type', 'size', 'selected', 'disabled', 'dir', 'rtl']);
 
 export class DsCard extends HTMLElement {
   static get observedAttributes() {
@@ -108,12 +112,32 @@ export class DsCard extends HTMLElement {
       this.removeAttribute('title');
       return;
     }
-    if (this._mounted) this._render();
+    if (!this._mounted) return;
+    /* Visual-only attrs repaint in place; structural attrs rebuild the markup. */
+    if (VISUAL_ONLY.has(name)) this._paintState();
+    else this._render();
+  }
+
+  /* Host classes + state attrs only — no innerHTML rebuild (see VISUAL_ONLY). */
+  _paintState() {
+    const type = enumAttr(this, 'type', TYPES, 'elevated');
+    const size = enumAttr(this, 'size', SIZES, 'medium');
+    const selected = boolAttr(this, 'selected');
+    const disabled = boolAttr(this, 'disabled');
+    const rtl = boolAttr(this, 'rtl') || this.getAttribute('dir') === 'rtl';
+    [...this.classList].forEach((c) => { if (c.startsWith('ds-card')) this.classList.remove(c); });
+    this.classList.add('ds-card', `ds-card--${type}`, `ds-card--${size}`);
+    if (selected) this.classList.add('ds-card--selected');
+    if (disabled) this.classList.add('ds-card--disabled');
+    /* Guard the same-value set so a `dir="rtl"` write can't re-enter this
+       callback in a loop. */
+    if (rtl && this.getAttribute('dir') !== 'rtl') this.setAttribute('dir', 'rtl');
+    if (disabled) this.setAttribute('aria-disabled', 'true');
+    else this.removeAttribute('aria-disabled');
   }
 
   _render() {
-    const type = enumAttr(this, 'type', TYPES, 'elevated');
-    const size = enumAttr(this, 'size', SIZES, 'medium');
+    this._paintState();
     const title = this._titleText || '';
     const subtitle = this.getAttribute('subtitle') || '';
     const showSubtitle = this.getAttribute('show-subtitle') !== 'false';
@@ -125,19 +149,8 @@ export class DsCard extends HTMLElement {
     const footerLabel = this.getAttribute('footer-label') || 'Action';
     const footerHref = this.getAttribute('footer-href') || '#';
     const showMedia = boolAttr(this, 'show-media');
-    const selected = boolAttr(this, 'selected');
-    const disabled = boolAttr(this, 'disabled');
-    const rtl = boolAttr(this, 'rtl') || this.getAttribute('dir') === 'rtl';
     const icon = this.getAttribute('icon') || 'more-vertical';
 
-    [...this.classList].forEach((c) => { if (c.startsWith('ds-card')) this.classList.remove(c); });
-    this.classList.add('ds-card', `ds-card--${type}`, `ds-card--${size}`);
-    if (selected) this.classList.add('ds-card--selected');
-    if (disabled) this.classList.add('ds-card--disabled');
-    if (rtl) this.setAttribute('dir', 'rtl');
-
-    if (disabled) this.setAttribute('aria-disabled', 'true');
-    else this.removeAttribute('aria-disabled');
     if (!this.hasAttribute('role')) this.setAttribute('role', 'group');
     if (title && !this.hasAttribute('aria-label')) this.setAttribute('aria-label', title);
 
@@ -147,8 +160,8 @@ export class DsCard extends HTMLElement {
       <div class="ds-card__header">
         ${showLeadingIcon ? '<span class="ds-card__leading" data-slot="leading-icon" aria-hidden="true"></span>' : ''}
         <div class="ds-card__header-text">
-          ${title ? `<h3 class="ds-card__title">${title}</h3>` : ''}
-          ${subtitle && showSubtitle ? `<p class="ds-card__subtitle">${subtitle}</p>` : ''}
+          ${title ? `<h3 class="ds-card__title">${escapeHtml(title)}</h3>` : ''}
+          ${subtitle && showSubtitle ? `<p class="ds-card__subtitle">${escapeHtml(subtitle)}</p>` : ''}
         </div>
         ${showHeaderAction ? '<span class="ds-card__header-action" data-slot="header-action"></span>' : ''}
       </div>`;
@@ -157,7 +170,7 @@ export class DsCard extends HTMLElement {
 
     const footer = showFooter ? `
       <div class="ds-card__footer">
-        <ds-text-link variant="primary" size="medium" href="${footerHref}" data-footer-action>${footerLabel}</ds-text-link>
+        <ds-text-link variant="primary" size="medium" href="${escapeHtml(footerHref)}" data-footer-action>${escapeHtml(footerLabel)}</ds-text-link>
       </div>` : '';
 
     const selectedOverlay = `<div class="ds-card__selected-ring" aria-hidden="true"></div>`;
@@ -178,7 +191,7 @@ export class DsCard extends HTMLElement {
     if (showHeaderAction) {
       const slot = this.querySelector('[data-slot="header-action"]');
       if (this._slottedHeaderAction) slot.appendChild(this._slottedHeaderAction);
-      else slot.innerHTML = `<ds-icon-button type="tertiary-grey" size="xl" icon="${icon}" label="More" no-tooltip data-header-action></ds-icon-button>`;
+      else slot.innerHTML = `<ds-icon-button type="tertiary-grey" size="xl" icon="${escapeHtml(icon)}" label="More" no-tooltip data-header-action></ds-icon-button>`;
     }
     const contentSlot = this.querySelector('[data-slot="content"]');
     if (contentSlot) {

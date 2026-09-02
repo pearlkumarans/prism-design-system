@@ -37,6 +37,9 @@ import '../radio/radio.js';
 /* Helper/note row = the shared "Form Field Helper Row" sub-component. */
 import '../field-helper/field-helper.js';
 import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
+import '../tooltip/tooltip.js';
 
 /* Auto-load field-helper.css once (light-DOM, so it must be present even on
    pages that load radio-group.css individually). */
@@ -49,9 +52,6 @@ const VARIANTS = ['default', 'card'];
 /* Option flow. Unset = follow label-position (left→row, top→column, the historic
    coupling). Set explicitly to lay options out independent of the label. */
 const ORIENTATIONS = ['horizontal', 'vertical'];
-
-const esc = (s) => String(s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 let _uid = 0;
 
@@ -195,18 +195,18 @@ export class DsRadioGroup extends HTMLElement {
 
     this._itemsEl.innerHTML = this._options.map((o, i) => {
       const hasDesc = o.description != null && o.description !== '';
-      const radio = `<ds-radio name="${esc(name)}" value="${esc(o.value)}" label="${esc(o.label ?? o.value)}"`
+      const radio = `<ds-radio name="${escapeHtml(name)}" value="${escapeHtml(o.value)}" label="${escapeHtml(o.label ?? o.value)}"`
         + ` size="${size}" data-index="${i}"`
         + (o.selected ? ' checked' : '')
         + ((o.disabled || groupDisabled) ? ' disabled' : '')
         + (state === 'error' ? ' error' : '')
         + (rtl ? ' rtl' : '') + '></ds-radio>';
       const tip = o.info
-        ? `<ds-tooltip class="ds-radio-group__option-info" text="${esc(o.info)}" show-icon="false" position="up-center"><ds-icon name="info-circle" size="16"></ds-icon></ds-tooltip>`
+        ? `<ds-tooltip class="ds-radio-group__option-info" text="${escapeHtml(o.info)}" show-icon="false" position="up-center"><ds-icon name="info-circle" size="16"></ds-icon></ds-tooltip>`
         : '';
       /* Trusted inline HTML (e.g. <strong>) — like ds-inline-alert's description. */
       const desc = hasDesc
-        ? `<span class="ds-radio-group__option-desc" id="ds-rg-desc-${this._uid}-${i}">${o.description}</span>`
+        ? `<span class="ds-radio-group__option-desc" id="ds-rg-desc-${this._uid}-${i}">${escapeHtml(o.description)}</span>`
         : '';
       /* The .ds-radio-group__option wrapper only earns its keep when it carries the
          card surface, a per-option info tooltip, OR a description. A described option

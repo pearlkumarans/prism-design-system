@@ -9,6 +9,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
 
 const VARIANTS = ['default', 'success', 'warning', 'error', 'indeterminate'];
 const SIZES = ['small', 'medium', 'large'];
@@ -53,8 +54,8 @@ export class DsProgressBar extends HTMLElement {
 
     const labelRow = showLabel
       ? `<div class="ds-progress-bar__row">
-           <span class="ds-progress-bar__label">${label}</span>
-           <span class="ds-progress-bar__value">${valueLabel}</span>
+           <span class="ds-progress-bar__label">${escapeHtml(label)}</span>
+           <span class="ds-progress-bar__value">${escapeHtml(valueLabel)}</span>
          </div>`
       : '';
 
@@ -65,9 +66,9 @@ export class DsProgressBar extends HTMLElement {
        generated "{pct}%", expose it via aria-valuetext so screen readers read
        the user-facing label (e.g. "Step 3 of 8") instead of just the percent. */
     const ariaAttrs = indeterminate
-      ? `role="progressbar" aria-label="${label}"`
-      : `role="progressbar" aria-label="${label}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${value}"`
-        + (customValueLabel ? ` aria-valuetext="${customValueLabel}"` : '');
+      ? `role="progressbar" aria-label="${escapeHtml(label)}"`
+      : `role="progressbar" aria-label="${escapeHtml(label)}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${value}"`
+        + (customValueLabel ? ` aria-valuetext="${escapeHtml(customValueLabel)}"` : '');
 
     this._root.innerHTML = `
       ${labelRow}

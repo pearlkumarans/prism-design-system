@@ -13,6 +13,7 @@ import '../icon-button/icon-button.js';
 import '../text-link/text-link.js';
 import { injectCss } from '../../utils/inject-css.js';
 import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 /* Auto-load icon-button.css once (light-DOM, so it's present even on pages that
    load inline-alert.css individually). Idempotent. */
@@ -80,15 +81,15 @@ export class DsInlineAlert extends HTMLElement {
     const iconHTML = showIcon
       ? `<span class="ds-inline-alert__icon"><ds-icon name="${escapeHtml(ICON_FOR[type])}" size="20"></ds-icon></span>`
       : '';
-    const titleHTML = title ? `<div class="ds-inline-alert__title">${title}</div>` : '';
-    const descHTML = description ? `<div class="ds-inline-alert__description">${description}</div>` : '';
+    const titleHTML = title ? `<div class="ds-inline-alert__title">${escapeHtml(title)}</div>` : '';
+    const descHTML = description ? `<div class="ds-inline-alert__description">${escapeHtml(description)}</div>` : '';
     /* Action link per spec: leading arrow + label, single line, inherits the
        alert's title colour. Renders as a button-role anchor so consumers can
        attach a click handler via the ds-inline-alert-action event. */
     const actionHTML = action
       ? `<div class="ds-inline-alert__action">
            <ds-text-link data-action role="button" tabindex="0" variant="primary" size="medium" underline="always"
-                         leading-icon="${rtl ? 'arrow-narrow-left' : 'arrow-narrow-right'}">${action}</ds-text-link>
+                         leading-icon="${rtl ? 'arrow-narrow-left' : 'arrow-narrow-right'}">${escapeHtml(action)}</ds-text-link>
          </div>`
       : '';
     const dismissHTML = showDismiss

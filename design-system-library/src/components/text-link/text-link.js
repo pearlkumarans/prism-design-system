@@ -1,11 +1,10 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 const STYLES = ['primary', 'secondary', 'subtle', 'danger'];
 const SIZES = ['small', 'medium', 'large'];
 const UNDERLINES = ['always', 'hover', 'none'];
-
-const esc = (s) => String(s == null ? '' : s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 export class DsTextLink extends HTMLElement {
   static get observedAttributes() { return ['variant', 'size', 'underline', 'href', 'leading-icon', 'trailing-icon', 'disabled', 'rtl', 'target', 'label']; }
@@ -55,9 +54,9 @@ export class DsTextLink extends HTMLElement {
 
     const iconPx = size === 'small' ? 12 : size === 'medium' ? 14 : 16;
     this._anchor.innerHTML = `
-      ${leadingIcon ? `<span class="ds-text-link__icon"><ds-icon name="${esc(leadingIcon)}" size="${iconPx}"></ds-icon></span>` : ''}
-      <span>${esc(label)}</span>
-      ${trailingIcon ? `<span class="ds-text-link__icon"><ds-icon name="${esc(trailingIcon)}" size="${iconPx}"></ds-icon></span>` : ''}
+      ${leadingIcon ? `<span class="ds-text-link__icon"><ds-icon name="${escapeHtml(leadingIcon)}" size="${iconPx}"></ds-icon></span>` : ''}
+      <span>${escapeHtml(label)}</span>
+      ${trailingIcon ? `<span class="ds-text-link__icon"><ds-icon name="${escapeHtml(trailingIcon)}" size="${iconPx}"></ds-icon></span>` : ''}
     `;
   }
 }

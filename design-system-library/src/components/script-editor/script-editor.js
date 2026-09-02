@@ -1,4 +1,6 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 const TYPES = ['basic', 'with-toolbar', 'with-line-numbers', 'with-tabs', 'full-ide'];
 const STATES = ['default', 'error', 'disabled', 'readonly'];
@@ -31,7 +33,14 @@ export class DsScriptEditor extends HTMLElement {
     const state = enumAttr(this, 'state', STATES, 'default');
     const size = enumAttr(this, 'size', SIZES, 'medium');
     const language = this.getAttribute('language') || 'TypeScript';
-    const value = this.getAttribute('value') ?? this._initialValue ?? '';
+    /* Preserve edited code across a rebuild. The contenteditable's text isn't
+       reflected to the `value` attribute, so reading the attribute here would
+       wipe what the user typed on any attribute change (e.g. state="error"
+       after validation). Prefer the live code element; fall back to the
+       attribute / initial slotted text on the first render. A `value` attribute
+       change has its own no-rebuild path in attributeChangedCallback. */
+    const typed = this._codeEl ? this._codeEl.textContent : null;
+    const value = typed != null ? typed : (this.getAttribute('value') ?? this._initialValue ?? '');
     const tabs = (this.getAttribute('tabs') || 'index.ts').split(',').map((s) => s.trim()).filter(Boolean);
     const showStatus = !this.hasAttribute('show-status') || this.getAttribute('show-status') !== 'false';
     const errorText = this.getAttribute('error-text') || '';
@@ -56,7 +65,7 @@ export class DsScriptEditor extends HTMLElement {
       ? `<div class="ds-script-editor__tabs">${tabs.map((t, i) => `
           <button class="ds-script-editor__tab${i === 0 ? ' ds-script-editor__tab--active' : ''}" type="button">
             <ds-icon name="doc" size="12"></ds-icon>
-            <span>${t}</span>
+            <span>${escapeHtml(t)}</span>
           </button>`).join('')}</div>`
       : '';
 
@@ -69,7 +78,7 @@ export class DsScriptEditor extends HTMLElement {
            <button class="ds-script-editor__btn" type="button">■ ${LABELS.stop}</button>
            <button class="ds-script-editor__btn" type="button">⧉ ${LABELS.copy}</button>
            <button class="ds-script-editor__btn" type="button">⚙ ${LABELS.settings}</button>
-           <span class="ds-script-editor__lang-badge">${language}</span>
+           <span class="ds-script-editor__lang-badge">${escapeHtml(language)}</span>
          </div>`
       : '';
 
@@ -84,7 +93,7 @@ export class DsScriptEditor extends HTMLElement {
     const spacesLabel = rtl ? 'مسافات: 2'   : 'Spaces: 2';
     const statusHTML = showStatus
       ? `<div class="ds-script-editor__status" aria-live="polite">
-           <span>${state === 'error' && errorText ? errorText : language}</span>
+           <span>${escapeHtml(state === 'error' && errorText ? errorText : language)}</span>
            <span style="margin-inline-start: auto;">${lnColLabel}</span>
            <span>UTF-8</span>
            <span>${spacesLabel}</span>
@@ -115,7 +124,7 @@ VITE v5.2.0  ready in 342ms</pre>
              role="textbox" aria-multiline="true" aria-label="Code editor"
              ${editable ? 'contenteditable="true"' : 'contenteditable="false"'}
              ${state === 'readonly' ? 'aria-readonly="true"' : ''}
-             ${state === 'disabled' ? 'aria-disabled="true"' : ''}>${value.replace(/</g, '&lt;')}</div>
+             ${state === 'disabled' ? 'aria-disabled="true"' : ''}>${escapeHtml(value)}</div>
         ${state === 'readonly' ? `<span class="ds-script-editor__readonly-badge">${rtl ? 'للقراءة فقط' : 'READ ONLY'}</span>` : ''}
       </div>
       ${terminalHTML}

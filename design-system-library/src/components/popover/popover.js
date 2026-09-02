@@ -30,6 +30,8 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
+import { rafThrottle } from '../../utils/raf-throttle.js';
+import '../../icons/icon.js';
 
 const PLACEMENTS = [
   'top', 'top-start', 'top-center', 'top-end',
@@ -159,9 +161,14 @@ export class DsPopover extends HTMLElement {
       const t = e.target;
       if (this._surface.contains(t)) return;          // click inside popover
       if (this._anchorEl && this._anchorEl.contains(t)) return; // click on trigger (toggle handles it)
+      /* A composed input slotted into the popover (ds-input-select / ds-date-picker
+         / ds-token-field) portals its own dropdown to <body>, so a click on one of
+         its options is technically outside the surface — treat clicks inside any
+         known floating DS layer as inside, or picking a value would dismiss us. */
+      if (t.closest && t.closest('.ds-input-select__dropdown, .ds-date-picker__popover, .ds-token-field__dropdown')) return;
       this._dismiss('outside');
     };
-    this._onReflow = () => { if (this.hasAttribute('open')) this._position(); };
+    this._onReflow = rafThrottle(() => { if (this.hasAttribute('open')) this._position(); });
     this._onAnchorClick = () => this.toggle();
   }
 

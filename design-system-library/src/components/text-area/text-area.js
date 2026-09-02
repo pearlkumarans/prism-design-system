@@ -4,14 +4,13 @@ import '../field-helper/field-helper.js';
 /* Label help icon tooltip (same pattern as ds-token-field). */
 import '../tooltip/tooltip.js';
 import { injectCss } from '../../utils/inject-css.js';
+import { escapeHtml } from '../../utils/escape.js';
+import '../../icons/icon.js';
 
 /* Auto-load field-helper.css once (both are light-DOM, so the stylesheet must
    be present even on pages that load text-area.css individually). */
 injectCss('ds-text-area-fh-css', '../field-helper/field-helper.css', import.meta.url);
 injectCss('ds-text-area-tt-css', '../tooltip/tooltip.css', import.meta.url);
-
-const esc = (s) => String(s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const STATES = ['default', 'error', 'success', 'readonly', 'disabled'];
 const POSITIONS = ['none', 'top', 'left'];
@@ -52,7 +51,13 @@ export class DsTextArea extends HTMLElement {
     const position = enumAttr(this, 'label-position', POSITIONS, 'left');
     const label = this.getAttribute('label') || '';
     const placeholder = this.getAttribute('placeholder') || '';
-    const value = this.getAttribute('value') ?? '';
+    /* Preserve typed content across a rebuild: the entered text lives in the
+       textarea, not the attribute, so a non-value attribute change (e.g.
+       state="error" after validation) must not snap back to the stale attribute.
+       A `value` attribute change has its own no-rebuild path in
+       attributeChangedCallback, so the live textarea is always the source of
+       truth here after the first render. */
+    const value = this._textarea ? this._textarea.value : (this.getAttribute('value') ?? '');
     const required = boolAttr(this, 'required');
     const helper = this.getAttribute('helper') || '';
     const counter = this.getAttribute('counter') || '';
@@ -71,16 +76,16 @@ export class DsTextArea extends HTMLElement {
        icon gets a hover tooltip; it always emits ds-text-area-help on click. */
     const showLabelHelp = boolAttr(this, 'show-label-help-icon');
     const labelHelpText = this.getAttribute('label-help') || '';
-    const labelHelpBtn = `<button type="button" class="ds-text-area__label-help" aria-label="${labelHelpText ? esc(labelHelpText) : 'Help'}" data-label-help><ds-icon name="help-circle" size="16"></ds-icon></button>`;
+    const labelHelpBtn = `<button type="button" class="ds-text-area__label-help" aria-label="${labelHelpText ? escapeHtml(labelHelpText) : 'Help'}" data-label-help><ds-icon name="help-circle" size="16"></ds-icon></button>`;
     const labelHelpHTML = showLabelHelp
       ? (labelHelpText
-          ? `<ds-tooltip class="ds-text-area__label-help-tip" text="${esc(labelHelpText)}" position="up-center" theme="dark"${rtl ? ' rtl' : ''}>${labelHelpBtn}</ds-tooltip>`
+          ? `<ds-tooltip class="ds-text-area__label-help-tip" text="${escapeHtml(labelHelpText)}" position="up-center" theme="dark"${rtl ? ' rtl' : ''}>${labelHelpBtn}</ds-tooltip>`
           : labelHelpBtn)
       : '';
     /* label-position="none" hides the label; kept as an accessible name via
        aria-label on the textarea (set after render). */
     const labelHTML = (label && position !== 'none')
-      ? `<span class="ds-text-area__label-row"><label class="ds-text-area__label" for="${this._id}">${label}${required ? '<span class="ds-text-area__required">*</span>' : ''}</label>${labelHelpHTML}</span>`
+      ? `<span class="ds-text-area__label-row"><label class="ds-text-area__label" for="${this._id}">${escapeHtml(label)}${required ? '<span class="ds-text-area__required">*</span>' : ''}</label>${labelHelpHTML}</span>`
       : '';
 
     /* The whole helper row is one <ds-field-helper id="…-helper"> (icon + text
@@ -89,12 +94,12 @@ export class DsTextArea extends HTMLElement {
     const describedBy = (showHelperRow && (helper || (showCounter && counter))) ? helperId : '';
 
     const fieldHTML = `<div class="ds-text-area__field">
-      <textarea id="${this._id}" placeholder="${placeholder}" rows="${maxLines}"
+      <textarea id="${this._id}" placeholder="${escapeHtml(placeholder)}" rows="${maxLines}"
                 ${state === 'readonly' ? 'readonly aria-readonly="true"' : ''}
                 ${state === 'disabled' ? 'disabled' : ''}
                 ${required ? 'required aria-required="true"' : ''}
                 ${state === 'error' ? 'aria-invalid="true"' : ''}
-                ${describedBy ? `aria-describedby="${describedBy}"` : ''}>${value.replace(/</g, '&lt;')}</textarea>
+                ${describedBy ? `aria-describedby="${describedBy}"` : ''}>${escapeHtml(value)}</textarea>
     </div>`;
 
     /* Helper/counter row = shared <ds-field-helper>. State drives colour + icon;
@@ -104,9 +109,9 @@ export class DsTextArea extends HTMLElement {
       : state === 'disabled' ? 'disabled' : 'default';
     const helperHTML = showHelperRow
       ? `<ds-field-helper class="ds-text-area__helper-row" id="${helperId}"
-           text="${esc(helper)}" state="${helperState}"
+           text="${escapeHtml(helper)}" state="${helperState}"
            ${helper ? '' : 'show-icon="false"'}
-           ${showCounter && counter ? `counter="${esc(counter)}"` : ''}
+           ${showCounter && counter ? `counter="${escapeHtml(counter)}"` : ''}
            ${rtl ? 'rtl' : ''}></ds-field-helper>`
       : '';
 

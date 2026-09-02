@@ -29,6 +29,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { lockScroll, unlockScroll } from '../../utils/scroll-lock.js';
 import '../../icons/icon.js';
 import '../button/button.js';
 import '../icon-button/icon-button.js';
@@ -88,7 +89,14 @@ export class DsConfirmationModal extends HTMLElement {
 
   disconnectedCallback() {
     document.removeEventListener('keydown', this._onKeydown);
+    /* A confirmation removed while still open must not leave the page scroll-locked. */
+    this._unlockScroll();
   }
+
+  /* Background scroll lock via the shared ref-counted util; the instance flag
+     keeps this balanced (lock once per open, unlock once). */
+  _lockScroll() { if (!this._scrollLocked) { this._scrollLocked = true; lockScroll(); } }
+  _unlockScroll() { if (this._scrollLocked) { this._scrollLocked = false; unlockScroll(); } }
 
   attributeChangedCallback(name) {
     if (!this._mounted) return;
@@ -321,6 +329,9 @@ export class DsConfirmationModal extends HTMLElement {
     }
     if (this._opened) return;
     this._opened = true;
+    /* Lock background scroll while open — the scrim + aria-modal imply the page
+       behind must not scroll. Restored on close AND disconnect. */
+    this._lockScroll();
     /* Re-center on each open — clear any prior drag offset. */
     this._dragOffset = { x: 0, y: 0 };
     if (this._dialog) this._dialog.style.transform = '';
@@ -343,6 +354,7 @@ export class DsConfirmationModal extends HTMLElement {
 
   _onClose() {
     document.removeEventListener('keydown', this._onKeydown);
+    this._unlockScroll();
     if (this._previouslyFocused?.focus) this._previouslyFocused.focus();
     this.dispatchEvent(new CustomEvent('ds-confirmation-close', { bubbles: true }));
     this._opened = false;

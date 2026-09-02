@@ -1,13 +1,15 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
+import { escapeHtml } from '../../utils/escape.js';
+import '../text-link/text-link.js';
+import { injectCss } from '../../utils/inject-css.js';
+/* The auto-generated action renders a light-DOM <ds-text-link>; inject its CSS
+   once so it's styled on pages that link section-header.css alone. Idempotent. */
+injectCss('ds-section-header-textlink-css', '../text-link/text-link.css', import.meta.url);
 
 const SIZES = ['small', 'medium', 'large'];
 const STYLES = ['default', 'with-description', 'with-border'];
 const DIVIDERS = ['none', 'bottom', 'both'];
-
-const esc = (s) => String(s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;');
 
 /**
  * <ds-section-header> — a compact heading that labels a section/sub-region.
@@ -93,12 +95,12 @@ export class DsSectionHeader extends HTMLElement {
     if (rtl) this._root.setAttribute('dir', 'rtl');
     else this._root.removeAttribute('dir');
 
-    const descHtml = `<p class="ds-section-header__description">${esc(description)}</p>`;
+    const descHtml = `<p class="ds-section-header__description">${escapeHtml(description)}</p>`;
 
     this._root.innerHTML = `
       <div class="ds-section-header__content">
         <div class="ds-section-header__group">
-          <${hTag} class="ds-section-header__title">${esc(title)}</${hTag}>
+          <${hTag} class="ds-section-header__title">${escapeHtml(title)}</${hTag}>
           ${(showDesc && !isBorder) ? descHtml : ''}
         </div>
         ${isBorder ? '<span class="ds-section-header__rule" aria-hidden="true"></span>' : ''}
@@ -114,7 +116,7 @@ export class DsSectionHeader extends HTMLElement {
       } else {
         const linkSize = size === 'large' ? 'medium' : 'small';
         slot.innerHTML =
-          `<ds-text-link variant="primary" size="${linkSize}" underline="hover">${esc(actionLabel)}</ds-text-link>`;
+          `<ds-text-link variant="primary" size="${linkSize}" underline="hover">${escapeHtml(actionLabel)}</ds-text-link>`;
       }
     }
   }

@@ -18,24 +18,11 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+/* Shared ref-counted scroll lock — replaces a local copy so overlay composes with
+   the modal family (one counter) and gains scrollbar-shift compensation. */
+import { lockScroll, unlockScroll } from '../../utils/scroll-lock.js';
 
 const TYPES = ['dim', 'light', 'transparent', 'blur', 'dim-blur'];
-
-let _openCount = 0;
-let _prevBodyOverflow = '';
-
-function lockScroll() {
-  if (_openCount === 0) {
-    _prevBodyOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-  }
-  _openCount += 1;
-}
-
-function unlockScroll() {
-  _openCount = Math.max(0, _openCount - 1);
-  if (_openCount === 0) document.body.style.overflow = _prevBodyOverflow;
-}
 
 export class DsOverlay extends HTMLElement {
   static get observedAttributes() {

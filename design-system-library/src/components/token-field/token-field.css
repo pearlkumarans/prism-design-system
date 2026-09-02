@@ -5,10 +5,9 @@
    Filled = single row + "+N" total badge · Active = wrap up to --tf-max-rows.
    ============================================================================= */
 
-:host { display: block; font-family: var(--font-family-sans); width: 100%; }
-/* Light-DOM host: :host doesn't apply, so set display + the query container on
-   the element directly (drives the responsive label collapse below). */
-ds-token-field { display: block; width: 100%; container-type: inline-size; }
+/* Light-DOM host: :host doesn't apply, so set display, font, width + the query
+   container on the element directly (drives the responsive label collapse below). */
+ds-token-field { display: block; width: 100%; font-family: var(--font-family-sans); container-type: inline-size; }
 
 .ds-token-field {
   display: flex;
@@ -167,11 +166,11 @@ ds-token-field { display: block; width: 100%; container-type: inline-size; }
 }
 
 /* ---- States --------------------------------------------------------- */
-.ds-token-field[data-state="hover"]  .ds-token-field__field,
+/* `_resolveState()` never emits 'hover'/'focus' (it uses the :hover pseudo and
+   the 'active' state); style those directly rather than via dead data-state hooks. */
 .ds-token-field__field:hover { border-color: var(--uems-border-accent); }
 
 .ds-token-field--open .ds-token-field__field,
-.ds-token-field[data-state="focus"]  .ds-token-field__field,
 .ds-token-field[data-state="active"] .ds-token-field__field {
   border: 2px solid var(--uems-border-accent-focus);
   /* Compensate the extra 1px border on every side so the field doesn't shift

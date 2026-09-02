@@ -6,6 +6,17 @@ import '../scrollbar/scrollbar.js';
 import '../badge/badge.js';
 /* Rows are <ds-inline-alert> (the Message Banner) — register it too. */
 import '../inline-alert/inline-alert.js';
+import { injectCss } from '../../utils/inject-css.js';
+
+/* The composed sub-components are all light-DOM — inject each one's stylesheet
+   once so the box is styled on pages that link message-box.css alone. (Each of
+   these in turn injects its own sub-deps' CSS when it loads.) */
+[
+  ['ds-message-box-tab-css', '../tab-bar-horizontal/tab-bar-horizontal.css'],
+  ['ds-message-box-scrollbar-css', '../scrollbar/scrollbar.css'],
+  ['ds-message-box-badge-css', '../badge/badge.css'],
+  ['ds-message-box-inline-alert-css', '../inline-alert/inline-alert.css'],
+].forEach(([id, rel]) => injectCss(id, rel, import.meta.url));
 
 let _uid = 0;
 

@@ -14,6 +14,7 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
    not just full-bundle pages. */
 import '../tooltip/tooltip.js';
 import { injectCss } from '../../utils/inject-css.js';
+import '../../icons/icon.js';
 injectCss('ds-icon-button-tooltip-css', '../tooltip/tooltip.css', import.meta.url);
 
 const SHAPES = ['square', 'circle'];

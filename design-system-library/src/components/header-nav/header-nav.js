@@ -34,11 +34,18 @@ import { escapeHtml } from '../../utils/escape.js';
 /* Centre search uses the shared search-field component. */
 import '../search-field/search-field.js';
 import { injectCss } from '../../utils/inject-css.js';
+import '../../icons/icon.js';
+import '../avatar/avatar.js';
+import '../dropdown-menu/dropdown-menu.js';
 
 /* ds-search-field is light-DOM (styled via `ds-search-field {…}` in its own
    CSS). Auto-load that stylesheet so the centre search field is styled even on
    pages that link header-nav.css individually without search-field.css. */
 injectCss('ds-header-nav-search-field-css', '../search-field/search-field.css', import.meta.url);
+/* The customer selector renders a light-DOM <ds-dropdown-menu>; inject its
+   stylesheet too so the menu is styled on pages that link header-nav.css alone.
+   (ds-avatar is shadow-DOM and ds-icon is self-contained, so neither needs one.) */
+injectCss('ds-header-nav-dropdown-menu-css', '../dropdown-menu/dropdown-menu.css', import.meta.url);
 
 /* Spec ships 4 product variants. The set is extended below with the rest of
    the ManageEngine endpoint-management product family — same chrome, different
@@ -272,7 +279,7 @@ export class DsHeaderNav extends HTMLElement {
         <img class="ds-header-nav__logo"
              src="${(typeof window !== 'undefined' && window.UEMS_LOGO_BASE) || '/logos'}/${product.logo}.svg"
              alt="" aria-hidden="true" />
-        <span class="ds-header-nav__product">${productName}</span>
+        <span class="ds-header-nav__product">${escapeHtml(productName)}</span>
       </div>`;
 
     const centreHTML = showTabs
@@ -286,7 +293,7 @@ export class DsHeaderNav extends HTMLElement {
           <button type="button" class="ds-header-nav__customer"
                   data-action="customer-selector"
                   aria-haspopup="listbox" aria-expanded="false">
-            <span class="ds-header-nav__customer-label">${customerLabel}</span>
+            <span class="ds-header-nav__customer-label">${escapeHtml(customerLabel)}</span>
             <ds-icon name="chevron-down" size="14"></ds-icon>
           </button>
           <ds-dropdown-menu class="ds-header-nav__customer-menu" type="single"></ds-dropdown-menu>
@@ -307,7 +314,7 @@ export class DsHeaderNav extends HTMLElement {
     if (showAvatar)   cluster.push(`
       <button type="button" class="ds-header-nav__avatar"
               data-action="avatar" aria-label="User menu">
-        <ds-avatar size="small" type="initials" name="${this.getAttribute('user-initials') || 'AM'}"></ds-avatar>
+        <ds-avatar size="small" type="initials" name="${escapeHtml(this.getAttribute('user-initials') || 'AM')}"></ds-avatar>
       </button>`);
     if (showBento)    cluster.push(this._iconBtn('bento', 'bento-menu', 'Apps'));
 
@@ -532,13 +539,13 @@ export class DsHeaderNav extends HTMLElement {
   _renderSearchBar(placeholder) {
     return `
       <ds-search-field class="ds-header-nav__search" size="small"
-                       placeholder="${placeholder}" show-shortcut shortcut-label="⌘K"></ds-search-field>`;
+                       placeholder="${escapeHtml(placeholder)}" show-shortcut shortcut-label="⌘K"></ds-search-field>`;
   }
 
   _iconBtn(action, icon, label) {
     return `
       <button type="button" class="ds-header-nav__icon-btn"
-              data-action="${action}" aria-label="${label}">
+              data-action="${action}" aria-label="${escapeHtml(label)}">
         <ds-icon name="${escapeHtml(icon)}" size="20"></ds-icon>
       </button>`;
   }
