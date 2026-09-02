@@ -120,8 +120,37 @@ export class DsFileUpload extends HTMLElement {
   updateFile(id, patch) {
     const f = this._files.find((x) => x.id === String(id));
     if (!f) return;
+    const prevStatus = f.status;
+    const prevStatusText = f.statusText;
+    const prevState = this._state;
     Object.assign(f, normFile({ ...f, ...patch }));
+    /* Fast path: a progress tick that changes neither this file's status/statusText
+       nor the derived overall state only needs the affected progress bar's `value`
+       updated in place. A full _render() here would rebuild every row's innerHTML on
+       every tick (re-homing rows, re-running the picker input) — wasteful during an
+       upload. Any status change (row icon/actions differ) still rebuilds. */
+    if (f.status === prevStatus && f.statusText === prevStatusText
+        && this._state === prevState && this._patchProgressInPlace(f)) return;
     this._render();
+  }
+
+  /* Update just the progress bar for file `f`, matching the row by its real
+     (DOM-decoded) data-id — no querySelector on consumer values. Returns false
+     when no matching bar is in the DOM, so the caller falls back to _render. */
+  _patchProgressInPlace(f) {
+    if (!this._root) return false;
+    let bar = null, scope = null;
+    const rows = this._root.querySelectorAll('.ds-file-upload__item');
+    for (const row of rows) {
+      if (row.getAttribute('data-id') === f.id) { scope = row; bar = row.querySelector('.ds-file-upload__progress'); break; }
+    }
+    /* single-in-flight upload (form field / prominent zone) hosts one bar, no row */
+    if (!bar && rows.length === 0) { bar = this._root.querySelector('.ds-file-upload__progress'); scope = bar && bar.parentElement; }
+    if (!bar) return false;
+    bar.setAttribute('value', String(f.progress));
+    const pct = scope && scope.querySelector('.ds-file-upload__pct');   // only the multi-row has one
+    if (pct) pct.textContent = `${Math.round(f.progress)}%`;
+    return true;
   }
 
   removeFile(id) {

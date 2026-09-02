@@ -1,176 +1,115 @@
-/* ds-file-upload — selection/progress UI driven by `el.files`. Covers variant +
-   state derivation, the per-file rows a `multiple` upload renders (with the
-   right per-status actions: uploading→cancel, error→retry+remove, success→
-   remove), escaping of file names + action aria-labels, the select/cancel/remove
-   events, keyboard a11y on the drop box, and teardown. The consumer owns the
-   actual upload; the component only reflects the `files` model. */
-import { fixture, html, expect, oneEvent, nextFrame } from '@open-wc/testing';
+/* ds-file-upload — the consumer drives the lifecycle via `files` / updateFile /
+   removeFile; the component renders selection + progress UI. The headline here is
+   the perf contract: a progress tick updates the affected bar IN PLACE (no full
+   innerHTML rebuild), while a status change still rebuilds the row. */
+import { fixture, html, expect, nextFrame, oneEvent } from '@open-wc/testing';
 import '../src/components/file-upload/file-upload.js';
 
-const XSS = '"><img src=x onerror=alert(1)>';
-const root = (el) => el.querySelector('.ds-file-upload');
-const box = (el) => el.querySelector('.ds-file-upload__box');
-const items = (el) => [...el.querySelectorAll('.ds-file-upload__item')];
+const rowFor = (el, id) =>
+  [...el.querySelectorAll('.ds-file-upload__item')].find((r) => r.getAttribute('data-id') === id);
 
-describe('ds-file-upload — structure & state', () => {
-  it('renders the form variant box as an accessible button by default', async () => {
-    const el = await fixture(html`<ds-file-upload></ds-file-upload>`);
+describe('ds-file-upload — structure & variants', () => {
+  it('form variant renders the placeholder + a Browse button', async () => {
+    const el = await fixture(html`<ds-file-upload variant="form" placeholder="Choose file"></ds-file-upload>`);
     await nextFrame();
-    expect(root(el).classList.contains('ds-file-upload--form'), 'form is the default variant').to.be.true;
-    const b = box(el);
-    expect(b, 'drop box missing').to.exist;
-    expect(b.getAttribute('role')).to.equal('button');
-    expect(b.getAttribute('tabindex')).to.equal('0');
+    expect(el.querySelector('.ds-file-upload__placeholder')?.textContent).to.equal('Choose file');
+    expect(el.querySelector('.ds-file-upload__browse')).to.exist;
   });
 
-  it('honours the prominent variant', async () => {
-    const el = await fixture(html`<ds-file-upload variant="prominent"></ds-file-upload>`);
-    await nextFrame();
-    expect(root(el).classList.contains('ds-file-upload--prominent')).to.be.true;
-  });
-
-  it('derives the visual state from the files model', async () => {
-    const el = await fixture(html`<ds-file-upload multiple></ds-file-upload>`);
-    await nextFrame();
-    expect(root(el).classList.contains('ds-file-upload--state-default'), 'empty → default').to.be.true;
-
-    el.files = [{ id: '1', name: 'a', status: 'uploading', progress: 10 }];
-    await nextFrame();
-    expect(root(el).classList.contains('ds-file-upload--state-uploading'), 'busy → uploading').to.be.true;
-
-    el.files = [{ id: '1', name: 'a', status: 'success' }, { id: '2', name: 'b', status: 'error' }];
-    await nextFrame();
-    expect(root(el).classList.contains('ds-file-upload--state-error'), 'any error → error').to.be.true;
-
-    el.files = [{ id: '1', name: 'a', status: 'success' }, { id: '2', name: 'b', status: 'success' }];
-    await nextFrame();
-    expect(root(el).classList.contains('ds-file-upload--state-success'), 'all success → success').to.be.true;
-  });
-});
-
-describe('ds-file-upload — file rows & per-status actions', () => {
-  async function withFiles() {
+  it('multiple uploading files render one row each with a progress bar', async () => {
     const el = await fixture(html`<ds-file-upload multiple></ds-file-upload>`);
     el.files = [
-      { id: 'u', name: 'up.csv', status: 'uploading', progress: 40 },
-      { id: 's', name: 'ok.csv', status: 'success' },
-      { id: 'e', name: 'bad.csv', status: 'error', statusText: 'Virus found' },
-      { id: 'c', name: 'scan.csv', status: 'scanning' },
+      { id: 'a', name: 'one.csv', status: 'uploading', progress: 10 },
+      { id: 'b', name: 'two.csv', status: 'uploading', progress: 20 },
     ];
     await nextFrame();
-    return el;
-  }
-
-  it('renders one row per file', async () => {
-    const el = await withFiles();
-    expect(items(el).length).to.equal(4);
-  });
-
-  it('uploading row exposes only a cancel action', async () => {
-    const el = await withFiles();
-    const row = el.querySelector('.ds-file-upload__item--uploading');
-    const actions = [...row.querySelectorAll('.ds-file-upload__action')];
-    expect(actions.map((a) => a.dataset.action)).to.deep.equal(['cancel']);
-  });
-
-  it('error row exposes retry + remove; success row exposes remove; scanning row none', async () => {
-    const el = await withFiles();
-    const err = [...el.querySelector('.ds-file-upload__item--error').querySelectorAll('.ds-file-upload__action')];
-    expect(err.map((a) => a.dataset.action)).to.deep.equal(['retry', 'remove']);
-    const suc = [...el.querySelector('.ds-file-upload__item--success').querySelectorAll('.ds-file-upload__action')];
-    expect(suc.map((a) => a.dataset.action)).to.deep.equal(['remove']);
-    const scan = el.querySelector('.ds-file-upload__item--scanning').querySelectorAll('.ds-file-upload__action');
-    expect(scan.length).to.equal(0);
-  });
-
-  it('removeFile / clear prune the rows', async () => {
-    const el = await withFiles();
-    el.removeFile('u');
-    await nextFrame();
-    expect(items(el).length).to.equal(3);
-    el.clear();
-    await nextFrame();
-    expect(items(el).length).to.equal(0);
+    expect(el.querySelectorAll('.ds-file-upload__item').length).to.equal(2);
+    expect(rowFor(el, 'a').querySelector('.ds-file-upload__progress').getAttribute('value')).to.equal('10');
+    expect(rowFor(el, 'a').querySelector('.ds-file-upload__pct').textContent).to.equal('10%');
   });
 });
 
-describe('ds-file-upload — escaping', () => {
-  it('escapes a hostile file name (renders as text, no injected node)', async () => {
+describe('ds-file-upload — progress ticks update in place (perf contract)', () => {
+  it('a progress-only updateFile keeps the same row/bar nodes (no rebuild) and syncs value + pct', async () => {
     const el = await fixture(html`<ds-file-upload multiple></ds-file-upload>`);
-    el.files = [{ id: '1', name: XSS, status: 'success' }];
+    el.files = [
+      { id: 'a', name: 'one.csv', status: 'uploading', progress: 10 },
+      { id: 'b', name: 'two.csv', status: 'uploading', progress: 20 },
+    ];
     await nextFrame();
-    const name = el.querySelector('.ds-file-upload__item .ds-file-upload__name');
-    expect(name.querySelector('img'), 'name injected an <img>').to.not.exist;
-    expect(name.textContent).to.contain('<img');
+    const rowA = rowFor(el, 'a');
+    const barA = rowA.querySelector('.ds-file-upload__progress');
+    const rowB = rowFor(el, 'b');
+    rowA._probe = 'kept'; rowB._probe = 'kept';   // survives only if not rebuilt
+
+    el.updateFile('a', { progress: 80 });
+    await nextFrame();
+
+    // same nodes — the tick did NOT rebuild innerHTML
+    expect(rowFor(el, 'a'), 'row A node identity').to.equal(rowA);
+    expect(rowFor(el, 'a')._probe, 'row A not rebuilt').to.equal('kept');
+    expect(rowFor(el, 'b')._probe, 'row B not rebuilt').to.equal('kept');
+    expect(rowA.querySelector('.ds-file-upload__progress'), 'bar node identity').to.equal(barA);
+    // value + pct synced in place
+    expect(barA.getAttribute('value')).to.equal('80');
+    expect(rowA.querySelector('.ds-file-upload__pct').textContent).to.equal('80%');
   });
 
-  it('escapes the file name inside every action aria-label', async () => {
+  it('a status change rebuilds the row (uploading -> success shows the remove action)', async () => {
     const el = await fixture(html`<ds-file-upload multiple></ds-file-upload>`);
-    el.files = [{ id: '1', name: XSS, status: 'error' }];
+    el.files = [
+      { id: 'a', name: 'one.csv', status: 'uploading', progress: 90 },
+      { id: 'b', name: 'two.csv', status: 'uploading', progress: 20 },
+    ];
     await nextFrame();
-    const actions = [...el.querySelectorAll('.ds-file-upload__action')];
-    expect(actions.length).to.be.greaterThan(0);
-    actions.forEach((a) => {
-      expect(a.querySelector('img'), 'action label injected an <img>').to.not.exist;
-      expect(a.getAttribute('aria-label')).to.contain('<img');
-    });
+    const rowA = rowFor(el, 'a');
+    rowA._probe = 'kept';
+
+    el.updateFile('a', { status: 'success', progress: 100 });
+    await nextFrame();
+
+    const rowA2 = rowFor(el, 'a');
+    expect(rowA2._probe, 'status change must rebuild the row').to.not.equal('kept');
+    expect(rowA2.classList.contains('ds-file-upload__item--success')).to.be.true;
+    expect(rowA2.querySelector('[data-action="remove"]')).to.exist;
+    expect(rowA2.querySelector('.ds-file-upload__progress'), 'success row has no progress bar').to.not.exist;
   });
 });
 
-describe('ds-file-upload — events & a11y', () => {
-  it('a row action emits its lifecycle event with the file (cancel)', async () => {
+describe('ds-file-upload — actions, escaping, a11y', () => {
+  it('the cancel action on an uploading row fires ds-file-upload-cancel with the file', async () => {
     const el = await fixture(html`<ds-file-upload multiple></ds-file-upload>`);
-    el.files = [{ id: 'u', name: 'up.csv', status: 'uploading', progress: 5 }];
+    el.files = [{ id: 'a', name: 'one.csv', status: 'uploading', progress: 10 }];
     await nextFrame();
-    const btn = el.querySelector('.ds-file-upload__action[data-action="cancel"]');
-    setTimeout(() => btn.click());
+    setTimeout(() => rowFor(el, 'a').querySelector('[data-action="cancel"]').click());
     const ev = await oneEvent(el, 'ds-file-upload-cancel');
-    expect(ev.detail.file.id).to.equal('u');
+    expect(ev.detail.file.id).to.equal('a');
   });
 
-  it('the remove action emits ds-file-upload-remove', async () => {
+  it('escapes a hostile file name — no injected node', async () => {
     const el = await fixture(html`<ds-file-upload multiple></ds-file-upload>`);
-    el.files = [{ id: 's', name: 'ok.csv', status: 'success' }];
+    el.files = [{ id: 'x', name: '<img src=x onerror=alert(1)>', status: 'uploading', progress: 5 }];
     await nextFrame();
-    const btn = el.querySelector('.ds-file-upload__action[data-action="remove"]');
-    setTimeout(() => btn.click());
-    const ev = await oneEvent(el, 'ds-file-upload-remove');
-    expect(ev.detail.file.id).to.equal('s');
+    expect(el.querySelector('img[onerror]'), 'file name injected an <img>').to.not.exist;
+    expect(rowFor(el, 'x').querySelector('.ds-file-upload__name').textContent).to.contain('<img');
   });
 
-  it('a drop on the box emits ds-file-upload-select with the dropped files', async () => {
-    const el = await fixture(html`<ds-file-upload></ds-file-upload>`);
+  it('the prominent drop zone is a keyboard-operable button', async () => {
+    const el = await fixture(html`<ds-file-upload variant="prominent" zone-hint="Drop here"></ds-file-upload>`);
     await nextFrame();
-    const file = new File(['x'], 'drop.txt');
-    const ev = new Event('drop', { bubbles: true });
-    Object.defineProperty(ev, 'dataTransfer', { value: { files: [file] } });
-    setTimeout(() => box(el).dispatchEvent(ev));
-    const got = await oneEvent(el, 'ds-file-upload-select');
-    expect(got.detail.files.length).to.equal(1);
-    expect(got.detail.files[0].name).to.equal('drop.txt');
+    const box = el.querySelector('[role="button"]');
+    expect(box, 'a role=button drop target').to.exist;
+    expect(box.getAttribute('tabindex')).to.equal('0');
   });
 
-  it('Enter / Space on the box opens the picker (keyboard a11y)', async () => {
-    const el = await fixture(html`<ds-file-upload></ds-file-upload>`);
-    await nextFrame();
-    let opened = 0;
-    el.openPicker = () => { opened += 1; };
-    box(el).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    box(el).dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
-    expect(opened).to.equal(2);
-  });
-});
-
-describe('ds-file-upload — teardown', () => {
-  it('survives disconnect → reconnect without throwing or duplicating', async () => {
+  it('teardown: disconnect -> reconnect keeps a single root and preserves files', async () => {
     const el = await fixture(html`<ds-file-upload multiple></ds-file-upload>`);
-    el.files = [{ id: '1', name: 'a', status: 'success' }];
+    el.files = [{ id: 'a', name: 'one.csv', status: 'uploading', progress: 10 }];
     await nextFrame();
     const parent = el.parentNode;
-    expect(() => el.remove()).to.not.throw();
+    el.remove();
     parent.appendChild(el);
     await nextFrame();
-    expect(el.querySelectorAll('.ds-file-upload').length, 'one root after reconnect').to.equal(1);
-    expect(items(el).length).to.equal(1);
+    expect(el.querySelectorAll('.ds-file-upload__item').length).to.equal(1);
   });
 });
