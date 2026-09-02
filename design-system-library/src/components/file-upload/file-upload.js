@@ -250,7 +250,7 @@ export class DsFileUpload extends HTMLElement {
        above (top) it, matching ds-text-input's label-col / label-row anatomy. */
     const bodyHtml = `
       <div class="ds-file-upload__body">
-        <div class="ds-file-upload__box" role="button" tabindex="${disabled ? -1 : 0}"
+        <div class="ds-file-upload__box" role="group"
              aria-disabled="${disabled}"
              ${label ? `aria-labelledby="${labelId}"` : `aria-label="${escapeHtml(placeholder)}"`}
              ${helperHtml ? `aria-describedby="${this._id}-helper"` : ''}>
@@ -388,12 +388,14 @@ export class DsFileUpload extends HTMLElement {
     const box = this._root.querySelector('.ds-file-upload__box');
 
     if (!disabled) {
+      /* The box is a labelled role=group, not a button — clicking it (mouse) is a
+         convenience that opens the picker; the Browse/Upload <ds-button> inside is
+         the keyboard/AT control (its activation bubbles here). The box no longer
+         carries role=button/tabindex/keydown, which would nest an interactive
+         control inside another (axe: nested-interactive). */
       box.addEventListener('click', (e) => {
         if (e.target.closest('.ds-file-upload__action')) return;
         this.openPicker();
-      });
-      box.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.openPicker(); }
       });
 
       /* Drag & drop — depth counter survives child enter/leave churn. */

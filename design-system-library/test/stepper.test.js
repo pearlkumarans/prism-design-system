@@ -19,12 +19,20 @@ describe('ds-stepper — structure & a11y', () => {
     expect(stepEls(el).length).to.equal(3);
   });
 
-  it('exposes role=list and a default Progress aria-label', async () => {
+  it('exposes a labelled group wrapping a role=list of steps (live-region stays out of the list)', async () => {
     const el = await fixture(html`<ds-stepper></ds-stepper>`);
     el.steps = STEPS;
     await nextFrame();
-    expect(el.getAttribute('role')).to.equal('list');
+    // host is a labelled group; the actual list is an inner element so the progress
+    // live-region can be a sibling (a list may only contain listitems).
+    expect(el.getAttribute('role')).to.equal('group');
     expect(el.getAttribute('aria-label')).to.equal('Progress');
+    const list = el.querySelector('.ds-stepper__list');
+    expect(list.getAttribute('role')).to.equal('list');
+    expect(list.querySelectorAll('.ds-stepper__step').length).to.equal(STEPS.length);
+    // the live-region is NOT inside the list
+    expect(list.querySelector('.ds-stepper__sr')).to.not.exist;
+    expect(el.querySelector('.ds-stepper__sr')).to.exist;
   });
 
   it('marks the active step with aria-current="step"', async () => {

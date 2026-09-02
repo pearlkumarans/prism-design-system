@@ -34,6 +34,7 @@ export class DsSearchField extends HTMLElement {
       'size', 'placeholder', 'value',
       'show-shortcut', 'shortcut-label',
       'loading', 'disabled', 'error', 'rtl',
+      'aria-label', 'label',
     ];
   }
 
@@ -172,6 +173,12 @@ export class DsSearchField extends HTMLElement {
     const filled     = !!(this._input && this._input.value);
 
     if (ph != null) this._input.setAttribute('placeholder', ph);
+
+    /* The search input must always have an accessible name — a bare field (no
+       label/placeholder) was otherwise unlabelled (axe: label). Use an explicit
+       aria-label/label if given, else the placeholder, else a "Search" default. */
+    this._input.setAttribute('aria-label',
+      this.getAttribute('aria-label') || this.getAttribute('label') || ph || 'Search');
 
     /* Container classes */
     const cls = this._root.classList;

@@ -94,12 +94,17 @@ describe('ds-file-upload — actions, escaping, a11y', () => {
     expect(rowFor(el, 'x').querySelector('.ds-file-upload__name').textContent).to.contain('<img');
   });
 
-  it('the prominent drop zone is a keyboard-operable button', async () => {
-    const el = await fixture(html`<ds-file-upload variant="prominent" zone-hint="Drop here"></ds-file-upload>`);
+  it('the prominent drop zone is a labelled group whose keyboard control is the Browse button (no nested-interactive)', async () => {
+    const el = await fixture(html`<ds-file-upload variant="prominent" label="Attachment" zone-hint="Drop here"></ds-file-upload>`);
     await nextFrame();
-    const box = el.querySelector('[role="button"]');
-    expect(box, 'a role=button drop target').to.exist;
-    expect(box.getAttribute('tabindex')).to.equal('0');
+    const box = el.querySelector('.ds-file-upload__box');
+    // the zone is a non-interactive labelled group — NOT a button nested around the Browse button
+    expect(box.getAttribute('role'), 'zone is a group, not a button').to.equal('group');
+    expect(box.hasAttribute('tabindex'), 'zone is not itself a tab stop').to.be.false;
+    // the real keyboard/AT control is the Browse <ds-button>, which is focusable
+    const browse = el.querySelector('.ds-file-upload__browse');
+    expect(browse, 'Browse button is the control').to.exist;
+    expect(browse.querySelector('button'), 'Browse renders a focusable native button').to.exist;
   });
 
   it('teardown: disconnect -> reconnect keeps a single root and preserves files', async () => {

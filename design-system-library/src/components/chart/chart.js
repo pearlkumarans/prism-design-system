@@ -432,11 +432,16 @@ export class DsChart extends HTMLElement {
       });
     }
 
-    /* Visually-hidden data table fallback + container role/label. */
+    /* Visually-hidden data table fallback + graphic role/label. */
     const table = this._buildTable(type, data, isGauge, isPart);
     const ariaLabel = this._ariaSummary(type, data, isGauge, isPart);
-    this._root.setAttribute('role', 'img');
-    this._root.setAttribute('aria-label', ariaLabel);
+    /* role=img belongs on the GRAPHIC only (the SVG's wrapper), NOT the root: a
+       role=img makes its subtree a leaf for AT, which would both hide the data-
+       table fallback and trap the focusable legend buttons inside it (axe: nested-
+       interactive). With it on the plot wrapper, the legend + table are exposed
+       siblings. The root just carries the class chrome. */
+    this._root.removeAttribute('role');
+    this._root.removeAttribute('aria-label');
 
     /* Re-attach (keep the persistent tooltip element). The SVG lives in a plain
        <div> wrapper: a div grows via flexbox (an inline <svg> does not), so with
@@ -444,6 +449,8 @@ export class DsChart extends HTMLElement {
     this._root.innerHTML = '';
     const plotWrap = document.createElement('div');
     plotWrap.className = 'ds-chart__plot-wrap';
+    plotWrap.setAttribute('role', 'img');
+    plotWrap.setAttribute('aria-label', ariaLabel);
     plotWrap.appendChild(svg);
     this._root.appendChild(plotWrap);
     if (showLegend && legendSeries.length) this._root.appendChild(legend);

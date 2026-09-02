@@ -103,11 +103,15 @@ describe('ds-chart — structure & a11y', () => {
     expect(bars(el).length).to.equal(12);
   });
 
-  it('exposes role=img and an aria-label summarising type, series count and categories', async () => {
+  it('exposes role=img + aria-label on the plot GRAPHIC (not the root, so the legend + data-table stay accessible)', async () => {
     const el = await make({}, { categories: ['A', 'B'], series: [{ name: 'S', values: [1, 2] }] });
-    const r = root(el);
-    expect(r.getAttribute('role')).to.equal('img');
-    const label = r.getAttribute('aria-label');
+    // role=img belongs on the SVG's wrapper so it doesn't trap the focusable legend
+    // buttons or hide the data-table fallback (both are exposed siblings).
+    const graphic = el.querySelector('.ds-chart__plot-wrap');
+    expect(graphic, 'plot-wrap graphic').to.exist;
+    expect(graphic.getAttribute('role')).to.equal('img');
+    expect(root(el).hasAttribute('role'), 'root is not role=img').to.be.false;
+    const label = graphic.getAttribute('aria-label');
     expect(label).to.contain('column chart');
     expect(label).to.contain('1 series');
     expect(label).to.contain('A, B');

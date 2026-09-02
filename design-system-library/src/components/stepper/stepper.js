@@ -147,7 +147,12 @@ export class DsStepper extends HTMLElement {
     if (boolAttr(this, 'rtl')) this.setAttribute('dir', 'rtl');
     else if (this.getAttribute('dir') === 'rtl') this.removeAttribute('dir');
 
-    this.setAttribute('role', 'list');
+    /* The host is a labelled GROUP wrapping the step list + a progress live-region.
+       role=list can't live on the host because a list's only allowed children are
+       listitems (axe: aria-required-children) — the live-region would violate it —
+       so the list is an inner element (below) and the host groups it with the
+       status. */
+    this.setAttribute('role', 'group');
     if (!this.hasAttribute('aria-label')) this.setAttribute('aria-label', 'Progress');
 
     const isz = ICON_SIZE[size];
@@ -194,7 +199,12 @@ export class DsStepper extends HTMLElement {
       + `<span class="ds-stepper__compact-label">${escapeHtml(summary)}</span>`
       + `<span class="ds-stepper__compact-bar"><span class="ds-stepper__compact-fill" style="inline-size:${pct}%"></span></span>`
       + `</div>`;
-    this.innerHTML = rows + compact + `<span class="ds-stepper__sr" role="status" aria-live="polite">${escapeHtml(summary)}</span>`;
+    /* Inner role=list holds ONLY the <li> steps; it uses display:contents so the
+       steps stay flex items of the host (layout unchanged). The compact bar and
+       the progress live-region are siblings of the list, inside the host group. */
+    this.innerHTML = `<ol class="ds-stepper__list" role="list">${rows}</ol>`
+      + compact
+      + `<span class="ds-stepper__sr" role="status" aria-live="polite">${escapeHtml(summary)}</span>`;
   }
 
   /* ── events ────────────────────────────────────────────────────────────── */

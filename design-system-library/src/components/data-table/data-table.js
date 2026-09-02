@@ -1036,6 +1036,10 @@ export class DsDataTable extends HTMLElement {
     handle.setAttribute('aria-orientation', 'vertical');
     handle.setAttribute('aria-label', this._t('resize', typeof col.header === 'string' ? col.header : col.id));
     handle.tabIndex = 0;
+    /* A focusable role=separator is a window splitter → aria-valuenow is required
+       (axe: aria-required-attr). Seed it with the current column width and keep it
+       current on drag/keyboard resize. */
+    handle.setAttribute('aria-valuenow', String(Math.round(this._colWidths[col.id] != null ? this._colWidths[col.id] : (th.offsetWidth || 0))));
 
     handle.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return;
@@ -1051,7 +1055,8 @@ export class DsDataTable extends HTMLElement {
       try { handle.setPointerCapture(e.pointerId); } catch (_) { /* no-op */ }
       const onMove = (ev) => {
         const dx = (ev.clientX - startX) * (rtl ? -1 : 1);
-        this._setColWidth(table, th, col, startW + dx);
+        const w = this._setColWidth(table, th, col, startW + dx);
+        if (w != null) handle.setAttribute('aria-valuenow', String(Math.round(w)));
       };
       const onUp = () => {
         window.removeEventListener('pointermove', onMove);
@@ -1077,6 +1082,7 @@ export class DsDataTable extends HTMLElement {
       this._freezeColWidths(table);
       const base = this._colWidths[col.id] != null ? this._colWidths[col.id] : th.offsetWidth;
       const w = this._setColWidth(table, th, col, base + (grow ? 8 : -8));
+      if (w != null) handle.setAttribute('aria-valuenow', String(Math.round(w)));
       this.dispatchEvent(new CustomEvent('ds-table-column-resize', {
         bubbles: true, detail: { columnId: col.id, width: w, widths: { ...this._colWidths } },
       }));
