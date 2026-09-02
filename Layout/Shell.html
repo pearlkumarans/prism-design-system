@@ -1734,15 +1734,15 @@
     positionUpdate();
   }
 
-  /* Appearance — theme picker opened by the right-pane theme toggle. */
-  const APPEARANCE = [
-    { v: 'system',      label: 'Use system settings', icon: 'half', dot: '#2C66DD' },
-    { v: 'light',       label: 'Light mode',          icon: 'sun',  dot: '#2C66DD' },
-    { v: 'dark',        label: 'Night mode',          icon: 'moon', dot: '#2C66DD' },
-    { v: 'green-light', label: 'Green — Light',       icon: 'sun',  dot: '#1E8E3E' },
-    { v: 'green-dark',  label: 'Green — Dark',        icon: 'moon', dot: '#1E8E3E' },
-  ];
+  /* Appearance — theme picker opened by the right-pane theme toggle.
+     Modes: light | dark | night | system, each available in both accent families.
+     `night` is the deepest neutral theme (Grey palette, Charoite for error);
+     green-night is night with the Fern accent. */
   const HALF_CIRCLE = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.6a7.4 7.4 0 0 0 0 14.8z" fill="currentColor"/></svg>';
+  /* Night: crescent + stars, to read as "deeper than dark" beside the plain moon.
+     Inline for the same reason as HALF_CIRCLE — no sprite equivalent exists —
+     and painted with currentColor so it still follows the row's token colour. */
+  const MOON_STARS = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M15.3 11.6A6.2 6.2 0 0 1 7.1 3.4a6.4 6.4 0 1 0 8.2 8.2z" fill="currentColor"/><circle cx="13.1" cy="3.2" r="1.05" fill="currentColor"/><circle cx="16" cy="6.5" r="0.75" fill="currentColor"/></svg>';
   let _appr = document.documentElement.getAttribute('data-theme') || 'light';
 
   /* Core theme setter — shared by the Appearance menu and the Profile drawer */
@@ -1763,10 +1763,11 @@
   }
   function setTheme(v) { applyTheme(v); renderAppearance(); }   /* Appearance menu: also re-render the menu */
 
-  /* Combine a mode (light/dark/system) + accent colour (blue/green) → theme value. */
+  /* Combine a mode (light/dark/night/system) + accent colour (blue/green) →
+     theme value. Every mode exists in both families, so green is a plain prefix:
+     green-light / green-dark / green-night / green-system. */
   function combineTheme(mode, color) {
-    if (color === 'green') return mode === 'system' ? 'green-system' : (mode === 'dark' ? 'green-dark' : 'green-light');
-    return mode;   /* blue: light / dark / system */
+    return color === 'green' ? 'green-' + mode : mode;
   }
   function renderAppearance() {
     _card = 'appearance'; _anchorId = '__theme__';
@@ -1774,7 +1775,10 @@
     popEl.className = 'upd-pop upd-pop--appr open';
     /* Current mode (light/dark/system) + accent colour (blue/green) from _appr. */
     const curColor = _appr.indexOf('green') === 0 ? 'green' : 'blue';
-    const curMode  = (_appr === 'system' || _appr === 'green-system') ? 'system' : (_appr === 'dark' || _appr === 'green-dark') ? 'dark' : 'light';
+    /* Strip the accent prefix and read the mode off the remainder. */
+    const curMode  = /system$/.test(_appr) ? 'system'
+      : /night$/.test(_appr) ? 'night'
+      : /dark$/.test(_appr) ? 'dark' : 'light';
     /* Accent swatches (right of the "Theme" title). */
     const COLORS = [['blue', '#2C66DD'], ['green', '#1E8E3E']];
     const colorBtns = COLORS.map(([c, hex]) =>
@@ -1783,10 +1787,13 @@
     const MODE_ITEMS = [
       { m: 'light',  label: 'Light mode',          icon: 'sun'  },
       { m: 'dark',   label: 'Dark mode',           icon: 'moon' },
+      { m: 'night',  label: 'Night mode',          icon: 'stars' },
       { m: 'system', label: 'Use system settings', icon: 'half' },
     ];
     const rows = MODE_ITEMS.map((o) => {
-      const ico = o.icon === 'half' ? HALF_CIRCLE : `<ds-icon name="${o.icon}" size="18"></ds-icon>`;
+      const ico = o.icon === 'half' ? HALF_CIRCLE
+        : o.icon === 'stars' ? MOON_STARS
+        : `<ds-icon name="${o.icon}" size="18"></ds-icon>`;
       const active = curMode === o.m;
       return `<button type="button" class="appr-item${active ? ' is-active' : ''}" role="menuitemradio" aria-checked="${active}" data-mode="${o.m}">
         <span class="appr-item__ico">${ico}</span>

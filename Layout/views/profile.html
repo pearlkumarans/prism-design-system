@@ -76,7 +76,10 @@
   .pf-link ds-icon:first-child { color: var(--uems-icon-secondary, var(--uems-text-secondary)); }
   .pf-caret { margin-inline-start: auto; color: var(--uems-text-secondary); }
   .pf-appear { display: flex; flex-direction: column; gap: 12px; }
-  .pf-themes { display: flex; gap: 8px; align-items: stretch; }
+  /* Four modes (Light / Dark / Night / System) + the accent swatches no longer
+     fit one line at drawer width, so the row wraps; the swatches keep their
+     trailing position and drop to the next line when space runs out. */
+  .pf-themes { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
   /* Theme colour swatches share the row with Light/Dark/System, pushed to the end
      and stretched to the button height. */
   .pf-themes__colors { margin-inline-start: auto; display: flex; gap: 8px; align-items: stretch; }
@@ -211,6 +214,7 @@
       <div class="pf-themes">
         <button type="button" class="pf-theme is-active" data-pf-theme="light"><span class="pf-theme__ico"><ds-icon name="sun" size="18"></ds-icon></span><span data-i18n="pf.light">Light</span></button>
         <button type="button" class="pf-theme" data-pf-theme="dark"><span class="pf-theme__ico"><ds-icon name="moon" size="18"></ds-icon></span><span data-i18n="pf.dark">Dark</span></button>
+        <button type="button" class="pf-theme" data-pf-theme="night"><span class="pf-theme__ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M15.3 11.6A6.2 6.2 0 0 1 7.1 3.4a6.4 6.4 0 1 0 8.2 8.2z" fill="currentColor"/><circle cx="13.1" cy="3.2" r="1.05" fill="currentColor"/><circle cx="16" cy="6.5" r="0.75" fill="currentColor"/></svg></span><span data-i18n="pf.night">Night</span></button>
         <button type="button" class="pf-theme" data-pf-theme="system"><span class="pf-theme__ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.6a7.4 7.4 0 0 0 0 14.8z" fill="currentColor"/></svg></span><span data-i18n="pf.system">System</span></button>
         <div class="pf-colors pf-themes__colors">
           <button type="button" class="pf-color is-active" data-pfcolor data-theme-fam="blue" style="background:#2C66DD" aria-label="Blue"><ds-icon name="check" size="14"></ds-icon></button>
@@ -258,15 +262,18 @@
   const ctx = () => window.ShellCtx || {};
 
   /* A theme value carries BOTH halves — an accent family and a mode:
-       blue  → light | dark | system
-       green → green-light | green-dark | green-system
+       blue  → light | dark | night | system
+       green → green-light | green-dark | green-night | green-system
      Every control has to round-trip both. Dropping one is why choosing Dark used
      to reset a green accent back to blue, and why choosing an accent while on
      System collapsed it to light/dark. Mirrors RailPopover._combineTheme. */
   const themeFamOf  = (v) => String(v).includes('green') ? 'green' : 'blue';
+  /* Strip the accent prefix and read the mode off the remainder. */
   const themeModeOf = (v) => {
     v = String(v);
-    return v.includes('system') ? 'system' : v.includes('dark') ? 'dark' : 'light';
+    if (/system$/.test(v)) return 'system';
+    if (/night$/.test(v)) return 'night';
+    return /dark$/.test(v) ? 'dark' : 'light';
   };
   const combineTheme = (fam, mode) => (fam === 'green' ? 'green-' + mode : mode);
   const applyCombined = (fam, mode) => { if (ctx().applyTheme) ctx().applyTheme(combineTheme(fam, mode)); };
@@ -368,7 +375,7 @@
     } else {
       box.innerHTML =
         `<div class="pf-field"><span class="pf-field__label">${tr('Appearance')}</span><div class="pf-muted">${tr('Choose the mode in which you want to view your product.')}</div>` +
-          `<div class="pf-themes" style="margin-top:10px"><button type="button" class="pf-theme" data-pf-theme="light"><span class="pf-theme__ico"><ds-icon name="sun" size="18"></ds-icon></span>${tr('Light')}</button><button type="button" class="pf-theme" data-pf-theme="dark"><span class="pf-theme__ico"><ds-icon name="moon" size="18"></ds-icon></span>${tr('Dark')}</button><button type="button" class="pf-theme" data-pf-theme="system"><span class="pf-theme__ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.6a7.4 7.4 0 0 0 0 14.8z" fill="currentColor"/></svg></span>${tr('System')}</button></div></div>` +
+          `<div class="pf-themes" style="margin-top:10px"><button type="button" class="pf-theme" data-pf-theme="light"><span class="pf-theme__ico"><ds-icon name="sun" size="18"></ds-icon></span>${tr('Light')}</button><button type="button" class="pf-theme" data-pf-theme="dark"><span class="pf-theme__ico"><ds-icon name="moon" size="18"></ds-icon></span>${tr('Dark')}</button><button type="button" class="pf-theme" data-pf-theme="night"><span class="pf-theme__ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M15.3 11.6A6.2 6.2 0 0 1 7.1 3.4a6.4 6.4 0 1 0 8.2 8.2z" fill="currentColor"/><circle cx="13.1" cy="3.2" r="1.05" fill="currentColor"/><circle cx="16" cy="6.5" r="0.75" fill="currentColor"/></svg></span>${tr('Night')}</button><button type="button" class="pf-theme" data-pf-theme="system"><span class="pf-theme__ico"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.6a7.4 7.4 0 0 0 0 14.8z" fill="currentColor"/></svg></span>${tr('System')}</button></div></div>` +
         `<div class="pf-divider"></div>` +
         `<div class="pf-field"><span class="pf-field__label">${tr('Navigation')}</span><div class="pf-muted">${tr('Select the navigation to be applied to your product.')}</div>` +
           `<div class="pf-navs" style="margin-top:10px"><div class="pf-nav pf-nav--top" data-nav="top"><div class="pf-nav__thumb"></div><div class="pf-nav__lbl">${tr('Top Navigation')}</div></div><div class="pf-nav pf-nav--left" data-nav="left"><div class="pf-nav__thumb"></div><div class="pf-nav__lbl">${tr('Left Navigation')}</div></div></div></div>` +
@@ -413,8 +420,8 @@
       box.querySelector('#pf-rail-icons')?.addEventListener('ds-toggle-change', (e) => {
         ctx().setRailIcons && ctx().setRailIcons(!!(e.detail && e.detail.checked));
       });
-      const curFam = String(appr).includes('green') ? 'green' : 'blue';
-      const curMode = appr === 'system' ? 'system' : (String(appr).includes('dark') ? 'dark' : 'light');
+      const curFam = themeFamOf(appr);
+      const curMode = themeModeOf(appr);
       box.querySelectorAll('[data-pf-theme]').forEach((b) => b.classList.toggle('is-active', b.dataset.pfTheme === curMode));
       box.querySelectorAll('.pf-color').forEach((b) => b.classList.toggle('is-active', b.dataset.themeFam === curFam));
       box.querySelectorAll('[data-pf-theme]').forEach((b) => b.addEventListener('click', () => {

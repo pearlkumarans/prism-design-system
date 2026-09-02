@@ -3,8 +3,11 @@ import { tracked } from '@glimmer/tracking';
 
 /**
  * theme — Phase A. Backs ShellCtx.applyTheme. Accepts the shell's value grammar:
- * 'light' | 'dark' | 'system' | 'green-light' | 'green-dark'. Sets data-theme on
- * <html> (the design system's light/dark switch) and toggles the accent family.
+ * 'light' | 'dark' | 'night' | 'system' and their 'green-' counterparts.
+ * Sets data-theme on <html> (the design system's theme switch) and toggles the
+ * accent family. `night` is the deepest neutral theme (Grey palette, Charoite
+ * for error); it exists in both accent families (night / green-night) and, like
+ * light and dark, passes straight through — only `system` needs resolving.
  */
 export default class ThemeService extends Service {
   @tracked appr = 'light';
@@ -20,6 +23,15 @@ export default class ThemeService extends Service {
 
   get family() {
     return String(this.appr).includes('green') ? 'green' : 'blue';
+  }
+
+  /* light | dark | night | system — the mode half of the appearance grammar,
+     read off the value with the accent prefix stripped. */
+  get mode() {
+    const v = String(this.appr);
+    if (/system$/.test(v)) return 'system';
+    if (/night$/.test(v)) return 'night';
+    return /dark$/.test(v) ? 'dark' : 'light';
   }
 
   applyTheme(value) {

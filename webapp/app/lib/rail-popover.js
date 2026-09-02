@@ -29,6 +29,10 @@ const ROADMAP = {
 
 // System-mode icon (half-filled circle) for the Appearance menu.
 const HALF_CIRCLE = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="7.4" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.6a7.4 7.4 0 0 0 0 14.8z" fill="currentColor"/></svg>';
+// Night mode (crescent + stars) — reads as "deeper than dark" next to the plain
+// moon. Inline for the same reason as HALF_CIRCLE: no sprite equivalent. Painted
+// with currentColor so it follows the row's token colour. Mirrors Shell.html.
+const MOON_STARS = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M15.3 11.6A6.2 6.2 0 0 1 7.1 3.4a6.4 6.4 0 1 0 8.2 8.2z" fill="currentColor"/><circle cx="13.1" cy="3.2" r="1.05" fill="currentColor"/><circle cx="16" cy="6.5" r="0.75" fill="currentColor"/></svg>';
 
 export class RailPopover {
   constructor(rpEl, theme) {
@@ -145,17 +149,18 @@ export class RailPopover {
   }
 
   /* ── Appearance (theme chooser) — opened by hovering the rail theme icon ─────── */
+  // Every mode exists in both accent families, so green is a plain prefix:
+  // green-light / green-dark / green-night / green-system. Mirrors Shell.html.
   _combineTheme(mode, color) {
-    if (color === 'green') return mode === 'system' ? 'green-system' : (mode === 'dark' ? 'green-dark' : 'green-light');
-    return mode; // blue: light / dark / system
+    return color === 'green' ? `green-${mode}` : mode;
   }
 
   _appearanceHtml(curColor, curMode) {
     const COLORS = [['blue', '#2C66DD'], ['green', '#1E8E3E']];
     const colorBtns = COLORS.map(([c, hex]) => `<button type="button" class="appr-color${curColor === c ? ' is-active' : ''}" data-color="${c}" style="background:${hex}" aria-label="${c} accent"><ds-icon name="check" size="14"></ds-icon></button>`).join('');
-    const MODES = [['light', 'Light mode', 'sun'], ['dark', 'Dark mode', 'moon'], ['system', 'Use system settings', 'half']];
+    const MODES = [['light', 'Light mode', 'sun'], ['dark', 'Dark mode', 'moon'], ['night', 'Night mode', 'stars'], ['system', 'Use system settings', 'half']];
     const rows = MODES.map(([m, label, icon]) => {
-      const ico = icon === 'half' ? HALF_CIRCLE : `<ds-icon name="${icon}" size="18"></ds-icon>`;
+      const ico = icon === 'half' ? HALF_CIRCLE : icon === 'stars' ? MOON_STARS : `<ds-icon name="${icon}" size="18"></ds-icon>`;
       const active = curMode === m;
       return `<button type="button" class="appr-item${active ? ' is-active' : ''}" role="menuitemradio" aria-checked="${active}" data-mode="${m}"><span class="appr-item__ico">${ico}</span><span class="appr-item__label">${label}</span>${active ? '<ds-icon class="appr-item__check" name="check" size="16"></ds-icon>' : ''}</button>`;
     }).join('');
@@ -167,7 +172,10 @@ export class RailPopover {
     this.anchorId = '__theme__';
     const appr = String((this.theme && this.theme.appr) || document.documentElement.getAttribute('data-theme') || 'light');
     const curColor = appr.indexOf('green') === 0 ? 'green' : 'blue';
-    const curMode = (appr === 'system' || appr === 'green-system') ? 'system' : (appr === 'dark' || appr === 'green-dark') ? 'dark' : 'light';
+    // Strip the accent prefix and read the mode off the remainder.
+    const curMode = /system$/.test(appr) ? 'system'
+      : /night$/.test(appr) ? 'night'
+      : /dark$/.test(appr) ? 'dark' : 'light';
     el.className = 'upd-pop upd-pop--appr';
     el.innerHTML = this._appearanceHtml(curColor, curMode);
     this.card = 'appearance';
