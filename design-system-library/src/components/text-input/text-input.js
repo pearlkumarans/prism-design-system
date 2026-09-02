@@ -339,17 +339,24 @@ export class DsTextInput extends HTMLElement {
       el.addEventListener('mouseenter', () => showTip(el));
       el.addEventListener('mouseleave', hideTip);
     });
-    /* Keyboard parity: a keyboard-only user can't hover the affix, so reveal a
-       truncated affix while the FIELD itself is focused — no new tab stops, since
-       the input is already the tab stop. showTip self-guards on truncation, so we
-       pick the first affix that's actually clipped (prefix before suffix). Both
-       listeners live on the per-render input, so they're GC-clean on rebuild. */
-    if (this._input && affixTexts.length) {
+    /* Keyboard parity: a keyboard-only user can't hover the affix or the help text,
+       and neither is focusable, so reveal a truncated one while the FIELD itself is
+       focused — no new tab stops (the input is already the tab stop). Both the affix
+       showTip and the helper's revealTip self-guard on truncation. The affix and
+       helper tips are separate, non-overlapping elements (affix above the field,
+       helper below), so surfacing both when both are clipped is fine. Listeners live
+       on the per-render input → GC-clean on rebuild. */
+    /* helperEl was captured above (counter wiring) — reuse it. */
+    if (this._input && (affixTexts.length || helperEl)) {
       this._input.addEventListener('focus', () => {
         const clipped = affixTexts.find((el) => el.scrollWidth > el.clientWidth + 1);
         if (clipped) showTip(clipped);
+        this._root.querySelector('ds-field-helper')?.revealTip?.();
       });
-      this._input.addEventListener('blur', hideTip);
+      this._input.addEventListener('blur', () => {
+        hideTip();
+        this._root.querySelector('ds-field-helper')?.hideTip?.();
+      });
     }
   }
 

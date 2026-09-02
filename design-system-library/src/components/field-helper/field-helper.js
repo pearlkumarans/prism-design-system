@@ -102,6 +102,17 @@ export class DsFieldHelper extends HTMLElement {
     }
   }
 
+  /* Public: reveal / hide the truncation tip on demand. A field wrapper (e.g.
+     ds-text-input) calls these on its input's focus/blur so a keyboard-only user
+     can read a clipped helper — the help text itself isn't focusable, so it can't
+     get the hover reveal. revealTip() no-ops unless the text is actually clipped. */
+  revealTip() {
+    const textEl = this._root && this._root.querySelector('.ds-field-helper__text');
+    if (textEl) DsFieldHelper._showTip(textEl, textEl.textContent);
+  }
+
+  hideTip() { DsFieldHelper._hideTip(); }
+
   static _hideTip() {
     const t = document.getElementById(DsFieldHelper.TIP_ID);
     if (t) t.style.display = 'none';

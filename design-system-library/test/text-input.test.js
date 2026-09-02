@@ -172,3 +172,51 @@ describe('ds-text-input — truncated affix reveal on input focus (keyboard pari
     expect(tip().textContent).to.equal('example.com/very/long/path');
   });
 });
+
+describe('ds-text-input — truncated helper reveal on input focus (keyboard parity)', () => {
+  const HTIP_ID = 'ds-field-helper-tooltip';
+  const htip = () => document.getElementById(HTIP_ID);
+  afterEach(() => { htip()?.remove(); });
+
+  const setClip = (el, scroll, client) => {
+    Object.defineProperty(el, 'scrollWidth', { value: scroll, configurable: true });
+    Object.defineProperty(el, 'clientWidth', { value: client, configurable: true });
+  };
+
+  it('reveals a truncated helper on focus and hides it on blur (no affix needed)', async () => {
+    const el = await fixture(html`<ds-text-input label="X" helper="A rather long helper string that gets clipped by the row"></ds-text-input>`);
+    await nextFrame();
+    const textEl = el.querySelector('.ds-field-helper__text');
+    expect(textEl, 'helper text element').to.exist;
+    setClip(textEl, 320, 60);          // truncated
+
+    const input = el.querySelector('input');
+    input.dispatchEvent(new FocusEvent('focus'));
+    expect(htip(), 'helper tip element').to.exist;
+    expect(htip().style.display).to.equal('block');
+    expect(htip().textContent).to.contain('long helper string');
+
+    input.dispatchEvent(new FocusEvent('blur'));
+    expect(htip().style.display).to.equal('none');
+  });
+
+  it('does not reveal the helper tip on focus when it is not truncated', async () => {
+    const el = await fixture(html`<ds-text-input label="X" helper="short"></ds-text-input>`);
+    await nextFrame();
+    setClip(el.querySelector('.ds-field-helper__text'), 30, 60);   // fits
+    el.querySelector('input').dispatchEvent(new FocusEvent('focus'));
+    expect(htip() == null || htip().style.display === 'none', 'helper tip stays hidden').to.be.true;
+  });
+
+  it('exposes revealTip()/hideTip() on ds-field-helper for a field wrapper to drive', async () => {
+    const helper = await fixture(html`<ds-field-helper text="Some clipped helper text here"></ds-field-helper>`);
+    await nextFrame();
+    expect(helper.revealTip, 'revealTip method').to.be.a('function');
+    expect(helper.hideTip, 'hideTip method').to.be.a('function');
+    setClip(helper.querySelector('.ds-field-helper__text'), 300, 40);
+    helper.revealTip();
+    expect(htip().style.display).to.equal('block');
+    helper.hideTip();
+    expect(htip().style.display).to.equal('none');
+  });
+});
