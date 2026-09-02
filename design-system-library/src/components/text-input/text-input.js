@@ -68,6 +68,13 @@ export class DsTextInput extends HTMLElement {
   set value(v) { if (this._input) this._input.value = v ?? ''; }
 
   _render() {
+    /* Close any open affix dropdown before rebuilding innerHTML — otherwise the
+       body-portaled menu is orphaned and its global scroll/resize/doc-click
+       listeners (whose closure captures the now-detached chip) leak until the
+       next outside click. Idempotent; matches disconnect + the breadcrumb/
+       page-header/split-button pattern. */
+    this._closeAffixMenu();
+
     /* Preserve the LIVE input across the rebuild: typing updates `this._input.value`
        but NOT the `value` attribute, so an unrelated attribute change (e.g. a form
        setting state="error" on validation) must not revert the field or drop focus.

@@ -13,6 +13,7 @@ import '../src/components/split-button/split-button.js';
 import '../src/components/tag/tag.js';
 import '../src/components/tab-bar-horizontal/tab-bar-horizontal.js';
 import '../src/components/tab-bar-vertical/tab-bar-vertical.js';
+import '../src/components/text-input/text-input.js';
 
 const XSS = '"><img src=x onerror=alert(1)>';
 const noImg = (el, ctx) => expect(el.querySelector('img[onerror]'), `${ctx}: injected an <img>`).to.not.exist;
@@ -123,5 +124,29 @@ describe('review regressions — injection sinks the S4 sweep missed', () => {
     const el = await fixture(html`<ds-script-editor type="with-tabs" tabs="index.ts,${XSS}"></ds-script-editor>`);
     await nextFrame();
     noImg(el, 'script-editor tab names');
+  });
+});
+
+describe('review regressions — portaled menus torn down on re-render (not just disconnect)', () => {
+  const affixMenus = () => document.body.querySelectorAll('.ds-text-input__affix-menu');
+
+  it('ds-text-input closes an open affix dropdown before an attribute-driven rebuild', async () => {
+    const el = await fixture(html`<ds-text-input label="Amount" prefix-dropdown prefix-text="USD"></ds-text-input>`);
+    el.prefixOptions = [{ label: 'USD', value: 'USD' }, { label: 'EUR', value: 'EUR' }];
+    await nextFrame();
+
+    // open the body-portaled affix menu
+    el.querySelector('[data-prefix-dropdown]').click();
+    await nextFrame();
+    expect(affixMenus().length, 'affix menu should portal into body on open').to.equal(1);
+
+    // an unrelated attribute change (e.g. a form marking the field invalid) rebuilds
+    // innerHTML — the open portaled menu + its global listeners must be torn down,
+    // not orphaned (the leak class: _render now calls _closeAffixMenu first).
+    el.setAttribute('state', 'error');
+    await nextFrame();
+    expect(affixMenus().length, 're-render must not orphan the portaled affix menu').to.equal(0);
+    expect(el.querySelector('[data-prefix-dropdown]')?.getAttribute('aria-expanded'))
+      .to.not.equal('true');
   });
 });
