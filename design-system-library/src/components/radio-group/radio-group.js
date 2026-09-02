@@ -204,9 +204,12 @@ export class DsRadioGroup extends HTMLElement {
       const tip = o.info
         ? `<ds-tooltip class="ds-radio-group__option-info" text="${escapeHtml(o.info)}" show-icon="false" position="up-center"><ds-icon name="info-circle" size="16"></ds-icon></ds-tooltip>`
         : '';
-      /* Trusted inline HTML (e.g. <strong>) — like ds-inline-alert's description. */
+      /* Trusted inline HTML (e.g. <strong>) — like ds-inline-alert's description,
+         so `o.description` is author markup and is rendered as-is (NOT escaped;
+         escaping it here would print the tags as literal text and break the
+         documented contract + the enhancements test). */
       const desc = hasDesc
-        ? `<span class="ds-radio-group__option-desc" id="ds-rg-desc-${this._uid}-${i}">${escapeHtml(o.description)}</span>`
+        ? `<span class="ds-radio-group__option-desc" id="ds-rg-desc-${this._uid}-${i}">${o.description}</span>`
         : '';
       /* The .ds-radio-group__option wrapper only earns its keep when it carries the
          card surface, a per-option info tooltip, OR a description. A described option

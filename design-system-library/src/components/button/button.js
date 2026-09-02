@@ -121,19 +121,25 @@ export class DsButton extends HTMLElement {
     if (rtl) btn.setAttribute('dir', 'rtl');
     else btn.removeAttribute('dir');
 
-    if (loading) {
-      /* Spec: spinner replaces the prefix icon, label stays visible, suffix hidden. */
-      this._prefix.innerHTML = '<span class="ds-button__spinner" aria-hidden="true"></span>';
-      this._prefix.style.display = '';
-      this._suffix.innerHTML = '';
-      this._suffix.style.display = 'none';
-    } else {
-      this._prefix.innerHTML = prefixIcon ? `<ds-icon name="${escapeHtml(prefixIcon)}" size="${iconPx}"></ds-icon>` : '';
-      this._prefix.style.display = prefixIcon ? '' : 'none';
-
-      this._suffix.innerHTML = suffixIcon ? `<ds-icon name="${escapeHtml(suffixIcon)}" size="${iconPx}"></ds-icon>` : '';
-      this._suffix.style.display = suffixIcon ? '' : 'none';
+    /* Spec: while loading, a spinner replaces the prefix icon, the label stays
+       visible, and the suffix is hidden. Rewrite each icon slot's innerHTML ONLY
+       when its content key changes — a bare variant/size/disabled toggle should
+       not re-parse the <ds-icon>s. Display is cheap, so set it every time. */
+    const prefixKey = loading ? 'spinner' : (prefixIcon ? `${prefixIcon}|${iconPx}` : '');
+    if (prefixKey !== this._prefixKey) {
+      this._prefixKey = prefixKey;
+      this._prefix.innerHTML = loading
+        ? '<span class="ds-button__spinner" aria-hidden="true"></span>'
+        : (prefixIcon ? `<ds-icon name="${escapeHtml(prefixIcon)}" size="${iconPx}"></ds-icon>` : '');
     }
+    this._prefix.style.display = (loading || prefixIcon) ? '' : 'none';
+
+    const suffixKey = (!loading && suffixIcon) ? `${suffixIcon}|${iconPx}` : '';
+    if (suffixKey !== this._suffixKey) {
+      this._suffixKey = suffixKey;
+      this._suffix.innerHTML = suffixKey ? `<ds-icon name="${escapeHtml(suffixIcon)}" size="${iconPx}"></ds-icon>` : '';
+    }
+    this._suffix.style.display = suffixKey ? '' : 'none';
   }
 
   // Convenience proxies so consumers can poke these without reaching into the DOM
