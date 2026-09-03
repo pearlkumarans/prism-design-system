@@ -413,6 +413,14 @@ export class DsDropdownMenu extends HTMLElement {
     /* select-tick is multi-selectable (multiple ticks) — announce it. */
     if (type === 'select-tick') this._panel.setAttribute('aria-multiselectable', 'true');
     else this._panel.removeAttribute('aria-multiselectable');
+    /* A listbox (select/select-tick) or dialog (multi-select) panel REQUIRES an
+       accessible name (axe: aria-input-field-name); a menu doesn't. Name it from the
+       title (the visible header text, or the "Menu" default). */
+    if (type === 'select' || type === 'select-tick' || isMulti) {
+      this._panel.setAttribute('aria-label', title);
+    } else {
+      this._panel.removeAttribute('aria-label');
+    }
 
     const titleHTML = showTitle
       ? `<div class="ds-dropdown-menu__title">${escapeHtml(title)}</div>
