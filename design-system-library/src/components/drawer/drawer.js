@@ -250,13 +250,19 @@ export class DsDrawer extends HTMLElement {
     if (this._openRaf) { cancelAnimationFrame(this._openRaf); this._openRaf = 0; }
     this._unlockScroll();
     if (this._previouslyFocused?.focus) this._previouslyFocused.focus();
-    this.dispatchEvent(new CustomEvent('ds-drawer-close', { bubbles: true }));
+    /* Single close dispatch — carries the reason set by _dismiss (esc/overlay/close),
+       or 'programmatic' when `open` was removed directly (close()/removeAttribute).
+       Previously _dismiss ALSO dispatched, so a dismissal fired the event twice —
+       the first without a reason. */
+    const reason = this._closeReason || 'programmatic';
+    this._closeReason = null;
+    this.dispatchEvent(new CustomEvent('ds-drawer-close', { bubbles: true, detail: { reason } }));
   }
 
   _dismiss(reason) {
     if (!this.hasAttribute('open')) return;
-    this.removeAttribute('open');   // triggers _onClose
-    this.dispatchEvent(new CustomEvent('ds-drawer-close', { bubbles: true, detail: { reason } }));
+    this._closeReason = reason;
+    this.removeAttribute('open');   // → attributeChangedCallback('open') → _onClose(), which emits the single close event
   }
 
   // ---- Body scroll lock (modal) ------------------------------------------
