@@ -136,6 +136,7 @@ export class DsHeaderNav extends HTMLElement {
       'show-customer-selector', 'show-avatar', 'show-bento',
       'show-bookmark', 'show-zia',
       'center', 'search',
+      'customer-label', 'user-initials',
       'rtl',
     ];
   }

@@ -194,6 +194,12 @@ export class DsCriteriaFilter extends HTMLElement {
     document.removeEventListener('pointerdown', this._onDocPointer, true);
     window.removeEventListener('resize', this._onReposition, true);
     window.removeEventListener('scroll', this._onReposition, true);
+    /* Cancel in-flight timers/frames so nothing fires (repositioning a detached
+       popover, or dispatching a change) after the host is gone. */
+    this._onReposition.cancel();
+    if (this._emitChangeDebounced) this._emitChangeDebounced.cancel();
+    if (this._readyTimer) { clearTimeout(this._readyTimer); this._readyTimer = 0; }
+    if (this._readyRaf) { cancelAnimationFrame(this._readyRaf); this._readyRaf = 0; }
   }
   attributeChangedCallback(name) {
     if (!this._root) return;
@@ -449,7 +455,7 @@ export class DsCriteriaFilter extends HTMLElement {
   _optionLabel(field, val) { return (field && field.options || []).find((o) => o.value === val)?.label ?? val; }
 
   _emit(type, detail) { this.dispatchEvent(new CustomEvent('ds-criteria-filter-' + type, { bubbles: true, detail })); }
-  _debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+  _debounce(fn, ms) { let t; const d = (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; d.cancel = () => clearTimeout(t); return d; }
   _clone(o) { return JSON.parse(JSON.stringify(o)); }
 
   _emptyGroup() { return { id: uid(), combinator: this._combinatorDefault, not: false, rules: [] }; }
@@ -881,8 +887,10 @@ export class DsCriteriaFilter extends HTMLElement {
     /* Controls mounted; enable user-driven edits once init events have drained.
        setTimeout fires even when offscreen (rAF can be throttled there). */
     const markReady = () => { this._ready = true; };
-    setTimeout(markReady, 0);
-    requestAnimationFrame(markReady);
+    if (this._readyTimer) clearTimeout(this._readyTimer);
+    if (this._readyRaf) cancelAnimationFrame(this._readyRaf);
+    this._readyTimer = setTimeout(markReady, 0);
+    this._readyRaf = requestAnimationFrame(markReady);
   }
 
   _renderEmpty() {

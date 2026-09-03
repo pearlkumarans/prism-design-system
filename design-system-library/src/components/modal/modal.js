@@ -87,6 +87,7 @@ export class DsModal extends HTMLElement {
 
   disconnectedCallback() {
     document.removeEventListener('keydown', this._onKeydown, true);
+    if (this._endDrag) this._endDrag();   // drop an in-flight title-drag's document listeners
     stopLateChildren(this);
     /* A modal removed from the DOM while still open must not leave the page
        permanently scroll-locked. */
@@ -204,6 +205,7 @@ export class DsModal extends HTMLElement {
       handle.classList.remove('is-dragging');
       document.removeEventListener('pointermove', move);
       document.removeEventListener('pointerup', up);
+      this._endDrag = null;
     };
     handle.addEventListener('pointerdown', (e) => {
       if (!this.hasAttribute('open') || e.button !== 0) return;
@@ -214,6 +216,9 @@ export class DsModal extends HTMLElement {
       sx = e.clientX; sy = e.clientY;
       bx = this._dragOffset.x; by = this._dragOffset.y;
       handle.classList.add('is-dragging');
+      /* Store the teardown so a disconnect mid-drag drops these document
+         listeners (they'd otherwise outlive the detached modal). */
+      this._endDrag = up;
       document.addEventListener('pointermove', move);
       document.addEventListener('pointerup', up);
       e.preventDefault();   // prevent text selection while dragging

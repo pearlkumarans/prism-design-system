@@ -82,6 +82,7 @@ export class DsDrawer extends HTMLElement {
 
   disconnectedCallback() {
     document.removeEventListener('keydown', this._onKeydown, true);
+    if (this._openRaf) { cancelAnimationFrame(this._openRaf); this._openRaf = 0; }   // drop a pending open-focus frame (would focus a detached panel)
     this._unlockScroll();
     stopLateChildren(this);
   }
@@ -235,7 +236,8 @@ export class DsDrawer extends HTMLElement {
       : (document.activeElement instanceof HTMLElement ? document.activeElement : null);
     document.addEventListener('keydown', this._onKeydown, true);
     if (this._isModal()) this._lockScroll();
-    requestAnimationFrame(() => {
+    this._openRaf = requestAnimationFrame(() => {
+      this._openRaf = 0;
       const focusables = this._panel.querySelectorAll(FOCUSABLE);
       const first = Array.from(focusables).find((el) => !el.hidden && el.offsetParent !== null);
       (first || this._panel).focus();
@@ -245,6 +247,7 @@ export class DsDrawer extends HTMLElement {
 
   _onClose() {
     document.removeEventListener('keydown', this._onKeydown, true);
+    if (this._openRaf) { cancelAnimationFrame(this._openRaf); this._openRaf = 0; }
     this._unlockScroll();
     if (this._previouslyFocused?.focus) this._previouslyFocused.focus();
     this.dispatchEvent(new CustomEvent('ds-drawer-close', { bubbles: true }));

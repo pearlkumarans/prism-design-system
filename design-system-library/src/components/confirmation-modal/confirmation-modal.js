@@ -89,6 +89,7 @@ export class DsConfirmationModal extends HTMLElement {
 
   disconnectedCallback() {
     document.removeEventListener('keydown', this._onKeydown);
+    if (this._endDrag) this._endDrag();   // drop an in-flight dialog-drag's document listeners
     /* A confirmation removed while still open must not leave the page scroll-locked. */
     this._unlockScroll();
   }
@@ -224,6 +225,7 @@ export class DsConfirmationModal extends HTMLElement {
       dialog.classList.remove('is-dragging');
       document.removeEventListener('pointermove', move);
       document.removeEventListener('pointerup', up);
+      this._endDrag = null;
     };
     dialog.addEventListener('pointerdown', (e) => {
       if (!this.hasAttribute('open') || e.button !== 0) return;
@@ -236,6 +238,9 @@ export class DsConfirmationModal extends HTMLElement {
       sx = e.clientX; sy = e.clientY;
       bx = this._dragOffset.x; by = this._dragOffset.y;
       dialog.classList.add('is-dragging');
+      /* Store the teardown so a disconnect mid-drag drops these document
+         listeners (they'd otherwise outlive the detached dialog). */
+      this._endDrag = up;
       document.addEventListener('pointermove', move);
       document.addEventListener('pointerup', up);
       e.preventDefault();

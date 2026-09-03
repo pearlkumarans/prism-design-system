@@ -368,7 +368,7 @@ export class DsPageHeader extends HTMLElement {
             const last = i === this._breadcrumbs.length - 1;
             return last
               ? `<span>${escapeHtml(b.label)}</span>`
-              : `<a href="${b.href || '#'}">${escapeHtml(b.label)}</a>`;
+              : `<a href="${escapeHtml(b.href || '#')}">${escapeHtml(b.label)}</a>`;
           }).join('')
         }</ds-breadcrumb>`
       : '';

@@ -209,6 +209,9 @@ export class DsDatePicker extends HTMLElement {
     document.removeEventListener('click', this._docClickHandler);
     document.removeEventListener('keydown', this._docKeyHandler);
     this._unbindReanchor();
+    /* Mid-open disconnect: clear the open flag so a later reconnect + _open()
+       doesn't early-return on a stale `_isOpen` (696). */
+    this._isOpen = false;
     // Remove the portaled popover so it never leaks after the host is gone.
     if (this._popover && this._popover.parentNode) this._popover.parentNode.removeChild(this._popover);
   }
@@ -757,6 +760,7 @@ export class DsDatePicker extends HTMLElement {
 
   _unbindReanchor() {
     if (!this._reanchor) return;
+    this._reanchor.cancel();   // drop a pending frame so it can't fire _positionPopover on a detached node
     window.removeEventListener('scroll', this._reanchor, true);
     window.removeEventListener('resize', this._reanchor);
     this._reanchor = null;

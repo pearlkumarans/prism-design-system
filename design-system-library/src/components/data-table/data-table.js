@@ -328,6 +328,7 @@ export class DsDataTable extends HTMLElement {
   disconnectedCallback() {
     this._disableFit();
     if (this._endColResize) this._endColResize();   // drop an in-flight column-resize drag's window listeners
+    if (this._endBulkDrag) this._endBulkDrag();      // drop an in-flight bulk-bar drag's window listeners
     if (this._langObs) { this._langObs.disconnect(); this._langObs = null; }
     /* Tear down the lazily-portaled menus: each was appended to <body> and added a
        document click-listener whose closure retains this instance. Without this,
@@ -1177,9 +1178,9 @@ export class DsDataTable extends HTMLElement {
     bar.innerHTML = `
       <span class="ds-data-table__bulk-bar-grip" aria-hidden="true"><ds-icon name="move-vertical" size="16"></ds-icon></span>
       <span class="ds-data-table__bulk-bar-actions">` + this._bulkActions.map((a) => `
-        <button class="ds-data-table__bulk-bar-action" data-bulk-id="${a.id}"
+        <button class="ds-data-table__bulk-bar-action" data-bulk-id="${escapeHtml(a.id)}"
                 ${a.destructive ? 'data-destructive="true"' : ''}>
-          ${a.icon ? `<ds-icon name="${escapeHtml(a.icon)}" size="16"></ds-icon>` : ''} ${(DT_STRINGS.en[a.id] && a.label === DT_STRINGS.en[a.id]) ? this._t(a.id) : a.label}
+          ${a.icon ? `<ds-icon name="${escapeHtml(a.icon)}" size="16"></ds-icon>` : ''} ${(DT_STRINGS.en[a.id] && a.label === DT_STRINGS.en[a.id]) ? this._t(a.id) : escapeHtml(a.label)}
         </button>
       `).join('') + `</span>
       <span class="ds-data-table__bulk-bar-divider"></span>
@@ -1245,7 +1246,11 @@ export class DsDataTable extends HTMLElement {
         window.removeEventListener('pointerup', onUp);
         window.removeEventListener('pointercancel', onUp);
         bar.classList.remove('is-dragging');
+        this._endBulkDrag = null;
       };
+      /* Store the teardown so a disconnect mid-drag drops these window listeners
+         (they'd otherwise outlive the detached bar — same class as the resizer). */
+      this._endBulkDrag = onUp;
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
       window.addEventListener('pointercancel', onUp);

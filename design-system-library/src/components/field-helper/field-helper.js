@@ -49,6 +49,14 @@ export class DsFieldHelper extends HTMLElement {
     else this._sync();
   }
 
+  disconnectedCallback() {
+    /* The hover listeners live on our own light-DOM child, so they're GC'd with
+       it. But the truncation tip is a shared body-level singleton — if this row
+       was showing it when removed, hide it so it doesn't linger over a detached
+       node. (Only one row hovers at a time, so hiding the singleton is safe.) */
+    DsFieldHelper._hideTip();
+  }
+
   /* In-place mirror of the state/rtl half of _sync — no innerHTML rebuild. */
   _paintState() {
     let state = enumAttr(this, 'state', STATES, 'default');
