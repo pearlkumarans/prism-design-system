@@ -14,7 +14,21 @@
    Usage:  node scripts/lint-tokens.mjs [dir]      (default: src/components)
    Exit 1 with a report if any violation is found; 0 otherwise. */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, dirname, basename } from 'node:path';
+
+/* Control-size lock: within the interactive-control components, a raw px
+   height / min-height / line-height at a control-scale step must go through the
+   control-size tokens (spec: control-size-tokens). Allowed: var(), and a
+   `lint-ok` marker on the line for a genuine non-control sub-dimension (a resize
+   grip, a helper row, a divider). Non-control components (avatar, kpi-card,
+   data-table …) are out of scope — their heights aren't the control scale. */
+const CONTROL_FILES = new Set([
+  'button', 'icon-button', 'text-input', 'text-area', 'otp-input', 'search-field',
+  'input-select', 'token-field', 'toggle', 'checkbox', 'radio', 'badge', 'tag',
+  'field-helper', 'date-picker', 'time-picker', 'slider',
+]);
+const HEIGHT_STEPS = new Set([16, 20, 24, 28, 32, 36, 40, 44, 48]);
+const LH_STEPS = new Set([14, 16, 20, 24]);
 
 const ROOT = process.argv[2] || 'src/components';
 
@@ -59,10 +73,36 @@ for (const file of files) {
   }
 }
 
-if (violations.length) {
-  console.error(`\n✖ token-lint: ${violations.length} hardcoded color value(s) — replace with a design token (var(--uems-*)):\n`);
-  for (const v of violations) console.error(`  ${v.file}:${v.line}\n      ${v.decl}`);
-  console.error(`\n  Allowed: literals in comments, var(--token, <fallback>), and rgba(var(--uems-shadow-rgb) / α).\n`);
+// ---- Control-size lock (control components only) ----------------------------
+const sizeViolations = [];
+for (const file of files) {
+  if (!CONTROL_FILES.has(basename(dirname(file)))) continue;
+  const src = readFileSync(file, 'utf8');
+  const lines = src.split('\n');
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+  const sizeRe = /(min-height|line-height|height)\s*:\s*(\d+)px/gi;
+  let m;
+  while ((m = sizeRe.exec(code))) {
+    const prop = m[1].toLowerCase();
+    const val = Number(m[2]);
+    const steps = prop === 'line-height' ? LH_STEPS : HEIGHT_STEPS;
+    if (!steps.has(val)) continue;
+    const line = code.slice(0, m.index).split('\n').length;
+    if (/lint-ok/.test(lines[line - 1] || '')) continue;   // explicit per-line allow for a sub-part
+    sizeViolations.push({ file: relative(process.cwd(), file), line, decl: `${prop}: ${val}px` });
+  }
+}
+
+if (violations.length || sizeViolations.length) {
+  if (violations.length) {
+    console.error(`\n✖ token-lint: ${violations.length} hardcoded color value(s) — replace with a design token (var(--uems-*)):\n`);
+    for (const v of violations) console.error(`  ${v.file}:${v.line}\n      ${v.decl}`);
+  }
+  if (sizeViolations.length) {
+    console.error(`\n✖ token-lint: ${sizeViolations.length} hardcoded control size(s) — use the control-size tokens (--uems-control-h-* / --uems-chip-h-* / --uems-control-lh-* / --uems-icon-*), or mark a non-control sub-dimension with a /* lint-ok */ comment:\n`);
+    for (const v of sizeViolations) console.error(`  ${v.file}:${v.line}\n      ${v.decl}`);
+  }
+  console.error(`\n  Allowed: literals in comments, var(--token, <fallback>), rgba(var(--uems-shadow-rgb) / α), and control sizes via var() or a /* lint-ok */ marker.\n`);
   process.exit(1);
 }
-console.log(`✓ token-lint: no hardcoded colors in ${files.length} component stylesheets.`);
+console.log(`✓ token-lint: no hardcoded colors, and no raw control sizes in ${CONTROL_FILES.size} control components, across ${files.length} stylesheets.`);
