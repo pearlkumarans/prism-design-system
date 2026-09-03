@@ -60,6 +60,9 @@ export class DsDualList extends HTMLElement {
     this._available = [];
     this._selected = [];
     this._q = { available: '', selected: '' };
+    /* Roving-tabindex cursor per list: the index of the row that holds the single
+       tabindex=0 in each listbox (moved by Arrow/Home/End). */
+    this._focus = { available: 0, selected: 0 };
     this._uid = ++uid;
   }
 
@@ -74,8 +77,20 @@ export class DsDualList extends HTMLElement {
 
   attributeChangedCallback(name) {
     if (!this._built) return;
-    if (name === 'items') this._parseItemsAttr();
-    this._render();
+    if (name === 'items') { this._parseItemsAttr(); this._render(); return; }
+    /* Repaint-split: visual-only attrs that never change the rows a list renders
+       patch chrome in place (classes / hidden / disabled / helper) — no
+       list.innerHTML rebuild, so rows keep node identity + roving focus. Attrs
+       that DO change what each list renders (loading → skeletons, readonly →
+       per-row draggable + disabled, grouped → group headers, items) full-render.
+       _paintChrome is byte-identical to _render minus the two _renderList calls,
+       because _render is literally _paintChrome + _renderList (single source). */
+    const chromeOnly = name === 'searchable' || name === 'move-all'
+      || name === 'reorderable' || name === 'error' || name === 'error-message'
+      || name === 'search-placeholder' || name === 'available-label'
+      || name === 'selected-label';
+    if (chromeOnly) this._paintChrome();
+    else this._render();
   }
 
   /* ---- data ---------------------------------------------------------- */
@@ -154,6 +169,8 @@ export class DsDualList extends HTMLElement {
     /* Delegated events. */
     this.addEventListener('ds-checkbox-change', (e) => this._onCheck(e));
     this.addEventListener('ds-search-field-input', (e) => this._onSearch(e));
+    /* Keyboard: roving focus + activation within each listbox. */
+    this.addEventListener('keydown', (e) => this._onKeydown(e));
 
     /* Drag & drop — an enhancement alongside the checkbox + transfer buttons
        (which remain the accessible path). Rows are draggable; each panel's list
@@ -252,7 +269,20 @@ export class DsDualList extends HTMLElement {
   }
 
   /* ---- render -------------------------------------------------------- */
+  /* Full render = chrome + both lists. Structural attrs (loading/readonly/grouped/
+     items) and every data mutation (transfer/reorder/drop/search) route here. */
   _render() {
+    this._paintChrome();
+    this._renderList('available');
+    this._renderList('selected');
+  }
+
+  /* Chrome only — host state classes, per-panel search/link visibility + disabled,
+     transfer/reorder button visibility + disabled, counts, and the error helper
+     row. Touches no rows, so it is safe for visual-only attribute changes (it keeps
+     the existing list DOM + roving focus). _render calls this first, so the two
+     paths are byte-identical for everything except the list rebuild. */
+  _paintChrome() {
     const searchable = boolAttr(this, 'searchable');
     const moveAll = boolAttr(this, 'move-all');
     const reorderable = boolAttr(this, 'reorderable');
@@ -264,7 +294,6 @@ export class DsDualList extends HTMLElement {
     this.classList.toggle('ds-dual-list--readonly', readonly);
     this.classList.toggle('ds-dual-list--error', error);
     this.classList.toggle('ds-dual-list--move-all', moveAll);
-
 
     const placeholder = this.getAttribute('search-placeholder') || 'Search…';
     [this._panelAvail, this._panelSel].forEach((p) => {
@@ -281,8 +310,6 @@ export class DsDualList extends HTMLElement {
     this._reorderGroup.hidden = !reorderable;
     this._controls.hidden = readonly;
 
-    this._renderList('available');
-    this._renderList('selected');
     this._syncCounts();
     this._syncButtons();
 
@@ -387,6 +414,66 @@ export class DsDualList extends HTMLElement {
     } else {
       items.forEach(renderRow);
     }
+
+    this._applyRoving(side);
+  }
+
+  /* Roving tabindex across the freshly-rendered option rows: exactly one row is
+     tabbable (tabindex=0), the rest are -1 and reachable only via Arrow/Home/End.
+     Each row (role=option) is the single focus stop, so its inner ds-checkbox is a
+     visual affordance only — hide the native <input> so the option has no focusable
+     descendant (WAI-ARIA listbox forbids nested interactive controls); aria-selected
+     on the row conveys checked state. The :checked ~ box style still applies because
+     the (display:none) input keeps matching the sibling selector. */
+  _applyRoving(side) {
+    const list = (side === 'available' ? this._panelAvail : this._panelSel).list;
+    const rows = [...list.querySelectorAll('.ds-dual-list__row')];
+    if (!rows.length) return;
+    let idx = this._focus[side];
+    if (!Number.isInteger(idx) || idx < 0 || idx >= rows.length) idx = 0;
+    this._focus[side] = idx;
+    rows.forEach((row, i) => {
+      row.tabIndex = i === idx ? 0 : -1;
+      const input = row.querySelector('.ds-checkbox__input');
+      if (input && !input.hidden) input.hidden = true;
+    });
+  }
+
+  _onKeydown(e) {
+    const row = e.target.closest && e.target.closest('.ds-dual-list__row');
+    if (!row) return;
+    const panelEl = row.closest('.ds-dual-list__panel');
+    const side = panelEl && panelEl.dataset.side;
+    if (side !== 'available' && side !== 'selected') return;
+    const list = (side === 'available' ? this._panelAvail : this._panelSel).list;
+    const rows = [...list.querySelectorAll('.ds-dual-list__row')];
+    const cur = rows.indexOf(row);
+    if (cur < 0) return;
+
+    let next = cur;
+    switch (e.key) {
+      case 'ArrowDown': next = Math.min(cur + 1, rows.length - 1); break;
+      case 'ArrowUp':   next = Math.max(cur - 1, 0); break;
+      case 'Home':      next = 0; break;
+      case 'End':       next = rows.length - 1; break;
+      case ' ':
+      case 'Enter':     e.preventDefault(); this._toggleRow(row); return;
+      default: return;
+    }
+    e.preventDefault();
+    if (next === cur) return;
+    this._focus[side] = next;
+    rows[cur].tabIndex = -1;
+    rows[next].tabIndex = 0;
+    rows[next].focus();
+  }
+
+  /* Space/Enter on a focused option toggles its selection — routed through the
+     checkbox's own click() so it emits ds-checkbox-change (→ _onCheck updates the
+     item, aria-selected, and the transfer buttons), keeping one code path. */
+  _toggleRow(row) {
+    const cb = row.querySelector('ds-checkbox');
+    if (cb && !cb.hasAttribute('disabled')) cb.click();
   }
 
   _syncCounts() {
