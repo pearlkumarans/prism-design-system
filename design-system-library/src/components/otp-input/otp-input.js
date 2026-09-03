@@ -57,8 +57,41 @@ export class DsOtpInput extends HTMLElement {
     if (!this._root) return;
     if (name === 'value') {
       this.value = this.getAttribute('value') || '';
+    } else if (name === 'size' || name === 'state' || name === 'disabled' || name === 'rtl') {
+      /* Visual-only: patch the root class / dir, each box's disabled + aria-invalid,
+         and the helper's state / rtl in place — the box <input>s (and the typed
+         code + focus) survive. length / label / helper change the box set → render. */
+      this._paintChrome();
     } else {
       this._render();
+    }
+  }
+
+  /* Chrome-only update shared with _render: root class + dir, per-box disabled /
+     aria-invalid, and the helper row's state / rtl — never rebuilds innerHTML, so
+     the box <input>s keep their node identity (and their entered digits). */
+  _paintChrome() {
+    const size = enumAttr(this, 'size', SIZES, 'medium');
+    const state = this.getAttribute('state') || '';
+    const disabled = boolAttr(this, 'disabled') || state === 'disabled';
+    const rtl = boolAttr(this, 'rtl');
+
+    this._root.className = `ds-otp-input ds-otp-input--${size}` + (state ? ` ds-otp-input--${state}` : '');
+    if (rtl) this._root.setAttribute('dir', 'rtl');
+    else this._root.removeAttribute('dir');
+
+    const boxes = this._inputs || [...this._root.querySelectorAll('.ds-otp-input__box')];
+    boxes.forEach((box) => {
+      if (state === 'error') box.setAttribute('aria-invalid', 'true');
+      else box.removeAttribute('aria-invalid');
+      box.disabled = disabled;
+    });
+
+    const helper = this._root.querySelector('ds-field-helper');
+    if (helper) {
+      const helperState = state === 'error' ? 'error' : (state === 'disabled' ? 'disabled' : 'default');
+      if (helper.getAttribute('state') !== helperState) helper.setAttribute('state', helperState);
+      if (rtl) helper.setAttribute('rtl', ''); else helper.removeAttribute('rtl');
     }
   }
 
@@ -137,6 +170,9 @@ export class DsOtpInput extends HTMLElement {
 
     this._root.innerHTML = labelHTML + fieldsHTML + helperHTML;
     this._inputs = [...this._root.querySelectorAll('.ds-otp-input__box')];
+    /* Re-apply the chrome (class / dir / per-box + helper state) through the same
+       path the visual-only route uses, so both emit identical output. */
+    this._paintChrome();
     this._wire();
     /* Restore the captured code into the freshly-built boxes. */
     if (prevValue) this.value = prevValue;

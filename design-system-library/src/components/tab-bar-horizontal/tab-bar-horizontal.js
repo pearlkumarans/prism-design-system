@@ -66,9 +66,33 @@ export class DsTabBarHorizontal extends HTMLElement {
   attributeChangedCallback(name) {
     if (!this._mounted) return;
     /* Selection just glides the indicator to the new tab — no rebuild, so the
-       underline/fill can slide across. Everything else rebuilds. */
+       underline/fill can slide across (already optimised). type/rtl only toggle
+       the root class / dir + swap the pager chevrons (patched in place) — repaint
+       the chrome so the tab ds-icon / ds-badge / pager ds-icon-button aren't
+       re-parsed. aria-label(ledby) live in the scroller markup → full render. */
     if (name === 'active-id') this._syncActive(true);
+    else if (name === 'type' || name === 'rtl') this._paintChrome();
     else this._render();
+  }
+
+  /* Visual-only chrome (root class / dir + the pager chevron direction) applied
+     to the already-rendered tablist — never rebuilds innerHTML, so every tab's
+     ds-icon / ds-badge and the pager ds-icon-buttons keep their node identity.
+     Byte-identical to the chrome the full _render would produce. */
+  _paintChrome() {
+    if (!this._root) return;
+    const type = enumAttr(this, 'type', TYPES, 'underline');
+    const rtl = boolAttr(this, 'rtl');
+    this._type = type;
+    this._root.className = `ds-tab-bar-horizontal ds-tab-bar-horizontal--${type}`;
+    if (rtl) this._root.setAttribute('dir', 'rtl');
+    else this._root.removeAttribute('dir');
+    /* Pager chevrons flip with reading direction (same values as _render). */
+    if (this._prevBtn) this._prevBtn.setAttribute('icon', rtl ? 'chevron-right' : 'chevron-left');
+    if (this._nextBtn) this._nextBtn.setAttribute('icon', rtl ? 'chevron-left' : 'chevron-right');
+    this._updateOverflow();
+    /* underline↔fill changes the indicator geometry; RTL flips the scroll axis. */
+    this._positionIndicator(this._activeBtn, false);
   }
 
   disconnectedCallback() {

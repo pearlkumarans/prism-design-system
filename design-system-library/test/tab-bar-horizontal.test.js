@@ -188,3 +188,15 @@ describe('ds-tab-bar-horizontal — teardown', () => {
     expect(el.querySelectorAll('.ds-tab-bar-horizontal__scroller').length).to.equal(1);
   });
 });
+
+describe('ds-tab-bar-horizontal — repaint-split', () => {
+  it('keeps each tab ds-icon node across a visual-only type change', async () => {
+    const el = await withItems('type="underline"');
+    const icon = el.querySelector('.ds-tab-bar-horizontal__item-icon ds-icon');
+    expect(icon, 'tab icon rendered').to.exist;
+    el.setAttribute('type', 'fill');
+    await nextFrame();
+    expect(el.querySelector('.ds-tab-bar-horizontal__item-icon ds-icon'), 'same ds-icon node (not re-parsed)').to.equal(icon);
+    expect(root(el).classList.contains('ds-tab-bar-horizontal--fill'), 'type class applied').to.be.true;
+  });
+});

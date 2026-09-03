@@ -129,3 +129,17 @@ describe('ds-form-footer — teardown', () => {
     expect(el.querySelectorAll('.ds-form-footer__actions').length).to.equal(1);
   });
 });
+
+describe('ds-form-footer — repaint-split', () => {
+  it('keeps the slotted action button across a visual-only live change (not detached)', async () => {
+    const el = await fixture(html`<ds-form-footer>
+      <ds-button slot="action" variant="primary">Save</ds-button>
+    </ds-form-footer>`);
+    const btn = actionArea(el).querySelector('ds-button');
+    expect(btn, 'action button present').to.exist;
+    el.setAttribute('live', '');
+    await nextFrame();
+    expect(actionArea(el).querySelector('ds-button'), 'same button node (not detached / re-appended)').to.equal(btn);
+    expect(leftArea(el).getAttribute('aria-live'), 'live applied').to.equal('polite');
+  });
+});

@@ -269,3 +269,17 @@ describe('ds-otp-input — teardown', () => {
     expect(boxes(el).length, 'exactly one set of boxes after reconnect').to.equal(4);
   });
 });
+
+describe('ds-otp-input — repaint-split', () => {
+  it('keeps the box <input> nodes (and the typed code + focus) across a visual-only state change', async () => {
+    const el = await fixture(html`<ds-otp-input length="4"></ds-otp-input>`);
+    await nextFrame();
+    const first = boxes(el)[0];
+    typeInto(first, '7');
+    el.setAttribute('state', 'error');
+    await nextFrame();
+    expect(boxes(el)[0], 'same box <input> node (not re-parsed)').to.equal(first);
+    expect(first.value, 'typed digit preserved').to.equal('7');
+    expect(first.getAttribute('aria-invalid'), 'error state applied').to.equal('true');
+  });
+});

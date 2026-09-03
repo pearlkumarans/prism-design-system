@@ -130,8 +130,67 @@ export class DsAvatar extends HTMLElement {
     this._render();
   }
 
-  attributeChangedCallback() {
-    if (this.isConnected) this._render();
+  attributeChangedCallback(name) {
+    if (!this.isConnected) return;
+    /* size, disabled and editable are visual-only: patch the ARIA + the internal
+       svg px / overlay in place so the <img> (which would re-fetch) and the
+       initials/placeholder content are NOT re-parsed. src, name and type change
+       which content nodes exist, so they fall through to a full render. */
+    if (name === 'size' || name === 'disabled' || name === 'editable') this._paintChrome();
+    else this._render();
+  }
+
+  /* Host ARIA + in-place patch of the internal glyph px (placeholder / hover)
+     and the hover overlay — never touches the content <img> / initials, so a
+     bare size or disabled toggle keeps their node identity (no image re-fetch). */
+  _paintChrome() {
+    if (!this.shadowRoot) { this._render(); return; }
+    const content = this.shadowRoot.querySelector('[part="content"]');
+    const overlay = this.shadowRoot.querySelector('[part="overlay"]');
+    if (!content || !overlay) { this._render(); return; }
+
+    const size     = enumAttr(this, 'size', SIZES, 'medium');
+    const name     = this.getAttribute('name') || '';
+    const editable = boolAttr(this, 'editable');
+    const disabled = boolAttr(this, 'disabled');
+    const iconPx   = ICON_PX[size];
+    const sprite   = (typeof window !== 'undefined' && window.UEMS_ICON_SPRITE) || '/icons.svg';
+
+    // ARIA — identical to _render.
+    if (editable) {
+      this.setAttribute('role', 'button');
+      this.setAttribute('aria-label', name ? `Change profile photo for ${name}` : 'Change profile photo');
+      this.tabIndex = disabled ? -1 : 0;
+    } else {
+      this.removeAttribute('role');
+      if (name) this.setAttribute('aria-label', `${name} avatar`);
+      else this.removeAttribute('aria-label');
+      this.removeAttribute('tabindex');
+    }
+    this.setAttribute('aria-disabled', String(disabled));
+
+    // Patch the content glyph px in place (placeholder / hover); img + initials
+    // carry no px so they are left untouched (the <img> never re-fetches).
+    const contentSvg = content.querySelector('svg');
+    if (contentSvg) {
+      if (contentSvg.getAttribute('width') !== String(iconPx)) contentSvg.setAttribute('width', String(iconPx));
+      if (contentSvg.getAttribute('height') !== String(iconPx)) contentSvg.setAttribute('height', String(iconPx));
+    }
+
+    // Overlay — mirror _render's disabled logic, patched in place.
+    if (disabled) {
+      if (overlay.innerHTML !== '') overlay.innerHTML = '';
+    } else {
+      const ov = overlay.querySelector('svg');
+      if (ov) {
+        if (ov.getAttribute('width') !== String(iconPx)) ov.setAttribute('width', String(iconPx));
+        if (ov.getAttribute('height') !== String(iconPx)) ov.setAttribute('height', String(iconPx));
+      } else {
+        overlay.innerHTML = `<svg width="${iconPx}" height="${iconPx}" focusable="false" aria-hidden="true">
+           <use href="${sprite}#icon-image"></use>
+         </svg>`;
+      }
+    }
   }
 
   _resolveType() {

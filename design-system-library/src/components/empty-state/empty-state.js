@@ -109,7 +109,37 @@ export class DsEmptyState extends HTMLElement {
     stopLateChildren(this);
   }
 
-  attributeChangedCallback() { if (this._root) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* rtl and size are visual-only: repaint the root chrome (class / role / dir)
+       and patch the centered illustration px in place, without reassigning
+       _root.innerHTML — which would DETACH the slotted description and re-parse
+       every child ds-button / ds-icon. Everything else changes which nodes exist
+       (type layout, titles, labels, collections) and full-renders. */
+    if (name === 'rtl' || name === 'size') this._paintChrome();
+    else this._render();
+  }
+
+  /* Root-level chrome shared with _render: class (type + size), role, aria and
+     dir, plus an in-place patch of the centered illustration's size prop. Never
+     rebuilds innerHTML, so the slotted description keeps its node identity. */
+  _paintChrome() {
+    const type = enumAttr(this, 'type', TYPES, 'centered');
+    const size = enumAttr(this, 'size', SIZES, 'md');
+    const rtl = boolAttr(this, 'rtl');
+    const title = this.getAttribute('title') || '';
+
+    this._root.className = `ds-empty-state ds-empty-state--${type} ds-empty-state--${size}`;
+    this._root.setAttribute('role', 'region');
+    if (title) this._root.setAttribute('aria-labelledby', this._titleId);
+    else this._root.removeAttribute('aria-labelledby');
+    if (rtl) this._root.setAttribute('dir', 'rtl'); else this._root.removeAttribute('dir');
+
+    /* size feeds the centered illustration's size prop (sm→small … lg→large). */
+    const iSize = size === 'sm' ? 'small' : size === 'lg' ? 'large' : 'medium';
+    const ill = this._root.querySelector('.ds-empty-state__illustration ds-illustration');
+    if (ill && ill.getAttribute('size') !== iSize) ill.setAttribute('size', iSize);
+  }
 
   /* ---- shared region builders --------------------------------------- */
   _headerHTML(title, description) {
@@ -220,15 +250,11 @@ export class DsEmptyState extends HTMLElement {
   _render() {
     const type = enumAttr(this, 'type', TYPES, 'centered');
     const size = enumAttr(this, 'size', SIZES, 'md');
-    const rtl = boolAttr(this, 'rtl');
     const title = this.getAttribute('title') || '';
     const description = this.getAttribute('description') || '';
 
-    this._root.className = `ds-empty-state ds-empty-state--${type} ds-empty-state--${size}`;
-    this._root.setAttribute('role', 'region');
-    if (title) this._root.setAttribute('aria-labelledby', this._titleId);
-    else this._root.removeAttribute('aria-labelledby');
-    if (rtl) this._root.setAttribute('dir', 'rtl'); else this._root.removeAttribute('dir');
+    /* Root chrome (class / role / aria / dir) — shared with the visual-only path. */
+    this._paintChrome();
 
     let html = '';
     if (type === 'steps') {

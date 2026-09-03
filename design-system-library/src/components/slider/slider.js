@@ -32,11 +32,58 @@ export class DsSlider extends HTMLElement {
 
   attributeChangedCallback(name) {
     if (!this._root) return;
+    /* state/size/disabled/rtl only toggle root classes / dir + the inputs'
+       disabled/aria-invalid + the helper's state — none change which nodes exist.
+       Repaint the chrome in place so the live range <input>s (which hold the drag
+       position) and the child ds-field-helper are NOT rebuilt. value/min/max/
+       step/type/… change the inputs' geometry or the node set → full render. */
+    if (name === 'state' || name === 'size' || name === 'disabled' || name === 'rtl') {
+      this._paintChrome();
+      return;
+    }
     /* An explicit `value` change honours the attribute; any OTHER attribute
-       change (state/disabled/size/…) preserves the current thumb position across
-       the rebuild instead of snapping back to the stale attribute value. */
+       change preserves the current thumb position across the rebuild instead of
+       snapping back to the stale attribute value. */
     this._explicitValue = (name === 'value');
     this._render();
+  }
+
+  /* Visual-only chrome applied to the already-rendered slider: root class / dir,
+     the range <input>s' disabled + aria-invalid, and the helper state. It never
+     touches the <input>s' value/min/max/step, so an in-flight drag survives.
+     Byte-identical to the chrome the full _render would produce. */
+  _paintChrome() {
+    const size = enumAttr(this, 'size', SIZES, 'medium');
+    const state = this.getAttribute('state') || '';
+    const disabled = boolAttr(this, 'disabled');
+    const rtl = boolAttr(this, 'rtl');
+    const showTooltip = boolAttr(this, 'show-tooltip');
+    const isRange = enumAttr(this, 'type', TYPES, 'single') === 'range';
+    this._isRtl = rtl;
+
+    const cls = `ds-slider ds-slider--${size}`
+      + (isRange ? ' ds-slider--range' : '')
+      + (state === 'error' ? ' ds-slider--error' : '')
+      + (showTooltip ? ' ds-slider--has-tooltip' : '')
+      + (disabled ? ' ds-slider--disabled' : '');
+    this._root.className = cls;
+    if (rtl) this._root.setAttribute('dir', 'rtl');
+    else this._root.removeAttribute('dir');
+
+    /* Patch the live inputs in place (never rebuild — preserves drag state). */
+    this._root.querySelectorAll('.ds-slider__input').forEach((inp) => {
+      if (disabled) inp.setAttribute('disabled', '');
+      else inp.removeAttribute('disabled');
+      if (state === 'error') inp.setAttribute('aria-invalid', 'true');
+      else inp.removeAttribute('aria-invalid');
+    });
+
+    const helperEl = this._root.querySelector('.ds-slider__helper');
+    if (helperEl) {
+      helperEl.setAttribute('state', disabled ? 'disabled' : state === 'error' ? 'error' : 'default');
+      if (rtl) helperEl.setAttribute('rtl', '');
+      else helperEl.removeAttribute('rtl');
+    }
   }
 
   /* Single mode → number; Range mode → "start,end" string. */

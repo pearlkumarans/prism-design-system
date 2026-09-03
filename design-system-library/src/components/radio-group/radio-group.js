@@ -95,8 +95,69 @@ export class DsRadioGroup extends HTMLElement {
     if (name === 'value') {
       const v = this.getAttribute('value');
       this._options.forEach((o) => { o.selected = (o.value === v); });
+      this._sync();
+      return;
+    }
+    /* size/state/rtl only cascade attributes onto the SAME set of child <ds-radio>
+       controls (and toggle host state classes / the helper) — patch them in place
+       so the radios aren't torn down and rebuilt via innerHTML. Everything else
+       (label/helper/name/layout/variant, which change text, the radio `name`, the
+       layout classes, or the option-wrapper shape) → full _sync. */
+    if (name === 'size' || name === 'state' || name === 'rtl') {
+      this._paintChrome();
+      return;
     }
     this._sync();
+  }
+
+  /* Visual-only chrome: host state classes + dir, the shared helper row, and an
+     in-place cascade of size / disabled / error / rtl onto each existing
+     <ds-radio> — never re-sets _itemsEl.innerHTML, so the child radios keep their
+     node identity. Byte-identical to the size/state/rtl chrome that _sync +
+     _renderItems produce. */
+  _paintChrome() {
+    const size  = enumAttr(this, 'size',  SIZES,  's');
+    const state = enumAttr(this, 'state', STATES, 'default');
+    const rtl   = boolAttr(this, 'rtl');
+
+    this.classList.toggle('ds-radio-group--error',    state === 'error');
+    this.classList.toggle('ds-radio-group--disabled', state === 'disabled');
+    if (rtl) this.setAttribute('dir', 'rtl'); else this.removeAttribute('dir');
+
+    const helper = this.getAttribute('helper') || '';
+    const helperState = state === 'error' ? 'error' : state === 'disabled' ? 'disabled' : 'default';
+    this._helpEl.setAttribute('text', helper);
+    this._helpEl.setAttribute('state', helperState);
+    if (rtl) this._helpEl.setAttribute('rtl', ''); else this._helpEl.removeAttribute('rtl');
+    this._helperEl.hidden = !helper;
+
+    this._paintItems(size, state, rtl);
+  }
+
+  /* Cascade size / state / rtl onto the existing <ds-radio> children in place. */
+  _paintItems(size, state, rtl) {
+    const groupDisabled = state === 'disabled';
+    const circle = size === 's' ? 16 : size === 'l' ? 24 : 20;
+    const gap = size === 'mobile' ? 12 : 8;
+    this._itemsEl.style.setProperty('--ds-rg-desc-indent', `${circle + gap}px`);
+
+    this._itemsEl.querySelectorAll('ds-radio').forEach((r) => {
+      const i = Number(r.dataset.index);
+      const o = this._options[i] || {};
+      if (r.getAttribute('size') !== size) r.setAttribute('size', size);
+      if (o.disabled || groupDisabled) r.setAttribute('disabled', ''); else r.removeAttribute('disabled');
+      if (state === 'error') r.setAttribute('error', ''); else r.removeAttribute('error');
+      if (rtl) r.setAttribute('rtl', ''); else r.removeAttribute('rtl');
+    });
+
+    /* A size change makes ds-radio rebuild its own input, which would drop the
+       aria-describedby we wired for described options — re-apply it (same wiring
+       as _renderItems) so the paint stays byte-identical. */
+    this._options.forEach((o, i) => {
+      if (o.description == null || o.description === '') return;
+      const input = this._itemsEl.querySelector(`ds-radio[data-index="${i}"] .ds-radio__input`);
+      if (input) input.setAttribute('aria-describedby', `ds-rg-desc-${this._uid}-${i}`);
+    });
   }
 
   get options() { return this._options; }

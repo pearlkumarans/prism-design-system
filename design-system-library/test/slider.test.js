@@ -221,3 +221,19 @@ describe('ds-slider — dependencies & teardown', () => {
     expect(el.value).to.equal(55);
   });
 });
+
+describe('ds-slider — repaint-split', () => {
+  it('keeps the live range input node (and its dragged value) across a visual-only state change', async () => {
+    const el = await fixture(html`<ds-slider type="single" value="40"></ds-slider>`);
+    await nextFrame();
+    const input = el.querySelector('input[type="range"]');
+    expect(input, 'range input rendered').to.exist;
+    input.value = '73';                       // simulate an in-flight drag position
+    el.setAttribute('state', 'error');
+    await nextFrame();
+    expect(el.querySelector('input[type="range"]'), 'same input node (not rebuilt)').to.equal(input);
+    expect(input.value, 'dragged value preserved').to.equal('73');
+    expect(input.getAttribute('aria-invalid'), 'error state patched onto input').to.equal('true');
+    expect(el.querySelector('.ds-slider').classList.contains('ds-slider--error'), 'error class applied').to.be.true;
+  });
+});

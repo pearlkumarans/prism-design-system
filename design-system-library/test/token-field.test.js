@@ -113,3 +113,18 @@ describe('ds-token-field — teardown', () => {
     expect(el.values).to.deep.equal(['Keep']);
   });
 });
+
+describe('ds-token-field — repaint-split', () => {
+  it('keeps the ds-tag token node across a visual-only size change', async () => {
+    const el = await fixture(html`<ds-token-field label="Skills"></ds-token-field>`);
+    el.tokens = ['One'];
+    await nextFrame();
+    const tag = el.querySelector('[data-tag-value]');
+    expect(tag, 'token tag rendered').to.exist;
+    el.setAttribute('size', 'large');
+    await nextFrame();
+    expect(el.querySelector('[data-tag-value]'), 'same ds-tag node (not re-parsed)').to.equal(tag);
+    expect(tag.getAttribute('size'), 'tag size patched in place').to.equal('large');
+    expect(root(el).classList.contains('ds-token-field--large'), 'root size class applied').to.be.true;
+  });
+});

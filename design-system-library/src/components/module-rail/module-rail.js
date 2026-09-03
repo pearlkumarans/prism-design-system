@@ -75,7 +75,25 @@ export class DsModuleRail extends HTMLElement {
     this._menu?.remove(); this._menu = null;
   }
 
-  attributeChangedCallback() { if (this.isConnected) this._render(); }
+  attributeChangedCallback() {
+    if (!this.isConnected) return;
+    /* icons-only / rtl / more-label are visual-only: toggle the narrow-rail class
+       and patch the "more" button's aria-label in place (the item buttons don't
+       depend on any of them), so the item ds-icons are NOT re-parsed. Only `items`
+       (via the setter) changes the button set → full render. */
+    this._paintChrome();
+  }
+
+  /* Chrome-only update: the narrow-rail class + the overflow button's aria-label,
+     then a reflow. Never rebuilds innerHTML, so each item's ds-icon survives. */
+  _paintChrome() {
+    const icons = boolAttr(this, 'icons-only');
+    this.classList.toggle('ds-module-rail--icons', icons);
+    if (!icons) this._closeMenu();
+    const more = this.querySelector(':scope > .ds-module-rail__more');
+    if (more) more.setAttribute('aria-label', this._moreLabel());
+    requestAnimationFrame(() => this._reflow());
+  }
 
   get items() { return this._items; }
   set items(v) { this._items = Array.isArray(v) ? v.slice() : []; if (this.isConnected) this._render(); }

@@ -60,9 +60,26 @@ export class DsTabBarVertical extends HTMLElement {
   attributeChangedCallback(name) {
     if (!this._mounted) return;
     /* Selection just glides the indicator (bar / card) to the new tab — no
-       rebuild. Everything else rebuilds. */
+       rebuild (already optimised). type/rtl only toggle the root class / dir —
+       repaint the chrome so each row's ds-icon / ds-badge isn't re-parsed.
+       aria-label(ledby) live on the root already (patched here too). */
     if (name === 'active-id') this._syncActive(true);
+    else if (name === 'type' || name === 'rtl') this._paintChrome();
     else this._render();
+  }
+
+  /* Visual-only chrome (root class / dir) applied to the already-rendered
+     tablist — never rebuilds innerHTML, so every row's ds-icon / ds-badge keeps
+     its node identity. Byte-identical to the chrome the full _render produces. */
+  _paintChrome() {
+    if (!this._root) return;
+    const type = enumAttr(this, 'type', TYPES, 'underline');
+    const rtl = boolAttr(this, 'rtl');
+    this._root.className = `ds-tab-bar-vertical ds-tab-bar-vertical--${type}`;
+    if (rtl) this._root.setAttribute('dir', 'rtl');
+    else this._root.removeAttribute('dir');
+    /* underline↔fill changes only the indicator box (CSS-driven); resnap it. */
+    this._positionIndicator(this._activeBtn, false);
   }
 
   disconnectedCallback() {

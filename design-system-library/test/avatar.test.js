@@ -118,3 +118,18 @@ describe('ds-avatar — teardown', () => {
     expect(el.shadowRoot.querySelectorAll('[part="content"]').length).to.equal(1);
   });
 });
+
+describe('ds-avatar — repaint-split', () => {
+  it('keeps the content <img> node across a visual-only size change (no re-fetch)', async () => {
+    const GIF = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+    const el = await fixture(html`<ds-avatar type="image" name="Ada" src=${GIF}></ds-avatar>`);
+    await nextFrame();
+    const img = content(el).querySelector('img');
+    expect(img, 'img rendered').to.exist;
+    el.setAttribute('size', 'large');
+    await nextFrame();
+    expect(content(el).querySelector('img'), 'same <img> node (not re-parsed / re-fetched)').to.equal(img);
+    // Visual change applied: the hover overlay glyph is now sized for `large` (24px).
+    expect(el.shadowRoot.querySelector('[part="overlay"] svg').getAttribute('width')).to.equal('24');
+  });
+});

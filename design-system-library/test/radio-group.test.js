@@ -247,3 +247,15 @@ describe('ds-radio-group — teardown', () => {
     expect(radios(el).length).to.equal(4);
   });
 });
+
+describe('ds-radio-group — repaint-split', () => {
+  it('keeps each child ds-radio node across a visual-only size change', async () => {
+    const el = await withOptions();
+    const radio = el.querySelector('ds-radio');
+    expect(radio, 'radio rendered').to.exist;
+    el.setAttribute('size', 'l');
+    await nextFrame();
+    expect(el.querySelector('ds-radio'), 'same ds-radio node (not rebuilt via innerHTML)').to.equal(radio);
+    expect(radio.getAttribute('size'), 'size cascaded in place').to.equal('l');
+  });
+});

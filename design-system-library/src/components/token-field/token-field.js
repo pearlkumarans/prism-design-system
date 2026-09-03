@@ -115,8 +115,99 @@ export class DsTokenField extends HTMLElement {
   }
 
   attributeChangedCallback(name) {
-    if (name === 'pattern' || name === 'require-source') this._revalidate();
-    if (this._root) this._render();
+    if (!this._root) return;
+    if (name === 'pattern' || name === 'require-source') { this._revalidate(); this._render(); return; }
+    /* size/rtl/error only toggle root classes / dir + patch attributes on the
+       already-rendered ds-tag tokens, ds-field-helper and caret — none change
+       which nodes exist — so repaint the chrome in place instead of reassigning
+       innerHTML (which re-parses every ds-tag token + the portaled dropdown). */
+    if (name === 'size' || name === 'rtl' || name === 'error') { this._paintChrome(); return; }
+    /* `disabled` is visual EXCEPT when it flips the node set (an empty field's
+       caret, the clear button, or the open dropdown). Paint when the shape holds;
+       full render when it changes so the output stays byte-identical. */
+    if (name === 'disabled') {
+      const state = this._resolveState();
+      const isDisabled = state === 'disabled';
+      const isReadOnly = state === 'read-only';
+      const hasTokens = this._tokens.length > 0;
+      const isOpen = this._focused && !isDisabled && !isReadOnly;
+      const showClear = boolAttr(this, 'show-clear');
+      const wantInput = !isDisabled && !isReadOnly && (isOpen || !hasTokens);
+      const wantClear = showClear && hasTokens && !isDisabled && !isReadOnly;
+      const shapeHolds =
+        wantInput === !!this._root.querySelector('[data-input]')
+        && wantClear === !!this._root.querySelector('[data-clear]')
+        && isOpen === this._root.classList.contains('ds-token-field--open');
+      if (shapeHolds) { this._paintChrome(); return; }
+    }
+    this._render();
+  }
+
+  /* Root chrome (classes / dataset / dir) + in-place patches of the ds-tag token
+     sizes + close affordance, the ds-field-helper state, and the caret's
+     aria-invalid — never rebuilds innerHTML, so every ds-tag token keeps its node
+     identity across a visual toggle. Byte-identical to the size/rtl/error/disabled
+     chrome the full _render produces. */
+  _paintChrome() {
+    const size = enumAttr(this, 'size', SIZES, 'medium');
+    const state = this._resolveState();
+    const position = enumAttr(this, 'label-position', ['none', 'left', 'top'], 'top');
+    const isOpen = this._focused && state !== 'disabled' && state !== 'read-only';
+    const rtl = boolAttr(this, 'rtl');
+    const maxRows = parseInt(this.getAttribute('max-rows'), 10) || 3;
+    const isDisabled = state === 'disabled';
+    const isReadOnly = state === 'read-only';
+
+    const cls = [
+      'ds-token-field',
+      `ds-token-field--${size}`,
+      `ds-token-field--${position}`,
+      isOpen ? 'ds-token-field--open' : '',
+    ].filter(Boolean).join(' ');
+    this._root.className = cls;
+    this._root.dataset.state = state;
+    this._root.style.setProperty('--tf-max-rows', String(maxRows));
+    if (rtl) this._root.setAttribute('dir', 'rtl'); else this._root.removeAttribute('dir');
+
+    const field = this._root.querySelector('[data-field]');
+    if (field) {
+      if (isDisabled) field.setAttribute('aria-disabled', 'true');
+      else field.removeAttribute('aria-disabled');
+    }
+
+    /* Token tags: patch size + the close affordance in place (ds-tag repaints
+       itself), so the tag nodes are never re-parsed. */
+    const tagSize = size === 'large' ? 'large' : 'medium';
+    this._root.querySelectorAll('[data-tag-value]').forEach((tag) => {
+      if (tag.getAttribute('size') !== tagSize) tag.setAttribute('size', tagSize);
+      if (isDisabled || isReadOnly) tag.setAttribute('show-close', 'false');
+      else tag.removeAttribute('show-close');
+    });
+
+    const helperEl = this._root.querySelector('.ds-token-field__helper');
+    if (helperEl) {
+      const helperState = state === 'error' ? 'error' : state === 'disabled' ? 'disabled' : 'default';
+      helperEl.setAttribute('state', helperState);
+      if (helperState === 'error') helperEl.removeAttribute('show-icon');
+      else helperEl.setAttribute('show-icon', 'false');
+      if (rtl) helperEl.setAttribute('rtl', ''); else helperEl.removeAttribute('rtl');
+    }
+
+    const input = this._root.querySelector('[data-input]');
+    if (input) {
+      if (state === 'error') input.setAttribute('aria-invalid', 'true');
+      else input.removeAttribute('aria-invalid');
+    }
+
+    const tip = this._root.querySelector('.ds-token-field__label-help-tip');
+    if (tip) { if (rtl) tip.setAttribute('rtl', ''); else tip.removeAttribute('rtl'); }
+
+    /* Resting filled state collapses to a single row + "+N" — a size change
+       alters token widths, so recompute (un-hides all, then re-measures; keeps
+       node identity). Matches the collapse the full _render schedules. */
+    if (state === 'filled') {
+      requestAnimationFrame(() => { if (this._resolveState() === 'filled') this._collapseSingleRow(); });
+    }
   }
 
   // ---- Public API ---------------------------------------------------------

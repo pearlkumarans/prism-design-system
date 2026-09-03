@@ -39,8 +39,57 @@ export class DsTextArea extends HTMLElement {
 
   attributeChangedCallback(name) {
     if (!this._root) return;
-    if (name === 'value' && this._textarea) this._textarea.value = this.getAttribute('value') ?? '';
-    else this._render();
+    if (name === 'value' && this._textarea) { this._textarea.value = this.getAttribute('value') ?? ''; return; }
+    /* size/rtl only toggle root classes / dir + the helper rtl — never change the
+       node set — so repaint the chrome in place instead of re-parsing the child
+       ds-field-helper / ds-tooltip and rebuilding the resize grip. */
+    if (name === 'size' || name === 'rtl') { this._paintChrome(); return; }
+    /* `state` is visual EXCEPT when the resize grip's presence flips (the grip is
+       withheld only in disabled/readonly). Paint when the grip stays; full render
+       when it must be added/removed so the output stays byte-identical. */
+    if (name === 'state') {
+      const state = enumAttr(this, 'state', STATES, 'default');
+      const gripAllowed = state !== 'disabled' && state !== 'readonly';
+      const hasGrip = !!this._root.querySelector('.ds-text-area__resizer');
+      if (gripAllowed === hasGrip) { this._paintChrome(); return; }
+    }
+    this._render();
+  }
+
+  /* Visual-only chrome applied to the already-rendered field: root class / dir,
+     the <textarea>'s readonly/disabled/aria-invalid, and the helper + label-help
+     tooltip state — never rebuilds innerHTML, so the child ds-field-helper /
+     ds-tooltip and the typed <textarea> content keep their node identity.
+     Byte-identical to the size/rtl/state chrome the full _render produces. */
+  _paintChrome() {
+    const state = enumAttr(this, 'state', STATES, 'default');
+    const size = enumAttr(this, 'size', SIZES, 'large');
+    const position = enumAttr(this, 'label-position', POSITIONS, 'left');
+    const rtl = boolAttr(this, 'rtl');
+
+    this._root.className = `ds-text-area ds-text-area--${state} ds-text-area--${position} ds-text-area--${size}`;
+    if (rtl) this._root.setAttribute('dir', 'rtl');
+    else this._root.removeAttribute('dir');
+
+    const t = this._textarea;
+    if (t) {
+      if (state === 'readonly') { t.setAttribute('readonly', ''); t.setAttribute('aria-readonly', 'true'); }
+      else { t.removeAttribute('readonly'); t.removeAttribute('aria-readonly'); }
+      if (state === 'disabled') t.setAttribute('disabled', ''); else t.removeAttribute('disabled');
+      if (state === 'error') t.setAttribute('aria-invalid', 'true'); else t.removeAttribute('aria-invalid');
+    }
+
+    const helperEl = this._root.querySelector('ds-field-helper');
+    if (helperEl) {
+      const helperState = state === 'error' ? 'error'
+        : state === 'success' ? 'success'
+        : state === 'disabled' ? 'disabled' : 'default';
+      helperEl.setAttribute('state', helperState);
+      if (rtl) helperEl.setAttribute('rtl', ''); else helperEl.removeAttribute('rtl');
+    }
+
+    const tip = this._root.querySelector('.ds-text-area__label-help-tip');
+    if (tip) { if (rtl) tip.setAttribute('rtl', ''); else tip.removeAttribute('rtl'); }
   }
 
   get value() { return this._textarea?.value ?? ''; }

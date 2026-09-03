@@ -181,3 +181,17 @@ describe('ds-empty-state — a11y & teardown', () => {
     expect(titleEl(el).textContent).to.equal('No results');
   });
 });
+
+describe('ds-empty-state — repaint-split', () => {
+  it('keeps the slotted description node across a visual-only rtl change (not detached)', async () => {
+    const el = await fixture(html`<ds-empty-state title="No results"><span slot="description">See <a href="#">docs</a></span></ds-empty-state>`);
+    await nextFrame();
+    const slotted = el.querySelector('[slot="description"]');
+    expect(slotted, 'slotted description present').to.exist;
+    el.setAttribute('rtl', '');
+    await nextFrame();
+    expect(el.querySelector('[slot="description"]'), 'same slotted node (not detached)').to.equal(slotted);
+    expect(slotted.isConnected, 'slotted node still attached').to.be.true;
+    expect(root(el).getAttribute('dir'), 'rtl applied').to.equal('rtl');
+  });
+});

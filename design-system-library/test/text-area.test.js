@@ -224,3 +224,20 @@ describe('ds-text-area — teardown', () => {
     expect(el._endDrag, 'disconnect mid-drag dropped the window listeners').to.equal(null);
   });
 });
+
+describe('ds-text-area — repaint-split', () => {
+  it('keeps the child ds-field-helper node (and typed text) across a visual-only size change', async () => {
+    const el = await fixture(html`<ds-text-area label="Notes" helper="Hint" size="large"></ds-text-area>`);
+    await nextFrame();
+    const helper = el.querySelector('ds-field-helper');
+    const textarea = ta(el);
+    expect(helper, 'helper rendered').to.exist;
+    textarea.value = 'typed content';
+    el.setAttribute('size', 'medium');
+    await nextFrame();
+    expect(el.querySelector('ds-field-helper'), 'same ds-field-helper node (not re-parsed)').to.equal(helper);
+    expect(ta(el), 'same textarea node (typed text not detached)').to.equal(textarea);
+    expect(el.value, 'typed content preserved').to.equal('typed content');
+    expect(el.querySelector('.ds-text-area').classList.contains('ds-text-area--medium'), 'size class applied').to.be.true;
+  });
+});

@@ -108,3 +108,17 @@ describe('ds-module-rail — teardown', () => {
     expect(() => el.remove()).to.not.throw();
   });
 });
+
+describe('ds-module-rail — repaint-split', () => {
+  it('keeps each item ds-icon across a visual-only icons-only change (not re-parsed)', async () => {
+    const el = await fixture(html`<ds-module-rail></ds-module-rail>`);
+    el.items = ITEMS;
+    await nextFrame();
+    const icon = el.querySelector('.ds-module-rail__item .ds-module-rail__ic');
+    expect(icon, 'item ds-icon present').to.exist;
+    el.setAttribute('icons-only', '');
+    await nextFrame();
+    expect(el.querySelector('.ds-module-rail__item .ds-module-rail__ic'), 'same ds-icon node (not re-parsed)').to.equal(icon);
+    expect(el.classList.contains('ds-module-rail--icons'), 'icons-only class applied').to.be.true;
+  });
+});

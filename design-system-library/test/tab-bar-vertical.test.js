@@ -200,3 +200,15 @@ describe('ds-tab-bar-vertical — teardown', () => {
     expect(el.querySelectorAll('.ds-tab-bar-vertical').length).to.equal(1);
   });
 });
+
+describe('ds-tab-bar-vertical — repaint-split', () => {
+  it('keeps each row ds-icon node across a visual-only type change', async () => {
+    const el = await withItems('type="underline"');
+    const icon = el.querySelector('.ds-tab-bar-vertical__item-icon ds-icon');
+    expect(icon, 'row icon rendered').to.exist;
+    el.setAttribute('type', 'fill');
+    await nextFrame();
+    expect(el.querySelector('.ds-tab-bar-vertical__item-icon ds-icon'), 'same ds-icon node (not re-parsed)').to.equal(icon);
+    expect(root(el).classList.contains('ds-tab-bar-vertical--fill'), 'type class applied').to.be.true;
+  });
+});

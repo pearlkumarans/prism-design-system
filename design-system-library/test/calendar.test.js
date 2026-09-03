@@ -109,3 +109,18 @@ describe('ds-calendar — teardown', () => {
     expect(el.querySelectorAll('[role="grid"]').length).to.equal(1);
   });
 });
+
+describe('ds-calendar — repaint-split', () => {
+  it('keeps the panels (nav + day cells) across a visual-only show-footer change', async () => {
+    const el = await fixture(html`<ds-calendar value="2026-04-26"></ds-calendar>`);
+    await nextFrame();
+    const cell = el.querySelector('[data-iso="2026-04-26"]');
+    const nav = el.querySelector('.ds-calendar__nav');
+    expect(cell, 'day cell present').to.exist;
+    el.setAttribute('show-footer', '');
+    await nextFrame();
+    expect(el.querySelector('[data-iso="2026-04-26"]'), 'same day cell node (panels not rebuilt)').to.equal(cell);
+    expect(el.querySelector('.ds-calendar__nav'), 'same nav ds-icon-button node').to.equal(nav);
+    expect(el.querySelector('.ds-calendar__footer'), 'footer added in place').to.exist;
+  });
+});

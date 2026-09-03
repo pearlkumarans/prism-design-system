@@ -82,9 +82,37 @@ export class DsCalendar extends HTMLElement {
 
   attributeChangedCallback(name) {
     if (!this._mounted) return;
+    /* show-footer only adds / removes the Cancel-Apply row — patch it in place so
+       the panels (and their ds-icon-buttons, ds-text-link titles and day cells)
+       are NOT re-parsed. type / value / min / max change the grid, and rtl swaps
+       the locale text + chevron direction of every cell, so those full-render. */
+    if (name === 'show-footer') { this._paintFooter(); return; }
     if (name === 'value') this._readValue();
     if (name === 'value' || name === 'type') this._initFocus();
     this._render();
+  }
+
+  /* Append or remove the footer without rebuilding the panels. Shared with
+     _render so both paths emit byte-identical footer markup + wiring. */
+  _paintFooter() {
+    const existing = this.querySelector(':scope > .ds-calendar__footer');
+    const show = boolAttr(this, 'show-footer');
+    if (show && !existing) {
+      const footer = document.createElement('div');
+      footer.className = 'ds-calendar__footer';
+      footer.innerHTML = `
+        <ds-button variant="outline" size="small" data-cal-action="cancel">Cancel</ds-button>
+        <ds-button variant="primary" size="small" data-cal-action="apply">Apply</ds-button>
+      `;
+      this.appendChild(footer);
+      footer.addEventListener('click', (e) => {
+        const action = e.target.closest('[data-cal-action]')?.dataset.calAction;
+        if (action === 'cancel') this.dispatchEvent(new CustomEvent('ds-calendar-cancel', { bubbles: true }));
+        if (action === 'apply') this.dispatchEvent(new CustomEvent('ds-calendar-apply', { bubbles: true, detail: this._detail() }));
+      });
+    } else if (!show && existing) {
+      existing.remove();
+    }
   }
 
   _readValue() {
@@ -136,20 +164,7 @@ export class DsCalendar extends HTMLElement {
     months.forEach((m, idx) => panels.appendChild(this._renderPanel(m, idx, months.length)));
     this.appendChild(panels);
 
-    if (showFooter) {
-      const footer = document.createElement('div');
-      footer.className = 'ds-calendar__footer';
-      footer.innerHTML = `
-        <ds-button variant="outline" size="small" data-cal-action="cancel">Cancel</ds-button>
-        <ds-button variant="primary" size="small" data-cal-action="apply">Apply</ds-button>
-      `;
-      this.appendChild(footer);
-      footer.addEventListener('click', (e) => {
-        const action = e.target.closest('[data-cal-action]')?.dataset.calAction;
-        if (action === 'cancel') this.dispatchEvent(new CustomEvent('ds-calendar-cancel', { bubbles: true }));
-        if (action === 'apply') this.dispatchEvent(new CustomEvent('ds-calendar-apply', { bubbles: true, detail: this._detail() }));
-      });
-    }
+    if (showFooter) this._paintFooter();
 
     // Bind keyboard once
     if (!this._kbBound) {

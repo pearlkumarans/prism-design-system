@@ -66,8 +66,34 @@ export class DsFormFooter extends HTMLElement {
     stopLateChildren(this);
   }
 
-  attributeChangedCallback() {
-    if (this._mounted) this._render();
+  attributeChangedCallback(name) {
+    if (!this._mounted) return;
+    /* label / live / rtl / dir are visual-only: patch the host aria + dir and the
+       left area's aria-live in place, so the slotted action buttons (and the left
+       content) are NOT detached and re-appended. show-left / left-text change
+       which nodes exist, so they full-render. */
+    if (name === 'label' || name === 'live' || name === 'rtl' || name === 'dir') this._paintChrome();
+    else this._render();
+  }
+
+  /* Host chrome (dir / role / aria-label) + the left area's aria-live, patched in
+     place — never reassigns innerHTML, so the slotted actions keep node identity.
+     Mirrors _render's chrome exactly (same guards, so a `label` change is a no-op
+     once aria-label is set, matching the full-render path). */
+  _paintChrome() {
+    const live = boolAttr(this, 'live');
+    const rtl = boolAttr(this, 'rtl') || this.getAttribute('dir') === 'rtl';
+    const label = this.getAttribute('label') || 'Form actions';
+
+    if (rtl) this.setAttribute('dir', 'rtl');
+    if (!this.hasAttribute('role')) this.setAttribute('role', 'group');
+    if (!this.hasAttribute('aria-label')) this.setAttribute('aria-label', label);
+
+    const left = this.querySelector(':scope > .ds-form-footer__left');
+    if (left) {
+      if (live) left.setAttribute('aria-live', 'polite');
+      else left.removeAttribute('aria-live');
+    }
   }
 
   _render() {
