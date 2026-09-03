@@ -67,8 +67,10 @@ ds-scrollbar[data-sb-visible] .ds-scrollbar__thumb {
 ds-scrollbar:hover .ds-scrollbar__thumb,
 ds-scrollbar[data-sb-dragging] .ds-scrollbar__thumb { background: var(--ds-sb-thumb-strong); }
 
-/* focus ring — keyboard focus on the scroll region (2px accent, outside) */
-ds-scrollbar:focus-within .ds-scrollbar__thumb {
+/* focus ring — KEYBOARD focus on the scroll region only. Keyed off the viewport's
+   :focus-visible (not the host's :focus-within) so a mouse click on the region — or
+   focus landing on a link inside the scrolled content — doesn't light the thumb. */
+.ds-scrollbar__viewport:focus-visible ~ .ds-scrollbar__thumb {
   outline: 2px solid var(--ds-sb-focus);
   outline-offset: 2px;
 }

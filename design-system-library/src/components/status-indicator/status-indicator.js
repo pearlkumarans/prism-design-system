@@ -29,13 +29,23 @@ export class DsStatusIndicator extends HTMLElement {
 
   disconnectedCallback() { stopLateChildren(this); }
 
-  attributeChangedCallback() { if (this._root) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* status/size/disabled/interactive/rtl are visual-only — repaint the root
+       chrome (classes/aria/dir/tabindex + the icon px) in place instead of
+       rebuilding innerHTML (which re-parsed the ds-icon). label/icon/show-label
+       change the content, so they rebuild. */
+    if (name === 'status' || name === 'size' || name === 'disabled'
+        || name === 'interactive' || name === 'rtl') this._paintChrome();
+    else this._render();
+  }
 
-  _render() {
+  /* Root chrome only (classes / aria-label / dir / interactive tab stop) + an
+     in-place bump of the icon px — no innerHTML rebuild. */
+  _paintChrome() {
     const status = enumAttr(this, 'status', STATUSES, 'neutral');
-    const size = enumAttr(this, 'size', SIZES, 'small'); /* spec default: small */
+    const size = enumAttr(this, 'size', SIZES, 'small');
     const label = this.getAttribute('label') || this._labelText || 'Status';
-    const icon = this.getAttribute('icon') || '';
     const showLabel = !this.hasAttribute('show-label') || this.getAttribute('show-label') !== 'false';
     const disabled = boolAttr(this, 'disabled');
     const interactive = boolAttr(this, 'interactive');
@@ -44,14 +54,26 @@ export class DsStatusIndicator extends HTMLElement {
     this._root.className = `ds-status-indicator ds-status-indicator--${status} ds-status-indicator--${size}`
       + (disabled ? ' ds-status-indicator--disabled' : '')
       + (interactive ? ' ds-status-indicator--interactive' : '');
-    /* Plain span per spec — no role; consumers wrap dynamic regions in
-       aria-live themselves. Dot-only mode still needs an accessible name. */
     if (!showLabel) this._root.setAttribute('aria-label', label);
     else this._root.removeAttribute('aria-label');
-    /* Reflect rtl as dir="rtl" so the dot+icon+label flex order auto-mirrors
-       (dot moves to the right of the label in RTL). */
-    if (rtl) this._root.setAttribute('dir', 'rtl');
-    else this._root.removeAttribute('dir');
+    if (rtl) this._root.setAttribute('dir', 'rtl'); else this._root.removeAttribute('dir');
+    /* Interactive → keyboard-focusable so the :focus-visible ring is reachable.
+       Role stays the consumer's call (plain span per spec otherwise). */
+    if (interactive && !disabled) this._root.setAttribute('tabindex', '0');
+    else this._root.removeAttribute('tabindex');
+    const iconPx = String(size === 'small' ? 12 : size === 'medium' ? 14 : 16);
+    const ic = this._root.querySelector('.ds-status-indicator__icon ds-icon');
+    if (ic && ic.getAttribute('size') !== iconPx) ic.setAttribute('size', iconPx);
+  }
+
+  _render() {
+    const size = enumAttr(this, 'size', SIZES, 'small'); /* spec default: small */
+    const label = this.getAttribute('label') || this._labelText || 'Status';
+    const icon = this.getAttribute('icon') || '';
+    const showLabel = !this.hasAttribute('show-label') || this.getAttribute('show-label') !== 'false';
+
+    /* Root chrome (classes / aria-label / dir / interactive tab stop) — shared. */
+    this._paintChrome();
 
     const iconPx = size === 'small' ? 12 : size === 'medium' ? 14 : 16;
     /* Spec: an icon REPLACES the dot (Figma renders both — that's a flagged

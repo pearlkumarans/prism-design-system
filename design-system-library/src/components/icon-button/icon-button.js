@@ -33,25 +33,7 @@ export class DsIconButton extends HTMLElement {
       const btn = document.createElement('button');
       btn.className = 'ds-icon-button';
       btn.type = 'button';
-
-      /* An icon-only button has no visible text, so show its `label` as a
-         tooltip on hover/focus (the label already drives aria-label). Skip when
-         `no-tooltip` is set, when there's no label, or when the caller already
-         wrapped this button in a ds-tooltip. */
-      const label = this.getAttribute('label') || '';
-      const wantTip = label && !this.hasAttribute('no-tooltip') && !this.closest('ds-tooltip');
-      if (wantTip) {
-        const tip = document.createElement('ds-tooltip');
-        tip.className = 'ds-icon-button__tip';
-        tip.setAttribute('text', label);
-        tip.setAttribute('show-icon', 'false');
-        tip.setAttribute('position', this.getAttribute('tooltip-position') || 'up-center');
-        tip.appendChild(btn);
-        this.appendChild(tip);
-        this._tip = tip;
-      } else {
-        this.appendChild(btn);
-      }
+      this.appendChild(btn);
       this._btn = btn;
     }
     this._sync();
@@ -59,6 +41,35 @@ export class DsIconButton extends HTMLElement {
 
   attributeChangedCallback() {
     if (this._btn) this._sync();
+  }
+
+  /* An icon-only button has no visible text, so show its `label` as a tooltip on
+     hover/focus (the label already drives aria-label). Wrap/unwrap the button in a
+     ds-tooltip reactively so a `label`/`no-tooltip`/`tooltip-position` set AFTER
+     upgrade takes effect too (previously the wrapper was decided once at build).
+     Skip when `no-tooltip` is set, when there's no label, or when the caller
+     already wrapped this button in their own ds-tooltip. */
+  _syncTooltip() {
+    const label = this.getAttribute('label') || '';
+    const ownTip = this._tip && this._tip.parentNode === this;
+    const wantTip = !!label && !this.hasAttribute('no-tooltip')
+      && (ownTip || !this.closest('ds-tooltip'));
+    if (wantTip) {
+      if (!this._tip) {
+        const tip = document.createElement('ds-tooltip');
+        tip.className = 'ds-icon-button__tip';
+        tip.setAttribute('show-icon', 'false');
+        this.appendChild(tip);
+        tip.appendChild(this._btn);   // ds-tooltip re-wires aria-describedby onto the reparented button
+        this._tip = tip;
+      }
+      this._tip.setAttribute('text', label);
+      this._tip.setAttribute('position', this.getAttribute('tooltip-position') || 'up-center');
+    } else if (this._tip) {
+      this.appendChild(this._btn);    // unwrap
+      this._tip.remove();
+      this._tip = null;
+    }
   }
 
   _sync() {
@@ -81,11 +92,6 @@ export class DsIconButton extends HTMLElement {
     else btn.removeAttribute('aria-pressed');
     if (label) {
       btn.setAttribute('aria-label', label);
-      // Keep the auto-tooltip text in sync with the label.
-      if (this._tip) {
-        this._tip.setAttribute('text', label);
-        this._tip.setAttribute('position', this.getAttribute('tooltip-position') || 'up-center');
-      }
     } else {
       btn.removeAttribute('aria-label');
       // Spec: aria-label is required. An icon-only button with no label has
@@ -96,6 +102,8 @@ export class DsIconButton extends HTMLElement {
         this._labelWarned = true;
       }
     }
+    /* Wrap/unwrap the auto-tooltip reactively (handles a label set after upgrade). */
+    this._syncTooltip();
 
     /* Icon: build the <ds-icon> once and update it via setAttribute — never
        innerHTML. setAttribute escapes the value (no HTML injection from `icon`),
