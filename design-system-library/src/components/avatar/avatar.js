@@ -94,6 +94,10 @@ const STYLES = `
   :host([disabled]) .placeholder { background-color: var(--uems-bg-disabled); color: var(--uems-icon-disabled); border-color: transparent; }
   :host([disabled]) .hover-fill  { background-color: var(--uems-bg-disabled); color: var(--uems-icon-disabled); }
   :host([disabled]) img          { opacity: 0.5; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .overlay { transition: none; }
+  }
 `;
 
 export class DsAvatar extends HTMLElement {
