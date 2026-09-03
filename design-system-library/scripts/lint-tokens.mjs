@@ -93,7 +93,38 @@ for (const file of files) {
   }
 }
 
-if (violations.length || sizeViolations.length) {
+// ---- Spacing lock: raw on-scale px in padding must go through var(--spacing-N) ----
+// Applies to ALL component CSS. Only TOP-LEVEL px count — a px inside a var()/calc()
+// fallback (var(--x, 4px)) is a deliberate safety net and is allowed, as are
+// off-scale odd values (no token exists) and any line carrying a /* lint-ok */ marker.
+const SPACING_STEPS = new Set([2, 4, 6, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 80, 96]);
+const PAD_RE = /\bpadding(?:-(?:top|right|bottom|left|inline|block|inline-start|inline-end|block-start|block-end))?\s*:\s*([^;{}]*)/gi;
+const padViolations = [];
+for (const file of files) {
+  const src = readFileSync(file, 'utf8');
+  const lines = src.split('\n');
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+  let m;
+  while ((m = PAD_RE.exec(code))) {
+    const value = m[1];
+    const valueAt = m.index + m[0].length - value.length;   // offset of the value in `code`
+    let depth = 0;
+    for (let i = 0; i < value.length; i++) {
+      const ch = value[i];
+      if (ch === '(') { depth++; continue; }
+      if (ch === ')') { depth = Math.max(0, depth - 1); continue; }
+      if (depth !== 0) continue;
+      if (!/\d/.test(ch) || /[\w.-]/.test(value[i - 1] || ' ')) continue;
+      const mm = /^(\d+)px\b/.exec(value.slice(i));
+      if (!mm || !SPACING_STEPS.has(Number(mm[1]))) continue;
+      const line = code.slice(0, valueAt + i).split('\n').length;
+      if (/lint-ok/.test(lines[line - 1] || '')) continue;
+      padViolations.push({ file: relative(process.cwd(), file), line, decl: `${mm[1]}px (use var(--spacing-${mm[1]}))` });
+    }
+  }
+}
+
+if (violations.length || sizeViolations.length || padViolations.length) {
   if (violations.length) {
     console.error(`\n✖ token-lint: ${violations.length} hardcoded color value(s) — replace with a design token (var(--uems-*)):\n`);
     for (const v of violations) console.error(`  ${v.file}:${v.line}\n      ${v.decl}`);
@@ -102,7 +133,11 @@ if (violations.length || sizeViolations.length) {
     console.error(`\n✖ token-lint: ${sizeViolations.length} hardcoded control size(s) — use the control-size tokens (--uems-control-h-* / --uems-chip-h-* / --uems-control-lh-* / --uems-icon-*), or mark a non-control sub-dimension with a /* lint-ok */ comment:\n`);
     for (const v of sizeViolations) console.error(`  ${v.file}:${v.line}\n      ${v.decl}`);
   }
-  console.error(`\n  Allowed: literals in comments, var(--token, <fallback>), rgba(var(--uems-shadow-rgb) / α), and control sizes via var() or a /* lint-ok */ marker.\n`);
+  if (padViolations.length) {
+    console.error(`\n✖ token-lint: ${padViolations.length} raw on-scale padding value(s) — use the spacing tokens (var(--spacing-N)), or mark a deliberate off-token value with a /* lint-ok */ comment:\n`);
+    for (const v of padViolations) console.error(`  ${v.file}:${v.line}\n      padding … ${v.decl}`);
+  }
+  console.error(`\n  Allowed: literals in comments, var(--token, <fallback>), rgba(var(--uems-shadow-rgb) / α), control sizes via var()/lint-ok, off-scale paddings, and padding px inside a var()/calc() fallback.\n`);
   process.exit(1);
 }
-console.log(`✓ token-lint: no hardcoded colors, and no raw control sizes in ${CONTROL_FILES.size} control components, across ${files.length} stylesheets.`);
+console.log(`✓ token-lint: no hardcoded colors, no raw control sizes in ${CONTROL_FILES.size} control components, and no raw on-scale paddings, across ${files.length} stylesheets.`);
