@@ -327,6 +327,7 @@ export class DsDataTable extends HTMLElement {
 
   disconnectedCallback() {
     this._disableFit();
+    if (this._endColResize) this._endColResize();   // drop an in-flight column-resize drag's window listeners
     if (this._langObs) { this._langObs.disconnect(); this._langObs = null; }
     /* Tear down the lazily-portaled menus: each was appended to <body> and added a
        document click-listener whose closure retains this instance. Without this,
@@ -1058,11 +1059,17 @@ export class DsDataTable extends HTMLElement {
         const w = this._setColWidth(table, th, col, startW + dx);
         if (w != null) handle.setAttribute('aria-valuenow', String(Math.round(w)));
       };
-      const onUp = () => {
+      /* Drop just the window listeners — shared by onUp and a mid-drag disconnect
+         (which must NOT dispatch the resize event on a detached table). */
+      const teardown = () => {
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
         window.removeEventListener('pointercancel', onUp);
         this.classList.remove('is-col-resizing');
+        this._endColResize = null;
+      };
+      const onUp = () => {
+        teardown();
         this.dispatchEvent(new CustomEvent('ds-table-column-resize', {
           bubbles: true, detail: { columnId: col.id, width: this._colWidths[col.id], widths: { ...this._colWidths } },
         }));
@@ -1070,6 +1077,9 @@ export class DsDataTable extends HTMLElement {
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
       window.addEventListener('pointercancel', onUp);
+      /* Expose the teardown so a disconnect mid-resize drops these window listeners
+         (they'd otherwise keep firing _setColWidth on a detached table). */
+      this._endColResize = teardown;
     });
 
     /* Keyboard: arrows nudge ±8px (mirrored in RTL); Home resets all. */

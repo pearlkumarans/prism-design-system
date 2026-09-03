@@ -39,7 +39,35 @@ export class DsFieldHelper extends HTMLElement {
     this._sync();
   }
 
-  attributeChangedCallback() { if (this._root) this._sync(); }
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* state/rtl are visual-only — repaint the row (colour class, dir, live-region
+       role, and the default state-icon) in place instead of rebuilding innerHTML
+       (which re-parsed the icon + re-ran the truncation-tooltip wiring). text/icon/
+       counter/show-icon change the content, so they rebuild. */
+    if (name === 'state' || name === 'rtl') this._paintState();
+    else this._sync();
+  }
+
+  /* In-place mirror of the state/rtl half of _sync — no innerHTML rebuild. */
+  _paintState() {
+    let state = enumAttr(this, 'state', STATES, 'default');
+    if (state === 'negative') state = 'error';
+    const text = this.getAttribute('text') ?? this._slotText ?? '';
+    const counter = this.getAttribute('counter') || '';
+    if (!text && !counter) return;   // collapsed (empty) — nothing rendered to repaint
+    const rtl = boolAttr(this, 'rtl');
+    this._root.className = `ds-field-helper ds-field-helper--${state}`;
+    if (rtl) this._root.setAttribute('dir', 'rtl');
+    else this._root.removeAttribute('dir');
+    if (state === 'error') { this.setAttribute('role', 'alert'); this.setAttribute('aria-live', 'assertive'); }
+    else { this.removeAttribute('role'); this.setAttribute('aria-live', 'polite'); }
+    /* The leading icon defaults to the per-state glyph — swap its name in place
+       (skip when the caller pinned an explicit `icon`). */
+    if (!this.hasAttribute('icon')) {
+      this._root.querySelector('.ds-field-helper__icon ds-icon')?.setAttribute('name', ICON_FOR[state]);
+    }
+  }
 
   _sync() {
     /* Normalise the spec's `negative` onto the codebase's canonical `error`

@@ -475,8 +475,24 @@ export class DsDropdownMenu extends HTMLElement {
       }
     }
 
+    /* Preserve keyboard focus across a re-render while the menu is open: an
+       attribute change (e.g. a live items update) rebuilds innerHTML and would
+       otherwise drop focus to <body>. Capture the focused item's index, restore
+       it after re-wiring. */
+    let focusIdx = -1;
+    if (this._panel.contains(document.activeElement)) {
+      const items = [...this._panel.querySelectorAll('.ds-dropdown-menu__item')];
+      const li = document.activeElement.closest('.ds-dropdown-menu__item');
+      focusIdx = li ? items.indexOf(li) : -1;
+    }
+
     this._panel.innerHTML = titleHTML + itemsHTML + footerHTML;
     this._wire(type);
+
+    if (focusIdx >= 0) {
+      const items = [...this._panel.querySelectorAll('.ds-dropdown-menu__item')];
+      (items[focusIdx] || items[0])?.focus();
+    }
   }
 
   _renderItem(item, idx, type) {

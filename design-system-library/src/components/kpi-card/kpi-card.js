@@ -130,7 +130,35 @@ export class DsKpiCard extends HTMLElement {
       this.removeAttribute('title');
       return;
     }
-    if (this._mounted) this._render();
+    if (!this._mounted) return;
+    /* clickable/dir/rtl only touch the host chrome (classes + role/tabindex/dir/
+       aria-busy) — repaint in place instead of rebuilding the card (which would
+       detach a slotted chart/table). Everything else is structural. */
+    if ((name === 'clickable' || name === 'dir' || name === 'rtl') && this._chrome) this._paintChrome();
+    else this._render();
+  }
+
+  /* Host chrome only — no innerHTML. Reuses the variant/state/label/value cached
+     by the last _render so it needn't re-derive them. */
+  _paintChrome() {
+    const c = this._chrome;
+    if (!c) return;
+    const loading   = boolAttr(this, 'loading');
+    const clickable = boolAttr(this, 'clickable');
+    const rtl       = boolAttr(this, 'rtl') || this.getAttribute('dir') === 'rtl';
+    [...this.classList].forEach((k) => { if (k.startsWith('ds-kpi-card')) this.classList.remove(k); });
+    this.classList.add('ds-kpi-card', `ds-kpi-card--${c.variant}`, `ds-kpi-card--${c.state}`);
+    if (clickable && !loading) this.classList.add('ds-kpi-card--clickable');
+    if (loading) this.classList.add('ds-kpi-card--loading');
+    if (loading) this.setAttribute('aria-busy', 'true'); else this.removeAttribute('aria-busy');
+    if (rtl) this.setAttribute('dir', 'rtl');
+    if (clickable && !loading) {
+      this.setAttribute('role', 'button');
+      this.setAttribute('tabindex', '0');
+      if (!this.hasAttribute('aria-label') && c.label && c.value) this.setAttribute('aria-label', `${c.label}, ${c.value}`);
+    } else {
+      this.removeAttribute('role'); this.removeAttribute('tabindex');
+    }
   }
 
   /* Legacy severity chips for multi/single/two. [{value,label,tone,href?}] */
@@ -316,23 +344,10 @@ export class DsKpiCard extends HTMLElement {
     const clickable = boolAttr(this, 'clickable');
     const rtl       = boolAttr(this, 'rtl') || this.getAttribute('dir') === 'rtl';
 
-    // host classes
-    [...this.classList].forEach((c) => { if (c.startsWith('ds-kpi-card')) this.classList.remove(c); });
-    this.classList.add('ds-kpi-card', `ds-kpi-card--${variant}`, `ds-kpi-card--${state}`);
-    if (clickable && !loading) this.classList.add('ds-kpi-card--clickable');
-    if (loading) this.classList.add('ds-kpi-card--loading');
-    /* Announce the skeleton to assistive tech so SRs don't read stale/placeholder
-       content while the card loads (removed once real content is in). */
-    if (loading) this.setAttribute('aria-busy', 'true'); else this.removeAttribute('aria-busy');
-    if (rtl) this.setAttribute('dir', 'rtl');
-
-    if (clickable && !loading) {
-      this.setAttribute('role', 'button');
-      this.setAttribute('tabindex', '0');
-      if (!this.hasAttribute('aria-label') && label && value) this.setAttribute('aria-label', `${label}, ${value}`);
-    } else {
-      this.removeAttribute('role'); this.removeAttribute('tabindex');
-    }
+    // host classes + chrome — cache the derived bits so a visual-only attr
+    // (clickable/dir/rtl) can repaint the host without re-deriving variant/state.
+    this._chrome = { variant, state, label, value };
+    this._paintChrome();
 
     const delta = showTrend ? this._renderDelta(trendNum, trendTone, trendDir) : '';
     const subHTML = (desc && showSub) ? `<p class="ds-kpi-card__description">${escapeHtml(desc)}</p>` : '';

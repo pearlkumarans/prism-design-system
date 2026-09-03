@@ -61,6 +61,9 @@ export class DsTextInput extends HTMLElement {
   attributeChangedCallback(name) {
     if (!this._root) return;
     if (name === 'value' && this._input) { this._input.value = this.getAttribute('value') ?? ''; return; }
+    /* Cheap input-only attrs update the native input in place — no rebuild. */
+    if (name === 'placeholder' && this._input) { this._input.setAttribute('placeholder', this.getAttribute('placeholder') ?? ''); return; }
+    if (name === 'autocomplete' && this._input) { this._input.setAttribute('autocomplete', this.getAttribute('autocomplete') || 'on'); return; }
     /* Visual-only attrs (size/state/rtl) don't change the field's structure — a
        full _render() here would rebuild innerHTML and re-wire ~8 listeners (and
        churn the affixes) just to swap classes + a couple of aria/input attrs.
