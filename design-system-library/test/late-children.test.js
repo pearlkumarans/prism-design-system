@@ -27,6 +27,9 @@ import '../src/components/counter/counter.js';
 import '../src/components/divider/divider.js';
 import '../src/components/status-indicator/status-indicator.js';
 import '../src/components/text-link/text-link.js';
+import '../src/components/checkbox/checkbox.js';
+import '../src/components/split-button/split-button.js';
+import '../src/components/tooltip/tooltip.js';
 
 const settle = async () => { await nextFrame(); await nextFrame(); };
 
@@ -210,5 +213,30 @@ describe('late-children — content injected after upgrade is recovered', () => 
     expect(el.querySelector('a > span').textContent.trim()).to.equal('Learn more');
     const stray = [...el.childNodes].filter((n) => n !== el._anchor && !(n.nodeType === 3 && !n.textContent.trim()));
     expect(stray.length, 'label left stranded beside the anchor').to.equal(0);
+  });
+
+  it('ds-checkbox adopts a label appended after upgrade', async () => {
+    const el = await fixture(html`<ds-checkbox></ds-checkbox>`);
+    el.appendChild(document.createTextNode('Accept terms'));
+    await settle();
+    expect(el.querySelector('.ds-checkbox__label').textContent.trim()).to.equal('Accept terms');
+    const stray = [...el.childNodes].filter((n) => n !== el._wrapper && !(n.nodeType === 3 && !n.textContent.trim()));
+    expect(stray.length, 'label left stranded beside the wrapper').to.equal(0);
+  });
+
+  it('ds-split-button adopts a primary label appended after upgrade', async () => {
+    const el = await fixture(html`<ds-split-button></ds-split-button>`);
+    el.appendChild(document.createTextNode('Save'));
+    await settle();
+    expect(el.querySelector('.ds-split-button__main span').textContent.trim()).to.equal('Save');
+  });
+
+  it('ds-tooltip wires aria-describedby onto a trigger appended after upgrade', async () => {
+    const el = await fixture(html`<ds-tooltip text="Hi"></ds-tooltip>`);
+    const btn = document.createElement('button');
+    btn.textContent = 'Hover me';
+    el.appendChild(btn);
+    await settle();
+    expect(btn.getAttribute('aria-describedby'), 'trigger not wired').to.be.a('string').and.have.length.greaterThan(0);
   });
 });

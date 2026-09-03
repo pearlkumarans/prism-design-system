@@ -8,6 +8,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 
 const SIZES = ['small', 'medium'];
 
@@ -66,7 +67,16 @@ export class DsCheckbox extends HTMLElement {
       });
     }
     this._sync();
+    /* A framework may append the label text AFTER upgrade (captured empty above).
+       Reclaim the stray text into the label span (unless a `label` attr wins). */
+    watchLateChildren(this, (leaked) => {
+      const text = (leaked || []).map((n) => n.textContent).join('').trim();
+      (leaked || []).forEach((n) => n.remove());
+      if (text && this.getAttribute('label') == null) this._labelEl.textContent = text;
+    });
   }
+
+  disconnectedCallback() { stopLateChildren(this); }
 
   attributeChangedCallback() {
     if (this._input) this._sync();

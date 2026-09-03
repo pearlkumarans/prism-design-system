@@ -13,6 +13,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import '../../icons/icon.js';
 
 const POSITIONS = ['up-center', 'up-left', 'up-right', 'down-center', 'down-left', 'down-right', 'left', 'right', 'without-arrow'];
@@ -56,8 +57,17 @@ export class DsTooltip extends HTMLElement {
 
     // First (non-tip) child is the trigger; the tip lives in <body>, so the
     // first child is always the trigger. Connect aria-describedby.
+    this._wireTrigger();
+    /* A framework may append the trigger AFTER upgrade (firstElementChild was null
+       above), so re-wire aria-describedby when it arrives. */
+    watchLateChildren(this, () => this._wireTrigger());
+  }
+
+  _wireTrigger() {
     const trigger = this.firstElementChild;
-    if (trigger) trigger.setAttribute('aria-describedby', this._id);
+    if (trigger && trigger.getAttribute('aria-describedby') !== this._id) {
+      trigger.setAttribute('aria-describedby', this._id);
+    }
   }
 
   disconnectedCallback() {
@@ -65,6 +75,7 @@ export class DsTooltip extends HTMLElement {
     // (e.g. a data-table re-rendering its rows).
     this._hideNow();
     this._unbindReanchor();
+    stopLateChildren(this);
     if (this._tip && this._tip.parentNode) this._tip.parentNode.removeChild(this._tip);
   }
 

@@ -1,4 +1,5 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 /* Reuse the DS dropdown menu as the caret's overlay. */
 import '../dropdown-menu/dropdown-menu.js';
 import { injectCss } from '../../utils/inject-css.js';
@@ -33,9 +34,16 @@ export class DsSplitButton extends HTMLElement {
     }
     if (this._pendingMenu !== undefined) { this._menuItems = this._pendingMenu; this._pendingMenu = undefined; }
     this._render();
+    /* A framework may append the primary label AFTER upgrade (captured empty above).
+       Reclaim the stray text into _slottedLabel and re-render. */
+    watchLateChildren(this, (leaked) => {
+      const text = (leaked || []).map((n) => n.textContent).join('').trim();
+      (leaked || []).forEach((n) => n.remove());
+      if (text && this.getAttribute('label') == null) { this._slottedLabel = text; this._render(); }
+    });
   }
 
-  disconnectedCallback() { this._removeOutside(); }
+  disconnectedCallback() { this._removeOutside(); stopLateChildren(this); }
 
   attributeChangedCallback() { if (this._root) this._render(); }
 
