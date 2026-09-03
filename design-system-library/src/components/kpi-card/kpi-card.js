@@ -79,6 +79,13 @@ export class DsKpiCard extends HTMLElement {
 
   connectedCallback() {
     this._mounted = true;
+    /* Capture a slotted `<ds-icon slot="icon">` ONCE before the first _render wipes
+       innerHTML — the documented slot form, previously discarded (only the `icon`
+       attribute was read). Its name becomes the icon fallback. */
+    if (this._slottedIconName === undefined) {
+      const slotted = this.querySelector('[slot="icon"]');
+      this._slottedIconName = slotted ? (slotted.getAttribute('name') || slotted.getAttribute('icon') || '') : '';
+    }
     this._render();
     /* Re-evaluate the label ellipsis/tooltip when the card is resized (its
        width — hence whether the label overflows — is layout-dependent). */
@@ -302,7 +309,7 @@ export class DsKpiCard extends HTMLElement {
     const label    = this._titleText               || this.getAttribute('label')       || '';
     const desc     = this.getAttribute('subtitle') || this.getAttribute('description')  || '';
     const period   = this.getAttribute('period-label') || this.getAttribute('date')     || '';
-    const icon     = this.getAttribute('icon') || '';
+    const icon     = this.getAttribute('icon') || this._slottedIconName || '';
     const gaugeLbl = this.getAttribute('gauge-label') || '';
     const linkLabel = this.getAttribute('link-label') || '';
     const linkHref  = this.getAttribute('link-href')  || '#';

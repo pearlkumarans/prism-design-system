@@ -29,6 +29,20 @@ describe('ds-kpi-card — structure & content', () => {
     const el = await fixture(html`<ds-kpi-card value="1" title="X" subtitle="Connected in 24h"></ds-kpi-card>`);
     expect(el.querySelector('.ds-kpi-card__description').textContent).to.equal('Connected in 24h');
   });
+
+  it('renders the icon badge from the `icon` attribute', async () => {
+    const el = await fixture(html`<ds-kpi-card value="1" title="X" icon="clock"></ds-kpi-card>`);
+    const ic = el.querySelector('.ds-kpi-card__icon-badge ds-icon');
+    expect(ic, 'icon badge missing').to.exist;
+    expect(ic.getAttribute('name')).to.equal('clock');
+  });
+
+  it('supports the documented `<ds-icon slot="icon">` slot form', async () => {
+    const el = await fixture(html`<ds-kpi-card value="1" title="X"><ds-icon slot="icon" name="clock"></ds-icon></ds-kpi-card>`);
+    const ic = el.querySelector('.ds-kpi-card__icon-badge ds-icon');
+    expect(ic, 'slotted icon was discarded').to.exist;
+    expect(ic.getAttribute('name')).to.equal('clock');
+  });
 });
 
 describe('ds-kpi-card — size (default | wide)', () => {

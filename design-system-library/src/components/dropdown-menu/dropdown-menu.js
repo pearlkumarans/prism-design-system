@@ -105,18 +105,24 @@ export class DsDropdownMenu extends HTMLElement {
   }
 
   attributeChangedCallback(name) {
-    if (this._panel) this._render();
-    if (name === 'open' && this.hasAttribute('open') && this._panel) {
-      requestAnimationFrame(() => {
-        const first = this._panel.querySelector(
-          '.ds-dropdown-menu__item:not([aria-disabled="true"])'
-        );
-        first?.focus();
-      });
+    if (!this._panel) return;
+    /* `open` is visibility only — the list is already current (the items setter
+       re-renders on change), so toggle _panel.hidden instead of rebuilding the
+       whole list every time the menu opens/closes. */
+    if (name === 'open') {
+      const isOpen = this.hasAttribute('open');
+      this._panel.hidden = !isOpen;
+      if (isOpen) {
+        requestAnimationFrame(() => {
+          const first = this._panel.querySelector('.ds-dropdown-menu__item:not([aria-disabled="true"])');
+          first?.focus();
+        });
+      } else {
+        this._closeActiveSubmenu();
+      }
+      return;
     }
-    if (name === 'open' && !this.hasAttribute('open')) {
-      this._closeActiveSubmenu();
-    }
+    this._render();
   }
 
   get items() { return this._items; }

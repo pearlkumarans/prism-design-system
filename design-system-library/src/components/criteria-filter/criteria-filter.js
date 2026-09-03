@@ -204,7 +204,22 @@ export class DsCriteriaFilter extends HTMLElement {
   attributeChangedCallback(name) {
     if (!this._root) return;
     if (name === 'open') { this._syncOpen(); return; }   /* toggle visibility only — don't rebuild controls */
+    /* title / rtl are header chrome — patch the title text + dir in place instead
+       of tearing down + rebuilding every rule control (which resets _ready and
+       re-mounts sub-components). */
+    if ((name === 'title' || name === 'rtl') && this._paintChrome()) return;
     this._render();
+  }
+
+  /* In-place header update (title text + dir). Returns false if the header isn't
+     built yet so the caller falls back to a full render. */
+  _paintChrome() {
+    const titleEl = this._root.querySelector('.ds-criteria-filter__title');
+    if (!titleEl) return false;
+    if (this.hasAttribute('rtl')) this._root.setAttribute('dir', 'rtl');
+    else this._root.removeAttribute('dir');
+    titleEl.textContent = this.getAttribute('title') || 'Filter criteria';
+    return true;
   }
 
   /* ---- Presentation mode (Phase 3) -------------------------------------- */
