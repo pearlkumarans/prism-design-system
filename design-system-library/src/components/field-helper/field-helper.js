@@ -11,6 +11,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import '../../icons/icon.js';
 
 /* Spec state name is `negative`; `error` is kept as a working alias since
@@ -37,6 +38,13 @@ export class DsFieldHelper extends HTMLElement {
       this.appendChild(this._root);
     }
     this._sync();
+    /* A framework may append the helper text AFTER upgrade (captured empty above).
+       Reclaim the stray text into _slotText and re-sync (unless a `text` attr wins). */
+    watchLateChildren(this, (leaked) => {
+      const t = (leaked || []).map((n) => n.textContent).join('').trim();
+      (leaked || []).forEach((n) => n.remove());
+      if (t && this.getAttribute('text') == null) { this._slotText = t; this._sync(); }
+    });
   }
 
   attributeChangedCallback(name) {
@@ -50,6 +58,7 @@ export class DsFieldHelper extends HTMLElement {
   }
 
   disconnectedCallback() {
+    stopLateChildren(this);
     /* The hover listeners live on our own light-DOM child, so they're GC'd with
        it. But the truncation tip is a shared body-level singleton — if this row
        was showing it when removed, hide it so it doesn't linger over a detached

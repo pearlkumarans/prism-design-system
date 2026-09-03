@@ -1,5 +1,6 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import '../../icons/icon.js';
 
 const TYPES = ['basic', 'with-toolbar', 'with-line-numbers', 'with-tabs', 'full-ide'];
@@ -17,7 +18,19 @@ export class DsScriptEditor extends HTMLElement {
       this.appendChild(this._root);
     }
     this._render();
+    /* A framework may append the code text AFTER upgrade (captured empty above).
+       Reclaim the stray text into the editor (unless a `value` attr wins). */
+    watchLateChildren(this, (leaked) => {
+      const text = (leaked || []).map((n) => n.textContent).join('').trim();
+      (leaked || []).forEach((n) => n.remove());
+      if (text && this.getAttribute('value') == null) {
+        this._initialValue = text;
+        if (this._codeEl) this._codeEl.textContent = text; else this._render();
+      }
+    });
   }
+
+  disconnectedCallback() { stopLateChildren(this); }
 
   attributeChangedCallback(name) {
     if (!this._root) return;

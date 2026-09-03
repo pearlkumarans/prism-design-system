@@ -34,6 +34,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { lockScroll, unlockScroll } from '../../utils/scroll-lock.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 /* Reuse DS primitives instead of raw HTML: footer actions = <ds-button>,
    close = <ds-icon-button>, header/footer rules = <ds-divider>. */
 import '../../icons/icon.js';
@@ -99,9 +100,24 @@ export class DsFullscreenModal extends HTMLElement {
     }
     this._sync();
     if (boolAttr(this, 'open')) this._onOpen();
+    /* A framework may append body / footer-left content AFTER upgrade (captured
+       empty above) — re-home each leaked node by its slot and keep the string
+       captures in sync. */
+    watchLateChildren(this, (leaked) => {
+      if (!(leaked && leaked.length)) return;
+      const body = this.querySelector('[data-body]');
+      const fl = this.querySelector('[data-footer-left]');
+      leaked.forEach((n) => {
+        const dest = (n.getAttribute && n.getAttribute('slot') === 'footer-left') ? fl : body;
+        if (dest) dest.appendChild(n);
+      });
+      if (body) this._initialBodyHTML = body.innerHTML;
+      if (fl) this._initialFooterLeftHTML = fl.innerHTML;
+    });
   }
 
   disconnectedCallback() {
+    stopLateChildren(this);
     document.removeEventListener('keydown', this._onKeydown);
     this._releaseScrollLock();
   }

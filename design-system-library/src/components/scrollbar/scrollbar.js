@@ -1,4 +1,5 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 
 const ORIENTATIONS = ['vertical', 'horizontal'];
 const SIZES = ['thin', 'regular'];
@@ -45,11 +46,19 @@ export class DsScrollbar extends HTMLElement {
     }
     this._apply();
     this._scheduleSync();
+    /* A framework may append scroll content AFTER upgrade (the adopt above ran on
+       an empty host) — move any stray host child into the viewport. */
+    watchLateChildren(this, (leaked) => {
+      if (!(leaked && leaked.length) || !this._vp) return;
+      leaked.forEach((n) => this._vp.appendChild(n));
+      this._scheduleSync();
+    });
   }
 
   attributeChangedCallback() { if (this._built) { this._apply(); this._sync(); } }
 
   disconnectedCallback() {
+    stopLateChildren(this);
     this._ro && this._ro.disconnect();
     this._mo && this._mo.disconnect();
     if (this._onWinResize) removeEventListener('resize', this._onWinResize);

@@ -13,6 +13,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import '../../icons/icon.js';
 
 const VARIANTS = ['neutral', 'primary', 'success', 'warning', 'error', 'outline'];
@@ -52,7 +53,16 @@ export class DsTag extends HTMLElement {
       this.appendChild(this._root);
     }
     this._render();
+    /* A framework may append the tag label AFTER upgrade (captured empty above).
+       Reclaim the stray text into _slottedLabel and re-render. */
+    watchLateChildren(this, (leaked) => {
+      const text = (leaked || []).map((n) => n.textContent).join('').trim();
+      (leaked || []).forEach((n) => n.remove());
+      if (text && this.getAttribute('label') == null) { this._slottedLabel = text; this._render(); }
+    });
   }
+
+  disconnectedCallback() { stopLateChildren(this); }
 
   attributeChangedCallback(name) {
     if (!this._root) return;

@@ -8,6 +8,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 /* The dismiss/close affordance reuses <ds-icon-button>; the action reuses <ds-text-link>. */
 import '../icon-button/icon-button.js';
 import '../text-link/text-link.js';
@@ -51,7 +52,21 @@ export class DsInlineAlert extends HTMLElement {
       this.appendChild(this._root);
     }
     this._sync();
+    /* A framework may nest custom body content AFTER upgrade (the adopt above only
+       ran if children were present at connect). Collect it into _customEl and
+       re-sync so it lands in the rebuilt body. */
+    watchLateChildren(this, (leaked) => {
+      if (!(leaked && leaked.length)) return;
+      if (!this._customEl) {
+        this._customEl = document.createElement('div');
+        this._customEl.className = 'ds-inline-alert__custom';
+      }
+      leaked.forEach((n) => this._customEl.appendChild(n));
+      this._sync();
+    });
   }
+
+  disconnectedCallback() { stopLateChildren(this); }
 
   attributeChangedCallback() {
     if (this._root) this._sync();

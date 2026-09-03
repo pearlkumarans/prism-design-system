@@ -30,6 +30,11 @@ import '../src/components/text-link/text-link.js';
 import '../src/components/checkbox/checkbox.js';
 import '../src/components/split-button/split-button.js';
 import '../src/components/tooltip/tooltip.js';
+import '../src/components/tag/tag.js';
+import '../src/components/field-helper/field-helper.js';
+import '../src/components/scrollbar/scrollbar.js';
+import '../src/components/inline-alert/inline-alert.js';
+import '../src/components/script-editor/script-editor.js';
 
 const settle = async () => { await nextFrame(); await nextFrame(); };
 
@@ -238,5 +243,45 @@ describe('late-children — content injected after upgrade is recovered', () => 
     el.appendChild(btn);
     await settle();
     expect(btn.getAttribute('aria-describedby'), 'trigger not wired').to.be.a('string').and.have.length.greaterThan(0);
+  });
+
+  it('ds-tag adopts a label appended after upgrade', async () => {
+    const el = await fixture(html`<ds-tag></ds-tag>`);
+    el.appendChild(document.createTextNode('Beta'));
+    await settle();
+    expect(el.querySelector('.ds-tag__label').textContent.trim()).to.equal('Beta');
+  });
+
+  it('ds-field-helper adopts helper text appended after upgrade', async () => {
+    const el = await fixture(html`<ds-field-helper></ds-field-helper>`);
+    el.appendChild(document.createTextNode('Required field'));
+    await settle();
+    expect(el.querySelector('.ds-field-helper__text').textContent.trim()).to.equal('Required field');
+  });
+
+  it('ds-scrollbar moves content appended after upgrade into the viewport', async () => {
+    const el = await fixture(html`<ds-scrollbar></ds-scrollbar>`);
+    const p = document.createElement('p');
+    p.textContent = 'late scroll content';
+    el.appendChild(p);
+    await settle();
+    expect(el.querySelector('.ds-scrollbar__viewport').contains(p), 'content not moved into viewport').to.be.true;
+    expect([...el.children].includes(p), 'content stranded as a direct host child').to.be.false;
+  });
+
+  it('ds-inline-alert re-homes custom body appended after upgrade', async () => {
+    const el = await fixture(html`<ds-inline-alert type="info" title="Heads up"></ds-inline-alert>`);
+    const list = document.createElement('ul');
+    list.className = 'late-list';
+    el.appendChild(list);
+    await settle();
+    expect(el.querySelector('.ds-inline-alert__custom')?.contains(list), 'body not re-homed').to.be.true;
+  });
+
+  it('ds-script-editor adopts code appended after upgrade', async () => {
+    const el = await fixture(html`<ds-script-editor></ds-script-editor>`);
+    el.appendChild(document.createTextNode('const x = 1;'));
+    await settle();
+    expect(el.value.trim()).to.equal('const x = 1;');
   });
 });

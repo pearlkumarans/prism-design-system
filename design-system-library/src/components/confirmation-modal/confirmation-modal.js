@@ -30,6 +30,7 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { lockScroll, unlockScroll } from '../../utils/scroll-lock.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import '../../icons/icon.js';
 import '../button/button.js';
 import '../icon-button/icon-button.js';
@@ -85,9 +86,18 @@ export class DsConfirmationModal extends HTMLElement {
     /* If `open` was set in markup before connect, attributeChangedCallback
        skipped because we weren't mounted yet — handle it now. */
     if (boolAttr(this, 'open')) this._onOpen();
+    /* A framework may append body content AFTER upgrade (captured empty above) —
+       re-home it into [data-body] and keep the string capture in sync. */
+    watchLateChildren(this, (leaked) => {
+      const body = this.querySelector('[data-body]');
+      if (!body || !(leaked && leaked.length)) return;
+      leaked.forEach((n) => body.appendChild(n));
+      this._initialBody = body.innerHTML;
+    });
   }
 
   disconnectedCallback() {
+    stopLateChildren(this);
     document.removeEventListener('keydown', this._onKeydown);
     if (this._endDrag) this._endDrag();   // drop an in-flight dialog-drag's document listeners
     /* A confirmation removed while still open must not leave the page scroll-locked. */
