@@ -77,7 +77,15 @@ export class DsStepper extends HTMLElement {
     this._render();
   }
 
-  attributeChangedCallback() { if (this.isConnected) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this.isConnected) return;
+    /* `active` is the hot path (next/prev/goTo/click). Patch step state in place
+       so the ds-icon glyphs of unchanged steps aren't re-parsed; fall back to a
+       full render only if a step's button/span identity must flip (clickable+linear
+       unlocks a step as `active` advances). Everything else rebuilds. */
+    if (name === 'active') this._paintActive();
+    else this._render();
+  }
 
   /* ── data ──────────────────────────────────────────────────────────────── */
   get steps() { return this._steps; }
@@ -205,6 +213,65 @@ export class DsStepper extends HTMLElement {
     this.innerHTML = `<ol class="ds-stepper__list" role="list">${rows}</ol>`
       + compact
       + `<span class="ds-stepper__sr" role="status" aria-live="polite">${escapeHtml(summary)}</span>`;
+  }
+
+  /* In-place update for an `active` change: patch each step's status class, aria,
+     glyph (only when its glyph kind/name actually changes), and the summary/live
+     region — no innerHTML rebuild, so unchanged ds-icon glyphs survive. Falls back
+     to a full render if any step's button/span identity must flip. */
+  _paintActive() {
+    const list = this.querySelector('.ds-stepper__list');
+    if (!list) { this._render(); return; }
+    const size = enumAttr(this, 'size', ['sm', 'md', 'lg'], 'md');
+    const isz = ICON_SIZE[size];
+    const hideNumbers = boolAttr(this, 'hide-numbers');
+    const clickable = boolAttr(this, 'clickable');
+    const mode = enumAttr(this, 'mode', ['linear', 'nonlinear'], 'linear');
+    const lis = list.querySelectorAll('.ds-stepper__step');
+    if (lis.length !== this._steps.length) { this._render(); return; }
+
+    /* Guard: if any step's clickable-ness no longer matches its rendered tag
+       (button vs span), the DOM shape must change → full render. */
+    for (let i = 0; i < this._steps.length; i++) {
+      const canClick = this._canClick(this._statusFor(this._steps[i], i), i, clickable, mode);
+      const isBtn = !!lis[i].querySelector('button.ds-stepper__main');
+      if (canClick !== isBtn) { this._render(); return; }
+    }
+
+    this._steps.forEach((s, i) => {
+      const li = lis[i];
+      const st = this._statusFor(s, i);
+      li.className = `ds-stepper__step ds-stepper__step--${st}`;
+      if (st === 'active') li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+      if (st === 'error') li.setAttribute('aria-invalid', 'true'); else li.removeAttribute('aria-invalid');
+
+      let iconName = null;
+      if (st === 'completed') iconName = 'tick';
+      else if (hideNumbers && s.icon) iconName = s.icon;
+      const node = li.querySelector('.ds-stepper__node');
+      if (node) {
+        const glyph = node.querySelector('.ds-stepper__glyph');
+        const curName = glyph ? glyph.getAttribute('name') : null;
+        if (iconName) {
+          if (curName !== iconName) {
+            node.innerHTML = `<ds-icon class="ds-stepper__glyph" name="${escapeHtml(iconName)}" size="${isz}"></ds-icon>`;
+          }
+        } else {
+          const num = String(s.number != null ? s.number : (i + 1));
+          const numEl = node.querySelector('.ds-stepper__num');
+          if (numEl && !glyph) { if (numEl.textContent !== num) numEl.textContent = num; }
+          else node.innerHTML = `<span class="ds-stepper__num">${escapeHtml(num)}</span>`;
+        }
+      }
+    });
+
+    const total = this._steps.length;
+    const cur = this._steps[this.active];
+    const summary = total ? `Step ${this.active + 1} of ${total}${cur && cur.label ? ': ' + cur.label : ''}` : '';
+    const pct = total ? Math.round(((this.active + 1) / total) * 100) : 0;
+    const cl = this.querySelector('.ds-stepper__compact-label'); if (cl) cl.textContent = summary;
+    const cf = this.querySelector('.ds-stepper__compact-fill'); if (cf) cf.style.inlineSize = `${pct}%`;
+    const sr = this.querySelector('.ds-stepper__sr'); if (sr) sr.textContent = summary;
   }
 
   /* ── events ────────────────────────────────────────────────────────────── */

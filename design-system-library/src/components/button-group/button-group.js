@@ -94,10 +94,33 @@ export class DsButtonGroup extends HTMLElement {
 
   attributeChangedCallback(name) {
     if (!this._mounted) return;
-    /* Selection-only changes just repaint (keeps DOM + focus); anything structural
-       rebuilds the buttons. */
+    /* Selection-only changes just repaint (keeps DOM + focus). Pure visual chrome
+       (variant/layout/columns/equal/full-width/rtl) toggles track classes only.
+       Anything that changes the button set, icon size, roles, or wrap structure
+       (items/size/selection-mode/disabled/label/…) rebuilds. */
     if (name === 'value') this._paint();
+    else if (this._track && (name === 'variant' || name === 'layout' || name === 'columns'
+        || name === 'equal' || name === 'full-width' || name === 'rtl')) this._paintChrome();
     else this._render();
+  }
+
+  /* Track-level chrome (classes / dir / grid cols) — no innerHTML rebuild, so the
+     buttons and focus survive a variant/layout/rtl toggle. */
+  _paintChrome() {
+    const track = this._track;
+    if (!track) { this._render(); return; }
+    const layout = this._layout();
+    const cols = this._cols();
+    const variant = enumAttr(this, 'variant', VARIANTS, 'separated');
+    const size = enumAttr(this, 'size', SIZES, 'medium');
+    if (boolAttr(this, 'rtl')) this.setAttribute('dir', 'rtl'); else this.removeAttribute('dir');
+    LAYOUTS.forEach((l) => track.classList.toggle(`ds-button-group--${l}`, layout === l));
+    SIZES.forEach((s) => track.classList.toggle(`ds-button-group--size-${s}`, size === s));
+    track.classList.toggle('ds-button-group--attached', variant === 'attached');
+    track.classList.toggle('ds-button-group--equal', boolAttr(this, 'equal'));
+    track.classList.toggle('ds-button-group--full-width', boolAttr(this, 'full-width'));
+    if (layout === 'grid' && cols) track.style.setProperty('--ds-bg-cols', String(cols));
+    else track.style.removeProperty('--ds-bg-cols');
   }
 
   /* ---- Public API --------------------------------------------------------- */

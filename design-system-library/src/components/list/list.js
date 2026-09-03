@@ -69,7 +69,22 @@ export class DsList extends HTMLElement {
 
   disconnectedCallback() { stopLateChildren(this); }
 
-  attributeChangedCallback() { if (this._root) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* size/rtl are visual-only — repaint the root chrome (class + dir) without
+       rebuilding the <ul>/<ol> (which would re-parse every item + its ds-icon).
+       list-style/style-variant/ordered change the tag + markers → rebuild. */
+    if (name === 'size' || name === 'rtl') this._paintChrome();
+    else this._render();
+  }
+
+  _paintChrome() {
+    const size = enumAttr(this, 'size', SIZES, 'small');
+    const style = this._style();
+    this._root.className = `ds-list ds-list--${size} ds-list--${style}`;
+    if (boolAttr(this, 'rtl')) this._root.setAttribute('dir', 'rtl');
+    else this._root.removeAttribute('dir');
+  }
 
   get items() { return this._items; }
   set items(v) {
@@ -87,14 +102,10 @@ export class DsList extends HTMLElement {
   }
 
   _render() {
-    const size = enumAttr(this, 'size', SIZES, 'small');
     const style = this._style();
     const ordered = ORDERED_STYLES.includes(style);
-    const rtl = boolAttr(this, 'rtl');
 
-    this._root.className = `ds-list ds-list--${size} ds-list--${style}`;
-    if (rtl) this._root.setAttribute('dir', 'rtl');
-    else this._root.removeAttribute('dir');
+    this._paintChrome();
 
     const tag = ordered ? 'ol' : 'ul';
 
