@@ -122,3 +122,16 @@ describe('ds-toaster — spawning & max', () => {
     expect(live.length).to.be.at.most(2);
   });
 });
+
+describe('ds-toast — repaint-split', () => {
+  it('keeps the status ds-icon node across a visual-only style-variant change', async () => {
+    const el = await fixture(html`<ds-toast status="success" style-variant="subtle" title="Saved"></ds-toast>`);
+    await nextFrame();
+    const icon = el._root.querySelector('.ds-toast__icon ds-icon');
+    expect(icon, 'status icon rendered').to.exist;
+    el.setAttribute('style-variant', 'filled');
+    await nextFrame();
+    expect(el._root.querySelector('.ds-toast__icon ds-icon'), 'same ds-icon node (not re-parsed)').to.equal(icon);
+    expect(el._root.classList.contains('ds-toast--filled'), 'style-variant class applied').to.be.true;
+  });
+});

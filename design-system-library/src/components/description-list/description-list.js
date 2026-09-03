@@ -98,16 +98,31 @@ export class DsDescriptionList extends HTMLElement {
     this._render();
   }
 
-  attributeChangedCallback() { if (this._root) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* columns + orientation only change the grid class / data attr — repaint in
+       place so the value ds-icons and typed sub-components keep their identity.
+       `rtl` also propagates into the typed value children (rtlA in _valueHtml),
+       so it rebuilds. */
+    if (name === 'columns' || name === 'orientation') this._paintChrome();
+    else this._render();
+  }
 
-  _render() {
+  /* Grid class + column data attr + direction only — no innerHTML rebuild. */
+  _paintChrome() {
     const columns = enumAttr(this, 'columns', COLUMNS, '1');
     const orientation = enumAttr(this, 'orientation', ORIENTATIONS, 'stacked');
     const rtl = boolAttr(this, 'rtl');
-
     this._root.className = `ds-description-list ds-description-list--${orientation}`;
     this._root.dataset.columns = columns;
     if (rtl) this._root.setAttribute('dir', 'rtl'); else this._root.removeAttribute('dir');
+  }
+
+  _render() {
+    const rtl = boolAttr(this, 'rtl');
+
+    /* Root chrome — shared with the visual-only path. */
+    this._paintChrome();
 
     this._root.innerHTML = this._items.map((it, i) => {
       const term = escapeHtml(it.term ?? '');

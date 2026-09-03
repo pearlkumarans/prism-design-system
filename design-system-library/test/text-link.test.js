@@ -90,3 +90,16 @@ describe('ds-text-link — icons, reactive label & escaping', () => {
     expect(icon.hasAttribute('onload'), 'no injected onload attribute').to.be.false;
   });
 });
+
+describe('ds-text-link — repaint-split', () => {
+  it('keeps the leading ds-icon node across a visual-only variant change', async () => {
+    const el = await fixture(html`<ds-text-link href="/x" leading-icon="external" variant="primary">Docs</ds-text-link>`);
+    await nextFrame();
+    const icon = el.querySelector('.ds-text-link__icon ds-icon');
+    expect(icon, 'leading icon rendered').to.exist;
+    el.setAttribute('variant', 'danger');
+    await nextFrame();
+    expect(el.querySelector('.ds-text-link__icon ds-icon'), 'same ds-icon node (not re-parsed)').to.equal(icon);
+    expect(anchor(el).classList.contains('ds-text-link--danger'), 'variant class applied').to.be.true;
+  });
+});

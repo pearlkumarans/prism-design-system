@@ -72,7 +72,54 @@ export class DsMessageBox extends HTMLElement {
     /* Expand/collapse is animated in place — a full re-render would reset the
        grid-template-rows track to its target value and skip the transition. */
     if (name === 'expanded') { this._applyExpanded(); return; }
+    /* rtl / show-badge / counts are chrome — repaint in place so the slotted
+       ds-inline-alert rows are NOT detached + re-appended (which would reset their
+       state). `tab` changes which rows are visible, so it still rebuilds. */
+    if (name === 'rtl' || name === 'show-badge' || name === 'alerts-count' || name === 'information-count') {
+      this._paintChrome();
+      return;
+    }
     this._render();
+  }
+
+  /* In-place update of dir / row rtl / tab counts / the header count badge —
+     leaves the header scaffold + slotted rows intact (no innerHTML rebuild). */
+  _paintChrome() {
+    if (!this._root.querySelector('.ds-message-box__header')) { this._render(); return; }
+    const rtl = boolAttr(this, 'rtl');
+    const showBadge = boolAttr(this, 'show-badge');
+    const total = this._groups.alerts.length + this._groups.information.length;
+
+    if (rtl) this._root.setAttribute('dir', 'rtl'); else this._root.removeAttribute('dir');
+    ['alerts', 'information'].forEach((g) => this._groups[g].forEach((row) => {
+      if (rtl) row.setAttribute('rtl', ''); else row.removeAttribute('rtl');
+    }));
+
+    const tabs = this._root.querySelector('.ds-message-box__tabs');
+    if (tabs) {
+      if (rtl) tabs.setAttribute('rtl', ''); else tabs.removeAttribute('rtl');
+      tabs.items = [
+        { id: 'alerts', label: rtl ? 'التنبيهات' : 'Alerts', badge: { text: this._count('alerts'), variant: 'intense', state: 'moderate' } },
+        { id: 'information', label: rtl ? 'المعلومات' : 'Information', badge: { text: this._count('information'), variant: 'intense', state: 'active' } },
+      ];
+      const expanded = this._expanded;
+      tabs.setAttribute('active-id', expanded ? this._tab : '');
+      if (!expanded) this._stripActiveTabs(tabs);
+    }
+
+    const toggle = this._root.querySelector('.ds-message-box__toggle');
+    let badge = toggle && toggle.querySelector('.ds-message-box__count');
+    if (showBadge && toggle) {
+      if (!badge) {
+        badge = document.createElement('ds-badge');
+        badge.className = 'ds-message-box__count';
+        badge.setAttribute('type', 'neutral');
+        toggle.appendChild(badge);
+      }
+      badge.textContent = String(total);
+    } else if (badge) {
+      badge.remove();
+    }
   }
 
   get _expanded() { return enumAttr(this, 'expanded', ['true', 'false'], 'true') !== 'false'; }

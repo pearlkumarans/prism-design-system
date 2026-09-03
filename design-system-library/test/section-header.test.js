@@ -142,6 +142,19 @@ describe('ds-section-header — reactivity', () => {
   });
 });
 
+describe('ds-section-header — repaint-split', () => {
+  it('keeps the action ds-text-link node across a visual-only divider change', async () => {
+    const el = await fixture(html`<ds-section-header title="Devices" show-action action-label="View all"></ds-section-header>`);
+    await nextFrame();
+    const link = el.querySelector('.ds-section-header__action ds-text-link');
+    expect(link, 'action link rendered').to.exist;
+    el.setAttribute('divider', 'bottom');
+    await nextFrame();
+    expect(el.querySelector('.ds-section-header__action ds-text-link'), 'same link node (not re-parsed)').to.equal(link);
+    expect(root(el).classList.contains('ds-section-header--divider-bottom'), 'divider class applied').to.be.true;
+  });
+});
+
 describe('ds-section-header — escaping', () => {
   it('renders a hostile title as literal text (no injected <img>)', async () => {
     const el = await fixture(html`<ds-section-header></ds-section-header>`);

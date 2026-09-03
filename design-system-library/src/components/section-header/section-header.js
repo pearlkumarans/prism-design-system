@@ -48,12 +48,36 @@ export class DsSectionHeader extends HTMLElement {
     stopLateChildren(this);
   }
 
-  attributeChangedCallback() { if (this._root) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* divider + rtl only toggle root classes / direction — repaint in place so
+       the auto-generated action <ds-text-link> (and its ds-icon, if any) isn't
+       re-parsed. size/style-variant/heading-level change the heading element or
+       the layout structure, and title/description/action-label change text or
+       child nodes → full render. */
+    if (name === 'divider' || name === 'rtl') this._paintChrome();
+    else this._render();
+  }
+
+  /* Root classes + direction only — no innerHTML rebuild (see attributeChanged). */
+  _paintChrome() {
+    const size = enumAttr(this, 'size', SIZES, 'medium');
+    const style = enumAttr(this, 'style-variant', STYLES, 'default');
+    const divider = enumAttr(this, 'divider', DIVIDERS, 'none');
+    const rtl = boolAttr(this, 'rtl');
+    const isBorder = style === 'with-border';
+    let cls = `ds-section-header ds-section-header--${size}`;
+    if (isBorder) cls += ' ds-section-header--with-border';
+    if (divider === 'bottom') cls += ' ds-section-header--divider-bottom';
+    if (divider === 'both') cls += ' ds-section-header--divider-both';
+    this._root.className = cls;
+    if (rtl) this._root.setAttribute('dir', 'rtl');
+    else this._root.removeAttribute('dir');
+  }
 
   _render() {
     const size = enumAttr(this, 'size', SIZES, 'medium');
     const style = enumAttr(this, 'style-variant', STYLES, 'default');
-    const divider = enumAttr(this, 'divider', DIVIDERS, 'none');
 
     /* `title` is a GLOBAL HTML attribute — leaving it on the host makes the
        browser show a native tooltip on hover. Cache the value internally and
@@ -72,7 +96,6 @@ export class DsSectionHeader extends HTMLElement {
        longer renders a link. */
     const showAction = (actionLabel || this._slottedAction) &&
       this.hasAttribute('show-action') && this.getAttribute('show-action') !== 'false';
-    const rtl = boolAttr(this, 'rtl');
     const isBorder = style === 'with-border';
 
     /* Description shows for the with-description and with-border presets only
@@ -87,13 +110,8 @@ export class DsSectionHeader extends HTMLElement {
       : (size === 'large' ? 2 : size === 'medium' ? 3 : 4);
     const hTag = `h${level}`;
 
-    let cls = `ds-section-header ds-section-header--${size}`;
-    if (isBorder) cls += ' ds-section-header--with-border';
-    if (divider === 'bottom') cls += ' ds-section-header--divider-bottom';
-    if (divider === 'both') cls += ' ds-section-header--divider-both';
-    this._root.className = cls;
-    if (rtl) this._root.setAttribute('dir', 'rtl');
-    else this._root.removeAttribute('dir');
+    /* Root classes + direction — shared with the visual-only path. */
+    this._paintChrome();
 
     const descHtml = `<p class="ds-section-header__description">${escapeHtml(description)}</p>`;
 

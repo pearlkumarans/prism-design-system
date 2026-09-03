@@ -30,15 +30,26 @@ export class DsTextLink extends HTMLElement {
 
   disconnectedCallback() { stopLateChildren(this); }
 
-  attributeChangedCallback() { if (this._anchor) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this._anchor) return;
+    /* variant/size/underline/disabled/rtl/href/target only change anchor
+       classes/attrs (and the icon px, patched in place) — repaint the chrome so
+       the leading/trailing ds-icons aren't re-parsed. leading-icon/trailing-icon
+       names + the label text change child nodes → full render. */
+    if (name === 'variant' || name === 'size' || name === 'underline'
+        || name === 'disabled' || name === 'rtl' || name === 'href' || name === 'target') {
+      this._paintChrome();
+    } else this._render();
+  }
 
-  _render() {
+  /* Anchor chrome only (classes / href / target / rel / dir / aria) + an in-place
+     bump of the icon px — never rebuilds innerHTML, so the leading/trailing
+     ds-icons keep their node identity across a visual toggle. */
+  _paintChrome() {
     const variant = enumAttr(this, 'variant', STYLES, 'primary');
     const size = enumAttr(this, 'size', SIZES, 'small');
     const underline = enumAttr(this, 'underline', UNDERLINES, 'none');
     const href = this.getAttribute('href');
-    const leadingIcon = this.getAttribute('leading-icon');
-    const trailingIcon = this.getAttribute('trailing-icon');
     const disabled = boolAttr(this, 'disabled');
     const rtl = boolAttr(this, 'rtl');
 
@@ -56,6 +67,21 @@ export class DsTextLink extends HTMLElement {
     else this._anchor.removeAttribute('aria-disabled');
     if (rtl) this._anchor.setAttribute('dir', 'rtl');
     else this._anchor.removeAttribute('dir');
+
+    /* Keep the icon nodes; only bump their size on a size change (no re-parse). */
+    const iconPx = String(size === 'small' ? 12 : size === 'medium' ? 14 : 16);
+    this._anchor.querySelectorAll('.ds-text-link__icon ds-icon').forEach((ic) => {
+      if (ic.getAttribute('size') !== iconPx) ic.setAttribute('size', iconPx);
+    });
+  }
+
+  _render() {
+    const size = enumAttr(this, 'size', SIZES, 'small');
+    const leadingIcon = this.getAttribute('leading-icon');
+    const trailingIcon = this.getAttribute('trailing-icon');
+
+    /* Anchor chrome — shared with the visual-only path. */
+    this._paintChrome();
 
     /* Label precedence: the reactive `label` attribute wins over slotted text, so
        consumers can update the label at runtime (e.g. i18n) without wiping the anchor

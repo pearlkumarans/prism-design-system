@@ -129,7 +129,26 @@ export class DsRightPane extends HTMLElement {
     }
   }
 
-  attributeChangedCallback() { if (this._root) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* theme only swaps the toggle glyph (ambient <html data-theme> is the real
+       theme); rtl flips dir + the inward tooltip side. Both repaint in place so the
+       rail's icon-buttons/tooltips aren't re-parsed. Item / show-x / product-logo
+       changes rebuild. */
+    if (name === 'theme') { this._syncThemeBtn(); return; }
+    if (name === 'rtl') { this._paintRtl(); return; }
+    this._render();
+  }
+
+  _paintRtl() {
+    const rtl = boolAttr(this, 'rtl')
+      || (typeof document !== 'undefined'
+          && (this.closest('[dir="rtl"]') != null
+              || document.documentElement.getAttribute('dir') === 'rtl'));
+    if (rtl) this._root.setAttribute('dir', 'rtl'); else this._root.removeAttribute('dir');
+    const pos = rtl ? 'right' : 'left';
+    this._root.querySelectorAll('ds-icon-button[tooltip-position]').forEach((b) => b.setAttribute('tooltip-position', pos));
+  }
 
   set topItems(v) { this._customTop = Array.isArray(v) ? v.slice() : null; if (this._root) this._render(); }
   get topItems() { return this._customTop || DEFAULT_TOP; }
@@ -288,7 +307,9 @@ export class DsRightPane extends HTMLElement {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
         if (id === '__theme__') {
-          const next = theme === 'dark' ? 'light' : 'dark';
+          /* Re-resolve at click time — a theme change repaints the glyph in place
+             (no re-render), so the render-time `theme` closure can be stale. */
+          const next = this._resolveTheme() === 'dark' ? 'light' : 'dark';
           this.setAttribute('theme', next);
           this.dispatchEvent(new CustomEvent('ds-right-pane-theme', { bubbles: true, detail: { theme: next } }));
         } else if (id === '__more__') {

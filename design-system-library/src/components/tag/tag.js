@@ -54,24 +54,32 @@ export class DsTag extends HTMLElement {
     this._render();
   }
 
-  attributeChangedCallback() { if (this._root) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* variant/size/status/disabled/rtl only toggle root classes/attrs (and the
+       leading dot colour / icon px, patched in place) — repaint the chrome so the
+       leading + close ds-icons aren't re-parsed. label/icon/leading/show-close
+       change the label text or which child nodes exist → full render. */
+    if (name === 'variant' || name === 'size' || name === 'status'
+        || name === 'disabled' || name === 'rtl') this._paintChrome();
+    else this._render();
+  }
 
   _close(label) {
     this.dispatchEvent(new CustomEvent('ds-tag-close', { bubbles: true, detail: { label } }));
     this.remove();
   }
 
-  _render() {
+  /* Root chrome only (classes / dir / tab stop) + an in-place patch of the
+     leading dot colour and leading-icon px — never rebuilds innerHTML, so the
+     leading + close ds-icons keep their node identity across a visual toggle. */
+  _paintChrome() {
     const variant = enumAttr(this, 'variant', VARIANTS, 'neutral');
-    const size = enumAttr(this, 'size', SIZES, 'small'); /* spec default: small */
-    const label = this.getAttribute('label') || this._slottedLabel || 'Tag';
+    const size = enumAttr(this, 'size', SIZES, 'small');
     const icon = this.getAttribute('icon');
-    let leading = this.getAttribute('leading'); // 'status' | 'icon' | null ('dot' = legacy alias)
+    let leading = this.getAttribute('leading');
     if (leading === 'dot') leading = 'status';
     const status = enumAttr(this, 'status', Object.keys(STATUS_DOT), VARIANT_STATUS[variant] || 'success');
-    /* Spec: `Show Close` defaults to `true`. Use the "default-on, set to
-       'false' to hide" attribute convention — boolAttr's presence-only check
-       would default to false and break that contract. */
     const showClose = !this.hasAttribute('show-close')
       ? true
       : this.getAttribute('show-close') !== 'false';
@@ -94,6 +102,35 @@ export class DsTag extends HTMLElement {
       this._root.setAttribute('tabindex', '0');
       this._root.removeAttribute('aria-disabled');
     }
+
+    /* Patch the existing leading glyph in place (no re-parse). */
+    if (leading === 'status') {
+      const dot = this._root.querySelector('.ds-tag__dot');
+      if (dot) dot.style.setProperty('--_tag-dot', STATUS_DOT[status]);
+    } else if (leading === 'icon' && icon) {
+      const iconEl = this._root.querySelector('.ds-tag__icon ds-icon');
+      const iconPx = String(size === 'small' ? 12 : 16);
+      if (iconEl && iconEl.getAttribute('size') !== iconPx) iconEl.setAttribute('size', iconPx);
+    }
+  }
+
+  _render() {
+    const variant = enumAttr(this, 'variant', VARIANTS, 'neutral');
+    const size = enumAttr(this, 'size', SIZES, 'small'); /* spec default: small */
+    const label = this.getAttribute('label') || this._slottedLabel || 'Tag';
+    const icon = this.getAttribute('icon');
+    let leading = this.getAttribute('leading'); // 'status' | 'icon' | null ('dot' = legacy alias)
+    if (leading === 'dot') leading = 'status';
+    const status = enumAttr(this, 'status', Object.keys(STATUS_DOT), VARIANT_STATUS[variant] || 'success');
+    /* Spec: `Show Close` defaults to `true`. Use the "default-on, set to
+       'false' to hide" attribute convention — boolAttr's presence-only check
+       would default to false and break that contract. */
+    const showClose = !this.hasAttribute('show-close')
+      ? true
+      : this.getAttribute('show-close') !== 'false';
+
+    /* Root chrome (classes / dir / tab stop) — shared with the visual-only path. */
+    this._paintChrome();
 
     /* Leading icon: 12/16/16 per size (spec table) */
     const iconPx = size === 'small' ? 12 : 16;

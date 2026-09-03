@@ -123,6 +123,21 @@ describe('ds-description-list — events', () => {
   });
 });
 
+describe('ds-description-list — repaint-split', () => {
+  it('keeps a value ds-icon node across a visual-only columns change', async () => {
+    const el = await fixture(html`<ds-description-list columns="1"></ds-description-list>`);
+    el.items = [{ term: 'State', type: 'icon', icon: 'shield', description: 'Verified' }];
+    await nextFrame();
+    const icon = el.querySelector('.ds-description-list__icon-val ds-icon');
+    expect(icon, 'value icon rendered').to.exist;
+    el.setAttribute('columns', '2');
+    await nextFrame();
+    expect(el.querySelector('.ds-description-list__icon-val ds-icon'), 'same ds-icon node (not re-parsed)').to.equal(icon);
+    const root = el.querySelector('.ds-description-list');
+    expect(root.dataset.columns, 'columns data attr applied').to.equal('2');
+  });
+});
+
 describe('ds-description-list — teardown', () => {
   it('disconnects without throwing', async () => {
     const el = await fixture(html`<ds-description-list></ds-description-list>`);

@@ -144,8 +144,40 @@ export class DsFilterPanel extends HTMLElement {
     if (name === 'fit-gap') { this._scheduleFit(); return; }
     if (name === 'open') { this._syncOpen(); this._scheduleFit(); return; }   /* toggle visibility only — don't rebuild controls */
     if (name === 'collapse-at') this._observeWidth();
+    /* title / result-count / rtl are header chrome — patch them in place instead of
+       tearing down + rebuilding every filter control (which _render does, resetting
+       _ready and re-mounting sub-components). */
+    if ((name === 'title' || name === 'result-count' || name === 'rtl') && this._paintChrome()) {
+      this._scheduleFit();
+      return;
+    }
     this._render();
     this._scheduleFit();
+  }
+
+  /* In-place header update (title text, result count, dir). Returns false if the
+     header isn't built yet so the caller falls back to a full render. */
+  _paintChrome() {
+    const header = this._root.querySelector('.ds-filter-panel__header');
+    if (!header) return false;
+    const rtl = this.hasAttribute('rtl') || this.getAttribute('dir') === 'rtl';
+    if (rtl) this._root.setAttribute('dir', 'rtl'); else this._root.removeAttribute('dir');
+    const titleEl = header.querySelector('.ds-filter-panel__title');
+    if (titleEl) titleEl.textContent = this.getAttribute('title') || 'Filters';
+    const count = this.getAttribute('result-count');
+    const end = header.querySelector('.ds-filter-panel__header-end');
+    let countEl = end && end.querySelector('.ds-filter-panel__count');
+    if (count != null) {
+      if (!countEl && end) {
+        countEl = document.createElement('span');
+        countEl.className = 'ds-filter-panel__count';
+        end.insertBefore(countEl, end.firstChild);
+      }
+      if (countEl) countEl.textContent = count;
+    } else if (countEl) {
+      countEl.remove();
+    }
+    return true;
   }
 
   /* fit-viewport: cap the panel to the visible screen so a long filter list

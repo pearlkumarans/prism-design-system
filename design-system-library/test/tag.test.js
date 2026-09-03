@@ -168,6 +168,18 @@ describe('ds-tag — a11y', () => {
   });
 });
 
+describe('ds-tag — repaint-split', () => {
+  it('keeps the leading ds-icon node across a visual-only variant change', async () => {
+    const el = await fixture(html`<ds-tag label="Tag" leading="icon" icon="shield" variant="neutral"></ds-tag>`);
+    const icon = el.querySelector('.ds-tag__icon ds-icon');
+    expect(icon, 'leading icon rendered').to.exist;
+    el.setAttribute('variant', 'success');
+    await nextFrame();
+    expect(el.querySelector('.ds-tag__icon ds-icon'), 'same ds-icon node (not re-parsed)').to.equal(icon);
+    expect(root(el).classList.contains('ds-tag--success'), 'variant class applied').to.be.true;
+  });
+});
+
 describe('ds-tag — teardown', () => {
   it('survives disconnect → reconnect without duplicating structure or throwing', async () => {
     const el = await fixture(html`<ds-tag label="Tag"></ds-tag>`);

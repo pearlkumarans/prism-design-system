@@ -35,7 +35,25 @@ export class DsToast extends HTMLElement {
 
   disconnectedCallback() { clearTimeout(this._timer); }
 
-  attributeChangedCallback() { if (this._root) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* style-variant + rtl only toggle the surface class / direction — repaint in
+       place so the status + close ds-icons aren't re-parsed. `status` changes the
+       status icon glyph AND whether the timeout bar exists (error persists), so
+       it stays a full render. */
+    if (name === 'style-variant' || name === 'rtl') this._paintChrome();
+    else this._render();
+  }
+
+  /* Surface class + direction only — no innerHTML rebuild (see attributeChanged). */
+  _paintChrome() {
+    const status = enumAttr(this, 'status', STATUSES, 'info');
+    const styleV = enumAttr(this, 'style-variant', STYLES, 'subtle');
+    const rtl = boolAttr(this, 'rtl');
+    this._root.className = `ds-toast ds-toast--${styleV} ds-toast--${status}`;
+    if (rtl) this._root.setAttribute('dir', 'rtl');
+    else this._root.removeAttribute('dir');
+  }
 
   _pauseTimer() {
     /* Spec a11y: pause auto-dismiss on hover AND focus-within (WCAG 2.2.1). */
@@ -94,7 +112,6 @@ export class DsToast extends HTMLElement {
 
   _render() {
     const status = enumAttr(this, 'status', STATUSES, 'info');
-    const styleV = enumAttr(this, 'style-variant', STYLES, 'subtle');
     const title = this.getAttribute('title') || '';
     const description = this.getAttribute('description') || '';
     const showDescription = description && (!this.hasAttribute('show-description') || this.getAttribute('show-description') !== 'false');
@@ -103,16 +120,14 @@ export class DsToast extends HTMLElement {
     const showCta = ctaText && (!this.hasAttribute('show-cta') || this.getAttribute('show-cta') !== 'false');
     const showClose = !this.hasAttribute('show-close') || this.getAttribute('show-close') !== 'false';
     const duration = parseInt(this.getAttribute('duration') || '5000', 10);
-    const rtl = boolAttr(this, 'rtl');
 
     /* Spec: only Error escalates to assertive/alert (Warning shares it per
        the a11y table); Info/Success stay polite/status. */
     const isAssertive = status === 'error' || status === 'warning';
-    this._root.className = `ds-toast ds-toast--${styleV} ds-toast--${status}`;
+    /* Surface class + direction — shared with the visual-only path. */
+    this._paintChrome();
     this._root.setAttribute('role', isAssertive ? 'alert' : 'status');
     this._root.setAttribute('aria-live', isAssertive ? 'assertive' : 'polite');
-    if (rtl) this._root.setAttribute('dir', 'rtl');
-    else this._root.removeAttribute('dir');
 
     /* Bar appears only while a real countdown runs — persistent toasts
        (duration=0 / error) hide it entirely (spec edge case). Explicit

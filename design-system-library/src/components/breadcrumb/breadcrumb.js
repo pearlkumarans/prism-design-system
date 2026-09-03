@@ -71,8 +71,51 @@ export class DsBreadcrumb extends HTMLElement {
     stopLateChildren(this);
   }
 
-  attributeChangedCallback() {
-    if (this._mounted) { this._autoOverflow = false; this._render(); this._fit(); }
+  attributeChangedCallback(name) {
+    if (!this._mounted) return;
+    /* rtl + size don't change which crumbs render — only host classes/dir, the
+       separator glyph direction, and the home/overflow icon px. Patch those in
+       place so the <ol> and every crumb's ds-icon keep their node identity; a
+       full rebuild re-parsed them. Everything else (items/overflow/separator/
+       home-icon/max-visible/disabled) rebuilds the trail. */
+    if (name === 'rtl' || name === 'size') { this._paintChrome(); this._fit(); }
+    else { this._autoOverflow = false; this._render(); this._fit(); }
+  }
+
+  /* Host chrome + in-place patch of the separator direction and home/overflow
+     icon px — no <ol> rebuild, so the crumbs + ds-icons keep their identity. */
+  _paintChrome() {
+    const rtl = boolAttr(this, 'rtl');
+    const size = enumAttr(this, 'size', ['small', 'medium'], 'small');
+    const disabled = boolAttr(this, 'disabled');
+    const separator =
+      this.getAttribute('separator') ||
+      (rtl ? RTL_SEPARATOR : DEFAULT_SEPARATOR);
+
+    this.classList.remove('ds-breadcrumb--small', 'ds-breadcrumb--medium');
+    this.classList.add('ds-breadcrumb', `ds-breadcrumb--${size}`);
+    if (disabled) this.setAttribute('aria-disabled', 'true');
+    else this.removeAttribute('aria-disabled');
+    this.setAttribute('role', 'navigation');
+    if (!this.hasAttribute('aria-label')) this.setAttribute('aria-label', 'Breadcrumb');
+    if (rtl) this.setAttribute('dir', 'rtl');
+    else this.removeAttribute('dir');
+
+    /* Separator glyph follows the reading direction (unless pinned explicitly);
+       patch the existing ds-icon's name so the node survives. */
+    this.querySelectorAll('.ds-breadcrumb__separator ds-icon').forEach((ic) => {
+      if (ic.getAttribute('name') !== separator) ic.setAttribute('name', separator);
+    });
+    const homeIcon = this.querySelector('.ds-breadcrumb__home ds-icon');
+    if (homeIcon) {
+      const px = String(size === 'medium' ? 16 : 14);
+      if (homeIcon.getAttribute('size') !== px) homeIcon.setAttribute('size', px);
+    }
+    const overflowIcon = this.querySelector('.ds-breadcrumb__overflow-btn ds-icon');
+    if (overflowIcon) {
+      const px = String(size === 'medium' ? 20 : 12);
+      if (overflowIcon.getAttribute('size') !== px) overflowIcon.setAttribute('size', px);
+    }
   }
 
   _render() {

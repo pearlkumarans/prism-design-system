@@ -135,6 +135,21 @@ describe('ds-breadcrumb — reactivity & escaping', () => {
   });
 });
 
+describe('ds-breadcrumb — repaint-split', () => {
+  it('keeps the separator ds-icon node across a visual-only rtl change', async () => {
+    const el = await fixture(trail());
+    await nextFrame();
+    const sepIcon = el.querySelector('.ds-breadcrumb__separator ds-icon');
+    expect(sepIcon, 'separator icon rendered').to.exist;
+    expect(sepIcon.getAttribute('name')).to.equal('chevron-right');
+    el.setAttribute('rtl', '');
+    await nextFrame();
+    expect(el.querySelector('.ds-breadcrumb__separator ds-icon'), 'same ds-icon node (not re-parsed)').to.equal(sepIcon);
+    expect(sepIcon.getAttribute('name'), 'separator glyph flipped for rtl').to.equal('chevron-left');
+    expect(el.getAttribute('dir')).to.equal('rtl');
+  });
+});
+
 describe('ds-breadcrumb — a11y & teardown', () => {
   it('is accessible', async () => {
     const el = await fixture(trail());
