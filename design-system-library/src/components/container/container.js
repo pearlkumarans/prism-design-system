@@ -44,8 +44,44 @@ export class DsContainer extends HTMLElement {
     return ['padding', 'radius', 'variant', 'tone', 'elevation', 'interactive', 'selected', 'stack', 'row', 'gap', 'align'];
   }
 
-  connectedCallback() { this._apply(); this._mounted = true; }
+  connectedCallback() {
+    if (!this._onKeydown) {
+      /* Keyboard activation for an interactive (whole-surface) container: Enter or
+         Space fires a real click, mirroring a native button. */
+      this._onKeydown = (e) => {
+        if ((e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') && e.target === this) {
+          e.preventDefault();
+          this.click();
+        }
+      };
+      this.addEventListener('keydown', this._onKeydown);
+    }
+    this._apply();
+    this._mounted = true;
+  }
   attributeChangedCallback() { if (this._mounted) this._apply(); }
+
+  disconnectedCallback() {
+    if (this._onKeydown) { this.removeEventListener('keydown', this._onKeydown); this._onKeydown = null; }
+  }
+
+  /* When `interactive` marks the WHOLE surface as clickable, make it keyboard-
+     reachable/operable — but only when it holds no interactive descendants (else a
+     host role=button would nest interactives). Never clobber a consumer-set role or
+     tabindex; only manage the ones we added (tracked via _a11yAdded). */
+  _syncInteractiveA11y(interactive) {
+    const hasInteractiveChild = !!this.querySelector(
+      'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"]),'
+      + ' ds-button, ds-icon-button, ds-toggle, ds-checkbox, ds-radio, ds-input-select, ds-link, ds-text-link');
+    const wantButton = interactive && !hasInteractiveChild;
+    if (wantButton) {
+      if (!this.hasAttribute('role')) { this.setAttribute('role', 'button'); this._roleAdded = true; }
+      if (!this.hasAttribute('tabindex')) { this.setAttribute('tabindex', '0'); this._tabindexAdded = true; }
+    } else {
+      if (this._roleAdded) { this.removeAttribute('role'); this._roleAdded = false; }
+      if (this._tabindexAdded) { this.removeAttribute('tabindex'); this._tabindexAdded = false; }
+    }
+  }
 
   _setData(key, attr, allowed, fallback) {
     if (this.hasAttribute(attr)) this.dataset[key] = enumAttr(this, attr, allowed, fallback);
@@ -61,8 +97,10 @@ export class DsContainer extends HTMLElement {
     this._setData('elev', 'elevation', ELEVS, 'none');
     this._setData('gap', 'gap', GAPS, 'md');
     this._setData('align', 'align', ALIGNS, 'start');
-    this.classList.toggle('ds-container--interactive', boolAttr(this, 'interactive'));
+    const interactive = boolAttr(this, 'interactive');
+    this.classList.toggle('ds-container--interactive', interactive);
     this.classList.toggle('ds-container--selected', boolAttr(this, 'selected'));
+    this._syncInteractiveA11y(interactive);
     /* stack / row are layout booleans (presence = on) */
     if (this.hasAttribute('stack')) this.dataset.stack = ''; else delete this.dataset.stack;
     if (this.hasAttribute('row')) this.dataset.row = ''; else delete this.dataset.row;

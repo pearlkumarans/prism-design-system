@@ -117,6 +117,11 @@ export class DsToggle extends HTMLElement {
       this._btn.removeChild(this._text);
     }
   }
+
+  // Convenience proxies so consumers can poke the switch without reaching into the DOM
+  click() { this._btn?.click(); }
+  focus(opts) { this._btn?.focus(opts); }
+  blur() { this._btn?.blur(); }
 }
 
 if (typeof customElements !== 'undefined' && !customElements.get('ds-toggle')) {

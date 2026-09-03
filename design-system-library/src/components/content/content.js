@@ -27,8 +27,10 @@ export class DsContent extends HTMLElement {
     if (!this._mounted) {
       this.classList.add('ds-content');
       this._mounted = true;
-      this._wireAutoFrame();
     }
+    /* (Re)wire the auto-frame observer on every connect — disconnectedCallback nulls
+       it, so a disconnect→reconnect would otherwise leave auto-framing dead. */
+    if (!this._observer) this._wireAutoFrame();
     this._render();
   }
 

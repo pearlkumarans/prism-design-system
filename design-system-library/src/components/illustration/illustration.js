@@ -9,9 +9,8 @@
      - Override at runtime via window.UEMS_ILLUSTRATION_SPRITE.
    ============================================================================= */
 
-import { escapeHtml } from '../../utils/escape.js';
-
 const DEFAULT_SPRITE = '/illustrations.svg';
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 export class DsIllustration extends HTMLElement {
   static get observedAttributes() {
@@ -19,14 +18,27 @@ export class DsIllustration extends HTMLElement {
   }
 
   connectedCallback() {
-    this.render();
+    this.setAttribute('aria-hidden', 'true');
+    if (!this._svg) {
+      /* Build the <svg><use> once via the DOM API and patch attributes on change
+         (keyed repaint) rather than re-parsing innerHTML each time. setAttribute
+         doesn't parse HTML, so consumer values need no escaping to be safe. */
+      this._svg = document.createElementNS(SVG_NS, 'svg');
+      this._svg.setAttribute('focusable', 'false');
+      this._svg.setAttribute('aria-hidden', 'true');
+      this._use = document.createElementNS(SVG_NS, 'use');
+      this._svg.appendChild(this._use);
+      this.innerHTML = '';
+      this.appendChild(this._svg);
+    }
+    this._paint();
   }
 
   attributeChangedCallback() {
-    if (this.isConnected) this.render();
+    if (this._svg) this._paint();
   }
 
-  render() {
+  _paint() {
     const name = this.getAttribute('name') || '';
     const width = this.getAttribute('width');
     const height = this.getAttribute('height');
@@ -34,20 +46,13 @@ export class DsIllustration extends HTMLElement {
       (typeof window !== 'undefined' && window.UEMS_ILLUSTRATION_SPRITE) ||
       DEFAULT_SPRITE;
 
-    this.setAttribute('aria-hidden', 'true');
+    const hasW = width != null && width !== '';
+    const hasH = height != null && height !== '';
+    if (hasW) this._svg.setAttribute('width', width); else this._svg.removeAttribute('width');
+    if (hasH) this._svg.setAttribute('height', height); else this._svg.removeAttribute('height');
+    if (!hasW && !hasH) { this._svg.setAttribute('width', '100%'); this._svg.setAttribute('height', '100%'); }
 
-    /* name/width/height are consumer attributes interpolated into innerHTML —
-       escape them so a value containing a `"` can't break out of the attribute.
-       (sprite is a trusted window-config path.) */
-    const sizeAttrs = [];
-    if (width)  sizeAttrs.push(`width="${escapeHtml(width)}"`);
-    if (height) sizeAttrs.push(`height="${escapeHtml(height)}"`);
-
-    this.innerHTML = `
-      <svg ${sizeAttrs.join(' ') || 'width="100%" height="100%"'} focusable="false" aria-hidden="true">
-        <use href="${sprite}#illu-${escapeHtml(name)}"></use>
-      </svg>
-    `;
+    this._use.setAttribute('href', `${sprite}#illu-${name}`);
   }
 }
 

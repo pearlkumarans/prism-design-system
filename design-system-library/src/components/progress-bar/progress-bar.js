@@ -28,8 +28,20 @@ export class DsProgressBar extends HTMLElement {
     this._render();
   }
 
-  attributeChangedCallback() {
-    if (this._root) this._render();
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* value/max/label/value-label change only the fill width, aria value, and label
+       text — patch them in place so the CSS width transition actually animates. A
+       full _render() would recreate the .fill node and the bar would jump instead
+       of sliding. Anything that can change structure (variant↔indeterminate,
+       show-label, size/disabled/rtl chrome) rebuilds. */
+    if (this._fill
+        && (name === 'value' || name === 'max' || name === 'label' || name === 'value-label')
+        && !this._root.classList.contains('ds-progress-bar--indeterminate')) {
+      this._paintValue();
+    } else {
+      this._render();
+    }
   }
 
   _render() {
@@ -76,6 +88,35 @@ export class DsProgressBar extends HTMLElement {
         <div class="ds-progress-bar__fill" ${fillStyle}></div>
       </div>
     `;
+
+    /* Cache the nodes _paintValue() mutates so a value change never re-parses. */
+    this._fill = this._root.querySelector('.ds-progress-bar__fill');
+    this._track = this._root.querySelector('.ds-progress-bar__track');
+    this._labelEl = this._root.querySelector('.ds-progress-bar__label');
+    this._valueEl = this._root.querySelector('.ds-progress-bar__value');
+  }
+
+  /* In-place update of the fill width + aria value + label text — no innerHTML
+     rebuild, so the .ds-progress-bar__fill width transition animates. */
+  _paintValue() {
+    const max = Math.max(1, Number(this.getAttribute('max') || 100));
+    const valueRaw = Number(this.getAttribute('value'));
+    const value = Number.isFinite(valueRaw) ? Math.min(max, Math.max(0, valueRaw)) : 0;
+    const pct = (value / max) * 100;
+    const label = this.getAttribute('label') || 'Progress';
+    const customValueLabel = this.getAttribute('value-label');
+    const valueLabel = customValueLabel ?? `${Math.round(pct)}%`;
+
+    if (this._fill) this._fill.style.width = `${pct}%`;
+    if (this._track) {
+      this._track.setAttribute('aria-label', label);
+      this._track.setAttribute('aria-valuemax', String(max));
+      this._track.setAttribute('aria-valuenow', String(value));
+      if (customValueLabel) this._track.setAttribute('aria-valuetext', customValueLabel);
+      else this._track.removeAttribute('aria-valuetext');
+    }
+    if (this._labelEl) this._labelEl.textContent = label;
+    if (this._valueEl) this._valueEl.textContent = valueLabel;
   }
 }
 
