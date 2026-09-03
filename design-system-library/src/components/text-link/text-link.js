@@ -1,5 +1,6 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import '../../icons/icon.js';
 
 const STYLES = ['primary', 'secondary', 'subtle', 'danger'];
@@ -17,7 +18,17 @@ export class DsTextLink extends HTMLElement {
       this.appendChild(this._anchor);
     }
     this._render();
+    /* A framework may append the link text AFTER upgrade (captured 'Text Link'
+       above). Reclaim the stray text into _slottedText and re-render. */
+    watchLateChildren(this, (leaked) => {
+      const text = (leaked || []).map((n) => n.textContent).join('').trim();
+      (leaked || []).forEach((n) => n.remove());
+      if (text && this.getAttribute('label') == null) this._slottedText = text;
+      this._render();
+    });
   }
+
+  disconnectedCallback() { stopLateChildren(this); }
 
   attributeChangedCallback() { if (this._anchor) this._render(); }
 

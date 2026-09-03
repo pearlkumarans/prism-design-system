@@ -1,5 +1,6 @@
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import '../../icons/icon.js';
 
 const STATUSES = ['neutral', 'success', 'warning', 'critical', 'info', 'alert'];
@@ -16,7 +17,17 @@ export class DsStatusIndicator extends HTMLElement {
       this.appendChild(this._root);
     }
     this._render();
+    /* A framework may append the label text AFTER upgrade (captured empty above).
+       Reclaim the stray text into _labelText and re-render. */
+    watchLateChildren(this, (leaked) => {
+      const text = (leaked || []).map((n) => n.textContent).join('').trim();
+      (leaked || []).forEach((n) => n.remove());
+      if (text && !this.getAttribute('label')) this._labelText = text;
+      this._render();
+    });
   }
+
+  disconnectedCallback() { stopLateChildren(this); }
 
   attributeChangedCallback() { if (this._root) this._render(); }
 

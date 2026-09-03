@@ -23,6 +23,10 @@ import '../src/components/modal/modal.js';
 import '../src/components/popover/popover.js';
 import '../src/components/section-header/section-header.js';
 import '../src/components/empty-state/empty-state.js';
+import '../src/components/counter/counter.js';
+import '../src/components/divider/divider.js';
+import '../src/components/status-indicator/status-indicator.js';
+import '../src/components/text-link/text-link.js';
 
 const settle = async () => { await nextFrame(); await nextFrame(); };
 
@@ -172,5 +176,39 @@ describe('late-children — content injected after upgrade is recovered', () => 
     await settle();
     expect(el.querySelector('.ds-button__label').textContent.trim()).to.equal('Save');
     expect(el.querySelectorAll('.ds-button__label').length, 'label duplicated').to.equal(1);
+  });
+
+  it('ds-counter adopts a value appended after upgrade', async () => {
+    const el = await fixture(html`<ds-counter></ds-counter>`);
+    el.appendChild(document.createTextNode('142'));
+    await settle();
+    expect(el.querySelector('.ds-counter__value').textContent.trim()).to.equal('142');
+    const stray = [...el.childNodes].filter((n) => n !== el._valueEl && !(n.nodeType === 3 && !n.textContent.trim()));
+    expect(stray.length, 'value left stranded beside the pill').to.equal(0);
+  });
+
+  it('ds-divider (with-text) adopts a label appended after upgrade', async () => {
+    const el = await fixture(html`<ds-divider type="with-text"></ds-divider>`);
+    el.appendChild(document.createTextNode('Section'));
+    await settle();
+    expect(el.textContent.trim()).to.equal('Section');
+  });
+
+  it('ds-status-indicator adopts a label appended after upgrade', async () => {
+    const el = await fixture(html`<ds-status-indicator></ds-status-indicator>`);
+    el.appendChild(document.createTextNode('Online'));
+    await settle();
+    expect(el.querySelector('.ds-status-indicator__label').textContent.trim()).to.equal('Online');
+    const stray = [...el.childNodes].filter((n) => n !== el._root && !(n.nodeType === 3 && !n.textContent.trim()));
+    expect(stray.length, 'label left stranded beside the root').to.equal(0);
+  });
+
+  it('ds-text-link adopts link text appended after upgrade', async () => {
+    const el = await fixture(html`<ds-text-link href="#"></ds-text-link>`);
+    el.appendChild(document.createTextNode('Learn more'));
+    await settle();
+    expect(el.querySelector('a > span').textContent.trim()).to.equal('Learn more');
+    const stray = [...el.childNodes].filter((n) => n !== el._anchor && !(n.nodeType === 3 && !n.textContent.trim()));
+    expect(stray.length, 'label left stranded beside the anchor').to.equal(0);
   });
 });

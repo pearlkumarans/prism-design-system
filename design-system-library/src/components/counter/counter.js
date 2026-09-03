@@ -17,6 +17,7 @@
    ============================================================================= */
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 
 const VARIANTS = ['subtle', 'intense'];
 const STATES = ['default', 'active', 'critical', 'moderate', 'important', 'success', 'acknowledge'];
@@ -43,6 +44,24 @@ export class DsCounter extends HTMLElement {
       this._mounted = true;
     }
     this._sync();
+    /* Frameworks may append the value text AFTER upgrade (capture above ran on an
+       empty element). Reclaim any stray text now and as it arrives. */
+    this._reclaimLate();
+    watchLateChildren(this, () => this._reclaimLate());
+  }
+
+  disconnectedCallback() {
+    stopLateChildren(this);
+  }
+
+  _reclaimLate() {
+    const strays = [...this.childNodes].filter(
+      (n) => n !== this._valueEl && !(n.nodeType === 3 && !n.textContent.trim()));
+    if (!strays.length) return;
+    const text = strays.map((n) => n.textContent).join('').trim();
+    strays.forEach((n) => n.remove());
+    if (text && !this.hasAttribute('value')) this.setAttribute('value', text);  // → attributeChangedCallback → _sync
+    else this._sync();
   }
 
   attributeChangedCallback() {

@@ -10,6 +10,7 @@
    ============================================================================= */
 
 import { enumAttr } from '../../utils/attr.js';
+import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 
 const ORIENTATIONS = ['horizontal', 'vertical'];
 const TYPES        = ['full-width', 'inset', 'middle-inset', 'with-text'];
@@ -28,6 +29,18 @@ export class DsDivider extends HTMLElement {
       this._mounted = true;
     }
     this._sync();
+    /* A framework may append the label text AFTER upgrade (captured empty above).
+       _sync() rewrites/clears textContent, so reclaim = capture the late text into
+       the fallback, then re-sync (which discards the stray nodes). */
+    watchLateChildren(this, (leaked) => {
+      const text = (leaked || []).map((n) => n.textContent).join('').trim();
+      if (text && !this.getAttribute('label')) this._fallbackLabel = text;
+      this._sync();
+    });
+  }
+
+  disconnectedCallback() {
+    stopLateChildren(this);
   }
 
   attributeChangedCallback() {
