@@ -210,6 +210,21 @@ describe('ds-sidebar-l2 — a11y', () => {
   });
 });
 
+describe('ds-sidebar-l2 — repaint-split', () => {
+  it('keeps the back-control ds-icon-button node across a visual-only rtl change', async () => {
+    const el = await build(GROUPS, { variant: 'settings', title: 'Home', 'show-back': '' });
+    const back = el.querySelector('.ds-sidebar-l2__back');
+    expect(back, 'back control rendered').to.exist;
+    expect(back.getAttribute('icon')).to.equal('chevron-left');
+    el.setAttribute('rtl', '');
+    await nextFrame();
+    // same node — rtl painted the chrome in place, no innerHTML rebuild
+    expect(el.querySelector('.ds-sidebar-l2__back'), 'same ds-icon-button node').to.equal(back);
+    expect(back.getAttribute('icon'), 'icon mirrored for rtl').to.equal('chevron-right');
+    expect(nav(el).getAttribute('dir'), 'root dir applied').to.equal('rtl');
+  });
+});
+
 describe('ds-sidebar-l2 — teardown', () => {
   it('disconnects without throwing', async () => {
     const el = await build();

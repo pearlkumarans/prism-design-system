@@ -64,7 +64,28 @@ export class DsSidebarL2 extends HTMLElement {
     if (!this._root) return;
     /* `collapsed` only flips the toggle icon + CSS state — no full re-render. */
     if (name === 'collapsed') { this._syncCollapseToggle(); return; }
+    /* `rtl` is visual-only: it flips the root dir, mirrors the back-control icon
+       and the collapse chevron — none of which change which nodes exist. Paint
+       the chrome in place so the item/search/back ds-icon(-button)s aren't
+       re-parsed. Everything else (title/back/search-placeholder toggles, the
+       settings-header `variant`, and the SEARCH query which genuinely filters
+       which rows show) still full-renders. */
+    if (name === 'rtl') { this._paintChrome(); return; }
     this._render();
+    this._syncCollapseToggle();
+  }
+
+  /* Visual-only paint for `rtl`: patches the root dir + the back-control icon
+     name in place (the collapse chevron flip is handled by _syncCollapseToggle).
+     Produces the same dir/icon that _render would, without rebuilding innerHTML,
+     so the header/search/item ds-icons keep their node identity. */
+  _paintChrome() {
+    const rtl = boolAttr(this, 'rtl');
+    if (rtl) this._root.setAttribute('dir', 'rtl');
+    else this._root.removeAttribute('dir');
+    /* Back control mirrors in RTL (chevron-right) — patch the attr in place. */
+    const back = this._root.querySelector('.ds-sidebar-l2__back');
+    if (back) back.setAttribute('icon', rtl ? 'chevron-right' : 'chevron-left');
     this._syncCollapseToggle();
   }
 

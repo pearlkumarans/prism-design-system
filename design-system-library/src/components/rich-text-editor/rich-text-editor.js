@@ -70,7 +70,53 @@ export class DsRichTextEditor extends HTMLElement {
     this._hideFloating && this._hideFloating();
   }
 
-  attributeChangedCallback() { if (this._root) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* state/rtl/label/placeholder are chrome — patch them in place so a validation
+       `state="error"` (or an i18n label swap) does NOT rebuild the contenteditable
+       body and destroy the user's caret / selection / undo history. Falls back to a
+       full render if the change flips editability (toolbar + resize-grip appear or
+       disappear). toolbar / show-label / show-helper-row / helper / maxlength change
+       structure, so they rebuild. */
+    if ((name === 'state' || name === 'rtl' || name === 'label' || name === 'placeholder')
+        && this._paintChrome()) return;
+    this._render();
+  }
+
+  /* In-place chrome update that leaves the contenteditable body untouched. Returns
+     false when a full render is required (editability flipped). */
+  _paintChrome() {
+    const inner = this._root.querySelector('.ds-rte');
+    if (!inner || !this._body) return false;
+    const state = enumAttr(this, 'state', STATES, 'default');
+    const isDisabled = state === 'disabled';
+    const isReadonly = state === 'readonly';
+    const editable = !(isDisabled || isReadonly);
+    /* Editability flip changes which nodes exist (toolbar, resize-grip) → rebuild. */
+    if (editable !== (this._body.getAttribute('contenteditable') === 'true')) return false;
+
+    const rtl = boolAttr(this, 'rtl');
+    const label = this.getAttribute('label') || 'Label';
+    const placeholder = this.getAttribute('placeholder') || 'Start typing...';
+    const toolbar = enumAttr(this, 'toolbar', TOOLBARS, 'fixed');
+
+    inner.className = `ds-rte ds-rte--${state} ds-rte--toolbar-${toolbar}`;
+    if (rtl) inner.setAttribute('dir', 'rtl'); else inner.removeAttribute('dir');
+
+    const labelEl = inner.querySelector('.ds-rte__label');
+    if (labelEl) labelEl.textContent = label;
+    this._body.setAttribute('aria-label', label);
+    this._body.setAttribute('data-placeholder', placeholder);
+    if (state === 'error') this._body.setAttribute('aria-invalid', 'true');
+    else this._body.removeAttribute('aria-invalid');
+
+    const helper = inner.querySelector('.ds-rte__helper-row');
+    if (helper) {
+      helper.setAttribute('state', state === 'error' ? 'error' : (isDisabled ? 'disabled' : 'default'));
+      if (rtl) helper.setAttribute('rtl', ''); else helper.removeAttribute('rtl');
+    }
+    return true;
+  }
 
   get value() { return this._body?.innerHTML || ''; }
   set value(v) { if (this._body) { this._body.innerHTML = v ?? ''; this._updateCounter(); } }

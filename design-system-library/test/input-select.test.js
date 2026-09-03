@@ -103,6 +103,24 @@ describe('ds-input-select — a11y', () => {
   });
 });
 
+describe('ds-input-select — repaint-split', () => {
+  it('keeps the portaled dropdown node across a visual-only size change (no re-portal)', async () => {
+    const el = await fixture(html`<ds-input-select label="R"></ds-input-select>`);
+    await nextFrame();
+    el._open();               // open + portal the dropdown to <body>
+    await nextFrame();
+    const dd = el._dropdownEl;
+    expect(dd, 'dropdown portaled').to.exist;
+    expect(dd.parentNode).to.equal(document.body);
+    el.setAttribute('size', 'large');
+    await nextFrame();
+    // same node, still portaled — the chrome paint did NOT tear down / re-portal it
+    expect(el._dropdownEl, 'same portaled dropdown node').to.equal(dd);
+    expect(dd.parentNode, 'still in <body>').to.equal(document.body);
+    expect(root(el).classList.contains('ds-input-select--large'), 'size class applied').to.be.true;
+  });
+});
+
 describe('ds-input-select — teardown', () => {
   it('survives a disconnect → reconnect without duplicating its root', async () => {
     const el = await fixture(html`<ds-input-select label="R"></ds-input-select>`);

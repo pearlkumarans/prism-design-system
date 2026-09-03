@@ -118,6 +118,12 @@ export class DsInputSelect extends HTMLElement {
       }
     });
     if (!this._root) {
+      /* Capture a host `aria-label` ONCE and forward it to the inner combobox — the
+         host <ds-input-select> has no role, so aria-label on it is prohibited
+         (axe: aria-prohibited-attr) and doesn't name the control. Strip it from the
+         host so it isn't flagged; the combobox uses it when there's no `label`. */
+      this._ariaLabel = this.getAttribute('aria-label') || '';
+      if (this._ariaLabel) this.removeAttribute('aria-label');
       this.innerHTML = '';
       this._root = document.createElement('div');
       this.appendChild(this._root);
@@ -143,8 +149,104 @@ export class DsInputSelect extends HTMLElement {
     this._closeAffixMenu();
   }
 
-  attributeChangedCallback() {
-    if (this._root) this._render();
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* size/state/rtl are visual-only: they toggle root classes/dataset.state/dir,
+       the trigger's aria/tabindex, the chip (ds-tag) size, and the field-helper
+       state — none of which change which nodes exist. Paint the chrome in place so
+       the trigger's icons AND the portaled-to-<body> dropdown are neither
+       re-parsed nor re-portaled (a full _render would tear the open menu down and
+       rebuild it). Everything else (options/value/tags/placeholder/label/multi/…)
+       is structural. _paintChrome itself falls back to _render if a state change
+       would open/close the menu or add/remove the clear button. */
+    if (name === 'size' || name === 'state' || name === 'rtl') { this._paintChrome(); return; }
+    this._render();
+  }
+
+  /* Visual-only chrome paint for size/state/rtl. Mirrors the exact class/attr/dir
+     expressions _render uses, patching the already-rendered nodes in place and
+     leaving the portaled dropdown intact. Bails to a full _render when the change
+     is actually structural (menu open/close, or clear-button appear/disappear). */
+  _paintChrome() {
+    const size = enumAttr(this, 'size', SIZES, 'medium');
+    const position = enumAttr(this, 'label-position', POSITIONS, 'left');
+    const stateAttr = this._resolveState();
+    const rtl = boolAttr(this, 'rtl');
+    const multi = boolAttr(this, 'multi');
+
+    const stateImpliesOpen = stateAttr === 'active' || stateAttr === 'active-multi';
+    const isOpen = this._isOpen || stateImpliesOpen;
+    /* Structural: openness must not flip under a chrome paint (that portals /
+       tears down the dropdown). If it would, defer to the full render. */
+    if (isOpen !== !!this._dropdownEl) { this._render(); return; }
+
+    const effectiveState =
+      isOpen ? (multi ? 'active-multi' : 'active')
+      : stateAttr === 'default' && this._hasSelection() ? 'filled'
+      : stateAttr;
+    const isDisabled = effectiveState === 'disabled';
+    const isReadOnly = effectiveState === 'read-only';
+
+    /* Structural: the clear button appears/disappears with disabled/read-only. */
+    const showClear = boolAttr(this, 'show-clear');
+    const clearShouldExist = showClear && this._hasSelection() && !isDisabled && !isReadOnly;
+    if (clearShouldExist !== !!this._root.querySelector('[data-clear]')) { this._render(); return; }
+
+    this._root.className = [
+      'ds-input-select',
+      `ds-input-select--${size}`,
+      `ds-input-select--${position}`,
+      multi ? 'ds-input-select--multi' : '',
+    ].filter(Boolean).join(' ');
+    this._root.dataset.state = effectiveState;
+    if (rtl) this._root.setAttribute('dir', 'rtl'); else this._root.removeAttribute('dir');
+
+    const trigger = this._root.querySelector('[data-trigger]');
+    if (trigger) {
+      trigger.setAttribute('aria-expanded', String(isOpen));
+      if (effectiveState === 'error') trigger.setAttribute('aria-invalid', 'true');
+      else trigger.removeAttribute('aria-invalid');
+      if (isDisabled) {
+        trigger.setAttribute('aria-disabled', 'true');
+        trigger.setAttribute('tabindex', '-1');
+      } else {
+        trigger.removeAttribute('aria-disabled');
+        trigger.setAttribute('tabindex', '0');
+      }
+    }
+
+    /* Chips track the field size — patch each ds-tag's size in place. */
+    this._root.querySelectorAll('[data-tag-value]').forEach((tag) => {
+      if (tag.getAttribute('size') !== size) tag.setAttribute('size', size);
+    });
+
+    /* Field helper: state + show-icon + rtl, patched in place (the ds-field-helper
+       re-renders itself from these attrs, keeping its own node identity). */
+    const helper = this._root.querySelector('.ds-input-select__helper');
+    if (helper) {
+      const showHelperIconFlag =
+        effectiveState === 'error' || effectiveState === 'success' || boolAttr(this, 'show-helper-icon');
+      const helperState = effectiveState === 'error' ? 'error'
+        : effectiveState === 'success' ? 'success'
+        : effectiveState === 'disabled' ? 'disabled' : 'default';
+      helper.setAttribute('state', helperState);
+      if (showHelperIconFlag) helper.removeAttribute('show-icon');
+      else helper.setAttribute('show-icon', 'false');
+      if (rtl) helper.setAttribute('rtl', ''); else helper.removeAttribute('rtl');
+    }
+
+    /* Label help tooltip mirrors on rtl. */
+    const lhTip = this._root.querySelector('.ds-input-select__label-help-tip');
+    if (lhTip) { if (rtl) lhTip.setAttribute('rtl', ''); else lhTip.removeAttribute('rtl'); }
+
+    /* Keep the portaled dropdown intact — only propagate rtl into it in place. */
+    if (this._dropdownEl) {
+      if (rtl) this._dropdownEl.setAttribute('dir', 'rtl'); else this._dropdownEl.removeAttribute('dir');
+      const menu = this._dropdownEl.querySelector('[data-menu]');
+      if (menu) { if (rtl) menu.setAttribute('rtl', ''); else menu.removeAttribute('rtl'); }
+      const sf = this._dropdownEl.querySelector('[data-search]');
+      if (sf) { if (rtl) sf.setAttribute('rtl', ''); else sf.removeAttribute('rtl'); }
+    }
   }
 
   // ---- Public API ---------------------------------------------------------
@@ -291,7 +393,7 @@ export class DsInputSelect extends HTMLElement {
         aria-controls="${this._id}-listbox"
         ${(showLabel && label && position !== 'none')
           ? `aria-labelledby="${this._id}-label"`
-          : (label ? `aria-label="${escapeHtml(label)}"` : '')}
+          : ((label || this._ariaLabel) ? `aria-label="${escapeHtml(label || this._ariaLabel)}"` : '')}
         ${required ? 'aria-required="true"' : ''}
         ${effectiveState === 'error' ? 'aria-invalid="true"' : ''}
         ${isDisabled ? 'aria-disabled="true"' : ''}

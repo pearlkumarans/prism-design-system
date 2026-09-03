@@ -65,6 +65,29 @@ describe('ds-rich-text-editor — value get/set', () => {
     await nextFrame();
     expect(el.value).to.contain('Persist me');
   });
+
+  it('a state="error" change does NOT rebuild the body (caret/undo preserved)', async () => {
+    const el = await fixture(html`<ds-rich-text-editor label="D"></ds-rich-text-editor>`);
+    el.value = '<p>Typed content</p>';
+    const bodyBefore = body(el);
+    el.setAttribute('state', 'error');   // e.g. after validation
+    await nextFrame();
+    expect(body(el), 'body node was rebuilt — caret/undo would be lost').to.equal(bodyBefore);
+    expect(body(el).getAttribute('aria-invalid')).to.equal('true');
+    expect(el.value).to.contain('Typed content');
+    expect(el.querySelector('.ds-rte').classList.contains('ds-rte--error')).to.be.true;
+  });
+
+  it('a label / rtl change is applied in place without rebuilding the body', async () => {
+    const el = await fixture(html`<ds-rich-text-editor label="Before"></ds-rich-text-editor>`);
+    const bodyBefore = body(el);
+    el.setAttribute('label', 'After');
+    el.setAttribute('rtl', '');
+    await nextFrame();
+    expect(body(el)).to.equal(bodyBefore);
+    expect(el.querySelector('.ds-rte__label').textContent).to.equal('After');
+    expect(el.querySelector('.ds-rte').getAttribute('dir')).to.equal('rtl');
+  });
 });
 
 describe('ds-rich-text-editor — toolbar variants', () => {

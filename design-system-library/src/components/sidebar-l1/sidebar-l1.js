@@ -59,7 +59,20 @@ export class DsSidebarL1 extends HTMLElement {
     this._render();
   }
 
-  attributeChangedCallback() { if (this._root) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* rtl only sets the root dir — patch it in place instead of rebuilding every
+       item (which re-parses each ds-icon + ds-tooltip). `collapsed` genuinely
+       restructures (each item is wrapped in / unwrapped from a ds-tooltip for the
+       icon-only rail), so it rebuilds; the frequent select path is already
+       optimised and never rebuilds. */
+    if (name === 'rtl') {
+      if (boolAttr(this, 'rtl')) this._root.setAttribute('dir', 'rtl');
+      else this._root.removeAttribute('dir');
+      return;
+    }
+    this._render();
+  }
 
   disconnectedCallback() {
     /* Null the observer, not just disconnect it — `_render` only re-creates the

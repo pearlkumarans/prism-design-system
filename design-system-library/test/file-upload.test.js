@@ -76,6 +76,23 @@ describe('ds-file-upload — progress ticks update in place (perf contract)', ()
   });
 });
 
+describe('ds-file-upload — repaint-split', () => {
+  it('keeps the same file-row node across a visual-only rtl change (no rebuild)', async () => {
+    const el = await fixture(html`<ds-file-upload multiple helper="Only .csv"></ds-file-upload>`);
+    el.files = [{ id: 'a', name: 'one.csv', status: 'uploading', progress: 10 }];
+    await nextFrame();
+    const rowA = rowFor(el, 'a');
+    rowA._probe = 'kept';   // survives only if the row is not rebuilt
+    el.setAttribute('rtl', '');
+    await nextFrame();
+    // same node — rtl painted the chrome in place
+    expect(rowFor(el, 'a'), 'row A node identity').to.equal(rowA);
+    expect(rowFor(el, 'a')._probe, 'row A not rebuilt').to.equal('kept');
+    expect(el.querySelector('.ds-file-upload')?.getAttribute('dir'), 'root dir applied').to.equal('rtl');
+    expect(el.querySelector('ds-field-helper')?.hasAttribute('rtl'), 'helper rtl propagated').to.be.true;
+  });
+});
+
 describe('ds-file-upload — actions, escaping, a11y', () => {
   it('the cancel action on an uploading row fires ds-file-upload-cancel with the file', async () => {
     const el = await fixture(html`<ds-file-upload multiple></ds-file-upload>`);

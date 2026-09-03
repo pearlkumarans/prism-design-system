@@ -108,7 +108,37 @@ export class DsFileUpload extends HTMLElement {
     this._render();
   }
 
-  attributeChangedCallback() { if (this._root) this._render(); }
+  attributeChangedCallback(name) {
+    if (!this._root) return;
+    /* `rtl` is visual-only: it flips the root dir and propagates onto the shared
+       ds-field-helper — it never changes which rows/buttons exist and doesn't
+       touch the drag&drop wiring. Paint it in place so the file rows and their
+       ds-icon/ds-button/ds-progress-bar children aren't re-parsed and drag&drop
+       isn't re-wired.
+
+       `disabled` and `variant` stay STRUCTURAL (full _render): `disabled` toggles
+       whether the box click + drag&drop handlers are wired at all (enabled -> none
+       when disabled), which a chrome paint can't safely add/remove without
+       re-wiring; `variant` swaps the whole box markup (form placeholder+Browse vs
+       prominent hint+Upload, different button size/variant) i.e. which nodes exist.
+       The file list / value / accept / multiple are structural too. */
+    if (name === 'rtl') { this._paintChrome(); return; }
+    this._render();
+  }
+
+  /* Visual-only paint for `rtl`: patches the root dir + the field-helper's rtl in
+     place, matching what _render would set, without rebuilding rows or re-wiring
+     drag&drop — so every row's ds-icon/ds-button/ds-progress-bar keeps identity. */
+  _paintChrome() {
+    const rtl = boolAttr(this, 'rtl');
+    if (rtl) this._root.setAttribute('dir', 'rtl');
+    else this._root.removeAttribute('dir');
+    const helper = this._root.querySelector('ds-field-helper');
+    if (helper) {
+      if (rtl) helper.setAttribute('rtl', '');
+      else helper.removeAttribute('rtl');
+    }
+  }
 
   /* ---------------------------------------------------------------- API -- */
   get files() { return this._files.map((f) => ({ ...f })); }
