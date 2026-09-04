@@ -144,6 +144,38 @@ for (const file of files) {
   }
 }
 
+// ---- Line-height pairing: font-size-keyed line-height tokens --------------------
+// --uems-line-height-N is the line-height for font-size-N (e.g. -16 = 24px). So a
+// rule that sets font-size: var(--font-size-N) and a raw line-height whose px equals
+// that token's value must use var(--uems-line-height-N). Only the byte-identical
+// co-located case is flagged; inherited / deliberately-deviating line-heights and any
+// /* lint-ok */ line are left alone.
+const LH_FOR_FS = { 9: 14, 10: 14, 11: 14, 12: 16, 13: 20, 14: 20, 16: 24, 18: 28, 20: 30, 24: 32, 28: 36, 32: 44, 36: 46 };
+for (const file of files) {
+  const src = readFileSync(file, 'utf8');
+  const lines = src.split('\n');
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+  let r;
+  const ruleRe = /\{([^{}]*)\}/g;
+  while ((r = ruleRe.exec(code))) {
+    const body = r[1];
+    const fsNs = new Set();
+    let g;
+    const tokRe = /var\(--(?:uems-)?font-size-(\d+)/g;
+    while ((g = tokRe.exec(body))) fsNs.add(Number(g[1]));
+    if (!fsNs.size) continue;
+    const lhRe = /line-height:\s*(\d+)px/g;
+    while ((g = lhRe.exec(body))) {
+      const M = Number(g[1]);
+      const cands = [...fsNs].filter((n) => LH_FOR_FS[n] === M);
+      if (cands.length !== 1) continue;                 // no match, or ambiguous → leave
+      const line = code.slice(0, r.index + 1 + g.index).split('\n').length;
+      if (/lint-ok/.test(lines[line - 1] || '')) continue;
+      padViolations.push({ file: relative(process.cwd(), file), line, decl: `line-height: ${M}px (use var(--uems-line-height-${cands[0]}) — paired with font-size-${cands[0]})` });
+    }
+  }
+}
+
 if (violations.length || sizeViolations.length || padViolations.length) {
   if (violations.length) {
     console.error(`\n✖ token-lint: ${violations.length} hardcoded color value(s) — replace with a design token (var(--uems-*)):\n`);
