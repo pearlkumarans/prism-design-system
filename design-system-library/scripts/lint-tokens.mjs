@@ -93,33 +93,53 @@ for (const file of files) {
   }
 }
 
-// ---- Spacing lock: raw on-scale px in padding must go through var(--spacing-N) ----
-// Applies to ALL component CSS. Only TOP-LEVEL px count — a px inside a var()/calc()
-// fallback (var(--x, 4px)) is a deliberate safety net and is allowed, as are
-// off-scale odd values (no token exists) and any line carrying a /* lint-ok */ marker.
+// ---- Value token lock: raw values that already have a token must use it --------
+// Covers spacing (padding/margin/gap → --spacing-N), radius (border-radius → a radius
+// token), and type (font-size → --font-size-N, font-weight → --font-weight-name),
+// across ALL component CSS. Only TOP-LEVEL values count — a value inside a var()/
+// calc() fallback is a deliberate safety net and is allowed, as are off-scale values
+// with no token, negatives (need calc(), not a positive token), and any line carrying
+// a /* lint-ok */ marker.
 const SPACING_STEPS = new Set([2, 4, 6, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 80, 96]);
-const PAD_RE = /\bpadding(?:-(?:top|right|bottom|left|inline|block|inline-start|inline-end|block-start|block-end))?\s*:\s*([^;{}]*)/gi;
-const padViolations = [];
+const FONT_SIZE_STEPS = new Set([8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80]);
+// radius px → token (single-valued tokens only; --radius-full for 9999 to avoid the
+// ambiguous --uems-radius-pill, defined 9999px in one file and 20px in another).
+const RADIUS_MAP = { 2: '--radius-xs', 4: '--uems-radius-xs', 6: '--uems-radius-default', 8: '--uems-radius-s', 12: '--uems-radius-m', 16: '--uems-radius-l', 9999: '--radius-full' };
+const WEIGHT_MAP = { 100: '--font-weight-thin', 200: '--font-weight-extralight', 300: '--font-weight-light', 400: '--font-weight-regular', 500: '--font-weight-medium', 600: '--font-weight-semibold', 700: '--font-weight-bold', 800: '--font-weight-extrabold', 900: '--font-weight-black' };
+const SIDES = '(?:top|right|bottom|left|inline|block|inline-start|inline-end|block-start|block-end)';
+const LOCKS = [
+  { kind: 'px',  props: `padding(?:-${SIDES})?|margin(?:-${SIDES})?|(?:row-|column-)?gap`, suggest: (n) => SPACING_STEPS.has(n) ? `var(--spacing-${n})` : null },
+  { kind: 'px',  props: `border-radius|border-(?:top|bottom)-(?:left|right)-radius|border-(?:start|end)-(?:start|end)-radius`, suggest: (n) => RADIUS_MAP[n] ? `var(${RADIUS_MAP[n]})` : null },
+  { kind: 'px',  props: `font-size`, suggest: (n) => FONT_SIZE_STEPS.has(n) ? `var(--font-size-${n})` : null },
+  { kind: 'num', props: `font-weight`, suggest: (n) => WEIGHT_MAP[n] ? `var(${WEIGHT_MAP[n]})` : null },
+];
+const padViolations = [];   // (name kept for the reporting block below)
 for (const file of files) {
   const src = readFileSync(file, 'utf8');
   const lines = src.split('\n');
   const code = src.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
-  let m;
-  while ((m = PAD_RE.exec(code))) {
-    const value = m[1];
-    const valueAt = m.index + m[0].length - value.length;   // offset of the value in `code`
-    let depth = 0;
-    for (let i = 0; i < value.length; i++) {
-      const ch = value[i];
-      if (ch === '(') { depth++; continue; }
-      if (ch === ')') { depth = Math.max(0, depth - 1); continue; }
-      if (depth !== 0) continue;
-      if (!/\d/.test(ch) || /[\w.-]/.test(value[i - 1] || ' ')) continue;
-      const mm = /^(\d+)px\b/.exec(value.slice(i));
-      if (!mm || !SPACING_STEPS.has(Number(mm[1]))) continue;
-      const line = code.slice(0, valueAt + i).split('\n').length;
-      if (/lint-ok/.test(lines[line - 1] || '')) continue;
-      padViolations.push({ file: relative(process.cwd(), file), line, decl: `${mm[1]}px (use var(--spacing-${mm[1]}))` });
+  for (const lock of LOCKS) {
+    const declRe = new RegExp(String.raw`\b(?:${lock.props})\s*:\s*([^;{}]*)`, 'gi');
+    const numRe = lock.kind === 'px' ? /^(\d+)px\b/ : /^(\d+)\b/;
+    let m;
+    while ((m = declRe.exec(code))) {
+      const value = m[1];
+      const valueAt = m.index + m[0].length - value.length;
+      let depth = 0;
+      for (let i = 0; i < value.length; i++) {
+        const ch = value[i];
+        if (ch === '(') { depth++; continue; }
+        if (ch === ')') { depth = Math.max(0, depth - 1); continue; }
+        if (depth !== 0) continue;
+        if (!/\d/.test(ch) || /[\w.#-]/.test(value[i - 1] || ' ')) continue;
+        const mm = numRe.exec(value.slice(i));
+        if (!mm) continue;
+        const sugg = lock.suggest(Number(mm[1]));
+        if (!sugg) continue;
+        const line = code.slice(0, valueAt + i).split('\n').length;
+        if (/lint-ok/.test(lines[line - 1] || '')) continue;
+        padViolations.push({ file: relative(process.cwd(), file), line, decl: `${mm[0]} (use ${sugg})` });
+      }
     }
   }
 }
@@ -134,10 +154,10 @@ if (violations.length || sizeViolations.length || padViolations.length) {
     for (const v of sizeViolations) console.error(`  ${v.file}:${v.line}\n      ${v.decl}`);
   }
   if (padViolations.length) {
-    console.error(`\n✖ token-lint: ${padViolations.length} raw on-scale padding value(s) — use the spacing tokens (var(--spacing-N)), or mark a deliberate off-token value with a /* lint-ok */ comment:\n`);
-    for (const v of padViolations) console.error(`  ${v.file}:${v.line}\n      padding … ${v.decl}`);
+    console.error(`\n✖ token-lint: ${padViolations.length} raw value(s) that already have a token — spacing (padding/margin/gap → var(--spacing-N)), radius (border-radius → a radius token), or type (font-size → var(--font-size-N), font-weight → var(--font-weight-*)). Use the token, or mark a deliberate off-token value with a /* lint-ok */ comment:\n`);
+    for (const v of padViolations) console.error(`  ${v.file}:${v.line}\n      ${v.decl}`);
   }
-  console.error(`\n  Allowed: literals in comments, var(--token, <fallback>), rgba(var(--uems-shadow-rgb) / α), control sizes via var()/lint-ok, off-scale paddings, and padding px inside a var()/calc() fallback.\n`);
+  console.error(`\n  Allowed: literals in comments, var(--token, <fallback>), rgba(var(--uems-shadow-rgb) / α), control sizes via var()/lint-ok, off-scale/no-token values, negatives (calc()), and any value inside a var()/calc() fallback.\n`);
   process.exit(1);
 }
-console.log(`✓ token-lint: no hardcoded colors, no raw control sizes in ${CONTROL_FILES.size} control components, and no raw on-scale paddings, across ${files.length} stylesheets.`);
+console.log(`✓ token-lint: no hardcoded colors, no raw control sizes in ${CONTROL_FILES.size} control components, and no raw spacing/radius/type where a token exists, across ${files.length} stylesheets.`);

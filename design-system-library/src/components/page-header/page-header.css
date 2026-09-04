@@ -11,7 +11,7 @@ ds-page-header { display: block; font-family: var(--font-family-sans); width: 10
 .ds-page-header {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--spacing-12);
   padding: var(--spacing-12) 0;
   width: 100%;
   background: var(--uems-bg-base);
@@ -30,7 +30,7 @@ ds-page-header { display: block; font-family: var(--font-family-sans); width: 10
 .ds-page-header__title-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-8);
   padding: 0 var(--spacing-20);
 }
 /* Title-main: back + leading icon + the title/description stack, laid out as a
@@ -39,7 +39,7 @@ ds-page-header { display: block; font-family: var(--font-family-sans); width: 10
 .ds-page-header__title-main {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-12);
   flex: 1;
   min-width: 0;
 }
@@ -54,14 +54,14 @@ ds-page-header { display: block; font-family: var(--font-family-sans); width: 10
 .ds-page-header__title-stack {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-4);
   flex: 1;
   min-width: 0;
 }
 .ds-page-header__leading {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-12);
   min-width: 0;
 }
 /* Leading icon — a grey tile beside the title+description block. */
@@ -160,7 +160,7 @@ ds-page-header[filter-applied] .ds-page-header__title-filter::after {
 .ds-page-header__actions {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-8);
   flex-shrink: 0;
 }
 /* Consumer-slotted action buttons live inside this span — lay them out with a
@@ -168,7 +168,7 @@ ds-page-header[filter-applied] .ds-page-header__title-filter::after {
 .ds-page-header__action-slot {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-8);
 }
 
 /* Summary metadata is a <ds-description-list> now — the component owns
@@ -192,7 +192,7 @@ ds-page-header[filter-applied] .ds-page-header__title-filter::after {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;   /* all pairs share a baseline row */
-  gap: 4px 20px;
+  gap: var(--spacing-4) var(--spacing-20);
   /* Never wrap past two lines on responsive/narrow widths. Two item rows
      (24px each) + the 4px row-gap = 52px; anything beyond clips (whole pairs
      wrap as units via break-inside:avoid, so it never clips mid-item). */
@@ -202,7 +202,7 @@ ds-page-header[filter-applied] .ds-page-header__title-filter::after {
 .ds-page-header__summary .ds-description-list__item {
   flex-direction: row !important;
   align-items: baseline !important;
-  gap: 8px !important;
+  gap: var(--spacing-8) !important;
   /* Strip the component's own item spacing so the summary lines up with the
      title. `margin-block-end` (16 on all but :last-child) made the last item
      taller in the stretch row; `padding` (8 all sides) both pushed the summary
@@ -256,12 +256,12 @@ ds-page-header[filter-applied] .ds-page-header__title-filter::after {
 }
 /* Collapsed: shrink to 0 and pull back the surrounding flex `gap` (12px between
    header parts, 4px between title and description) so nothing leaves a hole. */
-.ds-page-header--collapsed .ds-page-header__breadcrumbs { max-height: 0; opacity: 0; margin-bottom: -12px; }
-.ds-page-header--collapsed .ds-page-header__description  { max-height: 0; opacity: 0; margin-top: -4px; }
+.ds-page-header--collapsed .ds-page-header__breadcrumbs { max-height: 0; opacity: 0; margin-bottom: calc(var(--spacing-12) * -1); }
+.ds-page-header--collapsed .ds-page-header__description  { max-height: 0; opacity: 0; margin-top: calc(var(--spacing-4) * -1); }
 /* Summary lives INSIDE the title-stack (4px internal gap), so reclaim only that
    4px on collapse — using -12px over-pulls and shrinks the stack below the
    title's own height, which knocks the title off-centre from the icon/button. */
-.ds-page-header--collapsed .ds-page-header__summary      { max-height: 0; opacity: 0; margin-top: -4px; }
+.ds-page-header--collapsed .ds-page-header__summary      { max-height: 0; opacity: 0; margin-top: calc(var(--spacing-4) * -1); }
 /* Collapsed: shrink the leading icon tile to 28px so it matches the xsmall
    action button's height (40→28 tile, 24→16 glyph), and pull the tabs up so the
    title row sits closer to the tab bar. */
@@ -281,7 +281,7 @@ ds-page-header[filter-applied] .ds-page-header__title-filter::after {
 .ds-page-header__divider { padding: 0; }
 .ds-page-header__tab-list {
   display: inline-flex;
-  gap: 12px;
+  gap: var(--spacing-12);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -289,7 +289,7 @@ ds-page-header[filter-applied] .ds-page-header__title-filter::after {
 .ds-page-header__tab {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-8);
   padding: var(--spacing-8) var(--spacing-4);
   background: transparent;
   border: 0;
@@ -306,7 +306,7 @@ ds-page-header[filter-applied] .ds-page-header__title-filter::after {
   border-bottom-color: var(--uems-border-accent);
 }
 .ds-page-header__tab-count {
-  font-size: 10px;
+  font-size: var(--font-size-10);
   font-weight: var(--font-weight-medium);
   color: var(--uems-text-secondary);
   background: var(--uems-bg-secondary-alt);
