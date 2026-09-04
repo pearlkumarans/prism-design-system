@@ -12,7 +12,7 @@ ds-page-header { display: block; font-family: var(--font-family-sans); width: 10
   display: flex;
   flex-direction: column;
   gap: var(--spacing-12);
-  padding: var(--spacing-12) 0;
+  padding: var(--spacing-12) 0 0;
   width: 100%;
   background: var(--uems-bg-base);
   /* Responsive to the header's OWN width (works in a narrow panel, not just a
@@ -21,9 +21,14 @@ ds-page-header { display: block; font-family: var(--font-family-sans); width: 10
 }
 
 /* Breadcrumb is a real <ds-breadcrumb> now — it owns crumb colors, separators,
-   hover and current-page styling. Here we only position it within the header. */
-.ds-page-header__breadcrumbs {
-  display: block;
+   hover and current-page styling. Here we only position it within the header.
+   Scoped under .ds-page-header on purpose: the host element carries BOTH
+   .ds-page-header__breadcrumbs and .ds-breadcrumb, and breadcrumb.css resets
+   `padding: 0` on .ds-breadcrumb. Those are both (0,1,0), and breadcrumb.css is
+   injected after this file, so an unscoped rule here loses the tie and the
+   trail sat flush to the header's left edge instead of lining up with the
+   title row. `display` is left to the component (it wants flex). */
+.ds-page-header .ds-page-header__breadcrumbs {
   padding: 0 var(--spacing-20);
 }
 
@@ -342,9 +347,11 @@ ds-page-header[filter-applied] .ds-page-header__title-filter::after {
    already sit on their own right-aligned row from the 560 tier; secondary
    actions fold into the ⋮ overflow via the JS fitter below.) */
 @container (max-width: 400px) {
-  .ds-page-header__breadcrumbs,
   .ds-page-header__title-row,
   .ds-page-header__tabs { padding-inline: var(--spacing-12); }
+  /* Same tie-break as the base rule above — needs the extra class to out-rank
+     breadcrumb.css's `padding: 0`. */
+  .ds-page-header .ds-page-header__breadcrumbs { padding-inline: var(--spacing-12); }
   .ds-page-header__icon { width: 32px; height: 32px; }
   .ds-page-header__icon svg { width: 20px; height: 20px; }
 }
