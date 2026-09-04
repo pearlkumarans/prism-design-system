@@ -30,5 +30,26 @@
    control internals (ds-radio/ds-toggle hidden inputs, popovers) so they can't
    escape to ds-content and inflate its scrollHeight — which would make ds-content
    scroll and drag a pinned ds-form-footer up. Keep it. ds-page-header owns its own
-   20px inline padding, so the header sits flush and only the scroll body is inset. */
-.lay__scroll { position: relative; flex: 1 1 auto; overflow: auto; padding: 0 20px 24px; }
+   20px inline padding, so the header sits flush and only the scroll body is inset.
+   Top inset is deliberately 0 — the gap below the page header comes from the
+   `ds-page-header + *` rule just below, so it is set once for every screen. */
+.lay__scroll { position: relative; flex: 1 1 auto; overflow: auto; padding: 0 var(--spacing-20) var(--spacing-24); }
+
+/* ---- Gap below the page header -------------------------------------------
+   ds-page-header ends flush at its last row (the tab underline / divider), by
+   design — those are separators that want to reach the edge. The gap to the
+   page body is therefore the LAYOUT's, and it belongs here rather than in each
+   view: the body container is named differently in nearly every screen
+   (.lay__scroll, .dash, .wrap, .prism-scroll, .page__scroll, .ql-body, .dp,
+   .cl, .buy, …) and every one of them was written with `padding-top: 0`,
+   relying on the header's own bottom padding to space them.
+
+   Targeting the adjacent sibling covers all of them in one place, whatever the
+   container is called. Specificity is only (0,0,2), so a view that wants a
+   different gap just sets its own margin/padding and wins.
+
+   20px is the ONLY gap: a first-child wrapper inside the body must not add its
+   own top inset on top of this, or the total drifts per screen (it used to run
+   12px on dashboards and 28-32px on lists and forms). Repeating sections keep
+   their spacing via a :first-child exemption rather than losing it wholesale. */
+ds-page-header + * { margin-block-start: var(--spacing-20); }

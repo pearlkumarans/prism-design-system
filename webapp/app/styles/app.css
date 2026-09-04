@@ -164,7 +164,7 @@ body {
 /* Patterns whose content stacks its own children (list view, dashboard bento)
    opt into a column with a consistent gap — the only per-pattern variation. */
 .prism-scroll--stack { display: flex; flex-direction: column; gap: 16px; }
-.bl-dash .bl-kpis { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 16px; }
+.bl-dash .bl-kpis { display: flex; gap: 12px; flex-wrap: wrap; }
 .bl-dash .bl-kpis ds-kpi-card { flex: 1 1 200px; min-width: 180px; }
 
 .bl-dash .bl-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; align-items: stretch; grid-auto-rows: 360px; }
@@ -234,6 +234,9 @@ body {
 .sform { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 /* .sform__scroll → .prism-scroll */
 .sform__section { padding: 20px 0 4px; }
+/* The layout supplies the 20px gap below the page header — the first section
+   must not stack its own on top. */
+.sform__section:first-child { padding-block-start: 0; }
 .sform__fields { display: flex; flex-direction: column; gap: 20px; padding-top: 12px; }
 .sform__field { max-width: 820px; }
 .sform__control-only { padding-inline-start: 288px; }
@@ -267,7 +270,7 @@ body {
 /* ── Native managed-computers list (Phase E, 3rd pilot / data-layer spike) ──── */
 .bl-list { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 /* .bl-list__scroll → .prism-scroll.prism-scroll--stack */
-.bl-list .bl-kpis { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 16px; }
+.bl-list .bl-kpis { display: flex; gap: 12px; flex-wrap: wrap; }
 .bl-list .bl-kpis ds-kpi-card { flex: 1 1 200px; min-width: 180px; }
 /* Filter column collapsed by default (table full-width); the table's built-in
    Filter button toggles `.is-filtering`, sliding the 240px sidebar open — this
