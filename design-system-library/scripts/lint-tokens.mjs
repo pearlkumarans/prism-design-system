@@ -13,7 +13,7 @@
 
    Usage:  node scripts/lint-tokens.mjs [dir]      (default: src/components)
    Exit 1 with a report if any violation is found; 0 otherwise. */
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join, relative, dirname, basename } from 'node:path';
 
 /* Control-size lock: within the interactive-control components, a raw px
@@ -172,6 +172,39 @@ for (const file of files) {
       const line = code.slice(0, r.index + 1 + g.index).split('\n').length;
       if (/lint-ok/.test(lines[line - 1] || '')) continue;
       padViolations.push({ file: relative(process.cwd(), file), line, decl: `line-height: ${M}px (use var(--uems-line-height-${cands[0]}) — paired with font-size-${cands[0]})` });
+    }
+  }
+}
+
+// ---- Undefined shadow-token references (elevation) -----------------------------
+// A var(--…shadow…) pointing at a token that doesn't exist silently uses its literal
+// fallback (e.g. --uems-shadow-lg was never defined; only --shadow-lg is), so the
+// elevation "token" is dead. Collect every custom property defined under src/tokens,
+// then flag a component reference to an undefined shadow/elevation token.
+const definedTokens = new Set();
+const collectDefs = (css) => { let d; const dr = /(--[a-z0-9-]+)\s*:/gi; while ((d = dr.exec(css))) definedTokens.add(d[1].toLowerCase()); };
+const TOKENS_DIR = 'src/tokens';
+if (existsSync(TOKENS_DIR)) {
+  for (const f of readdirSync(TOKENS_DIR)) {
+    if (f.endsWith('.css')) collectDefs(readFileSync(join(TOKENS_DIR, f), 'utf8'));
+  }
+}
+// Also count component-local custom props (e.g. --ds-container-shadow, --_s-thumb-shadow)
+// as defined, so only genuinely-undefined names (a mistyped design token) are flagged.
+for (const file of files) collectDefs(readFileSync(file, 'utf8'));
+if (definedTokens.size) {
+  for (const file of files) {
+    const src = readFileSync(file, 'utf8');
+    const lines = src.split('\n');
+    const code = src.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+    let m;
+    const refRe = /var\(\s*(--[a-z0-9-]*(?:shadow|elevation)[a-z0-9-]*)/gi;
+    while ((m = refRe.exec(code))) {
+      const name = m[1].toLowerCase();
+      if (definedTokens.has(name)) continue;
+      const line = code.slice(0, m.index).split('\n').length;
+      if (/lint-ok/.test(lines[line - 1] || '')) continue;
+      padViolations.push({ file: relative(process.cwd(), file), line, decl: `var(${m[1]}) — undefined shadow/elevation token (silently uses its fallback; use a defined --shadow-* token)` });
     }
   }
 }
