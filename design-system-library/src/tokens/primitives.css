@@ -14,6 +14,10 @@
  * HAND-ADDED (not in the Figma export — keep on regeneration):
  *   --grey-modern-925  #101217   surface between the dark  canvas and card fill
  *   --grey-1025        #131313   surface between the night canvas and card fill
+ *   --fern-canvas      #DDECE5   light canvas gradient stop (SDP parity)
+ *   --sunshine-canvas  #FFF1C5   light canvas gradient stop (SDP parity)
+ * The two *-canvas entries are role-named on purpose: they are NOT ramp steps
+ * and must only ever back --uems-background / --uems-background-alt.
  * ============================================================================= */
 
 :root {
@@ -119,6 +123,13 @@
   --fern-10:            #F2F9F5;
   --fern-15:            #EBF6F0;
   --fern-25:            #E7F3ED;
+  /* CANVAS ONLY — do not use as a general Fern step. Added by hand to match
+     ServiceDesk Plus's app canvas exactly: it is the bottom stop of SDP's blue
+     gradient AND the top stop of its teal one. Falls ~51% between fern-25 and
+     fern-50 (L* 92.14 against 94.82 / 89.55) and is on-hue, but it is NOT part
+     of the ramp's progression — bind only --uems-background / -alt to it.
+     Add it to the Figma collection too, or regeneration will drop it. */
+  --fern-canvas:        #DDECE5;
   --fern-50:            #CEE7DA;
   --fern-100:           #B7DCC7;
   --fern-150:           #9ECFB4;
@@ -167,6 +178,9 @@
   --sunshine-25:        #FEF8EB;
   --sunshine-50:        #FEF1D6;
   --sunshine-100:       #FDEBC2;
+  /* CANVAS ONLY — see --fern-canvas. Bottom stop of SDP's teal gradient; sits
+     just above sunshine-100 (the nearest step, dE 2.69). Not a ramp step. */
+  --sunshine-canvas:    #FFF1C5;
   --sunshine-150:       #FDE4AE;
   --sunshine-200:       #FCDD99;
   --sunshine-250:       #FCD685;
