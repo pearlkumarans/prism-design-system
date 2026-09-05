@@ -276,4 +276,206 @@ describe('ds-dropdown-menu — teardown', () => {
     expect(el.querySelectorAll('.ds-dropdown-menu').length, 'exactly one panel after reconnect').to.equal(1);
     expect(items(el).length).to.equal(3);
   });
+
+  /* ── Nested (cascade) menus — `subItems` ──────────────────────────────── */
+  describe('nested menus', () => {
+    const NESTED = [
+      { label: 'Deploy', value: 'deploy' },
+      { label: 'Export', value: 'export', subItems: [
+        { label: 'CSV', value: 'csv' },
+        { label: 'PDF', value: 'pdf', subItems: [
+          { label: 'Portrait', value: 'p' },
+          { label: 'Landscape', value: 'l', subItems: [{ label: 'Too deep', value: 'x' }] },
+        ] },
+      ] },
+    ];
+    const flyouts = () => [...document.querySelectorAll('ds-dropdown-menu.ds-dropdown-menu--cascade-sub[open]')];
+    const row = (el, re) => items(el).find((r) => re.test(r.textContent));
+    /* The flyouts live on <body>, outside the fixture, so clear them by hand. */
+    afterEach(() => document.querySelectorAll('ds-dropdown-menu.ds-dropdown-menu--cascade-sub')
+      .forEach((n) => n.remove()));
+
+    it('marks a subItems row as a popup and gives it a chevron', async () => {
+      const el = await mk(NESTED, { open: true, type: 'action' });
+      const r = row(el, /Export/);
+      expect(r.hasAttribute('data-has-sub')).to.be.true;
+      expect(r.getAttribute('aria-haspopup')).to.equal('menu');
+      expect(r.getAttribute('aria-expanded')).to.equal('false');
+      expect(r.querySelector('.ds-dropdown-menu__item-chevron')).to.exist;
+      /* A plain row stays plain. */
+      expect(row(el, /Deploy/).hasAttribute('aria-haspopup')).to.be.false;
+    });
+
+    it('opens the flyout on the forward arrow, inheriting type + rtl', async () => {
+      const el = await mk(NESTED, { open: true, type: 'action' });
+      el.setAttribute('rtl', '');
+      await nextFrame();
+      const r = row(el, /Export/);
+      r.focus();
+      /* RTL mirrors the open key to ArrowLeft. */
+      r.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+      await nextFrame();
+      const [sub] = flyouts();
+      expect(sub, 'flyout opened').to.exist;
+      expect(sub.getAttribute('type'), 'inherits action').to.equal('action');
+      expect(sub.hasAttribute('rtl'), 'inherits rtl').to.be.true;
+      expect(r.getAttribute('aria-expanded')).to.equal('true');
+      expect(sub.contains(document.activeElement), 'focus moved into the flyout').to.be.true;
+    });
+
+    it('peels one level at a time on the back arrow and Escape', async () => {
+      const el = await mk(NESTED, { open: true, type: 'action' });
+      const exportRow = row(el, /Export/);
+      exportRow.focus();
+      exportRow.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      await nextFrame();
+      const l2 = flyouts()[0];
+      const pdf = [...l2.querySelectorAll('.ds-dropdown-menu__item')].find((r) => /PDF/.test(r.textContent));
+      pdf.focus();
+      pdf.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      await nextFrame();
+      expect(flyouts().length, 'two levels open').to.equal(2);
+
+      /* Escape closes only the deepest, returning focus to the row that owns it. */
+      document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await nextFrame();
+      expect(flyouts().length, 'back to one level').to.equal(1);
+      expect(document.activeElement).to.equal(pdf);
+
+      /* Back-arrow closes the last one; the root menu stays open. */
+      document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+      await nextFrame();
+      expect(flyouts().length, 'all flyouts closed').to.equal(0);
+      expect(document.activeElement).to.equal(exportRow);
+      expect(el.hasAttribute('open'), 'root menu still open').to.be.true;
+      expect(exportRow.getAttribute('aria-expanded')).to.equal('false');
+    });
+
+    it('re-fires a leaf select on the root menu with its parent attached', async () => {
+      const el = await mk(NESTED, { open: true, type: 'action' });
+      const r = row(el, /Export/);
+      r.focus();
+      r.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      await nextFrame();
+      const listener = oneEvent(el, 'ds-dropdown-select');
+      flyouts()[0].querySelector('.ds-dropdown-menu__item').click();
+      const { detail } = await listener;
+      expect(detail.value).to.equal('csv');
+      expect(detail.parent.label, 'parent row attached').to.equal('Export');
+      expect(el.hasAttribute('open'), 'root menu closed after a leaf select').to.be.false;
+    });
+
+    it('stops cascading at the depth cap', async () => {
+      const el = await mk(NESTED, { open: true, type: 'action' });
+      const r = row(el, /Export/);
+      r.focus();
+      r.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      await nextFrame();
+      const pdf = [...flyouts()[0].querySelectorAll('.ds-dropdown-menu__item')].find((x) => /PDF/.test(x.textContent));
+      pdf.focus();
+      pdf.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      await nextFrame();
+      const l3 = flyouts().find((s) => s._subDepth === 3);
+      expect(l3, 'third level opened').to.exist;
+      /* Landscape declares subItems but sits at the cap — no affordance offered. */
+      const landscape = [...l3.querySelectorAll('.ds-dropdown-menu__item')].find((x) => /Landscape/.test(x.textContent));
+      expect(landscape.hasAttribute('data-has-sub'), 'no cascade past the cap').to.be.false;
+      expect(landscape.querySelector('.ds-dropdown-menu__item-chevron'), 'no chevron past the cap').to.not.exist;
+    });
+
+    it('keeps the whole chain open while the cursor moves out to the third level', async () => {
+      /* Regression: moving into L3 necessarily LEAVES L2, and that mouseleave
+         starts a close timer on L1. Entering L3 only cancelled its immediate
+         owner's (L2's) timer, so L1 closed L2 180ms later and took L3 with it —
+         the third level was unreachable by mouse. */
+      const el = await mk(NESTED, { open: true, type: 'action' });
+      const enter = (n) => n.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
+      const leave = (n) => n.dispatchEvent(new MouseEvent('mouseleave', { bubbles: false }));
+      const panelOf = (n) => n.querySelector('.ds-dropdown-menu');
+
+      enter(row(el, /Export/));                       // open L2
+      await nextFrame();
+      const l2 = flyouts()[0];
+      leave(panelOf(el)); enter(l2);                  // cursor crosses into L2
+      const pdf = [...l2.querySelectorAll('.ds-dropdown-menu__item')].find((r) => /PDF/.test(r.textContent));
+      enter(pdf);                                      // open L3
+      await nextFrame();
+      const l3 = flyouts().find((s) => s._subDepth === 3);
+      expect(l3, 'third level opened').to.exist;
+
+      /* The move that used to kill it: leave L2 (arming L1's timer), enter L3. */
+      leave(panelOf(l2)); leave(l2); enter(l3);
+      await new Promise((r) => setTimeout(r, 300));   // past the 180ms close delay
+      expect(flyouts().length, 'both flyouts still open with the cursor in L3').to.equal(2);
+    });
+
+    it('never renders a title row on a flyout', async () => {
+      /* The title belongs to the ROOT menu and is opt-in even there. Repeating it
+         down the cascade restates the row the user just came from. */
+      const el = await mk(NESTED, { open: true, type: 'action' });
+      el.setAttribute('show-title', '');
+      el.setAttribute('title', 'Actions');
+      await nextFrame();
+      expect(el.querySelector('.ds-dropdown-menu__title'), 'root keeps its title').to.exist;
+
+      const r = row(el, /Export/);
+      r.focus();
+      r.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      await nextFrame();
+      const [sub] = flyouts();
+      expect(sub.hasAttribute('show-title'), 'flyout is not given show-title').to.be.false;
+      expect(sub.querySelector('.ds-dropdown-menu__title'), 'flyout renders no title row').to.not.exist;
+    });
+
+    it('still renders section headings inside a flyout', async () => {
+      /* The title ROW is withheld from flyouts; heading ITEMS are not — they are
+         how a flyout labels its groups. */
+      const el = await mk([
+        { label: 'Move to', value: 'move', subItems: [
+          { type: 'heading', label: 'Infrastructure' },
+          { label: 'Servers', value: 'servers' },
+          { type: 'divider' },
+          { type: 'heading', label: 'End user' },
+          { label: 'Laptops', value: 'laptops' },
+        ] },
+      ], { open: true, type: 'default' });
+      const r = row(el, /Move to/);
+      r.focus();
+      r.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      await nextFrame();
+      const [sub] = flyouts();
+      const heads = [...sub.querySelectorAll('.ds-dropdown-menu__section-heading')];
+      expect(heads.map((h) => h.textContent.trim())).to.eql(['Infrastructure', 'End user']);
+      expect(sub.querySelector('.ds-dropdown-menu__title'), 'still no title row').to.not.exist;
+      expect(sub.querySelectorAll('.ds-dropdown-menu__divider').length, 'divider survives too').to.be.greaterThan(0);
+    });
+
+    it('does not steal focus when a flyout opens on hover', async () => {
+      /* Hover-opening must leave the focus ring where the user put it — only the
+         keyboard path moves focus into the flyout. */
+      const el = await mk(NESTED, { open: true, type: 'action' });
+      const r = row(el, /Export/);
+      const before = document.activeElement;
+      r.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
+      await nextFrame();
+      await nextFrame();
+      const [sub] = flyouts();
+      expect(sub, 'flyout opened on hover').to.exist;
+      expect(sub.contains(document.activeElement), 'focus did NOT move into the flyout').to.be.false;
+      expect(document.activeElement, 'focus stayed where it was').to.equal(before);
+    });
+
+    it('ignores subItems in select / multi-select', async () => {
+      for (const type of ['select', 'multi-select']) {
+        const el = await mk(NESTED, { open: true, type });
+        const r = row(el, /Export/);
+        expect(r.hasAttribute('data-has-sub'), `${type}: no cascade`).to.be.false;
+        expect(r.querySelector('.ds-dropdown-menu__item-chevron'), `${type}: no chevron`).to.not.exist;
+        r.focus();
+        r.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        await nextFrame();
+        expect(flyouts().length, `${type}: nothing opened`).to.equal(0);
+      }
+    });
+  });
 });

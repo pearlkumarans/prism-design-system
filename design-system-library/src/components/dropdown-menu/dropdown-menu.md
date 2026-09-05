@@ -60,12 +60,13 @@ Inner rows are instances of the `_Action Dropdown item` sub-component; the menu 
 | `open()` / `close()` / `toggle()` | Control visibility (mirrors the `open` attribute). |
 | `positionFrom(trigger, opts?)` | Fixed-position the panel next to `trigger` (an element or DOMRect-like), clamping on screen. `opts`: `{ gap=6, margin=8, align: 'right'\|'left'\|'before', vAlign: 'below'\|'top' }`. **align** (horizontal): `right` (default) / `left` align the panel's right/left edge with the trigger; **`before`** opens the panel entirely to the left of the trigger — use it for right-edge action ⋯ columns so other rows' icons aren't covered. **vAlign** (vertical): `below` (default) drops the panel below the trigger, **flipping above** when there's no room; **`top`** lines the panel's top edge up with the trigger's top (for side-opening action menus), clamping up near the viewport bottom so it never clips. |
 | `openFrom(trigger, opts?)` | `open()` then `positionFrom()` — the standard way to anchor a row/action menu to its trigger. |
+| `openSubmenuFor(value)` | Open the nested flyout belonging to the row with this `value` (or label). For a trigger outside the menu that should mirror hovering that row. No-op past the depth cap. |
 
 ### Properties (DOM-only)
 
 | Property | Type | Notes |
 |----------|------|-------|
-| `items` | `Array<Item>` | Item objects: `{ label, value, selected?, disabled?, icon?, danger?, linkStyle?, sub?, badge?, shortcut?, description?, actions? }`. Use `{ type: 'heading', label }` and `{ type: 'divider' }` to inject section structure. |
+| `items` | `Array<Item>` | Item objects: `{ label, value, selected?, disabled?, icon?, danger?, linkStyle?, sub?, badge?, shortcut?, description?, actions?, subItems? }`. Use `{ type: 'heading', label }` and `{ type: 'divider' }` to inject section structure. |
 
 `selected` marks a row active (accent wash + accent label) in any type — use it to show which item is currently in effect. `linkStyle: true` renders the row as a **text link** (accent label + icon, underline on hover) while keeping normal menuitem behaviour — for a create/add entry that should read as an action, not a plain row.
 
@@ -74,6 +75,81 @@ Inner rows are instances of the `_Action Dropdown item` sub-component; the menu 
 They are **keyboard-operable** by roving focus (Tab still exits the menu, per the ARIA menu pattern): from a focused row press **→** to enter the actions, **←/→** to move between them (← from the first returns to the row), **Enter/Space** to activate, and **↑/↓/Home/End/Esc** to hand control back to row navigation. Buttons carry an `aria-label` from `label`.
 
 A **heading** item may carry a trailing text-link action — `{ type: 'heading', label, action: { id, label } }` — rendered on the heading's right (e.g. a "Clear all" link beside a "Saved filters" title). Clicking it emits `ds-dropdown-action` (`{ actionId, value: null, item: null }`) and closes the menu.
+
+#### Nested menus (`subItems`)
+
+`subItems` turns a row into a **cascade** — hovering or activating it opens a
+flyout beside the menu instead of selecting:
+
+```js
+menu.items = [
+  { label: 'Deploy', value: 'deploy', icon: 'rocket' },
+  { label: 'Export', value: 'export', icon: 'download', subItems: [
+      { label: 'CSV', value: 'csv' },
+      { label: 'PDF', value: 'pdf' },
+  ]},
+];
+```
+
+The chevron is added for you — never set `sub`/`chevron` by hand on a cascade
+row. A flyout **never carries a title row** — the title belongs to the root menu
+and is opt-in even there; repeating it down the cascade just restates the row the
+user came from and pushes the options further from the cursor. The parent row is
+the label. The flyout inherits the parent's `type` and `rtl`, and is appended to
+`<body>` with fixed positioning so it is never clipped by the list's own
+scrolling, flipping to the parent's other side when there isn't room.
+
+Selecting a **leaf** emits `ds-dropdown-select` on the *root* menu with the
+parent attached — `{ value, item, parent }` — then the whole menu closes. Use
+`parent` to tell `CSV under Export` from a top-level `CSV`.
+
+`openSubmenuFor(valueOrLabel)` opens a row's flyout programmatically, for a
+trigger that lives outside the menu.
+
+**Grouping inside a flyout.** Since a flyout has no title row, label its options
+with **section headings** instead — they live in the list, scroll with it, and
+stick to the top while their own group is in view:
+
+```js
+{ label: 'Move to', value: 'move', subItems: [
+    { type: 'heading', label: 'Infrastructure' },
+    { label: 'Servers',   value: 'servers' },
+    { label: 'Databases', value: 'databases' },
+    { type: 'divider' },
+    { type: 'heading', label: 'End user' },
+    { label: 'Laptops', value: 'laptops' },
+    { label: 'Mobile',  value: 'mobile'  },
+] }
+```
+
+| | Title row | Section heading |
+|---|---|---|
+| How | `show-title` + `title` on the element | `{ type: 'heading', label }` in `items` |
+| How many | one, pinned above the list | as many as the list needs |
+| Names | the menu itself | a group of rows |
+| Scrolls | no — fixed above the list | sticky within the list |
+| In a flyout | **never** | yes — use this |
+
+**Supported on `default` and `action` only.** In `select` / `multi-select` the
+row click *is* the selection, so `subItems` there is ignored — the row renders
+with no chevron and the component warns in the console.
+
+**Depth is capped at 3** (the menu plus two flyouts). Deeper trees march
+off-screen and leave a cursor corridor too narrow to hold; use a drawer or a page
+instead. A row past the cap renders without a chevron, so it never advertises
+something it can't do.
+
+Keyboard (mirrored in RTL) follows the ARIA menu pattern:
+
+| Key | Action |
+|-----|--------|
+| **→** | open the flyout and move into its first row |
+| **←** | close the current level, focus returns to the row that owns it |
+| **Esc** | same as ← — peels one level; only the root menu's Esc closes the menu |
+
+A cascade row **cannot also carry `actions`**: both sit on the row's trailing
+edge and **→** can only enter one of them (the cascade wins), which would leave
+the buttons unreachable by keyboard. The component warns if a row declares both.
 
 Set **`data-no-truncate`** on the host (`<ds-dropdown-menu data-no-truncate>`) so row labels show in full — the menu hugs content with a wider cap instead of ellipsizing. Scoped to that attribute, so other menus keep truncating long labels.
 
@@ -94,7 +170,7 @@ Set **`data-no-truncate`** on the host (`<ds-dropdown-menu data-no-truncate>`) s
 
 | Event | Detail | Fires when |
 |-------|--------|-----------|
-| `ds-dropdown-select` | `{ value, item }` | Default / Action / Select / Select-tick row activated. |
+| `ds-dropdown-select` | `{ value, item, parent? }` | Default / Action / Select / Select-tick row activated. A leaf inside a nested flyout fires on the **root** menu and adds `parent` — the row that owns the flyout. |
 | `ds-dropdown-action` | `{ actionId, value, item }` | A row's trailing hover-action (from `item.actions`) was clicked. Menu closes; the row's own select does not fire. |
 | `ds-dropdown-toggle` | `{ value, selected, values, item }` | Multi-select row toggled (live, menu stays open). |
 | `ds-dropdown-apply` | `{ values }` | Multi-select footer Apply pressed. Closes the menu. |

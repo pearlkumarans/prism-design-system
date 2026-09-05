@@ -29,6 +29,15 @@
     <ds-dropdown-menu id="m3" type="sections" open></ds-dropdown-menu>
   </div>
 
+  <div class="col">
+    <h3>Nested (action)</h3>
+    <p style="font-size:12px;color:var(--uems-text-tertiary);max-width:26ch">
+      Hover or focus <strong>Export</strong>, then press <kbd>→</kbd>. <kbd>←</kbd> or
+      <kbd>Esc</kbd> steps back one level.
+    </p>
+    <ds-dropdown-menu id="m4" type="action" show-title title="Actions" open></ds-dropdown-menu>
+  </div>
+
   <script type="module">
     import '../../index.js';
     const m1 = document.getElementById('m1');
@@ -57,6 +66,27 @@
       { label: 'Settings',   value: 'set',   icon: 'config' },
       { label: 'Sign out',   value: 'out',   icon: 'close' },
     ];
+
+    /* Nested cascade — `subItems` on a row. The chevron, the flyout and its
+       keyboard wiring all come for free; the leaf select re-fires here with
+       `parent` so you can tell which branch. Flyouts carry no title row. */
+    const m4 = document.getElementById('m4');
+    m4.items = [
+      { label: 'Deploy now', value: 'deploy', icon: 'rocket' },
+      { label: 'Export', value: 'export', icon: 'download', subItems: [
+        { label: 'CSV', value: 'csv' },
+        { label: 'PDF', value: 'pdf', subItems: [
+          { label: 'Portrait',  value: 'portrait' },
+          { label: 'Landscape', value: 'landscape' },
+        ] },
+      ] },
+      { type: 'divider' },
+      { label: 'Delete', value: 'delete', icon: 'delete', danger: true },
+    ];
+    m4.addEventListener('ds-dropdown-select', (e) => {
+      const { value, parent } = e.detail;
+      console.log(parent ? `selected "${value}" under "${parent.label}"` : `selected "${value}"`);
+    });
   </script>
 </body>
 </html>

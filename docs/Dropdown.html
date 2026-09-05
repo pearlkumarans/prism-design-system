@@ -489,6 +489,31 @@
                   </div>
                 </div>
 
+                <!-- Nested / cascade -->
+                <div class="demo-dd-section">
+                  <div class="demo-group-label">Nested &mdash; a row that branches instead of selecting (<code>subItems</code>)</div>
+                  <div class="demo-dd-grid">
+                    <div class="demo-dd-frame">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <div class="demo-dd-caption">Action menu &mdash; hover <strong>Export</strong>, or focus it and press <kbd>&rarr;</kbd></div>
+                        <ds-dropdown-menu id="ov-nested" type="action" show-title title="Actions" open></ds-dropdown-menu>
+                      </div>
+                    </div>
+                    <div class="demo-dd-frame">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <div class="demo-dd-caption">Default menu &mdash; three levels deep (the maximum)</div>
+                        <ds-dropdown-menu id="ov-nested-default" type="default" open></ds-dropdown-menu>
+                      </div>
+                    </div>
+                    <div class="demo-dd-frame">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <div class="demo-dd-caption">Grouped flyout &mdash; a flyout has no title row, so it labels its options with section headings</div>
+                        <ds-dropdown-menu id="ov-nested-heading" type="default" open></ds-dropdown-menu>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Real-world trigger patterns -->
                 <div class="demo-dd-section">
                   <div class="demo-group-label">Real-world trigger patterns</div>
@@ -596,6 +621,66 @@
                 { type: 'divider' },
                 { label: 'Delete',    value: 'delete',    icon: 'delete', danger: true },
               ]);
+              setItems('nested-heading', [
+                { label: 'Move to', value: 'move', subItems: [
+                  { type: 'heading', label: 'Infrastructure' },
+                  { label: 'Servers',   value: 'servers' },
+                  { label: 'Databases', value: 'databases' },
+                  { type: 'divider' },
+                  { type: 'heading', label: 'End user' },
+                  { label: 'Laptops', value: 'laptops' },
+                  { label: 'Mobile',  value: 'mobile' },
+                ] },
+                { label: 'Duplicate', value: 'duplicate' },
+                { label: 'Rename',    value: 'rename' },
+              ]);
+              setItems('ov-nested-heading', [
+                { label: 'Move to', value: 'move', subItems: [
+                  { type: 'heading', label: 'Infrastructure' },
+                  { label: 'Servers',   value: 'servers' },
+                  { label: 'Databases', value: 'databases' },
+                  { type: 'divider' },
+                  { type: 'heading', label: 'End user' },
+                  { label: 'Laptops', value: 'laptops' },
+                  { label: 'Mobile',  value: 'mobile' },
+                ] },
+                { label: 'Duplicate', value: 'duplicate' },
+                { label: 'Rename',    value: 'rename' },
+              ]);
+              setItems('ov-nested', [
+                { label: 'Deploy now', value: 'deploy', icon: 'rocket' },
+                { label: 'Export', value: 'export', icon: 'download', subItems: [
+                  { label: 'CSV',  value: 'csv' },
+                  { label: 'PDF',  value: 'pdf' },
+                  { label: 'JSON', value: 'json' },
+                ] },
+                { type: 'divider' },
+                { label: 'Delete', value: 'delete', icon: 'delete', danger: true },
+              ]);
+              setItems('ov-nested-default', [
+                { label: 'Move to', value: 'move', subItems: [
+                  { label: 'Servers',  value: 'servers' },
+                  { label: 'Laptops',  value: 'laptops', subItems: [
+                    { label: 'Engineering', value: 'eng' },
+                    { label: 'Sales',       value: 'sales' },
+                  ] },
+                ] },
+                { label: 'Duplicate', value: 'dup' },
+                { label: 'Rename',    value: 'ren' },
+              ]);
+              /* Nested cascade demo — see the "Nested menus" section. */
+              setItems('nested-demo', [
+                { label: 'Deploy now', value: 'deploy', icon: 'rocket' },
+                { label: 'Export', value: 'export', icon: 'download', subItems: [
+                  { label: 'CSV', value: 'csv' },
+                  { label: 'PDF', value: 'pdf', subItems: [
+                    { label: 'Portrait',  value: 'portrait'  },
+                    { label: 'Landscape', value: 'landscape' },
+                  ] },
+                ] },
+                { type: 'divider' },
+                { label: 'Delete', value: 'delete', icon: 'delete', danger: true },
+              ]);
               setItems('ov-action-title', [
                 { label: 'Rename',         value: 'rename',  icon: 'edit' },
                 { label: 'Move',           value: 'move',    icon: 'folder' },
@@ -665,6 +750,84 @@
                 <tr><td><strong>Type</strong></td><td><code>Single Select</code>, <code>Multi Select</code>, <code>With Sections</code></td><td>Controls item type, header, and footer presence.</td></tr>
                 <tr><td><strong>Size</strong></td><td><code>Small</code></td><td>Currently only Small is available (Medium planned).</td></tr>
                 <tr><td><strong>RTL</strong></td><td><code>False</code>, <code>True</code></td><td>Mirrors the entire panel layout for RTL locales.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <hr class="doc-divider"/>
+
+          <div class="doc-section">
+            <h2 id="nested-menus" class="doc-section-title">Nested menus (cascade)<span class="h3-badge" style="background:rgba(37,99,235,0.1);color:var(--prism-violet);">default &middot; action</span></h2>
+            <p class="doc-section-subtitle">Give a row <code>subItems</code> and it stops being a choice &mdash; it becomes a branch. Hovering or activating it opens a flyout beside the menu; the chevron, the flyout and its keyboard wiring all come for free. Use it when a single action has a small, closed set of forms (<em>Export &rsaquo; CSV / PDF</em>), not to hide a second level of navigation.</p>
+
+            <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;margin-top:24px;">
+              <div style="flex:0 0 auto;min-height:300px;">
+                <ds-dropdown-menu id="nested-demo" type="action" show-title title="Actions" open></ds-dropdown-menu>
+              </div>
+              <div style="flex:1 1 320px;min-width:280px;">
+                <p style="font-size:14px;color:var(--prism-text-muted);margin:0 0 12px;">Hover <strong>Export</strong>, or focus it and press <kbd>&rarr;</kbd>. <kbd>&larr;</kbd> or <kbd>Esc</kbd> steps back one level.</p>
+<pre class="code-block"><code>menu.items = [
+  { label: 'Deploy now', value: 'deploy', icon: 'rocket' },
+  { label: 'Export', value: 'export', icon: 'download',
+    subItems: [
+      { label: 'CSV', value: 'csv' },
+      { label: 'PDF', value: 'pdf', subItems: [
+        { label: 'Portrait',  value: 'portrait'  },
+        { label: 'Landscape', value: 'landscape' },
+      ] },
+    ] },
+  { type: 'divider' },
+  { label: 'Delete', value: 'delete', icon: 'delete', danger: true },
+];
+
+// A leaf fires on the ROOT menu, with the branch it came from:
+menu.addEventListener('ds-dropdown-select', (e) =&gt; {
+  const { value, parent } = e.detail;   // 'csv', { label: 'Export', ... }
+});</code></pre>
+              </div>
+            </div>
+
+            <table class="size-table" style="margin-top:24px;">
+              <thead><tr><th>Rule</th><th>Why</th></tr></thead>
+              <tbody>
+                <tr><td><strong><code>default</code> and <code>action</code> only</strong></td><td>In <code>select</code> / <code>multi-select</code> the row click <em>is</em> the selection, so a cascade has nowhere to go. Those rows render with no chevron and the component warns in the console.</td></tr>
+                <tr><td><strong>Three levels maximum</strong></td><td>The menu plus two flyouts. Deeper trees march off-screen and leave a cursor corridor too narrow to hold &mdash; reach for a drawer or a page instead. A row past the cap renders without a chevron, so it never offers what it can&rsquo;t do.</td></tr>
+                <tr><td><strong>Never <code>subItems</code> + <code>actions</code> on one row</strong></td><td>Both sit on the row&rsquo;s trailing edge and <kbd>&rarr;</kbd> can only enter one of them. The cascade takes it, which would leave the hover-actions unreachable by keyboard. The component warns if a row declares both.</td></tr>
+                <tr><td><strong>Don&rsquo;t set <code>sub</code> or <code>chevron</code> by hand</strong></td><td><code>subItems</code> implies the chevron. Setting it manually on a non-cascade row promises a flyout that never opens.</td></tr>
+              </tbody>
+            </table>
+
+            <p class="doc-section-subtitle" style="margin-top:20px;">The flyout inherits the parent&rsquo;s <code>type</code> and <code>rtl</code>, and is appended to <code>&lt;body&gt;</code> with fixed positioning so the list&rsquo;s own scrolling can never clip it &mdash; flipping to the parent&rsquo;s other side when there isn&rsquo;t room. <code>menu.openSubmenuFor(value)</code> opens a row&rsquo;s flyout from a trigger elsewhere on the page.</p>
+
+            <h3 id="grouping-inside-a-flyout" class="doc-h3" style="margin-top:36px;">Grouping inside a flyout</h3>
+            <p class="doc-section-subtitle">A flyout never carries a <strong>title row</strong> &mdash; that belongs to the root menu, and repeating it just restates the row you came from. When a flyout&rsquo;s options need labelling, use <strong>section headings</strong> instead: they sit inside the list, scroll with it, and stick to the top while their own group is in view.</p>
+
+            <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;margin-top:20px;">
+              <div style="flex:0 0 auto;min-height:260px;">
+                <ds-dropdown-menu id="nested-heading" type="default" open></ds-dropdown-menu>
+              </div>
+              <div style="flex:1 1 320px;min-width:280px;">
+                <p style="font-size:14px;color:var(--prism-text-muted);margin:0 0 12px;">Hover <strong>Move to</strong> &mdash; the flyout groups its targets without a title bar.</p>
+<pre class="code-block"><code>{ label: 'Move to', value: 'move', subItems: [
+    { type: 'heading', label: 'Infrastructure' },
+    { label: 'Servers',   value: 'servers' },
+    { label: 'Databases', value: 'databases' },
+    { type: 'divider' },
+    { type: 'heading', label: 'End user' },
+    { label: 'Laptops', value: 'laptops' },
+    { label: 'Mobile',  value: 'mobile'  },
+] }</code></pre>
+              </div>
+            </div>
+
+            <table class="size-table" style="margin-top:24px;">
+              <thead><tr><th></th><th>Title row</th><th>Section heading</th></tr></thead>
+              <tbody>
+                <tr><td><strong>How</strong></td><td><code>show-title</code> + <code>title</code> on the element</td><td><code>{ type: 'heading', label }</code> in <code>items</code></td></tr>
+                <tr><td><strong>How many</strong></td><td>One, pinned above the list</td><td>As many as the list needs</td></tr>
+                <tr><td><strong>Names</strong></td><td>The menu itself</td><td>A group of rows</td></tr>
+                <tr><td><strong>Scrolls</strong></td><td>No &mdash; fixed above the list</td><td>Sticky within the list</td></tr>
+                <tr><td><strong>In a flyout</strong></td><td><strong>Never</strong></td><td>Yes &mdash; use this</td></tr>
               </tbody>
             </table>
           </div>
@@ -923,6 +1086,7 @@
             <div class="cp-toolbar">
               <div class="cp-control-group"><label class="cp-label">Type</label><select class="cp-select" id="pg-type"><option value="default">Default</option><option value="select">Select</option><option value="multi-select">Multi-select</option><option value="action">Action</option><option value="select-tick">Select-tick</option></select></div>
               <div class="cp-control-group"><label class="cp-label">Show title</label><div class="cp-checkbox-wrap"><button class="cp-toggle" id="pg-title-toggle"></button><span style="font-size:13px;color:var(--prism-text-muted);" id="pg-title-label">OFF</span></div></div>
+              <div class="cp-control-group" id="pg-nested-group"><label class="cp-label">Nested items</label><div class="cp-checkbox-wrap"><button class="cp-toggle" id="pg-nested-toggle"></button><span style="font-size:13px;color:var(--prism-text-muted);" id="pg-nested-label">OFF</span></div></div>
               <div class="cp-control-group" id="pg-clearall-group"><label class="cp-label">Show clear all</label><div class="cp-checkbox-wrap"><button class="cp-toggle on" id="pg-clearall-toggle"></button><span style="font-size:13px;color:var(--prism-text-muted);" id="pg-clearall-label">ON</span></div></div>
               <div class="cp-control-group"><label class="cp-label">Direction</label><select class="cp-select" id="pg-dir"><option value="ltr">LTR</option><option value="rtl">RTL</option></select></div>
             </div>
@@ -941,16 +1105,23 @@
             var titleLabel = document.getElementById('pg-title-label');
             var clearAllLabel = document.getElementById('pg-clearall-label');
             var clearAllGroup = document.getElementById('pg-clearall-group');
+            var nestedToggle = document.getElementById('pg-nested-toggle');
+            var nestedLabel = document.getElementById('pg-nested-label');
+            var nestedGroup = document.getElementById('pg-nested-group');
             var dirEl = document.getElementById('pg-dir');
             var previewArea = document.getElementById('pg-preview-area');
             var codeOut = document.getElementById('pg-code-output');
             var copyBtn = document.getElementById('pg-copy-btn');
 
-            var showTitle = false, showClearAll = true;
+            var showTitle = false, showClearAll = true, useNested = false;
+            /* Cascades only mean something where a row means "do this" — in the
+               select family the click IS the selection. Mirrors the component. */
+            var NESTABLE = { 'default': 1, 'action': 1 };
             var rawCode = '';
 
             titleToggle.addEventListener('click', function(){ showTitle = !showTitle; titleToggle.classList.toggle('on', showTitle); titleLabel.textContent = showTitle ? 'ON' : 'OFF'; update(); });
             clearAllToggle.addEventListener('click', function(){ showClearAll = !showClearAll; clearAllToggle.classList.toggle('on', showClearAll); clearAllLabel.textContent = showClearAll ? 'ON' : 'OFF'; update(); });
+            nestedToggle.addEventListener('click', function(){ useNested = !useNested; nestedToggle.classList.toggle('on', useNested); nestedLabel.textContent = useNested ? 'ON' : 'OFF'; update(); });
 
             function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
@@ -1014,6 +1185,54 @@
                 { label: 'واسع', value: 'spacious' },
               ],
             };
+            /* Cascade sets — `subItems` turns a row into a branch. Flyouts carry
+               no title row. Three levels is the component's ceiling. */
+            var NESTED_LTR = {
+              'default': [
+                { label: 'Move to', value: 'move', subItems: [
+                  { label: 'Servers', value: 'servers' },
+                  { label: 'Laptops', value: 'laptops', subItems: [
+                    { label: 'Engineering', value: 'eng' },
+                    { label: 'Sales', value: 'sales' },
+                  ] },
+                ] },
+                { label: 'Duplicate', value: 'duplicate' },
+                { label: 'Rename', value: 'rename' },
+              ],
+              'action': [
+                { label: 'Deploy now', value: 'deploy', icon: 'rocket' },
+                { label: 'Export', value: 'export', icon: 'download', subItems: [
+                  { label: 'CSV', value: 'csv' },
+                  { label: 'PDF', value: 'pdf' },
+                  { label: 'JSON', value: 'json' },
+                ] },
+                { type: 'divider' },
+                { label: 'Delete', value: 'delete', icon: 'delete', danger: true },
+              ],
+            };
+            var NESTED_RTL = {
+              'default': [
+                { label: 'نقل إلى', value: 'move', subItems: [
+                  { label: 'الخوادم', value: 'servers' },
+                  { label: 'المحمولة', value: 'laptops', subItems: [
+                    { label: 'الهندسة', value: 'eng' },
+                    { label: 'المبيعات', value: 'sales' },
+                  ] },
+                ] },
+                { label: 'نسخ', value: 'duplicate' },
+                { label: 'إعادة تسمية', value: 'rename' },
+              ],
+              'action': [
+                { label: 'نشر الآن', value: 'deploy', icon: 'rocket' },
+                { label: 'تصدير', value: 'export', icon: 'download', subItems: [
+                  { label: 'CSV', value: 'csv' },
+                  { label: 'PDF', value: 'pdf' },
+                  { label: 'JSON', value: 'json' },
+                ] },
+                { type: 'divider' },
+                { label: 'حذف', value: 'delete', icon: 'delete', danger: true },
+              ],
+            };
             var TITLE_COPY = { ltr: 'Menu', rtl: 'القائمة' };
 
             function update(){
@@ -1024,6 +1243,9 @@
               var ITEMS = isRtl ? ITEMS_RTL : ITEMS_LTR;
               var titleText = isRtl ? TITLE_COPY.rtl : TITLE_COPY.ltr;
               clearAllGroup.style.display = isMulti ? '' : 'none';
+              var canNest = !!NESTABLE[type];
+              nestedGroup.style.display = canNest ? '' : 'none';
+              var nested = canNest && useNested;
 
               var attrs = ['type="' + type + '"'];
               if (showTitle) attrs.push('show-title', 'title="' + titleText + '"');
@@ -1031,7 +1253,8 @@
               if (dir === 'rtl') attrs.push('rtl');
               attrs.push('open');
               var openTag = '<ds-dropdown-menu ' + attrs.join(' ') + '></ds-dropdown-menu>';
-              var itemsJson = JSON.stringify(ITEMS[type], null, 2);
+              var liveItems = nested ? (isRtl ? NESTED_RTL : NESTED_LTR)[type] : ITEMS[type];
+              var itemsJson = JSON.stringify(liveItems, null, 2);
               rawCode = openTag + '\n<script>\n  document.querySelector(\'ds-dropdown-menu\').items = ' + itemsJson + ';\n<\/script>';
 
               previewArea.innerHTML = '';
@@ -1043,8 +1266,8 @@
               el.setAttribute('open', '');
               previewArea.appendChild(el);
               if (window.customElements && customElements.whenDefined) {
-                customElements.whenDefined('ds-dropdown-menu').then(function(){ el.items = ITEMS[type]; });
-              } else { el.items = ITEMS[type]; }
+                customElements.whenDefined('ds-dropdown-menu').then(function(){ el.items = liveItems; });
+              } else { el.items = liveItems; }
 
               codeOut.innerHTML = esc(rawCode)
                 .replace(/&lt;(\/?)(ds-dropdown-menu|script)(.*?)&gt;/g,'&lt;$1<span style="color:#60a5fa;">$2</span>$3&gt;')
@@ -1086,6 +1309,7 @@
                 <tr><td><code>apply-label</code> &middot; <code>cancel-label</code></td><td>string</td><td>"Apply" / "Cancel"</td><td>Footer button labels.</td></tr>
                 <tr><td><code>rtl</code></td><td>boolean</td><td>off</td><td>Mirrors layout for RTL locales.</td></tr>
                 <tr><td><code>open</code></td><td>boolean</td><td>off</td><td>Visibility toggle. Use <code>.open()</code> / <code>.close()</code> methods too.</td></tr>
+                <tr><td><code>.openSubmenuFor(value)</code></td><td>method</td><td>&#8212;</td><td>Opens the nested flyout belonging to that row, for a trigger outside the menu. No-op past the depth cap.</td></tr>
               </tbody>
             </table>
             <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">DOM Property &mdash; <code>items</code></h4>
@@ -1101,13 +1325,14 @@
                 <tr><td><code>disabled</code></td><td>boolean</td><td>Disables the row.</td></tr>
                 <tr><td><code>type: 'heading'</code></td><td>literal</td><td>Section heading row; pair with <code>label</code>.</td></tr>
                 <tr><td><code>type: 'divider'</code></td><td>literal</td><td>Visual separator row.</td></tr>
+                <tr><td><code>subItems</code></td><td>Array&lt;Item&gt;</td><td>Turns the row into a <strong>cascade</strong> &mdash; opens a nested flyout instead of selecting. Chevron and keyboard wiring are automatic. <code>default</code> / <code>action</code> only; max 3 levels. See <a href="#nested-menus">Nested menus</a>.</td></tr>
               </tbody>
             </table>
             <h4 style="font-size:16px;font-weight:600;color:var(--prism-text);margin-bottom:16px;">Events</h4>
             <table class="size-table">
               <thead><tr><th>Event</th><th>Detail</th><th>Fires when</th></tr></thead>
               <tbody>
-                <tr><td><code>ds-dropdown-select</code></td><td><code>{ value, item }</code></td><td>default / select / select-tick / action row activated.</td></tr>
+                <tr><td><code>ds-dropdown-select</code></td><td><code>{ value, item, parent? }</code></td><td>default / select / select-tick / action row activated. A leaf chosen inside a nested flyout fires on the <strong>root</strong> menu and adds <code>parent</code> &mdash; the row that owns the flyout.</td></tr>
                 <tr><td><code>ds-dropdown-toggle</code></td><td><code>{ value, selected, values, item }</code></td><td>multi-select row toggled (live).</td></tr>
                 <tr><td><code>ds-dropdown-apply</code></td><td><code>{ values }</code></td><td>Multi-select footer Apply.</td></tr>
                 <tr><td><code>ds-dropdown-cancel</code></td><td>&#8212;</td><td>Multi-select footer Cancel.</td></tr>
@@ -1170,7 +1395,9 @@
               <tbody>
                 <tr><td><code>&#8595; / &#8593;</code></td><td>Move focus between menu items.</td></tr>
                 <tr><td><code>Enter / Space</code></td><td>Activate the focused item or toggle a checkbox.</td></tr>
-                <tr><td><code>Escape</code></td><td>Close the menu and return focus to the trigger element.</td></tr>
+                <tr><td><code>Escape</code></td><td>Close the menu and return focus to the trigger element. With a nested flyout open it peels <strong>one level</strong> instead, focus returning to the row that owns it.</td></tr>
+                <tr><td><code>&#8594;</code> <span style="color:var(--prism-text-muted)">(&#8592; in RTL)</span></td><td>On a row with <code>subItems</code>: open its flyout and move into the first entry. On a row with <code>actions</code>: enter the hover-actions. A row cannot have both &mdash; the cascade wins.</td></tr>
+                <tr><td><code>&#8592;</code> <span style="color:var(--prism-text-muted)">(&#8594; in RTL)</span></td><td>Inside a nested flyout: close this level and return focus to the parent row. Same as <code>Escape</code>.</td></tr>
                 <tr><td><code>Home</code></td><td>Move focus to the first menu item.</td></tr>
                 <tr><td><code>End</code></td><td>Move focus to the last menu item.</td></tr>
                 <tr><td><code>Tab</code></td><td>Move focus to the next focusable element (footer buttons in Multi Select).</td></tr>

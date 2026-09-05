@@ -53,6 +53,16 @@ injectCss('ds-dropdown-textlink-css', '../text-link/text-link.css', import.meta.
    Labels/descriptions/badges are frequently data-derived (customer names, saved
    filters, dynamic options), so they must never be injected as raw HTML. */
 const TYPES = ['default', 'select', 'multi-select', 'action', 'select-tick'];
+/* Cascade depth ceiling. 1 = the root menu, so 3 allows two flyouts. Past that
+   the flyouts march off-screen and the cursor corridor between them gets too
+   narrow to hold — deeper trees want a drawer or a page, not a menu. A row whose
+   subItems would exceed this renders WITHOUT a chevron, so it never offers an
+   affordance it cannot honour. */
+const MAX_SUB_DEPTH = 3;
+/* Nesting is only meaningful where a row means "do this" (default / action).
+   In select / multi-select every row is a radio or checkbox and the click is the
+   selection, so subItems there are ignored — warned about once per type. */
+const SUB_TYPES = ['default', 'action'];
 const LEGACY_TYPE_MAP = {
   single: 'default',
   multi: 'multi-select',
@@ -113,10 +123,17 @@ export class DsDropdownMenu extends HTMLElement {
       const isOpen = this.hasAttribute('open');
       this._panel.hidden = !isOpen;
       if (isOpen) {
-        requestAnimationFrame(() => {
-          const first = this._panel.querySelector('.ds-dropdown-menu__item:not([aria-disabled="true"])');
-          first?.focus();
-        });
+        /* A cascade flyout never grabs focus on its own: it opens on HOVER as
+           often as by keyboard, and pulling focus out from under a mouse user
+           moves the focus ring to a menu they only pointed at (and yanks it away
+           from whatever they were typing in). The keyboard path focuses it
+           explicitly instead — see the forward-arrow branch in _wire. */
+        if (!this._ownerRow) {
+          requestAnimationFrame(() => {
+            const first = this._panel.querySelector('.ds-dropdown-menu__item:not([aria-disabled="true"])');
+            first?.focus();
+          });
+        }
       } else {
         this._closeActiveSubmenu();
       }
@@ -270,6 +287,12 @@ export class DsDropdownMenu extends HTMLElement {
         if (off) { this.close(); return; }
       }
       this.positionFrom(this._anchor, this._anchorOpts);
+      /* The flyout is position:fixed off the row's rect, so it detaches on
+         scroll unless it re-measures with the panel. */
+      if (this._activeSubmenuLi) {
+        const openSub = this._submenus?.get(this._activeSubmenuLi);
+        if (openSub) this._positionSubmenu(openSub, this._activeSubmenuLi);
+      }
     });
   };
   _bindReanchor() {
@@ -305,7 +328,22 @@ export class DsDropdownMenu extends HTMLElement {
 
   _onKeydown = (e) => {
     if (!this.hasAttribute('open')) return;
-    if (e.key === 'Escape') { this.close(); return; }
+    if (e.key === 'Escape') {
+      /* Every open level has this handler on `document`, so scope by focus:
+         only the menu actually holding focus acts. Without this, one Escape
+         collapses the whole chain instead of stepping out one level. */
+      if (!this._panel.contains(document.activeElement)) return;
+      /* Deepest-first: if a flyout of MINE is open, that is the level to peel. */
+      if (this._activeSubmenuLi) {
+        const row = this._activeSubmenuLi;
+        this._closeActiveSubmenu();
+        row.focus();
+        return;
+      }
+      if (this._ownerRow) { this._closeSelfFromOwner(); return; }
+      this.close();
+      return;
+    }
     /* Focus trap — keep Tab/Shift+Tab cycling inside the multi-select dialog
        (spec §138). Only engages while focus is already within the panel, so it
        never hijacks the consumer's trigger or surrounding page. */
@@ -565,7 +603,10 @@ export class DsDropdownMenu extends HTMLElement {
       + (item.linkStyle ? ' ds-dropdown-menu__item--link' : '')
       + (item.selected ? ' ds-dropdown-menu__item--selected' : '');
 
-    const hasSubItems  = Array.isArray(item.subItems) && item.subItems.length > 0;
+    /* `subAllowed` folds in BOTH gates — menu type and depth — so a row that
+       cannot cascade renders as a plain row (no chevron, no aria-haspopup). */
+    const subAllowed   = SUB_TYPES.includes(type) && (this._subDepth || 1) < MAX_SUB_DEPTH;
+    const hasSubItems  = subAllowed && Array.isArray(item.subItems) && item.subItems.length > 0;
     /* `inert` makes the control presentational — out of tab order, no pointer
        events, hidden from AT — so the <li> alone owns interaction + semantics. */
     const radioHTML = isSelectType
@@ -609,7 +650,7 @@ export class DsDropdownMenu extends HTMLElement {
 
     return `<li class="${cls}"
                 role="${role}" ${ariaSelected} ${ariaChecked} ${ariaDisabled}
-                ${hasSubItems ? 'data-has-sub' : ''}
+                ${hasSubItems ? 'data-has-sub aria-haspopup="menu" aria-expanded="false"' : ''}
                 tabindex="${tabindex}" data-index="${idx}">
               ${radioHTML}${checkboxHTML}${iconHTML}
               <span class="ds-dropdown-menu__item-content">
@@ -666,7 +707,10 @@ export class DsDropdownMenu extends HTMLElement {
       const idx = Number(li.dataset.index);
       const item = this._items[idx];
       if (!item || item.disabled) return;
-      const hasSubItems = Array.isArray(item.subItems) && item.subItems.length > 0;
+      /* Must match _renderItem's gate exactly — a row the renderer refused to
+         give a chevron must also not claim the forward-arrow or the click. */
+      const hasSubItems = SUB_TYPES.includes(type) && (this._subDepth || 1) < MAX_SUB_DEPTH
+        && Array.isArray(item.subItems) && item.subItems.length > 0;
 
       const activate = () => {
         if (isMulti) {
@@ -760,9 +804,37 @@ export class DsDropdownMenu extends HTMLElement {
       });
       li.addEventListener('keydown', (e) => {
         const rtl = this.hasAttribute('rtl');
+        const fwdKey = rtl ? 'ArrowLeft' : 'ArrowRight';
+        const backKey = rtl ? 'ArrowRight' : 'ArrowLeft';
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); return; }
+        /* Forward-arrow: the cascade flyout wins the key over the row's
+           hover-actions (both sit on the trailing edge and only one can own it).
+           A row carrying BOTH is a config error — warned about in _wireSubmenus. */
+        if (e.key === fwdKey && hasSubItems) {
+          e.preventDefault();
+          this._openSubmenu(li, item);
+          /* Rows already exist — _openSubmenu assigns `items` (which renders)
+             before setting `open` — so focus synchronously rather than waiting a
+             frame, which never arrives in a throttled/background tab. */
+          this._submenus?.get(li)
+            ?.querySelector('.ds-dropdown-menu__item:not([aria-disabled="true"])')?.focus();
+          return;
+        }
+        /* Back-arrow inside a flyout steps out to the row that owns it, closing
+           this level only — the ARIA menu pattern's counterpart to the open key. */
+        if (e.key === backKey && (this._activeSubmenuLi || this._ownerRow)) {
+          e.preventDefault();
+          if (this._activeSubmenuLi) {
+            const openRow = this._activeSubmenuLi;
+            this._closeActiveSubmenu();
+            openRow.focus();
+          } else {
+            this._closeSelfFromOwner();
+          }
+          return;
+        }
         /* Into the row's hover-actions. */
-        if (e.key === (rtl ? 'ArrowLeft' : 'ArrowRight') && actionBtns.length) {
+        if (e.key === fwdKey && actionBtns.length) {
           e.preventDefault(); actionBtns[0].focus(); return;
         }
         if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) {
@@ -796,11 +868,37 @@ export class DsDropdownMenu extends HTMLElement {
   }
 
   /* ── Cascade sub-menu support ───────────────────────────────────────
-     Items with `subItems: [...]` (optionally `subTitle: '...'`) open a
-     secondary <ds-dropdown-menu> flyout on hover/click. The flyout is
+     Items with `subItems: [...]` open a secondary <ds-dropdown-menu> flyout on
+     hover/click. Flyouts never show a title row — that is the root menu's. The flyout is
      appended to <body> with fixed positioning so it never gets clipped by
      the list's overflow:auto, and so it stacks above sibling content. */
   _wireSubmenus() {
+    /* Fail loudly rather than silently: in select / multi-select the row click
+       IS the selection, so subItems can never open. Warn once per instance so a
+       misconfigured menu is caught in development, not mistaken for a bug. */
+    const type = this._resolvedType();
+    if (!SUB_TYPES.includes(type) && !this._warnedSubType
+        && this._items.some((it) => Array.isArray(it?.subItems) && it.subItems.length)) {
+      this._warnedSubType = true;
+      console.warn(`[ds-dropdown-menu] \`subItems\` is ignored for type="${type}" — `
+        + `nested menus are supported on ${SUB_TYPES.join(' / ')} only, where a row means `
+        + `"do this" rather than "tick this".`);
+    }
+    /* A row cannot offer a cascade AND hover-actions: both sit on the trailing
+       edge and the forward-arrow can only enter one of them (the cascade wins),
+       leaving the buttons keyboard-unreachable. Flag it rather than ship a
+       keyboard trap. */
+    if (!this._warnedSubActions) {
+      const clash = this._items.filter((it) => Array.isArray(it?.subItems) && it.subItems.length
+        && Array.isArray(it?.actions) && it.actions.length);
+      if (clash.length) {
+        this._warnedSubActions = true;
+        console.warn('[ds-dropdown-menu] these rows declare BOTH `subItems` and `actions`: '
+          + clash.map((it) => it.label).join(', ')
+          + '. The cascade takes the arrow key, so the row actions cannot be reached by '
+          + 'keyboard. Use one or the other.');
+      }
+    }
     /* Reset any sub-menus carried over from a previous render. */
     this._destroySubmenus();
     this._submenus       = new Map(); // parent <li> → child ds-dropdown-menu
@@ -828,7 +926,7 @@ export class DsDropdownMenu extends HTMLElement {
       const item = this._items[idx];
       if (!item?.subItems?.length) return;
       li.addEventListener('mouseenter', () => {
-        cancelClose();
+        this._cancelCloseChain();
         this._openSubmenu(li, item);
       });
     });
@@ -845,6 +943,9 @@ export class DsDropdownMenu extends HTMLElement {
   }
 
   _openSubmenu(parentLi, parentItem) {
+    /* Belt-and-braces: the renderer already withholds the chevron past the
+       ceiling, but openSubmenuFor() is public and can be called directly. */
+    if ((this._subDepth || 1) >= MAX_SUB_DEPTH) return;
     /* Close any sibling sub-menu before opening a new one. */
     this._closeActiveSubmenu(parentLi);
 
@@ -852,11 +953,21 @@ export class DsDropdownMenu extends HTMLElement {
     if (!sub) {
       sub = document.createElement('ds-dropdown-menu');
       sub.classList.add('ds-dropdown-menu--cascade-sub');
-      sub.setAttribute('type', 'default');
-      if (parentItem.subTitle) {
-        sub.setAttribute('show-title', '');
-        sub.setAttribute('title', parentItem.subTitle);
-      }
+      /* Inherit the parent's kind so an `action` menu's flyout still reads as an
+         action menu. Only default/action can cascade, so this is the whole set. */
+      sub.setAttribute('type', this._resolvedType() === 'action' ? 'action' : 'default');
+      /* Direction has to come across too, or an Arabic menu opens an LTR flyout
+         while the positioner correctly flips it to the left. */
+      if (this.hasAttribute('rtl')) sub.setAttribute('rtl', '');
+      /* A flyout never carries a title row. The title belongs to the ROOT menu
+         (and is opt-in even there) — repeating it down the cascade restates the
+         row the user just came from and pushes the options further from the
+         cursor. The parent row is the label. */
+      /* Depth + owner refs go on BEFORE `items`, because the items setter renders
+         and the renderer reads _subDepth to decide whether rows may cascade. */
+      sub._subDepth  = (this._subDepth || 1) + 1;
+      sub._ownerRow  = parentLi;
+      sub._ownerMenu = this;
       document.body.appendChild(sub);
       sub.items = parentItem.subItems;
 
@@ -872,23 +983,18 @@ export class DsDropdownMenu extends HTMLElement {
         this.close();
       });
 
-      sub.addEventListener('mouseenter', () => this._cancelSubmenuClose?.());
+      sub.addEventListener('mouseenter', () => this._cancelCloseChain());
       sub.addEventListener('mouseleave', () => this._scheduleSubmenuClose?.());
 
       this._submenus.set(parentLi, sub);
     } else {
-      /* Re-opening: refresh items + title in case they were changed. */
-      if (parentItem.subTitle) {
-        sub.setAttribute('show-title', '');
-        sub.setAttribute('title', parentItem.subTitle);
-      } else {
-        sub.removeAttribute('show-title');
-      }
+      /* Re-opening: refresh items in case they changed. */
       sub.items = parentItem.subItems;
     }
 
     sub.setAttribute('open', '');
     parentLi.setAttribute('data-sub-open', '');
+    parentLi.setAttribute('aria-expanded', 'true');
     this._activeSubmenuLi = parentLi;
 
     this._positionSubmenu(sub, parentLi);
@@ -935,8 +1041,35 @@ export class DsDropdownMenu extends HTMLElement {
       if (li === except) return;
       sub.removeAttribute('open');
       li.removeAttribute('data-sub-open');
+      if (li.hasAttribute('aria-haspopup')) li.setAttribute('aria-expanded', 'false');
     });
     if (this._activeSubmenuLi !== except) this._activeSubmenuLi = null;
+  }
+
+  /* Cancel the pending close on THIS menu and every ancestor.
+
+     Moving the cursor from one level into the next necessarily LEAVES the outer
+     one, and that mouseleave starts a close timer on the level above it. Entering
+     the new flyout only ever cancelled its immediate owner's timer, so at three
+     levels the grandparent's timer survived: stepping into L3 left L1 counting
+     down on L2, and 180ms later L1 closed L2 — taking L3 with it. Walking the
+     chain keeps every ancestor open for as long as the cursor is anywhere inside
+     the cascade. */
+  _cancelCloseChain() {
+    let m = this;
+    while (m) { m._cancelSubmenuClose?.(); m = m._ownerMenu; }
+  }
+
+  /* Close THIS flyout via the menu that owns it and put focus back on the
+     parent row. Routing through the owner keeps its data-sub-open /
+     aria-expanded / _activeSubmenuLi state truthful — a bare this.close()
+     would leave the parent row looking permanently expanded. */
+  _closeSelfFromOwner() {
+    const row = this._ownerRow;
+    const owner = this._ownerMenu;
+    if (!row || !owner) { this.close(); return; }
+    owner._closeActiveSubmenu();
+    row.focus();
   }
 
   _destroySubmenus() {
