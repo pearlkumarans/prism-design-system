@@ -110,16 +110,25 @@ trigger that lives outside the menu.
 with **section headings** instead — they live in the list, scroll with it, and
 stick to the top while their own group is in view:
 
+Headings work at **every** level — the root menu and any flyout:
+
 ```js
-{ label: 'Move to', value: 'move', subItems: [
-    { type: 'heading', label: 'Infrastructure' },
-    { label: 'Servers',   value: 'servers' },
-    { label: 'Databases', value: 'databases' },
-    { type: 'divider' },
-    { type: 'heading', label: 'End user' },
-    { label: 'Laptops', value: 'laptops' },
-    { label: 'Mobile',  value: 'mobile'  },
-] }
+menu.items = [
+  { type: 'heading', label: 'Organise' },          // root menu
+  { label: 'Move to', value: 'move', subItems: [
+      { type: 'heading', label: 'Infrastructure' }, // …and inside the flyout
+      { label: 'Servers',   value: 'servers' },
+      { label: 'Databases', value: 'databases' },
+      { type: 'divider' },
+      { type: 'heading', label: 'End user' },
+      { label: 'Laptops', value: 'laptops' },
+      { label: 'Mobile',  value: 'mobile'  },
+  ] },
+  { label: 'Duplicate', value: 'duplicate' },
+  { type: 'divider' },
+  { type: 'heading', label: 'Edit' },
+  { label: 'Rename', value: 'rename' },
+];
 ```
 
 | | Title row | Section heading |

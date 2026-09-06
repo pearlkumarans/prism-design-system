@@ -431,6 +431,7 @@ describe('ds-dropdown-menu — teardown', () => {
       /* The title ROW is withheld from flyouts; heading ITEMS are not — they are
          how a flyout labels its groups. */
       const el = await mk([
+        { type: 'heading', label: 'Organise' },
         { label: 'Move to', value: 'move', subItems: [
           { type: 'heading', label: 'Infrastructure' },
           { label: 'Servers', value: 'servers' },
@@ -438,7 +439,12 @@ describe('ds-dropdown-menu — teardown', () => {
           { type: 'heading', label: 'End user' },
           { label: 'Laptops', value: 'laptops' },
         ] },
+        { type: 'heading', label: 'Edit' },
+        { label: 'Rename', value: 'rename' },
       ], { open: true, type: 'default' });
+      /* Headings are not a flyout-only device — the root list groups the same way. */
+      expect([...el.querySelectorAll('.ds-dropdown-menu__section-heading')].map((h) => h.textContent.trim()))
+        .to.eql(['Organise', 'Edit']);
       const r = row(el, /Move to/);
       r.focus();
       r.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));

@@ -507,7 +507,7 @@
                     </div>
                     <div class="demo-dd-frame">
                       <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                        <div class="demo-dd-caption">Grouped flyout &mdash; a flyout has no title row, so it labels its options with section headings</div>
+                        <div class="demo-dd-caption">Section headings &mdash; group rows at any level. The root menu uses them, and so does the flyout (which has no title row)</div>
                         <ds-dropdown-menu id="ov-nested-heading" type="default" open></ds-dropdown-menu>
                       </div>
                     </div>
@@ -622,6 +622,7 @@
                 { label: 'Delete',    value: 'delete',    icon: 'delete', danger: true },
               ]);
               setItems('nested-heading', [
+                { type: 'heading', label: 'Organise' },
                 { label: 'Move to', value: 'move', subItems: [
                   { type: 'heading', label: 'Infrastructure' },
                   { label: 'Servers',   value: 'servers' },
@@ -632,9 +633,13 @@
                   { label: 'Mobile',  value: 'mobile' },
                 ] },
                 { label: 'Duplicate', value: 'duplicate' },
-                { label: 'Rename',    value: 'rename' },
+                { type: 'divider' },
+                { type: 'heading', label: 'Edit' },
+                { label: 'Rename', value: 'rename' },
+                { label: 'Delete', value: 'delete', danger: true },
               ]);
               setItems('ov-nested-heading', [
+                { type: 'heading', label: 'Organise' },
                 { label: 'Move to', value: 'move', subItems: [
                   { type: 'heading', label: 'Infrastructure' },
                   { label: 'Servers',   value: 'servers' },
@@ -645,7 +650,10 @@
                   { label: 'Mobile',  value: 'mobile' },
                 ] },
                 { label: 'Duplicate', value: 'duplicate' },
-                { label: 'Rename',    value: 'rename' },
+                { type: 'divider' },
+                { type: 'heading', label: 'Edit' },
+                { label: 'Rename', value: 'rename' },
+                { label: 'Delete', value: 'delete', danger: true },
               ]);
               setItems('ov-nested', [
                 { label: 'Deploy now', value: 'deploy', icon: 'rocket' },
@@ -807,16 +815,26 @@ menu.addEventListener('ds-dropdown-select', (e) =&gt; {
                 <ds-dropdown-menu id="nested-heading" type="default" open></ds-dropdown-menu>
               </div>
               <div style="flex:1 1 320px;min-width:280px;">
-                <p style="font-size:14px;color:var(--prism-text-muted);margin:0 0 12px;">Hover <strong>Move to</strong> &mdash; the flyout groups its targets without a title bar.</p>
-<pre class="code-block"><code>{ label: 'Move to', value: 'move', subItems: [
-    { type: 'heading', label: 'Infrastructure' },
-    { label: 'Servers',   value: 'servers' },
-    { label: 'Databases', value: 'databases' },
-    { type: 'divider' },
-    { type: 'heading', label: 'End user' },
-    { label: 'Laptops', value: 'laptops' },
-    { label: 'Mobile',  value: 'mobile'  },
-] }</code></pre>
+                <p style="font-size:14px;color:var(--prism-text-muted);margin:0 0 12px;">Headings group rows at <strong>any</strong> level &mdash; the root menu here has <em>Organise</em> and <em>Edit</em>, and hovering <strong>Move to</strong> shows the flyout grouping its targets the same way, without a title bar.</p>
+<pre class="code-block"><code>menu.items = [
+  // headings work at EVERY level — root menu…
+  { type: 'heading', label: 'Organise' },
+  { label: 'Move to', value: 'move', subItems: [
+      // …and inside the flyout
+      { type: 'heading', label: 'Infrastructure' },
+      { label: 'Servers',   value: 'servers' },
+      { label: 'Databases', value: 'databases' },
+      { type: 'divider' },
+      { type: 'heading', label: 'End user' },
+      { label: 'Laptops', value: 'laptops' },
+      { label: 'Mobile',  value: 'mobile'  },
+  ] },
+  { label: 'Duplicate', value: 'duplicate' },
+  { type: 'divider' },
+  { type: 'heading', label: 'Edit' },
+  { label: 'Rename', value: 'rename' },
+  { label: 'Delete', value: 'delete', danger: true },
+];</code></pre>
               </div>
             </div>
 

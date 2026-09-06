@@ -90,13 +90,27 @@ ds-dropdown-menu[open] {
   z-index: 1;
   background: var(--uems-bg-primary-alt);
   padding: var(--spacing-8) var(--spacing-12) var(--spacing-4);
-  font-size: var(--font-size-14);
-  font-weight: var(--font-weight-medium);
-  color: var(--uems-text-placeholder);
+  /* A label sits BELOW its content, never level with it: 12px against the rows'
+     14px, and recessive in colour so the options stay the loud thing. Matches
+     the title row's 12/semibold recipe, so the menu has one label voice — the
+     two stay apart by colour (title = text-secondary names the menu, heading =
+     text-quaternary names a group).
+
+     NOT text-placeholder, which this used to be: that token means the ghost text
+     inside an empty input, and it resolved to 3.08:1 here — under the 4.5:1
+     minimum for text. text-quaternary is 6.29:1 light / 5.78 dark / 5.72 night.
+
+     Sentence case, no uppercase or tracking: the label reads as a label through
+     size, weight and colour alone (house rule — see layouts.md "Casing"). */
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-semibold);
+  color: var(--uems-text-quaternary);
 }
-/* Separate groups — every heading except the first gets a little top space. */
+/* Separate groups — every heading except the first gets top space. 8px, not 4:
+   at 12px the headings carry less visual weight, so the gap does more of the
+   grouping work. */
 .ds-dropdown-menu__section-heading ~ .ds-dropdown-menu__section-heading {
-  margin-top: var(--spacing-4);
+  margin-top: var(--spacing-8);
 }
 /* Heading with a trailing action (e.g. "Clear all"): title left, link right. */
 .ds-dropdown-menu__section-heading--with-action {
