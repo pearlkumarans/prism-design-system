@@ -32,6 +32,7 @@ import '../src/components/progress-bar/progress-bar.js';
 import '../src/components/inline-alert/inline-alert.js';
 import '../src/components/empty-state/empty-state.js';
 import '../src/components/kpi-card/kpi-card.js';
+import '../src/components/item-list/item-list.js';
 import '../src/components/list/list.js';
 import '../src/components/description-list/description-list.js';
 import '../src/components/data-table/data-table.js';
@@ -110,6 +111,15 @@ describe('a11y sweep — data & feedback', () => {
   it('ds-illustration', async () => a11y(await fixture(html`<ds-illustration name="empty-box"></ds-illustration>`)));
   it('ds-avatar (initials)', async () => a11y(await fixture(html`<ds-avatar name="Jane Doe"></ds-avatar>`)));
   it('ds-icon-button', async () => a11y(await fixture(html`<ds-icon-button icon="settings" label="Settings"></ds-icon-button>`)));
+
+  it('ds-item-list', async () => {
+    const el = await fixture(html`<ds-item-list></ds-item-list>`);
+    el.items = [
+      { text: '23 devices pending enrollment', icon: 'exclamation-circle', status: 'critical', meta: 'Security \u00b7 3 mins ago' },
+      { text: 'MacBook-Pro-Dev-09 enrolled', icon: 'circle-tick', status: 'success', meta: 'admin \u00b7 2 hours ago' },
+    ];
+    await a11y(el);
+  });
 
   it('ds-list', async () => {
     const el = await fixture(html`<ds-list></ds-list>`);

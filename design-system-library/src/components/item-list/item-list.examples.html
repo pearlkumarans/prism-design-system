@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Item list — examples</title>
+  <link rel="stylesheet" href="../../styles/index.css" />
+  <script>window.UEMS_ICON_SPRITE = '../../icons/icons.svg';</script>
+  <script type="module" src="../../index.js"></script>
+  <style>
+    body { padding: 24px; font-family: var(--font-family-sans); background: var(--uems-bg-primary);
+           color: var(--uems-text-primary); display: grid; grid-template-columns: repeat(2, minmax(0,1fr));
+           gap: 32px; max-width: 1100px; }
+    h2 { margin: 0 0 8px; font-size: 14px; }
+    .col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .themes { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .swatch { padding: 16px; border-radius: 8px; background: var(--uems-bg-primary); }
+    .swatch h3 { margin: 0 0 8px; font-size: 12px; color: var(--uems-text-tertiary); }
+  </style>
+</head>
+<body>
+  <div class="col">
+    <h2>Activity — circle rail, statuses, action (.hd-act-row)</h2>
+    <ds-item-list id="activity" divider="line"></ds-item-list>
+  </div>
+  <div class="col">
+    <h2>Search results — tile rail + description (.as-row / .srch-row)</h2>
+    <ds-item-list id="search"></ds-item-list>
+  </div>
+
+  <div class="col">
+    <h2>Pending updates — meta above, inline body link (.pu-item)</h2>
+    <ds-item-list id="pending"></ds-item-list>
+  </div>
+  <div class="col">
+    <h2>Watchlist — tile rail, small (.wl-row, 16 files)</h2>
+    <ds-item-list id="watch" size="small" divider="dashed"></ds-item-list>
+  </div>
+
+  <div class="col">
+    <h2>Release notes — no rail</h2>
+    <ds-item-list id="notes"></ds-item-list>
+  </div>
+  <div class="col">
+    <h2>Execution log — timeline, dot marker (.tl-node)</h2>
+    <ds-item-list id="timeline" variant="timeline"></ds-item-list>
+  </div>
+
+  <div class="col">
+    <h2>Execution log — timeline, icon marker</h2>
+    <ds-item-list id="timeline-icon" variant="timeline" timeline-marker="icon"></ds-item-list>
+  </div>
+
+  <div class="col">
+    <h2>Declarative — slotted &lt;ds-item&gt; with slotted regions</h2>
+    <ds-item-list divider="line">
+      <ds-item icon="exclamation-circle" status="critical"
+               text="23 devices pending enrollment" meta="3 mins ago">
+        <ds-badge slot="meta" variant="error">Security</ds-badge>
+        <ds-button slot="trailing" variant="tertiary" size="small" label="Approve"></ds-button>
+      </ds-item>
+      <ds-item icon="circle-tick" status="success"
+               text="MacBook-Pro-Dev-09 enrolled" meta="admin · 2 hours ago"></ds-item>
+      <ds-item icon="laptop" text="Retired device" meta="Archived" disabled></ds-item>
+    </ds-item-list>
+  </div>
+  <div class="col">
+    <h2>RTL</h2>
+    <ds-item-list id="rtl" rtl divider="line"></ds-item-list>
+  </div>
+
+  <div class="themes">
+    <h2 style="grid-column:1/-1;">All six themes — contrast check</h2>
+    <div class="swatch" data-theme="light"><h3>light</h3><ds-item-list class="t"></ds-item-list></div>
+    <div class="swatch" data-theme="dark"><h3>dark</h3><ds-item-list class="t"></ds-item-list></div>
+    <div class="swatch" data-theme="night"><h3>night</h3><ds-item-list class="t"></ds-item-list></div>
+    <div class="swatch" data-theme="green-light"><h3>green-light</h3><ds-item-list class="t"></ds-item-list></div>
+    <div class="swatch" data-theme="green-dark"><h3>green-dark</h3><ds-item-list class="t"></ds-item-list></div>
+    <div class="swatch" data-theme="green-night"><h3>green-night</h3><ds-item-list class="t"></ds-item-list></div>
+  </div>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+
+    $('activity').items = [
+      { text: '23 devices pending enrollment', icon: 'exclamation-circle', status: 'critical',
+        badge: 'Security', meta: '3 mins ago', value: 'enroll-q',
+        action: { text: 'Approve', actionId: 'approve' } },
+      { text: 'MacBook-Pro-Dev-09 enrolled', icon: 'circle-tick', status: 'success', meta: 'admin · 2 hours ago' },
+      { text: 'Patch scan completed', icon: 'refresh', status: 'info', meta: 'System · 5 hours ago' },
+      { text: '9 devices retrying', icon: 'exclamation-triangle', status: 'warning', meta: 'System · 6 hours ago' },
+    ];
+
+    $('search').items = [
+      { text: 'Software Deployment', description: 'Deploy and manage applications across endpoints',
+        icon: 'software', lead: 'box', meta: 'Module', href: '#' },
+      { text: 'DESKTOP-4471-QA', description: 'Windows 11 · Last contact 4 mins ago',
+        icon: 'laptop', lead: 'box', meta: 'Device', href: '#' },
+      { text: 'SRV-BUILD-02', description: 'Windows Server 2022 · Healthy',
+        icon: 'server-01', lead: 'box', meta: 'Device', href: '#' },
+    ];
+
+    $('pending').items = [
+      { metaPosition: 'above', meta: 'Chrome · 3 versions behind', icon: 'installing-updates', lead: 'plain',
+        text: 'Google Chrome 141.0.7390', description: 'Approved for 412 devices',
+        link: { text: 'View', href: '#' }, action: { text: 'Install', actionId: 'install' } },
+      { metaPosition: 'above', meta: 'Zoom · 1 version behind', icon: 'installing-updates', lead: 'plain',
+        text: 'Zoom Workplace 6.5.9', description: 'Pending approval' },
+    ];
+
+    /* .wl-row is a 28px rounded TILE, not a bare glyph — corrected after auditing
+       the real call sites. Its trailing is a static value, which the data path
+       cannot express yet (see "Migration coverage" in item-list.md). */
+    $('watch').items = [
+      { text: 'Managed devices', icon: 'laptop', lead: 'box', trailing: '412' },
+      { text: 'Awaiting reboot', icon: 'refresh', lead: 'box', trailing: '38' },
+      { text: 'Agent unreachable', icon: 'exclamation-circle', lead: 'box', status: 'critical', trailing: '0' },
+      { text: 'DESKTOP-4471-QA', icon: 'laptop', lead: 'box', status: 'success',
+        meta: 'Windows 11', trailing: { badge: 'Online' } },
+    ];
+
+    $('notes').items = [
+      { metaPosition: 'above', meta: '11.3.2456 · 4 Sep 2026',
+        text: 'Agent reconnect backoff is now adaptive',
+        description: 'Agents on flaky links reconnect on a widening interval instead of a fixed 30s retry.',
+        link: 'Read more' },
+      { metaPosition: 'above', meta: '11.3.2451 · 28 Aug 2026',
+        text: 'Bulk approval for enrollment requests',
+        description: 'Approve or reject up to 500 pending enrollments in one action.',
+        link: { text: 'View release note', href: '#' } },
+    ];
+
+    $('timeline').items = [
+      { text: 'Deployment created', meta: '10:02 AM' },
+      { text: 'Running install script', status: 'info', meta: '10:08 AM',
+        output: 'PS> Start-Process msiexec.exe -ArgumentList "/i agent.msi /qn"\nExit code: 0', mono: true },
+      { text: 'Package distributed to 412 devices', status: 'success', meta: '10:14 AM' },
+      { text: 'Retrying on 9 devices', status: 'warning', meta: '10:26 AM' },
+      { text: '9 devices failed — agent unreachable', status: 'critical', meta: '10:31 AM' },
+    ];
+
+    $('rtl').items = [
+      { text: '٢٣ جهازًا في انتظار التسجيل', icon: 'exclamation-circle', status: 'critical', meta: 'الأمان · قبل ٣ دقائق' },
+      { text: 'تم تسجيل الجهاز', icon: 'circle-tick', status: 'success', meta: 'المسؤول · قبل ساعتين' },
+    ];
+
+    const THEME_ROWS = [
+      { text: 'Agent unreachable', icon: 'exclamation-circle', status: 'critical', meta: '3 mins ago' },
+      { text: 'Scan completed', icon: 'circle-tick', status: 'success', meta: '2 hours ago',
+        description: 'Secondary text on this ground' },
+    ];
+    document.querySelectorAll('ds-item-list.t').forEach((el) => {
+      el.setAttribute('divider', 'line');
+      el.items = THEME_ROWS.map((r) => ({ ...r }));
+    });
+
+    /* Same data, icon marker — every row needs an icon here, since the marker IS
+       the glyph. Rows without one render an empty tinted disc. */
+    $('timeline-icon').items = [
+      { text: 'Deployment created', icon: 'clock', meta: '10:02 AM' },
+      { text: 'Package distributed to 412 devices', icon: 'circle-tick', status: 'success', meta: '10:14 AM' },
+      { text: 'Retrying on 9 devices', icon: 'refresh', status: 'warning', meta: '10:26 AM' },
+      { text: '9 devices failed — agent unreachable', icon: 'exclamation-circle', status: 'critical', meta: '10:31 AM' },
+    ];
+
+    document.addEventListener('ds-item-action', (e) => console.log('ds-item-action', e.detail));
+  </script>
+</body>
+</html>

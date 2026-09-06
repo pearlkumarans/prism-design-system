@@ -35,6 +35,7 @@ import '../../src/components/field-helper/field-helper.js';
 import '../../src/components/input-select/input-select.js';
 import '../../src/components/token-field/token-field.js';
 import '../../src/components/description-list/description-list.js';
+import '../../src/components/item-list/item-list.js';
 import '../../src/components/list/list.js';
 import '../../src/components/data-table/data-table.js';
 import '../../src/components/empty-state/empty-state.js';
@@ -224,6 +225,44 @@ describe('visual — content & data', () => {
       { term: 'Status', description: 'Active' }, { term: 'Owner', description: 'Jane Doe' }, { term: 'Region', description: 'US East' },
     ];
     await shot(el, 'description-list');
+  });
+  it('item-list', async () => {
+    const el = await fixture(frame(html`<ds-item-list divider="line"></ds-item-list>`, '420px'));
+    el.querySelector('ds-item-list').items = [
+      { text: '23 devices pending enrollment', icon: 'exclamation-circle', status: 'critical', meta: 'Security \u00b7 3 mins ago' },
+      { text: 'MacBook-Pro-Dev-09 enrolled', icon: 'circle-tick', status: 'success', meta: 'admin \u00b7 2 hours ago' },
+    ];
+    await shot(el, 'item-list');
+  });
+  it('item-list (release note: inline link + trailing badge)', async () => {
+    const el = await fixture(frame(html`<ds-item-list divider="dashed"></ds-item-list>`, '420px'));
+    el.querySelector('ds-item-list').items = [
+      { metaPosition: 'above', meta: '11.3.2456 \u00b7 4 Sep 2026',
+        text: 'Agent reconnect backoff is now adaptive',
+        description: 'Agents on flaky links reconnect on a widening interval.',
+        link: 'Read more' },
+      { text: 'DESKTOP-4471-QA', icon: 'laptop', lead: 'box', status: 'success',
+        meta: 'Windows 11', trailing: { badge: 'Online' } },
+    ];
+    await shot(el, 'item-list-link-and-badge');
+  });
+  it('item-list (timeline, icon marker)', async () => {
+    const el = await fixture(frame(html`<ds-item-list variant="timeline" timeline-marker="icon"></ds-item-list>`, '420px'));
+    el.querySelector('ds-item-list').items = [
+      { text: 'Deployment created', icon: 'clock', meta: '10:02 AM' },
+      { text: 'Package distributed to 412 devices', icon: 'circle-tick', status: 'success', meta: '10:14 AM' },
+      { text: '9 devices failed', icon: 'exclamation-circle', status: 'critical', meta: '10:31 AM' },
+    ];
+    await shot(el, 'item-list-timeline-icon');
+  });
+  it('item-list (timeline)', async () => {
+    const el = await fixture(frame(html`<ds-item-list variant="timeline"></ds-item-list>`, '420px'));
+    el.querySelector('ds-item-list').items = [
+      { text: 'Deployment created', status: 'default', meta: '10:02 AM' },
+      { text: 'Package distributed to 412 devices', status: 'success', meta: '10:14 AM' },
+      { text: '9 devices failed', status: 'critical', meta: '10:31 AM' },
+    ];
+    await shot(el, 'item-list-timeline');
   });
   it('list', async () => {
     const el = await fixture(frame(html`<ds-list></ds-list>`, '260px'));

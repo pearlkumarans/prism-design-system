@@ -1,0 +1,251 @@
+/* =============================================================================
+   ds-item-list / .ds-item-list
+   A stacked list of rows: leading rail + content + trailing action.
+   `--timeline` re-dresses the rail only — same DOM, dot instead of an icon,
+   plus a connector drawn between rows.
+   ============================================================================= */
+
+/* Light-DOM component: :host never applies — style the tag itself, or the host
+   stays display:inline and its block children get an unreliable width. */
+ds-item-list { display: block; font-family: var(--font-family-sans); width: 100%; }
+
+.ds-item-list { display: flex; flex-direction: column; }
+
+/* ---- Row ------------------------------------------------------------------
+   The row is NOT a click target: no cursor:pointer here, deliberately. Pointer
+   on a non-clickable surface trains people to click and get nothing — only the
+   trailing control carries it. */
+.ds-item {
+  display: flex;
+  align-items: flex-start;
+  /* 12, not 10: the spacing scale steps 8 -> 12, and --spacing-10 does not exist.
+     An undefined var here invalidates the WHOLE padding shorthand, which is why
+     medium rows lost their padding entirely while small (which overrides both
+     with real tokens) looked fine. Matches .as-row / .wl-row in the product. */
+  gap: var(--spacing-12);
+  padding: var(--spacing-12) var(--spacing-8);
+  border-radius: var(--radius-sm);
+  /* Type lives on the ROW, not the title, so `1lh` below resolves against the
+     title's line box instead of whatever font-size the page happens to inherit.
+     Same approach as list.css. 14 x 1.5 = 21px, unchanged from before. */
+  font-size: var(--font-size-14);
+  line-height: var(--line-height-normal);
+  --_il-pad-block: var(--spacing-12);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+/* Hover says "this action belongs to this row" — association, not affordance.
+   :focus-within gives a keyboard user tabbing to the trailing control the same
+   grouping a mouse user gets for free. */
+.ds-item:hover,
+.ds-item:focus-within { background: var(--uems-bg-primary-hover); }
+.ds-item[aria-disabled="true"] { opacity: 0.5; }
+.ds-item[aria-disabled="true"] .ds-item__trailing { pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-item { transition: none; }
+}
+
+/* ---- Dividers -------------------------------------------------------------
+   Drawn on the row, not the container, so the last one can drop its rule
+   without the container needing to know how many rows there are. */
+.ds-item-list--divider-line .ds-item { border-bottom: 1px solid var(--uems-border-tertiary); }
+.ds-item-list--divider-dashed .ds-item { border-bottom: 1px dashed var(--uems-border-tertiary); }
+.ds-item-list--divider-line .ds-item:last-child,
+.ds-item-list--divider-dashed .ds-item:last-child { border-bottom: 0; }
+
+/* ---- Leading rail --------------------------------------------------------- */
+.ds-item__lead {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uems-icon-tertiary);
+}
+/* circle — the tinted status disc (.hd-act-row). Size is a control dimension,
+   not on the spacing scale. */
+.ds-item--lead-circle .ds-item__lead {
+  width: var(--uems-control-h-28, 28px);
+  height: var(--uems-control-h-28, 28px);
+  border-radius: var(--radius-full);
+}
+/* box — the rounded tile used by the search results (.as-row, .srch-row). */
+.ds-item--lead-box .ds-item__lead {
+  width: var(--uems-control-h-28, 28px);
+  height: var(--uems-control-h-28, 28px);
+  border-radius: var(--radius-sm);
+  background: var(--uems-bg-secondary);
+  color: var(--uems-icon-secondary);
+}
+/* plain — a bare glyph, no container (.wl-row, .pu-item). */
+.ds-item--lead-plain .ds-item__lead {
+  width: var(--uems-icon-20, 20px);
+  height: var(--uems-icon-20, 20px);
+  margin-top: var(--spacing-2);
+}
+
+/* ---- Status tints ---------------------------------------------------------
+   Only the `circle` rail is tinted — a bare glyph or a tile carrying a semantic
+   wash reads as a badge and competes with the real one in the meta line.
+   Colour NEVER carries the status alone: the glyph and the row text do. */
+.ds-item--lead-circle.ds-item--status-default  .ds-item__lead { background: var(--uems-bg-secondary);        color: var(--uems-icon-tertiary); }
+.ds-item--lead-circle.ds-item--status-info     .ds-item__lead { background: var(--uems-bg-info-primary);     color: var(--uems-text-info); }
+.ds-item--lead-circle.ds-item--status-success  .ds-item__lead { background: var(--uems-bg-success-primary);  color: var(--uems-text-success); }
+.ds-item--lead-circle.ds-item--status-warning  .ds-item__lead { background: var(--uems-bg-warning-primary);  color: var(--uems-text-warning); }
+.ds-item--lead-circle.ds-item--status-critical .ds-item__lead { background: var(--uems-bg-error-primary);    color: var(--uems-text-error); }
+
+/* ---- Content -------------------------------------------------------------- */
+.ds-item__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-2); }
+
+.ds-item__text {
+  font-weight: var(--font-weight-regular);
+  color: var(--uems-text-primary);
+  overflow-wrap: anywhere;   /* device names and paths have no spaces to break on */
+}
+/* href turns the primary line into a real link — it keeps the accent + underline
+   affordance rather than being a plain-looking string that happens to navigate. */
+a.ds-item__text { color: var(--uems-text-accent-link); text-decoration: none; }
+a.ds-item__text:hover { text-decoration: underline; }
+
+.ds-item__description {
+  font-size: var(--font-size-12);
+  color: var(--uems-text-tertiary);
+  overflow-wrap: anywhere;
+}
+
+/* Meta strip — badge, actor, timestamp. Wraps rather than truncating: the
+   timestamp is the part that would be cut, and it is often the point. */
+.ds-item__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-6);
+  font-size: var(--font-size-12);
+  color: var(--uems-text-quaternary);
+}
+
+/* ---- Trailing -------------------------------------------------------------
+   The row's only click target. Centred against the first text line rather than
+   the whole row, so it stays put as the description wraps. */
+.ds-item__trailing {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  padding-top: var(--spacing-2);
+}
+
+/* Inline continuation link (.pu-item__more) — sits at the end of the body, on its
+   own line, so it reads as the content carrying on rather than a row action. The
+   margin matches .pu-item__more's 8px. */
+.ds-item__link {
+  margin-top: var(--spacing-6);
+}
+
+/* Trailing VALUE — a count, a read time. Not a control: no pointer, no focus
+   ring, no hover. Sits at the row's type size so it reads as data, and one step
+   darker than the meta strip so it is not mistaken for a timestamp.
+   (.wl-val is 14/semibold/secondary, .srch-row__meta is 13/tertiary; this lands
+   between them and normalises both.) */
+.ds-item__value {
+  flex: 0 0 auto;
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-secondary);
+  font-variant-numeric: tabular-nums;   /* counts down a column line up */
+}
+.ds-item-list--small .ds-item__value { font-size: var(--font-size-13); }
+
+/* Output block (.tl-out) — script/command output under the title. pre-wrap because
+   newlines and alignment are the content; a surface so it reads as a quoted
+   region rather than more prose. */
+.ds-item__output {
+  margin-top: var(--spacing-6);
+  padding: var(--spacing-8) var(--spacing-12);
+  border-radius: var(--radius-md);
+  background: var(--uems-bg-secondary);
+  font-size: var(--font-size-12);
+  color: var(--uems-text-secondary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ds-item__output--mono {
+  font-family: var(--font-family-mono);
+  color: var(--uems-text-primary);   /* output is the subject here, not an aside */
+}
+
+/* ---- Timeline variant -----------------------------------------------------
+   Same DOM as default; only the rail is re-dressed. The connector is a
+   pseudo-element on the row so it spans the gap to the next one, and it stops at
+   the last row rather than trailing into empty space. */
+.ds-item-list--timeline .ds-item {
+  position: relative;
+  padding-bottom: var(--spacing-20);
+  /* ONE marker size drives the indent, the marker box, the marker's vertical
+     centring and both connector ends. Change the size and the whole node stays
+     assembled — nothing here repeats a number. */
+  --_il-marker-size: var(--uems-icon-14, 14px);
+  --_il-marker-inset: var(--spacing-6);
+  padding-inline-start: var(--spacing-32);
+  --_il-dot-top: calc(var(--_il-pad-block) + (1lh - var(--_il-marker-size)) / 2);
+}
+/* `timeline-marker="icon"` — a glyph in a status-tinted disc. Reuses the circle
+   rail (so the tints are the SAME rules the default variant uses); only the
+   geometry changes: a wider marker needs a wider indent to clear the text. */
+.ds-item-list--timeline-icon .ds-item {
+  --_il-marker-size: var(--uems-control-h-28, 28px);
+  --_il-marker-inset: 0px;
+  padding-inline-start: var(--spacing-40);
+}
+.ds-item-list--timeline .ds-item:last-child { padding-bottom: 0; }
+.ds-item-list--timeline .ds-item:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  /* Centred under the marker: half its width, less half the 2px line. */
+  inset-inline-start: calc(var(--_il-marker-inset) + var(--_il-marker-size) / 2 - 1px);
+  /* Span marker-bottom to the next marker's top, so the line meets both instead
+     of floating between them. The next row's marker starts --_il-dot-top below
+     this row's box. */
+  top: calc(var(--_il-dot-top) + var(--_il-marker-size));
+  bottom: calc(-1 * var(--_il-dot-top));
+  width: 2px;
+  background: var(--uems-border-tertiary);
+}
+/* The marker sits ON the connector, so it is ringed with the surface colour to
+   punch a hole in the line rather than sitting on top of it. */
+.ds-item-list--timeline .ds-item__lead {
+  position: absolute;
+  inset-inline-start: var(--_il-marker-inset);
+  top: var(--_il-dot-top);
+  width: var(--_il-marker-size);
+  height: var(--_il-marker-size);
+}
+.ds-item-list--timeline-icon .ds-item__lead {
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 0 3px var(--uems-bg-primary);
+}
+.ds-item__dot {
+  width: var(--_il-marker-size, var(--uems-icon-14, 14px));
+  height: var(--_il-marker-size, var(--uems-icon-14, 14px));
+  border-radius: var(--radius-full);
+  background: var(--uems-bg-tertiary-solid);
+  box-shadow: 0 0 0 3px var(--uems-bg-primary);
+}
+.ds-item--status-info     .ds-item__dot { background: var(--uems-bg-info-solid); }
+.ds-item--status-success  .ds-item__dot { background: var(--uems-bg-success-solid); }
+.ds-item--status-warning  .ds-item__dot { background: var(--uems-bg-warning-solid); }
+.ds-item--status-critical .ds-item__dot { background: var(--uems-bg-error-solid); }
+/* A timeline row is a record, not an action target — no hover wash. */
+.ds-item-list--timeline .ds-item:hover { background: transparent; }
+
+/* ---- Size ----------------------------------------------------------------- */
+.ds-item-list--small .ds-item {
+  padding-block: var(--spacing-6);
+  gap: var(--spacing-8);
+  font-size: var(--font-size-13);
+  --_il-pad-block: var(--spacing-6);   /* keeps the timeline dot aligned at this density */
+}
+
+/* ---- RTL ------------------------------------------------------------------
+   Layout is logical throughout (margin-inline, inset-inline), so direction is
+   the only thing to flip. */
+.ds-item-list[dir="rtl"] { text-align: right; }

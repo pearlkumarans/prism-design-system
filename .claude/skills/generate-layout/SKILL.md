@@ -316,16 +316,18 @@ Omit `?product=` for plain Endpoint Central pages — nothing changes for the EC
   only, matching the existing `ds-*` conventions.
 - **Content inside a widget/card must be a component that owns its padding — never a hand-rolled
   list.** `ds-widget__body` (and card bodies) have **zero horizontal padding by design**: the body
-  expects a DS component to supply its own inset — `ds-description-list`, `ds-data-table`,
-  `ds-chart`. Do **not** drop a bespoke `<div class="my-rows">…</div>` into a widget and hand-tune
+  expects a DS component to supply its own inset — `ds-item-list`, `ds-description-list`,
+  `ds-data-table`, `ds-chart`. Do **not** drop a bespoke `<div class="my-rows">…</div>` into a widget and hand-tune
   `padding`/`border`/icon-chips to fake the layout. That only looks right until the viewport or a
   sibling token shifts — then icons/badges touch the border, or the hand-rolled rows misalign with
   the real component beside them (this is the #1 source of "icon/badge touches the border" and
   "rows don't line up" bugs). Two obligations: **(a)** set the widget's **`type`** to match its
   content (`type="list"` for a definition/label list, `type="table"` for a table, `type="chart"`
   for a chart — the default is `chart`, which is edge-to-edge); **(b)** render the content with a
-  component (an icon + label + status-badge row list → `ds-description-list` with a `status`/badge
-  cell, or a borderless `ds-data-table`). If genuinely no component fits, that's a
+  component. **A list of records — activity, approvals, search hits, release notes, execution
+  steps — is `ds-item-list`**: an icon/status rail, a title, a meta line, and at most one action
+  per row. Reach for `ds-description-list` only for field/value pairs, and a borderless
+  `ds-data-table` when rows need sorting, paging, or bulk-select. If genuinely no component fits, that's a
   **propose-a-component** moment (needs confirmation) — not a `<div>` with custom CSS.
 - **Every icon name must exist in the sprite — validate before writing.** `ds-icon` and any
   `icon=`/`prefix-icon=`/`suffix-icon=` prop render an **empty, silent box** for a name that isn't
