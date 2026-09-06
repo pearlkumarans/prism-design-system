@@ -31,11 +31,11 @@ The Popover is a non-modal overlay anchored to a trigger — an optional header 
 |------|-------------|
 | **Arrow / beak** | 14×8 (top/bottom) · 8×14 (left/right) triangle sharing the surface fill + 1px border. Sits on the edge facing the trigger and points at the trigger's centre. Optional (`arrow`, default off). Decorative (`aria-hidden`). |
 | **Surface** | The container. `bg-primary-alt`, 1px `border-secondary`, `radius-8`, elevation shadow. Hugs content, 240px min-width, no max. |
-| **Header** | Title + close ✕, with a bottom divider (`border-primary`). Auto-shows when `title`/`rtl-title` set. |
+| **Header** | Title + close ✕, with a bottom divider (`border-tertiary`). Auto-shows when `title`/`rtl-title` set. Two styles via `header-style`: `framed` (the bordered bar) and `plain` (a simple title in the content flow). |
 | **Title** | Short label. `Text/Default/SemiBold`, `text-primary`. Single line, truncates with ellipsis. |
 | **Close** | 16px ✕ glyph, `icon-subtle`. Hidden via `hide-close`. |
 | **Body** | Default slot. Any content. `14/20`, `text-secondary`. |
-| **Footer** | Optional action group with a top divider. Consumer composes `<ds-button>`s in `slot="footer"`. |
+| **Footer** | Optional action group with a top divider (`border-tertiary`, matching the header). Right-aligned, mirrored under RTL. Consumer composes `<ds-button>`s in `slot="footer"`. |
 
 ---
 
@@ -76,8 +76,8 @@ Alignment (`-start` / `-center` / `-end`) sets where the popover aligns along th
 | `has-header` | boolean | unset | Force-show the header (auto-on when a title is set). |
 | `hide-close` | boolean | unset | Hide the close ✕ when a header is shown. |
 | `hide-divider` | boolean | unset | Hide the header bottom divider. |
+| `header-style` | `framed` · `plain` | `framed` | `plain` drops the framed header: no divider and no separate padded block, so the title sits at the top of the content flow sharing its left edge. Makes `hide-divider` redundant; the close button still works. |
 | `has-footer` | boolean | unset | Force-show the footer (auto-on when footer slot has content). |
-| `footer-align` | `default` · `centered` | `default` | Footer button-group alignment. |
 | `arrow` | boolean | unset (off) | Show the beak pointing at the anchor. |
 | `rtl` | boolean | unset | Mirror layout (✕ left, text right, footer to start) + use `rtl-title`. Sets `dir="rtl"`. |
 | `open` | boolean | unset | Open / close state. |
@@ -117,9 +117,9 @@ Hugs content with a 240px floor and **no max**. Force wrapping with `--ds-popove
 ### Sections
 | Region | Padding | Divider |
 |--------|---------|---------|
-| Header | `12px 16px` (logical; mirrors under RTL) | bottom 1px `--uems-border-primary` |
+| Header | `12px 16px` (logical; mirrors under RTL) — `header-style="plain"` drops the bottom padding | bottom 1px `--uems-border-tertiary` (none when `plain`) |
 | Body | `16px` | — |
-| Footer | `12px 16px` | top 1px `--uems-border-primary` |
+| Footer | `12px 16px` | top 1px `--uems-border-tertiary` |
 
 ### Typography & icon
 | Element | Style |

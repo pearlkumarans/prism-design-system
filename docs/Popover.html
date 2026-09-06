@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="css/common/components.css">
 <link rel="stylesheet" href="../design-system-library/src/tokens/index.css">
 <link rel="stylesheet" href="../design-system-library/src/components/popover/popover.css">
+<link rel="stylesheet" href="../design-system-library/src/components/checkbox/checkbox.css">
+<link rel="stylesheet" href="../design-system-library/src/components/badge/badge.css">
 <link rel="stylesheet" href="../design-system-library/src/components/button/button.css">
 <link rel="stylesheet" href="../design-system-library/src/components/text-link/text-link.css">
 <script>window.UEMS_ICON_SPRITE = '../design-system-library/src/icons/icons.svg';</script>
@@ -17,14 +19,26 @@
 <script type="module" src="../design-system-library/src/components/button/button.js"></script>
 <script type="module" src="../design-system-library/src/components/text-link/text-link.js"></script>
 <script type="module" src="../design-system-library/src/components/popover/popover.js"></script>
+<script type="module" src="../design-system-library/src/components/checkbox/checkbox.js"></script>
+<script type="module" src="../design-system-library/src/components/badge/badge.js"></script>
 <style>
   /* Popover is position:fixed and anchored at runtime. For inline static showcase
      cards, render an anchorless <ds-popover> inside a relative "frame" and force its
      surface visible (no anchor/open, so it does NOT steal focus, lock scroll, or add
      Esc/outside handlers). The interactive grid below uses real anchored popovers. */
   .page-popover .demo-pop-frame { display:flex; justify-content:center; padding:32px; background:var(--uems-bg-base,#f4f5f7); border:1px solid var(--uems-border-tertiary); border-radius:12px; }
-  .page-popover .demo-pop-frame ds-popover { display:block !important; }
-  .page-popover .demo-pop-frame .ds-popover__surface { position:static !important; animation:none !important; }
+  .page-popover .demo-pop-frame ds-popover { display:block !important; min-width:0; }
+  /* The surface hugs its content with NO max-width, so a paragraph of prose makes
+     it far wider than the card holding it (733px inside a 436px frame). Give every
+     static demo the width a real consumer would set, and let it shrink in the
+     narrow cards. The width lives on the SURFACE, so it needs the cap too. */
+  .page-popover .demo-pop-frame { --ds-popover-width: min(320px, 100%); }
+  .page-popover .demo-pop-frame .ds-popover__surface { max-width:100%; }
+  /* `relative`, NOT `static`: both defeat the component's position:fixed, but the
+     beak is position:absolute — with a static surface it has no positioned
+     ancestor and resolves against the document, landing at the page origin
+     instead of on the popover's edge. */
+  .page-popover .demo-pop-frame .ds-popover__surface { position:relative !important; animation:none !important; }
 
   .page-popover .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
   .page-popover .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -51,6 +65,27 @@
   }
   @media (max-width: 980px) { .page-popover .demo-mod-grid { grid-template-columns: 1fr; } }
   .page-popover .demo-mod-card { display: flex; flex-direction: column; gap: 10px; }
+
+  /* Real-world cases. Each stage is position:relative so an anchored popover has a
+     local containing block, and gets real height so the surface has room to open
+     without the card jumping. */
+  .page-popover .usecase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 980px) { .page-popover .usecase-grid { grid-template-columns: 1fr; } }
+  .page-popover .usecase { display: flex; flex-direction: column; gap: 10px; }
+  .page-popover .usecase-cap { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--prism-text-muted); }
+  .page-popover .usecase-stage {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    min-height: 96px; padding: 20px;
+    background: var(--uems-bg-base, #f4f5f7);
+    border: 1px solid var(--uems-border-tertiary); border-radius: 12px;
+  }
+  .page-popover .usecase-note { font-size: 12px; color: var(--prism-text-muted); line-height: 1.5; }
+  .page-popover .uc-checks { display: flex; flex-direction: column; gap: 10px; }
+  .page-popover .uc-metric { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--uems-text-secondary); }
+  .page-popover .uc-metric strong { color: var(--uems-text-primary); }
+  .page-popover .uc-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .page-popover .uc-rows > span { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 13px; color: var(--uems-text-tertiary); }
+  .page-popover .uc-rows strong { font-weight: var(--font-weight-medium, 500); color: var(--uems-text-primary); }
   .page-popover .demo-mod-card .card-cap {
     font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
     color: var(--prism-text-muted); text-transform: uppercase;
@@ -270,9 +305,9 @@
           <div class="anat-legend">
             <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Arrow / beak</strong><span>Optional pointer (<code>arrow</code>, default off). Shares the surface fill + 1px <code>--uems-border-secondary</code>; sits on the edge facing the trigger and points at it.</span></div></div>
             <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Surface</strong><span>The popover container. <code>--uems-bg-primary-alt</code>, 1px <code>--uems-border-secondary</code>, <code>--radius-md</code> (8px), <code>--shadow-md</code>. Width hugs content, min 240px.</span></div></div>
-            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Header</strong><span>Optional title (14 Semibold, <code>--uems-text-primary</code>) + close ✕ (16px, <code>--uems-icon-subtle</code>). Padding 12/16, bottom divider 1px <code>--uems-border-primary</code> (hide via <code>hide-divider</code>).</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Header</strong><span>Optional title (14 Semibold, <code>--uems-text-primary</code>) + close ✕ (16px, <code>--uems-icon-subtle</code>). Padding 12/16, bottom divider 1px <code>--uems-border-primary</code> (hide via <code>hide-divider</code>, or drop the whole framed bar with <code>header-style="plain"</code>).</span></div></div>
             <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Body</strong><span>Default slot. Any content; 14/20 <code>--uems-text-secondary</code>, padding 16. The surface grows to fit (no max-width).</span></div></div>
-            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Footer</strong><span>Optional action region (<code>slot="footer"</code>, default off). Top divider 1px, padding 12/16. <code>footer-align="centered"</code> centers the group.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Footer</strong><span>Optional action region (<code>slot="footer"</code>, default off). Top divider 1px (<code>--uems-border-tertiary</code>, matching the header divider), padding 12/16.</span></div></div>
           </div>
 
           <hr class="doc-divider"/>
@@ -288,7 +323,7 @@
                   <div class="demo-toolbar-dot" style="background:#ef4444;"></div>
                   <div class="demo-toolbar-dot" style="background:#eab308;"></div>
                   <div class="demo-toolbar-dot" style="background:#22c55e;"></div>
-                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Popover &middot; default surface + interactive placements</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--prism-text-muted);margin-left:8px;">Popover &middot; variants, real cases, and interactive placements</span>
                 </div>
               </div>
 
@@ -302,6 +337,157 @@
                     <ds-popover arrow data-static-arrow="up" title="Popover title">
                       <p>Popovers hold rich, focused content anchored to a trigger. Dismiss on outside-click, Esc, or the close button.</p>
                     </ds-popover>
+                  </div>
+                </div>
+
+                <!-- Every variant -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">Every variant</div>
+                  <div class="demo-mod-desc">Each surface below is static, so all eight sit side by side for comparison. The header, close, divider, footer, arrow, and direction are independent &mdash; combine them freely.</div>
+                  <div class="demo-mod-grid">
+                    <div class="demo-mod-card">
+                      <span class="card-cap">header-style="framed" &middot; default</span>
+                      <div class="demo-pop-frame">
+                        <ds-popover title="Popover title">
+                          <p>A bordered header bar with the title and close button, divided from the body.</p>
+                        </ds-popover>
+                      </div>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">header-style="plain"</span>
+                      <div class="demo-pop-frame">
+                        <ds-popover header-style="plain" title="Popover title">
+                          <p>No framed bar &mdash; the title sits at the top of the content, sharing its left edge.</p>
+                        </ds-popover>
+                      </div>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">hide-close</span>
+                      <div class="demo-pop-frame">
+                        <ds-popover hide-close title="No close button">
+                          <p>Dismiss on outside-click or <kbd>Esc</kbd> only.</p>
+                        </ds-popover>
+                      </div>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">hide-divider</span>
+                      <div class="demo-pop-frame">
+                        <ds-popover hide-divider title="No header divider">
+                          <p>The framed header keeps its padding but drops the rule beneath it.</p>
+                        </ds-popover>
+                      </div>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">no header</span>
+                      <div class="demo-pop-frame">
+                        <ds-popover>
+                          <p>With no <code>title</code> and no <code>has-header</code>, the body fills the surface.</p>
+                        </ds-popover>
+                      </div>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">slot="footer"</span>
+                      <div class="demo-pop-frame">
+                        <ds-popover title="Discard changes?" has-footer>
+                          <p>Your edits will be lost.</p>
+                          <div slot="footer">
+                            <ds-button variant="tertiary" size="small" label="Cancel"></ds-button>
+                            <ds-button variant="primary" size="small" label="Discard"></ds-button>
+                          </div>
+                        </ds-popover>
+                      </div>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">arrow</span>
+                      <div class="demo-pop-frame">
+                        <ds-popover arrow data-static-arrow="up" title="With a beak">
+                          <p>The beak points at the trigger. Its direction follows the resolved placement.</p>
+                        </ds-popover>
+                      </div>
+                    </div>
+                    <div class="demo-mod-card">
+                      <span class="card-cap">rtl</span>
+                      <div class="demo-pop-frame">
+                        <ds-popover rtl rtl-title="عنوان منبثق" title="Popover title">
+                          <p>يعرض العنوان بالعربية وتنعكس التخطيطات بالكامل.</p>
+                        </ds-popover>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Real-world usage -->
+                <div class="demo-mod-section">
+                  <div class="demo-group-label">In context &mdash; real Endpoint Central cases</div>
+                  <div class="demo-mod-desc">Live, anchored popovers on real triggers. Click one, then click outside or press <kbd>Esc</kbd> to dismiss &mdash; the beak follows the resolved placement. Each sets <code>--ds-popover-width</code>: the surface hugs its content with no max-width, so prose without a width stretches into a very wide surface.</div>
+                  <div class="usecase-grid">
+
+                    <div class="usecase">
+                      <div class="usecase-cap">Column chooser &mdash; a table toolbar</div>
+                      <div class="usecase-stage">
+                        <ds-button id="uc-cols" variant="outline" size="small" icon="column-settings" label="Columns"></ds-button>
+                        <ds-popover anchor="uc-cols" placement="bottom-end" arrow title="Show columns" has-footer style="--ds-popover-width:260px;">
+                          <div class="uc-checks">
+                            <ds-checkbox checked label="Device name"></ds-checkbox>
+                            <ds-checkbox checked label="Operating system"></ds-checkbox>
+                            <ds-checkbox checked label="Last contact"></ds-checkbox>
+                            <ds-checkbox label="Agent version"></ds-checkbox>
+                            <ds-checkbox label="IP address"></ds-checkbox>
+                          </div>
+                          <div slot="footer">
+                            <ds-button variant="tertiary" size="small" label="Reset"></ds-button>
+                            <ds-button variant="primary" size="small" label="Apply"></ds-button>
+                          </div>
+                        </ds-popover>
+                      </div>
+                      <div class="usecase-note">A short list of toggles, anchored to the control that opened it. Footer commits the change.</div>
+                    </div>
+
+                    <div class="usecase">
+                      <div class="usecase-cap">Destructive confirm &mdash; plain header</div>
+                      <div class="usecase-stage">
+                        <ds-button id="uc-del" variant="destructive" size="small" icon="delete" label="Remove 12 devices"></ds-button>
+                        <ds-popover anchor="uc-del" placement="bottom-start" arrow header-style="plain" title="Remove 12 devices?" has-footer style="--ds-popover-width:300px;">
+                          <p>They stop reporting immediately. Re-enrollment is required to manage them again.</p>
+                          <div slot="footer">
+                            <ds-button variant="tertiary" size="small" label="Cancel"></ds-button>
+                            <ds-button variant="destructive" size="small" label="Remove"></ds-button>
+                          </div>
+                        </ds-popover>
+                      </div>
+                      <div class="usecase-note">A short, high-stakes question. <code>header-style="plain"</code> keeps it reading as one message, not a panel.</div>
+                    </div>
+
+                    <div class="usecase">
+                      <div class="usecase-cap">Metric explainer &mdash; no header</div>
+                      <div class="usecase-stage">
+                        <span class="uc-metric">Patch compliance <strong>87%</strong>
+                          <ds-button id="uc-info" variant="tertiary" size="xsmall" icon="info-circle" label="What is this?"></ds-button>
+                        </span>
+                        <ds-popover anchor="uc-info" placement="right-center" arrow style="--ds-popover-width:280px;">
+                          <p>Share of managed devices with every <strong>approved</strong> patch installed. Declined patches and devices offline for 30+ days are excluded.</p>
+                        </ds-popover>
+                      </div>
+                      <div class="usecase-note">Body-only: one paragraph, no title and no close. Outside-click and <kbd>Esc</kbd> are enough.</div>
+                    </div>
+
+                    <div class="usecase">
+                      <div class="usecase-cap">Device summary &mdash; from a table row</div>
+                      <div class="usecase-stage">
+                        <ds-button id="uc-dev" variant="tertiary" size="small" icon="laptop" label="DESKTOP-4471-QA"></ds-button>
+                        <ds-popover anchor="uc-dev" placement="bottom-start" arrow header-style="plain" title="DESKTOP-4471-QA" style="--ds-popover-width:300px;">
+                          <div class="uc-rows">
+                            <span><span>Status</span><ds-badge variant="subtle" state="success" size="small" label="Online"></ds-badge></span>
+                            <span><span>Operating system</span><strong>Windows 11 Pro 23H2</strong></span>
+                            <span><span>Agent</span><strong>11.3.2456</strong></span>
+                            <span><span>Last contact</span><strong>4 mins ago</strong></span>
+                          </div>
+                          <ds-text-link href="#" variant="primary" size="small" trailing-icon="chevron-right" label="Open device"></ds-text-link>
+                        </ds-popover>
+                      </div>
+                      <div class="usecase-note">A read-only peek beside the row, so the table stays put. The link continues to the full page.</div>
+                    </div>
+
                   </div>
                 </div>
 
@@ -442,7 +628,7 @@
           <!-- Header options -->
           <div class="doc-section">
             <h3 id="header-options" class="doc-h3">Header options</h3>
-            <p class="doc-section-subtitle">A header appears automatically when <code>title</code> is set (or force it with <code>has-header</code>). Drop the close button with <code>hide-close</code>, drop the bottom divider with <code>hide-divider</code>, or omit the title for a header-less surface.</p>
+            <p class="doc-section-subtitle">A header appears automatically when <code>title</code> is set (or force it with <code>has-header</code>). Drop the close button with <code>hide-close</code>, drop the bottom divider with <code>hide-divider</code>, switch to <code>header-style="plain"</code> for a simple title with no framed bar, or omit the title for a header-less surface.</p>
             <div class="demo-mod-grid">
               <div class="demo-mod-card">
                 <span class="card-cap">title + close (default)</span>
@@ -475,6 +661,16 @@
                 <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">hide-divider</span> <span class="token-attr">title</span>=<span class="token-string">"No header divider"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
               </div>
               <div class="demo-mod-card">
+                <span class="card-cap">header-style="plain"</span>
+                <div class="demo-pop-frame">
+                  <ds-popover header-style="plain" title="Popover title">
+                    <p>No separate header bar &mdash; the title sits at the top of the content, so a short message reads as one block rather than a panel with chrome.</p>
+                  </ds-popover>
+                </div>
+                <button class="code-toggle-btn" data-toggle>Show code</button>
+                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">header-style</span>=<span class="token-string">"plain"</span> <span class="token-attr">title</span>=<span class="token-string">"Popover title"</span><span class="token-tag">&gt;</span>…<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
+              </div>
+              <div class="demo-mod-card">
                 <span class="card-cap">no header</span>
                 <div class="demo-pop-frame">
                   <ds-popover>
@@ -494,7 +690,7 @@
           <!-- Footer options -->
           <div class="doc-section">
             <h3 id="footer-options" class="doc-h3">Footer</h3>
-            <p class="doc-section-subtitle">The footer is off by default; it appears when you provide a <code>slot="footer"</code> (or force it with <code>has-footer</code>). Children are unwrapped into the footer row. <code>footer-align="centered"</code> centers the button group; the default right-aligns it.</p>
+            <p class="doc-section-subtitle">The footer is off by default; it appears when you provide a <code>slot="footer"</code> (or force it with <code>has-footer</code>). Children are unwrapped into the footer row and right-align (mirrored under <code>rtl</code>).</p>
             <div class="demo-mod-grid">
               <div class="demo-mod-card">
                 <span class="card-cap">default footer</span>
@@ -513,23 +709,6 @@
   <span class="token-tag">&lt;div</span> <span class="token-attr">slot</span>=<span class="token-string">"footer"</span><span class="token-tag">&gt;</span>
     <span class="token-tag">&lt;ds-button</span> <span class="token-attr">variant</span>=<span class="token-string">"outline"</span> <span class="token-attr">size</span>=<span class="token-string">"small"</span><span class="token-tag">&gt;</span>Cancel<span class="token-tag">&lt;/ds-button&gt;</span>
     <span class="token-tag">&lt;ds-button</span> <span class="token-attr">variant</span>=<span class="token-string">"primary"</span> <span class="token-attr">size</span>=<span class="token-string">"small"</span><span class="token-tag">&gt;</span>Save<span class="token-tag">&lt;/ds-button&gt;</span>
-  <span class="token-tag">&lt;/div&gt;</span>
-<span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
-              </div>
-              <div class="demo-mod-card">
-                <span class="card-cap">footer-align="centered"</span>
-                <div class="demo-pop-frame">
-                  <ds-popover footer-align="centered" title="Centered footer">
-                    <p>A single, prominent action centered in the footer.</p>
-                    <div slot="footer">
-                      <ds-button variant="primary" size="small">Continue</ds-button>
-                    </div>
-                  </ds-popover>
-                </div>
-                <button class="code-toggle-btn" data-toggle>Show code</button>
-                <div class="code-block"><div class="code-block-head"><span>HTML</span><button class="cb-copy"><ds-icon name="copy" size="13"></ds-icon> Copy</button></div><pre><span class="token-tag">&lt;ds-popover</span> <span class="token-attr">anchor</span>=<span class="token-string">"trigger"</span> <span class="token-attr">footer-align</span>=<span class="token-string">"centered"</span> <span class="token-attr">title</span>=<span class="token-string">"Centered footer"</span><span class="token-tag">&gt;</span>
-  <span class="token-tag">&lt;div</span> <span class="token-attr">slot</span>=<span class="token-string">"footer"</span><span class="token-tag">&gt;</span>
-    <span class="token-tag">&lt;ds-button</span> <span class="token-attr">variant</span>=<span class="token-string">"primary"</span> <span class="token-attr">size</span>=<span class="token-string">"small"</span><span class="token-tag">&gt;</span>Continue<span class="token-tag">&lt;/ds-button&gt;</span>
   <span class="token-tag">&lt;/div&gt;</span>
 <span class="token-tag">&lt;/ds-popover&gt;</span></pre></div>
               </div>
@@ -723,6 +902,66 @@
 
         <!-- ═══════════════ CODE ═══════════════ -->
         <div class="tab-content" id="tab-code" style="display:none;padding-top:32px;">
+          <h2 id="live-demo-code" class="doc-section-title">Live demo (Code)</h2>
+          <p class="doc-section-subtitle">Pick a header style, arrow, and direction &mdash; the popover updates live and the HTML below updates with it. Rendered as a static surface inside a frame, so it stays put while you compare.</p>
+          <div class="code-playground">
+            <div class="cp-toolbar">
+              <div class="cp-control-group">
+                <label class="cp-label">Header style</label>
+                <select class="cp-select" id="ppg-header">
+                  <option value="framed">Framed (divider)</option>
+                  <option value="plain">Plain (simple title)</option>
+                  <option value="none">No header</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Close button</label>
+                <select class="cp-select" id="ppg-close">
+                  <option value="show">Show</option>
+                  <option value="hide">Hide</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Footer</label>
+                <select class="cp-select" id="ppg-footer">
+                  <option value="none">None</option>
+                  <option value="actions">Actions</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Arrow</label>
+                <select class="cp-select" id="ppg-arrow">
+                  <option value="off">Off</option>
+                  <option value="on">On</option>
+                </select>
+              </div>
+              <div class="cp-control-group">
+                <label class="cp-label">Direction</label>
+                <select class="cp-select" id="ppg-dir">
+                  <option value="ltr">LTR</option>
+                  <option value="rtl">RTL (Arabic)</option>
+                </select>
+              </div>
+            </div>
+            <div class="cp-preview" id="ppg-preview">
+              <!-- The popover hugs its content with no max-width, so in this narrower
+                   preview it needs an explicit width — the documented
+                   --ds-popover-width, which is what a real consumer would set. -->
+              <div class="demo-pop-frame" id="ppg-frame" style="width:100%; --ds-popover-width:min(320px, 100%);"></div>
+            </div>
+            <div class="cp-code-header">
+              <div style="font-size:13.5px;font-weight:600;color:var(--prism-text);">HTML</div>
+              <div class="cp-code-actions">
+                <button class="cp-action-btn" id="ppg-copy">
+                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                  Copy code
+                </button>
+              </div>
+            </div>
+            <div style="background:#0a0a0c;"><div class="cp-code-area" id="ppg-code"></div></div>
+          </div>
+
+          <hr class="doc-divider" />
           <h2 id="install" class="doc-section-title">Install &amp; usage</h2>
           <p class="doc-section-subtitle">Register the component, then drive it with attributes and slots. Source: <code>design-system-library/src/components/popover/popover.js</code>.</p>
 
@@ -756,7 +995,6 @@
   <span class="token-attr">hide-close</span>
   <span class="token-attr">hide-divider</span>           <span class="token-attr">&lt;!-- hide header bottom divider --&gt;</span>
   <span class="token-attr">has-footer</span>             <span class="token-attr">&lt;!-- auto-on when footer slot present --&gt;</span>
-  <span class="token-attr">footer-align</span>=<span class="token-string">"default"</span>  <span class="token-attr">&lt;!-- default | centered --&gt;</span>
   <span class="token-attr">arrow</span>                  <span class="token-attr">&lt;!-- show the beak (default off) --&gt;</span>
   <span class="token-attr">rtl</span>
   <span class="token-attr">open</span><span class="token-tag">&gt;</span>
@@ -814,8 +1052,8 @@ popover.addEventListener(<span class="token-string">'ds-popover-close'</span>, (
                 <tr><td><code>has-header</code></td><td>boolean</td><td>auto</td><td>Force the header on (auto-on when <code>title</code>/<code>rtl-title</code> set).</td></tr>
                 <tr><td><code>hide-close</code></td><td>boolean</td><td>unset</td><td>Hide the close ✕ when a header is shown.</td></tr>
                 <tr><td><code>hide-divider</code></td><td>boolean</td><td>unset</td><td>Hide the header bottom divider.</td></tr>
+                <tr><td><code>header-style</code></td><td><code>framed</code> &middot; <code>plain</code></td><td><code>framed</code></td><td><code>plain</code> drops the framed header entirely &mdash; no divider and no separate padded block, so the title sits at the top of the content flow and shares its left edge. For a short message rather than a panel. Makes <code>hide-divider</code> redundant; the close button still works.</td></tr>
                 <tr><td><code>has-footer</code></td><td>boolean</td><td>auto</td><td>Force the footer on (auto-on when a footer slot is present).</td></tr>
-                <tr><td><code>footer-align</code></td><td><code>default</code> &middot; <code>centered</code></td><td><code>default</code></td><td>Right-align (default) or center the footer button group.</td></tr>
                 <tr><td><code>arrow</code></td><td>boolean</td><td>off</td><td>Render the beak pointing at the anchor.</td></tr>
                 <tr><td><code>rtl</code></td><td>boolean</td><td>unset</td><td>Mirror layout (or use host <code>dir="rtl"</code>).</td></tr>
                 <tr><td><code>open</code></td><td>boolean</td><td>unset</td><td>Open / close state.</td></tr>
@@ -955,19 +1193,30 @@ popover.addEventListener(<span class="token-string">'ds-popover-close'</span>, (
   <ds-popover anchor="pg-bs" placement="bottom-start" arrow title="Bottom start"><p>Anchored below, aligned to the start edge.</p></ds-popover>
   <ds-popover anchor="pg-bc" placement="bottom-center" arrow title="Bottom center"><p>Anchored below, centered on the trigger.</p></ds-popover>
 
-  <!-- Static-preview arrow init — point the beak per data-static-arrow on inline previews -->
+  <!-- Static-preview arrow init — point the beak per data-static-arrow on inline
+       previews. ds-popover normally sets the beak's direction and offset while
+       POSITIONING against an anchor; a static, anchorless preview never positions,
+       so the beak has to be placed by hand here.
+
+       Exposed as a function, not just a DOMContentLoaded pass: the Code-tab
+       playground rebuilds its popover on every change, and those later elements
+       would otherwise never get a beak. -->
   <script>
-    window.addEventListener('DOMContentLoaded',()=>{
-      document.querySelectorAll('ds-popover[data-static-arrow]').forEach(p=>{
-        const dir=p.getAttribute('data-static-arrow');
-        const ar=p.querySelector('.ds-popover__arrow'); if(!ar) return;
-        ar.hidden=false; ar.dataset.dir=dir;
-        ar.style.top=ar.style.bottom=ar.style.left=ar.style.right=ar.style.marginLeft=ar.style.marginTop='';
-        if(dir==='up'){ar.style.top='-5px';ar.style.left='50%';ar.style.marginLeft='-5px';}
-        if(dir==='down'){ar.style.bottom='-5px';ar.style.left='50%';ar.style.marginLeft='-5px';}
-        if(dir==='left'){ar.style.left='-5px';ar.style.top='50%';ar.style.marginTop='-5px';}
-        if(dir==='right'){ar.style.right='-5px';ar.style.top='50%';ar.style.marginTop='-5px';}
-      });
+    window.dsStaticArrow = function (pop) {
+      const dir = pop && pop.getAttribute('data-static-arrow');
+      const ar = pop && pop.querySelector('.ds-popover__arrow');
+      if (!dir || !ar) return;
+      ar.hidden = false;
+      ar.dataset.dir = dir;
+      ar.style.top = ar.style.bottom = ar.style.left = ar.style.right =
+        ar.style.marginLeft = ar.style.marginTop = '';
+      if (dir === 'up')    { ar.style.top = '-5px';    ar.style.left = '50%'; ar.style.marginLeft = '-5px'; }
+      if (dir === 'down')  { ar.style.bottom = '-5px'; ar.style.left = '50%'; ar.style.marginLeft = '-5px'; }
+      if (dir === 'left')  { ar.style.left = '-5px';   ar.style.top = '50%';  ar.style.marginTop = '-5px'; }
+      if (dir === 'right') { ar.style.right = '-5px';  ar.style.top = '50%';  ar.style.marginTop = '-5px'; }
+    };
+    window.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('ds-popover[data-static-arrow]').forEach(window.dsStaticArrow);
     });
   </script>
 
@@ -995,6 +1244,115 @@ popover.addEventListener(<span class="token-string">'ds-popover-close'</span>, (
     });
   </script>
 
+<script type="module">
+  /* Code-tab playground. The popover is anchorless and rendered inside
+     .demo-pop-frame, so it shows as a static surface — no positioning, no focus
+     trap, no scroll lock — which is what makes it safe to leave on screen. */
+  (function () {
+    const frame = document.getElementById('ppg-frame');
+    if (!frame) return;
+    const sHeader = document.getElementById('ppg-header');
+    const sClose = document.getElementById('ppg-close');
+    const sFooter = document.getElementById('ppg-footer');
+    const sArrow = document.getElementById('ppg-arrow');
+    const sDir = document.getElementById('ppg-dir');
+    const codeOut = document.getElementById('ppg-code');
+    const copyBtn = document.getElementById('ppg-copy');
+    let raw = '';
+
+    const BODY = {
+      ltr: 'Popovers hold rich, focused content anchored to a trigger. Dismiss on outside-click, Esc, or the close button.',
+      rtl: 'تحتوي النوافذ المنبثقة على محتوى غني ومركّز مرتبط بعنصر التشغيل.',
+    };
+    const TITLE = { ltr: 'Popover title', rtl: 'عنوان منبثق' };
+
+    const esc = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    /* Attributes first, then tags, and via token CLASSES — an inline style="…" in
+       the inserted markup would be re-matched by the attribute pass and mangled. */
+    const hl = (v) => esc(v)
+      .replace(/([a-zA-Z-]+)=&quot;(.*?)&quot;/g, '<span class="token-attr">$1</span>=<span class="token-string">"$2"</span>')
+      .replace(/&lt;(\/?)(ds-popover|ds-button)/g, '&lt;$1<span class="token-tag">$2</span>')
+      .replace(/\n/g, '<br/>').replace(/  /g, '&nbsp;&nbsp;');
+
+    function update() {
+      const header = sHeader.value;          // framed | plain | none
+      const rtl = sDir.value === 'rtl';
+      const hideClose = sClose.value === 'hide';
+      const footer = sFooter.value;          // none | actions
+      const arrow = sArrow.value === 'on';
+
+      /* Close and header-style only mean anything when a header is shown. */
+      sClose.disabled = header === 'none';
+      sHeader.title = header === 'none' ? 'No header — the title and close are hidden' : '';
+
+      /* Rebuild rather than mutate: ds-popover OWNS its inner DOM (it replaces
+         innerHTML with its surface template and distributes slotted content), so
+         writing innerHTML on the host from outside destroys that surface. */
+      const pop = document.createElement('ds-popover');
+      if (header !== 'none') {
+        pop.setAttribute('title', TITLE.ltr);
+        pop.setAttribute('rtl-title', TITLE.rtl);
+        if (header === 'plain') pop.setAttribute('header-style', 'plain');
+        if (hideClose) pop.setAttribute('hide-close', '');
+      }
+      if (footer !== 'none') pop.setAttribute('has-footer', '');
+      if (arrow) { pop.setAttribute('arrow', ''); pop.dataset.staticArrow = 'up'; }
+      if (rtl) pop.setAttribute('rtl', '');
+
+      const p = document.createElement('p');
+      p.textContent = BODY[rtl ? 'rtl' : 'ltr'];
+      pop.appendChild(p);
+      if (footer !== 'none') {
+        const bar = document.createElement('div');
+        bar.setAttribute('slot', 'footer');
+        for (const [variant, ltr, rtlLabel] of [['tertiary', 'Cancel', 'إلغاء'], ['primary', 'Save', 'حفظ']]) {
+          const b = document.createElement('ds-button');
+          b.setAttribute('variant', variant);
+          b.setAttribute('size', 'small');
+          b.setAttribute('label', rtl ? rtlLabel : ltr);
+          bar.appendChild(b);
+        }
+        pop.appendChild(bar);
+      }
+      frame.replaceChildren(pop);
+      /* After connecting: ds-popover builds its surface on connect, so the beak
+         does not exist until now. A static preview never positions itself, so the
+         direction and offset are applied by hand — same helper the inline demos use. */
+      if (arrow && window.dsStaticArrow) window.dsStaticArrow(pop);
+
+      const attrs = ['anchor="trigger-id"'];
+      if (header !== 'none') {
+        attrs.push(`title="${TITLE.ltr}"`);
+        if (rtl) attrs.push(`rtl-title="${TITLE.rtl}"`);
+        if (header === 'plain') attrs.push('header-style="plain"');
+        if (hideClose) attrs.push('hide-close');
+      }
+      if (arrow) attrs.push('arrow');
+      if (rtl) attrs.push('rtl');
+
+      const footerMarkup = footer === 'none' ? ''
+        : `\n  <div slot="footer">\n`
+          + `    <ds-button variant="tertiary" size="small" label="Cancel"></ds-button>\n`
+          + `    <ds-button variant="primary" size="small" label="Save"></ds-button>\n`
+          + `  </div>`;
+      raw = `<ds-popover ${attrs.join(' ')}>\n  <p>${BODY.ltr}</p>${footerMarkup}\n</ds-popover>`;
+      codeOut.innerHTML = hl(raw);
+    }
+
+    [sHeader, sClose, sFooter, sArrow, sDir].forEach((c) => c.addEventListener('change', update));
+    copyBtn.addEventListener('click', async () => {
+      try {
+        if (navigator.clipboard) await navigator.clipboard.writeText(raw);
+        const original = copyBtn.innerHTML;   // innerHTML: the button holds an SVG
+        copyBtn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!';
+        setTimeout(() => { copyBtn.innerHTML = original; }, 2000);
+      } catch (e) {}
+    });
+    update();
+    if (window.customElements && customElements.whenDefined) customElements.whenDefined('ds-popover').then(update);
+  })();
+</script>
   <script src="js/components/toc.js"></script>
   <script src="js/main.js"></script>
 </body>

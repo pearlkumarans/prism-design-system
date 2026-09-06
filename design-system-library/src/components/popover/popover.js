@@ -7,8 +7,10 @@
      has-header                    force-show header (auto-on when `title`/`rtl-title` set)
      hide-close                    hide the close (✕) when a header is shown
      hide-divider                  hide the header bottom divider
+     header-style="framed"         framed (default) | plain — `plain` drops the
+                                   separate bordered header block and lets the
+                                   title sit at the top of the content flow
      has-footer                    force-show footer (auto-on when footer slot present)
-     footer-align="default"        default | centered (footer button group alignment)
      arrow                         show the beak pointing at the anchor (default off)
      rtl
      open></ds-popover>
@@ -46,6 +48,10 @@ const FOCUSABLE = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
+/* framed = the bordered header bar (default). plain = the title sits in the
+   content flow, for a popover that is a short message rather than a panel. */
+const HEADER_STYLES = ['framed', 'plain'];
+
 const GAP = 8;     // distance from the anchor
 const MARGIN = 8;  // viewport edge clamp
 
@@ -54,7 +60,7 @@ let _uid = 0;
 export class DsPopover extends HTMLElement {
   static get observedAttributes() {
     return ['open', 'placement', 'anchor', 'title', 'rtl-title', 'has-header', 'hide-close',
-            'hide-divider', 'has-footer', 'footer-align', 'arrow', 'rtl'];
+            'hide-divider', 'header-style', 'has-footer', 'arrow', 'rtl'];
   }
 
   constructor() {
@@ -193,8 +199,10 @@ export class DsPopover extends HTMLElement {
 
     /* Header bottom divider toggle (Figma: Show Divider, default shown). */
     this._headerEl.toggleAttribute('data-no-divider', boolAttr(this, 'hide-divider'));
-    /* Footer alignment (Figma: Alignment = Default | Centered). */
-    this._footerEl.dataset.align = (this.getAttribute('footer-align') === 'centered') ? 'centered' : 'default';
+    /* `plain` drops the framed header: no divider and no separate padded block, so
+       the title reads as the first line of the content rather than a chrome bar.
+       `hide-divider` is redundant here — plain has no divider to hide. */
+    this._headerEl.dataset.style = enumAttr(this, 'header-style', HEADER_STYLES, 'framed');
     /* Arrow / beak (Figma: Arrow, default off). Direction is set during positioning. */
     this._arrowEl.hidden = !boolAttr(this, 'arrow');
 

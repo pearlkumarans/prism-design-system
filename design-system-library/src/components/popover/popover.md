@@ -2,7 +2,7 @@
 
 **Design System:** UEMS Design System 3.0
 
-The Popover is a non-modal overlay anchored to a trigger. It has no arrow. The surface is composed of an optional Header, a Body, and an optional Footer — all token-driven. Width hugs content (240px min-width, no max), with `--ds-popover-width` available for a fixed wrapping width.
+The Popover is a non-modal overlay anchored to a trigger. It has no arrow. The surface is composed of an optional Header, a Body, and an optional Footer — all token-driven. The header comes in two styles: `framed` (a bordered bar) and `plain` (a simple title in the content flow). Width hugs content (240px min-width, no max), with `--ds-popover-width` available for a fixed wrapping width.
 
 The runtime implementation lives at:
 
@@ -21,6 +21,7 @@ The runtime implementation lives at:
 | `title` | string | — | Header title. Setting it auto-shows the header. |
 | `has-header` | boolean | unset | Force-show the header even without a title. |
 | `hide-close` | boolean | unset | Hide the ✕ close button when a header is shown. |
+| `header-style` | `framed` \| `plain` | `framed` | `plain` drops the framed header: no divider and no separate padded block, so the title sits at the top of the content flow sharing its left edge. For a short message rather than a panel. Makes `hide-divider` redundant; the close button still works. |
 | `has-footer` | boolean | unset | Force-show the footer even when no footer content is slotted. |
 | `rtl` | boolean | unset | Mirrors layout (sets `dir="rtl"`). |
 

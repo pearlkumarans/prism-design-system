@@ -68,6 +68,23 @@ ds-popover[open] { display: block; }
 .ds-popover__header[hidden] { display: none; }
 .ds-popover__header[data-no-divider] { border-bottom: 0; }
 
+/* `header-style="plain"` — no divider and no separate padded block, so the title
+   reads as the first line of the content instead of a chrome bar. Inline padding
+   matches the body's so the title and the text share one left edge; the bottom
+   padding moves to the body, which tightens the pair into a single region. */
+.ds-popover__header[data-style="plain"] {
+  border-bottom: 0;
+  padding-block-end: 0;
+  padding-inline-start: var(--spacing-16);
+}
+/* :not([hidden]) matters — an adjacent-sibling rule still matches a display:none
+   header, which would silently shrink the body's top padding with no title shown. */
+.ds-popover__header[data-style="plain"]:not([hidden]) + .ds-popover__body {
+  padding-top: var(--spacing-6);
+}
+/* The close button keeps its own inline padding so it stays off the edge. */
+.ds-popover__header[data-style="plain"] .ds-popover__close { margin-inline-end: 0; }
+
 .ds-popover__title {
   flex: 1;
   min-width: 0;
@@ -123,11 +140,12 @@ ds-popover[open] { display: block; }
   gap: var(--spacing-8);
   padding-block: var(--spacing-12);
   padding-inline: var(--spacing-16);
-  border-top: 1px solid var(--uems-border-primary);
+  /* tertiary, matching the header divider and the surface border — and matching
+     modal / drawer / confirmation-modal, which use it for both dividers. */
+  border-top: 1px solid var(--uems-border-tertiary);
 }
 .ds-popover__footer[hidden] { display: none; }
-.ds-popover__footer[data-align="centered"] { justify-content: center; }
 
 /* ---- RTL ----------------------------------------------------------- */
 [dir="rtl"] .ds-popover__header { flex-direction: row-reverse; }
-[dir="rtl"] .ds-popover__footer:not([data-align="centered"]) { justify-content: flex-start; }
+[dir="rtl"] .ds-popover__footer { justify-content: flex-start; }

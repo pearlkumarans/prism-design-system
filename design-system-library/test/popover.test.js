@@ -86,6 +86,95 @@ describe('ds-popover — header/footer toggles', () => {
   });
 });
 
+describe('ds-popover — header-style', () => {
+  /* These assert the RENDERED box, so the stylesheet has to be present — the
+     shared harness does not load component CSS, and without it every padding
+     reads 0px and the assertions prove nothing. Each load races a timer and
+     never rejects: a stalled sheet must not hang the suite. */
+  before(async () => {
+    const HREFS = ['/src/tokens/primitives.css', '/src/tokens/spacing.css',
+      '/src/tokens/typography.css', '/src/tokens/tokens.css',
+      '/src/components/popover/popover.css'];
+    await Promise.all(HREFS.map((href) => new Promise((resolve) => {
+      if (document.querySelector(`link[href="${href}"]`)) return resolve();
+      const link = Object.assign(document.createElement('link'), { rel: 'stylesheet', href });
+      link.addEventListener('load', resolve);
+      link.addEventListener('error', resolve);
+      setTimeout(resolve, 2000);
+      document.head.appendChild(link);
+    })));
+    await nextFrame();
+  });
+
+  const headerOf = (el) => el.querySelector('.ds-popover__header');
+  const bodyOf = (el) => el.querySelector('.ds-popover__body');
+
+  it('defaults to the framed header, with its divider', async () => {
+    const el = await fixture(html`<ds-popover title="Title">Body</ds-popover>`);
+    expect(headerOf(el).dataset.style).to.equal('framed');
+    expect(getComputedStyle(headerOf(el)).borderBottomWidth).to.equal('1px');
+  });
+
+  it('plain drops the divider and the separate padded block', async () => {
+    const el = await fixture(html`<ds-popover title="Title" header-style="plain">Body</ds-popover>`);
+    const h = headerOf(el);
+    expect(h.dataset.style).to.equal('plain');
+    expect(getComputedStyle(h).borderBottomWidth, 'no divider').to.equal('0px');
+    expect(getComputedStyle(h).paddingBottom, 'no gap of its own').to.equal('0px');
+    /* Title and body share one left edge — that is what makes it read as one region. */
+    expect(getComputedStyle(h).paddingLeft).to.equal(getComputedStyle(bodyOf(el)).paddingLeft);
+  });
+
+  it('does NOT shrink the body padding when no title is set', async () => {
+    /* An adjacent-sibling rule still matches a display:none header, which would
+       silently clip the body's top padding with no title on screen. */
+    const el = await fixture(html`<ds-popover header-style="plain">Body</ds-popover>`);
+    expect(headerOf(el).hidden).to.be.true;
+    expect(getComputedStyle(bodyOf(el)).paddingTop).to.equal('16px');
+  });
+
+  it('still names the dialog by its title in plain', async () => {
+    const el = await fixture(html`<ds-popover title="Title" header-style="plain">Body</ds-popover>`);
+    expect(surfaceOf(el).getAttribute('aria-labelledby'))
+      .to.equal(el.querySelector('.ds-popover__title').id);
+  });
+
+  it('falls back to framed on an unknown value', async () => {
+    const el = await fixture(html`<ds-popover title="T" header-style="bogus">Body</ds-popover>`);
+    expect(headerOf(el).dataset.style).to.equal('framed');
+  });
+
+  it('matches the footer divider to the header divider', async () => {
+    /* The footer was the one border on the surface not using --uems-border-tertiary
+       (modal / drawer / confirmation-modal use it for both), so the two rules on a
+       single surface did not match. */
+    const el = await fixture(html`<ds-popover title="T" has-footer>Body</ds-popover>`);
+    const h = getComputedStyle(headerOf(el)).borderBottomColor;
+    const f = getComputedStyle(el.querySelector('.ds-popover__footer')).borderTopColor;
+    expect(f, 'footer divider matches the header divider').to.equal(h);
+  });
+
+  it('right-aligns the footer, and mirrors under rtl', async () => {
+    /* footer-align="centered" was removed — there is one alignment now. */
+    const ltr = await fixture(html`<ds-popover title="T" has-footer>Body</ds-popover>`);
+    expect(getComputedStyle(ltr.querySelector('.ds-popover__footer')).justifyContent).to.equal('flex-end');
+    const rtl = await fixture(html`<ds-popover title="T" has-footer rtl>Body</ds-popover>`);
+    expect(getComputedStyle(rtl.querySelector('.ds-popover__footer')).justifyContent).to.equal('flex-start');
+  });
+
+  it('no longer reacts to footer-align', async () => {
+    const el = await fixture(html`<ds-popover title="T" has-footer footer-align="centered">Body</ds-popover>`);
+    const footer = el.querySelector('.ds-popover__footer');
+    expect(footer.dataset.align, 'the attribute is gone, not merely ignored').to.be.undefined;
+    expect(getComputedStyle(footer).justifyContent).to.equal('flex-end');
+  });
+
+  it('keeps the close button available in plain', async () => {
+    const el = await fixture(html`<ds-popover title="T" header-style="plain">Body</ds-popover>`);
+    expect(el.querySelector('.ds-popover__close').hidden).to.be.false;
+  });
+});
+
 describe('ds-popover — escaping', () => {
   it('renders a hostile title as literal text', async () => {
     const el = await fixture(html`<ds-popover title="${XSS}"></ds-popover>`);
