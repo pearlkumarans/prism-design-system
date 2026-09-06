@@ -1,6 +1,6 @@
 ---
 name: Modal / Confirmation
-description: Compact confirmation modal with centered icon, title, and message — used for short, critical user decisions.
+description: Compact confirmation modal with a leading status icon beside the title — used for short, critical user decisions.
 type: component
 status: stable
 category: Feedback
@@ -16,7 +16,7 @@ variants:
 
 # Modal / Confirmation
 
-Compact confirmation modal with a centered icon, title, and short message. Use it to interrupt the flow and ask the user to confirm a discrete action — never as a substitute for inline validation or a full-screen page.
+Compact confirmation modal with a leading status icon beside the title and a short message. Use it to interrupt the flow and ask the user to confirm a discrete action — never as a substitute for inline validation or a full-screen page.
 
 ## Web Component API
 
@@ -48,8 +48,8 @@ Compact confirmation modal with a centered icon, title, and short message. Use i
 | `open` | `false` |
 | `hide-close` | `false` |
 | `dismiss-on-overlay-click` | `true` for Information/Warning, `false` for Destructive |
-| `show-divider-header` | `true` |
-| `show-divider-footer` | `true` |
+| `show-divider-header` | unset (off) |
+| `show-divider-footer` | unset (off) |
 
 ### Properties
 
@@ -103,23 +103,20 @@ Override with `icon="<name>"`.
 
 ```
 ┌──────────────────────────────────────┐
-│                            ✕         │  Close icon (top-right)
+│                                  ✕   │  Close (ds-icon-button, top-right)
+│  ╭───────╮  Modal title              │  Header is a ROW: icon beside the
+│  │   !   │  A short description.     │  titles column, both start-aligned
+│  ╰───────╯                           │  Icon 48×48, tinted by `variant`
+│                                      │  (it is also the drag handle)
+│  Are you sure you want to do this?   │  Body (default slot)
 │                                      │
-│             ╭───────╮                │
-│             │   !   │                │  Leading icon (48×48 pill)
-│             ╰───────╯                │
-│                                      │
-│           Modal title                │  18/24 semibold
-│   A short description of intent.     │  14/20 subtle
-│  ───────────────────────────────     │  Header divider
-│                                      │
-│   Are you sure you want to do this?  │  Body (slot)
-│                                      │
-│  ───────────────────────────────     │  Footer divider
-│                                      │
-│        [ Cancel ]  [ Continue ]      │  Centered button group
-└──────────────────────────────────────┘
-            (overlay 70% black)
+│  [Learn more]      [Cancel] [Delete] │  Footer is END-aligned; a tertiary
+└──────────────────────────────────────┘  action anchors to the leading edge,
+                                          making the row space-between
+        (overlay behind, `--uems-scrim`)
+
+Header and footer dividers are OFF by default — opt in per edge with
+`show-divider-header` / `show-divider-footer`.
 ```
 
 ---
@@ -135,7 +132,7 @@ Override with `icon="<name>"`.
 | Overlay color | `rgba(10, 11, 15, 0.7)` |
 | Title | Zoho Puvi Semibold 18/24 |
 | Description / Body | Zoho Puvi Regular 14/20, `--text-tertiary` |
-| Leading icon | 48×48 pill, tinted by variant |
+| Leading icon | 48×48 pill, tinted by variant; sits beside the titles, not above them. Doubles as the drag handle (`cursor: move`) |
 | Close icon | 28×28, tertiary grey, hover `--bg-secondary-hover` |
 
 ---

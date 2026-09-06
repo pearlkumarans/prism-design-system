@@ -43,6 +43,20 @@
     margin: 0 auto;
   }
 
+  /* ── Anatomy: the LIVE component, annotated ─────────────────────────────
+     Markers are positioned by measuring the real regions (see the script at the
+     end of the page), so the diagram cannot drift from the component the way the
+     previous hand-drawn one did. */
+  .page-snackbar .cm-anat { position: relative; display: flex; justify-content: center; padding: 32px 72px 24px; }
+  @media (max-width: 900px) { .page-snackbar .cm-anat { padding: 32px 16px 24px; } .page-snackbar .cm-anat .cm-mark { display: none; } }
+  .page-snackbar .cm-anat .demo-cm-frame { position: relative; width: 100%; max-width: 520px; }
+  /* Markup is <badge><line>. The line must sit BETWEEN the badge and the dialog,
+     so it points at what it labels: badges on the RIGHT of the dialog reverse
+     (line, then badge), badges on the LEFT keep source order (badge, then line). */
+  .page-snackbar .cm-anat .cm-mark { position: absolute; display: flex; align-items: center; gap: 6px; pointer-events: none; z-index: 2; flex-direction: row-reverse; }
+  .page-snackbar .cm-anat .cm-mark__line { width: 26px; height: 2px; background: var(--prism-violet, #2563eb); }
+  .page-snackbar .cm-anat .cm-mark--left { flex-direction: row; }
+
   /* Preview scaffolding (Mac-window pattern) */
   .page-snackbar .demo-toolbar-left { display: flex; align-items: center; gap: 12px; }
   .page-snackbar .demo-toolbar-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -241,62 +255,37 @@
 
           <!-- ───── Anatomy ───── -->
           <h2 id="anatomy" class="doc-section-title">Anatomy</h2>
+          <p class="doc-section-subtitle" style="margin-bottom:24px;">Rendered with the <strong>live component</strong> and annotated in place, so this diagram cannot drift from the code. The overlay is hidden here so the dialog can sit inline; both dividers are switched on so they can be labelled, but they are <strong>off by default</strong>.</p>
           <div class="anatomy-diagram" style="overflow:visible;">
-            <div style="display:flex;justify-content:center;margin:24px 0;padding:48px 32px;">
-              <div style="position:relative;width:480px;max-width:100%;border-radius:12px;background:var(--uems-bg-base, #fff);box-shadow:0 16px 32px rgba(13,18,31,0.18);padding:20px 24px 16px;text-align:center;color:var(--uems-text-primary, #1F242E);">
-                <!-- 1 Close icon -->
-                <div style="position:absolute;top:8px;right:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#8893AD;">
-                  <ds-icon name="close" size="16"></ds-icon>
-                  <div style="position:absolute;left:calc(100% + 6px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">1</span></div>
-                </div>
-
-                <!-- 2 Leading icon -->
-                <div style="display:flex;justify-content:center;padding:8px 0 12px;position:relative;">
-                  <div style="width:48px;height:48px;border-radius:50%;background:rgba(230,81,0,0.12);display:flex;align-items:center;justify-content:center;color:#E65100;">
-                    <ds-icon name="info-circle" size="24"></ds-icon>
-                  </div>
-                  <div style="position:absolute;left:-12px;top:50%;transform:translate(-100%,-50%);display:flex;align-items:center;gap:6px;"><span class="anat-marker-inline">2</span><div style="width:24px;height:2px;background:#2563eb;"></div></div>
-                </div>
-
-                <!-- 3 Title -->
-                <div style="position:relative;font-size:18px;font-weight:600;line-height:24px;margin-bottom:4px;">
-                  Delete this asset?
-                  <div style="position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">3</span></div>
-                </div>
-
-                <!-- 4 Description -->
-                <div style="position:relative;font-size:14px;line-height:20px;color:var(--uems-text-tertiary,#5C6066);margin-bottom:16px;">
-                  This change can't be undone.
-                  <div style="position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">4</span></div>
-                </div>
-
-                <hr style="border:none;border-top:1px solid #E1E4EB;margin:0 0 16px;" />
-
-                <!-- 5 Body -->
-                <div style="position:relative;font-size:14px;line-height:20px;color:var(--uems-text-tertiary,#5C6066);padding:0 16px;margin-bottom:20px;">
-                  The asset and its 14 associated logs will be permanently removed.
-                  <div style="position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">5</span></div>
-                </div>
-
-                <hr style="border:none;border-top:1px solid #E1E4EB;margin:0 0 16px;" />
-
-                <!-- 6 Footer button group -->
-                <div style="position:relative;display:flex;justify-content:center;gap:8px;">
-                  <button style="padding:8px 16px;border-radius:8px;border:1px solid #E1E4EB;background:#fff;color:#1F242E;font:inherit;font-size:14px;cursor:default;">Cancel</button>
-                  <button style="padding:8px 16px;border-radius:8px;border:0;background:#DE350B;color:#fff;font:inherit;font-size:14px;font-weight:500;cursor:default;">Delete asset</button>
-                  <div style="position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;"><div style="width:24px;height:2px;background:#2563eb;"></div><span class="anat-marker-inline">6</span></div>
-                </div>
+            <div class="cm-anat">
+              <div class="demo-cm-frame">
+                <!-- Deliberately NOT `open`: on open the component portals itself to
+                     document.body, which would tear it out of this frame. The frame's
+                     CSS forces the dialog visible inline instead — the same technique
+                     the Preview cards below use. -->
+                <ds-confirmation-modal id="cm-anatomy"
+                  variant="warning"
+                  title="Delete this asset?"
+                  description="This change can&#39;t be undone."
+                  primary-label="Delete asset"
+                  secondary-label="Cancel"
+                  tertiary-label="Learn more"
+                  show-divider-header show-divider-footer>
+                  <p>The asset and its 14 associated logs will be permanently removed.</p>
+                </ds-confirmation-modal>
               </div>
             </div>
           </div>
 
           <div class="anat-legend">
-            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Close icon</strong><span>Top-right dismiss. 28&times;28 hit target with a 16&times;16 &times; glyph. Tertiary grey, hover background <code>--uems-bg-secondary-hover</code>.</span></div></div>
-            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Leading icon</strong><span>48&times;48 circular pill with tinted background. Icon glyph and tint are driven by the modal <code>variant</code> &mdash; info / warning / destructive.</span></div></div>
-            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Title</strong><span>One short sentence naming the action. Zoho Puvi Semibold 18 / 24. Ends with "?" when asking for confirmation.</span></div></div>
-            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Description</strong><span>Optional supporting line below the title. Zoho Puvi Regular 14 / 20, <code>--uems-text-tertiary</code>. Omit if the title is self-explanatory.</span></div></div>
-            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Body</strong><span>Default slot. One or two sentences with the concrete consequence ("14 records will be removed"). Avoid bullet lists or long explanations.</span></div></div>
-            <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Footer button group</strong><span>Centered. Cancel on the left, primary on the right. Primary button variant matches the modal variant (primary / warning / destructive).</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">1</span><div><strong>Dialog</strong><span><code>role="alertdialog"</code> + <code>aria-modal="true"</code>, labelled by the title and described by the body. Draggable by its header. Behind it sits an <strong>overlay</strong> (hidden in this diagram) &mdash; clicking it dismisses only with <code>dismiss-on-overlay-click</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">2</span><div><strong>Close</strong><span>A real <code>ds-icon-button</code> pinned top-right &mdash; square, tertiary-grey, <code>size="xl"</code> (28&times;28 target, 20px glyph), no tooltip. Remove it with <code>hide-close</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">3</span><div><strong>Leading icon</strong><span>48&times;48 circle whose tint and glyph colour come from the <code>variant</code> &mdash; information (<code>bg-info-primary</code>), warning (the amber <strong>Alert</strong> family, not orange Warning), destructive (<code>bg-error-primary</code>). Default glyph <code>exclamation-circle</code>; override with <code>icon</code>. It is also the <strong>drag handle</strong>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">4</span><div><strong>Title</strong><span>An <code>h2</code> naming the action, in a column <em>beside</em> the icon &mdash; the header is a row, not a stack. <code>--font-size-16</code> / semibold / <code>--uems-text-primary</code> (16, not 18). Ends with &ldquo;?&rdquo; when asking for confirmation.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">5</span><div><strong>Description</strong><span>Optional line under the title, in the same column. <code>--font-size-14</code> / <code>--uems-text-secondary</code>. Omit it and the header centres the title against the icon instead of top-pinning it.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">6</span><div><strong>Dividers</strong><span>Header and footer rules, <strong>off by default</strong> &mdash; this modal is compact. Opt in per edge with <code>show-divider-header</code> / <code>show-divider-footer</code>.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">7</span><div><strong>Body</strong><span>Default slot &mdash; the concrete consequence. Hidden entirely when empty, and its divider with it.</span></div></div>
+            <div class="anat-legend-item"><span class="anat-marker-inline">8</span><div><strong>Footer</strong><span>Up to three buttons, <strong>end-aligned</strong>: primary (<code>warning</code> variant by default), secondary (<code>outline</code>), and an optional tertiary. When a tertiary is present it is treated as a utility and anchored to the leading edge, so the row becomes <code>space-between</code>.</span></div></div>
           </div>
 
           <hr class="doc-divider"/>
@@ -1043,6 +1032,81 @@
     });
   </script>
 
+  <!-- Anatomy markers — measured against the REAL regions of the live modal, so
+       the numbering follows the component instead of a hand-drawn mock. -->
+  <script>
+    (function () {
+      /* Listed in DOM order, which is also reading order down the dialog. The
+         number is the INDEX, never a literal — hardcoded numbers are how the
+         previous version ended up counting 1,2,3,4,5,7,6,8 down the page after
+         the divider was slotted in below the body. Keep .anat-legend in this same
+         order; the two are read together. */
+      const REGIONS = [
+        { sel: '.ds-confirmation-modal__dialog',      side: 'left',  at: 'top' },
+        { sel: '.ds-confirmation-modal__close',       side: 'right', at: 'center' },
+        { sel: '.ds-confirmation-modal__leading',     side: 'left',  at: 'center' },
+        { sel: '.ds-confirmation-modal__title',       side: 'right', at: 'center' },
+        { sel: '.ds-confirmation-modal__description', side: 'right', at: 'center' },
+        { sel: '[data-divider-header]',               side: 'left',  at: 'center' },
+        { sel: '.ds-confirmation-modal__body',        side: 'right', at: 'center' },
+        { sel: '.ds-confirmation-modal__footer',      side: 'right', at: 'center' },
+      ].map((r, i) => ({ ...r, n: i + 1 }));
+      function place() {
+        const stage = document.querySelector('.cm-anat');
+        const modal = document.getElementById('cm-anatomy');
+        if (!stage || !modal) return;
+        stage.querySelectorAll('.cm-mark').forEach((m) => m.remove());
+        const base = stage.getBoundingClientRect();
+        const dialog = modal.querySelector('.ds-confirmation-modal__dialog');
+        if (!dialog) return;
+        const d = dialog.getBoundingClientRect();
+        /* X comes from the DIALOG's edges, not each region's: a region like the
+           leading icon starts inside the dialog's padding, so anchoring to it would
+           drop the badge on top of the content. Anchoring to the dialog gives two
+           clean columns outside it. Y still comes from the region, so each badge
+           still points at the thing it labels. */
+        const placed = [];
+        REGIONS.forEach(({ n, sel, side, at }) => {
+          const el = modal.querySelector(sel);
+          if (!el || el.hidden || !el.getClientRects().length) return;
+          const r = el.getBoundingClientRect();
+          const y = at === 'top' ? r.top - base.top + 10 : r.top + r.height / 2 - base.top;
+          const x = side === 'left' ? (base.right - d.left + 8) : (d.right - base.left + 8);
+          placed.push({ n, side, x, y });
+        });
+        /* Two constraints at once, in ONE pass over the numbering order:
+             - badges on the same side must clear each other (they can be only a few
+               px apart, e.g. the close button and the title) — MIN_GAP;
+             - and n must never sit above n-1, whichever column each is in, or the
+               numbers stop reading top-to-bottom — MIN_STEP.
+           Doing this per-side (the earlier version) could push a badge below one in
+           the OTHER column and silently invert the sequence. */
+        const MIN_GAP = 26;   // same column: clear the previous badge
+        const MIN_STEP = 6;   // any column: stay below the previous number
+        let prevY = -Infinity;
+        const prevBySide = { left: -Infinity, right: -Infinity };
+        placed.forEach((p) => {
+          p.y = Math.max(p.y, prevY + MIN_STEP, prevBySide[p.side] + MIN_GAP);
+          prevY = p.y;
+          prevBySide[p.side] = p.y;
+        });
+        placed.forEach(({ n, side, x, y }) => {
+          const mark = document.createElement('span');
+          mark.className = 'cm-mark' + (side === 'left' ? ' cm-mark--left' : '');
+          mark.innerHTML = '<span class="anat-marker-inline">' + n + '</span><span class="cm-mark__line"></span>';
+          mark.style.top = y + 'px';
+          mark.style.transform = 'translateY(-50%)';
+          if (side === 'left') mark.style.right = x + 'px';
+          else mark.style.left = x + 'px';
+          stage.appendChild(mark);
+        });
+      }
+      /* Re-place after fonts/layout settle, and on resize — the regions move. */
+      window.addEventListener('DOMContentLoaded', () => { place(); setTimeout(place, 300); });
+      window.addEventListener('resize', place);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
+    })();
+  </script>
   <script src="js/components/toc.js"></script>
   <script src="js/main.js"></script>
 </body>
