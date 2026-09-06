@@ -103,6 +103,8 @@ describe('a11y sweep — data & feedback', () => {
   it('ds-text-link', async () => a11y(await fixture(html`<ds-text-link href="/docs">Read the docs</ds-text-link>`)));
   it('ds-status-indicator', async () => a11y(await fixture(html`<ds-status-indicator status="active" label="Online"></ds-status-indicator>`)));
   it('ds-progress-bar', async () => a11y(await fixture(html`<ds-progress-bar value="40" label="Upload progress"></ds-progress-bar>`)));
+  it('ds-progress-bar (circle)', async () => a11y(await fixture(html`<ds-progress-bar shape="circle" value="40" label="Upload progress"></ds-progress-bar>`)));
+  it('ds-progress-bar (circle, indeterminate)', async () => a11y(await fixture(html`<ds-progress-bar shape="circle" variant="indeterminate" label="Working"></ds-progress-bar>`)));
   it('ds-inline-alert', async () => a11y(await fixture(html`<ds-inline-alert type="info" title="Heads up" description="Your trial ends soon."></ds-inline-alert>`)));
   it('ds-empty-state', async () => a11y(await fixture(html`<ds-empty-state type="centered" title="No results" description="Try a different filter."></ds-empty-state>`)));
   it('ds-kpi-card', async () => a11y(await fixture(html`<ds-kpi-card value="1,234" label="Active users"></ds-kpi-card>`)));

@@ -72,10 +72,56 @@ Hex comments = Light theme. All fills are token-bound — one exact signature pe
 
 ## Developer Handoff
 
+## Shape: bar or circle
+
+`shape="circle"` re-dresses the same progress as a ring. It is a **shape, not a
+chart** — it answers "how far along is this one task", which is why it keeps
+`role="progressbar"` and the byte-identical ARIA contract, including omitting
+`aria-valuenow` when indeterminate.
+
+| Use | Reach for |
+|---|---|
+| One task's completion, 0–100% | `ds-progress-bar` (`bar` or `circle`) |
+| How a total **splits** across categories | `ds-chart type="donut"` |
+| A value against a **scale** with min/max | `ds-chart type="gauge"` |
+
+Split the circle into its own component the day it needs **segments**, **threshold
+zones**, a **semicircle**, or **min/max scale labels** — each of those is a chart,
+and none of them is progress.
+
+### Circle geometry
+
+One fixed geometry (`viewBox="0 0 100 100"`, `r=45`) with
+`vector-effect="non-scaling-stroke"`, so CSS sets the rendered size and the stroke
+width in px while the dash maths in JS never has to know how big the ring is.
+The arc is `stroke-dashoffset = C × (1 − value/max)` where `C = 2πr ≈ 282.743`.
+
+| `size` | Diameter | Stroke | Centre text |
+|---|---:|---:|---|
+| `small` | 32px | 3px | `--font-size-10` |
+| `medium` | 48px | 4px | `--font-size-12` |
+| `large` | 64px | 6px | `--font-size-14` |
+
+Every colour comes from the same `--_pb-track-bg` / `--_pb-fill-bg` /
+`--_pb-value-color` custom properties the bar uses, so the four variants cannot
+drift between the two shapes.
+
+### Differences from the bar
+
+| | `bar` | `circle` |
+|---|---|---|
+| Host layout | block, full width | `inline-flex`, hugs its size |
+| `label` | in a row above the track | caption beside the ring |
+| `value-label` | right of the label | centred inside the ring |
+| `show-label="false"` | removes the text row | bare ring — no centre, no caption (the value is still announced) |
+| Indeterminate | sliding fill | a fixed arc that spins |
+| RTL | fill grows right→left | ring mirrors, so it still fills in reading order |
+
 ### Suggested API
 
 ```
 <uems-progress-bar
+  shape="bar | circle"                (default: bar)
   value="0–100"                       (omit → indeterminate)
   size="small | medium | large"       (default: small)
   variant="default | success | warning | error"  (default: default)

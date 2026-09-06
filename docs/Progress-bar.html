@@ -203,6 +203,8 @@
                 gap: 32px !important;
               }
               .page-progress-bar .demo-pb-section { display: flex; flex-direction: column; gap: 14px; }
+              .page-progress-bar .demo-pb-row { display: flex; flex-wrap: wrap; align-items: center; gap: 28px; }
+              .page-progress-bar .demo-pb-row + .demo-pb-row { margin-top: 20px; }
               .page-progress-bar .demo-pb-section > .demo-group-label {
                 font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
                 color: var(--prism-text-muted); text-transform: uppercase;
@@ -288,6 +290,24 @@
               </div>
 
               <div class="demo-canvas">
+
+                <!-- Circle shape -->
+                <div class="demo-pb-section">
+                  <div class="demo-group-label">shape="circle" &mdash; the same progress as a ring</div>
+                  <div class="demo-pb-row">
+                    <ds-progress-bar shape="circle" size="small"  value="25" label="Small"></ds-progress-bar>
+                    <ds-progress-bar shape="circle" size="medium" value="50" label="Scanning"></ds-progress-bar>
+                    <ds-progress-bar shape="circle" size="large"  value="75" variant="success" label="Deploying"></ds-progress-bar>
+                    <ds-progress-bar shape="circle" size="medium" variant="indeterminate" label="Working&hellip;"></ds-progress-bar>
+                  </div>
+                  <div class="demo-pb-row">
+                    <ds-progress-bar shape="circle" size="medium" value="82" variant="warning" label="Storage used"></ds-progress-bar>
+                    <ds-progress-bar shape="circle" size="medium" value="43" variant="error" label="Sync failed"></ds-progress-bar>
+                    <ds-progress-bar shape="circle" size="medium" value="3" max="8" value-label="3/8" label="Steps"></ds-progress-bar>
+                    <ds-progress-bar shape="circle" size="medium" value="60" show-label="false"></ds-progress-bar>
+                    <ds-progress-bar shape="circle" size="medium" value="30" rtl label="&#1593;&#1585;&#1576;&#1610;"></ds-progress-bar>
+                  </div>
+                </div>
 
                 <!-- Variants -->
                 <div class="demo-pb-section">
@@ -762,6 +782,7 @@
           <p class="doc-section-subtitle">Configure the Progress Bar component and view generated HTML.</p>
           <div class="code-playground">
             <div class="cp-toolbar">
+              <div class="cp-control-group"><label class="cp-label">Shape</label><select class="cp-select" id="pg-shape"><option value="bar">bar</option><option value="circle">circle</option></select></div>
               <div class="cp-control-group"><label class="cp-label">Variant</label><select class="cp-select" id="pg-variant"><option value="default">default</option><option value="success">success</option><option value="warning">warning</option><option value="error">error</option><option value="indeterminate">indeterminate</option></select></div>
               <div class="cp-control-group"><label class="cp-label">Size</label><select class="cp-select" id="pg-size"><option value="small">small</option><option value="medium" selected>medium</option><option value="large">large</option></select></div>
               <div class="cp-control-group"><label class="cp-label">Value</label><input class="cp-select" id="pg-value" type="number" min="0" max="100" value="25" style="width:100%;"></div>
@@ -782,6 +803,7 @@
           <script>
           (function(){
             var els = {
+              shape:     document.getElementById('pg-shape'),
               variant:   document.getElementById('pg-variant'),
               size:      document.getElementById('pg-size'),
               value:     document.getElementById('pg-value'),
@@ -816,6 +838,8 @@
 
               host.innerHTML = '';
               var pb = document.createElement('ds-progress-bar');
+              var shape = els.shape.value;
+              if (shape !== 'bar') pb.setAttribute('shape', shape);
               if (variant !== 'default') pb.setAttribute('variant', variant);
               if (size !== 'medium') pb.setAttribute('size', size);
               if (variant !== 'indeterminate') pb.setAttribute('value', String(value));
@@ -828,6 +852,7 @@
               host.appendChild(pb);
 
               var attrs = [];
+              if (shape !== 'bar') attrs.push('shape="' + shape + '"');
               if (variant !== 'default') attrs.push('variant="' + variant + '"');
               if (size !== 'medium') attrs.push('size="' + size + '"');
               if (variant !== 'indeterminate') attrs.push('value="' + value + '"');
@@ -871,8 +896,9 @@
             <table class="size-table">
               <thead><tr><th>Attribute</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
               <tbody>
+                <tr><td><code>shape</code></td><td><code>'bar' | 'circle'</code></td><td><code>'bar'</code></td><td>A shape, not a chart &mdash; <code>circle</code> keeps <code>role="progressbar"</code> and the identical ARIA contract. For how a total splits use <code>ds-chart type="donut"</code>; for a value on a scale use <code>type="gauge"</code>.</td></tr>
                 <tr><td><code>variant</code></td><td><code>'default' | 'success' | 'warning' | 'error' | 'indeterminate'</code></td><td><code>'default'</code></td><td>Drives track + fill colours. <code>indeterminate</code> hides the value and animates a sweep.</td></tr>
-                <tr><td><code>size</code></td><td><code>'small' | 'medium' | 'large'</code></td><td><code>'medium'</code></td><td>Track height 4 / 6 / 8 px and label font 10 / 12 / 14 px.</td></tr>
+                <tr><td><code>size</code></td><td><code>'small' | 'medium' | 'large'</code></td><td><code>'medium'</code></td><td>Bar: track height 4 / 6 / 8&thinsp;px. Circle: diameter 32 / 48 / 64&thinsp;px with a 3 / 4 / 6&thinsp;px stroke. Label font 10 / 12 / 14&thinsp;px in both.</td></tr>
                 <tr><td><code>value</code></td><td>number 0&hellip;<code>max</code></td><td><code>0</code></td><td>Current progress. Ignored when <code>variant="indeterminate"</code>.</td></tr>
                 <tr><td><code>max</code></td><td>number &gt; 0</td><td><code>100</code></td><td>Used to compute the percentage.</td></tr>
                 <tr><td><code>label</code></td><td>string</td><td><code>"Progress"</code></td><td>Left-aligned label text.</td></tr>

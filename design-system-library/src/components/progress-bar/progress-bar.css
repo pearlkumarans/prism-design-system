@@ -6,6 +6,11 @@
 /* Light-DOM component: :host never applies — mirror display on the element
    (a dead :host duplicate was removed). */
 ds-progress-bar { display: block; width: 100%; font-family: var(--font-family-sans); }
+/* A ring hugs its own size, so the HOST has to stop being a full-width block —
+   styling only the inner root would leave every circle on its own line. Keyed to
+   the public attribute, so an unknown shape falls back to the bar's block layout
+   exactly as enumAttr does. */
+ds-progress-bar[shape="circle"] { display: inline-flex; width: auto; }
 
 .ds-progress-bar {
   display: flex;
@@ -91,6 +96,97 @@ ds-progress-bar { display: block; width: 100%; font-family: var(--font-family-sa
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(303%); } /* 100/33 — clears the right edge */
 }
+/* ═══ shape="circle" ══════════════════════════════════════════════════════
+   The same progress, re-dressed as a ring. Every colour comes from the SAME
+   --_pb-* custom properties the bar uses, so the four variants can never drift
+   between the two shapes.
+
+   Geometry: one fixed viewBox (r=45 in user units) with
+   vector-effect="non-scaling-stroke", so the stroke width is set here in px and
+   the dash maths in JS never has to know the rendered size. */
+.ds-progress-bar--circle {
+  display: inline-flex;
+  align-items: center;
+  width: auto;                      /* a ring hugs its size; the bar fills */
+  --_pb-ring-size: 48px;
+  --_pb-ring-stroke: 4px;
+}
+.ds-progress-bar--circle.ds-progress-bar--small  { --_pb-ring-size: 32px; --_pb-ring-stroke: 3px; }
+.ds-progress-bar--circle.ds-progress-bar--medium { --_pb-ring-size: 48px; --_pb-ring-stroke: 4px; }
+.ds-progress-bar--circle.ds-progress-bar--large  { --_pb-ring-size: 64px; --_pb-ring-stroke: 6px; }
+
+.ds-progress-bar__circle {
+  position: relative;
+  flex: none;
+  width: var(--_pb-ring-size);
+  height: var(--_pb-ring-size);
+}
+.ds-progress-bar__svg {
+  width: 100%;
+  height: 100%;
+  /* Start at 12 o'clock: the stroke begins at 3 o'clock, so rotate a quarter
+     turn back. Mirrored under RTL so progress travels in the reading direction. */
+  transform: rotate(-90deg);
+}
+.ds-progress-bar[dir="rtl"] .ds-progress-bar__svg { transform: rotate(-90deg) scaleY(-1); }
+
+.ds-progress-bar__circle-track,
+.ds-progress-bar__circle-fill {
+  fill: none;
+  stroke-width: var(--_pb-ring-stroke);
+}
+.ds-progress-bar__circle-track { stroke: var(--_pb-track-bg); }
+.ds-progress-bar__circle-fill {
+  stroke: var(--_pb-fill-bg);
+  stroke-linecap: round;
+  /* Matches the bar's fill transition, so both shapes advance at one speed. */
+  transition: stroke-dashoffset var(--duration-slow, 300ms) var(--ease-standard, ease);
+}
+
+/* Centre value. Sits over the ring rather than inside a foreignObject so it is
+   ordinary, themeable text. aria-hidden is unnecessary — the ARIA value lives on
+   the wrapper, and this is the same string. */
+.ds-progress-bar__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--_pb-text);
+  font-weight: var(--font-weight-medium);
+  color: var(--_pb-value-color);
+  font-variant-numeric: tabular-nums;   /* the digit width must not jitter as it counts */
+}
+.ds-progress-bar__caption {
+  font-size: var(--_pb-text);
+  line-height: var(--_pb-line, 16px);
+  color: var(--uems-text-secondary);
+}
+/* Caption sits beside the ring, not under it — a ring is as tall as it is wide,
+   so stacking wastes the space next to it. */
+.ds-progress-bar--circle { flex-direction: row; gap: var(--spacing-8); }
+
+/* Indeterminate: a fixed arc that spins. The dash pattern is a quarter of the
+   circumference (282.743 total), so roughly a 90° sweep. */
+.ds-progress-bar--circle.ds-progress-bar--indeterminate .ds-progress-bar__circle-fill {
+  stroke-dasharray: 70 213;
+  transition: none;
+  transform-origin: 50% 50%;
+  animation: ds-progress-ring-spin 0.9s linear infinite;
+}
+@keyframes ds-progress-ring-spin { to { transform: rotate(360deg); } }
+.ds-progress-bar--disabled.ds-progress-bar--indeterminate .ds-progress-bar__circle-fill {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Slow, don't freeze — as with the bar, the motion IS the "still working" signal. */
+  .ds-progress-bar--circle.ds-progress-bar--indeterminate .ds-progress-bar__circle-fill {
+    animation-duration: 3s;
+  }
+  .ds-progress-bar__circle-fill { transition: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ds-progress-bar--indeterminate .ds-progress-bar__fill {
     animation-duration: 3s; /* slow, don't freeze — the motion IS the signal */

@@ -78,6 +78,20 @@ describe('visual — leaf controls', () => {
 });
 
 describe('visual — composed', () => {
+  it('progress-bar (circle)', async () => {
+    const el = await fixture(frame(html`<div style="display:flex;gap:20px;align-items:center;"></div>`, '320px'));
+    const row = el.querySelector('div');
+    for (const [size, value, variant] of [['small', 25, 'default'], ['medium', 50, 'default'], ['large', 75, 'success']]) {
+      const pb = document.createElement('ds-progress-bar');
+      pb.setAttribute('shape', 'circle');
+      pb.setAttribute('size', size);
+      pb.setAttribute('value', String(value));
+      if (variant !== 'default') pb.setAttribute('variant', variant);
+      pb.setAttribute('show-label', 'false');
+      row.appendChild(pb);
+    }
+    await shot(el, 'progress-bar-circle');
+  });
   it('progress-bar', async () => {
     const el = await fixture(frame(html`<ds-progress-bar value="60" label="Upload"></ds-progress-bar>`, '280px'));
     await shot(el, 'progress-bar-60');
