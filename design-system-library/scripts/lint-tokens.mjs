@@ -114,6 +114,7 @@ const LOCKS = [
   { kind: 'num', props: `font-weight`, suggest: (n) => WEIGHT_MAP[n] ? `var(${WEIGHT_MAP[n]})` : null },
 ];
 const padViolations = [];   // (name kept for the reporting block below)
+const undefViolations = [];  // var() naming a token that does not exist
 for (const file of files) {
   const src = readFileSync(file, 'utf8');
   const lines = src.split('\n');
@@ -184,7 +185,12 @@ for (const file of files) {
 const definedTokens = new Set();
 const collectDefs = (css) => { let d; const dr = /(--[a-z0-9-]+)\s*:/gi; while ((d = dr.exec(css))) definedTokens.add(d[1].toLowerCase()); };
 const TOKENS_DIR = 'src/tokens';
-if (existsSync(TOKENS_DIR)) {
+/* Both undefined-token rules below are only sound when we can see the real token
+   definitions. Without them every design token would look undefined, so the rules
+   stand down rather than emit a wall of false positives (e.g. when this script is
+   pointed at a directory outside the library). */
+const haveTokenDefs = existsSync(TOKENS_DIR);
+if (haveTokenDefs) {
   for (const f of readdirSync(TOKENS_DIR)) {
     if (f.endsWith('.css')) collectDefs(readFileSync(join(TOKENS_DIR, f), 'utf8'));
   }
@@ -192,7 +198,7 @@ if (existsSync(TOKENS_DIR)) {
 // Also count component-local custom props (e.g. --ds-container-shadow, --_s-thumb-shadow)
 // as defined, so only genuinely-undefined names (a mistyped design token) are flagged.
 for (const file of files) collectDefs(readFileSync(file, 'utf8'));
-if (definedTokens.size) {
+if (haveTokenDefs) {
   for (const file of files) {
     const src = readFileSync(file, 'utf8');
     const lines = src.split('\n');
@@ -204,12 +210,47 @@ if (definedTokens.size) {
       if (definedTokens.has(name)) continue;
       const line = code.slice(0, m.index).split('\n').length;
       if (/lint-ok/.test(lines[line - 1] || '')) continue;
-      padViolations.push({ file: relative(process.cwd(), file), line, decl: `var(${m[1]}) — undefined shadow/elevation token (silently uses its fallback; use a defined --shadow-* token)` });
+      undefViolations.push({ file: relative(process.cwd(), file), line, decl: `var(${m[1]}) — undefined shadow/elevation token (silently uses its fallback; use a defined --shadow-* token)` });
     }
   }
 }
 
-if (violations.length || sizeViolations.length || padViolations.length) {
+// ---- Undefined token references, generally --------------------------------------
+// The shadow rule above is a special case of a broader failure: a var() naming a
+// token that does not exist. WITH a fallback that is a deliberate safety net and is
+// allowed. WITHOUT one the declaration is thrown away at parse time — and for a
+// SHORTHAND the WHOLE declaration goes, not just the bad part:
+// `padding: var(--spacing-10) var(--spacing-8)` lost BOTH axes because there is no
+// --spacing-10 (the scale steps 8 -> 12), so rows rendered with no padding at all
+// and nothing reported it.
+//
+// Only names with no fallback are flagged, so this can never fire on the defensive
+// var(--token, <literal>) pattern the rest of this file explicitly allows.
+if (haveTokenDefs) {
+  for (const file of files) {
+    const src = readFileSync(file, 'utf8');
+    const lines = src.split('\n');
+    const code = src.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+    let m;
+    // Capture the delimiter: ',' means a fallback follows, ')' means there is none.
+    const refRe = /var\(\s*(--[a-z0-9-]+)\s*([,)])/gi;
+    while ((m = refRe.exec(code))) {
+      const name = m[1].toLowerCase();
+      if (m[2] === ',') continue;                       // has a fallback — allowed
+      if (definedTokens.has(name)) continue;
+      if (/shadow|elevation/.test(name)) continue;      // already covered above
+      const line = code.slice(0, m.index).split('\n').length;
+      if (/lint-ok/.test(lines[line - 1] || '')) continue;
+      undefViolations.push({
+        file: relative(process.cwd(), file),
+        line,
+        decl: `var(${m[1]}) — undefined token, no fallback (declaration dropped; a shorthand loses ALL its values)`,
+      });
+    }
+  }
+}
+
+if (violations.length || sizeViolations.length || padViolations.length || undefViolations.length) {
   if (violations.length) {
     console.error(`\n✖ token-lint: ${violations.length} hardcoded color value(s) — replace with a design token (var(--uems-*)):\n`);
     for (const v of violations) console.error(`  ${v.file}:${v.line}\n      ${v.decl}`);
@@ -222,7 +263,11 @@ if (violations.length || sizeViolations.length || padViolations.length) {
     console.error(`\n✖ token-lint: ${padViolations.length} raw value(s) that already have a token — spacing (padding/margin/gap → var(--spacing-N)), radius (border-radius → a radius token), or type (font-size → var(--font-size-N), font-weight → var(--font-weight-*)). Use the token, or mark a deliberate off-token value with a /* lint-ok */ comment:\n`);
     for (const v of padViolations) console.error(`  ${v.file}:${v.line}\n      ${v.decl}`);
   }
-  console.error(`\n  Allowed: literals in comments, var(--token, <fallback>), rgba(var(--uems-shadow-rgb) / α), control sizes via var()/lint-ok, off-scale/no-token values, negatives (calc()), and any value inside a var()/calc() fallback.\n`);
+  if (undefViolations.length) {
+    console.error(`\n\u2716 token-lint: ${undefViolations.length} reference(s) to a token that is not defined. Without a fallback the browser DROPS the declaration \u2014 and for a shorthand it drops every value in it (this is how a padding shorthand silently becomes no padding at all). Fix the name, or give it a var(--token, <fallback>):\n`);
+    for (const v of undefViolations) console.error(`  ${v.file}:${v.line}\n      ${v.decl}`);
+  }
+  console.error(`\n  Allowed: literals in comments, var(--token, <fallback>) — including when that token is undefined, rgba(var(--uems-shadow-rgb) / α), control sizes via var()/lint-ok, off-scale/no-token values, negatives (calc()), and any value inside a var()/calc() fallback.\n`);
   process.exit(1);
 }
-console.log(`✓ token-lint: no hardcoded colors, no raw control sizes in ${CONTROL_FILES.size} control components, and no raw spacing/radius/type where a token exists, across ${files.length} stylesheets.`);
+console.log(`✓ token-lint: no hardcoded colors, no raw control sizes in ${CONTROL_FILES.size} control components, no raw spacing/radius/type where a token exists, and no undefined token references, across ${files.length} stylesheets.`);
