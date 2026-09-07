@@ -1,6 +1,6 @@
 /* =============================================================================
    <ds-item-list variant="default|timeline" timeline-marker="dot|icon"
-                 divider="none|line|dashed" size="small|medium" rtl>
+                 divider="none|line|dashed" size="small|medium" framed rtl>
      <ds-item lead="circle" status="critical" icon="exclamation-circle"
               text="23 devices pending enrollment"
               meta="Security · 3 mins ago">
@@ -12,10 +12,10 @@
    execution steps. Three regions per row: a LEADING RAIL, CONTENT, and TRAILING.
    Replaces the hand-rolled copies of this shape across the product. Migrated so
    far: .hd-act-row (home dashboard), .tl-node (device execution timeline) and
-   .edition__item (OSD cloud storage), .wl-row (module + BitLocker dashboards) and
-   .pu-item (product updates). Still hand-rolled, each for a named reason —
-   .srch-row, .hd-lib-row, .sup-upg__item; see item-list.md for the audit, the
-   migration notes and the gaps that remain.
+   .edition__item (OSD cloud storage), .wl-row (module + BitLocker dashboards),
+   .pu-item (product updates), .srch-row (search), .hd-lib-row (widget library) and
+   .sup-upg__item (support). That is every call site in the audit — see
+   item-list.md for it, the migration notes, and what deliberately stays out.
 
    `variant="timeline"` keeps the identical DOM and only re-dresses the rail, plus
    a connector drawn between rows. `timeline-marker` picks the marker: `dot` (the
@@ -33,7 +33,7 @@
 
    Items come from slotted <ds-item> children OR the `items` property:
 
-     list.items = [{ text, description, icon, status, tone, lead, meta, href,
+     list.items = [{ text, description, icon, status, tone, lead, meta, href, match,
                      badge:    'Security' | { text, state, variant, size, shape, icon },
                      trailing: '412' | { text } | { badge },   // a VALUE, not a control
                      link:     'Read more' | { text, href, icon },  // inline, ends the body
@@ -99,7 +99,7 @@ const STATUS_TO_BADGE_STATE = {
 };
 
 export class DsItemList extends HTMLElement {
-  static get observedAttributes() { return ['variant', 'divider', 'size', 'rtl', 'timeline-marker']; }
+  static get observedAttributes() { return ['variant', 'divider', 'size', 'rtl', 'timeline-marker', 'framed']; }
 
   constructor() {
     super();
@@ -188,8 +188,12 @@ export class DsItemList extends HTMLElement {
     const divider = variant === 'timeline'
       ? 'none'
       : enumAttr(this, 'divider', DIVIDERS, 'none');
+    /* framed rows carry their own border, so a divider on top of it would draw a
+       second rule against the first row's edge — the frame wins. */
+    const framed = boolAttr(this, 'framed');
     this._root.className = `ds-item-list ds-item-list--${variant}`
-      + ` ds-item-list--${size} ds-item-list--divider-${divider}`
+      + ` ds-item-list--${size} ds-item-list--divider-${framed ? 'none' : divider}`
+      + (framed ? ' ds-item-list--framed' : '')
       + (variant === 'timeline' ? ` ds-item-list--timeline-${this._timelineMarker()}` : '');
     this._root.setAttribute('role', 'list');
     if (boolAttr(this, 'rtl')) this._root.setAttribute('dir', 'rtl');
@@ -206,6 +210,7 @@ export class DsItemList extends HTMLElement {
       icon: attr('icon'),
       status: attr('status'),
       tone: attr('tone'),
+      match: attr('match'),
       lead: attr('lead'),
       meta: attr('meta'),
       metaPosition: attr('meta-position'),
@@ -322,13 +327,13 @@ export class DsItemList extends HTMLElement {
       const textEl = document.createElement(it.href ? 'a' : 'div');
       textEl.className = 'ds-item__text';
       if (it.href) textEl.setAttribute('href', it.href);
-      textEl.textContent = it.text;   // textContent, never an HTML sink
+      this._fillMarked(textEl, it.text, it.match);   // textContent, never an HTML sink
       body.appendChild(textEl);
     }
     if (it.description != null) {
       const d = document.createElement('div');
       d.className = 'ds-item__description';
-      d.textContent = it.description;
+      this._fillMarked(d, it.description, it.match);
       body.appendChild(d);
     }
     /* Command / script output (.tl-out). Its own region rather than a flag on
@@ -388,6 +393,29 @@ export class DsItemList extends HTMLElement {
   /* Build the meta-strip status chip. Always a real <ds-badge> — the component
      already owns these tints, so hand-rolling an equivalent here would fork them.
      `badge` may be a plain string (inherits the row's status) or an object. */
+  /* Search-match highlighting. `match` is a QUERY STRING, and the <mark> is built
+     as a DOM node around a slice of textContent — never an HTML sink, because
+     these strings are device names and article titles straight off an API. That
+     was the whole reason the product's own highlight() could not be lifted in:
+     it returned markup.
+
+     Marks the FIRST case-insensitive occurrence, which is exactly what
+     .srch-row's highlight() did. Server-supplied offsets, or every occurrence,
+     would be a superset of this and can be added without changing call sites. */
+  _fillMarked(el, value, match) {
+    const text = String(value);
+    const q = typeof match === 'string' ? match.trim() : '';
+    const at = q ? text.toLowerCase().indexOf(q.toLowerCase()) : -1;
+    if (at < 0) { el.textContent = text; return; }
+    el.textContent = '';
+    if (at > 0) el.appendChild(document.createTextNode(text.slice(0, at)));
+    const m = document.createElement('mark');
+    m.textContent = text.slice(at, at + q.length);
+    el.appendChild(m);
+    const tail = text.slice(at + q.length);
+    if (tail) el.appendChild(document.createTextNode(tail));
+  }
+
   _renderBadge(badge, status, defaultSize) {
     const spec = typeof badge === 'string' ? { text: badge } : (badge || {});
     const el = document.createElement('ds-badge');

@@ -53,6 +53,18 @@ ds-item-list { display: block; font-family: var(--font-family-sans); width: 100%
 .ds-item-list--divider-line .ds-item:last-child,
 .ds-item-list--divider-dashed .ds-item:last-child { border-bottom: 0; }
 
+/* ---- Framed rows ----------------------------------------------------------
+   Each row is its own bordered tile (.hd-lib-row) instead of a run of rows
+   separated by rules. The frame REPLACES the divider — drawing both would
+   double the line where two rows meet — so `divider` is forced to none when
+   framed, in the JS. */
+.ds-item-list--framed { gap: var(--spacing-8); }
+.ds-item-list--framed .ds-item {
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--radius-md);
+  padding-inline: var(--spacing-12);
+}
+
 /* ---- Leading rail --------------------------------------------------------- */
 .ds-item__lead {
   flex: 0 0 auto;
@@ -117,6 +129,18 @@ ds-item-list { display: block; font-family: var(--font-family-sans); width: 100%
    affordance rather than being a plain-looking string that happens to navigate. */
 a.ds-item__text { color: var(--uems-text-accent-link); text-decoration: none; }
 a.ds-item__text:hover { text-decoration: underline; }
+
+/* Search-match highlight (was .srch-row mark). The UA default for <mark> is a
+   yellow block with black text, which fights every theme — retint it from tokens
+   and inherit the row's colour, so the highlight reads as emphasis rather than as
+   a differently-coloured string. */
+.ds-item__text mark,
+.ds-item__description mark {
+  background: var(--uems-bg-warning-secondary);
+  color: inherit;
+  border-radius: var(--radius-sm);
+  padding-inline: var(--spacing-2);
+}
 
 .ds-item__description {
   font-size: var(--font-size-12);

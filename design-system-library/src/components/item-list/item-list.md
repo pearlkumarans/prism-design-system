@@ -59,9 +59,9 @@ sites actually use.
 | `.act-row` | n/a | serialized JSON data, not markup |
 | `.wl-row` | **MIGRATED** | — |
 | `.pu-item` | **MIGRATED** | — |
-| `.srch-row` | no | `<mark>` highlighting, **and** the whole row is `cursor:pointer` clickable — which this component deliberately refuses |
-| `.hd-lib-row` | no | each row is a **bordered tile** (1px border + 8px radius), not a flat divided row |
-| `.sup-upg__item` | partly | an extra error sub-block under the meta line (its `shape="rounded"` badge is now expressible) |
+| `.srch-row` | **MIGRATED** | — |
+| `.hd-lib-row` | **MIGRATED** | — |
+| `.sup-upg__item` | **MIGRATED** | — |
 | `.as-row` | n/a | does not exist |
 
 ### Migrated (2026-09-07)
@@ -74,6 +74,11 @@ sites actually use.
 | `.wl-row` ×3 lists (18 rows) | `lead="box"` + `status`, `trailing` value **or** `{ badge }`, `href` | `Layout/views/layout-module-dashboard.html` |
 | `.wl-row` ×1 list (5 rows) | same, chip-only trailing | `projects/bitlocker/layout-summary-dashboard.html` |
 | `.pu-item` ×3 groups (6 rows) | `tone` per category, `metaPosition: 'above'`, `description`, inline `link` | `Layout/views/updates.html` |
+| `.srch-row` ×4 lists | `match` highlighting, `lead="box"`, `trailing` value **or** chip | `Layout/views/search.html` |
+| `.hd-lib-row` ×6 rows | `framed`, `action` + `ds-item-action` | `projects/screens/home-dashboard.html` |
+| `.sup-upg__item` ×12 rows | `href` title, `trailing` chip, `meta`, error note via `rest` | `Layout/views/support.html` |
+
+**Every audited call site is now on the component.**
 
 Two things learned doing it, both worth knowing before the next call site:
 
@@ -97,6 +102,19 @@ Two things learned doing it, both worth knowing before the next call site:
   (deduped) and silently painted three chips grey: "In progress", "Prereq failed",
   "Pending reboot". `important` is its warning-coloured state. Same mistake class
   as the three visual-regression tests; worth grepping for on any new call site.
+- **A fourth wrong-coloured badge, same mistake.** `.srch-row`'s device data used
+  `tone: 'warning'` for the badge state — grey again. That is now four instances of
+  `warning`-instead-of-`important` found by migrating. Grep for it.
+- **`.hd-lib-row` had no padding at all.** It asked for `var(--spacing-10)` for both
+  `gap` and `padding`, and that token does not exist, so the whole padding shorthand
+  was invalid and the rows rendered flush. Exactly the failure this component's own
+  `.ds-item` comment warns about. Migrating fixed it, which is why those rows now
+  look roomier — that is the bug going away, not a design change.
+- **`.srch-row` was fake-clickable.** `cursor: pointer` and a hover wash, with **no
+  click handler anywhere**. The component refuses row-level click by design, so the
+  pointer went with it and the row lost nothing real. Six identical "Add" buttons in
+  `.hd-lib-row` also gained distinct accessible names ("Add — Agent Version"), which
+  the component derives from the row text.
 
 ### Closed
 
@@ -132,6 +150,17 @@ Two things learned doing it, both worth knowing before the next call site:
   and are told apart by the glyph colour. The hand-rolled `.pu-item` had the identical
   collision (both `--cobalt-50`), so this is inherited from the token system, not
   introduced here.
+- **`match` — search-match highlighting** (2026-09-07) — `match: 'query'` marks the
+  first case-insensitive hit in `text` and `description`. The `<mark>` is built as a
+  DOM node around a slice of `textContent`, never an HTML sink; that is precisely why
+  `.srch-row`'s own `highlight()` could not be lifted in — it returned markup, and
+  these strings are device names off an API. Server-supplied offsets, or marking every
+  occurrence, would be a superset and can be added without touching call sites.
+- **`framed` — bordered rows** (2026-09-07) — each row becomes its own tile with a
+  border and radius, for `.hd-lib-row`'s widget picker. The frame replaces the
+  divider (drawing both would double the rule where two rows meet), so `divider` is
+  forced to `none` while framed. Naming follows `ds-content [framed]` and
+  `ds-popover header-style="framed"`.
 - **Monospace output** — `output: '…'` renders a `pre-wrap` block (newlines and alignment
   are the content), and `mono: true` switches it to the monospace stack, matching `.tl-out`.
 - **Inline body link** — `link: 'Read more'` puts a continuation link at the end of the
@@ -140,13 +169,13 @@ Two things learned doing it, both worth knowing before the next call site:
 
 ### Still open
 
-1. **Search-match highlighting.** `.as-row` and `.srch-row` inject `<mark>` into the title
-   and subtitle. This component renders every consumer string with `textContent` on
-   purpose — device names and usernames arrive straight from an API. Highlighting needs a
-   structured mechanism (match ranges), never raw HTML.
-2. **Group headers.** `.pu-item` sits under date headers and `.srch-row` under section
-   headers. There is no grouping layer at all — the component renders a flat list. This is
-   the same requirement listed above as the trigger for splitting `timeline` out.
+1. ~~**Search-match highlighting.**~~ **Closed** — see `match` under Closed.
+2. ~~**Group headers.**~~ **Not a component gap after all.** Both `.pu-item` (date
+   headers) and `.srch-row` (section headers) migrated with **one list per group** and the
+   header between them. A group header is page chrome, not a row, so it stays with the
+   page; the component still renders a flat list and needs no grouping layer. It remains
+   the trigger for splitting `timeline` out only if a timeline ever needs *collapsible*
+   date ranges, which is a different requirement.
 3. ~~**Category tints that are not statuses.**~~ **Closed** — see `tone` under Closed.
 
 Gap 1 needs a design decision, gap 2 is a new structural layer, and gap 3 is a

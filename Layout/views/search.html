@@ -92,15 +92,12 @@
   .srch-cat__count { font-size: var(--font-size-13); color: var(--uems-text-tertiary); }
 
   /* rows (articles + results) */
-  .srch-row { display: flex; align-items: center; gap: var(--spacing-16, 16px); padding: var(--spacing-16, 16px) var(--spacing-8); border-radius: var(--radius-md, 8px); cursor: pointer; transition: background-color 120ms var(--ease-standard); }
-  .srch-row:hover { background: var(--uems-bg-primary); }
-  .srch-row + .srch-row { border-top: 1px solid var(--uems-border-tertiary); border-radius: 0; }
-  .srch-row__ic { flex: 0 0 36px; width: 36px; height: 36px; border-radius: var(--radius-md, 8px); background: var(--uems-bg-accent-secondary); display: flex; align-items: center; justify-content: center; color: var(--uems-text-accent-link); }
-  .srch-row__body { flex: 1; min-width: 0; }
-  .srch-row__title { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
-  .srch-row__sub { font-size: var(--font-size-13); color: var(--uems-text-secondary); margin-top: 2px; }
-  .srch-row__meta { flex: 0 0 auto; font-size: var(--font-size-13); color: var(--uems-text-tertiary); }
-  .srch-row mark { background: var(--uems-bg-warning-secondary, #fff4d6); color: inherit; border-radius: var(--radius-sm); padding: 0 2px; }
+  /* Result rows are ds-item-list (lead="box", divider="line"). The glyph tile, the
+     title/subtitle, the trailing value-or-chip AND the <mark> highlight are all the
+     component's now, so the whole .srch-row anatomy is gone.
+     One deliberate loss: .srch-row had cursor:pointer and a hover wash but NO click
+     handler — a fake affordance. ds-item-list refuses row-level click by design, so
+     the pointer goes with it rather than being reproduced. */
   .srch-count { font-size: var(--font-size-14); color: var(--uems-text-secondary); margin-bottom: var(--spacing-16); }
   .srch-empty-msg { padding: var(--spacing-40); text-align: center; color: var(--uems-text-tertiary); }
 </style>
@@ -177,13 +174,6 @@
   let _scope = SCOPES[0];
 
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-  function highlight(text, q) {
-    if (!q) return esc(text);
-    const i = text.toLowerCase().indexOf(q.toLowerCase());
-    if (i < 0) return esc(text);
-    return esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
-  }
-
   /* Feed the ds-dropdown-menu grouped items: headings for groups, a trailing
      chevron (›) for scopes that drill into sub-filters, tick on the active one. */
   function renderScopeMenu() {
@@ -201,8 +191,23 @@
       + `<div class="srch-sec"><div class="srch-sec__head"><span class="srch-sec__title">Browse by category</span></div>
         <div class="srch-cats">${CATS.map((c) => `<div class="srch-cat" data-q="${esc(c.name)}"><div class="srch-cat__ic"><ds-icon name="${c.icon}" size="20"></ds-icon></div><div><div class="srch-cat__name">${esc(c.name)}</div><div class="srch-cat__count">${c.count} features</div></div></div>`).join('')}</div></div>`
       + `<div class="srch-sec"><div class="srch-sec__head"><span class="srch-sec__title">Top articles</span><ds-text-link href="#" variant="primary" size="small">View all</ds-text-link></div>
-        <div>${ARTICLES.map((a) => `<div class="srch-row"><div class="srch-row__ic"><ds-icon name="doc" size="18"></ds-icon></div><div class="srch-row__body"><div class="srch-row__title">${esc(a.title)}</div><div class="srch-row__sub">${esc(a.cat)}</div></div><div class="srch-row__meta">${esc(a.read)}</div></div>`).join('')}</div></div>`;
+        <ds-item-list data-srch-list="top-articles" divider="line"></ds-item-list></div>`;
+    /* The rows come from data, so esc()/highlight() are no longer this view's job
+       for them — the component writes text with textContent and builds <mark>
+       as a node. Section heads stay page chrome. */
+    fillList(el, 'top-articles', ARTICLES.map((a) => articleRow(a)));
   }
+
+  /* One shape for all four result lists: a boxed glyph, a highlighted title and
+     subtitle, and a trailing value or chip. */
+  const articleRow = (a, q) => ({
+    lead: 'box', icon: 'doc', match: q,
+    text: a.title, description: a.cat, trailing: a.read,
+  });
+  const fillList = (root, name, items) => {
+    const list = root && root.querySelector(`[data-srch-list="${name}"]`);
+    if (list) list.items = items;
+  };
 
   function renderResults(q) {
     const box = $('srch-results'); if (!box) return;
@@ -214,13 +219,28 @@
     const total = feats.length + devs.length + arts.length;
     let html = `<div class="srch-count">${total} result${total === 1 ? '' : 's'} for “${esc(q)}”</div>`;
     if (!total) { html += `<div class="srch-empty-msg">No matches — try a different term or scope.</div>`; box.innerHTML = html; return; }
-    if (devs.length) html += `<div class="srch-sec"><div class="srch-sec__head"><span class="srch-sec__title">Devices · ${devs.length}</span></div><div>`
-      + devs.map((d) => `<div class="srch-row"><div class="srch-row__ic"><ds-icon name="computer" size="18"></ds-icon></div><div class="srch-row__body"><div class="srch-row__title">${highlight(d.name, q)}</div><div class="srch-row__sub">${highlight(d.sub, q)}</div></div><ds-badge variant="subtle" state="${d.tone}" size="small" shape="rounded">${d.status}</ds-badge></div>`).join('') + `</div></div>`;
-    if (feats.length) html += `<div class="srch-sec"><div class="srch-sec__head"><span class="srch-sec__title">Features · ${feats.length}</span></div><div>`
-      + feats.map((f) => `<div class="srch-row"><div class="srch-row__ic"><ds-icon name="layout-grid" size="18"></ds-icon></div><div class="srch-row__body"><div class="srch-row__title">${highlight(f.name, q)}</div><div class="srch-row__sub">${highlight(f.path, q)}</div></div><ds-badge variant="subtle" state="success" size="small" shape="rounded">Feature</ds-badge></div>`).join('') + `</div></div>`;
-    if (arts.length) html += `<div class="srch-sec"><div class="srch-sec__head"><span class="srch-sec__title">Articles · ${arts.length}</span></div><div>`
-      + arts.map((a) => `<div class="srch-row"><div class="srch-row__ic"><ds-icon name="doc" size="18"></ds-icon></div><div class="srch-row__body"><div class="srch-row__title">${highlight(a.title, q)}</div><div class="srch-row__sub">${esc(a.cat)}</div></div><div class="srch-row__meta">${esc(a.read)}</div></div>`).join('') + `</div></div>`;
+    const sec = (title, name) => `<div class="srch-sec"><div class="srch-sec__head"><span class="srch-sec__title">${title}</span></div>`
+      + `<ds-item-list data-srch-list="${name}" divider="line"></ds-item-list></div>`;
+    if (devs.length) html += sec(`Devices · ${devs.length}`, 'devices');
+    if (feats.length) html += sec(`Features · ${feats.length}`, 'features');
+    if (arts.length) html += sec(`Articles · ${arts.length}`, 'articles');
     box.innerHTML = html;
+    /* `match: q` is the component's highlighting: it marks the first
+       case-insensitive hit in the title AND the subtitle, building <mark> as a
+       node. That is what the local highlight() did, minus the HTML string. */
+    fillList(box, 'devices', devs.map((d) => ({
+      lead: 'box', icon: 'computer', match: q,
+      text: d.name, description: d.sub,
+      /* `warning` is not a ds-badge state — it warned and silently rendered grey.
+         `important` is its warning-coloured one. */
+      trailing: { badge: { text: d.status, state: d.tone === 'warning' ? 'important' : d.tone, size: 'small', shape: 'rounded' } },
+    })));
+    fillList(box, 'features', feats.map((f) => ({
+      lead: 'box', icon: 'layout-grid', match: q,
+      text: f.name, description: f.path,
+      trailing: { badge: { text: 'Feature', state: 'success', size: 'small', shape: 'rounded' } },
+    })));
+    fillList(box, 'articles', arts.map((a) => articleRow(a, q)));
   }
 
   function applyQuery(q) {

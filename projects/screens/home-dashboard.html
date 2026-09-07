@@ -165,8 +165,11 @@
 .hd-panel-body { flex: 1; min-height: 0; overflow: auto; padding: var(--spacing-16); display: flex; flex-direction: column; gap: var(--spacing-12); }
 .hd-panel-foot { display: flex; justify-content: flex-end; gap: var(--spacing-8); padding: var(--spacing-12) var(--spacing-16); border-top: 1px solid var(--uems-border-tertiary); }
 
-.hd-lib-row { display: flex; align-items: center; gap: var(--spacing-10); padding: var(--spacing-10) var(--spacing-12); border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md, 8px); }
-.hd-lib-name { flex: 1; font-size: var(--font-size-13); color: var(--uems-text-primary); }
+/* The widget library is ds-item-list size="small" framed — one bordered tile per
+   row, which is what .hd-lib-row drew by hand. Worth noting why the swap changes
+   the spacing: .hd-lib-row asked for var(--spacing-10), which does not exist, so
+   BOTH its gap and its whole padding shorthand were invalid and the rows had none
+   at all. The component uses real tokens. */
 
 .hd-scrim {
   position: fixed; inset: 0; z-index: 340; background: rgba(15, 24, 40, 0.45);
@@ -429,12 +432,7 @@
     </div>
     <div class="hd-panel-body">
       <ds-search-field placeholder="Search widgets" size="medium"></ds-search-field>
-      <div class="hd-lib-row"><span class="hd-lib-name">Devices by Operating System</span><ds-button variant="outline" size="xsmall" data-hd="lib-add">Add</ds-button></div>
-      <div class="hd-lib-row"><span class="hd-lib-name">Agent Version</span><ds-button variant="outline" size="xsmall" data-hd="lib-add">Add</ds-button></div>
-      <div class="hd-lib-row"><span class="hd-lib-name">Agent Install / Uninstall Summary</span><ds-button variant="outline" size="xsmall" data-hd="lib-add">Add</ds-button></div>
-      <div class="hd-lib-row"><span class="hd-lib-name">Agent Last Contact</span><ds-button variant="outline" size="xsmall" data-hd="lib-add">Add</ds-button></div>
-      <div class="hd-lib-row"><span class="hd-lib-name">Lifecycle - Declined &amp; Disposed</span><ds-button variant="outline" size="xsmall" data-hd="lib-add">Add</ds-button></div>
-      <div class="hd-lib-row"><span class="hd-lib-name">Inactive Device Policy Trend</span><ds-button variant="outline" size="xsmall" data-hd="lib-add">Add</ds-button></div>
+      <ds-item-list id="hd-lib-list" size="small" framed></ds-item-list>
     </div>
   </aside>
 
@@ -513,6 +511,28 @@
   ];
   const actList = $('#hd-act-list');
   if (actList) actList.items = HD_ACTIVITY;
+
+  /* Widget library. `action` with no href renders a real ds-button and fires
+     ds-item-action — the delegated [data-hd] click handler cannot see it, so the
+     toast is wired to the event instead. */
+  const HD_LIBRARY = [
+    'Devices by Operating System',
+    'Agent Version',
+    'Agent Install / Uninstall Summary',
+    'Agent Last Contact',
+    'Lifecycle - Declined & Disposed',
+    'Inactive Device Policy Trend',
+  ];
+  const libList = $('#hd-lib-list');
+  if (libList) {
+    libList.items = HD_LIBRARY.map((name) => ({
+      text: name,
+      action: { text: 'Add', actionId: 'lib-add', variant: 'outline', size: 'xsmall' },
+    }));
+    libList.addEventListener('ds-item-action', (e) => {
+      if (e.detail?.actionId === 'lib-add') toast('Widget added — demo only', { status: 'success' });
+    });
+  }
 
   const setBtnLabel = (dsBtn, text) => {
     const l = dsBtn && dsBtn.querySelector('.ds-button__label');

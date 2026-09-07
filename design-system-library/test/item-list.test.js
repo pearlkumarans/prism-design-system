@@ -194,6 +194,66 @@ describe('ds-item-list', () => {
     expect(textOf(row)).to.contain('lost connection');
   });
 
+  describe('search-match highlighting', () => {
+    it('wraps the matched run in a real <mark>, built as a node not markup', async () => {
+      const el = await mk([{ text: 'DESKTOP-ENG-117', match: 'eng' }]);
+      const t = el.querySelector('.ds-item__text');
+      const m = t.querySelector('mark');
+      expect(m, 'a real <mark> element').to.exist;
+      expect(m.textContent, 'keeps the source casing, matches case-insensitively').to.equal('ENG');
+      expect(t.textContent, 'the full string survives intact').to.equal('DESKTOP-ENG-117');
+    });
+
+    it('highlights the description too', async () => {
+      const el = await mk([{ text: 'x', description: 'Windows 11 Pro', match: 'windows' }]);
+      expect(el.querySelector('.ds-item__description mark').textContent).to.equal('Windows');
+    });
+
+    it('never treats the query or the text as HTML', async () => {
+      /* The reason highlight() could not simply be lifted in: it returned markup.
+         Both sides must stay inert — the text is a device name off an API. */
+      const el = await mk([{ text: '<img src=x onerror=alert(1)> laptop', match: '<img' }]);
+      const t = el.querySelector('.ds-item__text');
+      expect(t.querySelector('img'), 'no element parsed out of the text').to.not.exist;
+      expect(t.textContent).to.equal('<img src=x onerror=alert(1)> laptop');
+      expect(t.querySelector('mark').textContent, 'the query is matched literally').to.equal('<img');
+    });
+
+    it('leaves the text alone when there is no match, no query, or an empty one', async () => {
+      for (const match of [undefined, '', '   ', 'zzz']) {
+        const el = await mk([{ text: 'Managed devices', match }]);
+        expect(el.querySelector('.ds-item__text mark'), String(match)).to.not.exist;
+        expect(el.querySelector('.ds-item__text').textContent).to.equal('Managed devices');
+      }
+    });
+
+    it('marks a match at the very start without emitting an empty text node', async () => {
+      const el = await mk([{ text: 'Windows 11', match: 'win' }]);
+      const t = el.querySelector('.ds-item__text');
+      expect(t.firstChild.nodeName.toLowerCase(), 'starts with the mark itself').to.equal('mark');
+    });
+  });
+
+  describe('framed rows', () => {
+    it('gives each row its own border and drops the divider that would double it', async () => {
+      const el = await mk([{ text: 'a' }, { text: 'b' }], 'framed divider="line"');
+      const root = el.querySelector('.ds-item-list');
+      expect(root.classList.contains('ds-item-list--framed')).to.be.true;
+      expect(root.classList.contains('ds-item-list--divider-none'),
+        'the frame wins over an explicit divider').to.be.true;
+      const cs = getComputedStyle(rows(el)[0]);
+      expect(cs.borderTopWidth, 'a real border, not a bottom rule').to.equal('1px');
+      expect(cs.borderTopStyle).to.equal('solid');
+    });
+
+    it('is off by default, so unframed lists keep their dividers', async () => {
+      const el = await mk([{ text: 'a' }, { text: 'b' }], 'divider="line"');
+      const root = el.querySelector('.ds-item-list');
+      expect(root.classList.contains('ds-item-list--framed')).to.be.false;
+      expect(root.classList.contains('ds-item-list--divider-line')).to.be.true;
+    });
+  });
+
   it('places meta below by default and above on request', async () => {
     const below = await mk([{ text: 'T', meta: 'M' }]);
     const kidsBelow = [...below.querySelector('.ds-item__body').children].map((c) => c.className);

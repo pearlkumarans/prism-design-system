@@ -127,10 +127,9 @@
   .sup-upg__head { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-12, 12px); padding: var(--spacing-8, 8px) 0 var(--spacing-4, 4px); }
   .sup-upg__lead { font-size: var(--font-size-13); line-height: 20px; font-weight: var(--font-weight-medium); color: var(--uems-text-tertiary); }
   .sup-upg__total { font-size: var(--font-size-13); line-height: 20px; color: var(--uems-text-quaternary); }
-  .sup-upg__item { padding: var(--spacing-12, 12px) 0; border-top: 1px solid var(--uems-border-tertiary); }
-  .sup-upg__head + .sup-upg__item { border-top: 0; }   /* no divider directly under the caption */
-  .sup-upg__row1 { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-8, 8px); }
-  .sup-upg__meta { margin-top: 2px; font-size: var(--font-size-13); line-height: 20px; color: var(--uems-text-tertiary); }
+  /* Rows are ds-item-list (divider="line"): the linked build number, the trailing
+     status chip and the type/date meta line are the component's. Only the failure
+     note below stays here — it is page content the row carries, not row anatomy. */
   .sup-upg__error { margin-top: var(--spacing-8, 8px); font-size: var(--font-size-12); line-height: 1.5; color: var(--uems-text-error); }
   .sup-upg__error ds-text-link { margin-inline-start: var(--spacing-4, 4px); }
 </style>
@@ -461,26 +460,43 @@
   function renderGD(tab) {
     const box = document.getElementById('sup-gd-body'); if (!box) return;
     if (tab === 'upgrade') {
-      const items = UPGRADES.map((u) => {
-        const st = UPG_STATUS[u.status] || UPG_STATUS.success;
-        const err = (u.status === 'failed' && u.errorKey)
-          ? `<div class="sup-upg__error">${esc(t(u.errorKey))} <ds-text-link href="#" variant="primary" size="small">${esc(t('sup.upg.viewlogs'))}</ds-text-link></div>`
-          : '';
-        return `
-        <div class="sup-upg__item">
-          <div class="sup-upg__row1">
-            <ds-text-link href="#" variant="primary" size="medium" trailing-icon="link-square">${esc(u.build)}</ds-text-link>
-            <ds-badge variant="subtle" state="${st.state}" size="medium" shape="rounded" icon="${st.icon}">${esc(t(st.key))}</ds-badge>
-          </div>
-          <div class="sup-upg__meta">${esc(u.type)} · ${esc(u.date)}</div>
-          ${err}
-        </div>`;
-      }).join('');
+      /* The caption stays page chrome; the rows are ds-item-list (divider="line",
+         which is exactly the "rule between rows, none under the caption" the old
+         .sup-upg__head + .sup-upg__item rule hand-built). */
       box.innerHTML =
         `<div class="sup-upg__head">
            <span class="sup-upg__lead">${esc(t('sup.upg.lead'))}</span>
            <span class="sup-upg__total">${esc(t('sup.upg.total'))}: ${UPGRADE_TOTAL}</span>
-         </div>${items}`;
+         </div><ds-item-list id="sup-upg-list" divider="line"></ds-item-list>`;
+      const upgList = document.getElementById('sup-upg-list');
+      if (upgList) {
+        upgList.items = UPGRADES.map((u) => {
+          const st = UPG_STATUS[u.status] || UPG_STATUS.success;
+          const row = {
+            lead: 'none',
+            text: u.build,
+            href: '#',
+            meta: `${u.type} · ${u.date}`,
+            trailing: { badge: { text: t(st.key), state: st.state, size: 'medium', shape: 'rounded', icon: st.icon } },
+          };
+          /* The failure note is free-form body content, not part of the row shape,
+             so it rides `rest` as a real node rather than being folded into
+             `description`. It carries its own link, which stays live this way. */
+          if (u.status === 'failed' && u.errorKey) {
+            const err = document.createElement('div');
+            err.className = 'sup-upg__error';
+            err.textContent = `${t(u.errorKey)} `;
+            const logs = document.createElement('ds-text-link');
+            logs.setAttribute('href', '#');
+            logs.setAttribute('variant', 'primary');
+            logs.setAttribute('size', 'small');
+            logs.setAttribute('label', t('sup.upg.viewlogs'));
+            err.appendChild(logs);
+            row.rest = [err];
+          }
+          return row;
+        });
+      }
     } else {
       const rows = GD_DETAILS[tab] || GD_DETAILS.product;
       box.innerHTML = '<ds-description-list id="sup-gd-dl" orientation="horizontal"></ds-description-list>';
