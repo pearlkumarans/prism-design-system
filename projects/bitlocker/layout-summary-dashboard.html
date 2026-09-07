@@ -55,11 +55,10 @@
 #bldash-pop .bl-grid .ds-chart__plot { max-height: 100%; }
 
 /* List-widget collection rows (icon tile + label + trailing value/badge). */
-#bldash-pop .wl-row { display: flex; align-items: center; gap: 12px; padding: 8px 16px; }
-#bldash-pop .wl-ico { width: 28px; height: 28px; border-radius: 8px; background: var(--uems-bg-secondary-alt, #eef1f6); display: inline-flex; align-items: center; justify-content: center; color: var(--uems-icon-secondary, #55607a); flex-shrink: 0; }
-#bldash-pop .wl-label { flex: 1 1 auto; min-width: 0; font-size: 14px; color: var(--uems-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#bldash-pop .wl-label--link { color: var(--uems-text-accent-link, #006aff); cursor: pointer; }
-#bldash-pop .wl-val { flex-shrink: 0; font-size: 14px; font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); }
+/* The recent-deployments list is ds-item-list (lead="box"); the row anatomy is
+   the component's. ds-item already carries 8px of inline inset, so 8 here
+   reproduces the 16px the old .wl-row hardcoded. */
+#bldash-pop .bl-list { padding-inline: var(--spacing-8); }
 
 /* Full-width "needs attention" table block (table owns its own inset). */
 #bldash-pop .bl-attention .ds-widget__surface { height: auto; }
@@ -200,12 +199,14 @@
   const setChart = (id, data) => { const c = $(id); if (c) c.data = data; };
   const DEPLOYS = [
     { icon: 'shield', k: 'bl.dep.corp', badge: 'completed', state: 'success' },
-    { icon: 'shield', k: 'bl.dep.finance', badge: 'inprogress', state: 'warning' },
+    { icon: 'shield', k: 'bl.dep.finance', badge: 'inprogress', state: 'important' },
     { icon: 'shield', k: 'bl.dep.sales', badge: 'completed', state: 'success' },
     { icon: 'shield', k: 'bl.dep.servers', badge: 'failed', state: 'critical' },
     { icon: 'shield', k: 'bl.dep.kiosks', badge: 'scheduled', state: 'default' },
   ];
-  const ISSUE_STATE = { failed: 'critical', prereq: 'warning', noncompliant: 'critical', reboot: 'warning' };
+  /* ds-badge's warning-coloured state is `important` — it has no `warning`, so the
+     three badges that used to say so silently rendered grey. `moderate` is alert. */
+  const ISSUE_STATE = { failed: 'critical', prereq: 'important', noncompliant: 'critical', reboot: 'important' };
   const ATTN = [
     { id: 1, name: 'FIN-WKS-2043', os: 'Windows 11 Pro', issue: 'failed', rsn: 'bl.rsn.tpm', code: '0x80310018', seen: 'bl.time.12m' },
     { id: 2, name: 'SRV-DC-01', os: 'Server 2019', issue: 'prereq', rsn: 'bl.rsn.feat', code: '', seen: 'bl.time.1h' },
@@ -236,12 +237,23 @@
     setChart('c-prereq', { categories: [t('bl.cat.tpmno'), t('bl.cat.legacy'), t('bl.cat.gpo'), t('bl.cat.wmi'), t('bl.cat.osunsup')], series: [{ name: t('bl.s.devices'), values: [6, 4, 3, 1, 1], color: 'orange' }] });
     setChart('c-escrow', { categories: ['Active Directory', t('bl.cat.ecserver')], series: [{ name: t('bl.s.keys'), values: [96, 42], colors: ['blue', 'green'] }] });
 
-    /* Recent deployments list. */
+    /* Recent deployments list. Rebuilt on every applyStrings() so a language change
+       re-resolves the labels; replaceChildren keeps that idempotent. */
     const deploy = $('deploy-list');
-    if (deploy) deploy.innerHTML = DEPLOYS.map((r) =>
-      `<div class="wl-row"><span class="wl-ico"><ds-icon name="${r.icon}" size="16"></ds-icon></span>`
-      + `<span class="wl-label wl-label--link">${esc(t(r.k))}</span>`
-      + `<ds-badge variant="subtle" state="${r.state}" size="medium" shape="pill" label="${esc(t('bl.st.' + r.badge))}"></ds-badge></div>`).join('');
+    if (deploy) {
+      deploy.classList.add('bl-list');
+      const list = document.createElement('ds-item-list');
+      /* The tile stays neutral — only the trailing chip carries state — so `status`
+         is left at its default rather than tinting the rail. */
+      list.items = DEPLOYS.map((r) => ({
+        lead: 'box',
+        icon: r.icon,
+        text: t(r.k),
+        href: '#',
+        trailing: { badge: { text: t('bl.st.' + r.badge), state: r.state } },
+      }));
+      deploy.replaceChildren(list);
+    }
 
     /* Systems needing attention table. */
     const attn = $('attn-table');

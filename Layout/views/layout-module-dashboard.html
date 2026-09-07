@@ -103,13 +103,11 @@
    lets the plot stretch wide/short instead of scaling by width. */
 #w-contact ds-chart { height: 100%; min-height: 0; }
 
-/* List-widget "collection" rows (icon tile + label + trailing value/badge) —
-   the canonical ds-widget type="list" pattern (Widget.html .wl-row). */
-#mdash-pop .wl-row { display: flex; align-items: center; gap: 12px; padding: 8px 16px; }
-#mdash-pop .wl-ico { width: 28px; height: 28px; border-radius: 8px; background: var(--uems-bg-secondary-alt, #eef1f6); display: inline-flex; align-items: center; justify-content: center; color: var(--uems-icon-secondary, #55607a); flex-shrink: 0; }
-#mdash-pop .wl-label { flex: 1 1 auto; min-width: 0; font-size: 14px; color: var(--uems-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#mdash-pop .wl-label--link { color: var(--uems-text-accent-link, #006aff); cursor: pointer; }
-#mdash-pop .wl-val { flex-shrink: 0; font-size: 14px; font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); }
+/* List widgets are ds-item-list (lead="box"). The row anatomy — tile, label,
+   trailing value or status chip — is the component's now; the host only supplies
+   the inset the widget body expects. ds-item already carries 8px of it, so 8
+   here reproduces the 16px .wl-row used to hardcode. */
+#mdash-pop .md-list { padding-inline: var(--spacing-8); }
 
 @media (max-width: 1200px) {
   .md-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -267,27 +265,43 @@
   setChart('c-drivers', { categories: ['Net', 'Mouse', 'Keyboard', 'System', 'I4IDClass', 'Process', 'fdc', 'USB', 'hdc', 'Ports', 'Display'], series: [{ name: 'Drivers', values: [5, 4, 3, 3, 2, 2, 2, 2, 2, 2, 1] }] });
   setChart('c-cfgsum', { categories: ['Expired', 'Ready to Execute', 'Executed', 'In progress', 'Suspended', 'Retry in progress', 'Draft'], series: [{ name: 'Status', values: [1500, 1300, 864, 744, 643, 465, 245], colors: ['red', 'blue', 'green', 'orange', 'purple', 'charoite', 'grey'] }] });
 
-  /* List widgets (ds-widget type="list" → wl-row collections). A row is either
-     icon+label+value (metrics) or icon+link+status badge (entities). */
-  const rowsHtml = (rows) => rows.map((r) => {
-    const trailing = r.badge
-      ? `<ds-badge variant="subtle" state="${r.state || 'default'}" size="medium" shape="pill" label="${esc(r.badge)}"></ds-badge>`
-      : `<span class="wl-val">${esc(r.val)}</span>`;
-    /* Per-row icon tint + tile background (Figma). Falls back to the CSS default. */
-    const ico = (r.bg || r.color) ? ` style="${r.bg ? `background:${r.bg};` : ''}${r.color ? `color:${r.color};` : ''}"` : '';
-    return `<div class="wl-row"><span class="wl-ico"${ico}><ds-icon name="${r.icon}" size="16"></ds-icon></span>`
-      + `<span class="wl-label${r.link ? ' wl-label--link' : ''}">${esc(r.label)}</span>${trailing}</div>`;
-  }).join('');
-  const setList = (id, rows) => { const el = $(id); if (el) el.innerHTML = rowsHtml(rows); };
+  /* List widgets (ds-widget type="list") are ds-item-list with lead="box". A row is
+     either icon+label+value (metrics) or icon+link+status chip (entities).
 
-  /* Software Summary — icon + tile colors taken from Figma (node 22090:525484). */
+     The tile tint used to be raw hex set inline from data — and those hexes WERE
+     the token values (#E7F3ED is --uems-bg-success-primary, #FDEBEB is
+     --uems-bg-error-primary), so they are now the row's semantic `status` and no
+     hardcoded colour is left in this view. Rows that name no status keep the
+     tile's neutral default, which is all the entity lists ever showed. */
+  const setList = (id, rows) => {
+    const el = $(id);
+    if (!el) return;
+    el.classList.add('md-list');
+    const list = document.createElement('ds-item-list');
+    /* .items, not innerHTML: the component escapes on the data path, so esc() is
+       no longer this view's job for these rows. */
+    list.items = rows.map((r) => ({
+      lead: 'box',
+      icon: r.icon,
+      status: r.status || 'default',
+      text: r.label,
+      ...(r.link ? { href: '#' } : {}),
+      trailing: r.badge ? { badge: { text: r.badge, state: r.state || 'default' } } : r.val,
+    }));
+    el.replaceChildren(list);
+  };
+
+  /* Software Summary. The Figma tile colours (node 22090:525484) map onto the status
+     vocabulary one-for-one, with one exception: "Under Licensed" was #fef8eb, which
+     is --uems-bg-alert-primary (sunshine). There is no `alert` status, so it takes
+     `warning` (persimmon) — the nearest semantic fit, and a visible hue shift. */
   setList('soft-list', [
-    { icon: 'layers', label: 'Total Software', val: '1,289', bg: '#eaf0fc', color: '#2b7fff' },
-    { icon: 'circle-tick', label: 'In Compliance (Licensed)', val: '834', bg: '#e7f3ed', color: '#0c8844' },
-    { icon: 'exclamation-circle', label: 'Over Licensed', val: '89', bg: '#fdebeb', color: '#e42527' },
-    { icon: 'clock', label: 'Under Licensed', val: '42', bg: '#fef8eb', color: '#ff8b4d' },
-    { icon: 'info-circle', label: 'License Expired', val: '15', bg: '#fdebeb', color: '#e42527' },
-    { icon: 'shield', label: 'Prohibited Software', val: '13', bg: '#fdebeb', color: '#e42527' },
+    { icon: 'layers', label: 'Total Software', val: '1,289', status: 'info' },
+    { icon: 'circle-tick', label: 'In Compliance (Licensed)', val: '834', status: 'success' },
+    { icon: 'exclamation-circle', label: 'Over Licensed', val: '89', status: 'critical' },
+    { icon: 'clock', label: 'Under Licensed', val: '42', status: 'warning' },
+    { icon: 'info-circle', label: 'License Expired', val: '15', status: 'critical' },
+    { icon: 'shield', label: 'Prohibited Software', val: '13', status: 'critical' },
   ]);
 
   setList('rc-list', [

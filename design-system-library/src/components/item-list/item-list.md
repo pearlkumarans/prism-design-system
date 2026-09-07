@@ -57,7 +57,7 @@ sites actually use.
 | `.tl-node` | **MIGRATED** | — |
 | `.edition__item` | **MIGRATED** | — (tile normalised to the DS 28px neutral box) |
 | `.act-row` | n/a | serialized JSON data, not markup |
-| `.wl-row` | **fully, pending a colour mapping** | its rail colours are raw hex inline from data; `lead="box"` + `status` now covers them (the hexes *are* the token values — `#E7F3ED` is `--uems-bg-success-primary`) |
+| `.wl-row` | **MIGRATED** | — |
 | `.pu-item` | partly | two category tints (`security`→alert, `integration`→accent) still have no `status` equivalent |
 | `.srch-row` | no | `<mark>` highlighting, **and** the whole row is `cursor:pointer` clickable — which this component deliberately refuses |
 | `.hd-lib-row` | no | each row is a **bordered tile** (1px border + 8px radius), not a flat divided row |
@@ -71,6 +71,8 @@ sites actually use.
 | `.tl-node` ×6 rows | `variant="timeline"` `timeline-marker="dot"`, `output` + `mono` | `projects/deployments/layout-deployment-device.html` |
 | `.hd-act-row` ×9 rows | `size="small" divider="dashed"`, `lead="circle"` + `status`, `badge` + `meta`, `action` | `projects/screens/home-dashboard.html` |
 | `.edition__item` ×3 rows | `lead="box"`, `text` + `description` | `projects/screens/osd-cloud-storage.html` |
+| `.wl-row` ×3 lists (18 rows) | `lead="box"` + `status`, `trailing` value **or** `{ badge }`, `href` | `Layout/views/layout-module-dashboard.html` |
+| `.wl-row` ×1 list (5 rows) | same, chip-only trailing | `projects/bitlocker/layout-summary-dashboard.html` |
 
 Two things learned doing it, both worth knowing before the next call site:
 
@@ -83,6 +85,17 @@ Two things learned doing it, both worth knowing before the next call site:
   list came back empty until the handler re-seeded `items` from the source (and
   dropped the duplicated `id`). Any page that clones markup containing a
   `ds-item-list` has to do the same.
+- **`.wl-row` was hiding hardcoded colour.** Its rail tint was raw hex set inline
+  from data — and the hex *was* the token value, so `lead="box"` + `status` renders
+  five of the six tiles pixel-identical (`#EAF0FC`, `#E7F3ED`, `#FDEBEB` all match
+  exactly) while deleting eight hardcoded colours from two views. The sixth,
+  "Under Licensed", was `#FEF8EB` = `--uems-bg-alert-primary`; with no `alert`
+  status it takes `warning` (`#FFEEE5`), a deliberate and visible hue shift.
+- **Migrating found three badges rendering the wrong colour.** The BitLocker view
+  asked for `state="warning"`, which `ds-badge` does not have — it warned once
+  (deduped) and silently painted three chips grey: "In progress", "Prereq failed",
+  "Pending reboot". `important` is its warning-coloured state. Same mistake class
+  as the three visual-regression tests; worth grepping for on any new call site.
 
 ### Closed
 
