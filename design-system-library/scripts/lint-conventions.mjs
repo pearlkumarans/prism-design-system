@@ -9,7 +9,8 @@
      in an HTML string it must be escaped.
      ALLOWED (not flagged): values wrapped in escapeHtml() / esc() / CSS.escape()
      / an inline .replace(); a base var assigned via one of those earlier in the
-     file; ids/uids/state/geometry/pre-built-markup vars; a `// lint-ok` on the line.
+     file; ids/uids/state/geometry/pre-built-markup vars; arguments to a console.*
+     call (a warning string is not a DOM sink); a `// lint-ok` on the line.
 
    RULE 2 — no-local-css-injector (the shared-helper class)
      Flags a component that hand-rolls the light-DOM stylesheet injector
@@ -210,6 +211,14 @@ for (const file of files) {
       if (!isTainted) continue;
       const line = code.slice(0, m.index).split('\n').length;
       if (/\/\/\s*lint-ok/.test(src.split('\n')[line - 1] || '')) continue;
+      /* A console argument is not an innerHTML sink. The house warning shape —
+         console.warn(`[ds] Unknown size="${raw}" — expected one of […]`) — reads
+         as an attr sink to ATTR_SINK but never reaches the DOM; enumAttr owns it
+         for most components and radio hand-rolls it because it accepts aliases.
+         Tested on the text BEFORE the match, and only while no ')' has closed the
+         call, so a genuine sink later on the same line still fires. */
+      const lineStart = code.lastIndexOf('\n', m.index - 1) + 1;
+      if (/console\.\w+\s*\([^)]*$/.test(code.slice(lineStart, m.index))) continue;
       violations.push({ rel, line, kind, expr: expr.slice(0, 50) });
     }
   };

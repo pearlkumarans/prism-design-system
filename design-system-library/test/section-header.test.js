@@ -114,6 +114,44 @@ describe('ds-section-header — action', () => {
     const el = await fixture(html`<ds-section-header title="T" show-action="false" action-label="Manage"></ds-section-header>`);
     expect(el.querySelector('.ds-section-header__action')).to.not.exist;
   });
+
+  it('warns, rather than silently dropping, a slotted action with no show-action', async () => {
+    /* The host's children are emptied during render, so without show-action there
+       is no action region for the captured node to return to and the element leaves
+       the DOM. A page doing getElementById on it then gets null — which is exactly
+       how this was found. The opt-in stays required; it just says so now. */
+    const seen = [];
+    const orig = console.warn;
+    console.warn = (...a) => { seen.push(String(a[0])); };
+    try {
+      const el = await fixture(html`
+        <ds-section-header title="T">
+          <button slot="action" id="dropped-act">Go</button>
+        </ds-section-header>`);
+      await nextFrame();
+      expect(el.querySelector('#dropped-act'), 'still dropped — documented behaviour').to.not.exist;
+      expect(seen.some((m) => /slot="action".*show-action/.test(m)), 'but warned about it').to.be.true;
+    } finally {
+      console.warn = orig;
+    }
+  });
+
+  it('stays silent when the slotted action is opted in', async () => {
+    const seen = [];
+    const orig = console.warn;
+    console.warn = (...a) => { seen.push(String(a[0])); };
+    try {
+      const el = await fixture(html`
+        <ds-section-header title="T" show-action>
+          <button slot="action" id="kept-act">Go</button>
+        </ds-section-header>`);
+      await nextFrame();
+      expect(el.querySelector('.ds-section-header__action #kept-act')).to.exist;
+      expect(seen.filter((m) => /show-action/.test(m)), 'no warning').to.have.lengthOf(0);
+    } finally {
+      console.warn = orig;
+    }
+  });
 });
 
 describe('ds-section-header — reactivity', () => {

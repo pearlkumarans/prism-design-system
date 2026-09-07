@@ -10,12 +10,17 @@ list group, or modal body section. Not the page-level Page Header.
 | `divider` | `none` \| `bottom` \| `both` | `none` (full-width rule, Border-Secondary) |
 | `title` | string | `Section Title` |
 | `description` | string | — (shown only for `with-description` / `with-border`) |
-| `action-label` | string | — renders a default `ds-text-link` |
-| `show-action` | `false` to hide | shown when `action-label` (or a slotted action) is set |
+| `action-label` | string | — the label for the default `ds-text-link` |
+| `show-action` | boolean | **off.** Required to render the action *at all* — a label alone does not, and neither does a slotted action |
 | `heading-level` | `1`–`6` | derived from size (large → `h2`, medium → `h3`, small → `h4`) |
 | `rtl` | boolean | — |
 
 Slot `action` to drop in a custom button/link instead of the default text link.
+
+**`show-action` is required either way.** Without it there is no action region, and
+because the host's children are emptied during render a slotted `[slot="action"]`
+element is dropped from the DOM entirely — `getElementById` on it then returns
+`null`. The component warns when that happens.
 
 ## Styles
 

@@ -127,6 +127,20 @@ export class DsSectionHeader extends HTMLElement {
       ${(showDesc && isBorder) ? descHtml : ''}
     `;
 
+    /* A slotted action with no `show-action` is a silent data-loss trap: the host's
+       children were emptied above and the captured node then has nowhere to go, so
+       the element simply vanishes from the DOM — a page that later does
+       getElementById on it gets null. Keeping the flag required (an explicit opt-in
+       is the documented contract), but say so instead of swallowing it. */
+    if (!showAction && this._slottedAction && !this._warnedNoShowAction) {
+      this._warnedNoShowAction = true;
+      if (typeof console !== 'undefined') {
+        console.warn('[ds] ds-section-header has a [slot="action"] but no `show-action` '
+          + '— the action region is not rendered and the slotted element is dropped. '
+          + 'Add show-action to render it.', this);
+      }
+    }
+
     if (showAction) {
       const slot = this._root.querySelector('[data-action-slot]');
       if (this._slottedAction) {
