@@ -50,6 +50,46 @@ spacing, fonts, radii, or shadows.
   global component anatomy using design-system tokens only (no hardcoded values), matching the
   conventions of the existing `ds-*` components.
 
+## Component docs (hard rule)
+
+A change to a `ds-*` component is **not done** until its documentation is updated in the
+same pass. Code alone does not deliver a feature — docs are how the team finds it. Update:
+
+- **`docs/<Component>.html`** — the live docs page: demo/preview, the API table, the
+  keyboard + accessibility tables, and events. **The filename does not always match the
+  tag** (`ds-dropdown-menu` → `docs/Dropdown.html`, `ds-item-list` → `docs/Item-list.html`).
+- **`design-system-library/src/components/<name>/<name>.md`** — the component spec.
+- **`docs/MD/<name>.md`** — usually a **different document**, not a copy. Of the 43 pairs
+  that exist on both sides, **32 differ** and only 11 match; 24 more specs have no
+  `docs/MD` twin at all. `diff` them before touching either, and **never `cp` one over the
+  other** — that silently destroys a separate handoff doc (popover's was 181 lines of
+  Anatomy / States / Motion / Design Tokens; it got overwritten by the 87-line src spec).
+  Edit each in place. Equal line counts do not mean equal content.
+
+`<name>.examples.html` is a dev harness, **not** a substitute for the docs page.
+
+Two things that bite when adding a *new* docs page:
+
+- It renders **completely unstyled** until a `.page-<name>` block is cloned into
+  `docs/css/common/components.css`. That stylesheet is duplicated per page and has no
+  shared base, so a body class with no block gets zero layout. The file documents the
+  workflow in its own section comments (`/* ===== Cloned from … ===== */`). Verify by
+  checking `.components-layout` computes to `grid`, not `block`.
+- Its sidebar entry must be added to **every** component docs page (66 carry that sidebar
+  today), and a card added to `docs/Components.html`.
+
+### docs/ is git-ignored (since 2026-09-07)
+
+The rule above still stands — **write the files** — but they are no longer tracked, so they
+will not appear in `git status` and cannot be committed. Consequences to keep in mind:
+
+- The docs site is deployed by **copying `docs/` and `design-system-library/` side by side**
+  onto the docs server (they must be siblings — docs pages reference the library as
+  `../design-system-library/…`). It is not deployed by `git pull`.
+- A fresh clone has **no `docs/` at all**. Do not assume a teammate can see your docs work.
+- Recover the last tracked copy with
+  `git checkout docs-tracked-before-untrack -- docs`.
+
 ## Skills — routing
 
 Match the prompt to the right skill (full guide + chaining in
