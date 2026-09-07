@@ -21,18 +21,20 @@ This is not `ds-list`. `ds-list` is a bulleted/numbered prose list — markers a
 text. `ds-item-list` is a record list — status, metadata, and an action per row.
 They share no anatomy, and neither replaces the other.
 
-### The evidence — six shapes across 23 files
+### The evidence — six shapes
 
 Audited 2026-09-06 by reading every call site, not by pattern-matching class names.
 Counts are files carrying the markup, excluding `docs/` and build output.
+**Re-counted 2026-09-07 during the migration; three rows below were wrong and are
+corrected in place.**
 
 | Call site | Class | Files | Rail | Notes |
 |---|---|---:|---|---|
 | Home dashboard — recent activity | `.hd-act-row` | 1 | tinted circle 28 | `ds-badge` + time in the meta line, `ds-text-link` trailing |
-| Enrollment dashboard | `.act-row` | 1 | tinted circle **24** | a *separate* hand-roll, not a copy of `.hd-act-row`; uses local CSS vars, not tokens |
-| Watchlist / stat rows | `.wl-row` | **16** | rounded tile 28 | the dominant shape. Trailing is a **static value** or a `ds-badge` — not an action. Per-row icon colour is set inline from data |
+| Enrollment dashboard | `.act-row` | 1 | tinted circle **24** | **not live markup** — it exists only inside a serialized saved-dashboard JSON payload in `ec-custom-dashboard.html`. Not a migration target: that is stored data, not a call site |
+| Watchlist / stat rows | `.wl-row` | 2 | rounded tile 28 | **was claimed as 16 files; it is 2** (6 occurrences). Trailing is a **static value** or a `ds-badge` — not an action. Per-row icon colour is set inline from data |
 | Pending updates | `.pu-item` | 1 | rounded tile **34** | badge **above** the title, inline link in the body, grouped under `.pu-ghead` date headers. Tints are *categories* (platform/performance/feature), not our five statuses |
-| App search results | `.as-row` | 1 | rounded tile | titles carry `<mark>` **search highlighting** |
+| ~~App search results~~ | `.as-row` | **0** | — | **does not exist.** No file in `projects/` or `Layout/views` carries this class; the original audit invented it |
 | Global search results | `.srch-row` | 1 | rounded tile | `<mark>` highlighting; trailing is a static value **or** a `ds-badge`; grouped under `.srch-sec__head` |
 | Execution timeline | `.tl-node` | 2 | dot + connector | 32px indent, `::before` line. Body text can be **monospace** command output |
 
@@ -51,13 +53,36 @@ sites actually use.
 
 | Call site | Covered | Blocked on |
 |---|---|---|
-| `.hd-act-row` | **fully** (slot + data) | — |
-| `.act-row` | **fully**, at 28px instead of 24 | a deliberate normalisation, not a gap |
-| `.tl-node` | **fully** (slot + data) | — |
-| `.wl-row` | **fully**, except colour | per-row icon colour set inline from data |
-| `.pu-item` | partly | date-group headers; 34px rail; category tints |
-| `.as-row` | partly | `<mark>` search highlighting |
-| `.srch-row` | partly | `<mark>` highlighting; section headers |
+| `.hd-act-row` | **MIGRATED** | — |
+| `.tl-node` | **MIGRATED** | — |
+| `.edition__item` | **MIGRATED** | — (tile normalised to the DS 28px neutral box) |
+| `.act-row` | n/a | serialized JSON data, not markup |
+| `.wl-row` | all but two details | per-row icon colour; `ds-badge shape="pill"` is not passed through |
+| `.pu-item` | partly | two category tints (`security`→alert, `integration`→accent) have no `status`; `ds-badge shape` |
+| `.srch-row` | no | `<mark>` highlighting, **and** the whole row is `cursor:pointer` clickable — which this component deliberately refuses |
+| `.hd-lib-row` | no | each row is a **bordered tile** (1px border + 8px radius), not a flat divided row |
+| `.sup-upg__item` | no | `ds-badge shape="rounded"`; an extra error sub-block under the meta line |
+| `.as-row` | n/a | does not exist |
+
+### Migrated (2026-09-07)
+
+| Was | Now | Where |
+|---|---|---|
+| `.tl-node` ×6 rows | `variant="timeline"` `timeline-marker="dot"`, `output` + `mono` | `projects/deployments/layout-deployment-device.html` |
+| `.hd-act-row` ×9 rows | `size="small" divider="dashed"`, `lead="circle"` + `status`, `badge` + `meta`, `action` | `projects/screens/home-dashboard.html` |
+| `.edition__item` ×3 rows | `lead="box"`, `text` + `description` | `projects/screens/osd-cloud-storage.html` |
+
+Two things learned doing it, both worth knowing before the next call site:
+
+- **A row's disc tint and its badge state are independent.** Recent Activity pairs a
+  green "enrolled" disc with a grey `macOS` platform chip, so those rows name
+  `badge.state` explicitly instead of letting it follow `status`. Had they relied on
+  the `status`→badge mapping, three of nine chips would have changed colour.
+- **`items` is a property, not an attribute, so it does not survive `cloneNode`.**
+  Home dashboard's Edit Layout duplicates a widget by cloning its card; the cloned
+  list came back empty until the handler re-seeded `items` from the source (and
+  dropped the duplicated `id`). Any page that clones markup containing a
+  `ds-item-list` has to do the same.
 
 ### Closed
 

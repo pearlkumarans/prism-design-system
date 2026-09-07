@@ -88,14 +88,10 @@
     .auto__body { margin-top: var(--spacing-16); display: none; }
     .panel[data-on="true"] .auto__body { display: block; }
 
-    /* Edition explainer list */
-    .edition { display: flex; flex-direction: column; gap: var(--spacing-12); }
-    .edition__item { display: flex; gap: var(--spacing-12); }
-    .edition__ico { flex-shrink: 0; width: 32px; height: 32px; border-radius: var(--radius-sm, 8px);
-      display: inline-flex; align-items: center; justify-content: center;
-      background: var(--uems-bg-accent-primary-subtle); color: var(--uems-icon-accent, var(--uems-text-accent-link)); }
-    .edition__t { margin: 0; font-size: var(--font-size-13); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
-    .edition__d { margin: 3px 0 0; font-size: var(--font-size-12); color: var(--uems-text-secondary); line-height: 1.5; }
+    /* The edition explainer is ds-item-list with lead="box" — the icon tile, the
+       title and the description are all the component's, so the .edition__*
+       anatomy is gone. The tile is the design system's neutral 28px box rather
+       than the accent-tinted 32px one this page used to draw by hand. */
 
     .table-wrap { display: flex; flex-direction: column; }
     .img-name { display: inline-flex; align-items: center; gap: var(--spacing-8); }
@@ -211,29 +207,7 @@
             <section class="panel">
               <ds-section-header size="medium" title="What happens to my storage"
                 description="How your cloud storage limit changes across account states."></ds-section-header>
-              <div class="edition">
-                <div class="edition__item">
-                  <span class="edition__ico"><ds-icon name="ticket" size="18"></ds-icon></span>
-                  <div>
-                    <p class="edition__t">Trial → Active customer</p>
-                    <p class="edition__d">The 30 GB you evaluated with continues with your subscription. Buy extra storage any time if you need more for image replication.</p>
-                  </div>
-                </div>
-                <div class="edition__item">
-                  <span class="edition__ico"><ds-icon name="exclamation-triangle" size="18"></ds-icon></span>
-                  <div>
-                    <p class="edition__t">Trial → Free / Active → Free</p>
-                    <p class="edition__d">The limit drops to 1 GB. You can still access and use everything already uploaded, but new uploads and image replications are blocked until you buy an add-on or clean up.</p>
-                  </div>
-                </div>
-                <div class="edition__item">
-                  <span class="edition__ico"><ds-icon name="delete" size="18"></ds-icon></span>
-                  <div>
-                    <p class="edition__t">Dormant beyond 6 months</p>
-                    <p class="edition__d">A free account left dormant for more than 6 months is deleted by default, and its cloud storage is cleaned up during deletion.</p>
-                  </div>
-                </div>
-              </div>
+              <ds-item-list id="osd-edition-list" size="small"></ds-item-list>
             </section>
 
           </div>
@@ -309,6 +283,16 @@
       <ds-progress-bar variant="${m.variant}" size="medium" value="${(m.gb / TOTAL * 100).toFixed(1)}" max="100" show-label="false"></ds-progress-bar>
       <span class="mod__val">${m.gb.toFixed(1)} GB</span>
     </div>`).join('');
+
+  /* ── Edition explainer (ds-item-list, lead="box") ── */
+  document.getElementById('osd-edition-list').items = [
+    { lead: 'box', icon: 'ticket', text: 'Trial → Active customer',
+      description: 'The 30 GB you evaluated with continues with your subscription. Buy extra storage any time if you need more for image replication.' },
+    { lead: 'box', icon: 'exclamation-triangle', text: 'Trial → Free / Active → Free',
+      description: 'The limit drops to 1 GB. You can still access and use everything already uploaded, but new uploads and image replications are blocked until you buy an add-on or clean up.' },
+    { lead: 'box', icon: 'delete', text: 'Dormant beyond 6 months',
+      description: 'A free account left dormant for more than 6 months is deleted by default, and its cloud storage is cleaned up during deletion.' },
+  ];
 
   /* ── Auto-cleanup select ── */
   customElements.whenDefined('ds-input-select').then(() => {

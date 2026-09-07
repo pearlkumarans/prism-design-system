@@ -73,24 +73,10 @@
 }
 #dep-device-pop .tl-close:hover { background: var(--uems-bg-secondary-hover); }
 #dep-device-pop .tl-body { flex: 1 1 auto; overflow: auto; padding: 20px; }
-#dep-device-pop .tl-node { position: relative; padding-inline-start: 32px; padding-bottom: 20px; }
-#dep-device-pop .tl-node:not(:last-child)::before {
-  content: ''; position: absolute; left: 9px; top: 20px; bottom: 0; width: 2px; background: var(--uems-border-tertiary);
-}
-#dep-device-pop .tl-dot { position: absolute; left: 3px; top: 4px; width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 0 3px var(--uems-bg-primary); }
-#dep-device-pop .tl-dot.g { background: var(--uems-bg-success-solid, #16a34a); }
-#dep-device-pop .tl-dot.r { background: var(--uems-bg-error-solid, #dc2626); }
-#dep-device-pop .tl-dot.o { background: var(--uems-bg-info-solid, #2563eb); animation: dp-pulse 1.4s ease-in-out infinite; }
-#dep-device-pop .tl-dot.n { background: var(--uems-bg-secondary-solid, #94a3b8); }
-@keyframes dp-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
-#dep-device-pop .tl-title { font-size: 13px; font-weight: 600; color: var(--uems-text-primary); }
-#dep-device-pop .tl-out {
-  margin-top: 8px; padding: 10px 12px; border-radius: 6px;
-  background: var(--uems-bg-secondary-subtle);
-  font-size: 12px; color: var(--uems-text-secondary);
-  white-space: pre-wrap;
-}
-#dep-device-pop .tl-out.mono { font-family: ui-monospace, 'SF Mono', Consolas, monospace; color: var(--uems-text-primary); }
+/* The stage timeline is ds-item-list variant="timeline" — the connector, the
+   status-tinted dot and the mono output block are all the component's, so the
+   hand-rolled .tl-node/.tl-dot/.tl-title/.tl-out rules (and the dp-pulse
+   keyframes that only tinted .tl-dot.o) are gone with it. */
 </style>
 
 <div id="dep-device-pop" class="lay-root" hidden>
@@ -224,14 +210,25 @@
   });
 
   /* ---- Panel ---------------------------------------------------------- */
+  /* The dot letters are this view's shorthand; ds-item-list tints the marker from
+     the row's semantic status, so map once here rather than styling dots by hand. */
+  const TL_STATUS = { g: 'success', r: 'critical', o: 'info', n: 'default' };
+
   function renderTimeline() {
-    const parts = TIMELINE.map((n) =>
-      `<div class="tl-node">
-         <span class="tl-dot ${n.d}"></span>
-         <div class="tl-title">${esc(n.t)}</div>
-         <div class="tl-out ${n.mono ? 'mono' : ''}">${esc(n.out)}</div>
-       </div>`).join('');
-    $('dv-panel-body').innerHTML = parts;
+    const body = $('dv-panel-body');
+    if (!body) return;
+    const list = document.createElement('ds-item-list');
+    list.setAttribute('variant', 'timeline');
+    list.setAttribute('timeline-marker', 'dot');
+    /* .items, not innerHTML: the component escapes on the data path (output goes
+       in via textContent), so esc() is no longer this view's job. */
+    list.items = TIMELINE.map((n) => ({
+      text: n.t,
+      status: TL_STATUS[n.d] || 'default',
+      output: n.out,
+      mono: !!n.mono,
+    }));
+    body.replaceChildren(list);
     $('dv-panel-badge').innerHTML = badge('Failed');
   }
   function openPanel() {

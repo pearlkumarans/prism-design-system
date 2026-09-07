@@ -10,9 +10,11 @@
 
    A stacked list of things — activity, approvals, search hits, release notes,
    execution steps. Three regions per row: a LEADING RAIL, CONTENT, and TRAILING.
-   Replaces eight hand-rolled copies of the same shape across the product
-   (.hd-act-row, .act-row, .wl-row ×16, .pu-item, .as-row, .srch-row, .tl-node —
-   23 files; see item-list.md for the audit and the gaps that remain).
+   Replaces the hand-rolled copies of this shape across the product. Migrated so
+   far: .hd-act-row (home dashboard), .tl-node (device execution timeline) and
+   .edition__item (OSD cloud storage). Still hand-rolled, each for a named reason
+   — .wl-row, .pu-item, .srch-row, .hd-lib-row, .sup-upg__item; see item-list.md
+   for the audit, the migration notes and the gaps that remain.
 
    `variant="timeline"` keeps the identical DOM and only re-dresses the rail, plus
    a connector drawn between rows. `timeline-marker` picks the marker: `dot` (the
