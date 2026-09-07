@@ -73,8 +73,27 @@ failure, not an auto-create. Check with:
 diff <(ls screenshots/Chrome-darwin/baseline) <(ls screenshots/Chrome-linux/baseline)
 ```
 
-The `failureThreshold` (0.15%) absorbs sub-pixel AA noise; tighten it toward 0
-once baselines are stable on the runner.
+### Two thresholds, not one
+
+A visual change has to clear **both** knobs in `web-test-runner.visual.config.js`
+to fail a test, and they measure different things:
+
+| knob | question | value |
+|---|---|---|
+| `diffOptions.threshold` | how different must *one pixel* be to be counted? | `0.05` |
+| `failureThreshold` | how many counted pixels may differ before failing? | `0.15%` of area |
+
+The per-pixel one matters more than it looks. pixelmatch's default of `0.1` is a
+YIQ cutoff of 35215 x 0.1² = 352, and it silently swallowed a real bug: swapping
+the badge background from `--uems-bg-warning-primary` (#FFEEE5) to
+`--uems-bg-success-primary` (#E7F3ED) is a delta of just **110**, so every pixel
+of a wrong-coloured badge counted as *unchanged* and the suite stayed green.
+Two pale tints read as obviously different to a person and near-identical to the
+default cutoff. At `0.05` (cutoff 88) that same swap fails at 69% different.
+
+Free on CI: the runner's renders were byte-identical across separate runs, so
+zero pixels differ at any threshold. `failureThreshold` still absorbs local
+macOS AA noise; tighten it toward 0 once baselines live on a pinned CI image.
 
 ### Assert real values
 

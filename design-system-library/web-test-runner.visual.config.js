@@ -49,9 +49,23 @@ export default {
   plugins: [
     visualRegressionPlugin({
       update: process.argv.includes('--update-visual-baseline'),
-      /* Allow a hair of AA/subpixel noise so a re-render on the same machine is
-         green, while any real visual change (a moved box, a wrong colour) still
-         trips it. Tighten toward 0 once baselines live on a pinned CI image. */
+      /* TWO INDEPENDENT KNOBS -- both have to be passed to catch a real change.
+
+         diffOptions.threshold is PER PIXEL: how different two pixels must be
+         before pixelmatch counts one at all. pixelmatch's own default is 0.1,
+         which converts to a YIQ cutoff of 35215 x 0.1^2 = 352. That silently
+         swallowed a genuine bug: swapping the badge's background token from
+         --uems-bg-warning-primary (#FFEEE5) to --uems-bg-success-primary
+         (#E7F3ED) is a delta of only 110, so every pixel of a wrong-coloured
+         badge counted as unchanged and the suite stayed green. Two pale tints
+         are far apart to a human and nearly identical to the default cutoff.
+         0.05 => cutoff 88, which flags it. Free on CI: the runner's renders are
+         byte-identical across runs, so zero pixels differ at any threshold. */
+      diffOptions: { threshold: 0.05 },
+      /* failureThreshold is the AREA allowance: having counted the differing
+         pixels, how many may differ before the test fails. Keeps a hair of
+         AA/subpixel noise from failing a re-render on the same machine.
+         Tighten toward 0 once baselines live on a pinned CI image. */
       failureThreshold: 0.15,          // ≤0.15% of pixels may differ
       failureThresholdType: 'percent',
       getBaselineName: nameFor('baseline'),
