@@ -57,11 +57,11 @@ sites actually use.
 | `.tl-node` | **MIGRATED** | — |
 | `.edition__item` | **MIGRATED** | — (tile normalised to the DS 28px neutral box) |
 | `.act-row` | n/a | serialized JSON data, not markup |
-| `.wl-row` | all but two details | per-row icon colour; `ds-badge shape="pill"` is not passed through |
-| `.pu-item` | partly | two category tints (`security`→alert, `integration`→accent) have no `status`; `ds-badge shape` |
+| `.wl-row` | **fully, pending a colour mapping** | its rail colours are raw hex inline from data; `lead="box"` + `status` now covers them (the hexes *are* the token values — `#E7F3ED` is `--uems-bg-success-primary`) |
+| `.pu-item` | partly | two category tints (`security`→alert, `integration`→accent) still have no `status` equivalent |
 | `.srch-row` | no | `<mark>` highlighting, **and** the whole row is `cursor:pointer` clickable — which this component deliberately refuses |
 | `.hd-lib-row` | no | each row is a **bordered tile** (1px border + 8px radius), not a flat divided row |
-| `.sup-upg__item` | no | `ds-badge shape="rounded"`; an extra error sub-block under the meta line |
+| `.sup-upg__item` | partly | an extra error sub-block under the meta line (its `shape="rounded"` badge is now expressible) |
 | `.as-row` | n/a | does not exist |
 
 ### Migrated (2026-09-07)
@@ -88,7 +88,17 @@ Two things learned doing it, both worth knowing before the next call site:
 
 - **Trailing static value or badge, from data** — `trailing: '412' | { text } | { badge }`.
   A value, not a control: no focus stop, no accessible name, no pointer. This unblocked
-  `.wl-row` (16 files) and `.srch-row`'s trailing column.
+  `.wl-row` and `.srch-row`'s trailing column.
+- **A tintable `box` rail** (2026-09-07) — `circle` and `box` now share one `status` tint
+  ladder, so shape and colour are independent choices and a tinted rounded tile no longer
+  means hand-rolling one. `box` keeps its own darker default icon rather than joining the
+  ladder at `default`, so the change is purely additive: nothing already on a page moved.
+  It also corrected two of this component's *own* docs demos, which passed
+  `lead: 'box', status: 'critical'` and had been silently rendering grey.
+- **`ds-badge` shape passthrough** (2026-09-07) — `badge: { shape: 'rounded' }` reaches
+  `ds-badge`. Omit it and `ds-badge` keeps its own `pill` default, which is why `.wl-row`'s
+  `shape="pill"` never actually needed this — an earlier note here claiming otherwise was
+  wrong. `.pu-item` and `.sup-upg__item` are the real callers.
 - **Monospace output** — `output: '…'` renders a `pre-wrap` block (newlines and alignment
   are the content), and `mono: true` switches it to the monospace stack, matching `.tl-out`.
 - **Inline body link** — `link: 'Read more'` puts a continuation link at the end of the
@@ -104,9 +114,11 @@ Two things learned doing it, both worth knowing before the next call site:
 2. **Group headers.** `.pu-item` sits under date headers and `.srch-row` under section
    headers. There is no grouping layer at all — the component renders a flat list. This is
    the same requirement listed above as the trigger for splitting `timeline` out.
-3. **Per-row icon colour.** `.wl-row` sets the rail's colours inline from data. The
-   component offers five semantic statuses, by design. Migration means mapping those
-   colours to statuses — a content decision, not a code one.
+3. **Category tints that are not statuses.** Mostly closed: `box` is now tintable, so
+   `.wl-row`'s inline rail colours map onto the five semantic statuses (they are literally
+   the same token values). What remains is genuinely out of scope — `.pu-item` tints by
+   *category* (`security`, `integration`), and a category is not a status. Those two want
+   either a `slots.leading` tile or an accent vocabulary this component should not invent.
 
 Gap 1 needs a design decision, gap 2 is a new structural layer, and gap 3 is a
 data-mapping exercise per call site.

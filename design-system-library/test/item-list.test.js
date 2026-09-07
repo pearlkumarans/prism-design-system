@@ -111,6 +111,32 @@ describe('ds-item-list', () => {
     expect(rows(bare)[0].classList.contains('ds-item--lead-none')).to.be.true;
   });
 
+  it('tints a box rail from the row status, exactly as circle does', async () => {
+    /* box and circle differ in SHAPE only. Before this, box had one fixed grey
+       look, so a tinted rounded tile (.pu-item's category tiles) had to be
+       hand-rolled. Compared against circle rather than a hardcoded colour: the
+       point is that the two rails agree, not what the token happens to be. */
+    const bg = async (lead, status) => {
+      const el = await mk([{ text: 'x', icon: 'user', lead, status }]);
+      return getComputedStyle(el.querySelector('.ds-item__lead')).backgroundColor;
+    };
+    for (const status of ['info', 'success', 'warning', 'critical']) {
+      const box = await bg('box', status);
+      expect(box, `box/${status} must match circle/${status}`).to.equal(await bg('circle', status));
+      expect(box, `box/${status} must not stay the untinted grey`).to.not.equal(await bg('box', 'default'));
+    }
+  });
+
+  it('leaves the box rail default untinted, so existing rows do not move', async () => {
+    /* box keeps its own darker default icon rather than joining the ladder at
+       `default` — adding the tints must not restyle anything already shipped. */
+    const el = await mk([{ text: 'x', icon: 'user', lead: 'box' }]);
+    const lead = getComputedStyle(el.querySelector('.ds-item__lead'));
+    const circle = await mk([{ text: 'x', icon: 'user', lead: 'circle' }]);
+    expect(lead.color, 'box default icon stays icon-secondary, not the circle ladder tertiary')
+      .to.not.equal(getComputedStyle(circle.querySelector('.ds-item__lead')).color);
+  });
+
   it('carries the status as a class, and never by colour alone', async () => {
     const el = await mk([{ text: 'Agent lost connection', icon: 'exclamation-circle', status: 'critical' }]);
     const row = rows(el)[0];
@@ -205,6 +231,16 @@ describe('ds-item-list', () => {
     it('lets an explicit badge state override the row status', async () => {
       const el = await mk([{ text: 'Row', status: 'critical', badge: { text: 'Info', state: 'active' } }]);
       expect(el.querySelector('ds-badge').getAttribute('state')).to.equal('active');
+    });
+
+    it('passes an explicit badge shape through, and otherwise leaves it to ds-badge', async () => {
+      /* .pu-item and .sup-upg__item use shape="rounded"; pill is ds-badge's own
+         default, so we set nothing when the call site says nothing. */
+      const rounded = await mk([{ text: 'Row', badge: { text: 'Security', shape: 'rounded' } }]);
+      expect(rounded.querySelector('ds-badge').getAttribute('shape')).to.equal('rounded');
+      const plain = await mk([{ text: 'Row', badge: 'Security' }]);
+      expect(plain.querySelector('ds-badge').hasAttribute('shape'),
+        'no shape attribute, so ds-badge keeps its own default').to.be.false;
     });
 
     it('renders the meta strip for a badge with no meta text', async () => {

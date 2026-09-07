@@ -33,7 +33,7 @@
    Items come from slotted <ds-item> children OR the `items` property:
 
      list.items = [{ text, description, icon, status, lead, meta, href,
-                     badge:    'Security' | { text, state, variant, icon },
+                     badge:    'Security' | { text, state, variant, size, shape, icon },
                      trailing: '412' | { text } | { badge },   // a VALUE, not a control
                      link:     'Read more' | { text, href, icon },  // inline, ends the body
                      output:   'stdout…', mono: true,          // command output block
@@ -381,6 +381,10 @@ export class DsItemList extends HTMLElement {
        trailing column is the row's headline value and matches .wl-row's medium.
        An explicit `size` still wins. */
     el.setAttribute('size', spec.size || defaultSize || 'small');
+    /* Shape is ds-badge's own choice to make (it defaults to `pill`); we only pass
+       it through so a call site that needs `rounded` — .pu-item's category chips,
+       .sup-upg__item's build status — does not have to hand-roll the badge. */
+    if (spec.shape) el.setAttribute('shape', spec.shape);
     if (spec.icon) el.setAttribute('icon', spec.icon);
     /* `label`, not textContent — ds-badge re-renders its own chrome. */
     if (spec.text) el.setAttribute('label', spec.text);
