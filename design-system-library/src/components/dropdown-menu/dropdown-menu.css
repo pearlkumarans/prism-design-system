@@ -159,9 +159,51 @@ hr.ds-dropdown-menu__divider {
   outline: 2px solid var(--uems-border-accent-focus);
   outline-offset: -2px;
 }
-.ds-dropdown-menu__item[aria-disabled="true"] {
+/* ---- Disabled row ---------------------------------------------------
+   The whole row has to read as unavailable, not just its label. Every part that
+   carries its own colour is muted here, and the hover/active washes are removed
+   — a row that lights up on hover reads as clickable no matter how grey the text
+   is, which is the tell that used to make these look merely low-contrast.
+   `danger` and `selected` are overridden too: an unavailable Delete must not
+   stay red, and an unavailable selected row must not stay accented. */
+.ds-dropdown-menu__item[aria-disabled="true"],
+.ds-dropdown-menu__item[aria-disabled="true"] .ds-dropdown-menu__item-label,
+.ds-dropdown-menu__item[aria-disabled="true"] .ds-dropdown-menu__item-description,
+.ds-dropdown-menu__item[aria-disabled="true"] .ds-dropdown-menu__item-shortcut,
+.ds-dropdown-menu__item[aria-disabled="true"] .ds-dropdown-menu__item-icon,
+.ds-dropdown-menu__item[aria-disabled="true"] .ds-dropdown-menu__item-chevron,
+.ds-dropdown-menu__item[aria-disabled="true"] .ds-dropdown-menu__tick,
+.ds-dropdown-menu__item--danger[aria-disabled="true"],
+.ds-dropdown-menu__item--danger[aria-disabled="true"] .ds-dropdown-menu__item-icon,
+/* The selected wash is applied through aria-checked / aria-selected further down
+   the file at the SAME specificity, so it would win on source order alone.
+   Pairing the attributes here outranks it instead of relying on position. */
+.ds-dropdown-menu__item[aria-disabled="true"][aria-checked="true"],
+.ds-dropdown-menu__item[aria-disabled="true"][aria-selected="true"],
+.ds-dropdown-menu__item--selected[aria-disabled="true"] {
   color: var(--uems-text-disabled);
+}
+/* Selection stays legible through the checked checkbox/radio, which render their
+   own disabled state — the row itself drops the accent wash rather than looking
+   half-available. */
+.ds-dropdown-menu__item[aria-disabled="true"][aria-checked="true"],
+.ds-dropdown-menu__item[aria-disabled="true"][aria-selected="true"] {
+  background: transparent;
+}
+.ds-dropdown-menu__item[aria-disabled="true"] {
   cursor: not-allowed;
+}
+/* No hover/active feedback — including for danger, which has its own hover. */
+.ds-dropdown-menu__item[aria-disabled="true"]:hover,
+.ds-dropdown-menu__item[aria-disabled="true"]:active,
+.ds-dropdown-menu__item--danger[aria-disabled="true"]:hover {
+  background: transparent;
+}
+/* The badge / "new" pip carry their own fill, so mute the whole chip rather than
+   just its text — a bright badge on a greyed row draws the eye to a dead end. */
+.ds-dropdown-menu__item[aria-disabled="true"] .ds-dropdown-menu__item-badge,
+.ds-dropdown-menu__item[aria-disabled="true"] .ds-dropdown-menu__item-new {
+  opacity: 0.5;
 }
 
 .ds-dropdown-menu__item-icon,

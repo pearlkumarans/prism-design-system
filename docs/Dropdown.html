@@ -490,6 +490,25 @@
                   </div>
                 </div>
 
+                <!-- Disabled rows -->
+                <div class="demo-dd-section">
+                  <div class="demo-group-label">Disabled rows &mdash; the whole row mutes, not just the label (<code>disabled: true</code>)</div>
+                  <div class="demo-dd-grid">
+                    <div class="demo-dd-frame">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <div class="demo-dd-caption">Action &mdash; icon, description and a destructive row</div>
+                        <ds-dropdown-menu id="ov-disabled-action" type="action" open></ds-dropdown-menu>
+                      </div>
+                    </div>
+                    <div class="demo-dd-frame">
+                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <div class="demo-dd-caption">Multi-select &mdash; selected but unavailable</div>
+                        <ds-dropdown-menu id="ov-disabled-multi" type="multi-select" show-select-all="false" show-reset open></ds-dropdown-menu>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Nested / cascade -->
                 <div class="demo-dd-section">
                   <div class="demo-group-label">Nested &mdash; a row that branches instead of selecting (<code>subItems</code>)</div>
@@ -608,6 +627,21 @@
                 { label: 'Inactive users', value: 'inactive' },
                 { label: 'Suspended', value: 'suspended', selected: true },
                 { label: 'Invited', value: 'invited' },
+              ]);
+              /* Every coloured part mutes: the icon, the description, the danger
+                 red, and the selected accent. A row that only greys its label
+                 reads as low contrast rather than unavailable. */
+              setItems('ov-disabled-action', [
+                { label: 'Edit', value: 'edit', icon: 'edit' },
+                { label: 'Deploy now', value: 'deploy', icon: 'rocket', description: 'No agent on this device', disabled: true },
+                { type: 'divider' },
+                { label: 'Delete', value: 'delete', icon: 'delete', danger: true, disabled: true },
+              ]);
+              setItems('ov-disabled-multi', [
+                { type: 'selection-bar' },
+                { label: 'Active users', value: 'active', selected: true },
+                { label: 'Suspended', value: 'suspended', selected: true, disabled: true },
+                { label: 'Invited', value: 'invited', disabled: true },
               ]);
               setItems('ov-multi-rtl', [
                 { type: 'selection-bar', selectAllText: 'تحديد الكل', deselectAllText: 'إلغاء تحديد الكل', selectedText: '{n} محدد' },
@@ -1106,7 +1140,7 @@ menu.addEventListener('ds-dropdown-select', (e) =&gt; {
               <div class="cp-control-group"><label class="cp-label">Type</label><select class="cp-select" id="pg-type"><option value="default">Default</option><option value="select">Select</option><option value="multi-select">Multi-select</option><option value="action">Action</option><option value="select-tick">Select-tick</option></select></div>
               <div class="cp-control-group"><label class="cp-label">Show title</label><div class="cp-checkbox-wrap"><button class="cp-toggle" id="pg-title-toggle"></button><span style="font-size:13px;color:var(--prism-text-muted);" id="pg-title-label">OFF</span></div></div>
               <div class="cp-control-group" id="pg-nested-group"><label class="cp-label">Nested items</label><div class="cp-checkbox-wrap"><button class="cp-toggle" id="pg-nested-toggle"></button><span style="font-size:13px;color:var(--prism-text-muted);" id="pg-nested-label">OFF</span></div></div>
-              <div class="cp-control-group" id="pg-clearall-group"><label class="cp-label">Show clear all</label><div class="cp-checkbox-wrap"><button class="cp-toggle on" id="pg-clearall-toggle"></button><span style="font-size:13px;color:var(--prism-text-muted);" id="pg-clearall-label">ON</span></div></div>
+              <div class="cp-control-group" id="pg-clearall-group"><label class="cp-label">Footer reset</label><div class="cp-checkbox-wrap"><button class="cp-toggle on" id="pg-clearall-toggle"></button><span style="font-size:13px;color:var(--prism-text-muted);" id="pg-clearall-label">ON</span></div></div>
               <div class="cp-control-group"><label class="cp-label">Direction</label><select class="cp-select" id="pg-dir"><option value="ltr">LTR</option><option value="rtl">RTL</option></select></div>
             </div>
             <div class="cp-preview" id="pg-preview-area" style="min-height:280px;display:flex;align-items:flex-start;justify-content:center;padding:24px;"></div>
@@ -1157,9 +1191,15 @@ menu.addEventListener('ds-dropdown-select', (e) =&gt; {
                 { label: 'Name (A → Z)', value: 'az' },
               ],
               'multi-select': [
+                /* The selection bar is what makes a multi-select read as one — it
+                   carries the count and the select/deselect-all pair. Without it
+                   this demo was a bare checkbox list with footer links, which is
+                   not the pattern the Preview and the guidance describe. */
+                { type: 'selection-bar' },
                 { label: 'Active users', value: 'active', selected: true },
                 { label: 'Inactive users', value: 'inactive' },
-                { label: 'Suspended', value: 'suspended' },
+                { label: 'Suspended', value: 'suspended', selected: true },
+                { label: 'Invited', value: 'invited' },
               ],
               'action': [
                 { label: 'Edit', value: 'edit', icon: 'edit' },
@@ -1187,9 +1227,11 @@ menu.addEventListener('ds-dropdown-select', (e) =&gt; {
                 { label: 'الاسم (أ → ي)', value: 'az' },
               ],
               'multi-select': [
+                { type: 'selection-bar', selectAllText: 'تحديد الكل', deselectAllText: 'إلغاء تحديد الكل', selectedText: '{n} محدد' },
                 { label: 'المستخدمون النشطون', value: 'active', selected: true },
                 { label: 'المستخدمون غير النشطين', value: 'inactive' },
-                { label: 'موقوف', value: 'suspended' },
+                { label: 'موقوف', value: 'suspended', selected: true },
+                { label: 'مدعو', value: 'invited' },
               ],
               'action': [
                 { label: 'تعديل', value: 'edit', icon: 'edit' },
@@ -1268,7 +1310,11 @@ menu.addEventListener('ds-dropdown-select', (e) =&gt; {
 
               var attrs = ['type="' + type + '"'];
               if (showTitle) attrs.push('show-title', 'title="' + titleText + '"');
-              if (isMulti && showClearAll) attrs.push('show-clear-all');
+              /* Select-all lives in the selection bar, so the footer's own
+                 select-all link is switched off and the footer carries Reset —
+                 the same combination the Preview demonstrates. */
+              if (isMulti) attrs.push('show-select-all="false"');
+              if (isMulti && showClearAll) attrs.push('show-reset');
               if (dir === 'rtl') attrs.push('rtl');
               attrs.push('open');
               var openTag = '<ds-dropdown-menu ' + attrs.join(' ') + '></ds-dropdown-menu>';
@@ -1280,7 +1326,8 @@ menu.addEventListener('ds-dropdown-select', (e) =&gt; {
               var el = document.createElement('ds-dropdown-menu');
               el.setAttribute('type', type);
               if (showTitle) { el.setAttribute('show-title', ''); el.setAttribute('title', titleText); }
-              if (isMulti && showClearAll) el.setAttribute('show-clear-all', '');
+              if (isMulti) el.setAttribute('show-select-all', 'false');
+              if (isMulti && showClearAll) el.setAttribute('show-reset', '');
               if (dir === 'rtl') el.setAttribute('rtl', '');
               el.setAttribute('open', '');
               previewArea.appendChild(el);
@@ -1290,7 +1337,7 @@ menu.addEventListener('ds-dropdown-select', (e) =&gt; {
 
               codeOut.innerHTML = esc(rawCode)
                 .replace(/&lt;(\/?)(ds-dropdown-menu|script)(.*?)&gt;/g,'&lt;$1<span style="color:#60a5fa;">$2</span>$3&gt;')
-                .replace(/(\s)(type|title|show-title|show-clear-all|rtl|open)(=?)/g,'$1<span style="color:#38bdf8;">$2</span>$3')
+                .replace(/(\s)(type|title|show-title|show-select-all|show-reset|rtl|open)(=?)/g,'$1<span style="color:#38bdf8;">$2</span>$3')
                 .replace(/=&quot;(.*?)&quot;/g,'=<span style="color:#34d399;">"$1"</span>');
             }
 

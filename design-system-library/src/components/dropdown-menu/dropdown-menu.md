@@ -296,6 +296,7 @@ Set **`data-no-truncate`** on the host (`<ds-dropdown-menu data-no-truncate>`) s
 | Label color (Default) | `#15181E` | `Color-Text-Primary` |
 | Label color (Danger) | `#E42527` | `Color-Text-Critical` |
 | Label color (Disabled) | `#5F6C89 @ 50%` | `Color-Text-Disabled` |
+| Disabled row | every coloured part muted; `danger` and `selected` are overridden so an unavailable Delete is not red and an unavailable selected row is not accented; badge / new pip drop to 50% opacity | `Color-Text-Disabled` |
 
 ### Row States
 
@@ -306,7 +307,7 @@ Set **`data-no-truncate`** on the host (`<ds-dropdown-menu data-no-truncate>`) s
 | Focus | transparent + 2px `Border-Focus` inset ring | `Color-Text-Primary` | `pointer` |
 | Active / Pressed | `#E1E4EB` | `Color-Text-Primary` | `pointer` |
 | Selected (Select / Multi-select / Select-tick) | transparent (control conveys selection) | `Color-Text-Primary` | `pointer` |
-| Disabled | transparent | `Color-Text-Disabled` (50% alpha) | `not-allowed` |
+| Disabled | transparent (no hover or active wash) | `Color-Text-Disabled` across the **whole row** — label, description, shortcut, icon, chevron and tick | `not-allowed` |
 | Danger (Action's last row) | transparent (Default), `#FCE9E9` on hover | `Color-Text-Critical` | `pointer` |
 
 ### Dividers
@@ -364,7 +365,7 @@ Set **`data-no-truncate`** on the host (`<ds-dropdown-menu data-no-truncate>`) s
 | **Focus indicator** | 2px `Border-Focus` (`#2C66DD`) inset ring on the focused row, only with `:focus-visible`. |
 | **Selection** | Select / Select-tick: only one row has `aria-selected="true"` at a time. Multi-select: each row independently sets `aria-checked`. |
 | **Danger row** | Uses `Color-Text-Critical` plus an icon — color is not the sole indicator. Confirm destructive actions in a follow-up dialog when consequences are severe. |
-| **Disabled items** | `aria-disabled="true"` plus the `disabled` attribute on the underlying button. Disabled rows remain in focus order so screen readers can announce them, but cannot be activated. |
+| **Disabled items** | `aria-disabled="true"` and `tabindex="-1"`. The row is skipped by Tab **and** by arrow-key roving focus, and cannot be activated. Note this is stricter than the ARIA menu pattern, which keeps disabled items focusable so they stay discoverable — a deliberate deviation, recorded here so it is not "fixed" by accident. |
 | **Color contrast** | Label colors meet WCAG 2.1 AA (4.5:1) on the elevated white surface. Focus ring meets 3:1 against both default and hover backgrounds. |
 | **RTL** | Full RTL via the `RTL = True` variant or `dir="rtl"` on the container. `↑` / `↓` keys remain unchanged. |
 

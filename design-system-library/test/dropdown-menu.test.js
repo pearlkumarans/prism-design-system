@@ -185,6 +185,75 @@ describe('ds-dropdown-menu — selection & change events', () => {
 });
 
 describe('ds-dropdown-menu — disabled items', () => {
+  /* The styling assertions need the real stylesheet — the shared harness does not
+     load component CSS, so every colour would read as an inherited default. Each
+     load races a timer and never rejects, so a stalled sheet cannot hang the run. */
+  before(async () => {
+    const HREFS = ['/src/tokens/primitives.css', '/src/tokens/spacing.css',
+      '/src/tokens/typography.css', '/src/tokens/tokens.css',
+      '/src/components/dropdown-menu/dropdown-menu.css'];
+    await Promise.all(HREFS.map((href) => new Promise((resolve) => {
+      if (document.querySelector(`link[href="${href}"]`)) return resolve();
+      const link = Object.assign(document.createElement('link'), { rel: 'stylesheet', href });
+      link.addEventListener('load', resolve);
+      link.addEventListener('error', resolve);
+      setTimeout(resolve, 2000);
+      document.head.appendChild(link);
+    })));
+    await nextFrame();
+  });
+
+  const colourOf = (row) => getComputedStyle(row).color;
+
+  it('mutes the WHOLE row, not just its label', async () => {
+    /* A greyed label beside a full-colour icon reads as low contrast, not as
+       unavailable. */
+    const el = await mk([
+      { label: 'Deploy', value: 'd', icon: 'rocket', description: 'No agent', disabled: true },
+    ], { open: true, type: 'action' });
+    const row = items(el)[0];
+    const muted = colourOf(row);
+    for (const sel of ['.ds-dropdown-menu__item-icon', '.ds-dropdown-menu__item-description']) {
+      const part = row.querySelector(sel);
+      if (part) expect(getComputedStyle(part).color, sel).to.equal(muted);
+    }
+    expect(getComputedStyle(row).cursor).to.equal('not-allowed');
+  });
+
+  it('drops the hover wash — a row that lights up reads as clickable', async () => {
+    const el = await mk([{ label: 'Off', value: 'off', disabled: true }], { open: true });
+    const row = items(el)[0];
+    /* :hover cannot be forced from script, so assert the declared rule instead. */
+    const sheet = [...document.styleSheets].find((s) => (s.href || '').includes('dropdown-menu.css'));
+    const rules = [...(sheet ? sheet.cssRules : [])].map((r) => r.cssText).join('\n');
+    expect(rules).to.contain('[aria-disabled="true"]:hover');
+    expect(getComputedStyle(row).backgroundColor, 'no resting wash').to.equal('rgba(0, 0, 0, 0)');
+  });
+
+  it('overrides danger — an unavailable Delete must not stay red', async () => {
+    const el = await mk([
+      { label: 'Delete', value: 'x', icon: 'delete', danger: true, disabled: true },
+      { label: 'Rename', value: 'r', disabled: true },
+    ], { open: true, type: 'action' });
+    const [danger, plain] = items(el);
+    expect(colourOf(danger), 'danger disabled matches plain disabled').to.equal(colourOf(plain));
+  });
+
+  it('overrides the selected accent in select and multi-select', async () => {
+    /* The selected wash comes from aria-checked / aria-selected at the same
+       specificity, so this only holds because the disabled rule pairs the
+       attributes — source order alone would lose. */
+    for (const type of ['select', 'multi-select']) {
+      const el = await mk([
+        { label: 'A', value: 'a', selected: true },
+        { label: 'B', value: 'b', selected: true, disabled: true },
+      ], { open: true, type });
+      const [on, off] = items(el);
+      expect(colourOf(off), `${type}: disabled is not accented`).to.not.equal(colourOf(on));
+      expect(getComputedStyle(off).backgroundColor, `${type}: no accent wash`).to.equal('rgba(0, 0, 0, 0)');
+    }
+  });
+
   it('marks a disabled row and never fires select on click', async () => {
     const el = await mk([
       { label: 'Off', value: 'off', disabled: true },
