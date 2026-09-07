@@ -1,14 +1,26 @@
 name: Design System CI
 
-# Runs the component test suite on pushes and PRs that touch the library.
+# Runs the component test suite on pushes and PRs that touch the library, and a
+# build+test of the Ember webapp that consumes it.
 # Repo root is `prism-design-system/`, so paths are relative to it.
+#
+# `webapp/**` is in the filter so webapp-only commits get checked at all — before,
+# a change like the vendor-assets fix reached main with zero check-runs. The
+# webapp job also runs on LIBRARY changes, which is the more valuable half:
+# webapp/package.json depends on the library by path
+# ("@uems/design-system": "file:../design-system-library"), so a component change
+# can break the app's build, and nothing used to catch that.
 on:
   push:
     paths:
       - 'design-system-library/**'
+      - 'webapp/**'
+      - '.github/workflows/ci.yml'
   pull_request:
     paths:
       - 'design-system-library/**'
+      - 'webapp/**'
+      - '.github/workflows/ci.yml'
   workflow_dispatch: {}
 
 # Supersede in-flight runs for the same ref to save CI minutes.
@@ -94,3 +106,36 @@ jobs:
           path: design-system-library/screenshots/Chrome-linux/**
           if-no-files-found: warn
           retention-days: 14
+
+  webapp:
+    name: Webapp build + tests (Ember)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webapp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: webapp/package-lock.json
+
+      # Same fallback as the library job: npm's optional-dependency bug can leave a
+      # platform-specific binary missing, and a clean reinstall resolves it.
+      - name: Install dependencies
+        run: npm ci || (rm -rf node_modules package-lock.json && npm install)
+
+      # `prebuild` runs sync:catalog + vendor:assets first, so this covers the
+      # asset-vendoring step as well as the Ember build — which is where today's
+      # breakage actually showed up.
+      - name: Production build
+        run: npm run build
+
+      # testem.js already carries a CI launcher (--headless=new --no-sandbox
+      # --disable-dev-shm-usage); ubuntu-latest ships the Chrome it needs.
+      - name: Unit tests
+        run: npm test
