@@ -67,7 +67,7 @@ describe('visual — leaf controls', () => {
     await shot(await fixture(html`<ds-tag label="Marketing" variant="primary"></ds-tag>`), 'tag-primary');
   });
   it('status-indicator', async () => {
-    await shot(await fixture(html`<ds-status-indicator status="active" label="Online"></ds-status-indicator>`), 'status-indicator-active');
+    await shot(await fixture(html`<ds-status-indicator status="success" label="Online"></ds-status-indicator>`), 'status-indicator-success');
   });
   it('toggle-on', async () => {
     await shot(await fixture(html`<ds-toggle label="Wi-Fi" checked></ds-toggle>`), 'toggle-on');
@@ -126,8 +126,8 @@ describe('visual — buttons', () => {
   it('button-tertiary', async () => {
     await shot(await fixture(html`<ds-button variant="tertiary">Learn more</ds-button>`), 'button-tertiary');
   });
-  it('button-danger', async () => {
-    await shot(await fixture(html`<ds-button variant="danger">Delete</ds-button>`), 'button-danger');
+  it('button-destructive', async () => {
+    await shot(await fixture(html`<ds-button variant="destructive">Delete</ds-button>`), 'button-destructive');
   });
   it('button-outline', async () => {
     await shot(await fixture(html`<ds-button variant="outline">Export</ds-button>`), 'button-outline');
@@ -144,8 +144,8 @@ describe('visual — buttons', () => {
 });
 
 describe('visual — indicators & chips', () => {
-  it('badge-subtle-warning', async () => {
-    await shot(await fixture(html`<ds-badge variant="subtle" state="warning">Warning</ds-badge>`), 'badge-subtle-warning');
+  it('badge-subtle-important', async () => {
+    await shot(await fixture(html`<ds-badge variant="subtle" state="important">Warning</ds-badge>`), 'badge-subtle-important');
   });
   it('tag-with-close', async () => {
     await shot(await fixture(html`<ds-tag label="Marketing" variant="primary" show-close></ds-tag>`), 'tag-with-close');
