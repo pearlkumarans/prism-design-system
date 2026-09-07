@@ -86,22 +86,27 @@ jobs:
       # against a committed baseline. Baselines are OS-specific (font rasterisation),
       # so this runner compares against screenshots/Chrome-linux/baseline/**.
       #
-      # BOOTSTRAP (current): those Linux baselines don't exist yet, so this step is
-      # NON-BLOCKING (continue-on-error) and uploads the Linux renders + diffs as an
-      # artifact. To bless them: download the artifact, copy the images from
-      # Chrome-linux/failed/ into Chrome-linux/baseline/ (or run
-      # `npm run test:visual:update` on a Linux checkout), and commit.
-      # ENFORCE (after blessing): delete `continue-on-error: true` so a real visual
-      # regression fails the build. See design-system-library/test/visual/README.md.
+      # ENFORCED: all 55 Linux baselines are blessed, so a visual regression now
+      # FAILS the build. Renders were byte-identical across two separate runs before
+      # blessing and the threshold is 0.15%, so this should not flake.
+      #
+      # If it does fail: download the visual-regression-linux artifact and compare
+      # failed/<name>.png with failed/<name>-diff.png. Intended change? Copy the new
+      # render over Chrome-linux/baseline/<name>.png and commit it, and refresh the
+      # macOS set locally with `npm run test:visual:update`. The two platform sets
+      # must stay name-for-name identical.
+      # See design-system-library/test/visual/README.md.
       - name: Visual regression
         id: visual
-        continue-on-error: true
         run: npm run test:visual
 
       # v6, not v5: upload-artifact@v5 still targets Node 20, so it would keep the
       # deprecation warning. checkout and setup-node move to Node 24 at v5.
+      # failure(), not a bare outcome check: an `if` naming no status function is
+      # implicitly ANDed with success(), so now that this job can actually fail, the
+      # upload would be skipped on exactly the runs whose diffs you need.
       - name: Upload visual diffs / renders
-        if: steps.visual.outcome == 'failure'
+        if: failure() && steps.visual.outcome == 'failure'
         uses: actions/upload-artifact@v6
         with:
           name: visual-regression-linux

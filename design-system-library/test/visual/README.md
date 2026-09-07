@@ -52,17 +52,38 @@ The `visual` job in `.github/workflows/ci.yml` runs `npm run test:visual` on
 depend on OS font rendering, those Linux baselines must be generated on the runner
 — the committed `Chrome-darwin/**` set (macOS) won't match.
 
-**Bootstrap (current state):** the CI step is **non-blocking**
-(`continue-on-error`) and, on the expected "no baseline" failure, uploads the
-Linux renders + diffs as the `visual-regression-linux` artifact.
+**Enforced.** All 55 Linux baselines are blessed, so a visual regression fails
+the build. Before blessing, the runner's renders were byte-identical across two
+separate CI runs — with a 0.15% threshold, that leaves plenty of headroom, so a
+failure here means something really did change.
 
-**To bless the Linux baselines and enforce:**
-1. Download the `visual-regression-linux` artifact from a CI run (or run
-   `npm run test:visual:update` on a Linux checkout / container).
-2. Copy the images from `Chrome-linux/failed/` into `Chrome-linux/baseline/` and
-   commit them.
-3. Remove `continue-on-error: true` from the `visual` job so a real visual
-   regression fails the build.
+**When CI fails on a visual diff:**
+1. Download the `visual-regression-linux` artifact from the failed run.
+2. Compare `failed/<name>.png` (what CI rendered) against
+   `failed/<name>-diff.png` (the highlighted pixels).
+3. **Unintended?** Fix the component.
+   **Intended?** Copy the new render over `Chrome-linux/baseline/<name>.png`,
+   and refresh the macOS set locally with `npm run test:visual:update`.
+
+Both platform sets must stay **name-for-name identical** — renaming a `shot()`
+orphans one baseline and leaves the other missing, and a missing baseline is a
+failure, not an auto-create. Check with:
+
+```sh
+diff <(ls screenshots/Chrome-darwin/baseline) <(ls screenshots/Chrome-linux/baseline)
+```
 
 The `failureThreshold` (0.15%) absorbs sub-pixel AA noise; tighten it toward 0
 once baselines are stable on the runner.
+
+### Assert real values
+
+A `shot()` naming a variant/state the component doesn't have still produces a
+screenshot — the component warns to the console, falls back, and the baseline
+then locks in the *fallback* under a filename claiming otherwise. Three tests
+did exactly this (`variant="danger"`, `status="active"`, `state="warning"`).
+The suite must run warning-free:
+
+```sh
+npm run test:visual 2>&1 | grep '\[ds\] Unknown'   # must print nothing
+```
