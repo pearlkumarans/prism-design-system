@@ -37,10 +37,10 @@ jobs:
         working-directory: design-system-library
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
@@ -70,10 +70,10 @@ jobs:
         working-directory: design-system-library
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
@@ -98,9 +98,11 @@ jobs:
         continue-on-error: true
         run: npm run test:visual
 
+      # v6, not v5: upload-artifact@v5 still targets Node 20, so it would keep the
+      # deprecation warning. checkout and setup-node move to Node 24 at v5.
       - name: Upload visual diffs / renders
         if: steps.visual.outcome == 'failure'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: visual-regression-linux
           path: design-system-library/screenshots/Chrome-linux/**
@@ -115,10 +117,10 @@ jobs:
         working-directory: webapp
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
