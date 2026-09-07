@@ -15,7 +15,7 @@ describe('ds-toast — structure & status a11y', () => {
     expect(root.getAttribute('role')).to.equal('status');
     expect(root.getAttribute('aria-live')).to.equal('polite');
     expect(root.classList.contains('ds-toast--info')).to.be.true;
-    expect(root.classList.contains('ds-toast--subtle'), 'default style-variant').to.be.true;
+    expect(root.classList.contains('ds-toast--filled'), 'default style-variant').to.be.true;
   });
 
   it('error escalates to assertive/alert', async () => {

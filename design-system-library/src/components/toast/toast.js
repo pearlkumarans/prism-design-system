@@ -3,7 +3,7 @@
              description="Profile updated." cta-text="View" cta-href="/profile"
              duration="5000"></ds-toast>
 
-   Transient notification. Defaults: status=info, style-variant=subtle,
+   Transient notification. Defaults: status=info, style-variant=filled,
    duration=5000ms. duration="0" (or status=error) → persistent: no countdown,
    no timeout bar (spec edge case). Hover/focus-within pauses the countdown
    (WCAG 2.2.1); Escape dismisses; close click dismisses immediately.
@@ -48,7 +48,7 @@ export class DsToast extends HTMLElement {
   /* Surface class + direction only — no innerHTML rebuild (see attributeChanged). */
   _paintChrome() {
     const status = enumAttr(this, 'status', STATUSES, 'info');
-    const styleV = enumAttr(this, 'style-variant', STYLES, 'subtle');
+    const styleV = enumAttr(this, 'style-variant', STYLES, 'filled');
     const rtl = boolAttr(this, 'rtl');
     this._root.className = `ds-toast ds-toast--${styleV} ds-toast--${status}`;
     if (rtl) this._root.setAttribute('dir', 'rtl');
@@ -251,7 +251,7 @@ export class DsToaster extends HTMLElement {
     t.dataset.managed = '';
     t.setAttribute('title', o.title ?? o.message ?? '');
     t.setAttribute('status', o.status || 'info');
-    t.setAttribute('style-variant', o.style || 'subtle');
+    t.setAttribute('style-variant', o.style || 'filled');
     if (o.description) t.setAttribute('description', o.description);
     if (o.cta) { t.setAttribute('cta-text', o.cta); if (o.ctaHref) t.setAttribute('cta-href', o.ctaHref); }
     else t.setAttribute('show-cta', 'false');

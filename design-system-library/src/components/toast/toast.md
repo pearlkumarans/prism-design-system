@@ -92,7 +92,7 @@ Hex comments = Light theme. `{Status}` ∈ Info/Success/Warning/Error.
 ```
 <uems-toast
   status="info | success | warning | error"   (default: info)
-  style="subtle | filled"                     (default: subtle)
+  style="subtle | filled"                     (default: filled)
   title="..."                                  (required)
   description="..."                            (optional)
   cta-text="..." cta-href / on-cta             (optional)
