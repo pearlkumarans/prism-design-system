@@ -8,13 +8,13 @@
 
 ## Overview
 
-A transient notification with status icon, title, optional description, optional CTA link, optional close button, and an **auto-dismiss timeout bar** along the bottom edge. Two visual styles — Subtle (light surface) and Filled (solid status color) — across four statuses, with full RTL mirroring.
+A transient notification with status icon, title, optional description, optional CTA link, optional close button, and an **auto-dismiss timeout bar** along the bottom edge. Two visual styles — Subtle (light surface) and **Intense** (solid status color; **`intense` is the default** — named "Filled" in the Figma source) — across four statuses, with full RTL mirroring.
 
 ## Variants
 
 | Axis | Values | Count |
 |---|---|---:|
-| `Style` | Subtle (default), Filled | 2 |
+| `Style` | Subtle, Intense (default) | 2 |
 | `Status` | Info (default), Success, Warning, Error | 4 |
 | `State` | Default, Hover | 2 |
 | `RTL` | False (default), True | 2 |
@@ -73,7 +73,7 @@ Hex comments = Light theme. `{Status}` ∈ Info/Success/Warning/Error.
 | Close icon | `--uems-icon-subtle` |
 | Timeout track / fill | `--uems-bg-quaternary` / `--uems-bg-{status}-solid` |
 
-### Filled style
+### Intense style
 > **Verified detail (2026-06-12):** in Figma the Filled **Timeout Bar container renders at 25% layer opacity** (black track + white fill both tinted by the solid status colour), and the Filled **description sits at 80% opacity**. Code applies both.
 
 
@@ -92,7 +92,7 @@ Hex comments = Light theme. `{Status}` ∈ Info/Success/Warning/Error.
 ```
 <uems-toast
   status="info | success | warning | error"   (default: info)
-  style="subtle | filled"                     (default: filled)
+  style="subtle | intense"                     (default: intense)
   title="..."                                  (required)
   description="..."                            (optional)
   cta-text="..." cta-href / on-cta             (optional)
@@ -153,18 +153,18 @@ Hex comments = Light theme. `{Status}` ∈ Info/Success/Warning/Error.
 .toast--subtle.toast--warning { --toast-icon: var(--uems-text-warning); --toast-cta: var(--uems-text-warning); --toast-fill: var(--uems-bg-warning-solid); }
 .toast--subtle.toast--error   { --toast-icon: var(--uems-text-error); --toast-cta: var(--uems-text-error); --toast-fill: var(--uems-bg-error-solid); }
 
-/* ---- Filled ---- */
-.toast--filled { --toast-title: var(--uems-text-white); --toast-desc: var(--uems-text-white);
+/* ---- Intense ---- */
+.toast--intense { --toast-title: var(--uems-text-white); --toast-desc: var(--uems-text-white);
   --toast-cta: var(--uems-text-white); --toast-icon: var(--uems-text-white);
   --toast-track: var(--uems-bg-base-black); --toast-fill: var(--uems-bg-base-white); }
-.toast--filled.toast--info    { background: var(--uems-bg-info-solid);    --toast-close: var(--uems-border-accent-subtle); }
-.toast--filled.toast--info:hover    { background: var(--uems-bg-info-solid-hover); }
-.toast--filled.toast--success { background: var(--uems-bg-success-solid); --toast-close: var(--uems-border-success-subtle); }
-.toast--filled.toast--success:hover { background: var(--uems-bg-success-solid-hover); }
-.toast--filled.toast--warning { background: var(--uems-bg-warning-solid); --toast-close: var(--uems-border-warning-subtle); }
-.toast--filled.toast--warning:hover { background: var(--uems-bg-warning-solid-hover); }
-.toast--filled.toast--error   { background: var(--uems-bg-error-solid);   --toast-close: var(--uems-border-error-subtle); }
-.toast--filled.toast--error:hover   { background: var(--uems-bg-error-solid-hover); }
+.toast--intense.toast--info    { background: var(--uems-bg-info-solid);    --toast-close: var(--uems-border-accent-subtle); }
+.toast--intense.toast--info:hover    { background: var(--uems-bg-info-solid-hover); }
+.toast--intense.toast--success { background: var(--uems-bg-success-solid); --toast-close: var(--uems-border-success-subtle); }
+.toast--intense.toast--success:hover { background: var(--uems-bg-success-solid-hover); }
+.toast--intense.toast--warning { background: var(--uems-bg-warning-solid); --toast-close: var(--uems-border-warning-subtle); }
+.toast--intense.toast--warning:hover { background: var(--uems-bg-warning-solid-hover); }
+.toast--intense.toast--error   { background: var(--uems-bg-error-solid);   --toast-close: var(--uems-border-error-subtle); }
+.toast--intense.toast--error:hover   { background: var(--uems-bg-error-solid-hover); }
 
 /* RTL — logical flow handles order; nothing to mirror except text alignment */
 [dir="rtl"] .toast__text { text-align: right; }
@@ -186,7 +186,7 @@ The fill is anchored to the reading-direction start (left in LTR, right in RTL �
 
 | Element | State/Event | Behavior |
 |---|---|---|
-| Toast (Filled) | Hover | Background deepens to `*-solid-hover`; **auto-dismiss timer pauses** |
+| Toast (Intense) | Hover | Background deepens to `*-solid-hover`; **auto-dismiss timer pauses** |
 | Toast (Subtle) | Hover | Background tints to `--uems-bg-primary-hover`; **auto-dismiss timer pauses** |
 | CTA | Click | Navigate/act; toast persists (don't dismiss on CTA unless the action resolves it) |
 | Close | Click | Dismiss immediately |
@@ -218,7 +218,7 @@ Not specified in Figma — suggested, confirm with design:
 | Toast | Enter | slide-in from edge + fade | 250ms | ease-out |
 | Toast | Exit (dismiss/timeout) | fade + slight slide | 200ms | ease-in |
 | Timeout bar | While visible | width 100% → 0% | = `duration` | linear |
-| Filled bg | Hover | background-color | 100ms | ease-out |
+| Intense bg | Hover | background-color | 100ms | ease-out |
 
 `prefers-reduced-motion`: fade only, no slide; keep the bar (it's information, not decoration).
 
@@ -231,7 +231,7 @@ Not specified in Figma — suggested, confirm with design:
 | Close | `<button aria-label="Dismiss notification">`, icon `aria-hidden` |
 | Timer | Pause countdown on hover **and** `focus-within` (WCAG 2.2.1 Timing Adjustable); timeout bar is `aria-hidden` |
 | Escape | Dismisses the focused/most recent toast |
-| Contrast | Filled: white on `*-solid` passes AA for all four statuses; Subtle: status text colors on #F9FAFB pass AA |
+| Contrast | Intense: white on `*-solid` passes AA for all four statuses; Subtle: status text colors on #F9FAFB pass AA |
 | Don't auto-dismiss errors | Errors with actions should persist until dismissed |
 
 ## Verification

@@ -15,7 +15,7 @@ describe('ds-toast — structure & status a11y', () => {
     expect(root.getAttribute('role')).to.equal('status');
     expect(root.getAttribute('aria-live')).to.equal('polite');
     expect(root.classList.contains('ds-toast--info')).to.be.true;
-    expect(root.classList.contains('ds-toast--filled'), 'default style-variant').to.be.true;
+    expect(root.classList.contains('ds-toast--intense'), 'default style-variant').to.be.true;
   });
 
   it('error escalates to assertive/alert', async () => {
@@ -129,9 +129,9 @@ describe('ds-toast — repaint-split', () => {
     await nextFrame();
     const icon = el._root.querySelector('.ds-toast__icon ds-icon');
     expect(icon, 'status icon rendered').to.exist;
-    el.setAttribute('style-variant', 'filled');
+    el.setAttribute('style-variant', 'intense');
     await nextFrame();
     expect(el._root.querySelector('.ds-toast__icon ds-icon'), 'same ds-icon node (not re-parsed)').to.equal(icon);
-    expect(el._root.classList.contains('ds-toast--filled'), 'style-variant class applied').to.be.true;
+    expect(el._root.classList.contains('ds-toast--intense'), 'style-variant class applied').to.be.true;
   });
 });
