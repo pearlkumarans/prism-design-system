@@ -87,17 +87,23 @@ ds-item-list { display: block; font-family: var(--font-family-sans); width: 100%
    Only the `circle` rail is tinted — a bare glyph or a tile carrying a semantic
    wash reads as a badge and competes with the real one in the meta line.
    Colour NEVER carries the status alone: the glyph and the row text do. */
-.ds-item--lead-circle.ds-item--status-default  .ds-item__lead { background: var(--uems-bg-secondary);        color: var(--uems-icon-tertiary); }
-/* The tint ladder is SHARED by both tinted rails. `circle` and `box` differ in
-   shape only, so a call site picks the shape the design needs and `status`
-   colours it the same way either way — a tinted rounded tile no longer means
-   hand-rolling one (.pu-item's category tiles, .wl-row's per-row icon colour).
-   `box` keeps its own darker default icon (icon-secondary, set above) rather
-   than joining the ladder at `default`, so nothing already on the page moves. */
-:is(.ds-item--lead-circle, .ds-item--lead-box).ds-item--status-info     .ds-item__lead { background: var(--uems-bg-info-primary);     color: var(--uems-text-info); }
-:is(.ds-item--lead-circle, .ds-item--lead-box).ds-item--status-success  .ds-item__lead { background: var(--uems-bg-success-primary);  color: var(--uems-text-success); }
-:is(.ds-item--lead-circle, .ds-item--lead-box).ds-item--status-warning  .ds-item__lead { background: var(--uems-bg-warning-primary);  color: var(--uems-text-warning); }
-:is(.ds-item--lead-circle, .ds-item--lead-box).ds-item--status-critical .ds-item__lead { background: var(--uems-bg-error-primary);    color: var(--uems-text-error); }
+.ds-item--lead-circle.ds-item--tone-default  .ds-item__lead { background: var(--uems-bg-secondary);        color: var(--uems-icon-tertiary); }
+/* The tint ladder is SHARED by both tinted rails, and keyed on TONE, not status.
+   `circle` and `box` differ in shape only, so a call site picks the shape the
+   design needs and the tone colours it the same way either way — a tinted rounded
+   tile no longer means hand-rolling one.
+   Tone defaults to status, so status-driven rows are unaffected; naming a tone is
+   what lets a list tint by CATEGORY (.pu-item) without claiming a state it does
+   not have. `alert` and `brand` exist only here, for that reason.
+   `box` keeps its own darker default icon (icon-secondary, set above) rather than
+   joining the ladder at `default`, so nothing already on a page moves. */
+:is(.ds-item--lead-circle, .ds-item--lead-box).ds-item--tone-info     .ds-item__lead { background: var(--uems-bg-info-primary);     color: var(--uems-text-info); }
+:is(.ds-item--lead-circle, .ds-item--lead-box).ds-item--tone-success  .ds-item__lead { background: var(--uems-bg-success-primary);  color: var(--uems-text-success); }
+:is(.ds-item--lead-circle, .ds-item--lead-box).ds-item--tone-warning  .ds-item__lead { background: var(--uems-bg-warning-primary);  color: var(--uems-text-warning); }
+:is(.ds-item--lead-circle, .ds-item--lead-box).ds-item--tone-alert    .ds-item__lead { background: var(--uems-bg-alert-primary);    color: var(--uems-text-alert); }
+:is(.ds-item--lead-circle, .ds-item--lead-box).ds-item--tone-critical .ds-item__lead { background: var(--uems-bg-error-primary);    color: var(--uems-text-error); }
+/* brand — the accent tile. Matches ds-fullscreen-modal's leading-tone="brand". */
+:is(.ds-item--lead-circle, .ds-item--lead-box).ds-item--tone-brand    .ds-item__lead { background: var(--uems-bg-accent-primary);   color: var(--uems-text-accent-link); }
 
 /* ---- Content -------------------------------------------------------------- */
 .ds-item__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-2); }

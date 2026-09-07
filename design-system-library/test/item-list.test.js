@@ -127,6 +127,54 @@ describe('ds-item-list', () => {
     }
   });
 
+  it('defaults the rail tone to the row status, so status-driven rows are unchanged', async () => {
+    for (const status of ['info', 'success', 'warning', 'critical', 'default']) {
+      const el = await mk([{ text: 'x', icon: 'user', status }]);
+      expect(rows(el)[0].classList.contains(`ds-item--tone-${status}`), status).to.be.true;
+    }
+  });
+
+  it('tints the rail from tone WITHOUT touching the badge state', async () => {
+    /* The whole point of tone: .pu-item tints by category on rows that have no
+       state. A category must not end up claiming a status on the chip. */
+    const el = await mk([{ text: 'Zoom 6.5.9', icon: 'user', lead: 'box', tone: 'brand',
+      badge: { text: 'Integration' } }]);
+    const row = rows(el)[0];
+    expect(row.classList.contains('ds-item--tone-brand'), 'rail takes the tone').to.be.true;
+    expect(row.classList.contains('ds-item--status-default'), 'status stays default').to.be.true;
+    expect(el.querySelector('ds-badge').getAttribute('state'),
+      'the chip follows status, not tone').to.equal('default');
+  });
+
+  it('gives alert and brand their own tints, distinct from every status tint', async () => {
+    /* These two exist only as tones — they are the tints .pu-item needed and the
+       status vocabulary deliberately does not have.
+
+       Compares the tile AND the glyph colour, not the tile alone: in the LIGHT
+       theme --uems-bg-accent-primary and --uems-bg-info-primary are the same
+       token (--cobalt-25), so brand and info legitimately share a background and
+       are told apart by the glyph. The hand-rolled .pu-item had the identical
+       collision. Asserting on the background alone passes only because this
+       harness happens to run dark, where the two tokens diverge. */
+    const tint = async (tone) => {
+      const el = await mk([{ text: 'x', icon: 'user', lead: 'box', tone }]);
+      const cs = getComputedStyle(el.querySelector('.ds-item__lead'));
+      return `${cs.backgroundColor} on ${cs.color}`;
+    };
+    const seen = {};
+    for (const t of ['default', 'info', 'success', 'warning', 'alert', 'critical', 'brand']) seen[t] = await tint(t);
+    for (const t of ['alert', 'brand']) {
+      for (const other of ['default', 'info', 'success', 'warning', 'critical']) {
+        expect(seen[t], `${t} must be distinguishable from ${other}`).to.not.equal(seen[other]);
+      }
+    }
+  });
+
+  it('ignores an unknown tone and falls back to the row status', async () => {
+    const el = await mk([{ text: 'x', icon: 'user', status: 'critical', tone: 'chartreuse' }]);
+    expect(rows(el)[0].classList.contains('ds-item--tone-critical')).to.be.true;
+  });
+
   it('leaves the box rail default untinted, so existing rows do not move', async () => {
     /* box keeps its own darker default icon rather than joining the ladder at
        `default` — adding the tints must not restyle anything already shipped. */

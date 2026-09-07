@@ -34,19 +34,13 @@
   #updates-pop .ds-drawer__body { padding-top: var(--spacing-24); }
   .pu-group:first-child .pu-ghead { padding-top: 0; }
   .pu-date { font-size: var(--font-size-13); font-weight: var(--font-weight-bold); letter-spacing: 0.04em; text-transform: uppercase; color: var(--uems-text-secondary); }
-  .pu-item { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid color-mix(in srgb, var(--uems-border-tertiary) 55%, transparent); }
-  .pu-ic { flex: 0 0 34px; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-  .pu-ic--platform    { background: var(--uems-bg-secondary); color: var(--uems-text-secondary); }
-  .pu-ic--performance { background: var(--uems-bg-success-secondary); color: var(--uems-text-success); }
-  .pu-ic--feature     { background: var(--uems-bg-info-secondary); color: var(--uems-icon-info); }
-  .pu-ic--security    { background: var(--uems-bg-alert-secondary); color: var(--uems-text-alert); }
-  .pu-ic--integration { background: var(--uems-bg-accent-secondary); color: var(--uems-text-accent); }
-  .pu-ic--fix         { background: var(--uems-bg-warning-secondary); color: var(--uems-text-warning); }
-  .pu-item__body { flex: 1; min-width: 0; }
-  .pu-item__tag { margin-bottom: 4px; }
-  .pu-item__title { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); margin-bottom: 4px; }
-  .pu-item__desc { font-size: var(--font-size-14); line-height: 20px; color: var(--uems-text-secondary); }
-  .pu-item__more { margin-top: 8px; }
+  /* Rows are ds-item-list (lead="box", divider="line"): the tinted tile, the chip
+     above the title, the description and the inline "View" link are all the
+     component's, so the whole .pu-item/.pu-ic anatomy is gone — including the six
+     per-category tile colours, which are now TONES on the data.
+     The list draws rules BETWEEN rows; this keeps the one under the date header,
+     which is group chrome rather than row anatomy. */
+  .pu-group ds-item-list { border-top: 1px solid color-mix(in srgb, var(--uems-border-tertiary) 55%, transparent); }
 </style>
 
 <ds-drawer id="updates-pop" class="ec-drawer" title="Product Updates" side="right" size="m" modal="false" show-footer="false">
@@ -58,6 +52,10 @@
   const lang = () => (window.ShellCtx && window.ShellCtx.lang) || 'en';
   const PU_ICON  = { platform: 'layers', performance: 'zap', feature: 'sparkles', security: 'shield', integration: 'puzzle', fix: 'bug' };
   const PU_TAG   = { platform: 'default', performance: 'success', feature: 'active', security: 'moderate', integration: 'acknowledge', fix: 'important' };
+  /* Tile tint per category. These are ds-item-list TONES, not statuses: a release
+     note has a category, not a state. `alert` and `brand` exist for exactly the two
+     the status vocabulary never had (security, integration). */
+  const PU_TONE  = { platform: 'default', performance: 'success', feature: 'info', security: 'alert', integration: 'brand', fix: 'warning' };
   const PU_LABEL = { platform: 'Platform', performance: 'Performance', feature: 'Feature', security: 'Security', integration: 'Integration', fix: 'Fix' };
   const PU_LABEL_AR = { platform: 'النظام الأساسي', performance: 'الأداء', feature: 'ميزة', security: 'الأمان', integration: 'تكامل', fix: 'إصلاح' };
   const MSGS = {
@@ -108,20 +106,46 @@
     const ar = lang() === 'ar';
     const p = panel(); if (p) { p.setAttribute('title', t('upd.title')); if (ar) p.setAttribute('rtl', ''); else p.removeAttribute('rtl'); }
     const LBL = ar ? PU_LABEL_AR : PU_LABEL;
-    body.innerHTML = PUPDATES.map((g) => `
-      <div class="pu-group">
-        <div class="pu-ghead"><span class="pu-date">${t('upd.' + g.key + '.date')}</span><ds-badge variant="subtle" state="default" size="small" shape="rounded">v${g.version}</ds-badge></div>
-        ${g.items.map((it) => `
-          <div class="pu-item">
-            <span class="pu-ic pu-ic--${it.cat}"><ds-icon name="${PU_ICON[it.cat]}" size="17"></ds-icon></span>
-            <div class="pu-item__body">
-              <div class="pu-item__tag"><ds-badge variant="subtle" state="${PU_TAG[it.cat]}" size="small" shape="rounded">${LBL[it.cat]}</ds-badge></div>
-              <div class="pu-item__title">${t('upd.' + it.key + '.title')}</div>
-              <div class="pu-item__desc">${t('upd.' + it.key + '.desc')}</div>
-              <div class="pu-item__more"><ds-text-link href="#" variant="primary" size="small" trailing-icon="chevron-right">${t('upd.view')}</ds-text-link></div>
-            </div>
-          </div>`).join('')}
-      </div>`).join('');
+    /* ONE ds-item-list PER GROUP, with the date header between them. The component
+       renders a flat list by design and has no grouping layer — but a group header
+       is a heading, not a row, so it belongs to the page either way. Nothing here
+       needs the component to grow one. */
+    body.replaceChildren(...PUPDATES.map((g) => {
+      const group = document.createElement('div');
+      group.className = 'pu-group';
+
+      const head = document.createElement('div');
+      head.className = 'pu-ghead';
+      const date = document.createElement('span');
+      date.className = 'pu-date';
+      date.textContent = t('upd.' + g.key + '.date');
+      const ver = document.createElement('ds-badge');
+      ver.setAttribute('variant', 'subtle');
+      ver.setAttribute('state', 'default');
+      ver.setAttribute('size', 'small');
+      ver.setAttribute('shape', 'rounded');
+      ver.setAttribute('label', `v${g.version}`);
+      head.append(date, ver);
+
+      const list = document.createElement('ds-item-list');
+      list.setAttribute('divider', 'line');
+      /* The chip sits ABOVE the title (metaPosition), the tile is tinted by
+         CATEGORY rather than by state (tone — these rows have no status), and
+         "View" ends the description rather than sitting in the trailing column. */
+      list.items = g.items.map((it) => ({
+        lead: 'box',
+        tone: PU_TONE[it.cat],
+        icon: PU_ICON[it.cat],
+        metaPosition: 'above',
+        badge: { text: LBL[it.cat], state: PU_TAG[it.cat], shape: 'rounded' },
+        text: t('upd.' + it.key + '.title'),
+        description: t('upd.' + it.key + '.desc'),
+        link: { text: t('upd.view'), href: '#' },
+      }));
+
+      group.append(head, list);
+      return group;
+    }));
   }
   document.addEventListener('shell:langchange', () => { const p = panel(); if (p && p.hasAttribute('open')) renderUpdates(); });
   function show() { renderUpdates(); const p = panel(); if (p) p.open(); }

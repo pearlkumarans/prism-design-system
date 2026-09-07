@@ -58,7 +58,7 @@ sites actually use.
 | `.edition__item` | **MIGRATED** | — (tile normalised to the DS 28px neutral box) |
 | `.act-row` | n/a | serialized JSON data, not markup |
 | `.wl-row` | **MIGRATED** | — |
-| `.pu-item` | partly | two category tints (`security`→alert, `integration`→accent) still have no `status` equivalent |
+| `.pu-item` | **MIGRATED** | — |
 | `.srch-row` | no | `<mark>` highlighting, **and** the whole row is `cursor:pointer` clickable — which this component deliberately refuses |
 | `.hd-lib-row` | no | each row is a **bordered tile** (1px border + 8px radius), not a flat divided row |
 | `.sup-upg__item` | partly | an extra error sub-block under the meta line (its `shape="rounded"` badge is now expressible) |
@@ -73,6 +73,7 @@ sites actually use.
 | `.edition__item` ×3 rows | `lead="box"`, `text` + `description` | `projects/screens/osd-cloud-storage.html` |
 | `.wl-row` ×3 lists (18 rows) | `lead="box"` + `status`, `trailing` value **or** `{ badge }`, `href` | `Layout/views/layout-module-dashboard.html` |
 | `.wl-row` ×1 list (5 rows) | same, chip-only trailing | `projects/bitlocker/layout-summary-dashboard.html` |
+| `.pu-item` ×3 groups (6 rows) | `tone` per category, `metaPosition: 'above'`, `description`, inline `link` | `Layout/views/updates.html` |
 
 Two things learned doing it, both worth knowing before the next call site:
 
@@ -112,6 +113,25 @@ Two things learned doing it, both worth knowing before the next call site:
   `ds-badge`. Omit it and `ds-badge` keeps its own `pill` default, which is why `.wl-row`'s
   `shape="pill"` never actually needed this — an earlier note here claiming otherwise was
   wrong. `.pu-item` and `.sup-upg__item` are the real callers.
+- **Rail `tone`, separate from row `status`** (2026-09-07) — `tone` colours only the
+  leading tile; `status` keeps driving the badge state and the timeline dot. Tone
+  defaults to status, so no existing row moved.
+
+  This is the distinction `.pu-item` needed: it tints by *category*
+  (platform/performance/feature/security/integration/fix) on rows that have no state
+  at all. Folding those into `STATUSES` would have made `status` lie to the badge it
+  drives — a "Security" release note would have claimed a critical state.
+
+  The vocabulary follows the one the system already had for this exact job,
+  `ds-fullscreen-modal`'s `leading-tone` (`info`/`warning`/`success`/`brand`), plus
+  `alert` and `critical` so it is a superset of the statuses it falls back to.
+  `alert` and `brand` are the two tints the status ladder never had.
+
+  Note `brand` and `info` share a background in the LIGHT theme —
+  `--uems-bg-accent-primary` and `--uems-bg-info-primary` are both `--cobalt-25` —
+  and are told apart by the glyph colour. The hand-rolled `.pu-item` had the identical
+  collision (both `--cobalt-50`), so this is inherited from the token system, not
+  introduced here.
 - **Monospace output** — `output: '…'` renders a `pre-wrap` block (newlines and alignment
   are the content), and `mono: true` switches it to the monospace stack, matching `.tl-out`.
 - **Inline body link** — `link: 'Read more'` puts a continuation link at the end of the
@@ -127,11 +147,7 @@ Two things learned doing it, both worth knowing before the next call site:
 2. **Group headers.** `.pu-item` sits under date headers and `.srch-row` under section
    headers. There is no grouping layer at all — the component renders a flat list. This is
    the same requirement listed above as the trigger for splitting `timeline` out.
-3. **Category tints that are not statuses.** Mostly closed: `box` is now tintable, so
-   `.wl-row`'s inline rail colours map onto the five semantic statuses (they are literally
-   the same token values). What remains is genuinely out of scope — `.pu-item` tints by
-   *category* (`security`, `integration`), and a category is not a status. Those two want
-   either a `slots.leading` tile or an accent vocabulary this component should not invent.
+3. ~~**Category tints that are not statuses.**~~ **Closed** — see `tone` under Closed.
 
 Gap 1 needs a design decision, gap 2 is a new structural layer, and gap 3 is a
 data-mapping exercise per call site.

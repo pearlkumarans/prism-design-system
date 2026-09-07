@@ -12,10 +12,10 @@
    execution steps. Three regions per row: a LEADING RAIL, CONTENT, and TRAILING.
    Replaces the hand-rolled copies of this shape across the product. Migrated so
    far: .hd-act-row (home dashboard), .tl-node (device execution timeline) and
-   .edition__item (OSD cloud storage) and .wl-row (module + BitLocker dashboards).
-   Still hand-rolled, each for a named reason — .pu-item, .srch-row, .hd-lib-row,
-   .sup-upg__item; see item-list.md for the audit, the migration notes and the
-   gaps that remain.
+   .edition__item (OSD cloud storage), .wl-row (module + BitLocker dashboards) and
+   .pu-item (product updates). Still hand-rolled, each for a named reason —
+   .srch-row, .hd-lib-row, .sup-upg__item; see item-list.md for the audit, the
+   migration notes and the gaps that remain.
 
    `variant="timeline"` keeps the identical DOM and only re-dresses the rail, plus
    a connector drawn between rows. `timeline-marker` picks the marker: `dot` (the
@@ -33,7 +33,7 @@
 
    Items come from slotted <ds-item> children OR the `items` property:
 
-     list.items = [{ text, description, icon, status, lead, meta, href,
+     list.items = [{ text, description, icon, status, tone, lead, meta, href,
                      badge:    'Security' | { text, state, variant, size, shape, icon },
                      trailing: '412' | { text } | { badge },   // a VALUE, not a control
                      link:     'Read more' | { text, href, icon },  // inline, ends the body
@@ -78,6 +78,17 @@ const LEADS = ['circle', 'plain', 'box', 'dot', 'none'];
    line stops meeting the markers it connects. */
 const MARKERS = ['dot', 'icon'];
 const STATUSES = ['default', 'info', 'success', 'warning', 'critical'];
+/* Rail TONE, separate from row STATUS on purpose.
+   `status` answers "what state is this row in" — it drives the badge state and the
+   timeline dot, both of which carry meaning. `tone` answers only "what colour is
+   the leading tile", which for some lists is a CATEGORY, not a state: .pu-item
+   tints by platform/performance/feature/security/integration/fix, and those rows
+   have no status at all. Folding categories into the status enum would have made
+   `status` lie to the badge it drives.
+   The vocabulary follows the one this system already uses for exactly this job
+   (ds-fullscreen-modal's leading-tone: info/warning/success/brand), plus `alert`
+   and `critical` so it is a superset of the statuses it falls back to. */
+const TONES = ['default', 'info', 'success', 'warning', 'alert', 'critical', 'brand'];
 const META_POS = ['below', 'above'];
 /* ds-badge owns the status chip — we never re-tint one by hand. Its state
    vocabulary differs from ours, so map it: a consumer sets status once on the row
@@ -194,6 +205,7 @@ export class DsItemList extends HTMLElement {
       description: attr('description'),
       icon: attr('icon'),
       status: attr('status'),
+      tone: attr('tone'),
       lead: attr('lead'),
       meta: attr('meta'),
       metaPosition: attr('meta-position'),
@@ -251,10 +263,13 @@ export class DsItemList extends HTMLElement {
       ? (this._timelineMarker() === 'icon' ? 'circle' : 'dot')
       : (LEADS.includes(it.lead) ? it.lead : (it.icon ? 'circle' : 'none'));
     const status = STATUSES.includes(it.status) ? it.status : 'default';
+    /* Falls back to `status`, so a row that names no tone keeps the exact tint it
+       had before tone existed. */
+    const tone = TONES.includes(it.tone) ? it.tone : status;
     const metaPos = META_POS.includes(it.metaPosition) ? it.metaPosition : 'below';
 
     const li = document.createElement('div');
-    li.className = `ds-item ds-item--lead-${lead} ds-item--status-${status}`;
+    li.className = `ds-item ds-item--lead-${lead} ds-item--status-${status} ds-item--tone-${tone}`;
     li.setAttribute('role', 'listitem');
     if (it.disabled) li.setAttribute('aria-disabled', 'true');
     if (it.value != null) li.dataset.value = String(it.value);
