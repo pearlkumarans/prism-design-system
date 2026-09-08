@@ -5,11 +5,8 @@
    Spec: docs/MD/toast.md · Figma node 15938:44865 (32 variants).
    No left status stripe — never drawn in Figma (spec flag 1).
    ============================================================================= */
-
-
 /* Light-DOM component: :host never applies — mirror display on the element. */
 ds-toast { display: block; font-family: var(--font-family-sans); }
-
 .ds-toast {
   display: flex;
   flex-direction: column;          /* content row + timeout bar */
@@ -26,7 +23,6 @@ ds-toast { display: block; font-family: var(--font-family-sans); }
   .ds-toast { transition: none; }
 }
 /* Exit slide-up + fade is run via the Web Animations API in _dismiss(). */
-
 /* ---- Content row ----------------------------------------------------- */
 .ds-toast__content {
   display: flex;
@@ -53,19 +49,17 @@ ds-toast { display: block; font-family: var(--font-family-sans); }
   line-height: var(--uems-line-height-12);
   color: var(--_toast-desc, var(--uems-text-secondary));
 }
-
 /* CTA — separate row item, always underlined, bottom-aligned per the
    Figma drawing (the frame is justify-end, not centered). */
-/* The CTA is a <ds-text-link variant="surface">: it brings its own size (small=12),
-   weight, underline, and focus ring. The container only owns layout positioning + the
-   status-adaptive colour the surface link inherits (status colour on subtle, white on
-   intense) — no styling of the link itself. */
+/* The CTA is a <ds-text-link>: it brings its own size/weight/underline/focus + colour.
+   SUBTLE uses the link's own `primary` colour (no toast-custom colour). INTENSE uses the
+   `surface` variant on the solid fill, so the toast sets white here for it to inherit
+   (a plain accent link would be low-contrast). The container only owns layout. */
 .ds-toast__cta {
   align-self: flex-end;
   flex-shrink: 0;
-  color: var(--_toast-cta);
 }
-
+.ds-toast--intense .ds-toast__cta { color: var(--uems-text-white); }
 .ds-toast__close {
   background: transparent; border: 0; padding: 0; cursor: pointer; line-height: 0;
   width: 16px; height: 16px;
@@ -75,7 +69,6 @@ ds-toast { display: block; font-family: var(--font-family-sans); }
   color: var(--_toast-close, var(--uems-icon-subtle));
 }
 .ds-toast__close:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; border-radius: var(--uems-radius-xs, 4px); }
-
 /* ---- Timeout bar — 4px, full width, in-flow at the bottom ------------ */
 .ds-toast__timeout {
   height: 4px;
@@ -95,9 +88,9 @@ ds-toast { display: block; font-family: var(--font-family-sans); }
   /* keep the bar — it's information, not decoration */
   .ds-toast__timeout > div[data-animating="true"] { animation-duration: 0.01ms !important; animation: none; }
 }
-
 /* =============================================================================
-   Subtle style (default) — light neutral surface, status carried by icon/CTA
+   Subtle style (default) — light neutral surface, status carried by the icon
+   (the CTA is a standard primary text-link, not status-coloured)
    ============================================================================= */
 .ds-toast--subtle {
   --_toast-bg: var(--uems-bg-secondary-subtle);
@@ -107,14 +100,12 @@ ds-toast { display: block; font-family: var(--font-family-sans); }
   --_toast-track: var(--uems-bg-quaternary);
 }
 .ds-toast--subtle:hover { --_toast-bg: var(--uems-bg-primary-hover); }
-
 /* Info icon: dedicated Icon-Info token (Figma fix 2026-06-12); other
    statuses bind Text-{status} per the drawing (see spec flag 4). */
-.ds-toast--subtle.ds-toast--info    { --_toast-icon: var(--uems-icon-info);    --_toast-cta: var(--uems-text-accent-primary); --_toast-fill: var(--uems-bg-info-solid); }
-.ds-toast--subtle.ds-toast--success { --_toast-icon: var(--uems-text-success); --_toast-cta: var(--uems-text-success);        --_toast-fill: var(--uems-bg-success-solid); }
-.ds-toast--subtle.ds-toast--warning { --_toast-icon: var(--uems-text-warning); --_toast-cta: var(--uems-text-warning);        --_toast-fill: var(--uems-bg-warning-solid); }
-.ds-toast--subtle.ds-toast--error   { --_toast-icon: var(--uems-text-error);   --_toast-cta: var(--uems-text-error);          --_toast-fill: var(--uems-bg-error-solid); }
-
+.ds-toast--subtle.ds-toast--info    { --_toast-icon: var(--uems-icon-info); --_toast-fill: var(--uems-bg-info-solid); }
+.ds-toast--subtle.ds-toast--success { --_toast-icon: var(--uems-text-success);        --_toast-fill: var(--uems-bg-success-solid); }
+.ds-toast--subtle.ds-toast--warning { --_toast-icon: var(--uems-text-warning);        --_toast-fill: var(--uems-bg-warning-solid); }
+.ds-toast--subtle.ds-toast--error   { --_toast-icon: var(--uems-text-error);          --_toast-fill: var(--uems-bg-error-solid); }
 /* =============================================================================
    Intense style — solid status surface, ALL foreground white (warning too),
    close = per-status subtle border tint, bar = black track / white fill
@@ -122,7 +113,6 @@ ds-toast { display: block; font-family: var(--font-family-sans); }
 .ds-toast--intense {
   --_toast-title: var(--uems-text-white);
   --_toast-desc: var(--uems-text-white);
-  --_toast-cta: var(--uems-text-white);
   --_toast-icon: var(--uems-text-white);
   --_toast-track: var(--uems-bg-base-black);
   --_toast-fill: var(--uems-bg-base-white);
@@ -133,7 +123,6 @@ ds-toast { display: block; font-family: var(--font-family-sans); }
 .ds-toast--intense .ds-toast__timeout { opacity: 0.25; }
 /* Figma: Intense description sits at 80% opacity over the solid colour. */
 .ds-toast--intense .ds-toast__description { opacity: 0.8; }
-
 .ds-toast--intense.ds-toast--info    { --_toast-bg: var(--uems-bg-info-solid);    --_toast-close: var(--uems-border-accent-subtle); }
 .ds-toast--intense.ds-toast--info:hover    { --_toast-bg: var(--uems-bg-info-solid-hover); }
 .ds-toast--intense.ds-toast--success { --_toast-bg: var(--uems-bg-success-solid); --_toast-close: var(--uems-border-success-subtle); }
@@ -142,10 +131,8 @@ ds-toast { display: block; font-family: var(--font-family-sans); }
 .ds-toast--intense.ds-toast--warning:hover { --_toast-bg: var(--uems-bg-warning-solid-hover); }
 .ds-toast--intense.ds-toast--error   { --_toast-bg: var(--uems-bg-error-solid);   --_toast-close: var(--uems-border-error-subtle); }
 .ds-toast--intense.ds-toast--error:hover   { --_toast-bg: var(--uems-bg-error-solid-hover); }
-
 /* RTL — logical flow handles order; text alignment follows direction */
 .ds-toast[dir="rtl"] .ds-toast__body { text-align: right; }
-
 /* =============================================================================
    ds-toaster — Sonner-style stacked region (same file as the toast). Toasts
    overlap absolutely; JS sets each one's transform (collapsed ↔ expanded ↔

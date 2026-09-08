@@ -137,15 +137,36 @@ describe('ds-toast — repaint-split', () => {
 });
 
 describe('ds-toast — CTA (surface text-link)', () => {
-  it('renders the CTA as a <ds-text-link variant="surface"> (not a button)', async () => {
+  it('renders the CTA as a <ds-text-link> (not a button)', async () => {
     const el = await fixture(html`<ds-toast title="T" cta-text="View Details" cta-href="/x"></ds-toast>`);
     await nextFrame();
     const cta = el._root.querySelector('.ds-toast__cta');
     expect(cta, 'CTA rendered').to.exist;
     expect(cta.tagName.toLowerCase(), 'CTA is a ds-text-link, not a <button>').to.equal('ds-text-link');
-    expect(cta.getAttribute('variant')).to.equal('surface');
     expect(cta.getAttribute('label')).to.equal('View Details');
     expect(cta.getAttribute('href')).to.equal('/x');
+  });
+
+  it('CTA variant tracks the toast style: subtle→primary (own colour), intense→surface (white)', async () => {
+    const sub = await fixture(html`<ds-toast style-variant="subtle" status="error" title="T" cta-text="Retry"></ds-toast>`);
+    await nextFrame();
+    // subtle: the link uses its OWN primary colour, not a per-status custom colour
+    expect(sub._root.querySelector('.ds-toast__cta').getAttribute('variant')).to.equal('primary');
+
+    const int = await fixture(html`<ds-toast style-variant="intense" status="error" title="T" cta-text="Retry"></ds-toast>`);
+    await nextFrame();
+    expect(int._root.querySelector('.ds-toast__cta').getAttribute('variant')).to.equal('surface');
+  });
+
+  it('toggling style-variant swaps the CTA variant in place (no rebuild)', async () => {
+    const el = await fixture(html`<ds-toast style-variant="subtle" title="T" cta-text="Go"></ds-toast>`);
+    await nextFrame();
+    const cta = el._root.querySelector('.ds-toast__cta');
+    expect(cta.getAttribute('variant')).to.equal('primary');
+    el.setAttribute('style-variant', 'intense');
+    await nextFrame();
+    expect(el._root.querySelector('.ds-toast__cta'), 'same CTA node (repaint, not rebuild)').to.equal(cta);
+    expect(cta.getAttribute('variant')).to.equal('surface');
   });
 
   it('an event-only CTA (no href) still fires ds-toast-cta on click', async () => {

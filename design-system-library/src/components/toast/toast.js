@@ -58,6 +58,8 @@ export class DsToast extends HTMLElement {
     this._root.className = `ds-toast ds-toast--${styleV} ds-toast--${status}`;
     if (rtl) this._root.setAttribute('dir', 'rtl');
     else this._root.removeAttribute('dir');
+    /* Keep the CTA's link variant in sync on a subtle↔intense toggle (no rebuild). */
+    this._root.querySelector('.ds-toast__cta')?.setAttribute('variant', styleV === 'intense' ? 'surface' : 'primary');
   }
 
   _pauseTimer() {
@@ -117,6 +119,7 @@ export class DsToast extends HTMLElement {
 
   _render() {
     const status = enumAttr(this, 'status', STATUSES, 'info');
+    const styleV = enumAttr(this, 'style-variant', STYLES, 'intense');
     const title = this.getAttribute('title') || '';
     const description = this.getAttribute('description') || '';
     const showDescription = description && (!this.hasAttribute('show-description') || this.getAttribute('show-description') !== 'false');
@@ -140,10 +143,13 @@ export class DsToast extends HTMLElement {
     const animating = this._countdownActive()
       && (!this.hasAttribute('show-timeout') || this.getAttribute('show-timeout') !== 'false');
 
-    /* The right-side CTA is a <ds-text-link variant="surface"> — it inherits the
-       toast's status-adaptive CTA colour (--_toast-cta) rather than a fixed link
-       colour. href → a real navigable link; no href → event-only (fires ds-toast-cta). */
-    const ctaEl = `<ds-text-link class="ds-toast__cta" variant="surface" size="small" underline="always"`
+    /* The right-side CTA is a <ds-text-link>. On SUBTLE it uses the link's own
+       `primary` colour (no toast-custom colour). On INTENSE (solid surface) it uses
+       the `surface` variant, which inherits the white the toast sets on it — a plain
+       accent link would be low-contrast on the solid fill. href → a real navigable
+       link; no href → event-only (still fires ds-toast-cta). */
+    const ctaVariant = styleV === 'intense' ? 'surface' : 'primary';
+    const ctaEl = `<ds-text-link class="ds-toast__cta" variant="${ctaVariant}" size="small" underline="always"`
       + ` label="${escapeHtml(ctaText)}"${ctaHref ? ` href="${escapeHtml(ctaHref)}"` : ''} data-cta></ds-text-link>`;
 
     this._root.innerHTML = `
