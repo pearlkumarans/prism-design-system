@@ -36,6 +36,20 @@
      'label', text)`. button.js itself is never flagged (it owns the span via a
      createElement'd `this._label`, not a querySelector).
 
+   RULE 6 — no-reentrant-attr-write (the render-loop class)
+     Flags `this.setAttribute('x', …)` inside a PAINT method (_render / _paint* /
+     _apply / _sync) for an `x` the component also OBSERVES, with no same-value
+     guard on the line. setAttribute fires attributeChangedCallback even when the
+     value is UNCHANGED, so the write re-enters the paint forever — "Maximum call
+     stack size exceeded", and the component never finishes rendering. It hit
+     ds-card, was fixed there, then recurred in ds-form-footer, ds-kpi-card and
+     ds-kpi-breakdown and shipped on three docs pages before anyone noticed.
+     NOT flagged: writes in property setters or event-listener bodies (a date
+     pick reflecting `value`) — those run on input, not during paint, and cannot
+     loop. Both exclusions are load-bearing: without them this rule reported 25
+     false positives across 11 components.
+     Guard with `if (want && this.getAttribute('x') !== want)`, or `// lint-ok`.
+
    RULE 4 — no-missing-component-import (the undeclared-dependency class)
      Flags a component that RENDERS a `<ds-*>` tag (in a template string) or does
      `createElement('ds-*')` for an element whose defining module it does NOT
@@ -107,6 +121,7 @@ const localEscapers = [];
 const missingImports = [];
 const btnLabels = [];
 const deadHosts = [];
+const reentrantAttrs = [];
 
 /* An HTML-entity escaper re-implementation — either the chained `.replace(/&/g,
    '&amp;')` form or the `'&': '&amp;'` map form. The shared escapeHtml is the only
@@ -224,6 +239,55 @@ for (const file of files) {
   };
   scan(TEXT_SINK, 'text');
   scan(ATTR_SINK, 'attr');
+
+  /* RULE 6 — no-reentrant-attr-write (the render-loop class)
+     Flags `this.setAttribute('x', …)` inside a PAINT method for an `x` that the
+     component also OBSERVES, without a same-value guard on the line.
+     setAttribute fires attributeChangedCallback even when the value is
+     UNCHANGED, so such a write re-enters the paint forever — "Maximum call
+     stack size exceeded", and the component never finishes rendering. It hit
+     ds-card, was fixed there, then recurred in ds-form-footer, ds-kpi-card and
+     ds-kpi-breakdown and shipped on three docs pages.
+     Scoped to paint methods on purpose: reflecting an observed attribute from
+     an EVENT handler (a date pick writing `value`) is normal and never loops.
+     Guard with `if (want && this.getAttribute('x') !== want)`, or // lint-ok. */
+  {
+    const observed = new Set();
+    for (const om of code.matchAll(/observedAttributes\s*\(\)\s*\{\s*return\s*\[([^\]]*)\]/g)) {
+      for (const a of om[1].matchAll(/'([^']+)'/g)) observed.add(a[1]);
+    }
+    const PAINT = /^\s{2}(_render|_paint[A-Za-z]*|_apply|_sync)\s*\(/;
+    /* Any 2-space member STARTS a new member, and a 2-space `}` ENDS one. Both
+       matter: without the get/set/static/async forms here, `inPaint` leaked past
+       the end of a paint method into the property setters below it and reported
+       19 false positives across 9 components (checkbox's `set checked(v)` and
+       friends, which are event-path reflection and never loop). */
+    const MEMBER = /^\s{2}(?:static\s+|async\s+|get\s+|set\s+|\*\s*)?[A-Za-z_$][\w$]*\s*\(/;
+    /* A write REGISTERED inside a paint method but executed later — the
+       `addEventListener('click', () => this.setAttribute('tab', …))` shape — runs
+       on user input, not during paint, so it cannot loop. Track callback bodies
+       by brace depth and skip them; without this, message-box and right-pane
+       contributed 6 more false positives. */
+    const CALLBACK_OPEN = /(?:addEventListener|forEach|map|then|setTimeout|requestAnimationFrame|observe)\s*\(/;
+    let inPaint = false;
+    let depth = 0;
+    let cbDepth = null;
+    code.split('\n').forEach((line, i) => {
+      if (MEMBER.test(line)) { inPaint = PAINT.test(line); depth = 0; cbDepth = null; }
+      else if (/^\s{2}\}/.test(line)) { inPaint = false; cbDepth = null; }
+      const opensCb = inPaint && cbDepth === null && CALLBACK_OPEN.test(line) && /=>|function/.test(line);
+      const before = depth;
+      depth += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
+      if (opensCb) cbDepth = before;
+      else if (cbDepth !== null && depth <= cbDepth) cbDepth = null;
+      if (!inPaint || cbDepth !== null) return;
+      const w = /this\.setAttribute\(\s*'([^']+)'/.exec(line);
+      if (!w || !observed.has(w[1])) return;
+      if (new RegExp(`getAttribute\\(\\s*'${w[1]}'\\s*\\)\\s*!==`).test(line)) return;  // guarded
+      if (/\/\/\s*lint-ok/.test(src.split('\n')[i] || '')) return;
+      reentrantAttrs.push({ rel, line: i + 1, attr: w[1] });
+    });
+  }
 }
 
 let failed = false;
@@ -257,6 +321,13 @@ if (btnLabels.length) {
   for (const b of btnLabels) console.error(`  ${b.rel}:${b.line}`);
   console.error('');
 }
+if (reentrantAttrs.length) {
+  failed = true;
+  console.error(`\n✖ convention-lint (render-loop): ${reentrantAttrs.length} unguarded write(s) to an OBSERVED attribute inside a paint method — setAttribute fires attributeChangedCallback even when the value is unchanged, so this re-enters the paint forever:\n`);
+  for (const v of reentrantAttrs) console.error(`    ${v.rel}:${v.line}   setAttribute('${v.attr}')`);
+  console.error(`\n  Guard it:  if (want && this.getAttribute('x') !== want) this.setAttribute('x', want);\n  Or suppress a verified-safe case with a trailing  // lint-ok  comment.\n`);
+}
+
 if (deadHosts.length) {
   failed = true;
   console.error(`\n✖ convention-lint (dead-host): ${deadHosts.length} light-DOM component(s) have a standalone :host {} rule (never applies) — mirror display on the ds-<name> element selector instead:\n`);

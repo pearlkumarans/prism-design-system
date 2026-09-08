@@ -158,7 +158,11 @@ export class DsKpiCard extends HTMLElement {
     if (clickable && !loading) this.classList.add('ds-kpi-card--clickable');
     if (loading) this.classList.add('ds-kpi-card--loading');
     if (loading) this.setAttribute('aria-busy', 'true'); else this.removeAttribute('aria-busy');
-    if (rtl) this.setAttribute('dir', 'rtl');
+    /* Guard the same-value set: `dir` is observed, and setAttribute fires
+       attributeChangedCallback even when the value is unchanged, so an unguarded
+       write re-enters this paint forever. (aria-busy above is NOT observed, so it
+       is safe unguarded.) Same fix ds-card and ds-widget already carry. */
+    if (rtl && this.getAttribute('dir') !== 'rtl') this.setAttribute('dir', 'rtl');
     if (clickable && !loading) {
       this.setAttribute('role', 'button');
       this.setAttribute('tabindex', '0');
@@ -537,7 +541,15 @@ export class DsKpiGroup extends HTMLElement {
     const variant = enumAttr(this, 'variant', GROUP_VARIANTS, 'multi');
     [...this.classList].forEach((c) => { if (c.startsWith('ds-kpi-group')) this.classList.remove(c); });
     this.classList.add('ds-kpi-group', `ds-kpi-group--${variant}`);
-    if (boolAttr(this, 'rtl')) this.setAttribute('dir', 'rtl'); else this.removeAttribute('dir');
+    /* Guarded PROPHYLACTICALLY, not as a fix: DsKpiGroup does not observe `dir`
+       today, so this write cannot re-enter its callback. Its sibling DsKpiCard
+       does observe it, and that is exactly the loop that shipped — so guard here
+       too, and adding `dir` to the list above stays safe. */
+    if (boolAttr(this, 'rtl')) {
+      if (this.getAttribute('dir') !== 'rtl') this.setAttribute('dir', 'rtl');
+    } else if (this.hasAttribute('dir')) {
+      this.removeAttribute('dir');
+    }
   }
 }
 

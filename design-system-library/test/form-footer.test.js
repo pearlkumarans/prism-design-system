@@ -143,3 +143,37 @@ describe('ds-form-footer — repaint-split', () => {
     expect(leftArea(el).getAttribute('aria-live'), 'live applied').to.equal('polite');
   });
 });
+
+/* Regression — the `dir` self-retrigger loop.
+
+   `dir` is an observed attribute AND the paint path writes it when `rtl` is set.
+   setAttribute fires attributeChangedCallback even when the value is UNCHANGED,
+   so an unguarded write re-entered the paint forever: "Maximum call stack size
+   exceeded", and the component never finished rendering. It shipped on three
+   docs pages. ds-card and ds-widget already carried the guard; these did not.
+
+   These COUNT PAINTS rather than expecting a throw: the overflow surfaces as an
+   uncaught window error from a re-entrant callback, not as an exception thrown
+   back into setAttribute, so an assertion on the return value sees nothing and
+   passes even when the bug is present (verified — the first version of this
+   block passed against the unfixed code). A bounded call count is the thing
+   that actually distinguishes fixed from broken. */
+describe('ds-form-footer — dir must not re-enter its own paint', () => {
+  it('ds-form-footer paints a bounded number of times when rtl is set', async () => {
+    const el = await fixture(html`<ds-form-footer></ds-form-footer>`);
+    await nextFrame();
+    const proto = Object.getPrototypeOf(el);
+    const orig = proto._paintChrome;
+    let calls = 0;
+    proto._paintChrome = function (...a) { calls += 1; if (calls > 50) return; return orig.apply(this, a); };
+    try {
+      el.setAttribute('rtl', '');
+      await nextFrame();
+      expect(calls, '_paintChrome re-entered itself — the dir guard is missing').to.be.lessThan(10);
+      expect(el.getAttribute('dir'), 'rtl still applied').to.equal('rtl');
+    } finally {
+      proto._paintChrome = orig;
+    }
+  });
+
+});

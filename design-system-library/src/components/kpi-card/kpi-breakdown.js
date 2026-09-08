@@ -150,7 +150,10 @@ export class DsKpiBreakdown extends HTMLElement {
     [...this.classList].forEach((c) => { if (c.startsWith('ds-kpi-breakdown')) this.classList.remove(c); });
     this.classList.add('ds-kpi-breakdown', `ds-kpi-breakdown--${layout}`, `ds-kpi-breakdown--${state}`);
     if (loading) this.classList.add('ds-kpi-breakdown--loading');
-    if (rtl) this.setAttribute('dir', 'rtl');
+    /* Guard the same-value set: `dir` is observed and setAttribute always fires
+       attributeChangedCallback, so an unguarded write re-enters this render
+       forever. Same fix ds-card and ds-widget already carry. */
+    if (rtl && this.getAttribute('dir') !== 'rtl') this.setAttribute('dir', 'rtl');
 
     this.setAttribute('role', 'group');
     if (!this.hasAttribute('aria-label') && title) this.setAttribute('aria-label', `${title}${value ? ', ' + value : ''}`);

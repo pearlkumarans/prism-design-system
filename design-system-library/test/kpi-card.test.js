@@ -5,6 +5,7 @@
    teardown (ResizeObserver disconnected, no listener leak). */
 import { fixture, html, expect, nextFrame } from '@open-wc/testing';
 import '../src/components/kpi-card/kpi-card.js';
+import '../src/components/kpi-card/kpi-breakdown.js';
 import { trackListeners } from './helpers/listeners.js';
 
 const XSS = '<img src=x onerror=alert(1)>';
@@ -182,4 +183,67 @@ describe('ds-kpi-card — teardown', () => {
     expect(el.querySelectorAll('.ds-kpi-card__default').length).to.equal(1);
     expect(valueEl(el).textContent.trim()).to.equal('30');
   });
+});
+
+/* Regression — the `dir` self-retrigger loop.
+
+   `dir` is an observed attribute AND the paint path writes it when `rtl` is set.
+   setAttribute fires attributeChangedCallback even when the value is UNCHANGED,
+   so an unguarded write re-entered the paint forever: "Maximum call stack size
+   exceeded", and the component never finished rendering. It shipped on three
+   docs pages. ds-card and ds-widget already carried the guard; these did not.
+
+   These COUNT PAINTS rather than expecting a throw: the overflow surfaces as an
+   uncaught window error from a re-entrant callback, not as an exception thrown
+   back into setAttribute, so an assertion on the return value sees nothing and
+   passes even when the bug is present (verified — the first version of this
+   block passed against the unfixed code). A bounded call count is the thing
+   that actually distinguishes fixed from broken. */
+describe('ds-kpi-card / group / breakdown — dir must not re-enter its own paint', () => {
+  it('ds-kpi-card paints a bounded number of times when rtl is set', async () => {
+    const el = await fixture(html`<ds-kpi-card label="Devices" value="186"></ds-kpi-card>`);
+    await nextFrame();
+    const proto = Object.getPrototypeOf(el);
+    const orig = proto._paintChrome;
+    let calls = 0;
+    proto._paintChrome = function (...a) { calls += 1; if (calls > 50) return; return orig.apply(this, a); };
+    try {
+      el.setAttribute('rtl', '');
+      await nextFrame();
+      expect(calls, '_paintChrome re-entered itself — the dir guard is missing').to.be.lessThan(10);
+      expect(el.getAttribute('dir'), 'rtl still applied').to.equal('rtl');
+    } finally {
+      proto._paintChrome = orig;
+    }
+  });
+
+  it('ds-kpi-group applies and clears dir from rtl', async () => {
+    /* Not a recursion test: DsKpiGroup does not observe `dir`, so it could not
+       loop. This just pins the set/clear behaviour the guard now wraps. */
+    const el = await fixture(html`<ds-kpi-group><ds-kpi-card label="A" value="1"></ds-kpi-card></ds-kpi-group>`);
+    el.setAttribute('rtl', '');
+    await nextFrame();
+    expect(el.getAttribute('dir'), 'applied').to.equal('rtl');
+    el.removeAttribute('rtl');
+    await nextFrame();
+    expect(el.hasAttribute('dir'), 'cleared').to.be.false;
+  });
+
+  it('ds-kpi-breakdown paints a bounded number of times when rtl is set', async () => {
+    const el = await fixture(html`<ds-kpi-breakdown></ds-kpi-breakdown>`);
+    await nextFrame();
+    const proto = Object.getPrototypeOf(el);
+    const orig = proto._render;
+    let calls = 0;
+    proto._render = function (...a) { calls += 1; if (calls > 50) return; return orig.apply(this, a); };
+    try {
+      el.setAttribute('rtl', '');
+      await nextFrame();
+      expect(calls, '_render re-entered itself — the dir guard is missing').to.be.lessThan(10);
+      expect(el.getAttribute('dir'), 'rtl still applied').to.equal('rtl');
+    } finally {
+      proto._render = orig;
+    }
+  });
+
 });

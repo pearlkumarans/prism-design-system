@@ -85,7 +85,11 @@ export class DsFormFooter extends HTMLElement {
     const rtl = boolAttr(this, 'rtl') || this.getAttribute('dir') === 'rtl';
     const label = this.getAttribute('label') || 'Form actions';
 
-    if (rtl) this.setAttribute('dir', 'rtl');
+    /* Guard the same-value set: `dir` is observed, and setAttribute fires
+       attributeChangedCallback even when the value is unchanged — so an
+       unguarded write here re-enters this paint forever. Same fix ds-card and
+       ds-widget already carry. */
+    if (rtl && this.getAttribute('dir') !== 'rtl') this.setAttribute('dir', 'rtl');
     if (!this.hasAttribute('role')) this.setAttribute('role', 'group');
     if (!this.hasAttribute('aria-label')) this.setAttribute('aria-label', label);
 
@@ -106,7 +110,8 @@ export class DsFormFooter extends HTMLElement {
     [...this.classList].forEach((c) => { if (c.startsWith('ds-form-footer')) this.classList.remove(c); });
     this.classList.add('ds-form-footer');
     if (!showLeft) this.classList.add('ds-form-footer--no-left');
-    if (rtl) this.setAttribute('dir', 'rtl');
+    /* Guarded for the same reason as the chrome paint above. */
+    if (rtl && this.getAttribute('dir') !== 'rtl') this.setAttribute('dir', 'rtl');
 
     if (!this.hasAttribute('role')) this.setAttribute('role', 'group');
     if (!this.hasAttribute('aria-label')) this.setAttribute('aria-label', label);
