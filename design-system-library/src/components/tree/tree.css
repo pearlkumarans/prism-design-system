@@ -1,0 +1,168 @@
+/* =============================================================================
+   ds-tree — hierarchy rows with a disclosure twisty, optional checkbox column
+   and optional guide lines. See tree.js for the ARIA/keyboard contract.
+
+   ONE number drives the geometry. `--_tree-indent` is the per-level step; the
+   twisty box, the label offset and the guide line all derive from it plus
+   `--_tree-twisty`, so a wider twisty automatically widens the indent and the
+   guide cannot drift off the chevron it is supposed to run through. This is the
+   same derived-geometry approach ds-item-list uses for its timeline connector,
+   for the same reason: the two used to be tuned by hand and drifted apart.
+   ============================================================================= */
+
+/* Block, not inline: the host holds block children whose width would otherwise
+   be unreliable (the ds-item-list lesson). */
+ds-tree { display: block; font-family: var(--font-family-sans); width: 100%; }
+
+.ds-tree {
+  display: flex;
+  flex-direction: column;
+  /* 12, not 10: the spacing scale steps 8 -> 12 and --spacing-10 DOES NOT EXIST.
+     An undefined var() invalidates the whole declaration, which is how .ds-item
+     and .hd-lib-row both silently lost their padding. */
+  --_tree-indent: var(--spacing-20);
+  --_tree-twisty: var(--uems-icon-20, 20px);
+  --_tree-row-pad: var(--spacing-6);
+  font-size: var(--font-size-14);
+  line-height: var(--line-height-normal);
+}
+
+.ds-tree__group { display: flex; flex-direction: column; }
+.ds-tree__node { display: flex; flex-direction: column; position: relative; }
+
+/* ---- Row ------------------------------------------------------------------ */
+.ds-tree__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  padding-block: var(--_tree-row-pad);
+  padding-inline-end: var(--spacing-8);
+  /* The depth is a plain number on the row, so the indent is arithmetic rather
+     than a nested margin — a flat, virtualized rendering would keep working. */
+  padding-inline-start: calc(var(--spacing-4) + var(--_tree-depth, 0) * var(--_tree-indent));
+  border-radius: var(--radius-sm);
+  color: var(--uems-text-primary);
+  cursor: default;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.ds-tree__item:hover { background: var(--uems-bg-secondary); }
+
+/* One tab stop, so the ring must be unmistakable when it lands. */
+.ds-tree__item:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: -2px;
+}
+
+.ds-tree__item[aria-selected="true"] {
+  background: var(--uems-bg-accent-primary);
+  color: var(--uems-text-accent-secondary);
+}
+.ds-tree__item[aria-selected="true"]:hover { background: var(--uems-bg-accent-primary-hover, var(--uems-bg-accent-primary)); }
+
+.ds-tree__item[aria-disabled="true"] {
+  color: var(--uems-text-disabled);
+  pointer-events: none;
+}
+
+/* ---- Twisty ---------------------------------------------------------------
+   A LEAF keeps the box. Without it every leaf label would sit one twisty-width
+   further left than its siblings' labels and the level would stop reading as a
+   level. */
+.ds-tree__twisty {
+  flex: 0 0 var(--_tree-twisty);
+  width: var(--_tree-twisty);
+  height: var(--_tree-twisty);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--uems-icon-tertiary);
+}
+.ds-tree__twisty[data-twisty] { cursor: pointer; }
+.ds-tree__twisty[data-twisty]:hover {
+  background: var(--uems-bg-secondary-hover);
+  color: var(--uems-icon-secondary);
+}
+
+/* ---- Checkbox / icon / label --------------------------------------------- */
+.ds-tree__check { flex: 0 0 auto; display: inline-flex; }
+.ds-tree__icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  color: var(--uems-icon-secondary);
+}
+
+.ds-tree__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Search-match highlight. mark's UA default is a yellow block with black text,
+   which fights every theme — retint from tokens and inherit the row's colour so
+   the hit reads as emphasis, not as a differently-coloured string. Same
+   treatment as ds-item-list. */
+.ds-tree__label mark {
+  background: var(--uems-bg-warning-secondary);
+  color: inherit;
+  border-radius: var(--radius-sm);
+  padding-inline: var(--spacing-2);
+}
+
+.ds-tree__badge, .ds-tree__action { flex: 0 0 auto; }
+.ds-tree__meta {
+  flex: 0 0 auto;
+  font-size: var(--font-size-12);
+  color: var(--uems-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The row action only appears on hover/focus — a kebab on every row of a deep
+   tree is visual noise, and the row is not a click target itself. */
+.ds-tree__action { opacity: 0; }
+.ds-tree__item:hover .ds-tree__action,
+.ds-tree__item:focus-within .ds-tree__action,
+.ds-tree__item:focus-visible .ds-tree__action { opacity: 1; }
+
+/* ---- Lazy + empty branches ----------------------------------------------- */
+.ds-tree__loading, .ds-tree__empty {
+  padding-block: var(--_tree-row-pad);
+  padding-inline-start: calc(var(--spacing-4) + var(--_tree-depth, 0) * var(--_tree-indent) + var(--_tree-twisty) + var(--spacing-6));
+  font-size: var(--font-size-13);
+  color: var(--uems-text-tertiary);
+}
+
+/* ---- Guide lines ----------------------------------------------------------
+   Opt-in with `guides`. Drawn on the NODE, not the row, so the line spans the
+   row plus its whole expanded subtree. Positioned through the centre of the
+   twisty from the same variables the indent uses. */
+.ds-tree--guides .ds-tree__node .ds-tree__node::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: calc(var(--spacing-4) + (var(--_tree-depth, 1) - 1) * var(--_tree-indent) + var(--_tree-twisty) / 2);
+  border-inline-start: 1px solid var(--uems-border-tertiary);
+  pointer-events: none;
+}
+
+/* ---- Density -------------------------------------------------------------- */
+.ds-tree--small {
+  --_tree-indent: var(--spacing-16);
+  --_tree-row-pad: var(--spacing-4);
+  font-size: var(--font-size-13);
+}
+
+/* ---- RTL ------------------------------------------------------------------
+   Everything above is logical (padding-inline-*, inset-inline-start,
+   border-inline-start), so the mirror is free. The chevron GLYPH is the one
+   thing that is not: it points at the content, so it has to flip. */
+[dir="rtl"] .ds-tree__twisty[data-twisty] ds-icon { transform: scaleX(-1); }
+[dir="rtl"] .ds-tree__item[aria-expanded="true"] .ds-tree__twisty ds-icon { transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-tree__item { transition: none; }
+}

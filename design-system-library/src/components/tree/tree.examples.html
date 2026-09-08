@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <title>ds-tree — dev harness</title>
+  <script>
+    window.UEMS_ICON_SPRITE = '../../icons/icons.svg';
+  </script>
+  <link rel="stylesheet" href="../../styles/index.css">
+  <script type="module">import '../index.js';</script>
+  <style>
+    body { font-family: var(--font-family-sans); background: var(--uems-bg-primary); color: var(--uems-text-primary); padding: 24px; margin: 0; }
+    h2 { font-size: var(--font-size-14); margin: 28px 0 8px; color: var(--uems-text-secondary); }
+    .box { max-width: 460px; border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-md); padding: var(--spacing-8); }
+    .out { font-family: var(--font-family-mono); font-size: 12px; color: var(--uems-text-tertiary); margin-top: 6px; min-height: 1.2em; }
+    .row { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  </style>
+</head>
+<body>
+
+<h2>1 — read-only hierarchy (selection="none", guides), slotted markup</h2>
+<div class="box">
+  <ds-tree guides label="Registry">
+    <ds-tree-item id="hklm" text="HKEY_LOCAL_MACHINE" icon="folder" expanded>
+      <ds-tree-item id="sw" text="SOFTWARE" icon="folder" expanded>
+        <ds-tree-item id="policies" text="Policies" icon="folder"></ds-tree-item>
+        <ds-tree-item id="ms" text="Microsoft" icon="folder" has-children></ds-tree-item>
+      </ds-tree-item>
+      <ds-tree-item id="sys" text="SYSTEM" icon="folder" has-children></ds-tree-item>
+    </ds-tree-item>
+  </ds-tree>
+</div>
+
+<div class="row">
+  <div>
+    <h2>2 — selection="single" + badges + row action</h2>
+    <div class="box"><ds-tree id="t-single" selection="single" guides label="Report categories"></ds-tree></div>
+    <div class="out" id="o-single">—</div>
+  </div>
+
+  <div>
+    <h2>3 — checkbox tree, cascade + tri-state parents</h2>
+    <div class="box"><ds-tree id="t-multi" selection="multi" checkboxes guides label="Target OUs"></ds-tree></div>
+    <div class="out" id="o-multi">—</div>
+  </div>
+</div>
+
+<div class="row">
+  <div>
+    <h2>4 — lazy branches (expand "Domain Controllers")</h2>
+    <div class="box"><ds-tree id="t-lazy" selection="single" guides label="Active Directory"></ds-tree></div>
+    <div class="out" id="o-lazy">—</div>
+  </div>
+
+  <div>
+    <h2>5 — search match + auto-expanded ancestors, size="small"</h2>
+    <div class="box"><ds-tree id="t-search" size="small" selection="single" guides label="Search results"></ds-tree></div>
+    <div class="out">match: "fin"</div>
+  </div>
+</div>
+
+<h2>6 — RTL, checkboxes, disabled node</h2>
+<div class="box"><ds-tree id="t-rtl" rtl selection="multi" checkboxes guides label="شجرة"></ds-tree></div>
+
+<script type="module">
+  const OU = () => ([
+    { id: 'corp', text: 'corp.acme.com', icon: 'folder', expanded: true, children: [
+      { id: 'fin', text: 'Finance', icon: 'folder', badge: '42', children: [
+        { id: 'fin-ap', text: 'Accounts Payable', icon: 'computer' },
+        { id: 'fin-ar', text: 'Accounts Receivable', icon: 'computer' },
+      ] },
+      { id: 'eng', text: 'Engineering', icon: 'folder', badge: '318', children: [
+        { id: 'eng-qa', text: 'QA', icon: 'computer' },
+        { id: 'eng-dev', text: 'Dev', icon: 'computer' },
+      ] },
+      { id: 'kiosk', text: 'Kiosks (locked)', icon: 'computer', disabled: true },
+    ] },
+  ]);
+
+  document.getElementById('t-single').items = [
+    { id: 'r1', text: 'Inventory', icon: 'folder', expanded: true, children: [
+      { id: 'r1a', text: 'Hardware', icon: 'doc', meta: '12 reports', action: { text: 'Run', actionId: 'run' } },
+      { id: 'r1b', text: 'Software', icon: 'doc', meta: '8 reports', action: { text: 'Run', actionId: 'run' } },
+    ] },
+    { id: 'r2', text: 'Patch', icon: 'folder', badge: { text: 'new', state: 'active' }, children: [
+      { id: 'r2a', text: 'Missing patches', icon: 'doc', meta: '4 reports' },
+    ] },
+  ];
+  document.getElementById('t-multi').items = OU();
+  document.getElementById('t-rtl').items = OU();
+
+  document.getElementById('t-search').items = [
+    { id: 's-corp', text: 'corp.acme.com', icon: 'folder', expanded: true, match: 'fin', children: [
+      { id: 's-fin', text: 'Finance', icon: 'folder', match: 'fin', expanded: true, children: [
+        { id: 's-ap', text: 'Finance-AP-07', icon: 'computer', match: 'fin' },
+      ] },
+      { id: 's-eng', text: 'Engineering', icon: 'folder', match: 'fin' },
+    ] },
+  ];
+
+  /* Lazy: `hasChildren` with nothing loaded. ds-tree-expand fires with lazy:true,
+     the row shows "Loading…", and setChildren() resolves it. */
+  const lazy = document.getElementById('t-lazy');
+  lazy.items = [
+    { id: 'ad', text: 'acme.local', icon: 'folder', expanded: true, children: [
+      { id: 'dc', text: 'Domain Controllers', icon: 'folder', hasChildren: true },
+      { id: 'users', text: 'Users', icon: 'folder', hasChildren: true },
+    ] },
+  ];
+  lazy.addEventListener('ds-tree-expand', (e) => {
+    document.getElementById('o-lazy').textContent = `expand ${e.detail.id} lazy=${e.detail.lazy}`;
+    if (!e.detail.lazy) return;
+    setTimeout(() => lazy.setChildren(e.detail.id, [
+      { id: `${e.detail.id}-1`, text: 'DC-01', icon: 'server-01' },
+      { id: `${e.detail.id}-2`, text: 'DC-02', icon: 'server-01' },
+    ]), 600);
+  });
+
+  const log = (id, el) => {
+    el.addEventListener('ds-tree-select', (e) => {
+      document.getElementById(id).textContent = `selected (${e.detail.ids.length}): ${e.detail.ids.join(', ') || '—'}`;
+    });
+    el.addEventListener('ds-tree-action', (e) => {
+      document.getElementById(id).textContent = `action ${e.detail.actionId} on ${e.detail.id}`;
+    });
+  };
+  log('o-single', document.getElementById('t-single'));
+  log('o-multi', document.getElementById('t-multi'));
+</script>
+</body>
+</html>
