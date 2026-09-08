@@ -307,7 +307,6 @@ body {
 .upd-card__icon { flex: 0 0 40px; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 .upd-card--rec .upd-card__icon { background: var(--uems-bg-warning-primary); color: var(--uems-text-warning); }
 .upd-card--norm .upd-card__icon { background: var(--uems-bg-info-secondary); color: var(--uems-icon-info); }
-.upd-card--review .upd-card__icon { background: var(--uems-bg-accent-secondary); color: var(--uems-icon-accent); }
 .upd-card__close { position: absolute; top: 8px; inset-inline-end: 8px; }
 .upd-card__body { flex: 1; min-width: 0; padding-inline-end: 16px; }
 .upd-card__badge { margin-bottom: 8px; }
@@ -325,6 +324,31 @@ body {
 .rm-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; text-decoration: none; }
 .rm-row .ds-text-link { font-weight: var(--font-weight-semibold); font-size: var(--font-size-14); }
 .rm-row__ext { color: #6B94E7; flex: 0 0 auto; }
+/* Review & earn — "gift-card face": accent surface (chip + gold stars + trust
+   line) over a white action footer. Full-bleed, so it overrides .upd-card's
+   padded flex-row base. Translucent white veils use color-mix on the white
+   token — no hardcoded colours; the gold is the chart-yellow token. */
+.upd-card--review { display: block; gap: 0; padding: 0; border: none; overflow: hidden; border-radius: 14px; box-shadow: var(--shadow-lg); background: var(--uems-bg-primary); }
+.rv-face { position: relative; overflow: hidden; padding: var(--spacing-20); background: var(--uems-bg-button-primary-pressed); color: var(--uems-text-white); }
+.rv-face__ring { position: absolute; border-radius: var(--radius-full); pointer-events: none; background: color-mix(in srgb, var(--uems-text-white) 8%, transparent); }
+.rv-face__ring--1 { top: -40px; inset-inline-end: -30px; width: 150px; height: 150px; }
+.rv-face__ring--2 { top: -10px; inset-inline-end: 12px; width: 90px; height: 90px; background: color-mix(in srgb, var(--uems-text-white) 6%, transparent); }
+.rv-close { position: absolute; top: 10px; inset-inline-end: 10px; z-index: 2; }
+.upd-card--review .rv-close button,
+.upd-card--review .rv-close button:hover:not(:disabled),
+.upd-card--review .rv-close button:active:not(:disabled) { color: var(--uems-text-white); background: transparent; }
+.upd-card--review .rv-close ds-icon { color: var(--uems-text-white); }
+.rv-eyebrow { position: relative; display: inline-flex; align-items: center; gap: var(--spacing-6); font-size: var(--font-size-11); font-weight: var(--font-weight-semibold); letter-spacing: 0.06em; }
+.rv-chip { display: block; position: relative; width: 38px; height: 27px; margin: var(--spacing-16) 0 var(--spacing-12); border-radius: var(--uems-radius-xs); background: var(--uems-bg-chart-yellow-primary); }
+.rv-chip::after { content: ""; position: absolute; inset: 5px; border-radius: 3px; border: 1px solid color-mix(in srgb, var(--uems-bg-base-black) 32%, transparent); }
+.rv-title { position: relative; font-size: var(--font-size-18); line-height: 26px; font-weight: var(--font-weight-semibold); }
+.rv-desc { position: relative; margin-top: var(--spacing-4); font-size: var(--font-size-13); line-height: 20px; opacity: 0.88; }
+.rv-meta { position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-12); margin-top: var(--spacing-16); }
+.rv-stars { display: inline-flex; gap: 3px; color: var(--uems-bg-chart-yellow-primary); }
+.rv-valid { font-size: var(--font-size-11); opacity: 0.72; }
+.rv-actions { display: flex; align-items: center; gap: var(--spacing-12); padding: var(--spacing-12) var(--spacing-16); background: var(--uems-bg-primary); }
+.rv-actions ds-text-link { white-space: nowrap; }
+.rv-dismiss { margin-inline-start: auto; }
 /* Appearance (theme chooser) — a narrow popover with accent swatches + a mode list,
    opened by hovering the right-rail theme icon. */
 .upd-pop--appr { width: 240px; }
