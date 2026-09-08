@@ -170,3 +170,69 @@ describe('ds-button — teardown', () => {
     expect(labelEl(el).textContent).to.equal('Reattach');
   });
 });
+
+describe('ds-button — surface variant colours', () => {
+  /* Colour assertions need the real stylesheet: the shared harness does not load
+     component CSS, so color/border-color would read as initial values. Each load
+     races a timer and never rejects — a stalled sheet must not hang the suite. */
+  before(async () => {
+    const HREFS = ['/src/tokens/primitives.css', '/src/tokens/spacing.css',
+      '/src/tokens/typography.css', '/src/tokens/tokens.css',
+      '/src/components/button/button.css'];
+    await Promise.all(HREFS.map((href) => new Promise((resolve) => {
+      if (document.querySelector(`link[href="${href}"]`)) return resolve();
+      const link = Object.assign(document.createElement('link'), { rel: 'stylesheet', href });
+      link.addEventListener('load', resolve);
+      link.addEventListener('error', resolve);
+      setTimeout(resolve, 2000);
+      document.head.appendChild(link);
+    })));
+    await nextFrame();
+  });
+
+  /* Resolve a token through the browser so both sides of the comparison are the
+     same rgb() string — and so the assertion holds in either theme rather than
+     pinning a hex that only matches the one this harness happens to run in. */
+  const resolved = (value) => {
+    const probe = document.createElement('span');
+    probe.style.color = value;
+    document.body.appendChild(probe);
+    const out = getComputedStyle(probe).color;
+    probe.remove();
+    return out;
+  };
+  const surface = (el) => el.querySelector('.ds-button');
+
+  it('renders the border and the label in the accent colour', async () => {
+    const el = await fixture(html`<ds-button variant="surface">Get Quote</ds-button>`);
+    await nextFrame();
+    const cs = getComputedStyle(surface(el));
+    expect(cs.color, 'label is accent').to.equal(resolved('var(--uems-text-accent-link)'));
+    expect(cs.borderTopColor, 'border is accent').to.equal(resolved('var(--uems-border-accent)'));
+  });
+
+  it('keeps the label and border matched, not a shade apart', async () => {
+    /* Both tokens resolve to the same hyperlink blue; if either is retargeted the
+       pairing should be a deliberate decision, not a silent drift. */
+    const el = await fixture(html`<ds-button variant="surface">Book Now</ds-button>`);
+    await nextFrame();
+    const cs = getComputedStyle(surface(el));
+    expect(cs.color).to.equal(cs.borderTopColor);
+  });
+
+  it('keeps its opaque surface fill — it is not an outline button', async () => {
+    const el = await fixture(html`<ds-button variant="surface">Get Quote</ds-button>`);
+    await nextFrame();
+    const bg = getComputedStyle(surface(el)).backgroundColor;
+    expect(bg, 'not transparent').to.not.equal('rgba(0, 0, 0, 0)');
+    expect(bg).to.equal(resolved('var(--uems-bg-primary-alt)'));
+  });
+
+  it('drops the accent when disabled', async () => {
+    const el = await fixture(html`<ds-button variant="surface" disabled>Get Quote</ds-button>`);
+    await nextFrame();
+    const cs = getComputedStyle(surface(el));
+    expect(cs.color, 'label goes neutral').to.equal(resolved('var(--uems-text-disabled)'));
+    expect(cs.borderTopColor, 'border goes neutral').to.equal(resolved('var(--uems-border-disabled)'));
+  });
+});

@@ -46,7 +46,7 @@ The custom element does not invent its own click event; consumers listen for nat
 | `secondary` | `--bg-secondary` | `--bg-secondary-hover` | `--text-primary` | — |
 | `tertiary` | transparent | `--bg-accent-primary-subtle` | `--text-accent-link` | — |
 | `outline` | transparent | `--bg-secondary-hover` | `--text-primary` | `--border-secondary` |
-| `surface` | `--bg-primary-alt` | `--bg-secondary-alt` | `--text-primary` | `--border-primary` |
+| `surface` | `--bg-primary-alt` | `--bg-secondary-alt` | `--text-accent-link` | `--border-accent` |
 | `destructive` | `--bg-error-solid` | `--bg-error-solid-hover` | `--text-white` | — |
 | `success` | `--bg-success-solid` | `--bg-success-solid-hover` | `--text-white` | — |
 | `warning` | `--bg-warning-solid` | `--bg-warning-solid-hover` | `--text-white` | — |
@@ -82,6 +82,11 @@ All sizes use `--radius-sm` (8px).
   opaque, bordered button. On a white surface the two are equivalent, so prefer
   `outline`. `surface` is named by role, not colour: `--uems-bg-primary-alt` is
   `#FFFFFF` in light and `#20242E` in dark, so it inverts correctly.
+- ✅ **`surface` is accent, not neutral.** Its border and label are both `#006AFF`
+  (`--border-accent` / `--text-accent-link`) — on a tinted ground a grey-on-white
+  button reads as disabled chrome rather than the call to action it usually is.
+  Reach for `outline` when you want a genuinely quiet bordered button. Disabled
+  still goes neutral.
 - ✅ Use Destructive only for irreversible actions.
 - ❌ Don't use Loading without disabling user interaction (the component handles this — but don't hand-roll it).
 - ❌ Don't use color alone to convey meaning — keep label text descriptive.

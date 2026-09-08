@@ -171,12 +171,20 @@ ds-button { display: inline-block; vertical-align: middle; }
    solid button. Bordered, since a surface fill on a light canvas has little edge
    definition on its own.
    Named by ROLE, not colour: --uems-bg-primary-alt is #FFFFFF in light but
-   #20242E in dark, so a "white" variant would render dark and the name would lie. */
+   #20242E in dark, so a "white" variant would render dark and the name would lie.
+
+   The border and label are ACCENT, not neutral. On a tinted ground a neutral
+   grey-on-white button reads as disabled chrome rather than the call to action it
+   usually is here — profile.html was already forcing exactly this pairing with
+   two `!important` overrides on .pf-cta, which is the signal that it belonged in
+   the component. Both tokens resolve to the same #006AFF, so the label matches
+   its border instead of sitting a shade off it. The :disabled rule below still
+   overrides both, so a disabled surface button stays neutral. */
 .ds-button--surface {
   --_btn-bg: var(--uems-bg-primary-alt);
   --_btn-bg-hover: var(--uems-bg-secondary-alt);
-  --_btn-fg: var(--uems-text-primary);
-  --_btn-border: var(--uems-border-primary);
+  --_btn-fg: var(--uems-text-accent-link);
+  --_btn-border: var(--uems-border-accent);
 }
 
 .ds-button--destructive {
