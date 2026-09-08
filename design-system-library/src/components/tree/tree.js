@@ -183,7 +183,7 @@ export class DsTree extends HTMLElement {
     if (node) node.children = Array.isArray(children) ? children : [];
     this._loading.delete(id);
     this._expanded.add(id);
-    this._render();
+    this._paintExpansion(id);
   }
 
   expandAll() {
@@ -349,25 +349,69 @@ export class DsTree extends HTMLElement {
     wrap.appendChild(row);
 
     /* ---- children -------------------------------------------------------- */
-    if (expanded) {
-      if (loading) {
-        const busy = document.createElement('div');
-        busy.className = 'ds-tree__loading';
-        busy.style.setProperty('--_tree-depth', String(level));
-        busy.setAttribute('role', 'status');
-        busy.textContent = 'Loading…';
-        wrap.appendChild(busy);
-      } else if (Array.isArray(node.children) && node.children.length) {
-        wrap.appendChild(this._renderLevel(node.children, level + 1, path));
-      } else {
-        const empty = document.createElement('div');
-        empty.className = 'ds-tree__empty';
-        empty.style.setProperty('--_tree-depth', String(level));
-        empty.textContent = 'No items';
-        wrap.appendChild(empty);
-      }
-    }
+    if (expanded) wrap.appendChild(this._childrenFor(node, level, path, loading));
     return wrap;
+  }
+
+  /* What hangs below an expanded row: the children, a loading stand-in, or a
+     note that the branch is empty. Shared by the full render and the in-place
+     expansion patch so the two cannot drift — the same reason _boxState is
+     shared by the render and _paintSelection. */
+  _childrenFor(node, level, path, loading) {
+    if (loading) {
+      const busy = document.createElement('div');
+      busy.className = 'ds-tree__loading';
+      busy.style.setProperty('--_tree-depth', String(level));
+      busy.setAttribute('role', 'status');
+      busy.textContent = 'Loading…';
+      return busy;
+    }
+    if (Array.isArray(node.children) && node.children.length) {
+      return this._renderLevel(node.children, level + 1, path);
+    }
+    const empty = document.createElement('div');
+    empty.className = 'ds-tree__empty';
+    empty.style.setProperty('--_tree-depth', String(level));
+    empty.textContent = 'No items';
+    return empty;
+  }
+
+  /* Expand/collapse DOES change which rows exist, so unlike selection it has to
+     build DOM — but only for the branch that changed. Re-rendering the whole
+     tree here churned 45 nodes on an 8-row tree and re-upgraded every ds-icon,
+     which is the same blink the checkbox path had, just on a different key. */
+  _paintExpansion(id) {
+    const row = this._visible().find((r) => r.dataset.id === id);
+    if (!row) { this._render(); return; }          // off-screen: nothing to patch
+    const node = this._find(id);
+    if (!node) { this._render(); return; }
+    const wrap = row.parentElement;
+    const level = Number(row.dataset.level);
+    const path = this._pathOf(id) || [];
+    const expanded = this._expanded.has(id);
+
+    if (this._hasKids(node)) row.setAttribute('aria-expanded', String(expanded));
+    const twisty = row.querySelector('[data-twisty]');
+    if (twisty) {
+      /* Retarget the existing glyph rather than replacing it. ds-icon observes
+         `name`, so setting it re-renders in place instead of tearing the element
+         down and re-resolving from the sprite — one fewer thing to flicker on
+         every single toggle. */
+      const want = expanded ? 'chevron-down' : 'chevron-right';
+      const glyph = twisty.querySelector('ds-icon');
+      if (glyph) glyph.setAttribute('name', want);
+      else twisty.innerHTML = `<ds-icon name="${want}" size="14"></ds-icon>`;
+    }
+    /* Drop whatever currently hangs below this row, then rebuild just that. */
+    while (wrap.lastElementChild && wrap.lastElementChild !== row) wrap.lastElementChild.remove();
+    if (expanded) wrap.appendChild(this._childrenFor(node, level, path, this._loading.has(id)));
+
+    /* Rows came or went, so the single tab stop may have vanished with them. */
+    const visible = this._visible();
+    if (!visible.some((el) => el.dataset.id === this._focusId)) {
+      this._focusId = visible.length ? visible[0].dataset.id : null;
+    }
+    this._applyTabStops();
   }
 
   /* Search-match highlighting, identical in approach to ds-item-list: the <mark>
@@ -411,15 +455,13 @@ export class DsTree extends HTMLElement {
        setChildren() happened to re-render later). */
     if (e.target.closest?.('[data-twisty]')) {
       this._toggle(id);
-      this._render();
-      this._focusCurrent();
+      this._paintExpansion(id);
       return;
     }
 
     if (this._hasKids(node) && enumAttr(this, 'selection', SELECTION, 'none') === 'none') {
       this._toggle(id);   // a read-only tree: clicking a branch opens it
-      this._render();     // expanding changes which rows EXIST
-      this._focusCurrent();
+      this._paintExpansion(id);
       return;
     }
     /* Selecting is visual-only — patch in place so the tree does not blink and
@@ -464,14 +506,32 @@ export class DsTree extends HTMLElement {
     const move = (to) => { if (to) { this._focusId = to.dataset.id; this._applyTabStops(); to.focus(); } };
 
     switch (e.key) {
-      case 'ArrowDown': e.preventDefault(); move(visible[Math.min(i + 1, visible.length - 1)]); return;
-      case 'ArrowUp': e.preventDefault(); move(visible[Math.max(i - 1, 0)]); return;
-      case 'Home': e.preventDefault(); move(visible[0]); return;
-      case 'End': e.preventDefault(); move(visible[visible.length - 1]); return;
+      case 'ArrowDown':
+      case 'ArrowUp': {
+        e.preventDefault();
+        const to = e.key === 'ArrowDown'
+          ? visible[Math.min(i + 1, visible.length - 1)]
+          : visible[Math.max(i - 1, 0)];
+        move(to);
+        /* Shift extends the selection as focus travels — APG's multi-select
+           addition. Plain arrows deliberately do NOT change the selection: with
+           `multi` the selection does not follow focus, or walking the tree would
+           silently rewrite what the user had picked. */
+        if (e.shiftKey) this._extendTo(to);
+        return;
+      }
+      case 'Home':
+      case 'End': {
+        e.preventDefault();
+        const to = e.key === 'Home' ? visible[0] : visible[visible.length - 1];
+        if (e.shiftKey) this._extendRange(cur, to);
+        move(to);
+        return;
+      }
       case forward: {
         e.preventDefault();
         if (!this._hasKids(node)) return;
-        if (!this._expanded.has(id)) { this._toggle(id); this._render(); this._focusCurrent(); return; }
+        if (!this._expanded.has(id)) { this._toggle(id); this._paintExpansion(id); cur.focus(); return; }
         /* Already open → step INTO it. The first child is simply the next visible
            row, and only if it really is one level deeper (an expanded-but-empty
            or still-loading branch has none). */
@@ -481,7 +541,7 @@ export class DsTree extends HTMLElement {
       }
       case back: {
         e.preventDefault();
-        if (this._hasKids(node) && this._expanded.has(id)) { this._toggle(id); this._render(); this._focusCurrent(); return; }
+        if (this._hasKids(node) && this._expanded.has(id)) { this._toggle(id); this._paintExpansion(id); cur.focus(); return; }
         /* Collapsed or a leaf → step out to the parent, which is the nearest
            preceding node one level up. */
         for (let j = i - 1; j >= 0; j--) {
@@ -508,15 +568,31 @@ export class DsTree extends HTMLElement {
       case '*': {
         e.preventDefault();
         const level = Number(cur.dataset.level);
-        this._visible().forEach((el) => {
-          if (Number(el.dataset.level) !== level) return;
-          const n = this._find(el.dataset.id);
-          if (this._hasKids(n)) this._expanded.add(el.dataset.id);
-        });
-        this._render(); this._focusCurrent();
+        const siblings = this._visible()
+          .filter((el) => Number(el.dataset.level) === level)
+          .map((el) => el.dataset.id)
+          .filter((sid) => this._hasKids(this._find(sid)) && !this._expanded.has(sid));
+        siblings.forEach((sid) => { this._expanded.add(sid); });
+        /* Deepest first: patching a shallower branch would replace the DOM the
+           later patches are looking for. */
+        siblings.reverse().forEach((sid) => this._paintExpansion(sid));
+        cur.focus();
         return;
       }
       default: break;
+    }
+    /* Ctrl/Cmd+A selects every selectable node, and again clears it — APG allows
+       the toggle and it is the only way out of a large selection by keyboard. */
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
+      if (enumAttr(this, 'selection', SELECTION, 'none') !== 'multi') return;
+      e.preventDefault();
+      const all = [];
+      this._walk((n, p) => { if (!n.disabled) all.push(this._idOf(n, p)); });
+      const already = all.every((nid) => this._selected.has(nid));
+      this._selected = already ? new Set() : new Set(all);
+      this._emit('ds-tree-select', { ids: [...this._selected], id: null, selected: !already, item: null });
+      this._paintSelection();
+      return;
     }
     /* Type-ahead — a printable character jumps to the next visible node whose
        label starts with the accumulated buffer. */
@@ -530,6 +606,30 @@ export class DsTree extends HTMLElement {
       if (hit) move(hit);
     }
   };
+
+  /* Add one row to the selection as shift-focus passes over it. */
+  _extendTo(rowEl) {
+    if (!rowEl || enumAttr(this, 'selection', SELECTION, 'none') !== 'multi') return;
+    const id = rowEl.dataset.id;
+    const node = this._find(id);
+    if (!node || node.disabled) return;
+    this._setSelected(id, node, true);
+    this._paintSelection();
+  }
+
+  /* Select every selectable row between two, inclusive — Shift+Home/End. */
+  _extendRange(fromEl, toEl) {
+    if (!fromEl || !toEl || enumAttr(this, 'selection', SELECTION, 'none') !== 'multi') return;
+    const visible = this._visible();
+    const a = visible.indexOf(fromEl);
+    const b = visible.indexOf(toEl);
+    if (a < 0 || b < 0) return;
+    visible.slice(Math.min(a, b), Math.max(a, b) + 1).forEach((r) => {
+      const node = this._find(r.dataset.id);
+      if (node && !node.disabled) this._setSelected(r.dataset.id, node, true);
+    });
+    this._paintSelection();
+  }
 
   _toggle(id) {
     const node = this._find(id);

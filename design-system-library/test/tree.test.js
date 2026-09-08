@@ -205,7 +205,110 @@ describe('ds-tree — keyboard', () => {
   });
 });
 
+describe('ds-tree — multi-select keyboard', () => {
+  it('leaves the selection alone when plain arrows move focus', async () => {
+    /* With `multi` the selection must NOT follow focus, or walking the tree
+       silently rewrites what the user picked. */
+    const el = await mk(OU(), 'selection="multi" checkboxes');
+    row(el, 'fin').focus();
+    press(document.activeElement, ' ');
+    await nextFrame();
+    const before = el.selectedIds.slice().sort();
+    press(document.activeElement, 'ArrowDown');
+    press(document.activeElement, 'ArrowDown');
+    expect(el.selectedIds.slice().sort()).to.deep.equal(before);
+  });
+
+  it('Shift+Arrow extends the selection as focus travels', async () => {
+    const el = await mk([{ id: 'p', text: 'P', expanded: true,
+      children: [{ id: 'a', text: 'A' }, { id: 'b', text: 'B' }, { id: 'c', text: 'C' }] }],
+      'selection="multi" checkboxes');
+    row(el, 'a').focus();
+    press(document.activeElement, ' ');
+    await nextFrame();
+    press(document.activeElement, 'ArrowDown');   // plain: focus only
+    await nextFrame();
+    expect(el.selectedIds, 'plain arrow did not select').to.not.include('b');
+    row(el, 'a').focus();
+    document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', shiftKey: true, bubbles: true }));
+    await nextFrame();
+    expect(el.selectedIds, 'shift extended onto it').to.include('b');
+  });
+
+  it('Shift+End extends to the last row, skipping disabled ones', async () => {
+    const el = await mk(OU(), 'selection="multi" checkboxes');
+    row(el, 'fin').focus();
+    document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', shiftKey: true, bubbles: true }));
+    await nextFrame();
+    expect(el.selectedIds, 'reached the far end').to.include('eng');
+    expect(el.selectedIds, 'but never the disabled node').to.not.include('kiosk');
+  });
+
+  it('Ctrl+A selects every selectable node, and again clears', async () => {
+    const el = await mk(OU(), 'selection="multi" checkboxes');
+    el.selectedIds = [];
+    await nextFrame();
+    row(el, 'fin').focus();
+    document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true }));
+    await nextFrame();
+    expect(el.selectedIds, 'everything selectable').to.include.members(['corp', 'fin', 'eng']);
+    expect(el.selectedIds, 'except the disabled node').to.not.include('kiosk');
+    document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true }));
+    await nextFrame();
+    expect(el.selectedIds, 'a second press is the way back out').to.deep.equal([]);
+  });
+
+  it('Ctrl+A is inert outside multi-select', async () => {
+    const el = await mk(OU(), 'selection="single"');
+    row(el, 'fin').focus();
+    document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true }));
+    await nextFrame();
+    expect(el.selectedIds.length, 'single selection cannot hold the tree').to.be.at.most(1);
+  });
+});
+
 describe('ds-tree — expand / collapse', () => {
+  it('patches only the branch that changed, not the whole tree', async () => {
+    /* Reported as a blink on keyboard use too. Expanding legitimately creates
+       rows, but re-rendering the root replaced all 8 rows and re-upgraded all 11
+       ds-icons — measured 45 node changes for an 8-row tree. */
+    const el = await mk(OU(), 'selection="multi" checkboxes');
+    el.expandAll();
+    await nextFrame();
+    const untouched = row(el, 'kiosk');
+    const itsBox = untouched.querySelector('ds-checkbox');
+    row(el, 'fin').focus();
+    press(document.activeElement, 'ArrowLeft');   // collapse
+    await nextFrame();
+    expect(row(el, 'kiosk'), 'an unrelated row is the SAME element').to.equal(untouched);
+    expect(row(el, 'kiosk').querySelector('ds-checkbox')).to.equal(itsBox);
+    expect(row(el, 'fin-ap'), 'and the collapsed children really are gone').to.not.exist;
+  });
+
+  it('retargets the chevron instead of recreating it', async () => {
+    /* ds-icon observes `name`, so setting it re-renders in place rather than
+       tearing the element down and re-resolving from the sprite. */
+    const el = await mk(OU());
+    const glyph = row(el, 'corp').querySelector('[data-twisty] ds-icon');
+    expect(glyph.getAttribute('name')).to.equal('chevron-down');
+    row(el, 'corp').querySelector('[data-twisty]').click();
+    await nextFrame();
+    const after = row(el, 'corp').querySelector('[data-twisty] ds-icon');
+    expect(after, 'the same element').to.equal(glyph);
+    expect(after.getAttribute('name'), 'just pointed elsewhere').to.equal('chevron-right');
+  });
+
+  it('keeps focus on the row across an expand and a collapse', async () => {
+    const el = await mk(OU());
+    row(el, 'fin').focus();
+    press(document.activeElement, 'ArrowRight');
+    await nextFrame();
+    expect(document.activeElement.dataset.id, 'after expanding').to.equal('fin');
+    press(document.activeElement, 'ArrowLeft');
+    await nextFrame();
+    expect(document.activeElement.dataset.id, 'after collapsing').to.equal('fin');
+  });
+
   it('renders after a twisty click, not just mutating state', async () => {
     /* Regression: _onClick returned right after _toggle without re-rendering, so
        the expanded set changed and the DOM did not — clicking a chevron visibly

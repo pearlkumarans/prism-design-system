@@ -86,6 +86,17 @@ Per the ARIA pattern. Arrows mirror under `rtl`, matching `ds-dropdown-menu`.
 | `*` | Expand every sibling at the focused level |
 | printable | Type-ahead to the next matching visible label |
 
+Multi-select only — plain arrows deliberately do **not** change the selection,
+or walking the tree would silently rewrite what the user picked:
+
+| Key | Action |
+|---|---|
+| Shift + ↓ / ↑ | Move focus **and** extend the selection onto it |
+| Shift + Home / End | Extend the selection to the first / last visible row |
+| Ctrl / Cmd + A | Select every selectable node; again to clear |
+
+Disabled nodes are skipped by every one of these, as by cascade.
+
 The keyboard handler derives the current node from the **event target**, not from
 the remembered tab stop. Those agree when the user tabs in, but diverge the
 moment focus arrives another way, and then every key acts on the wrong row.
@@ -108,6 +119,15 @@ controlled case.
 `selectedIds` — a half-selected parent that claimed to be checked would
 over-report the selection to whatever consumes it. Disabled nodes are skipped by
 cascade.
+
+**Selection and expansion repaint in place.** Only expand/collapse changes which
+rows exist, and even then only within the branch that changed. Everything else —
+selection, cascade, `selectedIds=` — patches the rows already on screen. Calling
+`_render()` for a selection change rebuilt every row and re-upgraded every
+`ds-icon`, which read as a blink on each click, and destroyed the focused row
+with it. Same split `ds-card` and `ds-item-list` already make. `_boxState()` and
+`_childrenFor()` are shared by the full render and the patches so the two paths
+cannot drift.
 
 **One number drives the geometry.** `--_tree-indent` and `--_tree-twisty` derive
 the indent, the twisty box and the guide-line position, so a wider twisty widens
