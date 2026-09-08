@@ -278,8 +278,16 @@ export class DsTree extends HTMLElement {
       /* The row owns the accessible name; the checkbox must not repeat it as a
          second label, so it is named by the row and hidden from the tree walk. */
       cb.setAttribute('aria-label', `Select ${node.text ?? ''}`);
-      if (selected) cb.setAttribute('checked', '');
-      else if (this._isPartiallySelected(node, path)) cb.setAttribute('indeterminate', '');
+      /* A parent's box reflects its SUBTREE; only a leaf reflects its own
+         membership. Deriving a parent from `_selected.has(id)` produced two wrong
+         states at once: a parent whose whole subtree was checked rendered EMPTY
+         (nothing had added the parent itself), and a checked parent stayed
+         checked after a child was unchecked underneath it. */
+      const box = this._hasKids(node) && Array.isArray(node.children) && node.children.length
+        ? this._subtreeState(node, path)
+        : (selected ? 'all' : 'none');
+      if (box === 'all') cb.setAttribute('checked', '');
+      else if (box === 'some') cb.setAttribute('indeterminate', '');
       if (node.disabled) cb.setAttribute('disabled', '');
       cb.classList.add('ds-tree__check');
       row.appendChild(cb);
@@ -543,6 +551,9 @@ export class DsTree extends HTMLElement {
       if (on) this._selected.add(id); else this._selected.delete(id);
       if (enumAttr(this, 'select-parents', CASCADE, 'cascade') === 'cascade') {
         this._cascade(node, on, this._pathOf(id) || []);
+        /* …then settle the ancestors. `independent` deliberately skips this: not
+           touching the rest of the tree is the whole point of that mode. */
+        this._syncParents();
       }
     }
     this._emit('ds-tree-select', { ids: [...this._selected], id, selected: on, item: node });
@@ -560,19 +571,43 @@ export class DsTree extends HTMLElement {
     });
   }
 
-  _isPartiallySelected(node, path) {
-    if (!this._hasKids(node) || !Array.isArray(node.children)) return false;
-    let some = false;
-    let all = true;
+  /* 'all' | 'some' | 'none' for a node's descendants. DISABLED descendants are
+     ignored: they can never be selected, so counting them would mean a branch
+     holding one permanently-unselectable child could never read as fully picked
+     however much the user chose. */
+  _subtreeState(node, path) {
+    let selectable = 0;
+    let picked = 0;
     const walk = (n, p) => {
       (n.children || []).forEach((c, i) => {
-        const cid = this._idOf(c, [...p, i]);
-        if (this._selected.has(cid)) some = true; else all = false;
-        walk(c, [...p, i]);
+        const cp = [...p, i];
+        if (!c.disabled) {
+          selectable += 1;
+          if (this._selected.has(this._idOf(c, cp))) picked += 1;
+        }
+        walk(c, cp);
       });
     };
     walk(node, path);
-    return some && !all;
+    if (!selectable || !picked) return 'none';
+    return picked === selectable ? 'all' : 'some';
+  }
+
+  /* Keep `selectedIds` agreeing with what the checkboxes show: a parent belongs
+     to the selection exactly when its whole selectable subtree does. Without
+     this the two could disagree — a parent still listed as selected after a child
+     was unchecked, over-reporting the selection to whatever consumes it.
+     Bottom-up, so a grandparent sees its children's settled state. */
+  _syncParents() {
+    const visit = (nodes, path) => (nodes || []).forEach((n, i) => {
+      const p = [...path, i];
+      visit(n.children, p);
+      if (!(this._hasKids(n) && Array.isArray(n.children) && n.children.length)) return;
+      const id = this._idOf(n, p);
+      if (this._subtreeState(n, p) === 'all') this._selected.add(id);
+      else this._selected.delete(id);
+    });
+    visit(this._source(), []);
   }
 
   /* ---- helpers ----------------------------------------------------------- */

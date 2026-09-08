@@ -13,7 +13,7 @@ const OU = () => ([
       { id: 'fin-ap', text: 'AP' },
       { id: 'fin-ar', text: 'AR' },
     ] },
-    { id: 'eng', text: 'Engineering', children: [{ id: 'eng-qa', text: 'QA' }] },
+    { id: 'eng', text: 'Engineering', children: [{ id: 'eng-qa', text: 'QA' }, { id: 'eng-dev', text: 'Dev' }] },
     { id: 'kiosk', text: 'Kiosks', disabled: true },
   ] },
 ]);
@@ -317,6 +317,56 @@ describe('ds-tree — selection', () => {
     const corpCb = row(el, 'corp').querySelector('.ds-tree__check');
     expect(corpCb.hasAttribute('indeterminate'), 'mixed, not checked').to.be.true;
     expect(el.selectedIds, 'and NOT reported as selected').to.not.include('corp');
+  });
+
+  it('shows a parent CHECKED once its whole subtree is selected', async () => {
+    /* Reported from the playground: Finance sat empty while both its children
+       were checked, because the parent's box was derived from its own membership
+       in the selection rather than from its subtree. */
+    const el = await mk(OU(), 'selection="multi" checkboxes');
+    el.expandAll();
+    await nextFrame();
+    row(el, 'fin-ap').querySelector('.ds-tree__check input').click();
+    await nextFrame();
+    row(el, 'fin-ar').querySelector('.ds-tree__check input').click();
+    await nextFrame();
+    const fin = row(el, 'fin').querySelector('.ds-tree__check');
+    expect(fin.hasAttribute('checked'), 'all children selected → parent checked').to.be.true;
+    expect(fin.hasAttribute('indeterminate'), 'and not mixed').to.be.false;
+    expect(el.selectedIds, 'a fully selected parent IS part of the selection').to.include('fin');
+  });
+
+  it('drops a parent back to MIXED when a child is unchecked', async () => {
+    /* The other half of the same report: Engineering stayed fully checked after
+       QA was unchecked underneath it. */
+    const el = await mk(OU(), 'selection="multi" checkboxes');
+    el.expandAll();
+    await nextFrame();
+    row(el, 'eng').querySelector('.ds-tree__check input').click();   // cascade on
+    await nextFrame();
+    expect(el.selectedIds, 'cascade reached the children').to.include.members(['eng', 'eng-qa', 'eng-dev']);
+    row(el, 'eng-qa').querySelector('.ds-tree__check input').click(); // uncheck one
+    await nextFrame();
+    const eng = row(el, 'eng').querySelector('.ds-tree__check');
+    expect(eng.hasAttribute('indeterminate'), 'parent goes mixed').to.be.true;
+    expect(eng.hasAttribute('checked'), 'and is no longer checked').to.be.false;
+    expect(el.selectedIds, 'and leaves the selection, so it is not over-reported').to.not.include('eng');
+  });
+
+  it('lets a disabled descendant still allow a full parent', async () => {
+    /* corp has a permanently unselectable child (Kiosks). If disabled nodes
+       counted toward "all", corp could never read as fully selected however much
+       the user picked. */
+    const el = await mk(OU(), 'selection="multi" checkboxes');
+    el.expandAll();
+    await nextFrame();
+    ['fin-ap', 'fin-ar', 'eng-qa', 'eng-dev'].forEach((id) => {
+      row(el, id).querySelector('.ds-tree__check input').click();
+    });
+    await nextFrame();
+    const corp = row(el, 'corp').querySelector('.ds-tree__check');
+    expect(corp.hasAttribute('checked'), 'every SELECTABLE descendant is picked').to.be.true;
+    expect(el.selectedIds, 'the disabled node is still not selected').to.not.include('kiosk');
   });
 
   it('never cascades onto a disabled node', async () => {
