@@ -3,7 +3,7 @@ import { escapeHtml } from '../../utils/escape.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import '../../icons/icon.js';
 
-const STYLES = ['primary', 'secondary', 'subtle', 'danger'];
+const STYLES = ['primary', 'secondary', 'subtle', 'danger', 'surface'];
 const SIZES = ['small', 'medium', 'large'];
 const UNDERLINES = ['always', 'hover', 'none'];
 

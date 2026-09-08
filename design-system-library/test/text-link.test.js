@@ -37,6 +37,15 @@ describe('ds-text-link — structure & defaults', () => {
     expect(a.classList.contains('ds-text-link--primary')).to.be.true;
     expect(a.classList.contains('ds-text-link--small')).to.be.true;
   });
+
+  it('applies the surface variant class (color:inherit is defined in CSS)', async () => {
+    // Surface is the on-a-coloured-surface variant; its rule is `color: inherit` so the
+    // container controls the colour. (The harness loads no component CSS, so we assert
+    // the class here; the live colour inheritance is covered by the toast integration.)
+    const el = await fixture(html`<ds-text-link variant="surface" href="/x">On surface</ds-text-link>`);
+    const a = anchor(el);
+    expect(a.classList.contains('ds-text-link--surface')).to.be.true;
+  });
 });
 
 describe('ds-text-link — href, target & disabled', () => {

@@ -12,7 +12,12 @@
 
 import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { escapeHtml } from '../../utils/escape.js';
+import { injectCss } from '../../utils/inject-css.js';
 import '../../icons/icon.js';
+/* The CTA is a real <ds-text-link> (surface variant). Import it + inject its CSS so
+   the link is styled even on a page that only pulled toast.css. Idempotent. */
+import '../text-link/text-link.js';
+injectCss('ds-toast-textlink-css', '../text-link/text-link.css', import.meta.url);
 
 const STATUSES = ['info', 'success', 'warning', 'error'];
 const STYLES = ['subtle', 'intense'];
@@ -135,9 +140,11 @@ export class DsToast extends HTMLElement {
     const animating = this._countdownActive()
       && (!this.hasAttribute('show-timeout') || this.getAttribute('show-timeout') !== 'false');
 
-    const ctaEl = ctaHref
-      ? `<a class="ds-toast__cta" href="${escapeHtml(ctaHref)}" data-cta>${escapeHtml(ctaText)}</a>`
-      : `<button class="ds-toast__cta" type="button" data-cta>${escapeHtml(ctaText)}</button>`;
+    /* The right-side CTA is a <ds-text-link variant="surface"> — it inherits the
+       toast's status-adaptive CTA colour (--_toast-cta) rather than a fixed link
+       colour. href → a real navigable link; no href → event-only (fires ds-toast-cta). */
+    const ctaEl = `<ds-text-link class="ds-toast__cta" variant="surface" size="small" underline="always"`
+      + ` label="${escapeHtml(ctaText)}"${ctaHref ? ` href="${escapeHtml(ctaHref)}"` : ''} data-cta></ds-text-link>`;
 
     this._root.innerHTML = `
       <div class="ds-toast__content">

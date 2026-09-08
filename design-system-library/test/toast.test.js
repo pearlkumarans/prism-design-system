@@ -135,3 +135,36 @@ describe('ds-toast — repaint-split', () => {
     expect(el._root.classList.contains('ds-toast--intense'), 'style-variant class applied').to.be.true;
   });
 });
+
+describe('ds-toast — CTA (surface text-link)', () => {
+  it('renders the CTA as a <ds-text-link variant="surface"> (not a button)', async () => {
+    const el = await fixture(html`<ds-toast title="T" cta-text="View Details" cta-href="/x"></ds-toast>`);
+    await nextFrame();
+    const cta = el._root.querySelector('.ds-toast__cta');
+    expect(cta, 'CTA rendered').to.exist;
+    expect(cta.tagName.toLowerCase(), 'CTA is a ds-text-link, not a <button>').to.equal('ds-text-link');
+    expect(cta.getAttribute('variant')).to.equal('surface');
+    expect(cta.getAttribute('label')).to.equal('View Details');
+    expect(cta.getAttribute('href')).to.equal('/x');
+  });
+
+  it('an event-only CTA (no href) still fires ds-toast-cta on click', async () => {
+    const el = await fixture(html`<ds-toast title="T" cta-text="Undo"></ds-toast>`);
+    await nextFrame();
+    const cta = el._root.querySelector('.ds-toast__cta');
+    expect(cta.tagName.toLowerCase()).to.equal('ds-text-link');
+    expect(cta.hasAttribute('href'), 'event-only CTA has no href').to.be.false;
+    let fired = 0;
+    el.addEventListener('ds-toast-cta', () => (fired += 1));
+    cta.click();
+    expect(fired, 'ds-toast-cta fired').to.equal(1);
+  });
+
+  it('escapes CTA text passed to the link label', async () => {
+    const el = await fixture(html`<ds-toast title="T" cta-text="${XSS}"></ds-toast>`);
+    await nextFrame();
+    const cta = el._root.querySelector('.ds-toast__cta');
+    expect(cta.querySelector('img'), 'CTA injected an <img>').to.not.exist;
+    expect(cta.textContent).to.contain('<img');
+  });
+});
