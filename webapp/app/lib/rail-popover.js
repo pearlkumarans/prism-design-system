@@ -90,7 +90,11 @@ export class RailPopover {
   // right (else it clamps to x=12 and overlaps the content). Mirrors Shell.html's
   // positionUpdate().
   _position() {
-    const btn = this.rpEl?.querySelector(`button[data-id="${this.anchorId}"]`);
+    /* Anchor by data-id on ANY element — rail items render as either a plain
+       <button> (update/roadmap) OR a <ds-icon-button> host (review). A `button[…]`
+       selector missed the ds-icon-button, so the review card never got positioned
+       and fell to the viewport corner. */
+    const btn = this.rpEl?.querySelector(`[data-id="${this.anchorId}"]`);
     if (!btn) return;
     const r = btn.getBoundingClientRect();
     const w = this.el.offsetWidth || 456;
