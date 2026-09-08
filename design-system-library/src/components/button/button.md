@@ -15,7 +15,7 @@ The Button is the primary interactive element for triggering actions. The runtim
 
 | Attribute | Values | Default | Description |
 |-----------|--------|---------|-------------|
-| `variant` | `primary` \| `secondary` \| `tertiary` \| `outline` \| `surface` \| `destructive` \| `success` \| `warning` \| `secondary-color` | `primary` | Visual style + semantics |
+| `variant` | `primary` \| `secondary` \| `tertiary` \| `tertiary-grey` \| `outline` \| `surface` \| `destructive` \| `success` \| `warning` \| `secondary-color` | `primary` | Visual style + semantics |
 | `size` | `large` \| `medium` \| `small` \| `xsmall` | `medium` | Height + padding + font size |
 | `type` | `button` \| `submit` \| `reset` | `button` | Forwarded to the inner `<button>` |
 | `disabled` | boolean | unset | Disables interaction; mirrors to inner button |
@@ -44,7 +44,8 @@ The custom element does not invent its own click event; consumers listen for nat
 |---------|-----------|----------|------------|--------|
 | `primary` | `--bg-button-primary` | `--bg-button-primary-hover` | `--text-white` | — |
 | `secondary` | `--bg-secondary` | `--bg-secondary-hover` | `--text-primary` | — |
-| `tertiary` | transparent | `--bg-accent-primary-subtle` | `--text-accent-link` | — |
+| `tertiary` | transparent | `--bg-accent-primary` | `--text-accent-link` | — |
+| `tertiary-grey` | transparent | `--bg-accent-primary` | `--text-secondary` | — |
 | `outline` | transparent | `--bg-secondary-hover` | `--text-primary` | `--border-secondary` |
 | `surface` | `--bg-primary-alt` | `--bg-secondary-alt` | `--text-accent-link` | `--border-accent` |
 | `destructive` | `--bg-error-solid` | `--bg-error-solid-hover` | `--text-white` | — |
@@ -87,6 +88,12 @@ All sizes use `--radius-sm` (8px).
   button reads as disabled chrome rather than the call to action it usually is.
   Reach for `outline` when you want a genuinely quiet bordered button. Disabled
   still goes neutral.
+- ✅ **`tertiary` vs `tertiary-grey`:** identical except the label — accent vs
+  neutral. Use `tertiary` when the action reads as a link ("Learn more"), and
+  `tertiary-grey` for a quiet action that should not compete with a real CTA
+  (toolbar and card-header actions, `Cancel` beside a Primary). It mirrors
+  `ds-icon-button`'s `type="tertiary-grey"` and resolves to the same grey, so a
+  text button and an icon button in one toolbar match.
 - ✅ Use Destructive only for irreversible actions.
 - ❌ Don't use Loading without disabling user interaction (the component handles this — but don't hand-roll it).
 - ❌ Don't use color alone to convey meaning — keep label text descriptive.

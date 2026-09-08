@@ -19,7 +19,7 @@ import { watchLateChildren, stopLateChildren } from '../../utils/late-children.j
 import { escapeHtml } from '../../utils/escape.js';
 import '../../icons/icon.js';
 
-const VARIANTS = ['primary', 'secondary', 'tertiary', 'outline', 'surface', 'destructive', 'success', 'warning', 'secondary-color'];
+const VARIANTS = ['primary', 'secondary', 'tertiary', 'tertiary-grey', 'outline', 'surface', 'destructive', 'success', 'warning', 'secondary-color'];
 const SIZES = ['large', 'medium', 'small', 'xsmall'];
 const TYPES = ['button', 'submit', 'reset'];
 

@@ -228,6 +228,33 @@ describe('ds-button — surface variant colours', () => {
     expect(bg).to.equal(resolved('var(--uems-bg-primary-alt)'));
   });
 
+  it('tertiary-grey is tertiary with a NEUTRAL label, not the accent one', async () => {
+    const grey = await fixture(html`<ds-button variant="tertiary-grey">Cancel</ds-button>`);
+    const tert = await fixture(html`<ds-button variant="tertiary">Learn more</ds-button>`);
+    await nextFrame();
+    const g = getComputedStyle(surface(grey));
+    const t = getComputedStyle(surface(tert));
+    expect(g.color, 'neutral label').to.equal(resolved('var(--uems-text-secondary)'));
+    expect(g.color, 'and NOT the accent tertiary uses').to.not.equal(t.color);
+    expect(g.backgroundColor, 'transparent like tertiary').to.equal('rgba(0, 0, 0, 0)');
+    expect(g.backgroundColor, 'same ground as tertiary').to.equal(t.backgroundColor);
+  });
+
+  it('matches ds-icon-button\'s tertiary-grey foreground, so a toolbar stays consistent', async () => {
+    /* The whole point of reusing the name: a text button and an icon button next
+       to each other must be the same grey. --uems-text-secondary and
+       --uems-icon-secondary are the same ramp step, and this asserts it rather
+       than trusting the comment. */
+    expect(resolved('var(--uems-text-secondary)'))
+      .to.equal(resolved('var(--uems-icon-secondary)'));
+  });
+
+  it('sends tertiary-grey neutral when disabled', async () => {
+    const el = await fixture(html`<ds-button variant="tertiary-grey" disabled>Cancel</ds-button>`);
+    await nextFrame();
+    expect(getComputedStyle(surface(el)).color).to.equal(resolved('var(--uems-text-disabled)'));
+  });
+
   it('drops the accent when disabled', async () => {
     const el = await fixture(html`<ds-button variant="surface" disabled>Get Quote</ds-button>`);
     await nextFrame();

@@ -156,6 +156,21 @@ ds-button { display: inline-block; vertical-align: middle; }
   --_btn-fg: var(--uems-text-accent-link, var(--hyperlink));
 }
 
+/* Tertiary Grey — Tertiary with a NEUTRAL label instead of the accent one, for a
+   quiet action that should not compete with a real link or CTA (toolbar and
+   card-header actions, "Cancel" next to a primary).
+
+   Deliberately mirrors ds-icon-button's `type="tertiary-grey"`, which already
+   existed: same transparent fill, same --uems-bg-accent-primary hover, and a
+   foreground token that resolves to the SAME value (--uems-text-secondary and
+   --uems-icon-secondary are both grey-modern-800 in light and -200 in dark), so a
+   text button and an icon button sitting side by side in a toolbar match. */
+.ds-button--tertiary-grey {
+  --_btn-bg: transparent;
+  --_btn-bg-hover: var(--uems-bg-accent-primary);
+  --_btn-fg: var(--uems-text-secondary);
+}
+
 .ds-button--outline {
   /* Spec: 1px Border-Primary (#B4BBCC); hover BG-Secondary-alt (#F0F2F5). */
   --_btn-bg: transparent;
@@ -250,6 +265,7 @@ ds-button { display: inline-block; vertical-align: middle; }
 
 /* Tertiary / Outline — transparent + disabled text (Outline keeps a disabled border). */
 .ds-button--tertiary:disabled,
+.ds-button--tertiary-grey:disabled,
 .ds-button--outline:disabled { --_btn-fg: var(--uems-text-disabled); }
 .ds-button--outline:disabled { --_btn-border: var(--uems-border-disabled); }
 
