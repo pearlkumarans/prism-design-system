@@ -385,6 +385,83 @@ describe('ds-tree — selection', () => {
     expect(el.selectedIds).to.deep.equal(['fin']);
   });
 
+  it('patches selection in place instead of rebuilding the tree', async () => {
+    /* Reported as a blink on every check. _render() rebuilt every row, which tore
+       down and re-upgraded every ds-icon and ds-checkbox in the tree on each
+       click — measured: one click replaced all 8 rows and all 11 icons. A
+       selection change is visual-only, so the existing nodes must survive. */
+    const el = await mk(OU(), 'selection="multi" checkboxes');
+    el.expandAll();
+    await nextFrame();
+    const untouched = row(el, 'kiosk');
+    const itsIcon = untouched.querySelector('ds-checkbox');
+    const marker = row(el, 'fin-ap');
+    marker.dataset.probe = 'survives';
+
+    row(el, 'eng-dev').querySelector('.ds-tree__check input').click();
+    await nextFrame();
+
+    expect(row(el, 'kiosk'), 'an unrelated row is the SAME element').to.equal(untouched);
+    expect(row(el, 'kiosk').querySelector('ds-checkbox'), 'and its checkbox was not re-created').to.equal(itsIcon);
+    expect(row(el, 'fin-ap').dataset.probe, 'nothing was rebuilt from data').to.equal('survives');
+  });
+
+  it('keeps the focused row focused across a selection change', async () => {
+    /* The blink took focus with it: the focused row was destroyed mid-click. */
+    const el = await mk(OU(), 'selection="multi" checkboxes');
+    row(el, 'eng').focus();
+    press(document.activeElement, ' ');
+    await nextFrame();
+    expect(document.activeElement.dataset.id, 'focus stayed on the row').to.equal('eng');
+  });
+
+  it('still repaints rows that a cascade changed, not just the clicked one', async () => {
+    /* Patching in place must not mean patching only the click target — the
+       ancestors and the whole subtree change state too. */
+    const el = await mk(OU(), 'selection="multi" checkboxes');
+    el.expandAll();
+    await nextFrame();
+    row(el, 'fin').querySelector('.ds-tree__check input').click();
+    await nextFrame();
+    const box = (id) => {
+      const c = row(el, id).querySelector('.ds-tree__check');
+      return c.hasAttribute('checked') ? 'checked' : c.hasAttribute('indeterminate') ? 'mixed' : 'empty';
+    };
+    expect(box('fin'), 'the clicked parent').to.equal('checked');
+    expect(box('fin-ap'), 'a cascaded child').to.equal('checked');
+    expect(box('corp'), 'the ancestor above it').to.equal('mixed');
+  });
+
+  it('independent mode shows a parent from ITSELF, not its subtree', async () => {
+    /* Standing alone is the point of that mode; reading the subtree there left a
+       parent the user had just checked showing empty. */
+    const el = await mk([{ id: 'p', text: 'Finance', expanded: true,
+      children: [{ id: 'c1', text: 'AP' }, { id: 'c2', text: 'AR' }] }],
+      'selection="multi" checkboxes select-parents="independent"');
+    row(el, 'p').querySelector('.ds-tree__check input').click();
+    await nextFrame();
+    const c = row(el, 'p').querySelector('.ds-tree__check');
+    expect(c.hasAttribute('checked'), 'the parent shows its own state').to.be.true;
+    expect(el.selectedIds).to.deep.equal(['p']);
+    expect(row(el, 'c1').querySelector('.ds-tree__check').hasAttribute('checked'),
+      'and the children are untouched').to.be.false;
+  });
+
+  it('drops state for nodes a new items assignment removes', async () => {
+    /* selectedIds kept reporting ids from the PREVIOUS hierarchy — a selection
+       the consumer can neither see nor clear. */
+    const el = await mk(OU(), 'selection="multi" checkboxes');
+    el.expandAll();
+    await nextFrame();
+    row(el, 'fin-ap').querySelector('.ds-tree__check input').click();
+    await nextFrame();
+    expect(el.selectedIds).to.include('fin-ap');
+    el.items = [{ id: 'other', text: 'Somewhere else' }];
+    await nextFrame();
+    expect(el.selectedIds, 'stale ids are gone').to.deep.equal([]);
+    expect(el.expandedIds, 'and so is stale expansion').to.deep.equal([]);
+  });
+
   it('emits ds-tree-select with the whole selection', async () => {
     const el = await mk(OU(), 'selection="multi"');
     const ev = oneEvent(el, 'ds-tree-select');

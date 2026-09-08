@@ -146,7 +146,19 @@ export class DsTree extends HTMLElement {
   set items(v) {
     this._items = Array.isArray(v) ? v.slice() : null;
     this._seeded = false;
+    /* Drop state for nodes the new hierarchy does not contain. Without this,
+       `selectedIds` kept reporting ids from the PREVIOUS data — a selection the
+       consumer cannot see and cannot clear. */
+    this._prune();
     if (this._root) this._render();
+  }
+
+  _prune() {
+    const live = new Set();
+    this._walk((n, p) => live.add(this._idOf(n, p)));
+    for (const set of [this._selected, this._expanded, this._loading]) {
+      [...set].forEach((id) => { if (!live.has(id)) set.delete(id); });
+    }
   }
 
   get expandedIds() { return [...this._expanded]; }
@@ -158,7 +170,9 @@ export class DsTree extends HTMLElement {
   get selectedIds() { return [...this._selected]; }
   set selectedIds(v) {
     this._selected = new Set(Array.isArray(v) ? v : []);
-    if (this._root) this._render();
+    /* Visual-only: driving the selection from outside must not blink the tree
+       either. Expansion is untouched, so no row appears or disappears. */
+    if (this._root) this._paintSelection();
   }
 
   /* Mark a lazy branch as resolved. The consumer normally just assigns new
@@ -278,14 +292,7 @@ export class DsTree extends HTMLElement {
       /* The row owns the accessible name; the checkbox must not repeat it as a
          second label, so it is named by the row and hidden from the tree walk. */
       cb.setAttribute('aria-label', `Select ${node.text ?? ''}`);
-      /* A parent's box reflects its SUBTREE; only a leaf reflects its own
-         membership. Deriving a parent from `_selected.has(id)` produced two wrong
-         states at once: a parent whose whole subtree was checked rendered EMPTY
-         (nothing had added the parent itself), and a checked parent stayed
-         checked after a child was unchecked underneath it. */
-      const box = this._hasKids(node) && Array.isArray(node.children) && node.children.length
-        ? this._subtreeState(node, path)
-        : (selected ? 'all' : 'none');
+      const box = this._boxState(node, path, id);
       if (box === 'all') cb.setAttribute('checked', '');
       else if (box === 'some') cb.setAttribute('indeterminate', '');
       if (node.disabled) cb.setAttribute('disabled', '');
@@ -411,12 +418,16 @@ export class DsTree extends HTMLElement {
 
     if (this._hasKids(node) && enumAttr(this, 'selection', SELECTION, 'none') === 'none') {
       this._toggle(id);   // a read-only tree: clicking a branch opens it
-    } else {
-      this._select(id, node);
-      this._emit('ds-tree-activate', { id, item: node });
+      this._render();     // expanding changes which rows EXIST
+      this._focusCurrent();
+      return;
     }
-    this._render();
-    this._focusCurrent();
+    /* Selecting is visual-only — patch in place so the tree does not blink and
+       the focused row survives. */
+    this._select(id, node);
+    this._emit('ds-tree-activate', { id, item: node });
+    this._paintSelection();
+    this._applyTabStops();
   };
 
   _onCheckbox = (e) => {
@@ -428,7 +439,7 @@ export class DsTree extends HTMLElement {
     if (!node || node.disabled) return;
     this._focusId = id;
     this._setSelected(id, node, !this._selected.has(id));
-    this._render();
+    this._paintSelection();
   };
 
   _onKeydown = (e) => {
@@ -480,12 +491,19 @@ export class DsTree extends HTMLElement {
       }
       case 'Enter':
         e.preventDefault();
-        if (node && !node.disabled) { this._select(id, node); this._emit('ds-tree-activate', { id, item: node }); this._render(); this._focusCurrent(); }
+        if (node && !node.disabled) {
+          this._select(id, node);
+          this._emit('ds-tree-activate', { id, item: node });
+          this._paintSelection();
+        }
         return;
       case ' ':
       case 'Spacebar':
         e.preventDefault();
-        if (node && !node.disabled) { this._setSelected(id, node, !this._selected.has(id)); this._render(); this._focusCurrent(); }
+        if (node && !node.disabled) {
+          this._setSelected(id, node, !this._selected.has(id));
+          this._paintSelection();
+        }
         return;
       case '*': {
         e.preventDefault();
@@ -568,6 +586,46 @@ export class DsTree extends HTMLElement {
       if (child.disabled) return;
       if (on) this._selected.add(cid); else this._selected.delete(cid);
       this._cascade(child, on, [...path, i]);
+    });
+  }
+
+  /* The ONE rule for what a checkbox shows, so the initial render and the
+     in-place repaint can never disagree.
+
+     Under `cascade` a parent reflects its SUBTREE: deriving it from its own
+     membership drew a fully-checked branch as EMPTY and kept a parent checked
+     after a child was unchecked. Under `independent` a parent reflects ITSELF —
+     standing alone is the point of that mode, and reading the subtree there left
+     a parent the user had just checked showing empty. */
+  _boxState(node, path, id) {
+    const cascade = enumAttr(this, 'select-parents', CASCADE, 'cascade') === 'cascade';
+    const kids = this._hasKids(node) && Array.isArray(node.children) && node.children.length;
+    if (!kids || !cascade) return this._selected.has(id) ? 'all' : 'none';
+    return this._subtreeState(node, path);
+  }
+
+  /* A selection change is VISUAL-ONLY, so patch the existing rows.
+     _render() rebuilds every row from scratch, which tore down and re-upgraded
+     every ds-icon and ds-checkbox in the tree on each click — the whole tree
+     visibly blinked, and the focused row was destroyed with it. Only
+     expand/collapse changes which rows EXIST, so only that path re-renders.
+     Rows are matched on dataset.id rather than a selector, so an id containing
+     quotes needs no escaping. */
+  _paintSelection() {
+    const selection = enumAttr(this, 'selection', SELECTION, 'none');
+    const byId = new Map();
+    this._visible().forEach((r) => byId.set(r.dataset.id, r));
+    this._walk((node, path) => {
+      const id = this._idOf(node, path);
+      const row = byId.get(id);
+      if (!row) return;                       // inside a collapsed branch
+      const box = this._boxState(node, path, id);
+      if (selection !== 'none') row.setAttribute('aria-selected', String(this._selected.has(id)));
+      const cb = row.querySelector('.ds-tree__check');
+      if (!cb) return;
+      if (box === 'all') { cb.setAttribute('checked', ''); cb.removeAttribute('indeterminate'); }
+      else if (box === 'some') { cb.removeAttribute('checked'); cb.setAttribute('indeterminate', ''); }
+      else { cb.removeAttribute('checked'); cb.removeAttribute('indeterminate'); }
     });
   }
 
