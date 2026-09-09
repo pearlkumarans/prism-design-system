@@ -30,6 +30,7 @@ A compact dot-plus-label indicator for system states, health conditions, and ope
 | `Show Label` | Boolean | `true` | `false` → dot-only indicator |
 | `Show Icon` | Boolean | `false` | `true` → an icon **replaces** the dot (intent — but see flag 6: Figma only shows the icon, it doesn't hide the dot; code must enforce the swap) |
 | `Icon` | Instance swap | check icon | Icon slot (stroke-drawn, colored `--uems-icon-primary` — not status-colored) |
+| `Pulse` | Boolean | `false` | `true` → animated "live" halo on the dot (expanding, fading ring in the status color). Pairs with `Show Label = false` for a dot-only live indicator. Only affects the dot (no-op in icon mode); suppressed while `Disabled`; honors `prefers-reduced-motion` (falls back to the static dot). |
 
 ## Layout
 
@@ -96,8 +97,10 @@ Label is `--uems-text-secondary` for **all** statuses (the dot carries the color
   disabled                                                  (boolean)
   show-label                                                (default: true)
   hoverable                                                 (opt-in hover tint)
+  pulse                                                     (boolean — animated live halo on the dot)
 >Online</uems-status-indicator>
 <!-- optional icon slot replaces the dot -->
+<!-- dot-only "live" indicator: <uems-status-indicator status="success" show-label="false" pulse></uems-status-indicator> -->
 ```
 
 ### HTML structure
@@ -154,6 +157,25 @@ Label is `--uems-text-secondary` for **all** statuses (the dot carries the color
 .status-indicator--disabled.status-indicator--warning  { --si-dot: var(--uems-bg-warning-secondary); }
 .status-indicator--disabled.status-indicator--critical { --si-dot: var(--uems-bg-error-secondary); }
 .status-indicator--disabled.status-indicator--info     { --si-dot: var(--uems-bg-info-secondary); }
+
+/* pulse — animated "live" halo behind the dot (status-colored, decorative) */
+.status-indicator--pulse .status-indicator__dot { position: relative; }
+.status-indicator--pulse .status-indicator__dot::after {
+  /* ring paints OVER the core (NOT behind via negative z-index — that would be
+     hidden by any opaque ancestor background); same colour + low alpha reads as a halo */
+  content: ""; position: absolute; inset: 0;
+  border-radius: inherit; background: var(--si-dot); pointer-events: none;
+  /* opacity 0 at both ends → seamless loop (no pop / scale snap) */
+  animation: status-indicator-pulse 1.8s var(--ease-standard, ease-out) infinite;
+}
+@keyframes status-indicator-pulse {
+  0% { transform: scale(1); opacity: 0; }
+  25% { opacity: 0.5; }
+  100% { transform: scale(2.8); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .status-indicator--pulse .status-indicator__dot::after { animation: none; display: none; }
+}
 
 /* icon mode — icon replaces the dot */
 .status-indicator__icon { stroke: var(--uems-icon-primary); fill: none; flex-shrink: 0; }

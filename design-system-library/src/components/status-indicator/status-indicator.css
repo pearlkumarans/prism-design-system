@@ -92,6 +92,41 @@ ds-status-indicator { display: inline-block; vertical-align: middle; font-family
 .ds-status-indicator--disabled.ds-status-indicator--info     .ds-status-indicator__dot { background: var(--uems-bg-info-secondary); }
 .ds-status-indicator--disabled.ds-status-indicator--alert    .ds-status-indicator__dot { background: var(--uems-bg-alert-secondary); }
 
+/* ---- Pulse (animated "live" halo) ----------------------------------- */
+/* `pulse` attribute → an expanding, fading ring behind the dot in the status
+   colour, for a live / real-time status (pairs naturally with show-label="false"
+   for a dot-only "live" indicator). The loop cadence (1.6s) is a literal: the
+   --duration-* tokens are transition-scale (≤320ms), not loop cadences — but the
+   easing still comes from --ease-standard. The ring is decorative + non-interactive
+   and never affects layout (absolutely positioned, behind the opaque core dot). */
+.ds-status-indicator--pulse .ds-status-indicator__dot { position: relative; }
+.ds-status-indicator--pulse .ds-status-indicator__dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;      /* pill, matches the dot */
+  background: var(--_si-color, var(--uems-bg-quaternary-solid));
+  pointer-events: none;
+  /* The ring paints OVER the core (no negative z-index — that would be hidden
+     behind any opaque ancestor background). It is the same colour as the core at
+     ≤0.5 alpha, so where it overlaps it just reinforces the opaque core; as it
+     scales past the dot it emanates and fades, reading as a halo.
+     Smoothness: opacity is 0 at BOTH ends (fades in, then out) so the loop restart
+     is seamless — no "pop" back to full alpha, no visible scale snap — and the
+     token ease-out (cubic-bezier(0.2,0,0,1)) decelerates the expansion. */
+  animation: ds-status-indicator-pulse 1.8s var(--ease-standard, ease-out) infinite;
+}
+@keyframes ds-status-indicator-pulse {
+  0%   { transform: scale(1);   opacity: 0;   }
+  25%  {                        opacity: 0.5; }
+  100% { transform: scale(2.8); opacity: 0;   }
+}
+/* Reduced motion → drop the animated ring entirely (no residual expanded halo);
+   the static dot alone still conveys the status. */
+@media (prefers-reduced-motion: reduce) {
+  .ds-status-indicator--pulse .ds-status-indicator__dot::after { animation: none; display: none; }
+}
+
 /* RTL — dir="rtl" alone reverses the flex inline axis. The dot, optional
    icon and label naturally swap so the dot sits on the right and the label
    on the left. text-align flips automatically via direction inheritance. */

@@ -8,13 +8,14 @@
 
 ## Overview
 
-A non-interactive informational popover shown on hover/focus, with an optional leading icon and a directional arrow in nine placements. Three themes (dark default, light, red/error) and full RTL. Content-only: anything interactive belongs in a Popover, not here.
+A non-interactive informational popover shown on hover/focus, with an optional leading icon and an optional directional arrow (off by default — a plain bubble centred above the trigger) across nine placements. Three themes (dark default, light, red/error) and full RTL. Content-only: anything interactive belongs in a Popover, not here.
 
 ## Variants
 
 | Axis | Values | Count |
 |---|---|---:|
-| `Position` | right (default), left, up center, up left, up right, down center, down left, down right, without arrow | 9 |
+| `Position` | up center (default), up left, up right, down center, down left, down right, left, right, without arrow | 9 |
+| `Arrow` | false (default — plain bubble), true (opt-in pointer, any position) | 2 |
 | `Theme` | dark (default), light, red | 3 |
 | `RTL` | false (default), true | 2 |
 
@@ -94,10 +95,10 @@ Every directional position mirrors consistently — so in code, just use logical
 ```
 <uems-tooltip
   content="..."                          (required — plain text)
-  position="top | bottom | left | right | top-start | top-end | bottom-start | bottom-end"  (default: top)
+  position="top | bottom | left | right | top-start | top-end | bottom-start | bottom-end | without-arrow"  (placement; default: up-center)
   theme="dark | light | red"             (default: dark)
   icon / no-icon                         (default: icon shown, swappable)
-  arrow                                  (default: true; false = "without arrow")
+  arrow                                  (boolean attribute; default OFF — a plain bubble. Add `arrow` to grow a pointer for the current placement; orthogonal to `position`, so `position="left" arrow` gives a left-placed bubble WITH a pointer)
   for="<trigger-id>" or wraps trigger slot
 ></uems-tooltip>
 ```
@@ -126,9 +127,12 @@ Every directional position mirrors consistently — so in code, just use logical
   background: var(--tip-bg); color: var(--tip-text);
   font-size: var(--uems-font-size-13);          /* 13px */
   line-height: var(--uems-line-height-13);       /* 20px */
-  pointer-events: none; opacity: 0; transition: opacity 150ms ease;
+  pointer-events: none; opacity: 0;
+  transform: translateY(-8px);   /* hidden offset points back toward the trigger; axis + sign follow the render side (above → -Y, below → +Y, left → -X, right → +X) */
+  transition: opacity var(--duration-fast) var(--ease-standard),
+              transform var(--duration-base) var(--easing-decelerate);
 }
-.tooltip.is-visible { opacity: 1; pointer-events: auto; } /* hoverable per WCAG 1.4.13 */
+.tooltip.is-visible { opacity: 1; transform: translate(0, 0); pointer-events: auto; } /* hoverable per WCAG 1.4.13 */
 .tooltip__icon { width: 20px; height: 20px; flex: none; color: var(--tip-icon); }
 .tooltip__text { max-width: min(240px, calc(100vw - 32px)); }  /* the real cap — body derives from this (288 w/ icon, 264 w/o); clamps on small viewports */
 
@@ -163,6 +167,7 @@ Use Floating UI (or equivalent) with `offset(6 + 4)` (arrow + gap), `flip()`, an
 | Focus (`:focus-visible`) | Show immediately |
 | Blur | Hide |
 | `Escape` | Hide immediately, focus stays on trigger |
+| Activate trigger (`pointerdown` / click) | Hide immediately — the user has committed to the action, so the hint clears before the menu/popover it opens paints (reappears on the next hover/focus) |
 | Trigger disappears/scrolls away | Hide |
 
 No hover/active/disabled states on the tooltip itself — it's a single-state surface.
@@ -189,7 +194,7 @@ Figma defines the tooltip at **one fixed size** (no size/breakpoint axis) — so
 
 ## Animation / Motion
 
-Not specified in Figma — suggested: fade in 150ms ease-out (after the show delay), fade out 100ms ease-in. `prefers-reduced-motion`: instant. Never slide/scale — tooltips should appear anchored, not arrive.
+On show/hide (after the ~200ms hover delay), the tip fades while **sliding in from the side it renders on**, gliding toward the trigger to settle: a tip above the trigger slides **down**, below slides **up**, left slides **right**, right slides **left** — an 8px directional offset. Opacity leads on `--duration-fast` (120ms) `--ease-standard`; the `transform` follows on `--duration-base` (180ms) `--easing-decelerate` so it eases to rest rather than snapping. The same transition plays in reverse on hide — the tip slides back out the way it came. `prefers-reduced-motion`: fade only, no transform. (In JS-positioned/floating mode the offset uses physical axes so it stays correct in RTL.)
 
 ## Accessibility
 

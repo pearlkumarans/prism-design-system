@@ -7,7 +7,7 @@ const STATUSES = ['neutral', 'success', 'warning', 'critical', 'info', 'alert'];
 const SIZES = ['small', 'medium', 'large'];
 
 export class DsStatusIndicator extends HTMLElement {
-  static get observedAttributes() { return ['status', 'size', 'label', 'icon', 'show-label', 'disabled', 'interactive', 'rtl']; }
+  static get observedAttributes() { return ['status', 'size', 'label', 'icon', 'show-label', 'disabled', 'interactive', 'rtl', 'pulse']; }
 
   connectedCallback() {
     if (!this._root) {
@@ -36,7 +36,7 @@ export class DsStatusIndicator extends HTMLElement {
        rebuilding innerHTML (which re-parsed the ds-icon). label/icon/show-label
        change the content, so they rebuild. */
     if (name === 'status' || name === 'size' || name === 'disabled'
-        || name === 'interactive' || name === 'rtl') this._paintChrome();
+        || name === 'interactive' || name === 'rtl' || name === 'pulse') this._paintChrome();
     else this._render();
   }
 
@@ -50,10 +50,15 @@ export class DsStatusIndicator extends HTMLElement {
     const disabled = boolAttr(this, 'disabled');
     const interactive = boolAttr(this, 'interactive');
     const rtl = boolAttr(this, 'rtl');
+    /* pulse → animated "live" halo on the dot. Suppressed while disabled (a
+       disabled status is static), and it only renders on the dot — the icon
+       variant has no dot, so pulse is a no-op there. */
+    const pulse = boolAttr(this, 'pulse');
 
     this._root.className = `ds-status-indicator ds-status-indicator--${status} ds-status-indicator--${size}`
       + (disabled ? ' ds-status-indicator--disabled' : '')
-      + (interactive ? ' ds-status-indicator--interactive' : '');
+      + (interactive ? ' ds-status-indicator--interactive' : '')
+      + (pulse && !disabled ? ' ds-status-indicator--pulse' : '');
     if (!showLabel) this._root.setAttribute('aria-label', label);
     else this._root.removeAttribute('aria-label');
     if (rtl) this._root.setAttribute('dir', 'rtl'); else this._root.removeAttribute('dir');

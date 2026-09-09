@@ -16,11 +16,13 @@ const UPDATE = {
   link: 'View release notes',
 };
 const REVIEW = {
-  title: 'Review & Earn',
-  desc: 'Love Endpoint Central? Have your friends try it out — they can manage up to <strong>75 devices free.</strong>',
+  eyebrow: 'Gift card',
+  title: 'Review & earn',
+  desc: 'Your feedback matters. Review us on TrustRadius and claim your gift card.',
+  valid: 'Valid · 2,000+ reviews',
   primary: 'Review now',
-  secondary: 'Need assistance?',
-  dismiss: "Don't show again",
+  secondary: 'Need assistance',
+  dismiss: "Don't show",
 };
 const ROADMAP = {
   title: 'Roadmap',
@@ -80,7 +82,9 @@ export class RailPopover {
     else if (kind === 'roadmap') { this.anchorId = 'roadmap'; el.className = 'upd-pop upd-pop--narrow'; el.innerHTML = this._roadmapHtml(); }
     else { this.anchorId = 'update'; el.className = 'upd-pop'; el.innerHTML = this._updateHtml(); }
     this.card = kind;
-    el.querySelector('[data-upd-close]')?.addEventListener('click', () => this.hide());
+    // A card may carry more than one dismissing control (e.g. review has both the
+    // close icon-button and a "Don't show" link), so wire every [data-upd-close].
+    el.querySelectorAll('[data-upd-close]').forEach((n) => n.addEventListener('click', (e) => { e.preventDefault(); this.hide(); }));
     el.classList.add('open');
     this._position();
   }
@@ -124,19 +128,31 @@ export class RailPopover {
       </div></div>`;
   }
 
+  // Review & earn — a "gift-card face": accent surface (EMV chip + gold star
+  // rating + trust line) over a white action footer. Built from ds-* components
+  // and design tokens; translucent overlays come from color-mix on the white
+  // token (no hardcoded colours). See .upd-card--review in app.css.
   _reviewHtml() {
     const d = REVIEW;
+    const stars = '<ds-icon name="star" size="16"></ds-icon>'.repeat(5);
     return `<div class="upd-card upd-card--review">
-      <div class="upd-card__icon"><ds-icon name="review" size="20"></ds-icon></div>
-      <ds-icon-button class="upd-card__close" data-upd-close icon="close" label="Dismiss" type="tertiary-grey" size="small"></ds-icon-button>
-      <div class="upd-card__body">
-        <div class="upd-card__title">${d.title}</div>
-        <div class="upd-card__desc">${d.desc}</div>
-        <div class="upd-card__actions">
-          <ds-button variant="primary" size="small">${d.primary}</ds-button>
-          <ds-button variant="secondary" size="small">${d.secondary}</ds-button>
+      <div class="rv-face">
+        <span class="rv-face__ring rv-face__ring--1" aria-hidden="true"></span>
+        <span class="rv-face__ring rv-face__ring--2" aria-hidden="true"></span>
+        <ds-icon-button class="rv-close" data-upd-close icon="close" label="Dismiss" type="tertiary-grey" size="small"></ds-icon-button>
+        <div class="rv-eyebrow"><ds-icon name="sparkles" size="14"></ds-icon>${d.eyebrow}</div>
+        <span class="rv-chip" aria-hidden="true"></span>
+        <div class="rv-title">${d.title}</div>
+        <div class="rv-desc">${d.desc}</div>
+        <div class="rv-meta">
+          <span class="rv-stars" aria-hidden="true">${stars}</span>
+          <span class="rv-valid">${d.valid}</span>
         </div>
-        <div class="upd-card__foot"><ds-text-link href="#" variant="subtle" size="medium" underline="always">${d.dismiss}</ds-text-link></div>
+      </div>
+      <div class="rv-actions">
+        <ds-button variant="primary" size="small">${d.primary}</ds-button>
+        <ds-text-link href="#" variant="primary" size="medium" underline="hover" label="${d.secondary}"></ds-text-link>
+        <ds-text-link class="rv-dismiss" data-upd-close href="#" variant="subtle" size="medium" underline="always" label="${d.dismiss}"></ds-text-link>
       </div></div>`;
   }
 
