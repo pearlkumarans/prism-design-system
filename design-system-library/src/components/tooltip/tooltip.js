@@ -1,7 +1,12 @@
 /* =============================================================================
-   <ds-tooltip text="Helpful hint" position="up-center" theme="dark">
+   <ds-tooltip text="Helpful hint" theme="dark">
      <button>Hover me</button>
    </ds-tooltip>
+
+   `position` sets PLACEMENT (default "up-center" — centred above the trigger);
+   `arrow` is a separate opt-in pointer, default OFF. So a bare tooltip is a
+   plain bubble with no arrow; add `arrow` (optionally with any position) to
+   grow a pointer at the trigger.
 
    The tip is PORTALED to <body> and positioned with position:fixed in JS
    (anchored to the trigger via getBoundingClientRect). This guarantees the tip
@@ -29,7 +34,7 @@ const MARGIN = 8; /* min distance from the viewport edge */
 let _uid = 0;
 
 export class DsTooltip extends HTMLElement {
-  static get observedAttributes() { return ['text', 'position', 'theme', 'show-icon', 'icon', 'rtl']; }
+  static get observedAttributes() { return ['text', 'position', 'theme', 'show-icon', 'icon', 'rtl', 'arrow']; }
 
   constructor() {
     super();
@@ -90,7 +95,7 @@ export class DsTooltip extends HTMLElement {
     /* Visual-only attrs (position/theme/rtl) just re-class + reposition the tip —
        no need to rebuild innerHTML (which re-parses the <ds-icon>). Structural
        attrs (text/icon/show-icon) change the content, so they rebuild. */
-    if (name === 'position' || name === 'theme' || name === 'rtl') this._paintState();
+    if (name === 'position' || name === 'theme' || name === 'rtl' || name === 'arrow') this._paintState();
     else this._render();
   }
 
@@ -214,9 +219,14 @@ export class DsTooltip extends HTMLElement {
     const position = enumAttr(this, 'position', POSITIONS, 'up-center');
     const theme = enumAttr(this, 'theme', THEMES, 'dark');
     const rtl = boolAttr(this, 'rtl');
+    /* Arrow is an opt-in pointer, orthogonal to placement: `position` decides
+       WHERE the bubble sits, `arrow` decides whether it grows a pointer. Default
+       OFF, so every tooltip is a plain bubble unless a caller asks for an arrow —
+       the .--no-arrow class zeroes the ::after regardless of the placement class. */
+    const arrow = boolAttr(this, 'arrow');
     /* --floating makes the tip position:fixed and clears the variant anchor
        offsets; the position class still drives the arrow direction. */
-    this._tip.className = `ds-tooltip__tip ds-tooltip__tip--floating ds-tooltip__tip--${theme} ds-tooltip__tip--${position}`;
+    this._tip.className = `ds-tooltip__tip ds-tooltip__tip--floating ds-tooltip__tip--${theme} ds-tooltip__tip--${position}${arrow ? '' : ' ds-tooltip__tip--no-arrow'}`;
     if (rtl) this._tip.setAttribute('dir', 'rtl');
     else this._tip.removeAttribute('dir');
     if (this._open) this._position();

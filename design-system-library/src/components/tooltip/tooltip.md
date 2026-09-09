@@ -8,13 +8,14 @@
 
 ## Overview
 
-A non-interactive informational popover shown on hover/focus, with an optional leading icon and a directional arrow in nine placements. Three themes (dark default, light, red/error) and full RTL. Content-only: anything interactive belongs in a Popover, not here.
+A non-interactive informational popover shown on hover/focus, with an optional leading icon and an optional directional arrow (off by default — a plain bubble centred above the trigger) across nine placements. Three themes (dark default, light, red/error) and full RTL. Content-only: anything interactive belongs in a Popover, not here.
 
 ## Variants
 
 | Axis | Values | Count |
 |---|---|---:|
-| `Position` | right (default), left, up center, up left, up right, down center, down left, down right, without arrow | 9 |
+| `Position` | up center (default), up left, up right, down center, down left, down right, left, right, without arrow | 9 |
+| `Arrow` | false (default — plain bubble), true (opt-in pointer, any position) | 2 |
 | `Theme` | dark (default), light, red | 3 |
 | `RTL` | false (default), true | 2 |
 
@@ -94,10 +95,10 @@ Every directional position mirrors consistently — so in code, just use logical
 ```
 <uems-tooltip
   content="..."                          (required — plain text)
-  position="top | bottom | left | right | top-start | top-end | bottom-start | bottom-end"  (default: top)
+  position="top | bottom | left | right | top-start | top-end | bottom-start | bottom-end | without-arrow"  (placement; default: up-center)
   theme="dark | light | red"             (default: dark)
   icon / no-icon                         (default: icon shown, swappable)
-  arrow                                  (default: true; false = "without arrow")
+  arrow                                  (boolean attribute; default OFF — a plain bubble. Add `arrow` to grow a pointer for the current placement; orthogonal to `position`, so `position="left" arrow` gives a left-placed bubble WITH a pointer)
   for="<trigger-id>" or wraps trigger slot
 ></uems-tooltip>
 ```

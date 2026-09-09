@@ -96,6 +96,12 @@ ds-tooltip { display: inline-block; position: relative; font-family: var(--font-
   border: 6px solid transparent;
 }
 .ds-tooltip__tip--without-arrow::after { content: none; }
+/* Arrow is opt-in: with no `arrow` attribute the tip carries --no-arrow, which
+   drops the ::after box entirely — so any placement (left/right/up/down) renders
+   as a plain bubble. Same (0,1,1) specificity as the directional rules but it
+   only zeroes `content`, which they never re-declare, so source order can't
+   resurrect the arrow. */
+.ds-tooltip__tip--no-arrow::after { content: none; }
 /* Arrow on the BOTTOM edge (tooltip sits ABOVE the trigger) — `up *` */
 .ds-tooltip__tip--up-center::after,
 .ds-tooltip__tip--up-left::after,

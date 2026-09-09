@@ -44,10 +44,11 @@ describe('ds-tooltip — trigger association', () => {
 });
 
 describe('ds-tooltip — position & theme', () => {
-  it('defaults to up-center + dark', async () => {
+  it('defaults to up-center placement, dark, and arrowless', async () => {
     const el = await fixture(html`<ds-tooltip text="Hint"><button>T</button></ds-tooltip>`);
-    expect(el._tip.classList.contains('ds-tooltip__tip--up-center')).to.be.true;
+    expect(el._tip.classList.contains('ds-tooltip__tip--up-center'), 'default placement').to.be.true;
     expect(el._tip.classList.contains('ds-tooltip__tip--dark')).to.be.true;
+    expect(el._tip.classList.contains('ds-tooltip__tip--no-arrow'), 'arrowless by default').to.be.true;
   });
 
   it('reflects the position + theme attributes', async () => {
@@ -62,6 +63,31 @@ describe('ds-tooltip — position & theme', () => {
     await nextFrame();
     expect(el._tip.classList.contains('ds-tooltip__tip--left')).to.be.true;
     expect(el._tip.classList.contains('ds-tooltip__tip--up-center')).to.be.false;
+  });
+});
+
+describe('ds-tooltip — arrow (opt-in pointer, default off)', () => {
+  it('is arrowless by default even with a directional position', async () => {
+    /* position sets PLACEMENT (left); the arrow is a separate opt-in, so without
+       the `arrow` attribute the tip carries --no-arrow (CSS drops the ::after). */
+    const el = await fixture(html`<ds-tooltip text="Hint" position="left"><button>T</button></ds-tooltip>`);
+    expect(el._tip.classList.contains('ds-tooltip__tip--left'), 'placement kept').to.be.true;
+    expect(el._tip.classList.contains('ds-tooltip__tip--no-arrow'), 'arrow suppressed by default').to.be.true;
+  });
+
+  it('draws the arrow only when arrow is set — placement unchanged', async () => {
+    const el = await fixture(html`<ds-tooltip text="Hint" position="left" arrow><button>T</button></ds-tooltip>`);
+    expect(el._tip.classList.contains('ds-tooltip__tip--left')).to.be.true;
+    expect(el._tip.classList.contains('ds-tooltip__tip--no-arrow'), 'arrow present, so no --no-arrow').to.be.false;
+  });
+
+  it('toggles the arrow reactively without changing placement', async () => {
+    const el = await fixture(html`<ds-tooltip text="Hint" position="up-center" arrow><button>T</button></ds-tooltip>`);
+    expect(el._tip.classList.contains('ds-tooltip__tip--no-arrow')).to.be.false;
+    el.removeAttribute('arrow');
+    await nextFrame();
+    expect(el._tip.classList.contains('ds-tooltip__tip--up-center'), 'placement kept').to.be.true;
+    expect(el._tip.classList.contains('ds-tooltip__tip--no-arrow'), 'now arrowless').to.be.true;
   });
 });
 
