@@ -50,6 +50,12 @@ export class DsTooltip extends HTMLElement {
       this.addEventListener('focusin', this._show);
       this.addEventListener('focusout', this._hide);
       this.addEventListener('keydown', (e) => { if (e.key === 'Escape') this._hideNow(); });
+      /* Activating the trigger dismisses the tip: on click the user has committed
+         to the action (opening a menu/popover, toggling), so the hover hint must
+         get out of the way — it would otherwise sit over whatever the click opens.
+         Fires on pointerdown so the tip is gone before the popover paints; it
+         reappears only on the next hover/focus. */
+      this.addEventListener('pointerdown', this._hideNow);
     }
     // Portal the tip to <body> so NO ancestor can clip it.
     if (this._tip.parentNode !== document.body) document.body.appendChild(this._tip);

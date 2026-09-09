@@ -163,6 +163,7 @@ Use Floating UI (or equivalent) with `offset(6 + 4)` (arrow + gap), `flip()`, an
 | Focus (`:focus-visible`) | Show immediately |
 | Blur | Hide |
 | `Escape` | Hide immediately, focus stays on trigger |
+| Activate trigger (`pointerdown` / click) | Hide immediately — the user has committed to the action, so the hint clears before the menu/popover it opens paints (reappears on the next hover/focus) |
 | Trigger disappears/scrolls away | Hide |
 
 No hover/active/disabled states on the tooltip itself — it's a single-state surface.

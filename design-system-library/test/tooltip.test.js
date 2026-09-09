@@ -96,6 +96,27 @@ describe('ds-tooltip — show / hide lifecycle', () => {
     expect(el._open, 'Escape hides at once').to.be.false;
     expect(el._tip.getAttribute('aria-hidden')).to.equal('true');
   });
+
+  it('activating the trigger (pointerdown) dismisses an open tip at once', async () => {
+    const el = await fixture(html`<ds-tooltip text="Hint"><button>T</button></ds-tooltip>`);
+    el.dispatchEvent(new Event('mouseenter'));
+    await wait(SHOWN);
+    expect(el._open, 'shown by hover').to.be.true;
+    /* Click starts with pointerdown; it bubbles from the trigger to the host.
+       The hint must clear before whatever the click opens (menu/popover) paints. */
+    trig(el).dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    expect(el._open, 'pointerdown hides at once').to.be.false;
+    expect(el._tip.getAttribute('aria-hidden')).to.equal('true');
+  });
+
+  it('cancels a pending (pre-delay) open when the trigger is activated', async () => {
+    const el = await fixture(html`<ds-tooltip text="Hint"><button>T</button></ds-tooltip>`);
+    el.dispatchEvent(new Event('mouseenter'));   /* schedules the deferred open */
+    trig(el).dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await wait(SHOWN);                            /* the scheduled open must have been cleared */
+    expect(el._open, 'a fast click never lets the tip appear').to.be.false;
+    expect(el._tip.dataset.visible).to.not.equal('true');
+  });
 });
 
 describe('ds-tooltip — escaping', () => {
