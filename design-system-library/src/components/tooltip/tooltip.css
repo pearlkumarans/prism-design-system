@@ -34,16 +34,21 @@ ds-tooltip { display: inline-block; position: relative; font-family: var(--font-
   align-items: flex-start;
   gap: var(--uems-spacing-4, 4px);
   pointer-events: none;
+  /* Enter/exit motion — a soft fade + rise on hover/focus. The opacity leads
+     (fast, standard curve) while the transform settles a touch longer on the
+     decelerate curve, so the tip glides to rest instead of snapping. Tokens, so
+     it stays in step with the rest of the system's motion. */
   opacity: 0;
-  transform: translateY(-2px);
-  transition: opacity 150ms ease, transform 150ms ease;
+  transform: translateY(-4px);
+  transition: opacity var(--duration-fast) var(--ease-standard),
+              transform var(--duration-base) var(--easing-decelerate);
   /* Default body color — overridden per theme below. */
   --_tt-bg: var(--uems-bg-secondary-solid);
 }
 .ds-tooltip__tip[data-visible="true"] { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ds-tooltip__tip { transition: opacity 150ms ease; transform: none !important; }
+  .ds-tooltip__tip { transition: opacity var(--duration-fast) var(--ease-standard); transform: none !important; }
 }
 
 .ds-tooltip__icon { line-height: 0; flex-shrink: 0; color: var(--_tt-icon); }
@@ -205,6 +210,21 @@ ds-tooltip { display: inline-block; position: relative; font-family: var(--font-
   position: fixed;
   inset: auto;
   margin: 0;
-  transform: translateY(-2px);
 }
-.ds-tooltip__tip.ds-tooltip__tip--floating[data-visible="true"] { transform: translateY(0); }
+/* Directional slide — the tip enters from the side it renders on (slides toward
+   the trigger) and exits back the same way; the base transition drives it. These
+   set only the HIDDEN-state offset; the settled rule below (same specificity,
+   declared later) wins when visible. Physical axes, not logical, to match the JS
+   physical positioning — correct in both LTR and RTL. */
+.ds-tooltip__tip--floating.ds-tooltip__tip--up-center,
+.ds-tooltip__tip--floating.ds-tooltip__tip--up-left,
+.ds-tooltip__tip--floating.ds-tooltip__tip--up-right,
+.ds-tooltip__tip--floating.ds-tooltip__tip--up-anchored,
+.ds-tooltip__tip--floating.ds-tooltip__tip--without-arrow { transform: translateY(-8px); }   /* above → slide down in */
+.ds-tooltip__tip--floating.ds-tooltip__tip--down-center,
+.ds-tooltip__tip--floating.ds-tooltip__tip--down-left,
+.ds-tooltip__tip--floating.ds-tooltip__tip--down-right,
+.ds-tooltip__tip--floating.ds-tooltip__tip--down-anchored { transform: translateY(8px); }     /* below → slide up in */
+.ds-tooltip__tip--floating.ds-tooltip__tip--left  { transform: translateX(-8px); }            /* left of trigger → slide right in */
+.ds-tooltip__tip--floating.ds-tooltip__tip--right { transform: translateX(8px); }             /* right of trigger → slide left in */
+.ds-tooltip__tip--floating[data-visible="true"] { transform: translate(0, 0); }

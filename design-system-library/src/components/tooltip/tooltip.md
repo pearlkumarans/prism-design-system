@@ -127,9 +127,12 @@ Every directional position mirrors consistently — so in code, just use logical
   background: var(--tip-bg); color: var(--tip-text);
   font-size: var(--uems-font-size-13);          /* 13px */
   line-height: var(--uems-line-height-13);       /* 20px */
-  pointer-events: none; opacity: 0; transition: opacity 150ms ease;
+  pointer-events: none; opacity: 0;
+  transform: translateY(-8px);   /* hidden offset points back toward the trigger; axis + sign follow the render side (above → -Y, below → +Y, left → -X, right → +X) */
+  transition: opacity var(--duration-fast) var(--ease-standard),
+              transform var(--duration-base) var(--easing-decelerate);
 }
-.tooltip.is-visible { opacity: 1; pointer-events: auto; } /* hoverable per WCAG 1.4.13 */
+.tooltip.is-visible { opacity: 1; transform: translate(0, 0); pointer-events: auto; } /* hoverable per WCAG 1.4.13 */
 .tooltip__icon { width: 20px; height: 20px; flex: none; color: var(--tip-icon); }
 .tooltip__text { max-width: min(240px, calc(100vw - 32px)); }  /* the real cap — body derives from this (288 w/ icon, 264 w/o); clamps on small viewports */
 
@@ -191,7 +194,7 @@ Figma defines the tooltip at **one fixed size** (no size/breakpoint axis) — so
 
 ## Animation / Motion
 
-Not specified in Figma — suggested: fade in 150ms ease-out (after the show delay), fade out 100ms ease-in. `prefers-reduced-motion`: instant. Never slide/scale — tooltips should appear anchored, not arrive.
+On show/hide (after the ~200ms hover delay), the tip fades while **sliding in from the side it renders on**, gliding toward the trigger to settle: a tip above the trigger slides **down**, below slides **up**, left slides **right**, right slides **left** — an 8px directional offset. Opacity leads on `--duration-fast` (120ms) `--ease-standard`; the `transform` follows on `--duration-base` (180ms) `--easing-decelerate` so it eases to rest rather than snapping. The same transition plays in reverse on hide — the tip slides back out the way it came. `prefers-reduced-motion`: fade only, no transform. (In JS-positioned/floating mode the offset uses physical axes so it stays correct in RTL.)
 
 ## Accessibility
 
