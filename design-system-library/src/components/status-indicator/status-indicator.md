@@ -92,7 +92,7 @@ Label is `--uems-text-secondary` for **all** statuses (the dot carries the color
 
 ```
 <uems-status-indicator
-  status="neutral | success | warning | critical | info"   (default: neutral)
+  status="neutral | success | warning | critical | info | alert"   (default: neutral)
   size="small | medium | large"                            (default: small)
   disabled                                                  (boolean)
   show-label                                                (default: true)
