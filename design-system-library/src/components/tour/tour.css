@@ -20,6 +20,17 @@ ds-tour { display: none !important; }
   line-height: var(--uems-line-height-14, 20px);
   color: var(--uems-text-secondary);
 }
+/* Interactive-step hint ("Try it to continue"). */
+.ds-tour__hint {
+  margin: 0;
+  display: inline-flex; align-items: center; gap: var(--spacing-4);
+  font-size: var(--font-size-12); font-weight: var(--font-weight-medium);
+  color: var(--uems-text-accent-link);
+}
+.ds-tour__hint::before {
+  content: ""; width: 6px; height: 6px; border-radius: var(--uems-radius-pill, 9999px);
+  background: var(--uems-bg-button-primary); flex: 0 0 auto;
+}
 
 /* ---- Footer (two rows: progress, then actions) ---------------------------- */
 .ds-tour__footer { display: flex; flex-direction: column; gap: var(--spacing-12); width: 100%; }
@@ -56,4 +67,20 @@ ds-tour { display: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
   .ds-tour__dot { transition: none; }
+}
+
+/* ---- Mobile: anchored steps dock as a bottom sheet ------------------------ */
+/* A floating anchored card cramps on a phone. Below 640px, dock the tour's
+   popover to the bottom edge, full width (inset), and drop the arrow — the
+   spotlight still highlights the target above. Overrides ds-popover's inline
+   JS position; the spotlight/backdrop are unaffected. */
+@media (max-width: 640px) {
+  .ds-tour__pop .ds-popover__surface {
+    top: auto !important;
+    bottom: var(--spacing-16) !important;
+    left: var(--spacing-12) !important;
+    right: var(--spacing-12) !important;
+    width: auto !important;
+  }
+  .ds-tour__pop .ds-popover__arrow { display: none !important; }
 }

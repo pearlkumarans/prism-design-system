@@ -47,6 +47,17 @@ tour.steps = [
 | `primaryLabel` | string | Override the primary button label (`Next` / `Done`) for this step. |
 | `showSkip` | boolean | Default `true`. The last step never shows Skip. |
 | `spotlightPadding` | number | Gap (px) between the target and the spotlight cutout / ring. Default `8`. |
+| `advanceOn` | event name | **Interactive step** — advance when this DOM event fires on the target (e.g. `'click'`). The spotlight cutout makes the target click-through; `Next` still works as an escape hatch. |
+| `hint` | string | Instruction shown on an `advanceOn` step (default: the `hint` label). |
+
+## Property — `labels` (i18n override)
+
+Override any control string; unset keys fall back to the built-in `en` / `ar`
+(under `rtl`) defaults.
+
+```js
+tour.labels = { skip: 'Dismiss', back: 'Back', next: 'Continue', done: 'Finish', of: '/', hint: 'Try it' };
+```
 
 ## Methods
 
@@ -80,6 +91,11 @@ to a backend "seen" write if `localStorage` alone isn't enough.
   an anchored→anchored transition).
 - **Persistence.** Both complete and skip mark the tour seen, so `auto-start`
   never re-nags; the distinct events let consumers act more finely.
+- **Interactive steps (P4).** `advanceOn` makes a step wait for the user's real
+  action on the target instead of a `Next` click — the basis for do-it-yourself
+  tours.
+- **Mobile (P4).** Below 640px, anchored steps dock as a bottom sheet (arrow
+  dropped); the spotlight still highlights the target above.
 - **Missing target.** A selector that resolves to nothing degrades to a centered
   step rather than failing.
 
@@ -103,7 +119,7 @@ values.
 ## Roadmap
 
 Phase 1: core engine — anchored + centered steps, progress, persistence,
-inherited a11y. Phase 2 (done): **spotlight cutout** — `ds-overlay.spotlight()`
-dims all but the target, with a focus ring, blur-preserving, click-through.
-**Later:** `ds-beacon` passive hotspot (P3), branching `advanceOn`, mobile
-bottom-sheet, analytics polish (P4).
+inherited a11y. Phase 2: **spotlight cutout** — `ds-overlay.spotlight()`. Phase 3:
+**`ds-beacon`** passive coach-mark. Phase 4 (done): **interactive `advanceOn`
+steps, mobile bottom-sheet, i18n `labels`** (analytics hooks already ship as the
+`ds-tour-*` events).

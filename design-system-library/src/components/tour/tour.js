@@ -43,6 +43,12 @@ import '../button/button.js';
 import '../text-link/text-link.js';
 
 const MASKS = ['dim', 'light', 'blur', 'dim-blur', 'none'];
+
+/* Built-in control strings. Consumers override any of them via the `labels`
+   property (for i18n); otherwise `rtl` picks the Arabic defaults. */
+const LABELS_LTR = { skip: 'Skip tour', back: 'Back', next: 'Next', done: 'Done', of: 'of', hint: 'Try it to continue' };
+const LABELS_RTL = { skip: 'تخطّي', back: 'رجوع', next: 'التالي', done: 'تم', of: 'من', hint: 'جرّبه للمتابعة' };
+
 let _uid = 0;
 
 export class DsTour extends HTMLElement {
@@ -90,6 +96,15 @@ export class DsTour extends HTMLElement {
   // ---- steps property -----------------------------------------------------
   get steps() { return this._steps; }
   set steps(v) { this._steps = Array.isArray(v) ? v : []; }
+
+  // ---- labels property (i18n override) ------------------------------------
+  get labels() { return this._labels || {}; }
+  set labels(v) { this._labels = (v && typeof v === 'object') ? v : null; }
+
+  _label(key) {
+    if (this._labels && this._labels[key] != null) return this._labels[key];
+    return (this._rtl() ? LABELS_RTL : LABELS_LTR)[key];
+  }
 
   // ---- public API ---------------------------------------------------------
   start(from = 0) {
@@ -190,6 +205,25 @@ export class DsTour extends HTMLElement {
     this._surface = pop;
     this._bindSurfaceClose(pop, 'ds-popover-close');
     pop.open();
+
+    /* Interactive step: advance when the user performs the real action on the
+       target (the spotlight cutout already makes it click-through). Next still
+       works as an escape hatch. */
+    if (step.advanceOn) this._bindAdvance(targetEl, step.advanceOn);
+  }
+
+  _bindAdvance(targetEl, evt) {
+    this._advanceTarget = targetEl;
+    this._advanceEvent = evt;
+    this._advanceHandler = () => this.next();
+    targetEl.addEventListener(evt, this._advanceHandler, { once: true });
+  }
+
+  _unbindAdvance() {
+    if (this._advanceTarget && this._advanceHandler) {
+      this._advanceTarget.removeEventListener(this._advanceEvent, this._advanceHandler);
+    }
+    this._advanceTarget = this._advanceHandler = this._advanceEvent = null;
   }
 
   _showCentered(step) {
@@ -231,6 +265,12 @@ export class DsTour extends HTMLElement {
       p.textContent = step.body;
       body.appendChild(p);
     }
+    if (step.advanceOn) {
+      const hint = document.createElement('p');
+      hint.className = 'ds-tour__hint';
+      hint.textContent = step.hint || this._label('hint');
+      body.appendChild(hint);
+    }
     return body;
   }
 
@@ -263,7 +303,7 @@ export class DsTour extends HTMLElement {
       skip.setAttribute('variant', 'secondary');
       skip.setAttribute('size', 'small');
       skip.setAttribute('href', '#');
-      skip.textContent = this._rtl() ? 'تخطّي' : 'Skip tour';
+      skip.textContent = this._label('skip');
       skip.addEventListener('click', (e) => { e.preventDefault(); this.end({ completed: false }); });
     }
 
@@ -273,7 +313,7 @@ export class DsTour extends HTMLElement {
       back.className = 'ds-tour__back';
       back.setAttribute('variant', 'secondary');
       back.setAttribute('size', 'small');
-      back.setAttribute('label', this._rtl() ? 'رجوع' : 'Back');
+      back.setAttribute('label', this._label('back'));
       back.addEventListener('click', () => this.prev());
     }
 
@@ -281,7 +321,7 @@ export class DsTour extends HTMLElement {
     next.className = 'ds-tour__next';
     next.setAttribute('variant', 'primary');
     next.setAttribute('size', 'small');
-    const nextLabel = step.primaryLabel || (isLast ? (this._rtl() ? 'تم' : 'Done') : (this._rtl() ? 'التالي' : 'Next'));
+    const nextLabel = step.primaryLabel || (isLast ? this._label('done') : this._label('next'));
     next.setAttribute('label', nextLabel);
     if (!isLast) next.setAttribute('suffix-icon', 'arrow-narrow-right');
     next.addEventListener('click', () => this.next());
@@ -305,8 +345,7 @@ export class DsTour extends HTMLElement {
     }
     const label = document.createElement('span');
     label.className = 'ds-tour__count';
-    const of = this._rtl() ? 'من' : 'of';
-    label.textContent = `${this._index + 1} ${of} ${total}`;
+    label.textContent = `${this._index + 1} ${this._label('of')} ${total}`;
     wrap.appendChild(dots);
     wrap.appendChild(label);
     return wrap;
@@ -351,6 +390,7 @@ export class DsTour extends HTMLElement {
 
   // ---- teardown -----------------------------------------------------------
   _teardownSurface() {
+    this._unbindAdvance();
     if (!this._surface) return;
     if (this._onSurfaceClose) {
       this._surface.removeEventListener('ds-popover-close', this._onSurfaceClose);
