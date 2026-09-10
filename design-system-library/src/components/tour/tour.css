@@ -1,0 +1,59 @@
+/* =============================================================================
+   ds-tour — page-tour orchestrator.
+   The host is an invisible controller; these styles dress the step-card content
+   (body + two-row footer with progress + controls) that ds-tour slots into a
+   ds-popover / ds-modal. The surfaces themselves come from those components.
+   ============================================================================= */
+
+/* Controller host renders nothing. */
+ds-tour { display: none !important; }
+
+/* Give the tour's popover a comfortable reading width (ds-popover hugs content
+   otherwise). Scoped to the tour's own popovers via the .ds-tour__pop class. */
+.ds-tour__pop { --ds-popover-width: 320px; }
+
+/* ---- Body ----------------------------------------------------------------- */
+.ds-tour__body { display: flex; flex-direction: column; gap: var(--spacing-8); }
+.ds-tour__text {
+  margin: 0;
+  font-size: var(--font-size-14);
+  line-height: var(--uems-line-height-14, 20px);
+  color: var(--uems-text-secondary);
+}
+
+/* ---- Footer (two rows: progress, then actions) ---------------------------- */
+.ds-tour__footer { display: flex; flex-direction: column; gap: var(--spacing-12); width: 100%; }
+
+/* Progress: dot row + "n of N" count. */
+.ds-tour__progress { display: flex; align-items: center; gap: var(--spacing-8); }
+.ds-tour__dots { display: inline-flex; align-items: center; gap: var(--spacing-4); }
+.ds-tour__dot {
+  width: 6px; height: 6px; border-radius: var(--uems-radius-pill, 9999px);
+  background: var(--uems-bg-quaternary-solid);
+  opacity: 0.32;
+  transition: opacity var(--duration-fast, 120ms) var(--ease-standard, ease),
+              width var(--duration-fast, 120ms) var(--ease-standard, ease),
+              background-color var(--duration-fast, 120ms) var(--ease-standard, ease);
+}
+.ds-tour__dot.is-done { background: var(--uems-bg-button-primary); opacity: 0.5; }
+.ds-tour__dot.is-current { background: var(--uems-bg-button-primary); opacity: 1; width: 18px; }
+.ds-tour__count {
+  font-size: var(--font-size-12); font-weight: var(--font-weight-medium);
+  color: var(--uems-text-tertiary);
+}
+
+/* Actions: Skip on the lead, Back/Next trailing (spacer pushes them apart). */
+.ds-tour__actions { display: flex; align-items: center; gap: var(--spacing-8); }
+.ds-tour__spacer { flex: 1 1 auto; }
+.ds-tour__skip { flex: 0 0 auto; }
+
+/* ---- Screen-reader live region (step announcements) ----------------------- */
+.ds-tour__sr {
+  position: fixed; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
+  white-space: nowrap; border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-tour__dot { transition: none; }
+}

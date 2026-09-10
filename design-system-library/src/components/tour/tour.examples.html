@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../../styles/index.css">
+<script>window.UEMS_ICON_SPRITE='../../icons/icons.svg';</script>
+<script type="module" src="../../index.js"></script>
+<style>
+  body { font-family: var(--font-family-sans); margin: 0; padding: 40px; background: var(--uems-bg-base); color: var(--uems-text-primary); }
+  h1 { font-size: 22px; }
+  .bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 20px 0 40px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; max-width: 900px; }
+  .cell { border: 1px solid var(--uems-border-tertiary); border-radius: 12px; padding: 24px; background: var(--uems-bg-primary); }
+  .spacer { height: 900px; }
+</style>
+</head>
+<body>
+  <h1>ds-tour — Phase 1 harness</h1>
+  <div class="bar">
+    <ds-button id="start-btn" variant="primary">Take the tour</ds-button>
+    <ds-button id="reset-btn" variant="secondary">Reset "seen"</ds-button>
+    <span id="log" style="font-family:monospace;font-size:12px;color:var(--uems-text-secondary)"></span>
+  </div>
+
+  <div class="grid">
+    <div class="cell"><ds-button id="t-create" variant="primary">Create deployment</ds-button></div>
+    <div class="cell"><ds-button id="t-targets" variant="secondary">Choose targets</ds-button></div>
+    <div class="cell"><ds-button id="t-schedule" variant="secondary">Schedule</ds-button></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="cell" style="max-width:260px"><ds-button id="t-reports" variant="secondary">Reports (below fold)</ds-button></div>
+
+  <ds-tour id="tour" mask="dim-blur" persist-key="harness.demo.v1"></ds-tour>
+
+  <script>
+    const tour = document.getElementById('tour');
+    tour.steps = [
+      { target: null, title: 'Welcome to Deployment', body: 'A quick 4-step tour of what changed in this release.', primaryLabel: 'Start tour' },
+      { target: '#t-create', placement: 'bottom-start', title: 'Create a deployment', body: 'Start here to push software or patches to your managed computers.' },
+      { target: '#t-targets', placement: 'bottom', title: 'Pick your targets', body: 'Choose the groups or devices this deployment applies to.' },
+      { target: '#t-reports', placement: 'top-start', title: 'Track it in Reports', body: 'This one is below the fold — the tour scrolls it into view first.' },
+    ];
+    const log = (m) => { document.getElementById('log').textContent = m; };
+    document.getElementById('start-btn').addEventListener('click', () => tour.start());
+    document.getElementById('reset-btn').addEventListener('click', () => { try { localStorage.removeItem('uems-tour-seen:harness.demo.v1'); } catch(e){} log('seen cleared'); });
+    ['start','step','complete','skip','end'].forEach(ev => tour.addEventListener('ds-tour-'+ev, (e) => log('ds-tour-'+ev + (e.detail ? ' ' + JSON.stringify(e.detail.index!=null?{i:e.detail.index,total:e.detail.total}:e.detail) : ''))));
+  </script>
+</body></html>
