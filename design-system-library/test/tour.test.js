@@ -217,6 +217,87 @@ describe('ds-tour — i18n labels', () => {
   });
 });
 
+describe('ds-tour — feature-spotlight corner variant', () => {
+  it('a single corner step renders a corner card with NO backdrop (even with mask)', async () => {
+    const el = await fixture(html`<ds-tour mask="dim"></ds-tour>`);
+    el.steps = [{ corner: 'bottom-right', title: 'New', body: 'x', primaryLabel: 'Got it' }];
+    el.start();
+    await nextFrame();
+    const pop = document.querySelector('ds-popover.ds-tour__pop--corner');
+    expect(pop).to.exist;
+    expect(pop.classList.contains('ds-tour__pop--corner-bottom-right')).to.be.true;
+    expect(document.querySelector('ds-overlay.ds-tour__backdrop')).to.not.exist;
+    el.end();
+  });
+
+  it('a single step is a spotlight — full-width action, no progress dots', async () => {
+    const el = await fixture(html`<ds-tour></ds-tour>`);
+    el.steps = [{ corner: 'bottom-right', title: 'X', body: 'y', primaryLabel: 'Got it' }];
+    el.start();
+    await nextFrame();
+    const pop = document.querySelector('ds-popover.ds-tour__pop--spotlight');
+    expect(pop).to.exist;
+    expect(pop.querySelector('.ds-tour__next--full')).to.exist;
+    expect(pop.querySelector('.ds-tour__dots')).to.not.exist;
+    el.end();
+  });
+
+  it('media-top: an image single-step puts the title BELOW the image', async () => {
+    const el = await fixture(html`<ds-tour></ds-tour>`);
+    el.steps = [{ corner: 'bottom-right', image: 'x.png', title: 'Title', body: 'y' }];
+    el.start();
+    await nextFrame();
+    const pop = document.querySelector('ds-popover.ds-tour__pop--media-top');
+    expect(pop).to.exist;
+    const kids = [...pop.querySelector('.ds-tour__body').children].map((n) => n.className);
+    expect(kids[0]).to.contain('ds-tour__media');
+    expect(kids[1]).to.contain('ds-tour__title');
+    el.end();
+  });
+});
+
+describe('ds-tour — remind-me-later dismissal', () => {
+  const KEY = 'ec.test.remind.v1';
+  const SEEN = 'uems-tour-seen:' + KEY;
+  afterEach(() => { try { localStorage.removeItem(SEEN); } catch (_) { /* ignore */ } });
+
+  it('a normal skip persists "seen"', async () => {
+    localStorage.removeItem(SEEN);
+    const el = await fixture(html`<ds-tour persist-key="${KEY}"></ds-tour>`);
+    el.steps = [{ corner: 'bottom-right', title: 'X', body: 'y' }];
+    el.start();
+    await nextFrame();
+    el.end({ completed: false });
+    expect(localStorage.getItem(SEEN)).to.be.ok;
+  });
+
+  it('end({remindLater}) does NOT persist "seen" and marks the skip event', async () => {
+    localStorage.removeItem(SEEN);
+    const el = await fixture(html`<ds-tour persist-key="${KEY}"></ds-tour>`);
+    el.steps = [{ corner: 'bottom-right', title: 'X', body: 'y' }];
+    el.start();
+    await nextFrame();
+    const ev = oneEvent(el, 'ds-tour-skip');
+    el.end({ completed: false, remindLater: true });
+    const { detail } = await ev;
+    expect(detail.remindLater).to.be.true;
+    expect(localStorage.getItem(SEEN)).to.not.be.ok;
+  });
+
+  it('the "I\'ll do it later" secondary link dismisses without persisting "seen"', async () => {
+    localStorage.removeItem(SEEN);
+    const el = await fixture(html`<ds-tour persist-key="${KEY}"></ds-tour>`);
+    el.steps = [{ corner: 'bottom-right', title: 'X', body: 'y', secondaryLabel: 'Later' }];
+    el.start();
+    await nextFrame();
+    const link = document.querySelector('ds-popover.ds-tour__pop--corner .ds-tour__secondary');
+    expect(link).to.exist;
+    (link.querySelector('a') || link).click();
+    await nextFrame();
+    expect(localStorage.getItem(SEEN)).to.not.be.ok;
+  });
+});
+
 describe('ds-tour — teardown', () => {
   it('end() removes every body-appended surface', async () => {
     await mountTargets();

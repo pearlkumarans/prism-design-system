@@ -33,6 +33,7 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { rafThrottle } from '../../utils/raf-throttle.js';
 import '../status-indicator/status-indicator.js';
 import '../popover/popover.js';
+import '../button/button.js';
 
 const PLACEMENTS = ['top-start', 'top-end', 'bottom-start', 'bottom-end', 'center-start', 'center-end'];
 const STATUSES = ['info', 'success', 'warning', 'critical', 'alert', 'neutral'];

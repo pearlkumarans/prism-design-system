@@ -132,6 +132,7 @@ export { DsSidebarL1 } from './sidebar-l1/sidebar-l1.js';
 export { DsSidebarL2 } from './sidebar-l2/sidebar-l2.js';
 export { DsModuleRail } from './module-rail/module-rail.js';
 export { DsContainer } from './container/container.js';
+export { DsContent } from './content/content.js';
 export { DsProgressBar } from './progress-bar/progress-bar.js';
 export { DsRadio } from './radio/radio.js';
 export { DsRadioGroup } from './radio-group/radio-group.js';
