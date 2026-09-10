@@ -41,13 +41,16 @@ import '../popover/popover.js';
 import '../modal/modal.js';
 import '../button/button.js';
 import '../text-link/text-link.js';
+import '../tooltip/tooltip.js';
 
 const MASKS = ['dim', 'light', 'blur', 'dim-blur', 'none'];
+const CARD_SIZES = ['small', 'medium', 'large'];
+const CORNERS = ['bottom-right', 'bottom-left', 'top-right', 'top-left'];
 
 /* Built-in control strings. Consumers override any of them via the `labels`
    property (for i18n); otherwise `rtl` picks the Arabic defaults. */
-const LABELS_LTR = { skip: 'Skip tour', back: 'Back', next: 'Next', done: 'Done', of: 'of', hint: 'Try it to continue' };
-const LABELS_RTL = { skip: 'تخطّي', back: 'رجوع', next: 'التالي', done: 'تم', of: 'من', hint: 'جرّبه للمتابعة' };
+const LABELS_LTR = { skip: 'Skip tour', close: 'Close', back: 'Back', next: 'Next', done: 'Done', of: 'of', hint: 'Try it to continue' };
+const LABELS_RTL = { skip: 'تخطّي', close: 'إغلاق', back: 'رجوع', next: 'التالي', done: 'تم', of: 'من', hint: 'جرّبه للمتابعة' };
 
 let _uid = 0;
 
@@ -134,7 +137,10 @@ export class DsTour extends HTMLElement {
     this.dispatchEvent(new CustomEvent('ds-tour-step', {
       bubbles: true, detail: { index: i, total: this._steps.length, step },
     }));
-    this._announce(`Step ${i + 1} of ${this._steps.length}: ${step.title || ''}`);
+    const info = this._progressInfo();
+    this._announce(info
+      ? `Step ${info.pos + 1} of ${info.total}: ${step.title || ''}`
+      : (step.title || ''));
   }
 
   end(opts = {}) {
@@ -154,7 +160,8 @@ export class DsTour extends HTMLElement {
   _showStep(step) {
     const targetEl = this._resolveTarget(step.target);
     if (targetEl) this._showAnchored(step, targetEl);
-    else this._showCentered(step);      // no target (or missing) → centered
+    else if (step.corner) this._showCorner(step);   // target-less corner announcement
+    else this._showCentered(step);                  // no target (or missing) → centered
   }
 
   _resolveTarget(target) {
@@ -175,41 +182,108 @@ export class DsTour extends HTMLElement {
     if (locked) body.style.overflow = 'hidden';
   }
 
-  _showAnchored(step, targetEl) {
-    this._scrollIntoView(targetEl);
-    if (!targetEl.id) targetEl.id = `ds-tour-target-${this._uid}-${this._index}`;
-
-    this._ensureBackdrop();
-    /* Spotlight the target: dim everything except its rect (P2). ds-overlay owns
-       the cutout + ring and re-pins them on scroll/resize. */
-    if (this._backdrop && this._backdrop.spotlight) {
-      const pad = step.spotlightPadding != null ? step.spotlightPadding : 8;
-      this._backdrop.spotlight(targetEl, { padding: pad, radius: 8 });
-    }
-
+  /* Shared card popover: class + size + spotlight + plain-header title + body +
+     footer. Anchor / placement / arrow / corner are set by the caller (per mode). */
+  _buildCardPopover(step, defaultSize = 'medium') {
     const pop = document.createElement('ds-popover');
     pop.className = 'ds-tour__pop';
-    pop.setAttribute('anchor', targetEl.id);
-    pop.setAttribute('placement', step.placement || 'bottom-start');
-    pop.setAttribute('arrow', '');
+    /* Single-step = feature spotlight: full-width action + no footer divider. */
+    if (this._steps.length === 1) pop.classList.add('ds-tour__pop--spotlight');
+    /* Card width: small | medium | large. Anchored steps default medium; the
+       corner announcement defaults large (passed in). A step's own `size` wins. */
+    const size = CARD_SIZES.includes(step.size) ? step.size : defaultSize;
+    if (size !== 'medium') pop.classList.add(`ds-tour__pop--${size}`);
     pop.setAttribute('title', step.title || '');
+    /* Plain header: the title flows into the content, no divided header bar. */
+    pop.setAttribute('header-style', 'plain');
     if (this._rtl()) pop.setAttribute('rtl', '');
-
     pop.appendChild(this._buildBody(step));
     const footSlot = document.createElement('div');
     footSlot.setAttribute('slot', 'footer');
     footSlot.appendChild(this._buildFooter(step));
     pop.appendChild(footSlot);
+    return pop;
+  }
+
+  /* Close ✕ = dismiss: aria-label + a hover-only ds-tooltip (icon off). Multi-step
+     tours read "Skip tour"; a single corner announcement reads plain "Close". */
+  _wireCardClose(pop, labelKey = 'skip') {
+    const closeBtn = pop.querySelector('.ds-popover__close');
+    if (closeBtn && !closeBtn.closest('ds-tooltip')) {
+      closeBtn.setAttribute('aria-label', this._label(labelKey));
+      const tip = document.createElement('ds-tooltip');
+      tip.setAttribute('text', this._label(labelKey));
+      tip.setAttribute('position', 'up-center');
+      tip.setAttribute('show-icon', 'false');
+      closeBtn.parentNode.insertBefore(tip, closeBtn);
+      tip.appendChild(closeBtn);
+    }
+  }
+
+  /* Move focus off the auto-focused ✕ onto Next so the ✕ tooltip stays hover-only. */
+  _focusNext(surface) {
+    requestAnimationFrame(() => {
+      if (this._surface !== surface || !surface.contains(document.activeElement)) return;
+      const next = surface.querySelector('.ds-tour__next');
+      const el = (next && next.querySelector('button')) || next;
+      if (el) el.focus();
+    });
+  }
+
+  _showAnchored(step, targetEl) {
+    this._scrollIntoView(targetEl);
+    if (!targetEl.id) targetEl.id = `ds-tour-target-${this._uid}-${this._index}`;
+
+    this._ensureBackdrop();
+    /* Spotlight the target: dim everything except its rect (P2). */
+    if (this._backdrop && this._backdrop.spotlight) {
+      const pad = step.spotlightPadding != null ? step.spotlightPadding : 8;
+      this._backdrop.spotlight(targetEl, { padding: pad, radius: 8 });
+    }
+
+    const pop = this._buildCardPopover(step);
+    pop.setAttribute('anchor', targetEl.id);
+    pop.setAttribute('placement', step.placement || 'bottom-start');
+    /* Arrow (beak) on by default; a step may turn it off with `arrow: false`. */
+    if (step.arrow !== false) pop.setAttribute('arrow', '');
 
     document.body.appendChild(pop);
     this._surface = pop;
     this._bindSurfaceClose(pop, 'ds-popover-close');
+    this._wireCardClose(pop);
     pop.open();
+    this._focusNext(pop);
 
     /* Interactive step: advance when the user performs the real action on the
        target (the spotlight cutout already makes it click-through). Next still
        works as an escape hatch. */
     if (step.advanceOn) this._bindAdvance(targetEl, step.advanceOn);
+  }
+
+  /* Target-less corner announcement (feature spotlight): a card pinned to a
+     screen corner (default bottom-right) with NO backdrop — it announces a
+     feature without blocking the screen (e.g. right after login), so the page
+     stays fully interactive behind it. The card is the same ds-popover surface,
+     but with no anchor it stays where CSS pins it (ds-popover skips inline
+     positioning when it has no anchor). The close ✕ reads "Close", not "Skip". */
+  _showCorner(step) {
+    this._removeBackdrop();
+
+    const pop = this._buildCardPopover(step, 'large');   // announcements default large
+    const corner = CORNERS.includes(step.corner) ? step.corner : 'bottom-right';
+    pop.classList.add('ds-tour__pop--corner', `ds-tour__pop--corner-${corner}`);
+    /* No anchor → no beak; a corner card points at nothing. */
+
+    document.body.appendChild(pop);
+    this._surface = pop;
+    this._bindSurfaceClose(pop, 'ds-popover-close');
+    this._wireCardClose(pop, 'close');
+    pop.open();
+    /* No backdrop → the page stays interactive, so DON'T light-dismiss on outside
+       click: working in the app behind the card must not close the announcement.
+       It persists until the user hits the action or the ✕ (Esc still closes). */
+    if (pop._onDocPointer) document.removeEventListener('mousedown', pop._onDocPointer, true);
+    this._focusNext(pop);
   }
 
   _bindAdvance(targetEl, evt) {
@@ -233,32 +307,80 @@ export class DsTour extends HTMLElement {
     modal.className = 'ds-tour__modal';
     modal.setAttribute('size', 'sm');
     modal.setAttribute('title', step.title || '');
-    if (step.body) modal.setAttribute('description', step.body);
     if (this._rtl()) modal.setAttribute('rtl', '');
+    /* With an image, put media + text in the body (image on top); otherwise use
+       the modal's description attribute as before. */
+    const media = this._buildMedia(step);
+    if (media) {
+      modal.appendChild(media);
+      if (step.body) {
+        const p = document.createElement('p');
+        p.className = 'ds-tour__text';
+        p.textContent = step.body;
+        modal.appendChild(p);
+      }
+    } else if (step.body) {
+      modal.setAttribute('description', step.body);
+    }
 
-    /* Progress in the body, skip on the footer-start link, Back/Next on the right. */
-    const body = document.createElement('div');
-    body.appendChild(this._buildProgress());
-    modal.appendChild(body);
+    const spotlight = this._spotlightFooter(step);
+    if (spotlight) {
+      /* Single-step: one full-width primary button, no progress. */
+      modal.classList.add('ds-tour__modal--single');
+      const foot = document.createElement('div');
+      foot.setAttribute('slot', 'footer');
+      foot.appendChild(spotlight.firstChild);
+      modal.appendChild(foot);
+    } else {
+      /* Pagination on the footer-start (where Skip used to be); Back / Next trail. */
+      const prog = this._buildProgress();
+      prog.setAttribute('slot', 'footer-start');
+      modal.appendChild(prog);
 
-    const ctl = this._buildControlParts(step);
-    if (ctl.skip) { ctl.skip.setAttribute('slot', 'footer-start'); modal.appendChild(ctl.skip); }
-    const foot = document.createElement('div');
-    foot.setAttribute('slot', 'footer');
-    if (ctl.back) foot.appendChild(ctl.back);
-    foot.appendChild(ctl.next);
-    modal.appendChild(foot);
+      const ctl = this._buildControlParts(step);
+      const foot = document.createElement('div');
+      foot.setAttribute('slot', 'footer');
+      if (ctl.back) foot.appendChild(ctl.back);
+      foot.appendChild(ctl.next);
+      modal.appendChild(foot);
+    }
 
     document.body.appendChild(modal);
     this._surface = modal;
     this._bindSurfaceClose(modal, 'ds-modal-close');
     modal.open();
+
+    /* Close ✕ = skip: relabel it + enable ds-icon-button's built-in "Skip tour"
+       tooltip. Then move focus to Next so it stays hover-only, not shown on open. */
+    const mclose = modal.querySelector('.ds-modal__close');
+    if (mclose) { mclose.removeAttribute('no-tooltip'); mclose.setAttribute('aria-label', this._label('skip')); mclose.setAttribute('label', this._label('skip')); }
+    requestAnimationFrame(() => {
+      if (this._surface !== modal || !modal.contains(document.activeElement)) return;
+      const next = modal.querySelector('.ds-tour__next');
+      const el = (next && next.querySelector('button')) || next;
+      if (el) el.focus();
+    });
   }
 
   // ---- card content -------------------------------------------------------
+  /* Optional media: step.image is a URL rendered at the top of the card. */
+  _buildMedia(step) {
+    if (!step.image) return null;
+    const fig = document.createElement('div');
+    fig.className = 'ds-tour__media';
+    const img = document.createElement('img');
+    img.src = step.image;
+    img.alt = step.imageAlt || '';
+    img.loading = 'lazy';
+    fig.appendChild(img);
+    return fig;
+  }
+
   _buildBody(step) {
     const body = document.createElement('div');
     body.className = 'ds-tour__body';
+    const media = this._buildMedia(step);
+    if (media) body.appendChild(media);
     if (step.body) {
       const p = document.createElement('p');
       p.className = 'ds-tour__text';
@@ -274,45 +396,58 @@ export class DsTour extends HTMLElement {
     return body;
   }
 
+  /* Feature-spotlight footer: a single-step tour is one card with nothing to page
+     through, so the footer is a single full-width primary button (no progress /
+     Back). Returns the footer, or null for the normal multi-step footer. */
+  _spotlightFooter(step) {
+    if (this._steps.length !== 1) return null;
+    const footer = document.createElement('div');
+    footer.className = 'ds-tour__footer ds-tour__footer--single';
+    const btn = document.createElement('ds-button');
+    btn.className = 'ds-tour__next ds-tour__next--full';
+    btn.setAttribute('variant', 'primary');
+    btn.setAttribute('size', 'small');
+    btn.setAttribute('label', step.primaryLabel || this._label('done'));
+    btn.addEventListener('click', () => this.next());
+    footer.appendChild(btn);
+    return footer;
+  }
+
   _buildFooter(step) {
+    const spotlight = this._spotlightFooter(step);
+    if (spotlight) return spotlight;
     const footer = document.createElement('div');
     footer.className = 'ds-tour__footer';
-    footer.appendChild(this._buildProgress());
-    const ctl = this._buildControlParts(step);
     const actions = document.createElement('div');
     actions.className = 'ds-tour__actions';
-    if (ctl.skip) actions.appendChild(ctl.skip);
+    /* Pagination sits on the lead (where the Skip link used to be); Back / Next
+       trail on the right. */
+    actions.appendChild(this._buildProgress());
     const spacer = document.createElement('span');
     spacer.className = 'ds-tour__spacer';
     actions.appendChild(spacer);
+    const ctl = this._buildControlParts(step);
     if (ctl.back) actions.appendChild(ctl.back);
     actions.appendChild(ctl.next);
     footer.appendChild(actions);
     return footer;
   }
 
-  /* Shared Skip / Back / Next controls (composed from ds-text-link + ds-button). */
+  /* Shared Back / Next controls (composed from ds-button). Skipping the tour is now
+     the close ✕ (with a "Skip tour" tooltip), so there is no separate Skip link. */
   _buildControlParts(step) {
     const isFirst = this._index === 0;
     const isLast = this._index === this._steps.length - 1;
-
-    let skip = null;
-    if (step.showSkip !== false && !isLast) {
-      skip = document.createElement('ds-text-link');
-      skip.className = 'ds-tour__skip';
-      skip.setAttribute('variant', 'secondary');
-      skip.setAttribute('size', 'small');
-      skip.setAttribute('href', '#');
-      skip.textContent = this._label('skip');
-      skip.addEventListener('click', (e) => { e.preventDefault(); this.end({ completed: false }); });
-    }
+    /* The centered welcome / summary dialog uses `small` buttons; the anchored
+       slide cards use the tighter `xsmall`. */
+    const size = (step && step.target == null) ? 'small' : 'xsmall';
 
     let back = null;
     if (!isFirst) {
       back = document.createElement('ds-button');
       back.className = 'ds-tour__back';
       back.setAttribute('variant', 'secondary');
-      back.setAttribute('size', 'small');
+      back.setAttribute('size', size);
       back.setAttribute('label', this._label('back'));
       back.addEventListener('click', () => this.prev());
     }
@@ -320,32 +455,45 @@ export class DsTour extends HTMLElement {
     const next = document.createElement('ds-button');
     next.className = 'ds-tour__next';
     next.setAttribute('variant', 'primary');
-    next.setAttribute('size', 'small');
+    next.setAttribute('size', size);
     const nextLabel = step.primaryLabel || (isLast ? this._label('done') : this._label('next'));
     next.setAttribute('label', nextLabel);
-    if (!isLast) next.setAttribute('suffix-icon', 'arrow-narrow-right');
     next.addEventListener('click', () => this.next());
 
-    return { skip, back, next };
+    return { back, next };
+  }
+
+  /* Progress counts only ANCHORED steps — a centered step (target: null, e.g. the
+     welcome / summary bookends) is an intro, not a numbered step. Returns
+     { pos, total } (0-based pos among counted steps) or null when the current
+     step is not counted. */
+  _progressInfo() {
+    const counted = (s) => s && s.target != null;
+    const total = this._steps.filter(counted).length;
+    const current = this._steps[this._index];
+    if (!counted(current) || total === 0) return null;
+    const pos = this._steps.slice(0, this._index + 1).filter(counted).length - 1;
+    return { pos, total };
   }
 
   _buildProgress() {
-    const total = this._steps.length;
     const wrap = document.createElement('div');
     wrap.className = 'ds-tour__progress';
+    const info = this._progressInfo();
+    if (!info) return wrap;                 // welcome / summary → no pagination
     const dots = document.createElement('div');
     dots.className = 'ds-tour__dots';
     dots.setAttribute('aria-hidden', 'true');
-    for (let i = 0; i < total; i++) {
+    for (let i = 0; i < info.total; i++) {
       const d = document.createElement('span');
       d.className = 'ds-tour__dot'
-        + (i < this._index ? ' is-done' : '')
-        + (i === this._index ? ' is-current' : '');
+        + (i < info.pos ? ' is-done' : '')
+        + (i === info.pos ? ' is-current' : '');
       dots.appendChild(d);
     }
     const label = document.createElement('span');
     label.className = 'ds-tour__count';
-    label.textContent = `${this._index + 1} ${this._label('of')} ${total}`;
+    label.textContent = `${info.pos + 1} ${this._label('of')} ${info.total}`;
     wrap.appendChild(dots);
     wrap.appendChild(label);
     return wrap;

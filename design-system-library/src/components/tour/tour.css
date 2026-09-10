@@ -8,12 +8,26 @@
 /* Controller host renders nothing. */
 ds-tour { display: none !important; }
 
-/* Give the tour's popover a comfortable reading width (ds-popover hugs content
-   otherwise). Scoped to the tour's own popovers via the .ds-tour__pop class. */
+/* Card width (ds-popover hugs content otherwise). Three sizes; medium is the
+   default. Scoped to the tour's own popovers via the .ds-tour__pop class.
+     small  260px — one- or two-line tips / feature spotlights
+     medium 320px — standard onboarding steps (default)
+     large  400px — richer copy, an image, or a longer explanation */
 .ds-tour__pop { --ds-popover-width: 320px; }
+.ds-tour__pop--small { --ds-popover-width: 260px; }
+.ds-tour__pop--large { --ds-popover-width: 400px; }
 
 /* ---- Body ----------------------------------------------------------------- */
 .ds-tour__body { display: flex; flex-direction: column; gap: var(--spacing-8); }
+
+/* Optional step image — sits at the top of the card, full width, rounded. */
+.ds-tour__media {
+  margin: 0 0 var(--spacing-4);
+  border-radius: var(--uems-radius-default, 6px);
+  overflow: hidden;
+  background: var(--uems-bg-secondary);
+}
+.ds-tour__media img { display: block; width: 100%; height: auto; }
 .ds-tour__text {
   margin: 0;
   font-size: var(--font-size-14);
@@ -53,10 +67,53 @@ ds-tour { display: none !important; }
   color: var(--uems-text-tertiary);
 }
 
+/* Feature-spotlight (single-step) footer — one full-width primary button, no
+   progress / Back, since a single card has nothing to page through. */
+.ds-tour__footer--single { display: block; }
+.ds-tour__next--full { display: block; width: 100%; }
+.ds-tour__next--full .ds-button { width: 100%; }
+/* Stretch the modal's right-aligned footer-actions so the button spans it. */
+.ds-tour__modal--single .ds-modal__footer-actions { flex: 1 1 100%; width: 100%; }
+/* Spotlight: no divider between body and the full-width action ("footer separation"). */
+.ds-tour__pop--spotlight .ds-popover__footer { border-top: 0; padding-top: 0; }
+.ds-tour__modal--single .ds-modal__footer { border-top: 0; }
+
 /* Actions: Skip on the lead, Back/Next trailing (spacer pushes them apart). */
 .ds-tour__actions { display: flex; align-items: center; gap: var(--spacing-8); }
 .ds-tour__spacer { flex: 1 1 auto; }
 .ds-tour__skip { flex: 0 0 auto; }
+
+/* ---- Corner announcement (target-less feature spotlight) ------------------ */
+/* A single card pinned to a screen corner over a dim backdrop — a feature
+   announcement that isn't anchored to any element. With no anchor, ds-popover
+   skips inline positioning, so these fixed offsets place the surface. Default
+   corner is bottom-right. */
+.ds-tour__pop--corner .ds-popover__surface {
+  position: fixed !important;
+  margin: 0 !important;
+  /* A feature announcement carries more presence than an anchored tip: a larger
+     elevation and softer, rounder corners lift it off the live screen. */
+  box-shadow: var(--shadow-xl, 0 20px 25px rgba(15, 19, 31, 0.12), 0 8px 10px rgba(15, 19, 31, 0.04)) !important;
+  border-radius: var(--uems-radius-l, 16px) !important;
+}
+/* Slightly larger headline — it's the lead of a standalone announcement. */
+.ds-tour__pop--corner .ds-popover__title { font-size: var(--font-size-16); }
+.ds-tour__pop--corner-bottom-right .ds-popover__surface {
+  top: auto !important; left: auto !important;
+  right: var(--spacing-24, 24px) !important; bottom: var(--spacing-24, 24px) !important;
+}
+.ds-tour__pop--corner-bottom-left .ds-popover__surface {
+  top: auto !important; right: auto !important;
+  left: var(--spacing-24, 24px) !important; bottom: var(--spacing-24, 24px) !important;
+}
+.ds-tour__pop--corner-top-right .ds-popover__surface {
+  bottom: auto !important; left: auto !important;
+  right: var(--spacing-24, 24px) !important; top: var(--spacing-24, 24px) !important;
+}
+.ds-tour__pop--corner-top-left .ds-popover__surface {
+  bottom: auto !important; right: auto !important;
+  left: var(--spacing-24, 24px) !important; top: var(--spacing-24, 24px) !important;
+}
 
 /* ---- Screen-reader live region (step announcements) ----------------------- */
 .ds-tour__sr {

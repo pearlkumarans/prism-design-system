@@ -12,7 +12,8 @@ existing Prism surfaces for each step.
 
 | Step kind | `step.target` | Surface used | Backdrop |
 |---|---|---|---|
-| **Anchored** | `'#id'` / element | `ds-popover` (anchor, placement, arrow) | `ds-overlay` (mask) |
+| **Anchored** | `'#id'` / element | `ds-popover` (anchor, placement, arrow) | `ds-overlay` (mask) — spotlight cutout on the target |
+| **Corner** | `null` + `corner` | `ds-popover` (no anchor, pinned to a screen corner, no arrow) | **None** — non-blocking, the page stays interactive |
 | **Centered** | `null` (or missing) | `ds-modal` (welcome / summary) | modal's own scrim |
 
 ## Attributes
@@ -40,12 +41,16 @@ tour.steps = [
 
 | Step field | Type | Notes |
 |---|---|---|
-| `target` | `'#id'` \| `Element` \| `null` | `null` (or an unresolvable selector) → centered modal step. |
+| `target` | `'#id'` \| `Element` \| `null` | `null` (or an unresolvable selector) → centered modal step, unless `corner` is set. |
+| `corner` | `bottom-right` \| `bottom-left` \| `top-right` \| `top-left` | Target-less only. Pins the card to a screen corner (no arrow) instead of centering it — the **feature-announcement** spotlight. **No backdrop** — non-blocking, so it can sit over a live screen (e.g. right after login). Default corner `bottom-right`. |
 | `title` | string | Card heading. |
 | `body` | string | Card body text (plain text — no HTML injection in Phase 1). |
+| `image` | URL string | Optional image shown at the top of the card (welcome art, a feature screenshot). |
+| `imageAlt` | string | Alt text for `image`. |
 | `placement` | `ds-popover` placement | Anchored steps only. Default `bottom-start`. |
+| `size` | `small` \| `medium` \| `large` | Card width — **260 / 320 / 400** px. Default `medium` (anchored / centered); a `corner` announcement defaults `large`. |
+| `arrow` | boolean | Show the beak pointing at the target. Default `true`; set `false` to drop it. Anchored steps. |
 | `primaryLabel` | string | Override the primary button label (`Next` / `Done`) for this step. |
-| `showSkip` | boolean | Default `true`. The last step never shows Skip. |
 | `spotlightPadding` | number | Gap (px) between the target and the spotlight cutout / ring. Default `8`. |
 | `advanceOn` | event name | **Interactive step** — advance when this DOM event fires on the target (e.g. `'click'`). The spotlight cutout makes the target click-through; `Next` still works as an escape hatch. |
 | `hint` | string | Instruction shown on an `advanceOn` step (default: the `hint` label). |
@@ -56,7 +61,7 @@ Override any control string; unset keys fall back to the built-in `en` / `ar`
 (under `rtl`) defaults.
 
 ```js
-tour.labels = { skip: 'Dismiss', back: 'Back', next: 'Continue', done: 'Finish', of: '/', hint: 'Try it' };
+tour.labels = { skip: 'Dismiss', close: 'Close', back: 'Back', next: 'Continue', done: 'Finish', of: '/', hint: 'Try it' };
 ```
 
 ## Methods
@@ -78,6 +83,33 @@ to a backend "seen" write if `localStorage` alone isn't enough.
 
 ## Behaviour
 
+- **Feature spotlight (single step).** A tour with exactly one step is a single
+  card with nothing to page through — so it drops the progress + Back and shows a
+  single **full-width primary button** (label from `primaryLabel`, default "Done";
+  e.g. "Got it"). The close ✕ still dismisses. Works for an anchored card, a
+  centered one, or a corner announcement.
+- **Corner announcement.** A target-less step with `corner` set pins the card to a
+  screen corner (default `bottom-right`) with **no backdrop** — the page stays fully
+  interactive behind it, so it can sit over a live screen (e.g. right after login)
+  without blocking work. It doesn't light-dismiss on an outside click either — it
+  persists until the action, the ✕, or `Esc`. The close ✕ reads **"Close"** here
+  (not "Skip tour"), since there's no multi-step tour to skip. It reads best as a
+  single-step feature spotlight (image on top, no arrow, full-width action). It
+  defaults to the **large** (400px) card and carries more presence than an anchored
+  tip — a larger elevation (`--shadow-xl`), rounder corners (`--uems-radius-l`), and
+  a slightly larger title (`--font-size-16`). A step's own `size` still overrides.
+  On phones it docks as a bottom sheet like anchored steps.
+- **Card footer & skip.** The footer is one row: pagination (dots + *n of N*) on
+  the lead, Back / Next trailing (no trailing icon). Buttons are `small` on the
+  centered welcome dialog and the tighter `xsmall` on the anchored slides. There is
+  no separate Skip link — the close ✕ is the skip affordance, with
+  `aria-label="Skip tour"` and a **hover-only** "Skip tour" `ds-tooltip` (icon off):
+  on open, focus is moved to Next so the tooltip doesn't fire from the ✕'s
+  auto-focus; it appears on hover (and keyboard focus of the ✕).
+- **Pagination excludes centered steps.** A centered step (`target: null`, e.g. the
+  welcome / summary bookends) shows no pagination and is not counted — the count
+  reflects the anchored steps only (so a welcome + 3 anchored steps read "1 of 3"
+  … "3 of 3").
 - **Advance vs. dismiss.** A surface dismissed by the user fires its close event
   with a `detail.reason` (`esc` / `overlay` / `close`); `ds-tour`'s own teardown
   fires none. So *reason-present = user wants out = skip* — advancing never
