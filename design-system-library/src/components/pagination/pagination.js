@@ -38,6 +38,7 @@ import { injectCss } from '../../utils/inject-css.js';
 import { escapeHtml } from '../../utils/escape.js';
 import '../icon-button/icon-button.js';
 import '../input-select/input-select.js';
+import '../../icons/icon.js'; // ds-icon — ellipsis + simple-mode chevrons render <ds-icon>
 
 /* Light-DOM sub-components: auto-load their CSS so the pager is styled even on a
    page that links pagination.css without the full bundle. */
