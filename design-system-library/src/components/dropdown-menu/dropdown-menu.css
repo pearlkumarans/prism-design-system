@@ -62,6 +62,24 @@ ds-dropdown-menu[open] {
    actually removed from layout regardless of TextLink's own host display. */
 .ds-dropdown-menu ds-text-link[hidden] { display: none; }
 
+/* ---- In-menu search (show-search) --------------------------------- */
+/* Sits between the title and the list; full-width SearchField, padded to line up
+   with the list gutter (8px). */
+.ds-dropdown-menu__search {
+  padding: var(--spacing-8) var(--spacing-8) var(--spacing-4);
+}
+.ds-dropdown-menu__search ds-search-field {
+  display: block;
+  width: 100%;
+}
+/* The `hidden` attribute must beat the flex display these rows carry, otherwise
+   the show-search filter sets [hidden] but the rows stay laid out. Author
+   `display: flex` on the row outranks the UA `[hidden] { display: none }`, so
+   restate it at higher specificity. */
+.ds-dropdown-menu__item[hidden],
+.ds-dropdown-menu__section-heading[hidden],
+.ds-dropdown-menu__divider[hidden] { display: none; }
+
 /* ---- List & dividers ---------------------------------------------- */
 .ds-dropdown-menu__list {
   list-style: none;

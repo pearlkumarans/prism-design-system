@@ -172,8 +172,24 @@ Set **`data-no-truncate`** on the host (`<ds-dropdown-menu data-no-truncate>`) s
 | `show-clear-all` | `false` (Multi-select only) |
 | `show-apply` | `true` (Multi-select only) |
 | `show-cancel` | `true` (Multi-select only) |
+| `show-search` | `false` (only `select` / `select-tick` / `multi-select`) |
 | `rtl` | `false` |
 | `open` | `false` |
+
+### In-menu search (`show-search`)
+
+For the option-picker types (`select`, `select-tick`, `multi-select`), `show-search`
+renders a filter field above the list (a reused `ds-search-field`) so long option lists
+stay usable. Typing filters rows by **label + description** (case-insensitive substring),
+hides section headings and dividers while a query is active, and shows a **No results**
+row when nothing matches. Filtering only changes what's *visible* — selection is untouched —
+and keyboard navigation skips the filtered-out rows. On open, focus lands in the search
+field so the user can type immediately. Command menus (`default` / `action`) ignore it.
+
+| Attribute | Default | Notes |
+|-----------|---------|-------|
+| `search-placeholder` | `Search` | Placeholder text for the filter field |
+| `no-results-text` | `No results` | Row shown when the query matches nothing |
 
 ### Events
 

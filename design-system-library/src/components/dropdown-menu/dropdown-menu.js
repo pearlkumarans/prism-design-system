@@ -41,6 +41,9 @@ import '../text-link/text-link.js';
 import { injectCss } from '../../utils/inject-css.js';
 import '../../icons/icon.js';
 import '../button/button.js';
+/* Optional in-menu filter (show-search) reuses the SearchField component — clear
+   button, Esc-to-clear and filled state come for free. */
+import '../search-field/search-field.js';
 
 /* ds-checkbox / ds-radio are light-DOM (styled via their own CSS files). Auto-
    load those stylesheets so the embedded indicators are styled even on pages
@@ -48,6 +51,7 @@ import '../button/button.js';
 injectCss('ds-dropdown-checkbox-css', '../checkbox/checkbox.css', import.meta.url);
 injectCss('ds-dropdown-radio-css', '../radio/radio.css', import.meta.url);
 injectCss('ds-dropdown-textlink-css', '../text-link/text-link.css', import.meta.url);
+injectCss('ds-dropdown-searchfield-css', '../search-field/search-field.css', import.meta.url);
 
 /* Escape consumer-provided strings before they go into the menu's innerHTML.
    Labels/descriptions/badges are frequently data-derived (customer names, saved
@@ -75,7 +79,7 @@ export class DsDropdownMenu extends HTMLElement {
       'type', 'title', 'show-title', 'show-footer', 'footer-text', 'footer-icon',
       'show-select-all', 'show-clear-all', 'show-reset', 'show-apply', 'show-cancel',
       'select-all-text', 'clear-all-text', 'reset-text', 'apply-label', 'cancel-label',
-      'empty-text',
+      'empty-text', 'show-search', 'search-placeholder', 'no-results-text',
       // legacy
       'header-text', 'show-header',
       'rtl', 'open',
@@ -90,6 +94,7 @@ export class DsDropdownMenu extends HTMLElement {
       this._pendingItems = v;
     }
     this._items = [];
+    this._searchQuery = '';
   }
 
   connectedCallback() {
@@ -130,6 +135,10 @@ export class DsDropdownMenu extends HTMLElement {
            explicitly instead — see the forward-arrow branch in _wire. */
         if (!this._ownerRow) {
           requestAnimationFrame(() => {
+            /* With an in-menu filter, focus the search field so the user can type
+               to filter immediately; otherwise focus the first option. */
+            const search = this._panel.querySelector('[data-search]');
+            if (search) { (search.focus ? search : search.querySelector('input'))?.focus(); return; }
             const first = this._panel.querySelector('.ds-dropdown-menu__item:not([aria-disabled="true"])');
             first?.focus();
           });
@@ -375,6 +384,40 @@ export class DsDropdownMenu extends HTMLElement {
     return this.getAttribute(name) !== 'false';
   }
 
+  /* Filter the open menu to rows whose label/description contain the search query.
+     Toggles li.hidden (keyboard nav + _focusable already skip hidden rows), hides
+     section headings/dividers while a query is active (they lose meaning in a flat
+     result list) and shows a "No results" row when nothing matches. Selection
+     state is untouched — filtering only changes what's visible. */
+  _applyFilter() {
+    const list = this._panel && this._panel.querySelector('.ds-dropdown-menu__list');
+    if (!list) return;
+    const q = (this._searchQuery || '').trim().toLowerCase();
+    let anyVisible = false;
+    list.querySelectorAll('.ds-dropdown-menu__item').forEach((li) => {
+      const text = li.dataset.searchText || (li.textContent || '').toLowerCase();
+      const match = !q || text.includes(q);
+      li.hidden = !match;
+      if (match) anyVisible = true;
+    });
+    list.querySelectorAll('.ds-dropdown-menu__section-heading, .ds-dropdown-menu__divider')
+      .forEach((el) => { el.hidden = !!q; });
+    this._toggleNoResults(list, !!q && !anyVisible);
+  }
+
+  _toggleNoResults(list, show) {
+    let row = list.querySelector('.ds-dropdown-menu__no-results');
+    if (show && !row) {
+      row = document.createElement('li');
+      row.className = 'ds-dropdown-menu__empty ds-dropdown-menu__no-results';
+      row.setAttribute('role', 'presentation');
+      row.textContent = this.getAttribute('no-results-text') || 'No results';
+      list.appendChild(row);
+    } else if (!show && row) {
+      row.remove();
+    }
+  }
+
   /* Toggle Select-all / Clear-all visibility based on current selection
      state. Called on each multi-select item toggle to keep no-op links
      out of view without doing a full re-render (which would steal focus). */
@@ -465,6 +508,19 @@ export class DsDropdownMenu extends HTMLElement {
          <hr class="ds-dropdown-menu__divider" />`
       : '';
 
+    /* Optional in-menu filter — only meaningful for the option-picker (select /
+       select-tick / multi-select) types where rows are choices; a `default`/
+       `action` command menu isn't filtered. Reuses ds-search-field; its value is
+       kept in `_searchQuery` so it survives re-renders and re-applies the filter. */
+    const isSelectFamily = type === 'select' || type === 'select-tick' || isMulti;
+    const showSearch = this._boolAttrDefault('show-search', false) && isSelectFamily;
+    const searchPlaceholder = this.getAttribute('search-placeholder') || 'Search';
+    const searchHTML = showSearch
+      ? `<div class="ds-dropdown-menu__search">
+           <ds-search-field size="small" ${rtl ? 'rtl' : ''} placeholder="${escapeHtml(searchPlaceholder)}"${this._searchQuery ? ` value="${escapeHtml(this._searchQuery)}"` : ''} data-search></ds-search-field>
+         </div>`
+      : '';
+
     /* Empty state: when there are no real options (ignoring headings, dividers
        and the selection bar), show a "No options" row, not a 0-height surface. */
     const renderable = this._items.filter((it) => it && !['heading', 'divider', 'selection-bar'].includes(it.type));
@@ -538,7 +594,7 @@ export class DsDropdownMenu extends HTMLElement {
       focusIdx = li ? items.indexOf(li) : -1;
     }
 
-    this._panel.innerHTML = titleHTML + itemsHTML + footerHTML;
+    this._panel.innerHTML = titleHTML + searchHTML + itemsHTML + footerHTML;
     this._wire(type);
 
     if (focusIdx >= 0) {
@@ -648,10 +704,13 @@ export class DsDropdownMenu extends HTMLElement {
            </button>`).join('')}</span>`
       : '';
 
+    /* Lower-cased label + description drive the show-search filter (matched in
+       _applyFilter). Escaped like any other consumer string. */
+    const searchText = escapeHtml([item.label, item.description].filter(Boolean).join(' ').toLowerCase());
     return `<li class="${cls}"
                 role="${role}" ${ariaSelected} ${ariaChecked} ${ariaDisabled}
                 ${hasSubItems ? 'data-has-sub aria-haspopup="menu" aria-expanded="false"' : ''}
-                tabindex="${tabindex}" data-index="${idx}">
+                tabindex="${tabindex}" data-index="${idx}" data-search-text="${searchText}">
               ${radioHTML}${checkboxHTML}${iconHTML}
               <span class="ds-dropdown-menu__item-content">
                 <span class="ds-dropdown-menu__item-label">${escapeHtml(item.label)}</span>
@@ -663,6 +722,23 @@ export class DsDropdownMenu extends HTMLElement {
 
   _wire(type) {
     const isMulti = type === 'multi-select';
+
+    /* In-menu filter (show-search): typing filters rows by label/description via
+       _applyFilter (which toggles li.hidden, so keyboard nav skips them for free).
+       Clear (× / Esc) restores the full list. Re-apply after a re-render so an
+       open filter survives an items/selection update. */
+    const search = this._panel.querySelector('[data-search]');
+    if (search) {
+      search.addEventListener('ds-search-field-input', (e) => {
+        this._searchQuery = (e.detail && e.detail.value) || '';
+        this._applyFilter();
+      });
+      search.addEventListener('ds-search-field-clear', () => {
+        this._searchQuery = '';
+        this._applyFilter();
+      });
+      if (this._searchQuery) this._applyFilter();
+    }
 
     this._panel.querySelector('[data-cancel]')?.addEventListener('click', () => {
       this.dispatchEvent(new CustomEvent('ds-dropdown-cancel', { bubbles: true }));

@@ -554,3 +554,73 @@ describe('ds-dropdown-menu — teardown', () => {
     });
   });
 });
+
+describe('ds-dropdown-menu — in-menu search (show-search)', () => {
+  const OPTS = [
+    { label: 'Apple', value: 'apple' },
+    { label: 'Banana', value: 'banana' },
+    { label: 'Cherry', value: 'cherry', description: 'a stone fruit' },
+  ];
+  const visible = (el) => items(el).filter((li) => !li.hidden);
+  const visLabels = (el) => visible(el).map((li) => li.querySelector('.ds-dropdown-menu__item-label').textContent);
+  const search = (el) => el.querySelector('[data-search]');
+  const typeInto = (el, value) => search(el).dispatchEvent(new CustomEvent('ds-search-field-input', { detail: { value }, bubbles: true }));
+
+  async function mkSearch(type = 'select') {
+    const el = await mk(OPTS, { open: true, type });
+    el.setAttribute('show-search', '');
+    await nextFrame();
+    return el;
+  }
+
+  it('renders a ds-search-field for a select-type menu with show-search', async () => {
+    const el = await mkSearch('select');
+    expect(search(el), 'search field rendered').to.exist;
+    expect(search(el).tagName.toLowerCase()).to.equal('ds-search-field');
+  });
+
+  it('does NOT render search on a command (default/action) menu', async () => {
+    const el = await mk(THREE, { open: true, type: 'default' });
+    el.setAttribute('show-search', '');
+    await nextFrame();
+    expect(search(el), 'no search on a command menu').to.not.exist;
+  });
+
+  it('filters options by label/description as the query changes', async () => {
+    const el = await mkSearch('select');
+    typeInto(el, 'an');            // Banana
+    expect(visLabels(el)).to.deep.equal(['Banana']);
+    typeInto(el, 'stone');         // matches Cherry via its description
+    expect(visLabels(el)).to.deep.equal(['Cherry']);
+    typeInto(el, '');              // all back
+    expect(visLabels(el)).to.deep.equal(['Apple', 'Banana', 'Cherry']);
+  });
+
+  it('shows a "No results" row when nothing matches, and clears it when emptied', async () => {
+    const el = await mkSearch('select');
+    typeInto(el, 'zzz');
+    expect(el.querySelector('.ds-dropdown-menu__no-results'), 'no-results shown').to.exist;
+    expect(visible(el).length, 'no options visible').to.equal(0);
+    el.querySelector('[data-search]').dispatchEvent(new CustomEvent('ds-search-field-clear', { bubbles: true }));
+    expect(el.querySelector('.ds-dropdown-menu__no-results'), 'no-results cleared on clear').to.not.exist;
+    expect(visible(el).length, 'all options visible again').to.equal(3);
+  });
+
+  it('filtering leaves selection untouched', async () => {
+    const el = await mkSearch('multi-select');
+    el.items = [{ label: 'Apple', value: 'apple', selected: true }, { label: 'Banana', value: 'banana' }];
+    await nextFrame();
+    typeInto(el, 'ban');
+    expect(el.selectedValues ? el.selectedValues : el._items.filter((i) => i.selected).map((i) => i.value))
+      .to.deep.equal(['apple']);   // apple still selected though filtered out
+  });
+
+  it('the query survives a re-render (items update re-applies the filter)', async () => {
+    const el = await mkSearch('select');
+    typeInto(el, 'err');           // Cherry
+    el.items = OPTS.slice();       // force a re-render
+    await nextFrame();
+    expect(visLabels(el)).to.deep.equal(['Cherry']);
+    expect(search(el).getAttribute('value')).to.equal('err');
+  });
+});
