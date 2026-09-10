@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Auto-upgrade feature spotlight — post-login</title>
+
+  <!-- Tell ds-icon where the sprite lives (defaults to /icons.svg, which 404s
+       here). Must be set before any icon renders. -->
+  <script>window.UEMS_ICON_SPRITE = '/design-system-library/src/icons/icons.svg';</script>
+
+  <!-- One aggregate stylesheet = tokens + every component (badge, button,
+       popover, modal, overlay, tooltip, icon-button, tour, …). -->
+  <link rel="stylesheet" href="../design-system-library/src/styles/index.css">
+  <!-- direct, cache-busted so tour.css edits show without fighting the @import cache -->
+  <link rel="stylesheet" href="../design-system-library/src/components/tour/tour.css?v=13">
+
+  <style>
+    /* ---- Mock post-login Endpoint Central shell (tokens only) -------------
+       Just enough chrome to show the spotlight is NON-BLOCKING: the dashboard
+       stays fully interactive behind the corner card. */
+    html, body { margin: 0; height: 100%; }
+    body {
+      font-family: var(--font-family-base, system-ui, sans-serif);
+      background: var(--uems-bg-base, #f4f5f7);
+      color: var(--uems-text-primary);
+    }
+    .app { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: 56px 1fr; height: 100vh; }
+    .app__top {
+      grid-column: 1 / -1; display: flex; align-items: center; gap: var(--spacing-12);
+      padding: 0 var(--spacing-20); background: var(--uems-bg-primary);
+      border-bottom: 1px solid var(--uems-border-tertiary);
+    }
+    .app__brand { font-weight: var(--font-weight-semibold); color: var(--uems-text-primary); }
+    .app__spacer { flex: 1 1 auto; }
+    .app__chip { width: 32px; height: 32px; border-radius: var(--uems-radius-pill, 999px); background: var(--uems-bg-accent-primary-subtle); }
+    .app__side { background: var(--uems-bg-primary); border-right: 1px solid var(--uems-border-tertiary); padding: var(--spacing-12); }
+    .nav-item { padding: var(--spacing-8) var(--spacing-12); border-radius: var(--uems-radius-s, 6px); color: var(--uems-text-secondary); font-size: var(--font-size-14); }
+    .nav-item.is-active { background: var(--uems-bg-accent-primary-subtle); color: var(--uems-text-accent-link); font-weight: var(--font-weight-medium); }
+    .app__main { padding: var(--spacing-24); overflow: auto; }
+    .app__h1 { margin: 0 0 var(--spacing-4); font-size: var(--font-size-20); font-weight: var(--font-weight-semibold); }
+    .app__sub { margin: 0 0 var(--spacing-20); color: var(--uems-text-tertiary); font-size: var(--font-size-14); }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-16); }
+    .panel { background: var(--uems-bg-primary); border: 1px solid var(--uems-border-tertiary); border-radius: var(--radius-lg, 12px); height: 140px; }
+    .demo-bar { display: flex; gap: var(--spacing-8); margin-bottom: var(--spacing-16); align-items: center; }
+    .demo-bar span { font-size: var(--font-size-12); color: var(--uems-text-tertiary); }
+
+    /* The hero (assets/auto-upgrade-hero.svg) is a purpose-built ~2.2:1 banner,
+       so it fills the media slot at its natural aspect — no crop needed. */
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="app__top">
+      <span class="app__brand">Endpoint Central</span>
+      <span class="app__spacer"></span>
+      <div class="app__chip"></div>
+    </div>
+    <aside class="app__side">
+      <div class="nav-item is-active">Home</div>
+      <div class="nav-item">Threats &amp; Patches</div>
+      <div class="nav-item">Software Deployment</div>
+      <div class="nav-item">Configurations</div>
+      <div class="nav-item">Admin</div>
+    </aside>
+    <main class="app__main">
+      <h1 class="app__h1">Welcome back</h1>
+      <p class="app__sub">Your environment at a glance — everything below stays clickable while the spotlight is up.</p>
+
+      <div class="demo-bar">
+        <ds-button id="reopen" variant="secondary" size="small">Reopen promo</ds-button>
+        <ds-button id="reset" variant="tertiary" size="small">Reset "seen"</ds-button>
+        <span id="seen-state"></span>
+      </div>
+
+      <div class="grid">
+        <div class="panel"></div><div class="panel"></div><div class="panel"></div>
+        <div class="panel"></div><div class="panel"></div><div class="panel"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- The announcement: mounted once at the shell level, fires once per user via
+       persist-key, non-blocking (mask="none"). auto-start defers to after the
+       landing view paints. -->
+  <ds-tour id="promo" mask="none" persist-key="ec.auto-upgrade-promo.v1" auto-start></ds-tour>
+
+  <script type="module">
+    import '../design-system-library/src/components/tour/tour.js?v=8';
+
+    const tour = document.getElementById('promo');
+
+    /* Reduced feature-spotlight: hero image on top, title, body, one full-width
+       primary action. Corner announcement → non-blocking, no backdrop, large,
+       elevated, rounded (all inherited from the ds-tour feature-spotlight). */
+    tour.steps = [{
+      corner: 'bottom-right',
+      image: 'assets/auto-upgrade-server.jpg?v=2',
+      imageAlt: 'A cloud syncing automatic upgrades to a server',
+      title: 'Automate your server upgrades',
+      body: 'Set it up once, and Endpoint Central downloads, installs, and verifies every server upgrade for you — during the maintenance window you choose.',
+      learnMoreHref: '#',
+      learnMoreLabel: 'Learn more',
+      primaryLabel: 'Set up auto-upgrade',
+      secondaryLabel: "I'll do it later",
+    }];
+
+    /* Primary action → in a real app, deep-link to the settings that own this
+       feature. Completing the single step fires ds-tour-complete. */
+    tour.addEventListener('ds-tour-complete', () => {
+      // window.location.href = '/admin/server-maintenance/upgrade-settings';
+      console.log('Enable auto-upgrade → navigate to Server Upgrade Settings');
+    });
+    // Impression / dismiss analytics hooks:
+    tour.addEventListener('ds-tour-step', (e) => console.log('promo shown', e.detail));
+    tour.addEventListener('ds-tour-skip', () => console.log('promo dismissed'));
+
+    /* ---- Demo controls (not part of the integration) -------------------- */
+    const KEY = 'uems-tour-seen:ec.auto-upgrade-promo.v1';
+    const seenState = document.getElementById('seen-state');
+    const refresh = () => seenState.textContent = localStorage.getItem(KEY) ? 'state: seen (auto-start suppressed)' : 'state: not seen';
+    document.getElementById('reopen').addEventListener('click', () => tour.start());
+    document.getElementById('reset').addEventListener('click', () => { localStorage.removeItem(KEY); refresh(); });
+    tour.addEventListener('ds-tour-end', refresh);
+    refresh();
+  </script>
+</body>
+</html>

@@ -5,6 +5,7 @@ import { service } from '@ember/service';
 export default class ApplicationController extends Controller {
   @service shell;
   @service router;
+  @service session;
 
   // The /patterns gallery and the /login route render standalone (no shell chrome).
   get isStandalone() {

@@ -14,7 +14,7 @@ existing Prism surfaces for each step.
 |---|---|---|---|
 | **Anchored** | `'#id'` / element | `ds-popover` (anchor, placement, arrow) | `ds-overlay` (mask) — spotlight cutout on the target |
 | **Corner** | `null` + `corner` | `ds-popover` (no anchor, pinned to a screen corner, no arrow) | **None** — non-blocking, the page stays interactive |
-| **Centered** | `null` (or missing) | `ds-modal` (welcome / summary) | modal's own scrim |
+| **Centered** | `null` (or missing) | `ds-modal` (welcome / summary — `md` / 640px) | modal's own scrim |
 
 ## Attributes
 
@@ -22,7 +22,7 @@ existing Prism surfaces for each step.
 |---|---|---|---|
 | `mask` | `dim` \| `light` \| `blur` \| `dim-blur` \| `none` | `dim` | Backdrop type for anchored steps → passed to `ds-overlay`. `none` = no scrim. |
 | `persist-key` | string | — | Namespace for the "seen" flag. Set → the tour persists to `localStorage` (`uems-tour-seen:<key>`) and fires lifecycle events for backend sync. |
-| `auto-start` | boolean | absent | Run once on connect **if** `persist-key` is unset or not yet seen. Deferred two frames so late-mounted targets exist. |
+| `auto-start` | boolean | absent | Run once **if** `persist-key` is unset or not yet seen. Fires as soon as both the attribute and `steps` are in place, so `<ds-tour auto-start>` + a later `tour.steps = […]` (e.g. from a deferred module) works regardless of order. Deferred two frames so late-mounted targets exist. |
 | `linear` | boolean | absent | Reserved — lock skipping ahead (Phase 4). |
 | `rtl` | boolean | absent | Mirror the card, progress, and control labels. |
 
@@ -51,6 +51,8 @@ tour.steps = [
 | `size` | `small` \| `medium` \| `large` | Card width — **260 / 320 / 400** px. Default `medium` (anchored / centered); a `corner` announcement defaults `large`. |
 | `arrow` | boolean | Show the beak pointing at the target. Default `true`; set `false` to drop it. Anchored steps. |
 | `primaryLabel` | string | Override the primary button label (`Next` / `Done`) for this step. |
+| `learnMoreHref` | URL string | Adds an inline **"Learn more"** link trailing the body copy (`learnMoreLabel` overrides the text, `learnMoreTarget` sets the anchor target). |
+| `secondaryLabel` | string | **Feature spotlight only** — a soft-decline text link below the full-width primary (e.g. "I'll do it later"). Dismisses the announcement as a **remind-me-later**: it fires `ds-tour-skip` but does **not** persist the `persist-key` seen flag, so it surfaces again next time (unlike the ✕ / `Esc`, which do mark it seen). |
 | `spotlightPadding` | number | Gap (px) between the target and the spotlight cutout / ring. Default `8`. |
 | `advanceOn` | event name | **Interactive step** — advance when this DOM event fires on the target (e.g. `'click'`). The spotlight cutout makes the target click-through; `Next` still works as an escape hatch. |
 | `hint` | string | Instruction shown on an `advanceOn` step (default: the `hint` label). |
@@ -75,7 +77,7 @@ tour.labels = { skip: 'Dismiss', close: 'Close', back: 'Back', next: 'Continue',
 | `ds-tour-start` | — | `start()` |
 | `ds-tour-step` | `{ index, total, step }` | each step shown |
 | `ds-tour-complete` | — | advancing past the last step |
-| `ds-tour-skip` | — | user dismisses (Skip / `Esc` / overlay / ✕) |
+| `ds-tour-skip` | `{ remindLater }` | user dismisses (Skip / `Esc` / overlay / ✕, or a `secondaryLabel` "remind me later" — `remindLater: true`, which doesn't persist "seen") |
 | `ds-tour-end` | `{ completed }` | always, after complete or skip |
 
 Wire `ds-tour-step` / `-complete` / `-skip` to analytics, and `-complete`/`-skip`
@@ -98,7 +100,10 @@ to a backend "seen" write if `localStorage` alone isn't enough.
   defaults to the **large** (400px) card and carries more presence than an anchored
   tip — a larger elevation (`--shadow-xl`), rounder corners (`--uems-radius-l`), and
   a slightly larger title (`--font-size-16`). A step's own `size` still overrides.
-  On phones it docks as a bottom sheet like anchored steps.
+  It **slides in** from the nearest screen edge (bottom corners rise, top corners
+  drop) over ~560ms with decelerate easing — a slow, deliberate entrance;
+  suppressed under `prefers-reduced-motion`. On phones it docks as
+  a bottom sheet like anchored steps.
 - **Card footer & skip.** The footer is one row: pagination (dots + *n of N*) on
   the lead, Back / Next trailing (no trailing icon). Buttons are `small` on the
   centered welcome dialog and the tighter `xsmall` on the anchored slides. There is

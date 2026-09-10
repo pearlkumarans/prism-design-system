@@ -27,6 +27,50 @@ ds-tour { display: none !important; }
   overflow: hidden;
   background: var(--uems-bg-secondary);
 }
+
+/* ---- Media-top feature spotlight ----------------------------------------- */
+/* A single-step spotlight WITH an image reads as an announcement: the hero spans
+   the card top edge-to-edge, the ✕ floats over it, and the title sits BELOW the
+   image (image → title → body → action). */
+.ds-tour__pop--media-top .ds-popover__surface { position: relative; }
+/* Kill the top padding so the hero is flush to the card's top edge. Must out-rank
+   the popover's plain-header + body rule (which sets a 6px top padding), hence the
+   full selector chain rather than a short `.media-top .body`. */
+.ds-tour__pop--media-top .ds-popover__header[data-style="plain"]:not([hidden]) + .ds-popover__body,
+.ds-tour__pop--media-top .ds-popover__body { padding-top: 0; }
+.ds-tour__pop--media-top .ds-tour__media {
+  /* bleed to the card's side edges; a little breathing room down to the title */
+  margin: 0 calc(-1 * var(--spacing-16)) var(--spacing-8);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.ds-tour__pop--corner.ds-tour__pop--media-top .ds-tour__media {
+  border-radius: var(--uems-radius-l, 16px) var(--uems-radius-l, 16px) 0 0;
+}
+/* The title is a body heading now, below the image. */
+.ds-tour__pop--media-top .ds-tour__title {
+  margin: 0;
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug, 1.35);
+  color: var(--uems-text-primary);
+}
+/* Header carries only the ✕ — float it over the image's top-right on an opaque
+   chip so it stays legible over any artwork. */
+.ds-tour__pop--media-top .ds-popover__header {
+  position: absolute; top: var(--spacing-8); inset-inline-end: var(--spacing-8);
+  padding: 0; border: 0; z-index: 1;
+}
+.ds-tour__pop--media-top .ds-popover__title { display: none; }
+/* The ✕ floats over artwork of any colour, so a theme surface behind it can
+   vanish (dark chip on a dark image). Use a translucent dark scrim + white icon
+   — the standard "close over image" treatment — legible over light or dark art. */
+.ds-tour__pop--media-top .ds-popover__close,
+.ds-tour__pop--media-top .ds-popover__close:hover {
+  background: rgba(15, 23, 42, 0.55);
+  color: var(--uems-icon-white, #ffffff);
+  border-radius: var(--uems-radius-pill, 999px);
+}
+.ds-tour__pop--media-top .ds-popover__close:hover { background: rgba(15, 23, 42, 0.8); }
 .ds-tour__media img { display: block; width: 100%; height: auto; }
 .ds-tour__text {
   margin: 0;
@@ -72,10 +116,14 @@ ds-tour { display: none !important; }
 .ds-tour__footer--single { display: block; }
 .ds-tour__next--full { display: block; width: 100%; }
 .ds-tour__next--full .ds-button { width: 100%; }
+/* Soft-decline link centered below the full-width primary. */
+.ds-tour__secondary { display: flex; justify-content: center; margin-top: var(--spacing-12); }
 /* Stretch the modal's right-aligned footer-actions so the button spans it. */
 .ds-tour__modal--single .ds-modal__footer-actions { flex: 1 1 100%; width: 100%; }
-/* Spotlight: no divider between body and the full-width action ("footer separation"). */
-.ds-tour__pop--spotlight .ds-popover__footer { border-top: 0; padding-top: 0; }
+/* Spotlight: no divider between body and the full-width action ("footer
+   separation"), and a little more room below the button so it doesn't crowd the
+   card's bottom edge. */
+.ds-tour__pop--spotlight .ds-popover__footer { border-top: 0; padding-top: 0; padding-bottom: var(--spacing-20); }
 .ds-tour__modal--single .ds-modal__footer { border-top: 0; }
 
 /* Actions: Skip on the lead, Back/Next trailing (spacer pushes them apart). */
@@ -98,6 +146,29 @@ ds-tour { display: none !important; }
 }
 /* Slightly larger headline — it's the lead of a standalone announcement. */
 .ds-tour__pop--corner .ds-popover__title { font-size: var(--font-size-16); }
+
+/* Smooth slide-in: the announcement eases in from the nearest screen edge —
+   bottom corners rise, top corners drop — a more deliberate entrance than the
+   popover's default 4px nudge. Decelerate easing = quick start, soft settle.
+   Overrides the base .ds-popover__surface animation (higher specificity). */
+.ds-tour__pop--corner .ds-popover__surface {
+  animation: ds-tour-corner-up 560ms var(--easing-decelerate, cubic-bezier(0, 0, 0, 1)) both;
+}
+.ds-tour__pop--corner-top-right .ds-popover__surface,
+.ds-tour__pop--corner-top-left .ds-popover__surface {
+  animation-name: ds-tour-corner-down;
+}
+@keyframes ds-tour-corner-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ds-tour-corner-down {
+  from { opacity: 0; transform: translateY(-28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-tour__pop--corner .ds-popover__surface { animation: none; }
+}
 .ds-tour__pop--corner-bottom-right .ds-popover__surface {
   top: auto !important; left: auto !important;
   right: var(--spacing-24, 24px) !important; bottom: var(--spacing-24, 24px) !important;

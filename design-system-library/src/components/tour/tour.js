@@ -49,8 +49,8 @@ const CORNERS = ['bottom-right', 'bottom-left', 'top-right', 'top-left'];
 
 /* Built-in control strings. Consumers override any of them via the `labels`
    property (for i18n); otherwise `rtl` picks the Arabic defaults. */
-const LABELS_LTR = { skip: 'Skip tour', close: 'Close', back: 'Back', next: 'Next', done: 'Done', of: 'of', hint: 'Try it to continue' };
-const LABELS_RTL = { skip: 'تخطّي', close: 'إغلاق', back: 'رجوع', next: 'التالي', done: 'تم', of: 'من', hint: 'جرّبه للمتابعة' };
+const LABELS_LTR = { skip: 'Skip tour', close: 'Close', back: 'Back', next: 'Next', done: 'Done', of: 'of', hint: 'Try it to continue', learnMore: 'Learn more' };
+const LABELS_RTL = { skip: 'تخطّي', close: 'إغلاق', back: 'رجوع', next: 'التالي', done: 'تم', of: 'من', hint: 'جرّبه للمتابعة', learnMore: 'اعرف المزيد' };
 
 let _uid = 0;
 
@@ -78,14 +78,33 @@ export class DsTour extends HTMLElement {
   connectedCallback() {
     /* The host is a controller, not a visible surface. */
     this.hidden = true;
-    if (boolAttr(this, 'auto-start')) {
-      const key = this.getAttribute('persist-key');
-      if (key && this._isSeen()) return;
-      /* Defer so late-mounted targets exist before the first anchored step. */
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (this.isConnected && !this._running) this.start();
-      }));
-    }
+    this._maybeAutoStart();
+  }
+
+  /* Fire the one-shot `auto-start` once BOTH the attribute and steps are in
+     place. connectedCallback and the `steps` setter each call this, so it works
+     regardless of order — the common case being a deferred ES module that sets
+     `.steps` a tick after the element connects, which would otherwise race the
+     auto-start and silently no-op. `_autoStarted` guards a double fire. */
+  _maybeAutoStart() {
+    if (this._autoStarted || this._running) return;
+    if (!this.isConnected || !boolAttr(this, 'auto-start')) return;
+    const key = this.getAttribute('persist-key');
+    if (key && this._isSeen()) return;
+    if (!this._steps.length) return;   // steps not set yet — the setter retries
+    this._autoStarted = true;
+    /* Defer so late-mounted targets exist before the first anchored step. rAF
+       gives the clean two-frame wait when the tab is visible; a timeout is the
+       fallback for a page that loads in a BACKGROUND tab (rAF is paused while
+       the tab is hidden) so the announcement still arrives. First one wins. */
+    let started = false;
+    const go = () => {
+      if (started) return;
+      started = true;
+      if (this.isConnected && !this._running) this.start();
+    };
+    requestAnimationFrame(() => requestAnimationFrame(go));
+    setTimeout(go, 200);
   }
 
   disconnectedCallback() { if (this._running) this._teardown(); this._running = false; }
@@ -98,7 +117,7 @@ export class DsTour extends HTMLElement {
 
   // ---- steps property -----------------------------------------------------
   get steps() { return this._steps; }
-  set steps(v) { this._steps = Array.isArray(v) ? v : []; }
+  set steps(v) { this._steps = Array.isArray(v) ? v : []; this._maybeAutoStart(); }
 
   // ---- labels property (i18n override) ------------------------------------
   get labels() { return this._labels || {}; }
@@ -146,14 +165,16 @@ export class DsTour extends HTMLElement {
   end(opts = {}) {
     if (!this._running) return;
     const completed = !!opts.completed;
+    /* `remindLater` = a soft "not now" (e.g. "I'll do it later") that must NOT
+       persist the seen flag, so the tour surfaces again next time. Completing or a
+       definitive skip (✕ / Esc) still mark it seen so auto-start won't re-nag. */
+    const remindLater = !!opts.remindLater;
     this._teardown();
     this._running = false;
     this._index = -1;
-    /* Skipping or completing both mark the tour seen, so auto-start won't re-nag;
-       consumers that want finer control can act on the distinct events. */
-    if (this.getAttribute('persist-key')) this._markSeen();
-    this.dispatchEvent(new CustomEvent(completed ? 'ds-tour-complete' : 'ds-tour-skip', { bubbles: true }));
-    this.dispatchEvent(new CustomEvent('ds-tour-end', { bubbles: true, detail: { completed } }));
+    if (!remindLater && this.getAttribute('persist-key')) this._markSeen();
+    this.dispatchEvent(new CustomEvent(completed ? 'ds-tour-complete' : 'ds-tour-skip', { bubbles: true, detail: { remindLater } }));
+    this.dispatchEvent(new CustomEvent('ds-tour-end', { bubbles: true, detail: { completed, remindLater } }));
   }
 
   // ---- step rendering -----------------------------------------------------
@@ -193,11 +214,17 @@ export class DsTour extends HTMLElement {
        corner announcement defaults large (passed in). A step's own `size` wins. */
     const size = CARD_SIZES.includes(step.size) ? step.size : defaultSize;
     if (size !== 'medium') pop.classList.add(`ds-tour__pop--${size}`);
+    /* Feature spotlight WITH an image → media-top layout: the hero spans the top,
+       the ✕ floats over it, and the title sits BELOW the image (announcement
+       order). The title attribute stays set either way so the dialog keeps its
+       accessible name (aria-labelledby → the header title, hidden by CSS here). */
+    const mediaTop = (this._steps.length === 1) && !!step.image;
+    if (mediaTop) pop.classList.add('ds-tour__pop--media-top');
     pop.setAttribute('title', step.title || '');
     /* Plain header: the title flows into the content, no divided header bar. */
     pop.setAttribute('header-style', 'plain');
     if (this._rtl()) pop.setAttribute('rtl', '');
-    pop.appendChild(this._buildBody(step));
+    pop.appendChild(this._buildBody(step, mediaTop ? step.title : null));
     const footSlot = document.createElement('div');
     footSlot.setAttribute('slot', 'footer');
     footSlot.appendChild(this._buildFooter(step));
@@ -305,7 +332,9 @@ export class DsTour extends HTMLElement {
 
     const modal = document.createElement('ds-modal');
     modal.className = 'ds-tour__modal';
-    modal.setAttribute('size', 'sm');
+    /* Welcome / summary dialog reads as a proper onboarding moment — the medium
+       (640px) modal, not the tight sm (480px) confirm size. */
+    modal.setAttribute('size', 'md');
     modal.setAttribute('title', step.title || '');
     if (this._rtl()) modal.setAttribute('rtl', '');
     /* With an image, put media + text in the body (image on top); otherwise use
@@ -371,20 +400,44 @@ export class DsTour extends HTMLElement {
     const img = document.createElement('img');
     img.src = step.image;
     img.alt = step.imageAlt || '';
-    img.loading = 'lazy';
+    /* Not lazy: a tour/announcement card is shown on demand, and a lazy image with
+       no explicit height starts as a 0-height box that never enters the viewport
+       intersection — so it would never load. Eager is correct here. */
     fig.appendChild(img);
     return fig;
   }
 
-  _buildBody(step) {
+  _buildBody(step, titleBelowText = null) {
     const body = document.createElement('div');
     body.className = 'ds-tour__body';
     const media = this._buildMedia(step);
     if (media) body.appendChild(media);
-    if (step.body) {
+    /* Media-top spotlight: the title moves out of the header to BELOW the image.
+       The dialog is still named by the (visually hidden) header title via
+       aria-labelledby, so this visible copy is aria-hidden to avoid a re-read. */
+    if (titleBelowText) {
+      const h = document.createElement('h3');
+      h.className = 'ds-tour__title';
+      h.setAttribute('aria-hidden', 'true');
+      h.textContent = titleBelowText;
+      body.appendChild(h);
+    }
+    if (step.body || step.learnMoreHref) {
       const p = document.createElement('p');
       p.className = 'ds-tour__text';
-      p.textContent = step.body;
+      if (step.body) p.textContent = step.body;
+      /* Optional inline "Learn more" link trailing the body copy. */
+      if (step.learnMoreHref) {
+        if (step.body) p.appendChild(document.createTextNode(' '));
+        const link = document.createElement('ds-text-link');
+        link.className = 'ds-tour__learn';
+        link.setAttribute('variant', 'primary');
+        link.setAttribute('size', 'medium');
+        link.setAttribute('href', step.learnMoreHref);
+        if (step.learnMoreTarget) link.setAttribute('target', step.learnMoreTarget);
+        link.textContent = step.learnMoreLabel || this._label('learnMore');
+        p.appendChild(link);
+      }
       body.appendChild(p);
     }
     if (step.advanceOn) {
@@ -410,6 +463,21 @@ export class DsTour extends HTMLElement {
     btn.setAttribute('label', step.primaryLabel || this._label('done'));
     btn.addEventListener('click', () => this.next());
     footer.appendChild(btn);
+    /* Optional soft-decline below the primary — a text link that dismisses the
+       announcement (skip semantics), e.g. "I'll do it later". */
+    if (step.secondaryLabel) {
+      const secondary = document.createElement('ds-text-link');
+      secondary.className = 'ds-tour__secondary';
+      secondary.setAttribute('variant', 'secondary');
+      secondary.setAttribute('size', 'medium');
+      secondary.setAttribute('underline', 'always');
+      secondary.setAttribute('href', '#');
+      secondary.textContent = step.secondaryLabel;
+      /* Soft decline: dismiss now but DON'T persist "seen" — a "remind me later"
+         so the announcement returns next time. */
+      secondary.addEventListener('click', (e) => { e.preventDefault(); this.end({ completed: false, remindLater: true }); });
+      footer.appendChild(secondary);
+    }
     return footer;
   }
 

@@ -7,7 +7,12 @@ import '../icons/icon.js';
 import './accordion/accordion.js';
 import './avatar/avatar.js';
 import './badge/badge.js';
-import './beacon/beacon.js';
+/* ds-beacon is loaded resiliently below (NOT a static import): its URL contains
+   "beacon", which privacy/security browser extensions and ad blockers block as a
+   tracking web-beacon. A blocked static import here would reject this whole module
+   and de-register EVERY ds-* component. A caught dynamic import isolates it — beacon
+   still registers when the request succeeds, and its failure never breaks the rest. */
+import('./beacon/beacon.js').catch(() => {});
 import './breadcrumb/breadcrumb.js';
 import './button/button.js';
 import './button-group/button-group.js';
@@ -86,7 +91,9 @@ export { DsIcon } from '../icons/icon.js';
 export { DsAccordion } from './accordion/accordion.js';
 export { DsAvatar } from './avatar/avatar.js';
 export { DsBadge } from './badge/badge.js';
-export { DsBeacon } from './beacon/beacon.js';
+/* DsBeacon is intentionally NOT re-exported here — a static re-export would fail
+   hard when beacon.js is blocked (see the caught dynamic import above). Import it
+   directly from './beacon/beacon.js' if you need the class. */
 export { DsBreadcrumb } from './breadcrumb/breadcrumb.js';
 export { DsDescriptionList } from './description-list/description-list.js';
 export { DsButton } from './button/button.js';
