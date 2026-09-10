@@ -83,6 +83,96 @@ describe('ds-form-footer — show-left toggle', () => {
   });
 });
 
+describe('ds-form-footer — validation message', () => {
+  const msgEl = (el) => el.querySelector('.ds-form-footer__message');
+
+  it('shows an error message (icon + colour class) in the left area when message is set', async () => {
+    const el = await fixture(html`<ds-form-footer message="Please fix the errors" message-type="error">
+      <ds-button slot="action" variant="primary">Save</ds-button>
+    </ds-form-footer>`);
+    await nextFrame();
+    expect(el.classList.contains('ds-form-footer--has-message')).to.be.true;
+    const m = msgEl(el);
+    expect(m, 'message element present').to.exist;
+    expect(m.classList.contains('ds-form-footer__message--error')).to.be.true;
+    expect(m.querySelector('.ds-form-footer__message-text').textContent).to.equal('Please fix the errors');
+    expect(m.querySelector('ds-icon').getAttribute('name')).to.equal('exclamation-circle');
+    expect(m.getAttribute('role')).to.equal('alert');
+  });
+
+  it('uses the warning icon + class for message-type="warning"', async () => {
+    const el = await fixture(html`<ds-form-footer message="Unsaved changes" message-type="warning"></ds-form-footer>`);
+    await nextFrame();
+    expect(msgEl(el).classList.contains('ds-form-footer__message--warning')).to.be.true;
+    expect(msgEl(el).querySelector('ds-icon').getAttribute('name')).to.equal('exclamation-triangle');
+  });
+
+  it('escapes a hostile message as literal text, never HTML', async () => {
+    const el = await fixture(html`<ds-form-footer message="${XSS}"></ds-form-footer>`);
+    await nextFrame();
+    expect(el.querySelector('.ds-form-footer__message img'), 'no injected <img>').to.not.exist;
+    expect(el.querySelector('.ds-form-footer__message-text').textContent).to.contain('<img');
+  });
+
+  it('fires ds-form-footer-submit when the primary button is clicked (not other buttons)', async () => {
+    const el = await fixture(html`<ds-form-footer>
+      <ds-button slot="action" variant="secondary">Cancel</ds-button>
+      <ds-button slot="action" variant="primary">Save</ds-button>
+    </ds-form-footer>`);
+    await nextFrame();
+    let fired = 0;
+    el.addEventListener('ds-form-footer-submit', () => (fired += 1));
+    el.querySelector('ds-button[variant="secondary"]').click();
+    expect(fired, 'Cancel does not submit').to.equal(0);
+    el.querySelector('ds-button[variant="primary"]').click();
+    expect(fired, 'Save submits').to.equal(1);
+  });
+
+  it('reveal-on-submit keeps the message hidden until the primary button is clicked', async () => {
+    const el = await fixture(html`<ds-form-footer message="Fix required fields" reveal-on-submit>
+      <ds-button slot="action" variant="primary">Save</ds-button>
+    </ds-form-footer>`);
+    await nextFrame();
+    expect(el.classList.contains('ds-form-footer--has-message'), 'hidden before submit').to.be.false;
+    el.querySelector('ds-button[variant="primary"]').click();
+    await nextFrame();
+    expect(el.classList.contains('ds-form-footer--has-message'), 'shown after submit').to.be.true;
+    expect(msgEl(el).querySelector('.ds-form-footer__message-text').textContent).to.equal('Fix required fields');
+  });
+
+  it('showMessage() / clearMessage() drive the message imperatively', async () => {
+    const el = await fixture(html`<ds-form-footer>
+      <ds-button slot="action" variant="primary">Save</ds-button>
+    </ds-form-footer>`);
+    await nextFrame();
+    el.showMessage('Network error — try again', 'error');
+    await nextFrame();
+    expect(el.classList.contains('ds-form-footer--has-message')).to.be.true;
+    expect(msgEl(el).querySelector('.ds-form-footer__message-text').textContent).to.equal('Network error — try again');
+    el.clearMessage();
+    await nextFrame();
+    expect(el.classList.contains('ds-form-footer--has-message')).to.be.false;
+  });
+
+  it('a message forces the left area even when show-left="false"', async () => {
+    const el = await fixture(html`<ds-form-footer show-left="false" message="Required" ></ds-form-footer>`);
+    await nextFrame();
+    expect(leftArea(el), 'left area shown for the message').to.exist;
+    expect(msgEl(el)).to.exist;
+  });
+
+  it('setting a message repaints in place — same primary button node (focus safe)', async () => {
+    const el = await fixture(html`<ds-form-footer>
+      <ds-button slot="action" variant="primary">Save</ds-button>
+    </ds-form-footer>`);
+    await nextFrame();
+    const btn = actionArea(el).querySelector('ds-button');
+    el.setAttribute('message', 'Something went wrong');
+    await nextFrame();
+    expect(actionArea(el).querySelector('ds-button'), 'action button not rebuilt').to.equal(btn);
+  });
+});
+
 describe('ds-form-footer — RTL', () => {
   it('mirrors via dir="rtl" from the rtl attribute', async () => {
     const el = await fixture(html`<ds-form-footer rtl></ds-form-footer>`);

@@ -34,6 +34,14 @@ ds-form-footer {
   align-items: center;
   gap: var(--spacing-8);
 }
+/* Content wrapper holds the normal left content (slotted / left-text); a
+   validation message replaces it when present (an error outranks the status). */
+.ds-form-footer__content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-width: 0;
+}
 /* Default status-text styling (Figma: Text/small/Regular, Text-Secondary).
    Only applies to the built-in `left-text`; slotted content styles itself. */
 .ds-form-footer__status {
@@ -45,6 +53,27 @@ ds-form-footer {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── Validation message (left side) — general form-level error / warning,
+   shown on the primary/Save press. Icon + semantic colour, matching
+   ds-inline-alert's error/warning tokens. ──────────────────────────────── */
+.ds-form-footer__message {
+  display: none;
+  align-items: flex-start;
+  gap: var(--spacing-6);
+  min-width: 0;
+  font-size: var(--font-size-12);
+  line-height: var(--uems-line-height-12);
+  font-weight: var(--font-weight-medium);
+}
+.ds-form-footer--has-message .ds-form-footer__content { display: none; }
+.ds-form-footer--has-message .ds-form-footer__message { display: flex; }
+.ds-form-footer__message--error { color: var(--uems-text-error); }
+.ds-form-footer__message--warning { color: var(--uems-text-alert); }
+.ds-form-footer__message-icon { flex-shrink: 0; }
+/* Errors must stay readable — wrap rather than truncate; the bar grows to fit. */
+.ds-form-footer__message-text { min-width: 0; }
+.ds-form-footer[dir="rtl"] .ds-form-footer__message-text { text-align: right; }
 
 /* ── Button group — right-aligned, never shrinks. Buttons are ds-button. ── */
 .ds-form-footer__actions {
