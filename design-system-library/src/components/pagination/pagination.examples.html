@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ds-pagination — examples</title>
+  <link rel="stylesheet" href="../../styles/index.css" />
+  <link rel="stylesheet" href="./pagination.css" />
+  <script>window.UEMS_ICON_SPRITE = '../../icons/icons.svg?v=chevrons2';</script>
+  <script type="module" src="./pagination.js"></script>
+  <style>
+    body { font-family: var(--font-family-sans); padding: 32px; background: var(--uems-background); color: var(--uems-text-primary); }
+    h2 { font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--uems-text-secondary); margin: 32px 0 12px; }
+    .frame { background: var(--uems-bg-base); border: 1px solid var(--uems-border-secondary); border-radius: var(--radius-lg, 12px); padding: 24px; margin-bottom: 8px; }
+    .frame.narrow { max-width: 420px; }
+    .log { font-family: var(--font-family-mono, monospace); font-size: var(--font-size-12); color: var(--uems-text-tertiary); margin-top: 8px; min-height: 1em; }
+  </style>
+</head>
+<body>
+  <h2>1 · Numbered (default) — full total, range + page size</h2>
+  <div class="frame">
+    <ds-pagination id="p1" total-items="240" page-size="20" show-range show-page-size show-first-last></ds-pagination>
+    <div class="log" id="p1log"></div>
+  </div>
+
+  <h2>2 · Numbered — first page (leading arrows disabled, no leading ellipsis)</h2>
+  <div class="frame"><ds-pagination total-items="200" page-size="20" page="1" show-first-last></ds-pagination></div>
+
+  <h2>3 · Numbered — mid page (both ellipses)</h2>
+  <div class="frame"><ds-pagination total-items="200" page-size="20" page="6" show-first-last></ds-pagination></div>
+
+  <h2>4 · Numbered — wide window (sibling-count 2, boundary-count 2)</h2>
+  <div class="frame"><ds-pagination total-items="400" page-size="20" page="10" sibling-count="2" boundary-count="2"></ds-pagination></div>
+
+  <h2>5 · Simple — Previous / Next</h2>
+  <div class="frame narrow"><ds-pagination mode="simple" total-items="200" page-size="20" page="3"></ds-pagination></div>
+
+  <h2>6 · Compact — Page X of Y (mobile)</h2>
+  <div class="frame narrow"><ds-pagination mode="compact" total-items="200" page-size="20" page="6"></ds-pagination></div>
+
+  <h2>6b · Dots — ds-tour indicator, navigable (small sets)</h2>
+  <div class="frame narrow"><ds-pagination mode="dots" total-items="160" page-size="20" page="3" show-range></ds-pagination></div>
+
+  <h2>7 · With jump-to-page</h2>
+  <div class="frame"><ds-pagination total-items="500" page-size="25" page="7" show-range show-jump></ds-pagination></div>
+
+  <h2>8 · Small size</h2>
+  <div class="frame"><ds-pagination size="small" total-items="200" page-size="20" page="4" show-range show-page-size show-first-last></ds-pagination></div>
+
+  <h2>9 · Disabled</h2>
+  <div class="frame"><ds-pagination total-items="200" page-size="20" page="4" show-range disabled></ds-pagination></div>
+
+  <h2>10 · RTL (chevrons flip; prev/next stay correct)</h2>
+  <div class="frame" dir="rtl"><ds-pagination rtl total-items="200" page-size="20" page="4" show-range show-first-last></ds-pagination></div>
+
+  <script type="module">
+    const p1 = document.getElementById('p1');
+    const log = document.getElementById('p1log');
+    p1.addEventListener('ds-pagination-change', (e) => {
+      log.textContent = `ds-pagination-change → page ${e.detail.page}, pageSize ${e.detail.pageSize}, source "${e.detail.source}"`;
+    });
+    p1.addEventListener('ds-pagination-page-size-change', (e) => {
+      log.textContent = `ds-pagination-page-size-change → pageSize ${e.detail.pageSize}, reset to page ${e.detail.page}`;
+    });
+  </script>
+</body>
+</html>

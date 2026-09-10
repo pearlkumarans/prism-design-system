@@ -1,0 +1,205 @@
+/* =============================================================================
+   ds-pagination — page navigation. Light-DOM: style the element directly.
+   Modes: numbered · simple · compact. Sizes: small · medium.
+   Colours/spacing/type/radius are design-system tokens; control pixel sizes
+   (heights, min-widths) are intrinsic geometry, not tokenised — matching the
+   convention in ds-icon-button / ds-tour.
+   ============================================================================= */
+ds-pagination { display: block; font-family: var(--font-family-sans); }
+
+.ds-pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-8) var(--spacing-16);
+  font-size: var(--font-size-14);
+  color: var(--uems-text-primary);
+}
+
+/* Result range — "1–20 of 240" */
+.ds-pagination__range {
+  color: var(--uems-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ds-pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+/* Push the nav to the right edge whenever meta (per-page / go-to-page / range)
+   precedes it; a bare pager with nothing before it stays left-aligned. */
+.ds-pagination__controls:not(:first-child) { margin-inline-start: auto; }
+
+/* ---- Numbered: page pills -------------------------------------------- */
+.ds-pagination__pages {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ds-pagination__item { display: inline-flex; }
+.ds-pagination__page {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 var(--spacing-8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--uems-radius-s, 8px);
+  background: var(--uems-bg-primary);
+  color: var(--uems-text-primary);
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+.ds-pagination__page:hover:not(:disabled):not(.is-current) {
+  background: var(--uems-bg-secondary-hover);
+  border-color: var(--uems-border-secondary);
+}
+.ds-pagination__page:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+.ds-pagination__page.is-current {
+  background: var(--uems-bg-button-primary);
+  border-color: var(--uems-bg-button-primary);
+  color: var(--uems-text-white);
+  cursor: default;
+}
+.ds-pagination__page:disabled { cursor: not-allowed; }
+
+/* Ellipsis */
+.ds-pagination__ellipsis {
+  min-width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uems-icon-subtle);
+  line-height: 0;
+}
+
+/* ---- Simple: text Prev / Next --------------------------------------- */
+.ds-pagination__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  height: 36px;
+  padding: 0 var(--spacing-12);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--uems-radius-s, 8px);
+  background: var(--uems-bg-primary);
+  color: var(--uems-text-primary);
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  line-height: 0;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard);
+}
+.ds-pagination__btn span { line-height: 1; }
+.ds-pagination__btn:hover:not(:disabled) { background: var(--uems-bg-secondary-hover); border-color: var(--uems-border-secondary); }
+.ds-pagination__btn:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; }
+.ds-pagination__btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ds-pagination--simple .ds-pagination__controls { flex: 1; }
+.ds-pagination__spacer { flex: 1; }
+
+/* ---- Compact: Page X of Y ------------------------------------------- */
+.ds-pagination__status {
+  padding: 0 var(--spacing-8);
+  color: var(--uems-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---- Dots: ds-tour indicator, made navigable ------------------------ */
+.ds-pagination__dots { display: inline-flex; align-items: center; }
+.ds-pagination__dot {
+  box-sizing: content-box;
+  width: 6px;
+  height: 6px;
+  padding: var(--spacing-6);          /* transparent hit area around the 6px dot */
+  border: 0;
+  border-radius: var(--uems-radius-pill, 9999px);
+  background-color: var(--uems-bg-quaternary-solid);
+  background-clip: content-box;       /* keep the visible dot at 6px */
+  opacity: 0.32;
+  cursor: pointer;
+  /* Width carries the "active movement" — slightly longer + eased so the pill
+     grow/shift reads as a smooth glide; colour + opacity fade quickly. */
+  transition: opacity var(--duration-fast) var(--ease-standard),
+              width var(--duration-base) var(--ease-standard),
+              background-color var(--duration-fast) var(--ease-standard);
+}
+.ds-pagination__dot:hover:not(.is-current):not(:disabled) { opacity: 0.6; }
+.ds-pagination__dot:focus-visible { outline: 2px solid var(--uems-border-accent-focus); outline-offset: 2px; }
+.ds-pagination__dot.is-done { background-color: var(--uems-bg-button-primary); opacity: 0.5; }
+.ds-pagination__dot.is-current {
+  width: 18px;
+  background-color: var(--uems-bg-button-primary);
+  opacity: 1;
+  cursor: default;
+}
+.ds-pagination__count {
+  padding: 0 var(--spacing-4);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-medium);
+  color: var(--uems-text-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ds-pagination--small .ds-pagination__dot { padding: var(--spacing-4); }
+
+/* ---- Rows-per-page + jump ------------------------------------------- */
+.ds-pagination__pagesize {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  color: var(--uems-text-secondary);
+}
+.ds-pagination__pagesize-select { width: 88px; }
+.ds-pagination__jump {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  color: var(--uems-text-secondary);
+}
+.ds-pagination__jump-input {
+  width: 64px;
+  height: 32px;
+  padding: 0 var(--spacing-8);
+  border: 1px solid var(--uems-border-tertiary);
+  border-radius: var(--uems-radius-default, 6px);
+  background: var(--uems-bg-primary);
+  color: var(--uems-text-primary);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.ds-pagination__jump-input:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 1px;
+  border-color: var(--uems-border-accent);
+}
+
+/* ---- Size: small ---------------------------------------------------- */
+.ds-pagination--small { font-size: var(--font-size-13); }
+.ds-pagination--small .ds-pagination__page,
+.ds-pagination--small .ds-pagination__ellipsis { min-width: 30px; height: 30px; }
+.ds-pagination--small .ds-pagination__btn { height: 30px; }
+.ds-pagination--small .ds-pagination__jump-input { height: 28px; }
+
+/* ---- Disabled / loading -------------------------------------------- */
+.ds-pagination.is-disabled { opacity: 0.6; pointer-events: none; }
+.ds-pagination.is-loading .ds-pagination__range { opacity: 0.5; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-pagination__page, .ds-pagination__btn { transition: none; }
+}
