@@ -46,6 +46,7 @@ tour.steps = [
 | `placement` | `ds-popover` placement | Anchored steps only. Default `bottom-start`. |
 | `primaryLabel` | string | Override the primary button label (`Next` / `Done`) for this step. |
 | `showSkip` | boolean | Default `true`. The last step never shows Skip. |
+| `spotlightPadding` | number | Gap (px) between the target and the spotlight cutout / ring. Default `8`. |
 
 ## Methods
 
@@ -70,8 +71,13 @@ to a backend "seen" write if `localStorage` alone isn't enough.
   with a `detail.reason` (`esc` / `overlay` / `close`); `ds-tour`'s own teardown
   fires none. So *reason-present = user wants out = skip* — advancing never
   mis-fires a skip.
-- **Scroll into view.** Anchored targets are `scrollIntoView({ block: 'center' })`
-  before the card paints (`auto` under `prefers-reduced-motion`).
+- **Spotlight (P2).** Anchored steps call `ds-overlay.spotlight(target)` — the
+  scrim dims everything except the target's rect (blur preserved, ring drawn,
+  target click-through), following it on scroll/resize.
+- **Scroll into view.** Anchored targets are scrolled to centre before the card
+  paints. A live backdrop locks body scroll, so the tour briefly lifts the lock
+  around an instant scroll (below-fold targets would otherwise be unreachable on
+  an anchored→anchored transition).
 - **Persistence.** Both complete and skip mark the tour seen, so `auto-start`
   never re-nags; the distinct events let consumers act more finely.
 - **Missing target.** A selector that resolves to nothing degrades to a centered
@@ -96,7 +102,8 @@ values.
 
 ## Roadmap
 
-Phase 1 (this): core engine — anchored + centered steps, dim backdrop, progress,
-persistence, inherited a11y. **Later:** spotlight cutout (enhance `ds-overlay`,
-P2), `ds-beacon` passive hotspot (P3), branching `advanceOn`, mobile bottom-sheet,
-analytics polish (P4).
+Phase 1: core engine — anchored + centered steps, progress, persistence,
+inherited a11y. Phase 2 (done): **spotlight cutout** — `ds-overlay.spotlight()`
+dims all but the target, with a focus ring, blur-preserving, click-through.
+**Later:** `ds-beacon` passive hotspot (P3), branching `advanceOn`, mobile
+bottom-sheet, analytics polish (P4).

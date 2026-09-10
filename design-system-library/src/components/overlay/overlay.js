@@ -21,8 +21,17 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 /* Shared ref-counted scroll lock — replaces a local copy so overlay composes with
    the modal family (one counter) and gains scrollbar-shift compensation. */
 import { lockScroll, unlockScroll } from '../../utils/scroll-lock.js';
+import { rafThrottle } from '../../utils/raf-throttle.js';
 
 const TYPES = ['dim', 'light', 'transparent', 'blur', 'dim-blur'];
+
+/* SVG-path substring for a rounded rectangle, used to punch the spotlight hole. */
+function roundedRectPath(x, y, w, h, r) {
+  return `M${x + r} ${y} H${x + w - r} A${r} ${r} 0 0 1 ${x + w} ${y + r}`
+    + ` V${y + h - r} A${r} ${r} 0 0 1 ${x + w - r} ${y + h}`
+    + ` H${x + r} A${r} ${r} 0 0 1 ${x} ${y + h - r}`
+    + ` V${y + r} A${r} ${r} 0 0 1 ${x + r} ${y} Z`;
+}
 
 export class DsOverlay extends HTMLElement {
   static get observedAttributes() {
@@ -51,6 +60,78 @@ export class DsOverlay extends HTMLElement {
       unlockScroll();
       this._locked = false;
     }
+    this.clearSpotlight();
+  }
+
+  // ---- Spotlight: dim everything EXCEPT a target rect ----------------------
+  /* Punches a rounded hole in the scrim over `target` (an Element or a
+     {left,top,width,height} rect) and draws a focus ring around it. The hole is
+     a clip-path on the host, so it preserves the type's blur and lets pointer
+     events fall through to the target. Recomputes on scroll/resize.
+     opts: { padding = 8, radius = 8, ring = true }. Pass no target to clear. */
+  spotlight(target, opts = {}) {
+    if (!target) { this.clearSpotlight(); return; }
+    this._spotTarget = target;
+    this._spotPad = opts.padding != null ? opts.padding : 8;
+    this._spotRadius = opts.radius != null ? opts.radius : 8;
+    this._spotRing = opts.ring !== false;
+    this.setAttribute('data-spotlight', '');
+    if (!this._onSpotReflow) this._onSpotReflow = rafThrottle(() => this._applySpotlight());
+    window.addEventListener('resize', this._onSpotReflow, true);
+    window.addEventListener('scroll', this._onSpotReflow, true);
+    this._applySpotlight();
+  }
+
+  clearSpotlight() {
+    if (!this._spotTarget && !this._ring) return;
+    this._spotTarget = null;
+    this.removeAttribute('data-spotlight');
+    this.style.clipPath = '';
+    this.style.webkitClipPath = '';
+    if (this._ring) { this._ring.remove(); this._ring = null; }
+    if (this._onSpotReflow) {
+      window.removeEventListener('resize', this._onSpotReflow, true);
+      window.removeEventListener('scroll', this._onSpotReflow, true);
+    }
+  }
+
+  _spotRect() {
+    const t = this._spotTarget;
+    if (!t) return null;
+    const r = (t instanceof Element) ? t.getBoundingClientRect() : t;
+    if (!r || (!r.width && !r.height)) return null;
+    const pad = this._spotPad;
+    return { x: r.left - pad, y: r.top - pad, w: r.width + pad * 2, h: r.height + pad * 2 };
+  }
+
+  _applySpotlight() {
+    const rect = this._spotRect();
+    if (!rect) { this.clearSpotlight(); return; }
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const rad = Math.max(0, Math.min(this._spotRadius, rect.w / 2, rect.h / 2));
+    /* Even-odd: outer viewport rect minus the inner rounded hole. */
+    const path = `M0 0 H${vw} V${vh} H0 Z ${roundedRectPath(rect.x, rect.y, rect.w, rect.h, rad)}`;
+    const clip = `path(evenodd, '${path}')`;
+    this.style.clipPath = clip;
+    this.style.webkitClipPath = clip;
+    if (this._spotRing) this._positionRing(rect, rad);
+  }
+
+  _positionRing(rect, rad) {
+    if (!this._ring) {
+      const ring = document.createElement('div');
+      ring.className = 'ds-overlay__ring';
+      ring.setAttribute('aria-hidden', 'true');
+      (this.parentNode || document.body).appendChild(ring);
+      this._ring = ring;
+    }
+    const s = this._ring.style;
+    s.left = `${Math.round(rect.x)}px`;
+    s.top = `${Math.round(rect.y)}px`;
+    s.width = `${Math.round(rect.w)}px`;
+    s.height = `${Math.round(rect.h)}px`;
+    s.borderRadius = `${rad}px`;
   }
 
   attributeChangedCallback() {

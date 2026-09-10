@@ -66,6 +66,24 @@ ds-overlay[type="dim-blur"] {
   }
 }
 
+/* --- Spotlight ring — drawn around the cutout when spotlight() is active -----
+   A separate fixed element (NOT a child of the clipped overlay, which would clip
+   it away). Border-only via box-shadow so pointer events fall through to the
+   highlighted target. Sits above the scrim (z-overlay) and below the dialog. */
+.ds-overlay__ring {
+  position: fixed;
+  pointer-events: none;
+  z-index: calc(var(--z-overlay, 1300) + 1);
+  box-shadow:
+    0 0 0 2px var(--uems-border-accent-focus, #2C66DD),
+    0 0 0 6px color-mix(in srgb, var(--uems-border-accent-focus, #2C66DD) 26%, transparent);
+  transition: left 0.2s var(--ease-standard, ease), top 0.2s var(--ease-standard, ease),
+              width 0.2s var(--ease-standard, ease), height 0.2s var(--ease-standard, ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-overlay__ring { transition: none; }
+}
+
 /* --- Honour prefers-reduced-transparency: swap blur for solid Dim/Light ------ */
 @media (prefers-reduced-transparency: reduce) {
   ds-overlay[type="blur"] {

@@ -148,12 +148,29 @@ export class DsTour extends HTMLElement {
     try { return document.querySelector(target); } catch (_) { return null; }
   }
 
+  /* Bring the target into view. A live backdrop locks body scroll (overflow:hidden),
+     which would block scrollIntoView on an anchored→anchored transition — so lift
+     the lock around an instant scroll, then restore it. Instant (not smooth) keeps
+     it reliable while the lock is briefly off; reduced-motion wants instant anyway. */
+  _scrollIntoView(targetEl) {
+    const body = document.body;
+    const locked = body.style.overflow === 'hidden';
+    if (locked) body.style.overflow = '';
+    try { targetEl.scrollIntoView({ block: 'center', inline: 'center', behavior: 'auto' }); } catch (_) {}
+    if (locked) body.style.overflow = 'hidden';
+  }
+
   _showAnchored(step, targetEl) {
-    const reduce = this._reducedMotion();
-    try { targetEl.scrollIntoView({ block: 'center', inline: 'center', behavior: reduce ? 'auto' : 'smooth' }); } catch (_) {}
+    this._scrollIntoView(targetEl);
     if (!targetEl.id) targetEl.id = `ds-tour-target-${this._uid}-${this._index}`;
 
     this._ensureBackdrop();
+    /* Spotlight the target: dim everything except its rect (P2). ds-overlay owns
+       the cutout + ring and re-pins them on scroll/resize. */
+    if (this._backdrop && this._backdrop.spotlight) {
+      const pad = step.spotlightPadding != null ? step.spotlightPadding : 8;
+      this._backdrop.spotlight(targetEl, { padding: pad, radius: 8 });
+    }
 
     const pop = document.createElement('ds-popover');
     pop.className = 'ds-tour__pop';

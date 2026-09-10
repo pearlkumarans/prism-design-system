@@ -73,6 +73,30 @@ The `Dim`, `Light`, and `Transparent` fills are bound to the **UEMS Theme Tokens
 
 No boolean, text, or instance-swap properties — the overlay carries no content.
 
+### Spotlight (methods)
+
+An overlay can **dim everything except a target rect** — the highlight used by
+guided tours (`ds-tour`) and any "focus this element" affordance.
+
+| Method | Description |
+|--------|-------------|
+| `spotlight(target, opts?)` | Punch a rounded hole in the scrim over `target` (an `Element` or a `{left, top, width, height}` rect) and draw a focus ring around it. `opts`: `padding` (default 8), `radius` (default 8), `ring` (default true). Recomputes on scroll/resize. |
+| `clearSpotlight()` | Remove the hole and ring, restoring a uniform scrim. |
+
+The hole is a `clip-path` on the host, so it **preserves the type's blur** (the
+dimmed area stays frosted; the target shows crisp) and lets **pointer events fall
+through** to the target — enabling interactive/branching steps. The ring is a
+separate fixed element (`.ds-overlay__ring`, `--z-overlay + 1`, `pointer-events:
+none`) so the clip doesn't erase it. Both re-pin on scroll/resize and respect
+`prefers-reduced-motion` (no glide). `clearSpotlight()` also runs automatically on
+`disconnectedCallback`, so removing an overlay never orphans a ring.
+
+```js
+overlay.spotlight(document.querySelector('#create'), { padding: 8, radius: 8 });
+// … later
+overlay.clearSpotlight();
+```
+
 ---
 
 ## Developer Handoff
