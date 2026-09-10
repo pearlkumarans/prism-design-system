@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../../styles/index.css">
+<script>window.UEMS_ICON_SPRITE='../../icons/icons.svg';</script>
+<script type="module" src="../../index.js"></script>
+<style>
+  body { font-family: var(--font-family-sans); margin: 0; padding: 48px; background: var(--uems-bg-base); color: var(--uems-text-primary); }
+  h1 { font-size: 22px; }
+  .row { display: flex; gap: 40px; align-items: center; flex-wrap: wrap; margin: 32px 0; }
+  .card { border: 1px solid var(--uems-border-tertiary); border-radius: 12px; padding: 20px 24px; background: var(--uems-bg-primary); }
+  #log { font-family: monospace; font-size: 12px; color: var(--uems-text-secondary); }
+</style>
+</head>
+<body>
+  <h1>ds-beacon — Phase 3 harness</h1>
+  <p style="color:var(--uems-text-secondary);font-size:14px">Hover / click a dot to reveal its coach-mark tip.</p>
+
+  <div class="row">
+    <div class="card" id="a-bulk">Bulk actions</div>
+    <div class="card" id="a-export">Export</div>
+    <div class="card" id="a-filters">Filters</div>
+  </div>
+  <div class="row">
+    <span id="log">—</span>
+  </div>
+
+  <!-- hover beacon, top-right corner -->
+  <ds-beacon anchor="a-bulk" placement="top-end" tip-placement="bottom-start" status="info"
+    title="New: bulk actions" body="Select multiple rows, then act on all of them at once." trigger="hover"></ds-beacon>
+
+  <!-- click beacon with dismiss + persistence -->
+  <ds-beacon anchor="a-export" placement="top-end" tip-placement="bottom" status="success"
+    title="Scheduled exports" body="You can now schedule this export to run daily." trigger="click"
+    dismissible persist-key="harness.export.v1"></ds-beacon>
+
+  <!-- warning beacon, bottom corner -->
+  <ds-beacon anchor="a-filters" placement="bottom-end" tip-placement="top" status="warning"
+    title="Filters moved" body="Filters now live in one panel — open it from here." trigger="hover"></ds-beacon>
+
+  <script>
+    const log = (m) => document.getElementById('log').textContent = m;
+    document.querySelectorAll('ds-beacon').forEach(b => {
+      ['open','close','dismiss'].forEach(ev => b.addEventListener('ds-beacon-'+ev, () => log('ds-beacon-'+ev+' · '+ (b.getAttribute('title')||''))));
+    });
+  </script>
+</body></html>

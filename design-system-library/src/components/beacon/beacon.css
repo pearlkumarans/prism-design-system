@@ -1,0 +1,48 @@
+/* =============================================================================
+   ds-beacon — passive coach-mark hotspot.
+   The host is a positioning controller; the visible affordance is a fixed
+   pulsing dot (ds-status-indicator) inside a clickable trigger button. The tip
+   is a ds-popover (its own styles apply).
+   ============================================================================= */
+
+ds-beacon { display: contents; }   /* host holds no box — the trigger is positioned */
+
+.ds-beacon__trigger {
+  position: fixed;
+  z-index: var(--z-beacon, 1200);   /* above page content, below overlays (1300) */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Enlarge the hit target around the small dot without moving it. */
+  padding: var(--spacing-8);
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--uems-radius-pill, 9999px);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.ds-beacon__trigger:focus-visible {
+  outline: 2px solid var(--uems-border-accent-focus);
+  outline-offset: 2px;
+}
+
+/* The dot itself — the status-indicator already carries the pulse halo. Strip its
+   inline padding so it centres cleanly in the trigger. */
+.ds-beacon__dot { pointer-events: none; }
+.ds-beacon__dot .ds-status-indicator { padding: 0; }
+
+/* Tip body text (the popover chrome comes from ds-popover). */
+.ds-beacon__tip { --ds-popover-width: 280px; }
+.ds-beacon__tip-body {
+  font-size: var(--font-size-14);
+  line-height: var(--uems-line-height-14, 20px);
+  color: var(--uems-text-secondary);
+}
+
+.ds-beacon__sr {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
+  white-space: nowrap; border: 0;
+}
