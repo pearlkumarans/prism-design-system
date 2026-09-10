@@ -90,3 +90,43 @@ describe('ds-overlay — teardown', () => {
     expect(el._locked, 'disconnect must unlock scroll').to.be.false;
   });
 });
+
+/* Spotlight cutout (Phase 2 of ds-tour, but a reusable ds-overlay capability):
+   punch a rounded hole over a target, draw a ring, follow it, and clean up. */
+describe('ds-overlay — spotlight', () => {
+  afterEach(() => document.querySelectorAll('.ds-overlay__ring').forEach((n) => n.remove()));
+
+  it('applies a clip-path hole + a ring when spotlighting a target', async () => {
+    const target = await fixture(html`<button style="position:fixed;left:120px;top:90px;width:140px;height:40px;">T</button>`);
+    const el = await fixture(html`<ds-overlay type="dim" open></ds-overlay>`);
+    el.spotlight(target, { padding: 8, radius: 8 });
+    expect(el.hasAttribute('data-spotlight')).to.be.true;
+    expect(el.style.clipPath.startsWith('path(')).to.be.true;
+    const ring = document.querySelector('.ds-overlay__ring');
+    expect(ring).to.exist;
+    expect(ring.getAttribute('aria-hidden')).to.equal('true');
+    // ring sits at target rect minus the padding
+    const r = target.getBoundingClientRect();
+    expect(Math.round(parseFloat(ring.style.left))).to.equal(Math.round(r.left - 8));
+    expect(Math.round(parseFloat(ring.style.top))).to.equal(Math.round(r.top - 8));
+  });
+
+  it('clearSpotlight() removes the clip, ring, and data attribute', async () => {
+    const target = await fixture(html`<button style="position:fixed;left:10px;top:10px;width:80px;height:30px;">T</button>`);
+    const el = await fixture(html`<ds-overlay open></ds-overlay>`);
+    el.spotlight(target);
+    el.clearSpotlight();
+    expect(el.hasAttribute('data-spotlight')).to.be.false;
+    expect(el.style.clipPath).to.equal('');
+    expect(document.querySelector('.ds-overlay__ring')).to.not.exist;
+  });
+
+  it('auto-clears the spotlight (and ring) on disconnect', async () => {
+    const target = await fixture(html`<button style="position:fixed;left:10px;top:10px;width:80px;height:30px;">T</button>`);
+    const el = await fixture(html`<ds-overlay open></ds-overlay>`);
+    el.spotlight(target);
+    expect(document.querySelector('.ds-overlay__ring')).to.exist;
+    el.remove();
+    expect(document.querySelector('.ds-overlay__ring')).to.not.exist;
+  });
+});
