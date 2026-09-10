@@ -46,6 +46,9 @@ import '../tooltip/tooltip.js';
 const MASKS = ['dim', 'light', 'blur', 'dim-blur', 'none'];
 const CARD_SIZES = ['small', 'medium', 'large'];
 const CORNERS = ['bottom-right', 'bottom-left', 'top-right', 'top-left'];
+/* Extra breathing room (px) between the spotlight cutout and the anchored card,
+   on top of the spotlight padding — so the highlight and card never touch. */
+const SPOTLIGHT_CARD_GAP = 8;
 
 /* Built-in control strings. Consumers override any of them via the `labels`
    property (for i18n); otherwise `rtl` picks the Arabic defaults. */
@@ -263,14 +266,18 @@ export class DsTour extends HTMLElement {
 
     this._ensureBackdrop();
     /* Spotlight the target: dim everything except its rect (P2). */
+    let spotlightPad = 0;
     if (this._backdrop && this._backdrop.spotlight) {
-      const pad = step.spotlightPadding != null ? step.spotlightPadding : 8;
-      this._backdrop.spotlight(targetEl, { padding: pad, radius: 8 });
+      spotlightPad = step.spotlightPadding != null ? step.spotlightPadding : 8;
+      this._backdrop.spotlight(targetEl, { padding: spotlightPad, radius: 8 });
     }
 
     const pop = this._buildCardPopover(step);
     pop.setAttribute('anchor', targetEl.id);
     pop.setAttribute('placement', step.placement || 'bottom-start');
+    /* Clear the spotlight cutout: sit the card its full spotlight padding plus a
+       small gap from the target so the highlight and card don't touch. */
+    if (spotlightPad) pop.setAttribute('offset', String(spotlightPad + SPOTLIGHT_CARD_GAP));
     /* Arrow (beak) on by default; a step may turn it off with `arrow: false`. */
     if (step.arrow !== false) pop.setAttribute('arrow', '');
 

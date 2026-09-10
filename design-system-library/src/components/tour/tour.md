@@ -121,7 +121,9 @@ to a backend "seen" write if `localStorage` alone isn't enough.
   mis-fires a skip.
 - **Spotlight (P2).** Anchored steps call `ds-overlay.spotlight(target)` — the
   scrim dims everything except the target's rect (blur preserved, ring drawn,
-  target click-through), following it on scroll/resize.
+  target click-through), following it on scroll/resize. The card clears the
+  cutout: it sets the popover's `offset` to `spotlightPadding + 8`, so the
+  highlight and the card never touch (a small gap between them).
 - **Scroll into view.** Anchored targets are scrolled to centre before the card
   paints. A live backdrop locks body scroll, so the tour briefly lifts the lock
   around an instant scroll (below-fold targets would otherwise be unreachable on

@@ -18,6 +18,7 @@ The runtime implementation lives at:
 | `open` | boolean | unset | Visibility. Toggling drives open/close lifecycle. |
 | `anchor` | element id | — | Id of the trigger element the popover anchors to and toggles from. |
 | `placement` | `top` \| `bottom` \| `left` \| `right` (+ `-start` \| `-center` \| `-end`) | `bottom-start` | Position relative to the anchor; flips if it doesn't fit. |
+| `offset` | number (px) | `8` | Distance from the anchor. Raise it to clear something drawn around the anchor — e.g. a tour's spotlight cutout. |
 | `title` | string | — | Header title. Setting it auto-shows the header. |
 | `has-header` | boolean | unset | Force-show the header even without a title. |
 | `hide-close` | boolean | unset | Hide the ✕ close button when a header is shown. |

@@ -60,7 +60,7 @@ let _uid = 0;
 export class DsPopover extends HTMLElement {
   static get observedAttributes() {
     return ['open', 'placement', 'anchor', 'title', 'rtl-title', 'has-header', 'hide-close',
-            'hide-divider', 'header-style', 'has-footer', 'arrow', 'rtl'];
+            'hide-divider', 'header-style', 'has-footer', 'arrow', 'rtl', 'offset'];
   }
 
   constructor() {
@@ -281,6 +281,13 @@ export class DsPopover extends HTMLElement {
   }
 
   // ---- Positioning (anchored, fixed, flip + viewport clamp) ---------------
+  /* Distance from the anchor. Defaults to GAP; an `offset` attribute overrides it
+     (e.g. a tour clears a spotlight cutout by setting a larger gap). */
+  _gap() {
+    const v = parseFloat(this.getAttribute('offset'));
+    return Number.isFinite(v) && v >= 0 ? v : GAP;
+  }
+
   _position() {
     if (!this._anchorEl) return;   // inline mode: consumer positions it
     const placement = enumAttr(this, 'placement', PLACEMENTS, 'bottom-start');
@@ -290,22 +297,23 @@ export class DsPopover extends HTMLElement {
     const s = this._surface.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
+    const gap = this._gap();
 
     /* Flip the primary side if it doesn't fit and the opposite side fits better. */
     const space = { top: a.top, bottom: vh - a.bottom, left: a.left, right: vw - a.right };
     const opp = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' };
-    const need = (side === 'top' || side === 'bottom') ? s.height + GAP : s.width + GAP;
+    const need = (side === 'top' || side === 'bottom') ? s.height + gap : s.width + gap;
     if (space[side] < need && space[opp[side]] > space[side]) side = opp[side];
 
     let top = 0;
     let left = 0;
     if (side === 'top' || side === 'bottom') {
-      top = side === 'bottom' ? a.bottom + GAP : a.top - s.height - GAP;
+      top = side === 'bottom' ? a.bottom + gap : a.top - s.height - gap;
       if (align === 'start') left = a.left;
       else if (align === 'end') left = a.right - s.width;
       else left = a.left + (a.width - s.width) / 2;
     } else {
-      left = side === 'right' ? a.right + GAP : a.left - s.width - GAP;
+      left = side === 'right' ? a.right + gap : a.left - s.width - gap;
       if (align === 'start') top = a.top;
       else if (align === 'end') top = a.bottom - s.height;
       else top = a.top + (a.height - s.height) / 2;

@@ -58,6 +58,19 @@ describe('ds-popover — placement (enumAttr)', () => {
     el.close();
   });
 
+  it('offset overrides the anchor gap — a larger offset sits the surface further from the anchor', async () => {
+    const wrap = await fixture(anchored('placement="bottom-start"'));
+    const el = wrap.querySelector('ds-popover');
+    el.open();
+    await nextFrame();
+    const topDefault = parseFloat(surfaceOf(el).style.top); // default gap (8)
+    el.setAttribute('offset', '24');                         // +16 further from the anchor
+    await nextFrame();
+    const topOffset = parseFloat(surfaceOf(el).style.top);
+    expect(topOffset - topDefault).to.equal(16);             // 24 − 8
+    el.close();
+  });
+
   it('accepts a valid placement without error', async () => {
     const wrap = await fixture(anchored('placement="right-end"'));
     const el = wrap.querySelector('ds-popover');
