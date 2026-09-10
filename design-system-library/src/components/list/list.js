@@ -23,14 +23,16 @@ import { boolAttr, enumAttr } from '../../utils/attr.js';
 import { watchLateChildren, stopLateChildren } from '../../utils/late-children.js';
 import { escapeHtml } from '../../utils/escape.js';
 import '../../icons/icon.js';
+import '../text-link/text-link.js';
 
+let _uid = 0;
 const SIZES = ['small', 'medium', 'large'];
 const STYLES = ['disc', 'circle', 'square', 'icon', 'number', 'letter', 'badge'];
 const ORDERED_STYLES = ['number', 'letter', 'badge'];
 const DEFAULT_ICON = 'arrow-narrow-right';
 
 export class DsList extends HTMLElement {
-  static get observedAttributes() { return ['size', 'list-style', 'style-variant', 'ordered', 'rtl']; }
+  static get observedAttributes() { return ['size', 'list-style', 'style-variant', 'ordered', 'rtl', 'title', 'heading-level']; }
 
   constructor() {
     super();
@@ -119,6 +121,8 @@ export class DsList extends HTMLElement {
           html: escapeHtml(raw),
           level: (isObj && it.level) || 1,
           icon: isObj ? it.icon : null,
+          href: isObj ? it.href : null,
+          target: isObj ? it.target : null,
         }, style);
       }).join('');
     } else if (this._initialChildren && this._initialChildren.length) {
@@ -129,10 +133,29 @@ export class DsList extends HTMLElement {
         html: node.innerHTML,
         level: node.getAttribute('level') || '1',
         icon: node.getAttribute('icon'),
+        href: node.getAttribute('href'),
+        target: node.getAttribute('target'),
       }, style)).join('');
     }
 
-    this._root.innerHTML = `<${tag} class="ds-list__inner">${itemsHTML}</${tag}>`;
+    /* Optional heading above the list. The <ul>/<ol> is labelled by it for a11y. */
+    const titleText = this.getAttribute('title');
+    let titleHTML = '';
+    let labelledby = '';
+    if (titleText) {
+      const lvl = this._headingLevel();
+      if (!this._titleId) this._titleId = `ds-list-title-${++_uid}`;
+      titleHTML = `<h${lvl} class="ds-list__title" id="${this._titleId}">${escapeHtml(titleText)}</h${lvl}>`;
+      labelledby = ` aria-labelledby="${this._titleId}"`;
+    }
+
+    this._root.innerHTML = `${titleHTML}<${tag} class="ds-list__inner"${labelledby}>${itemsHTML}</${tag}>`;
+  }
+
+  /* Heading level for the title (1–6, default 3). */
+  _headingLevel() {
+    const n = parseInt(this.getAttribute('heading-level'), 10);
+    return (n >= 1 && n <= 6) ? n : 3;
   }
 
   _renderItem(item, style) {
@@ -144,7 +167,21 @@ export class DsList extends HTMLElement {
     const iconHTML = style === 'icon'
       ? `<span class="ds-list__icon" aria-hidden="true"><ds-icon name="${icon}" size="100%"></ds-icon></span>`
       : '';
-    return `<li class="ds-list__item" data-level="${level}">${iconHTML}<span class="ds-list__text">${item.html}</span></li>`;
+    /* Clickable item: an `href` renders the text as a ds-text-link (secondary,
+       underline-on-hover). Items without an href stay plain text — mixed lists work.
+       `_blank` targets get rel="noopener". href is a raw field → escaped here. */
+    let text = item.html;
+    if (item.href) {
+      const href = escapeHtml(String(item.href));
+      const target = item.target ? ` target="${escapeHtml(String(item.target))}"` : '';
+      const rel = item.target === '_blank' ? ' rel="noopener"' : '';
+      /* List size maps 1:1 to text-link size (12/14/16), so the link matches the
+         row's text size. No underline (not even on hover) — the secondary color +
+         hover/focus states carry the affordance. */
+      const linkSize = enumAttr(this, 'size', SIZES, 'small');
+      text = `<ds-text-link class="ds-list__link" variant="secondary" size="${linkSize}" underline="none" href="${href}"${target}${rel}>${item.html}</ds-text-link>`;
+    }
+    return `<li class="ds-list__item" data-level="${level}">${iconHTML}<span class="ds-list__text">${text}</span></li>`;
   }
 }
 

@@ -71,17 +71,27 @@ Hex comments = Light theme. Identical for every Size and Level.
 ## Developer Handoff (ds-list — this codebase)
 
 ```html
-<ds-list style-variant="disc|circle|square|icon|number|letter|badge" size="small|medium|large" rtl>
+<ds-list style-variant="disc|circle|square|icon|number|letter|badge" size="small|medium|large"
+         title="Section title" heading-level="3" rtl>
   <ds-list-item>List item text</ds-list-item>
   <ds-list-item level="2">Nested item</ds-list-item>          <!-- level 1–3, +24px each -->
   <ds-list-item icon="arrow-narrow-right">Icon item</ds-list-item>  <!-- style-variant=icon -->
+  <ds-list-item href="/docs">Clickable item</ds-list-item>                 <!-- renders as a link -->
+  <ds-list-item href="https://x.com" target="_blank">External</ds-list-item>  <!-- rel="noopener" auto -->
 </ds-list>
 ```
 
 - `disc/circle/square/icon` → `<ul>`; `number/letter/badge` → `<ol>` (auto, by style).
 - **Legacy `ordered`** boolean still works (→ `number`). `items` array property also supported:
-  `list.items = ['a', {text:'b', level:2}, {text:'c', icon:'check'}]`.
+  `list.items = ['a', {text:'b', level:2}, {text:'c', icon:'check'}, {text:'d', href:'/d'}]`.
 - Nesting may also use the `level` prop (flat-markup fallback). Counters increment across visible items; real nested `<ol>` markup would restart per level.
+- **`title` (+ `heading-level`, 1–6, default 3)** — renders a heading above the list; the `<ul>`/`<ol>`
+  gets `aria-labelledby` the title. (`title` is the global attribute, so hovering the list also shows a
+  native tooltip.)
+- **Clickable items** — an item with **`href`** (slotted attribute or `items[].href`) renders its text as a
+  `ds-text-link` (`variant="secondary"`, `underline="none"`, size mapped from the list size). Items without
+  an `href` stay plain text, so **mixed lists** work. `target` is passed through; `target="_blank"` adds
+  `rel="noopener"`. Markers are unchanged — only the text is the link.
 
 ### CSS (token names as they exist in this codebase)
 
@@ -114,7 +124,9 @@ Hex comments = Light theme. Identical for every Size and Level.
 
 ## States and Interactions
 
-None — the list is static content. If items become interactive (links, checkboxes), compose with the Link / Checkbox components.
+- **Static by default** — plain lists have no states.
+- **Clickable items** (`href`) inherit all interaction from `ds-text-link`: hover underline, focus-visible
+  ring, keyboard focusability, and visited/active states. Navigation is via the link's `href` (no JS event).
 
 ## Responsive Behavior
 
@@ -140,6 +152,8 @@ None — the list is static content. If items become interactive (links, checkbo
 | Nesting | Prefer real nested lists over the `level` prop where hierarchy must be announced |
 | Ordered semantics | `number/letter/badge` must be `<ol>` (order has meaning) |
 | Contrast | Item text #15181E on white passes AAA; markers decorative; #5F6C89 ≥ 3:1 anyway |
+| Title | `title` renders a real `<h1>`–`<h6>` (via `heading-level`); the list is `aria-labelledby` it — pick a level that fits the page's heading outline |
+| Clickable items | Real `<a>` (from `ds-text-link`) — keyboard-focusable, correct link semantics; `target="_blank"` gets `rel="noopener"` |
 
 ## Verification
 
