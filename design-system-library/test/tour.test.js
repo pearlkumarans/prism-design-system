@@ -80,16 +80,24 @@ describe('ds-tour — surfaces per step', () => {
 });
 
 describe('ds-tour — progress', () => {
-  it('shows n-of-N and marks the current dot', async () => {
+  it('shows n-of-N and marks the current dot on anchored steps (centered bookends excluded)', async () => {
     await mountTargets();
     const el = await fixture(html`<ds-tour></ds-tour>`);
-    el.steps = STEPS();
+    el.steps = STEPS(); // welcome (centered) + 2 anchored — pagination counts the anchored only
     el.start();
     await nextFrame();
+    /* The centered welcome bookend shows no pagination (tour.md: "Pagination
+       excludes centered steps"). */
     const modal = document.querySelector('ds-modal.ds-tour__modal');
-    expect(modal.querySelectorAll('.ds-tour__dot').length).to.equal(3);
-    expect(modal.querySelector('.ds-tour__count').textContent).to.equal('1 of 3');
-    expect(modal.querySelectorAll('.ds-tour__dot.is-current').length).to.equal(1);
+    expect(modal.querySelectorAll('.ds-tour__dot').length, 'no dots on the welcome').to.equal(0);
+    expect(modal.querySelector('.ds-tour__count'), 'welcome is not numbered').to.not.exist;
+    /* First anchored step → popover paginated "1 of 2". */
+    el.next();
+    await nextFrame();
+    const pop = document.querySelector('ds-popover.ds-tour__pop');
+    expect(pop.querySelectorAll('.ds-tour__dot').length).to.equal(2);
+    expect(pop.querySelector('.ds-tour__count').textContent).to.equal('1 of 2');
+    expect(pop.querySelectorAll('.ds-tour__dot.is-current').length).to.equal(1);
     el.end();
   });
 });
@@ -200,10 +208,10 @@ describe('ds-tour — i18n labels', () => {
     await nextFrame();
     const modal = document.querySelector('ds-modal.ds-tour__modal');
     expect(modal.querySelector('.ds-tour__next').getAttribute('label')).to.equal('Go'); // step 0 primaryLabel wins
-    expect(modal.querySelector('.ds-tour__count').textContent).to.equal('1 / 3');
     el.next();
     await nextFrame();
     const pop = document.querySelector('ds-popover.ds-tour__pop');
+    expect(pop.querySelector('.ds-tour__count').textContent).to.equal('1 / 2'); // of-label override on the anchored count
     expect(pop.querySelector('.ds-tour__next').getAttribute('label')).to.equal('Continue');
     el.end();
   });
