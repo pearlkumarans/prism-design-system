@@ -80,6 +80,15 @@
   border-radius: var(--uems-radius-xs, 4px);          /* Figma: border-radius/radius-4 */
   background: var(--uems-bg-accent-primary-alt);      /* Figma: Background/BG-Accent-Primary_alt */
 }
+/* Surface exception: a surface link sits ON a coloured/solid container, where the
+   light accent hover pill (the underline="none" affordance) clashes with the
+   backdrop. For surface, drop that hover background and reveal a colour-inherited
+   underline on hover instead — the underline alone is the hover affordance.
+   `!important` beats underline-none's own `text-decoration-line: none !important`. */
+.ds-text-link--surface.ds-text-link--underline-none:hover {
+  background: transparent;
+  text-decoration-line: underline !important;
+}
 
 .ds-text-link__icon { line-height: 0; }
 
