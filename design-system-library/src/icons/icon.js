@@ -78,11 +78,15 @@ export class DsIcon extends HTMLElement {
 
   render() {
     /* Sanitise before either value reaches innerHTML below. Icon names are
-       sprite/font ids ([a-z0-9_-]) and size is numeric, so stripping to those
-       charsets is safer than escaping — a hostile value simply yields no icon
-       instead of breaking out of the <use href>/<svg width> attributes. */
+       sprite/font ids ([a-z0-9_-]) and size is a CSS length, so restricting to
+       those shapes is safer than escaping — a hostile value simply yields no icon
+       instead of breaking out of the <use href>/<svg width> attributes.
+       Size accepts a number (→ px) OR a plain percentage like "100%" (ds-list
+       uses `size="100%"` to fill its marker box); both are injection-free. Any
+       other value falls back to 20. */
     const name = (this.getAttribute('name') || '').replace(/[^a-zA-Z0-9_-]/g, '');
-    const size = String(parseFloat(this.getAttribute('size')) || 20);
+    const rawSize = (this.getAttribute('size') || '').trim();
+    const size = /^\d+(?:\.\d+)?%$/.test(rawSize) ? rawSize : String(parseFloat(rawSize) || 20);
 
     this.style.display = 'inline-flex';
     this.style.lineHeight = '0';
